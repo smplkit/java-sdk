@@ -373,7 +373,7 @@ class ConfigClientTest {
                     "type": "config",
                     "attributes": {
                       "key": null,
-                      "name": "No Key Config",
+                      "name": null,
                       "description": null,
                       "parent": null,
                       "values": {},
@@ -388,7 +388,7 @@ class ConfigClientTest {
 
         Config config = configClient.get("null-key-id");
         assertEquals("", config.key());
-        assertEquals("No Key Config", config.name());
+        assertEquals("", config.name());
     }
 
     @Test
@@ -416,6 +416,45 @@ class ConfigClientTest {
         Config config = configClient.get("bad-ts-id");
         assertNull(config.createdAt());
         assertNull(config.updatedAt());
+    }
+
+    @Test
+    void parseConfigWithMissingFields_usesDefaults() throws Exception {
+        // Attributes with only the required "name" field — all optional fields absent.
+        // Exercises the false branch of `attrs.has(...)` in parseResource, getStringOrNull,
+        // and parseInstant.
+        String response = """
+                {
+                  "data": {
+                    "id": "minimal-id",
+                    "type": "config",
+                    "attributes": {
+                      "name": "Minimal"
+                    }
+                  }
+                }
+                """;
+        stubResponse(200, response);
+
+        Config config = configClient.get("minimal-id");
+        assertEquals("minimal-id", config.id());
+        assertEquals("", config.key());
+        assertEquals("Minimal", config.name());
+        assertNull(config.description());
+        assertNull(config.parent());
+        assertTrue(config.values().isEmpty());
+        assertTrue(config.environments().isEmpty());
+        assertNull(config.createdAt());
+        assertNull(config.updatedAt());
+    }
+
+    @Test
+    void list_missingDataField_returnsEmpty() throws Exception {
+        // Response with no "data" field — getAsJsonArray returns null.
+        stubResponse(200, "{}");
+
+        List<Config> configs = configClient.list();
+        assertTrue(configs.isEmpty());
     }
 
     @SuppressWarnings("unchecked")

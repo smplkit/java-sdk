@@ -164,17 +164,11 @@ public final class ConfigClient {
         Map<String, Object> values = Map.of();
         if (attrs.has("values") && !attrs.get("values").isJsonNull()) {
             values = GSON.fromJson(attrs.get("values"), Map.class);
-            if (values == null) {
-                values = Map.of();
-            }
         }
 
         Map<String, Map<String, Object>> environments = Map.of();
         if (attrs.has("environments") && !attrs.get("environments").isJsonNull()) {
-            Map<String, Map<String, Object>> parsed = GSON.fromJson(attrs.get("environments"), Map.class);
-            if (parsed != null) {
-                environments = new HashMap<>(parsed);
-            }
+            environments = new HashMap<>(GSON.fromJson(attrs.get("environments"), Map.class));
         }
 
         Instant createdAt = parseInstant(attrs, "created_at");

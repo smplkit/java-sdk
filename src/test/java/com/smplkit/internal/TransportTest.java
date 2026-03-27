@@ -69,11 +69,17 @@ class TransportTest {
 
     @Test
     void checkStatus_3xxDoesNotThrow() {
-        // 3xx hits the default branch but status < 400, so nothing is thrown.
         for (int code : new int[]{301, 302, 304}) {
             HttpResponse<String> response = mockResponse(code, "");
             assertDoesNotThrow(() -> Transport.checkStatus(response));
         }
+    }
+
+    @Test
+    void checkStatus_1xxDoesNotThrow() {
+        // Status < 200 exercises the false branch of `status >= 200`.
+        HttpResponse<String> response = mockResponse(100, "");
+        assertDoesNotThrow(() -> Transport.checkStatus(response));
     }
 
     @Test
