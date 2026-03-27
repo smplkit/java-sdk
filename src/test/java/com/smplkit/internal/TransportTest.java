@@ -68,6 +68,15 @@ class TransportTest {
     }
 
     @Test
+    void checkStatus_3xxDoesNotThrow() {
+        // 3xx hits the default branch but status < 400, so nothing is thrown.
+        for (int code : new int[]{301, 302, 304}) {
+            HttpResponse<String> response = mockResponse(code, "");
+            assertDoesNotThrow(() -> Transport.checkStatus(response));
+        }
+    }
+
+    @Test
     void authHeaderIsSet() {
         Auth auth = new Auth("test-key");
         assertEquals("Bearer test-key", auth.authorizationHeader());
@@ -83,6 +92,35 @@ class TransportTest {
     void authRejectsBlank() {
         assertThrows(IllegalArgumentException.class, () -> new Auth(""));
         assertThrows(IllegalArgumentException.class, () -> new Auth("   "));
+    }
+
+    @Test
+    @SuppressWarnings("unchecked")
+    void put_sendsRequestAndReturnsResponse() throws Exception {
+        HttpResponse<String> mockResponse = mockResponse(200, "{\"data\":{}}");
+        java.net.http.HttpClient mockClient = Mockito.mock(java.net.http.HttpClient.class);
+        when(mockClient.send(
+                Mockito.any(java.net.http.HttpRequest.class),
+                Mockito.any(HttpResponse.BodyHandler.class)
+        )).thenReturn(mockResponse);
+
+        Auth auth = new Auth("test-key");
+        Transport transport = new Transport(mockClient, auth, "https://config.smplkit.com",
+                java.time.Duration.ofSeconds(30));
+
+        HttpResponse<String> response = transport.put("/api/v1/configs/some-id", "{\"data\":{}}");
+        assertNotNull(response);
+        assertEquals(200, response.statusCode());
+    }
+
+    @Test
+    void httpClient_returnsUnderlyingClient() {
+        java.net.http.HttpClient mockClient = Mockito.mock(java.net.http.HttpClient.class);
+        Auth auth = new Auth("test-key");
+        Transport transport = new Transport(mockClient, auth, "https://config.smplkit.com",
+                java.time.Duration.ofSeconds(30));
+
+        assertSame(mockClient, transport.httpClient());
     }
 
     @SuppressWarnings("unchecked")

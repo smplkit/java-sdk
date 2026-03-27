@@ -78,4 +78,22 @@ class SmplkitClientTest {
         // Should be safe to close twice
         assertDoesNotThrow(client::close);
     }
+
+    @Test
+    void packagePrivateConstructorWithHttpClient_createsClient() {
+        java.net.http.HttpClient httpClient = java.net.http.HttpClient.newHttpClient();
+        SmplkitClient client = new SmplkitClient(httpClient, "test-key",
+                "https://config.smplkit.com", Duration.ofSeconds(30));
+        assertNotNull(client);
+        assertNotNull(client.config());
+    }
+
+    @Test
+    void transport_returnsTransportInstance() {
+        try (SmplkitClient client = SmplkitClient.builder()
+                .apiKey("test-key")
+                .build()) {
+            assertNotNull(client.transport());
+        }
+    }
 }

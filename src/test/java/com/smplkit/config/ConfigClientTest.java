@@ -364,6 +364,60 @@ class ConfigClientTest {
         assertNull(config.updatedAt());
     }
 
+    @Test
+    void parseConfigWithNullKey_usesEmptyStringFallback() throws Exception {
+        String response = """
+                {
+                  "data": {
+                    "id": "null-key-id",
+                    "type": "config",
+                    "attributes": {
+                      "key": null,
+                      "name": "No Key Config",
+                      "description": null,
+                      "parent": null,
+                      "values": {},
+                      "environments": {},
+                      "created_at": null,
+                      "updated_at": null
+                    }
+                  }
+                }
+                """;
+        stubResponse(200, response);
+
+        Config config = configClient.get("null-key-id");
+        assertEquals("", config.key());
+        assertEquals("No Key Config", config.name());
+    }
+
+    @Test
+    void parseConfigWithMalformedTimestamp_returnsNullInstant() throws Exception {
+        String response = """
+                {
+                  "data": {
+                    "id": "bad-ts-id",
+                    "type": "config",
+                    "attributes": {
+                      "key": "test",
+                      "name": "Bad Timestamp",
+                      "description": null,
+                      "parent": null,
+                      "values": {},
+                      "environments": {},
+                      "created_at": "not-a-timestamp",
+                      "updated_at": "also-invalid"
+                    }
+                  }
+                }
+                """;
+        stubResponse(200, response);
+
+        Config config = configClient.get("bad-ts-id");
+        assertNull(config.createdAt());
+        assertNull(config.updatedAt());
+    }
+
     @SuppressWarnings("unchecked")
     private void stubResponse(int statusCode, String body) throws Exception {
         HttpResponse<String> mockResponse = Mockito.mock(HttpResponse.class);
