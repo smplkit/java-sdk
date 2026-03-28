@@ -8,16 +8,18 @@ The official Java SDK for [smplkit](https://docs.smplkit.com) — configuration 
 
 ## Installation
 
+> **Note:** The package is not yet available on Maven Central — coming soon. The coordinates below will work once publishing is live.
+
 ### Gradle (Kotlin DSL)
 
 ```kotlin
-implementation("com.smplkit:smplkit-sdk:0.0.0")
+implementation("com.smplkit:smplkit-sdk:1.0.0")
 ```
 
 ### Gradle (Groovy DSL)
 
 ```groovy
-implementation 'com.smplkit:smplkit-sdk:0.0.0'
+implementation 'com.smplkit:smplkit-sdk:1.0.0'
 ```
 
 ### Maven
@@ -26,7 +28,7 @@ implementation 'com.smplkit:smplkit-sdk:0.0.0'
 <dependency>
     <groupId>com.smplkit</groupId>
     <artifactId>smplkit-sdk</artifactId>
-    <version>0.0.0</version>
+    <version>1.0.0</version>
 </dependency>
 ```
 

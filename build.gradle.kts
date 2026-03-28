@@ -1,15 +1,20 @@
 plugins {
     `java-library`
     jacoco
+    `maven-publish`
+    signing
 }
 
 group = "com.smplkit"
-version = "0.0.0"
+// Version is set by CI from the git tag; this default is for local development only
+version = findProperty("projectVersion") as String? ?: "0.0.0-local"
 
 java {
     toolchain {
         languageVersion.set(JavaLanguageVersion.of(17))
     }
+    withSourcesJar()
+    withJavadocJar()
 }
 
 repositories {
@@ -32,4 +37,69 @@ tasks.jacocoTestReport {
     reports {
         xml.required.set(true)
     }
+}
+
+publishing {
+    publications {
+        create<MavenPublication>("mavenJava") {
+            from(components["java"])
+
+            groupId = "com.smplkit"
+            artifactId = "smplkit-sdk"
+
+            pom {
+                name.set("SmplKit SDK")
+                description.set("Java SDK for the SmplKit developer platform")
+                url.set("https://github.com/smplkit/java-sdk")
+
+                licenses {
+                    license {
+                        name.set("MIT License")
+                        url.set("https://opensource.org/licenses/MIT")
+                    }
+                }
+
+                developers {
+                    developer {
+                        id.set("smplkit")
+                        name.set("Smpl Solutions LLC")
+                        url.set("https://smplkit.com")
+                    }
+                }
+
+                scm {
+                    connection.set("scm:git:git://github.com/smplkit/java-sdk.git")
+                    developerConnection.set("scm:git:ssh://github.com/smplkit/java-sdk.git")
+                    url.set("https://github.com/smplkit/java-sdk")
+                }
+            }
+        }
+    }
+
+    repositories {
+        maven {
+            name = "OSSRH"
+            val releasesUrl = uri("https://s01.oss.sonatype.org/service/local/staging/deploy/maven2/")
+            val snapshotsUrl = uri("https://s01.oss.sonatype.org/content/repositories/snapshots/")
+            url = if (version.toString().endsWith("SNAPSHOT")) snapshotsUrl else releasesUrl
+            credentials {
+                username = findProperty("ossrhUsername") as String? ?: System.getenv("OSSRH_USERNAME") ?: ""
+                password = findProperty("ossrhPassword") as String? ?: System.getenv("OSSRH_PASSWORD") ?: ""
+            }
+        }
+    }
+}
+
+signing {
+    val signingKey = findProperty("signing.key") as String? ?: System.getenv("GPG_SIGNING_KEY")
+    val signingPassword = findProperty("signing.password") as String? ?: System.getenv("GPG_SIGNING_PASSWORD")
+    if (signingKey != null && signingPassword != null) {
+        useInMemoryPgpKeys(signingKey, signingPassword)
+    }
+    sign(publishing.publications["mavenJava"])
+}
+
+// Only require signing when actually publishing (not during local builds)
+tasks.withType<Sign>().configureEach {
+    onlyIf { gradle.taskGraph.hasTask("publish") }
 }
