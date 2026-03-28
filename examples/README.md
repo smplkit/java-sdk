@@ -7,7 +7,7 @@ Runnable examples demonstrating the [smplkit Java SDK](https://github.com/smplki
 ## Prerequisites
 
 1. Java 17+
-2. A valid smplkit API key (create one in the [smplkit console](https://www.smplkit.com)).
+2. A valid smplkit API key (create one in the [smplkit console](https://app.smplkit.com)).
 3. At least one config created in your smplkit account (every account comes with a `common` config by default).
 
 ## Config Showcase
@@ -16,12 +16,14 @@ Runnable examples demonstrating the [smplkit Java SDK](https://github.com/smplki
 
 An end-to-end walkthrough of the Smpl Config SDK covering:
 
-- **Client initialization** — `SmplkitClient.builder().apiKey(...).build()`
-- **Management-plane CRUD** — create, list, get by key, and delete configs
+- **Client initialization** — `SmplClient.builder().apiKey(...).build()`
+- **Management-plane CRUD** — create, update, list, get by key, and delete configs
+- **Environment overrides** — `setValues()` and `setValue()` for per-environment configuration
 - **Multi-level inheritance** — child → parent → common hierarchy setup
-- **Config values** — setting initial base values at creation time
-
-> **Note:** The Java SDK's management plane does not yet support `update()`, `setValues()`, or `setValue()`, and the runtime plane (`connect()`, typed accessors, WebSocket, change listeners) is not yet implemented. These sections are marked as skipped in the showcase output. See the [Python showcase](https://github.com/smplkit/python-sdk/tree/main/examples) for the full feature surface.
+- **Runtime value resolution** — `connect()`, `get()`, typed accessors (`getString`, `getInt`, `getBool`)
+- **Real-time updates** — WebSocket-driven cache invalidation with change listeners
+- **Manual refresh and cache diagnostics** — `refresh()`, `stats()`
+- **AutoCloseable pattern** — automatic cleanup via try-with-resources
 
 ### Running
 
@@ -30,4 +32,4 @@ export SMPLKIT_API_KEY="sk_api_..."
 ./gradlew :examples:run
 ```
 
-The script creates temporary configs, exercises the available SDK features, then cleans up after itself.
+The script creates temporary configs, exercises all SDK features, then cleans up after itself.

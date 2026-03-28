@@ -8,13 +8,13 @@ import java.time.Duration;
 import static org.junit.jupiter.api.Assertions.*;
 
 /**
- * Tests for {@link SmplkitClient} and {@link SmplkitClientBuilder}.
+ * Tests for {@link SmplClient} and {@link SmplClientBuilder}.
  */
-class SmplkitClientTest {
+class SmplClientTest {
 
     @Test
     void builderConstructsClientWithDefaults() {
-        try (SmplkitClient client = SmplkitClient.builder()
+        try (SmplClient client = SmplClient.builder()
                 .apiKey("test-key")
                 .build()) {
             assertNotNull(client);
@@ -24,7 +24,7 @@ class SmplkitClientTest {
 
     @Test
     void builderConstructsClientWithCustomOptions() {
-        try (SmplkitClient client = SmplkitClient.builder()
+        try (SmplClient client = SmplClient.builder()
                 .apiKey("test-key")
                 .timeout(Duration.ofSeconds(60))
                 .build()) {
@@ -35,7 +35,7 @@ class SmplkitClientTest {
 
     @Test
     void configReturnsConfigClient() {
-        try (SmplkitClient client = SmplkitClient.builder()
+        try (SmplClient client = SmplClient.builder()
                 .apiKey("test-key")
                 .build()) {
             ConfigClient config = client.config();
@@ -46,25 +46,25 @@ class SmplkitClientTest {
 
     @Test
     void builderRequiresApiKey() {
-        SmplkitClientBuilder builder = SmplkitClient.builder();
+        SmplClientBuilder builder = SmplClient.builder();
         assertThrows(NullPointerException.class, builder::build);
     }
 
     @Test
     void builderRejectsNullApiKey() {
         assertThrows(NullPointerException.class, () ->
-                SmplkitClient.builder().apiKey(null));
+                SmplClient.builder().apiKey(null));
     }
 
     @Test
     void builderRejectsNullTimeout() {
         assertThrows(NullPointerException.class, () ->
-                SmplkitClient.builder().timeout(null));
+                SmplClient.builder().timeout(null));
     }
 
     @Test
     void clientIsAutoCloseable() {
-        SmplkitClient client = SmplkitClient.builder()
+        SmplClient client = SmplClient.builder()
                 .apiKey("test-key")
                 .build();
         assertDoesNotThrow(client::close);
@@ -75,7 +75,7 @@ class SmplkitClientTest {
     @Test
     void packagePrivateConstructorWithHttpClient_createsClient() {
         java.net.http.HttpClient httpClient = java.net.http.HttpClient.newHttpClient();
-        SmplkitClient client = new SmplkitClient(httpClient, "test-key",
+        SmplClient client = new SmplClient(httpClient, "test-key",
                 Duration.ofSeconds(30));
         assertNotNull(client);
         assertNotNull(client.config());

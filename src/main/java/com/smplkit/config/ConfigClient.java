@@ -25,7 +25,7 @@ import java.util.UUID;
  * Client for the Smpl Config service.
  *
  * <p>Provides CRUD operations on configuration resources and runtime connection.
- * Obtained via {@link com.smplkit.SmplkitClient#config()}.</p>
+ * Obtained via {@link com.smplkit.SmplClient#config()}.</p>
  *
  * <p>All methods communicate with the server synchronously and raise
  * structured exceptions on failure.</p>
@@ -39,7 +39,7 @@ public final class ConfigClient {
     private final String apiKey;
 
     /**
-     * Creates a new ConfigClient. Use {@link com.smplkit.SmplkitClient} to obtain an instance.
+     * Creates a new ConfigClient. Use {@link com.smplkit.SmplClient} to obtain an instance.
      *
      * @param configsApi the generated API client
      * @param httpClient the HTTP client (used for WebSocket in ConfigRuntime)

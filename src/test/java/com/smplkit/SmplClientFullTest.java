@@ -8,9 +8,9 @@ import java.time.Duration;
 import static org.junit.jupiter.api.Assertions.*;
 
 /**
- * Additional tests for {@link SmplkitClient} covering the request interceptor lambda.
+ * Additional tests for {@link SmplClient} covering the request interceptor lambda.
  */
-class SmplkitClientFullTest {
+class SmplClientFullTest {
 
     @Test
     void realClient_exercisesRequestInterceptor() {
@@ -18,7 +18,7 @@ class SmplkitClientFullTest {
         // The call will fail (no real server), but the request interceptor lambda
         // (line 60: builder -> builder.header("Authorization", "Bearer " + apiKey))
         // will be executed before the request fails.
-        try (SmplkitClient client = SmplkitClient.builder()
+        try (SmplClient client = SmplClient.builder()
                 .apiKey("test-key")
                 .timeout(Duration.ofMillis(500))
                 .build()) {

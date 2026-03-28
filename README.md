@@ -1,10 +1,6 @@
 # smplkit Java SDK
 
-The official Java SDK for [smplkit](https://docs.smplkit.com) — configuration management for modern applications.
-
-## Requirements
-
-- Java 17 or later
+The official Java SDK for [smplkit](https://smplkit.com) — simple application infrastructure for developers.
 
 ## Installation
 
@@ -32,10 +28,14 @@ implementation 'com.smplkit:smplkit-sdk:1.0.0'
 </dependency>
 ```
 
-## Quick start
+## Requirements
+
+- Java 17 or later
+
+## Quick Start
 
 ```java
-import com.smplkit.SmplkitClient;
+import com.smplkit.SmplClient;
 import com.smplkit.config.Config;
 import com.smplkit.config.CreateConfigParams;
 
@@ -43,15 +43,12 @@ import java.util.List;
 import java.util.Map;
 
 // Build the client (implements AutoCloseable)
-try (SmplkitClient client = SmplkitClient.builder()
+try (SmplClient client = SmplClient.builder()
         .apiKey("sk_api_...")
         .build()) {
 
-    // Get a config by ID
-    Config config = client.config().get("550e8400-e29b-41d4-a716-446655440000");
-
     // Get a config by key
-    Config byKey = client.config().getByKey("user_service");
+    Config config = client.config().getByKey("user_service");
 
     // List all configs
     List<Config> configs = client.config().list();
@@ -66,11 +63,22 @@ try (SmplkitClient client = SmplkitClient.builder()
     );
 
     // Delete a config
-    client.config().delete("550e8400-e29b-41d4-a716-446655440000");
+    client.config().delete(newConfig.id());
 }
 ```
 
-## Error handling
+## Configuration
+
+```java
+import java.time.Duration;
+
+SmplClient client = SmplClient.builder()
+    .apiKey("sk_api_...")
+    .timeout(Duration.ofSeconds(30))  // default
+    .build();
+```
+
+## Error Handling
 
 All SDK exceptions extend `SmplException` (an unchecked `RuntimeException`):
 
@@ -80,11 +88,11 @@ import com.smplkit.errors.*;
 try {
     Config config = client.config().get("nonexistent-id");
 } catch (SmplNotFoundException e) {
-    // HTTP 404 — resource not found
+    // Resource not found
 } catch (SmplConflictException e) {
-    // HTTP 409 — conflict (e.g., deleting config with children)
+    // Conflict (e.g., deleting config with children)
 } catch (SmplValidationException e) {
-    // HTTP 422 — validation error
+    // Validation error
 } catch (SmplTimeoutException e) {
     // Request timed out
 } catch (SmplConnectionException e) {
@@ -96,18 +104,20 @@ try {
 }
 ```
 
-## Configuration
-
-```java
-SmplkitClient client = SmplkitClient.builder()
-    .apiKey("sk_api_...")
-    .timeout(Duration.ofSeconds(30))  // default
-    .build();
-```
+| Exception                  | Cause                        |
+|----------------------------|------------------------------|
+| `SmplNotFoundException`    | HTTP 404 — resource not found |
+| `SmplConflictException`   | HTTP 409 — conflict           |
+| `SmplValidationException` | HTTP 422 — validation error   |
+| `SmplTimeoutException`    | Request timed out             |
+| `SmplConnectionException` | Network connectivity issue    |
+| `SmplException`           | Any other SDK error           |
 
 ## Documentation
 
-Full documentation is available at [docs.smplkit.com](https://docs.smplkit.com).
+- [Getting Started](https://docs.smplkit.com/getting-started)
+- [Java SDK Guide](https://docs.smplkit.com/sdks/java)
+- [API Reference](https://docs.smplkit.com/api)
 
 ## License
 

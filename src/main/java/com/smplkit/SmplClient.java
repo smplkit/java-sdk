@@ -12,7 +12,7 @@ import java.time.Duration;
  *
  * <p>Use the {@link #builder()} method to construct an instance:</p>
  * <pre>{@code
- * try (SmplkitClient client = SmplkitClient.builder()
+ * try (SmplClient client = SmplClient.builder()
  *         .apiKey("sk_api_...")
  *         .build()) {
  *     Config cfg = client.config().get("my-config-id");
@@ -21,7 +21,7 @@ import java.time.Duration;
  *
  * <p>Implements {@link AutoCloseable} so it can be used in try-with-resources.</p>
  */
-public final class SmplkitClient implements AutoCloseable {
+public final class SmplClient implements AutoCloseable {
 
     private static final String CONFIG_BASE_URL = "https://config.smplkit.com";
 
@@ -29,12 +29,12 @@ public final class SmplkitClient implements AutoCloseable {
     private final HttpClient httpClient;
 
     /**
-     * Creates a new SmplkitClient. Package-private; use {@link #builder()}.
+     * Creates a new SmplClient. Package-private; use {@link #builder()}.
      *
      * @param apiKey  the API key
      * @param timeout the request timeout
      */
-    SmplkitClient(String apiKey, Duration timeout) {
+    SmplClient(String apiKey, Duration timeout) {
         this.httpClient = HttpClient.newBuilder()
                 .connectTimeout(timeout)
                 .build();
@@ -48,7 +48,7 @@ public final class SmplkitClient implements AutoCloseable {
      * @param apiKey     the API key
      * @param timeout    the request timeout
      */
-    SmplkitClient(HttpClient httpClient, String apiKey, Duration timeout) {
+    SmplClient(HttpClient httpClient, String apiKey, Duration timeout) {
         this.httpClient = httpClient;
         this.config = buildConfigClient(httpClient, apiKey, timeout);
     }
@@ -73,12 +73,12 @@ public final class SmplkitClient implements AutoCloseable {
     }
 
     /**
-     * Returns a new builder for constructing {@link SmplkitClient} instances.
+     * Returns a new builder for constructing {@link SmplClient} instances.
      *
      * @return a new builder
      */
-    public static SmplkitClientBuilder builder() {
-        return new SmplkitClientBuilder();
+    public static SmplClientBuilder builder() {
+        return new SmplClientBuilder();
     }
 
     /**

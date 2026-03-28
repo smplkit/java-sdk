@@ -77,8 +77,8 @@ publishing {
             artifactId = "smplkit-sdk"
 
             pom {
-                name.set("SmplKit SDK")
-                description.set("Java SDK for the SmplKit developer platform")
+                name.set("smplkit Java SDK")
+                description.set("Official Java SDK for the smplkit platform")
                 url.set("https://github.com/smplkit/java-sdk")
 
                 licenses {

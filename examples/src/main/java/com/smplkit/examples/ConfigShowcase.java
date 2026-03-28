@@ -1,6 +1,6 @@
 package com.smplkit.examples;
 
-import com.smplkit.SmplkitClient;
+import com.smplkit.SmplClient;
 import com.smplkit.config.Config;
 import com.smplkit.config.ConfigRuntime;
 import com.smplkit.config.ConfigStats;
@@ -17,7 +17,7 @@ import java.util.Map;
  *
  * <p>Demonstrates the smplkit Java SDK for Smpl Config, covering:</p>
  * <ul>
- *   <li>Client initialization ({@link SmplkitClient})</li>
+ *   <li>Client initialization ({@link SmplClient})</li>
  *   <li>Management-plane CRUD: create, update, list, and delete configs</li>
  *   <li>Environment-specific overrides and multi-level inheritance</li>
  *   <li>Runtime value resolution: connect(), get(), typed accessors</li>
@@ -53,13 +53,13 @@ public class ConfigShowcase {
             System.exit(1);
         }
 
-        // SmplkitClient is the entry point. API key is the only required argument.
+        // SmplClient is the entry point. API key is the only required argument.
         // It implements AutoCloseable for try-with-resources.
-        try (SmplkitClient client = SmplkitClient.builder()
+        try (SmplClient client = SmplClient.builder()
                 .apiKey(apiKey)
                 .build()) {
 
-            step("SmplkitClient initialized");
+            step("SmplClient initialized");
 
             // ==================================================================
             // 2. MANAGEMENT PLANE — Set up the configuration hierarchy
@@ -474,13 +474,13 @@ public class ConfigShowcase {
             // ==================================================================
             section("6. Sync Client (same API, no async)");
 
-            // Java's SmplkitClient is always synchronous — there is no separate
+            // Java's SmplClient is always synchronous — there is no separate
             // async variant. All management methods block until the server responds.
             // ConfigRuntime.get() and typed accessors are always synchronous.
             //
             // Example (same pattern used throughout this showcase):
             //
-            //   SmplkitClient client = SmplkitClient.builder().apiKey("sk_api_...").build();
+            //   SmplClient client = SmplClient.builder().apiKey("sk_api_...").build();
             //   Config cfg = client.config().getByKey("user_service");
             //   cfg = client.config().setValues(cfg, Map.of("max_retries", 10), "production");
             //   try (ConfigRuntime rt = client.config().connect(cfg, "production")) {
@@ -515,7 +515,7 @@ public class ConfigShowcase {
                     .build());
             step("Common config reset to empty");
 
-        } // SmplkitClient.close() is called here
+        } // SmplClient.close() is called here
 
         // ======================================================================
         // DONE
