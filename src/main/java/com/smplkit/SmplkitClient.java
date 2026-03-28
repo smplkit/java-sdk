@@ -31,15 +31,14 @@ public final class SmplkitClient implements AutoCloseable {
      * Creates a new SmplkitClient. Package-private; use {@link #builder()}.
      *
      * @param apiKey  the API key
-     * @param baseUrl the base URL
      * @param timeout the request timeout
      */
-    SmplkitClient(String apiKey, String baseUrl, Duration timeout) {
+    SmplkitClient(String apiKey, Duration timeout) {
         this.httpClient = HttpClient.newBuilder()
                 .connectTimeout(timeout)
                 .build();
         Auth auth = new Auth(apiKey);
-        this.transport = new Transport(httpClient, auth, baseUrl, timeout);
+        this.transport = new Transport(httpClient, auth, timeout);
         this.config = new ConfigClient(transport);
     }
 
@@ -48,13 +47,12 @@ public final class SmplkitClient implements AutoCloseable {
      *
      * @param httpClient the HTTP client to use
      * @param apiKey     the API key
-     * @param baseUrl    the base URL
      * @param timeout    the request timeout
      */
-    SmplkitClient(HttpClient httpClient, String apiKey, String baseUrl, Duration timeout) {
+    SmplkitClient(HttpClient httpClient, String apiKey, Duration timeout) {
         this.httpClient = httpClient;
         Auth auth = new Auth(apiKey);
-        this.transport = new Transport(httpClient, auth, baseUrl, timeout);
+        this.transport = new Transport(httpClient, auth, timeout);
         this.config = new ConfigClient(transport);
     }
 

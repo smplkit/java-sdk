@@ -26,7 +26,6 @@ class SmplkitClientTest {
     void builderConstructsClientWithCustomOptions() {
         try (SmplkitClient client = SmplkitClient.builder()
                 .apiKey("test-key")
-                .baseUrl("https://custom.example.com")
                 .timeout(Duration.ofSeconds(60))
                 .build()) {
             assertNotNull(client);
@@ -58,12 +57,6 @@ class SmplkitClientTest {
     }
 
     @Test
-    void builderRejectsNullBaseUrl() {
-        assertThrows(NullPointerException.class, () ->
-                SmplkitClient.builder().baseUrl(null));
-    }
-
-    @Test
     void builderRejectsNullTimeout() {
         assertThrows(NullPointerException.class, () ->
                 SmplkitClient.builder().timeout(null));
@@ -83,7 +76,7 @@ class SmplkitClientTest {
     void packagePrivateConstructorWithHttpClient_createsClient() {
         java.net.http.HttpClient httpClient = java.net.http.HttpClient.newHttpClient();
         SmplkitClient client = new SmplkitClient(httpClient, "test-key",
-                "https://config.smplkit.com", Duration.ofSeconds(30));
+                Duration.ofSeconds(30));
         assertNotNull(client);
         assertNotNull(client.config());
     }

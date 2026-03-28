@@ -111,10 +111,10 @@ class TransportTest {
         )).thenReturn(mockResponse);
 
         Auth auth = new Auth("test-key");
-        Transport transport = new Transport(mockClient, auth, "https://config.smplkit.com",
+        Transport transport = new Transport(mockClient, auth,
                 java.time.Duration.ofSeconds(30));
 
-        HttpResponse<String> response = transport.put("/api/v1/configs/some-id", "{\"data\":{}}");
+        HttpResponse<String> response = transport.put("https://config.smplkit.com/api/v1/configs/some-id", "{\"data\":{}}");
         assertNotNull(response);
         assertEquals(200, response.statusCode());
     }
@@ -123,7 +123,7 @@ class TransportTest {
     void httpClient_returnsUnderlyingClient() {
         java.net.http.HttpClient mockClient = Mockito.mock(java.net.http.HttpClient.class);
         Auth auth = new Auth("test-key");
-        Transport transport = new Transport(mockClient, auth, "https://config.smplkit.com",
+        Transport transport = new Transport(mockClient, auth,
                 java.time.Duration.ofSeconds(30));
 
         assertSame(mockClient, transport.httpClient());

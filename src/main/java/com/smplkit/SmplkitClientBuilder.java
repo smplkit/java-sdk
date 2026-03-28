@@ -10,7 +10,6 @@ import java.util.Objects;
  * <pre>{@code
  * SmplkitClient client = SmplkitClient.builder()
  *     .apiKey("sk_api_...")
- *     .baseUrl("https://config.smplkit.com")
  *     .timeout(Duration.ofSeconds(30))
  *     .build();
  * }</pre>
@@ -18,7 +17,6 @@ import java.util.Objects;
 public final class SmplkitClientBuilder {
 
     private String apiKey;
-    private String baseUrl = "https://config.smplkit.com";
     private Duration timeout = Duration.ofSeconds(30);
 
     SmplkitClientBuilder() {
@@ -33,17 +31,6 @@ public final class SmplkitClientBuilder {
      */
     public SmplkitClientBuilder apiKey(String apiKey) {
         this.apiKey = Objects.requireNonNull(apiKey, "apiKey must not be null");
-        return this;
-    }
-
-    /**
-     * Sets the base URL for the API. Defaults to {@code https://config.smplkit.com}.
-     *
-     * @param baseUrl the base URL
-     * @return this builder
-     */
-    public SmplkitClientBuilder baseUrl(String baseUrl) {
-        this.baseUrl = Objects.requireNonNull(baseUrl, "baseUrl must not be null");
         return this;
     }
 
@@ -66,6 +53,6 @@ public final class SmplkitClientBuilder {
      */
     public SmplkitClient build() {
         Objects.requireNonNull(apiKey, "apiKey must be set before calling build()");
-        return new SmplkitClient(apiKey, baseUrl, timeout);
+        return new SmplkitClient(apiKey, timeout);
     }
 }

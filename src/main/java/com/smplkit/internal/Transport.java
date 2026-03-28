@@ -30,7 +30,6 @@ public final class Transport {
 
     private final HttpClient httpClient;
     private final Auth auth;
-    private final String baseUrl;
     private final Duration timeout;
 
     /**
@@ -38,41 +37,38 @@ public final class Transport {
      *
      * @param httpClient the HTTP client to use
      * @param auth       authentication helper
-     * @param baseUrl    API base URL (no trailing slash)
      * @param timeout    request timeout
      */
-    public Transport(HttpClient httpClient, Auth auth, String baseUrl, Duration timeout) {
+    public Transport(HttpClient httpClient, Auth auth, Duration timeout) {
         this.httpClient = Objects.requireNonNull(httpClient, "httpClient must not be null");
         this.auth = Objects.requireNonNull(auth, "auth must not be null");
-        this.baseUrl = Objects.requireNonNull(baseUrl, "baseUrl must not be null")
-                .replaceAll("/+$", "");
         this.timeout = Objects.requireNonNull(timeout, "timeout must not be null");
     }
 
     /**
-     * Sends a GET request to the given path.
+     * Sends a GET request to the given URL.
      *
-     * @param path the API path (e.g., "/api/v1/configs")
+     * @param url the full URL (e.g., "https://config.smplkit.com/api/v1/configs")
      * @return the response
      * @throws SmplException on error
      */
-    public HttpResponse<String> get(String path) {
-        var request = newRequestBuilder(path)
+    public HttpResponse<String> get(String url) {
+        var request = newRequestBuilder(url)
                 .GET()
                 .build();
         return execute(request);
     }
 
     /**
-     * Sends a GET request to the given path with a query string.
+     * Sends a GET request to the given URL with a query string.
      *
-     * @param path  the API path
+     * @param url   the full URL
      * @param query the query string (without leading '?')
      * @return the response
      * @throws SmplException on error
      */
-    public HttpResponse<String> get(String path, String query) {
-        URI uri = URI.create(baseUrl + path + "?" + query);
+    public HttpResponse<String> get(String url, String query) {
+        URI uri = URI.create(url + "?" + query);
         var request = HttpRequest.newBuilder(uri)
                 .header("Authorization", auth.authorizationHeader())
                 .header("Accept", CONTENT_TYPE)
@@ -86,13 +82,13 @@ public final class Transport {
     /**
      * Sends a POST request with a JSON body.
      *
-     * @param path the API path
+     * @param url  the full URL
      * @param body JSON request body
      * @return the response
      * @throws SmplException on error
      */
-    public HttpResponse<String> post(String path, String body) {
-        var request = newRequestBuilder(path)
+    public HttpResponse<String> post(String url, String body) {
+        var request = newRequestBuilder(url)
                 .header("Content-Type", CONTENT_TYPE)
                 .POST(HttpRequest.BodyPublishers.ofString(body))
                 .build();
@@ -102,13 +98,13 @@ public final class Transport {
     /**
      * Sends a PUT request with a JSON body.
      *
-     * @param path the API path
+     * @param url  the full URL
      * @param body JSON request body
      * @return the response
      * @throws SmplException on error
      */
-    public HttpResponse<String> put(String path, String body) {
-        var request = newRequestBuilder(path)
+    public HttpResponse<String> put(String url, String body) {
+        var request = newRequestBuilder(url)
                 .header("Content-Type", CONTENT_TYPE)
                 .PUT(HttpRequest.BodyPublishers.ofString(body))
                 .build();
@@ -118,19 +114,19 @@ public final class Transport {
     /**
      * Sends a DELETE request.
      *
-     * @param path the API path
+     * @param url the full URL
      * @return the response
      * @throws SmplException on error
      */
-    public HttpResponse<String> delete(String path) {
-        var request = newRequestBuilder(path)
+    public HttpResponse<String> delete(String url) {
+        var request = newRequestBuilder(url)
                 .DELETE()
                 .build();
         return execute(request);
     }
 
-    private HttpRequest.Builder newRequestBuilder(String path) {
-        return HttpRequest.newBuilder(URI.create(baseUrl + path))
+    private HttpRequest.Builder newRequestBuilder(String url) {
+        return HttpRequest.newBuilder(URI.create(url))
                 .header("Authorization", auth.authorizationHeader())
                 .header("Accept", CONTENT_TYPE)
                 .header("User-Agent", USER_AGENT)

@@ -91,7 +91,7 @@ class ConfigClientTest {
     void setUp() {
         mockHttpClient = Mockito.mock(HttpClient.class);
         Auth auth = new Auth("test-api-key");
-        Transport transport = new Transport(mockHttpClient, auth, "https://config.smplkit.com", Duration.ofSeconds(30));
+        Transport transport = new Transport(mockHttpClient, auth, Duration.ofSeconds(30));
         configClient = new ConfigClient(transport);
     }
 

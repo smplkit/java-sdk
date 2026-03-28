@@ -29,7 +29,8 @@ import java.util.Map;
  */
 public final class ConfigClient {
 
-    private static final String BASE_PATH = "/api/v1/configs";
+    private static final String BASE_URL = "https://config.smplkit.com";
+    private static final String BASE_PATH = BASE_URL + "/api/v1/configs";
     private static final Gson GSON = new GsonBuilder().create();
 
     private final Transport transport;

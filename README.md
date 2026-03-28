@@ -101,8 +101,7 @@ try {
 ```java
 SmplkitClient client = SmplkitClient.builder()
     .apiKey("sk_api_...")
-    .baseUrl("https://config.smplkit.com")  // default
-    .timeout(Duration.ofSeconds(30))         // default
+    .timeout(Duration.ofSeconds(30))  // default
     .build();
 ```
 
