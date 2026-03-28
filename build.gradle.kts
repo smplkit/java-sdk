@@ -53,7 +53,7 @@ tasks.jacocoTestCoverageVerification {
                 value = "COVEREDRATIO"
                 minimum = "1.0".toBigDecimal()
             }
-            excludes = listOf("com.smplkit.internal.generated.*")
+            excludes = listOf("com.smplkit.internal.generated.**")
         }
     }
 }
