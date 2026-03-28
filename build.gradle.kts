@@ -46,6 +46,13 @@ tasks.jacocoTestReport {
 
 tasks.jacocoTestCoverageVerification {
     dependsOn(tasks.jacocoTestReport)
+    classDirectories.setFrom(
+        files(classDirectories.files.map {
+            fileTree(it) {
+                exclude("com/smplkit/internal/generated/**")
+            }
+        })
+    )
     violationRules {
         rule {
             limit {
@@ -53,7 +60,6 @@ tasks.jacocoTestCoverageVerification {
                 value = "COVEREDRATIO"
                 minimum = "1.0".toBigDecimal()
             }
-            excludes = listOf("com.smplkit.internal.generated.**")
         }
     }
 }
