@@ -22,7 +22,12 @@ repositories {
 }
 
 dependencies {
-    implementation("com.google.code.gson:gson:2.11.0")
+    // Generated client dependencies (Jackson-based, used by internal/generated/)
+    implementation("com.fasterxml.jackson.core:jackson-databind:2.17.1")
+    implementation("com.fasterxml.jackson.datatype:jackson-datatype-jsr310:2.17.1")
+    implementation("org.openapitools:jackson-databind-nullable:0.2.6")
+    compileOnly("jakarta.annotation:jakarta.annotation-api:2.1.1")
+
     testImplementation("org.junit.jupiter:junit-jupiter:5.10.2")
     testImplementation("org.mockito:mockito-core:5.11.0")
     testRuntimeOnly("org.junit.platform:junit-platform-launcher")

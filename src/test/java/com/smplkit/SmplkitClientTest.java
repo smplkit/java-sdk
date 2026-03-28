@@ -80,13 +80,4 @@ class SmplkitClientTest {
         assertNotNull(client);
         assertNotNull(client.config());
     }
-
-    @Test
-    void transport_returnsTransportInstance() {
-        try (SmplkitClient client = SmplkitClient.builder()
-                .apiKey("test-key")
-                .build()) {
-            assertNotNull(client.transport());
-        }
-    }
 }

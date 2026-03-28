@@ -1,0 +1,377 @@
+openapi: 3.1.0
+info:
+  description: Configuration management API for smplkit.
+  title: smplkit Config API
+  version: 0.1.0
+servers:
+- url: /
+paths:
+  /api/v1/configs:
+    get:
+      operationId: list_configs
+      parameters:
+      - explode: true
+        in: query
+        name: "filter[key]"
+        required: false
+        schema:
+          nullable: true
+          type: string
+        style: form
+      - explode: true
+        in: query
+        name: "filter[parent]"
+        required: false
+        schema:
+          nullable: true
+          type: string
+        style: form
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ConfigListResponse"
+          description: Successful Response
+        "422":
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/HTTPValidationError"
+          description: Validation Error
+      security:
+      - HTTPBearer: []
+      summary: List Configs
+      tags:
+      - Configs
+      x-accepts:
+      - application/json
+    post:
+      operationId: create_config
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/Response_Config_"
+        required: true
+      responses:
+        "201":
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ConfigResponse"
+          description: Successful Response
+        "422":
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/HTTPValidationError"
+          description: Validation Error
+      security:
+      - HTTPBearer: []
+      summary: Create Config
+      tags:
+      - Configs
+      x-content-type: application/json
+      x-accepts:
+      - application/json
+  /api/v1/configs/{id}:
+    delete:
+      operationId: delete_config
+      parameters:
+      - explode: false
+        in: path
+        name: id
+        required: true
+        schema:
+          format: uuid
+          title: Id
+          type: string
+        style: simple
+      responses:
+        "204":
+          description: Successful Response
+        "422":
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/HTTPValidationError"
+          description: Validation Error
+      security:
+      - HTTPBearer: []
+      summary: Delete Config
+      tags:
+      - Configs
+      x-accepts:
+      - application/json
+    get:
+      operationId: get_config
+      parameters:
+      - explode: false
+        in: path
+        name: id
+        required: true
+        schema:
+          format: uuid
+          title: Id
+          type: string
+        style: simple
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ConfigResponse"
+          description: Successful Response
+        "422":
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/HTTPValidationError"
+          description: Validation Error
+      security:
+      - HTTPBearer: []
+      summary: Get Config
+      tags:
+      - Configs
+      x-accepts:
+      - application/json
+    put:
+      operationId: update_config
+      parameters:
+      - explode: false
+        in: path
+        name: id
+        required: true
+        schema:
+          format: uuid
+          title: Id
+          type: string
+        style: simple
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/Response_Config_"
+        required: true
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ConfigResponse"
+          description: Successful Response
+        "422":
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/HTTPValidationError"
+          description: Validation Error
+      security:
+      - HTTPBearer: []
+      summary: Update Config
+      tags:
+      - Configs
+      x-content-type: application/json
+      x-accepts:
+      - application/json
+components:
+  schemas:
+    Config:
+      example:
+        description: Configuration for the user service.
+        environments: {}
+        key: user_service
+        name: User Service
+        parent: c837fa31-9c27-47e6-85e6-6e4c06bcf642
+        values:
+          max_retries: 3
+      properties:
+        key:
+          maxLength: 64
+          nullable: true
+          type: string
+        name:
+          maxLength: 255
+          title: Name
+          type: string
+        description:
+          maxLength: 1000
+          nullable: true
+          type: string
+        parent:
+          nullable: true
+          type: string
+        values:
+          additionalProperties: true
+          nullable: true
+          type: object
+        environments:
+          additionalProperties: true
+          nullable: true
+          type: object
+        created_at:
+          format: date-time
+          nullable: true
+          readOnly: true
+          type: string
+        updated_at:
+          format: date-time
+          nullable: true
+          readOnly: true
+          type: string
+      required:
+      - name
+      title: Config
+    ConfigListResponse:
+      example:
+        data:
+        - attributes:
+            description: Configuration for the user service.
+            environments: {}
+            key: user_service
+            name: User Service
+            parent: c837fa31-9c27-47e6-85e6-6e4c06bcf642
+            values:
+              max_retries: 3
+          id: id
+          type: config
+        - attributes:
+            description: Configuration for the user service.
+            environments: {}
+            key: user_service
+            name: User Service
+            parent: c837fa31-9c27-47e6-85e6-6e4c06bcf642
+            values:
+              max_retries: 3
+          id: id
+          type: config
+      properties:
+        data:
+          items:
+            $ref: "#/components/schemas/ConfigResource"
+          title: Data
+          type: array
+      required:
+      - data
+      title: ConfigListResponse
+    ConfigResource:
+      example:
+        attributes:
+          description: Configuration for the user service.
+          environments: {}
+          key: user_service
+          name: User Service
+          parent: c837fa31-9c27-47e6-85e6-6e4c06bcf642
+          values:
+            max_retries: 3
+        id: id
+        type: config
+      properties:
+        id:
+          nullable: true
+          type: string
+        type:
+          enum:
+          - config
+          title: Type
+          type: string
+        attributes:
+          $ref: "#/components/schemas/Config"
+      required:
+      - attributes
+      - type
+      title: ConfigResource
+    ConfigResponse:
+      example:
+        data:
+          attributes:
+            description: Configuration for the user service.
+            environments: {}
+            key: user_service
+            name: User Service
+            parent: c837fa31-9c27-47e6-85e6-6e4c06bcf642
+            values:
+              max_retries: 3
+          id: id
+          type: config
+      properties:
+        data:
+          $ref: "#/components/schemas/ConfigResource"
+      required:
+      - data
+      title: ConfigResponse
+    HTTPValidationError:
+      example:
+        detail:
+        - msg: msg
+          loc:
+          - Location_inner
+          - Location_inner
+          type: type
+        - msg: msg
+          loc:
+          - Location_inner
+          - Location_inner
+          type: type
+      properties:
+        detail:
+          items:
+            $ref: "#/components/schemas/ValidationError"
+          title: Detail
+          type: array
+      title: HTTPValidationError
+    Resource_Config_:
+      properties:
+        id:
+          nullable: true
+          type: string
+        type:
+          default: ""
+          title: Type
+          type: string
+        attributes:
+          $ref: "#/components/schemas/Config"
+      required:
+      - attributes
+      title: "Resource[Config]"
+    Response_Config_:
+      properties:
+        data:
+          $ref: "#/components/schemas/Resource_Config_"
+      required:
+      - data
+      title: "Response[Config]"
+    ValidationError:
+      example:
+        msg: msg
+        loc:
+        - Location_inner
+        - Location_inner
+        type: type
+      properties:
+        loc:
+          items:
+            $ref: "#/components/schemas/Location_inner"
+          title: Location
+          type: array
+        msg:
+          title: Message
+          type: string
+        type:
+          title: Error Type
+          type: string
+      required:
+      - loc
+      - msg
+      - type
+      title: ValidationError
+    Location_inner:
+      anyOf:
+      - type: string
+      - type: integer
+  securitySchemes:
+    HTTPBearer:
+      scheme: bearer
+      type: http
+

@@ -1,8 +1,8 @@
 package com.smplkit;
 
 import com.smplkit.config.ConfigClient;
-import com.smplkit.internal.Auth;
-import com.smplkit.internal.Transport;
+import com.smplkit.internal.generated.config.ApiClient;
+import com.smplkit.internal.generated.config.api.ConfigsApi;
 
 import java.net.http.HttpClient;
 import java.time.Duration;
@@ -23,9 +23,10 @@ import java.time.Duration;
  */
 public final class SmplkitClient implements AutoCloseable {
 
+    private static final String CONFIG_BASE_URL = "https://config.smplkit.com";
+
     private final ConfigClient config;
     private final HttpClient httpClient;
-    private final Transport transport;
 
     /**
      * Creates a new SmplkitClient. Package-private; use {@link #builder()}.
@@ -37,9 +38,7 @@ public final class SmplkitClient implements AutoCloseable {
         this.httpClient = HttpClient.newBuilder()
                 .connectTimeout(timeout)
                 .build();
-        Auth auth = new Auth(apiKey);
-        this.transport = new Transport(httpClient, auth, timeout);
-        this.config = new ConfigClient(transport);
+        this.config = buildConfigClient(httpClient, apiKey, timeout);
     }
 
     /**
@@ -51,9 +50,17 @@ public final class SmplkitClient implements AutoCloseable {
      */
     SmplkitClient(HttpClient httpClient, String apiKey, Duration timeout) {
         this.httpClient = httpClient;
-        Auth auth = new Auth(apiKey);
-        this.transport = new Transport(httpClient, auth, timeout);
-        this.config = new ConfigClient(transport);
+        this.config = buildConfigClient(httpClient, apiKey, timeout);
+    }
+
+    private static ConfigClient buildConfigClient(HttpClient httpClient, String apiKey, Duration timeout) {
+        ApiClient apiClient = new ApiClient();
+        apiClient.updateBaseUri(CONFIG_BASE_URL);
+        apiClient.setRequestInterceptor(
+                builder -> builder.header("Authorization", "Bearer " + apiKey));
+        apiClient.setReadTimeout(timeout);
+        ConfigsApi configsApi = new ConfigsApi(apiClient);
+        return new ConfigClient(configsApi, httpClient, apiKey);
     }
 
     /**
@@ -81,14 +88,5 @@ public final class SmplkitClient implements AutoCloseable {
     public void close() {
         // java.net.http.HttpClient does not require explicit closing in JDK 17,
         // but we implement AutoCloseable for forward compatibility and resource management.
-    }
-
-    /**
-     * Returns the underlying transport. Package-private for testing.
-     *
-     * @return the transport
-     */
-    Transport transport() {
-        return transport;
     }
 }
