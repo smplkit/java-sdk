@@ -8,6 +8,10 @@ java {
     }
 }
 
+repositories {
+    mavenCentral()
+}
+
 dependencies {
     implementation(rootProject)
 }
