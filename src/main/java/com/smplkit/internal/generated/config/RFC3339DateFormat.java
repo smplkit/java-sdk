@@ -21,7 +21,7 @@ import java.util.GregorianCalendar;
 import java.util.TimeZone;
 import com.fasterxml.jackson.databind.util.StdDateFormat;
 
-@jakarta.annotation.Generated(value = "org.openapitools.codegen.languages.JavaClientCodegen", date = "2026-03-28T05:49:10.427999-04:00[America/New_York]", comments = "Generator version: 7.21.0")
+@jakarta.annotation.Generated(value = "org.openapitools.codegen.languages.JavaClientCodegen", date = "2026-03-29T21:20:40.490016902Z[Etc/UTC]", comments = "Generator version: 7.21.0")
 public class RFC3339DateFormat extends DateFormat {
   private static final long serialVersionUID = 1L;
   private static final TimeZone TIMEZONE_Z = TimeZone.getTimeZone("UTC");
