@@ -54,6 +54,9 @@ public class ConfigShowcase {
         }
 
         // SmplClient is the entry point. API key is the only required argument.
+        // You can also omit the API key entirely — the SDK will resolve it from
+        // the SMPLKIT_API_KEY environment variable or ~/.smplkit config file.
+        // See the SDK README for details.
         // It implements AutoCloseable for try-with-resources.
         try (SmplClient client = SmplClient.builder()
                 .apiKey(apiKey)

@@ -45,9 +45,16 @@ class SmplClientTest {
     }
 
     @Test
-    void builderRequiresApiKey() {
+    void builderWithoutApiKeyOrEnv_throwsSmplException() {
+        // When no explicit key, no env var, and no config file, build() should throw
+        // SmplException. This test relies on SMPLKIT_API_KEY not being set in the
+        // test environment and ~/.smplkit not existing with a valid key.
+        // In CI this is always true.
         SmplClientBuilder builder = SmplClient.builder();
-        assertThrows(NullPointerException.class, builder::build);
+        String envKey = System.getenv("SMPLKIT_API_KEY");
+        if (envKey == null || envKey.isEmpty()) {
+            assertThrows(com.smplkit.errors.SmplException.class, builder::build);
+        }
     }
 
     @Test
@@ -60,6 +67,35 @@ class SmplClientTest {
     void builderRejectsNullTimeout() {
         assertThrows(NullPointerException.class, () ->
                 SmplClient.builder().timeout(null));
+    }
+
+    @Test
+    void createNoArg_coversStaticFactory() throws Exception {
+        // Set SMPLKIT_API_KEY via reflection so create() resolves successfully.
+        setEnv("SMPLKIT_API_KEY", "sk_api_test_create");
+        try {
+            SmplClient result = SmplClient.create();
+            assertNotNull(result);
+            result.close();
+        } finally {
+            clearEnv("SMPLKIT_API_KEY");
+        }
+    }
+
+    @SuppressWarnings("unchecked")
+    private static void setEnv(String key, String value) throws Exception {
+        var env = System.getenv();
+        var field = env.getClass().getDeclaredField("m");
+        field.setAccessible(true);
+        ((java.util.Map<String, String>) field.get(env)).put(key, value);
+    }
+
+    @SuppressWarnings("unchecked")
+    private static void clearEnv(String key) throws Exception {
+        var env = System.getenv();
+        var field = env.getClass().getDeclaredField("m");
+        field.setAccessible(true);
+        ((java.util.Map<String, String>) field.get(env)).remove(key);
     }
 
     @Test

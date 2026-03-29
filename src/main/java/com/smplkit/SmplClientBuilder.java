@@ -48,11 +48,15 @@ public final class SmplClientBuilder {
     /**
      * Builds and returns a new {@link SmplClient}.
      *
+     * <p>If no API key was set via {@link #apiKey(String)}, the builder resolves
+     * it from the {@code SMPLKIT_API_KEY} environment variable or the
+     * {@code ~/.smplkit} configuration file.</p>
+     *
      * @return the configured client
-     * @throws NullPointerException if apiKey has not been set
+     * @throws com.smplkit.errors.SmplException if no API key can be resolved
      */
     public SmplClient build() {
-        Objects.requireNonNull(apiKey, "apiKey must be set before calling build()");
-        return new SmplClient(apiKey, timeout);
+        String resolvedKey = ApiKeyResolver.resolve(apiKey);
+        return new SmplClient(resolvedKey, timeout);
     }
 }

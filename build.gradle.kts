@@ -35,6 +35,8 @@ dependencies {
 
 tasks.test {
     useJUnitPlatform()
+    // Allow env var manipulation via reflection in tests (Java 17+ module system)
+    jvmArgs("--add-opens", "java.base/java.util=ALL-UNNAMED")
 }
 
 tasks.jacocoTestReport {

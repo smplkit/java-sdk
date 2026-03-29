@@ -36,6 +36,24 @@ implementation 'com.smplkit:smplkit-sdk:1.0.0'
 
 ```java
 import com.smplkit.SmplClient;
+
+// Option 1: Explicit API key
+SmplClient client = SmplClient.builder()
+    .apiKey("sk_api_...")
+    .build();
+
+// Option 2: Environment variable (SMPLKIT_API_KEY)
+// export SMPLKIT_API_KEY=sk_api_...
+SmplClient client2 = SmplClient.create();
+
+// Option 3: Configuration file (~/.smplkit)
+// [default]
+// api_key = "sk_api_..."
+SmplClient client3 = SmplClient.create();
+```
+
+```java
+import com.smplkit.SmplClient;
 import com.smplkit.config.Config;
 import com.smplkit.config.CreateConfigParams;
 
@@ -68,6 +86,19 @@ try (SmplClient client = SmplClient.builder()
 ```
 
 ## Configuration
+
+The API key is resolved using the following priority:
+
+1. **Explicit argument:** Call `.apiKey()` on the builder or use `SmplClient.create(apiKey)`.
+2. **Environment variable:** Set `SMPLKIT_API_KEY`.
+3. **Configuration file:** Add `api_key` under `[default]` in `~/.smplkit` (TOML format):
+
+```toml
+[default]
+api_key = "sk_api_..."
+```
+
+If none of these are set, the SDK throws `SmplException` with a message listing all three methods.
 
 ```java
 import java.time.Duration;

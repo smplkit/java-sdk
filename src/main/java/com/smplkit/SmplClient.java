@@ -73,6 +73,28 @@ public final class SmplClient implements AutoCloseable {
     }
 
     /**
+     * Creates a new {@link SmplClient} with automatic API key resolution.
+     * The API key is resolved from the {@code SMPLKIT_API_KEY} environment
+     * variable or the {@code ~/.smplkit} configuration file.
+     *
+     * @return a new client
+     * @throws com.smplkit.errors.SmplException if no API key can be resolved
+     */
+    public static SmplClient create() {
+        return builder().build();
+    }
+
+    /**
+     * Creates a new {@link SmplClient} with the given API key.
+     *
+     * @param apiKey the API key
+     * @return a new client
+     */
+    public static SmplClient create(String apiKey) {
+        return builder().apiKey(apiKey).build();
+    }
+
+    /**
      * Returns a new builder for constructing {@link SmplClient} instances.
      *
      * @return a new builder
