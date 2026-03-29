@@ -4,7 +4,8 @@
 #
 # Prerequisites:
 #   - openapi-generator installed (https://openapi-generator.tech)
-#     brew install openapi-generator
+#     Homebrew:  brew install openapi-generator
+#     npm:       npm install -g @openapitools/openapi-generator-cli
 #
 # Usage:
 #   ./scripts/generate.sh
@@ -16,7 +17,19 @@ PROJECT_DIR="$(dirname "$SCRIPT_DIR")"
 SPEC_DIR="$PROJECT_DIR/openapi"
 SOURCE_ROOT="$PROJECT_DIR/src/main/java"
 
-echo "Regenerating clients from OpenAPI specs..."
+# Find openapi-generator (Homebrew: openapi-generator, npm: openapi-generator-cli)
+if command -v openapi-generator >/dev/null 2>&1; then
+    OPENAPI_GEN="openapi-generator"
+elif command -v openapi-generator-cli >/dev/null 2>&1; then
+    OPENAPI_GEN="openapi-generator-cli"
+else
+    echo "Error: openapi-generator not found."
+    echo "Install via: brew install openapi-generator"
+    echo "         or: npm install -g @openapitools/openapi-generator-cli"
+    exit 1
+fi
+
+echo "Regenerating clients from OpenAPI specs (using $OPENAPI_GEN)..."
 
 for spec in "$SPEC_DIR"/*.json; do
     name=$(basename "$spec" .json)
@@ -29,7 +42,7 @@ for spec in "$SPEC_DIR"/*.json; do
     # Maven project scaffolding (pom.xml, README, test files, etc.)
     temp_dir=$(mktemp -d)
 
-    openapi-generator generate \
+    $OPENAPI_GEN generate \
         -i "$spec" \
         -g java \
         -o "$temp_dir" \

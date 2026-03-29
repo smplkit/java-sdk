@@ -1,8 +1,8 @@
 .PHONY: install generate
 
 install:
-	# Gradle manages its own dependencies; ensure wrapper is executable
 	chmod +x gradlew
+	npm install -g @openapitools/openapi-generator-cli
 
 generate:
 	./scripts/generate.sh
