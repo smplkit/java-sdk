@@ -50,7 +50,7 @@ import java.util.Map;
 import java.util.Set;
 import java.util.function.Consumer;
 
-@jakarta.annotation.Generated(value = "org.openapitools.codegen.languages.JavaClientCodegen", date = "2026-03-29T21:20:46.570847387Z[Etc/UTC]", comments = "Generator version: 7.21.0")
+@jakarta.annotation.Generated(value = "org.openapitools.codegen.languages.JavaClientCodegen", date = "2026-03-29T17:28:41.860861-04:00[America/New_York]", comments = "Generator version: 7.21.0")
 public class LoggersApi {
   /**
    * Utility class for extending HttpRequest.Builder functionality.

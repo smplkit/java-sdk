@@ -51,7 +51,7 @@ import com.smplkit.internal.generated.app.ApiClient;
   ApiKey.JSON_PROPERTY_UPDATED_AT,
   ApiKey.JSON_PROPERTY_DATA
 })
-@jakarta.annotation.Generated(value = "org.openapitools.codegen.languages.JavaClientCodegen", date = "2026-03-29T21:20:36.674864626Z[Etc/UTC]", comments = "Generator version: 7.21.0")
+@jakarta.annotation.Generated(value = "org.openapitools.codegen.languages.JavaClientCodegen", date = "2026-03-29T17:28:39.959187-04:00[America/New_York]", comments = "Generator version: 7.21.0")
 public class ApiKey {
   public static final String JSON_PROPERTY_NAME = "name";
   @jakarta.annotation.Nonnull
