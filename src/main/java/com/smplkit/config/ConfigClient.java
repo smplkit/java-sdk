@@ -6,9 +6,14 @@ import com.smplkit.errors.SmplNotFoundException;
 import com.smplkit.errors.SmplValidationException;
 import com.smplkit.internal.generated.config.ApiException;
 import com.smplkit.internal.generated.config.api.ConfigsApi;
+import com.smplkit.internal.generated.config.model.ConfigInput;
+import com.smplkit.internal.generated.config.model.ConfigItemDefinition;
+import com.smplkit.internal.generated.config.model.ConfigItemOverride;
 import com.smplkit.internal.generated.config.model.ConfigListResponse;
+import com.smplkit.internal.generated.config.model.ConfigOutput;
 import com.smplkit.internal.generated.config.model.ConfigResource;
 import com.smplkit.internal.generated.config.model.ConfigResponse;
+import com.smplkit.internal.generated.config.model.EnvironmentOverride;
 import com.smplkit.internal.generated.config.model.ResourceConfig;
 import com.smplkit.internal.generated.config.model.ResponseConfig;
 
@@ -96,8 +101,7 @@ public final class ConfigClient {
      */
     public Config create(CreateConfigParams params) {
         try {
-            com.smplkit.internal.generated.config.model.Config attrs =
-                    new com.smplkit.internal.generated.config.model.Config();
+            ConfigInput attrs = new ConfigInput();
             attrs.setName(params.name());
             if (params.key() != null) {
                 attrs.setKey(params.key());
@@ -109,7 +113,7 @@ public final class ConfigClient {
                 attrs.setParent(params.parent());
             }
             if (params.values() != null) {
-                attrs.setValues(params.values());
+                attrs.setItems(wrapValuesAsItems(params.values()));
             }
 
             ResourceConfig data = new ResourceConfig()
@@ -174,12 +178,11 @@ public final class ConfigClient {
         try {
             String name = params.name() != null ? params.name() : config.name();
             String description = params.description() != null ? params.description() : config.description();
-            Map<String, Object> values = params.values() != null ? params.values() : config.values();
+            Map<String, Object> items = params.values() != null ? params.values() : config.items();
             Map<String, Map<String, Object>> environments =
                     params.environments() != null ? params.environments() : config.environments();
 
-            com.smplkit.internal.generated.config.model.Config attrs =
-                    new com.smplkit.internal.generated.config.model.Config();
+            ConfigInput attrs = new ConfigInput();
             attrs.setName(name);
             if (description != null) {
                 attrs.setDescription(description);
@@ -188,13 +191,11 @@ public final class ConfigClient {
             if (config.parent() != null) {
                 attrs.setParent(config.parent());
             }
-            if (values != null) {
-                attrs.setValues(new HashMap<>(values));
+            if (items != null) {
+                attrs.setItems(wrapValuesAsItems(items));
             }
             if (environments != null) {
-                // Flatten environments map for the API: Map<String, Map<String,Object>> → Map<String, Object>
-                Map<String, Object> flatEnvs = flattenEnvironments(environments);
-                attrs.setEnvironments(flatEnvs);
+                attrs.setEnvironments(wrapEnvironments(environments));
             }
 
             ResourceConfig data = new ResourceConfig()
@@ -276,7 +277,7 @@ public final class ConfigClient {
 
         List<ConfigRuntime.ChainEntry> chain = new ArrayList<>();
         for (Config c : configChain) {
-            chain.add(new ConfigRuntime.ChainEntry(c.id(), c.values(), c.environments()));
+            chain.add(new ConfigRuntime.ChainEntry(c.id(), c.items(), c.environments()));
         }
 
         // fetchChainFn for refresh/reconnect — re-fetches the same chain
@@ -306,33 +307,50 @@ public final class ConfigClient {
         List<ConfigRuntime.ChainEntry> entries = new ArrayList<>(ids.size());
         for (String id : ids) {
             Config c = get(id);
-            entries.add(new ConfigRuntime.ChainEntry(c.id(), c.values(), c.environments()));
+            entries.add(new ConfigRuntime.ChainEntry(c.id(), c.items(), c.environments()));
         }
         return entries;
     }
 
-    @SuppressWarnings("unchecked")
+    /**
+     * Parses a generated ConfigResource into the SDK's Config record.
+     *
+     * <p>Extracts raw values from typed item definitions and environment overrides.</p>
+     */
     private Config parseResource(ConfigResource resource) {
         String id = resource.getId();
-        com.smplkit.internal.generated.config.model.Config attrs = resource.getAttributes();
+        ConfigOutput attrs = resource.getAttributes();
 
         String key = attrs.getKey();
         String name = attrs.getName();
         String description = attrs.getDescription();
         String parent = attrs.getParent();
 
-        Map<String, Object> values = attrs.getValues();
-        if (values == null) values = Map.of();
+        // Extract raw values from typed items: {key: ConfigItemDefinition} -> {key: rawValue}
+        Map<String, Object> items = new HashMap<>();
+        Map<String, ConfigItemDefinition> rawItems = attrs.getItems();
+        if (rawItems != null) {
+            for (Map.Entry<String, ConfigItemDefinition> entry : rawItems.entrySet()) {
+                items.put(entry.getKey(), entry.getValue().getValue());
+            }
+        }
 
-        // The generated model uses Map<String, Object> for environments,
-        // but runtime expects Map<String, Map<String, Object>>.
+        // Extract environments with raw values from overrides
         Map<String, Map<String, Object>> environments = new HashMap<>();
-        Map<String, Object> rawEnvs = attrs.getEnvironments();
+        Map<String, EnvironmentOverride> rawEnvs = attrs.getEnvironments();
         if (rawEnvs != null) {
-            for (Map.Entry<String, Object> entry : rawEnvs.entrySet()) {
-                if (entry.getValue() instanceof Map) {
-                    environments.put(entry.getKey(), (Map<String, Object>) entry.getValue());
+            for (Map.Entry<String, EnvironmentOverride> envEntry : rawEnvs.entrySet()) {
+                EnvironmentOverride override = envEntry.getValue();
+                Map<String, Object> envData = new HashMap<>();
+                Map<String, ConfigItemOverride> envValues = override.getValues();
+                if (envValues != null) {
+                    Map<String, Object> extractedValues = new HashMap<>();
+                    for (Map.Entry<String, ConfigItemOverride> valEntry : envValues.entrySet()) {
+                        extractedValues.put(valEntry.getKey(), valEntry.getValue().getValue());
+                    }
+                    envData.put("values", extractedValues);
                 }
+                environments.put(envEntry.getKey(), envData);
             }
         }
 
@@ -345,21 +363,61 @@ public final class ConfigClient {
                 name != null ? name : "",
                 description,
                 parent,
-                values,
+                items,
                 environments,
                 createdAt,
                 updatedAt
         );
     }
 
-    /** Flattens Map&lt;String,Map&lt;String,Object&gt;&gt; → Map&lt;String,Object&gt; for the API. */
+    /**
+     * Wraps raw values as typed items for the API.
+     * Each value is wrapped as a ConfigItemDefinition with inferred type.
+     */
+    private static Map<String, ConfigItemDefinition> wrapValuesAsItems(Map<String, Object> values) {
+        Map<String, ConfigItemDefinition> items = new HashMap<>();
+        for (Map.Entry<String, Object> entry : values.entrySet()) {
+            ConfigItemDefinition def = new ConfigItemDefinition();
+            def.setValue(entry.getValue());
+            def.setType(inferType(entry.getValue()));
+            items.put(entry.getKey(), def);
+        }
+        return items;
+    }
+
+    /**
+     * Wraps environments for the API: converts raw value maps to EnvironmentOverride
+     * with ConfigItemOverride wrappers.
+     */
     @SuppressWarnings("unchecked")
-    private static Map<String, Object> flattenEnvironments(Map<String, Map<String, Object>> environments) {
-        Map<String, Object> result = new HashMap<>();
+    private static Map<String, EnvironmentOverride> wrapEnvironments(
+            Map<String, Map<String, Object>> environments) {
+        Map<String, EnvironmentOverride> result = new HashMap<>();
         for (Map.Entry<String, Map<String, Object>> entry : environments.entrySet()) {
-            result.put(entry.getKey(), entry.getValue());
+            EnvironmentOverride override = new EnvironmentOverride();
+            Map<String, Object> envData = entry.getValue();
+            Object rawValues = envData.get("values");
+            if (rawValues instanceof Map) {
+                Map<String, Object> valuesMap = (Map<String, Object>) rawValues;
+                Map<String, ConfigItemOverride> wrappedValues = new HashMap<>();
+                for (Map.Entry<String, Object> valEntry : valuesMap.entrySet()) {
+                    ConfigItemOverride itemOverride = new ConfigItemOverride();
+                    itemOverride.setValue(valEntry.getValue());
+                    wrappedValues.put(valEntry.getKey(), itemOverride);
+                }
+                override.setValues(wrappedValues);
+            }
+            result.put(entry.getKey(), override);
         }
         return result;
+    }
+
+    /** Infers the type string for a value. */
+    private static ConfigItemDefinition.TypeEnum inferType(Object value) {
+        if (value instanceof String) return ConfigItemDefinition.TypeEnum.STRING;
+        if (value instanceof Number) return ConfigItemDefinition.TypeEnum.NUMBER;
+        if (value instanceof Boolean) return ConfigItemDefinition.TypeEnum.BOOLEAN;
+        return ConfigItemDefinition.TypeEnum.JSON;
     }
 
     private static SmplException mapException(ApiException e) {

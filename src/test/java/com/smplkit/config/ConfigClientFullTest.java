@@ -4,15 +4,20 @@ import com.smplkit.errors.SmplException;
 import com.smplkit.errors.SmplNotFoundException;
 import com.smplkit.internal.generated.config.ApiException;
 import com.smplkit.internal.generated.config.api.ConfigsApi;
+import com.smplkit.internal.generated.config.model.ConfigItemDefinition;
+import com.smplkit.internal.generated.config.model.ConfigItemOverride;
 import com.smplkit.internal.generated.config.model.ConfigListResponse;
+import com.smplkit.internal.generated.config.model.ConfigOutput;
 import com.smplkit.internal.generated.config.model.ConfigResource;
 import com.smplkit.internal.generated.config.model.ConfigResponse;
+import com.smplkit.internal.generated.config.model.EnvironmentOverride;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;
 
 import java.net.http.HttpClient;
 import java.time.OffsetDateTime;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
@@ -41,15 +46,14 @@ class ConfigClientFullTest {
     }
 
     private ConfigResource makeResource(String id, String key, String name, String description,
-                                        String parent, Map<String, Object> values,
-                                        Map<String, Object> environments) {
-        com.smplkit.internal.generated.config.model.Config attrs =
-                new com.smplkit.internal.generated.config.model.Config(null, null);
+                                        String parent, Map<String, ConfigItemDefinition> items,
+                                        Map<String, EnvironmentOverride> environments) {
+        ConfigOutput attrs = new ConfigOutput(null, null);
         if (name != null) attrs.setName(name); else attrs.setName("");
         if (key != null) attrs.setKey(key);
         if (description != null) attrs.setDescription(description);
         if (parent != null) attrs.setParent(parent);
-        if (values != null) attrs.setValues(values);
+        if (items != null) attrs.setItems(items);
         if (environments != null) attrs.setEnvironments(environments);
 
         ConfigResource resource = new ConfigResource();
@@ -57,6 +61,29 @@ class ConfigClientFullTest {
         resource.setType(ConfigResource.TypeEnum.CONFIG);
         resource.setAttributes(attrs);
         return resource;
+    }
+
+    /** Helper to create a typed item definition with a raw value. */
+    private static ConfigItemDefinition itemDef(Object value, ConfigItemDefinition.TypeEnum type) {
+        ConfigItemDefinition def = new ConfigItemDefinition();
+        def.setValue(value);
+        def.setType(type);
+        return def;
+    }
+
+    /** Helper to create an environment override with wrapped values. */
+    private static EnvironmentOverride envOverride(Map<String, Object> rawValues) {
+        EnvironmentOverride override = new EnvironmentOverride();
+        if (rawValues != null) {
+            Map<String, ConfigItemOverride> wrapped = new HashMap<>();
+            for (Map.Entry<String, Object> entry : rawValues.entrySet()) {
+                ConfigItemOverride item = new ConfigItemOverride();
+                item.setValue(entry.getValue());
+                wrapped.put(entry.getKey(), item);
+            }
+            override.setValues(wrapped);
+        }
+        return override;
     }
 
     private ConfigResponse singleResponse(ConfigResource resource) {
@@ -72,7 +99,7 @@ class ConfigClientFullTest {
     }
 
     // -----------------------------------------------------------------------
-    // getByKey() — ApiException path (line 85-86)
+    // getByKey() — ApiException path
     // -----------------------------------------------------------------------
 
     @Test
@@ -86,7 +113,7 @@ class ConfigClientFullTest {
     }
 
     // -----------------------------------------------------------------------
-    // list() — ApiException path (lines 144-145)
+    // list() — ApiException path
     // -----------------------------------------------------------------------
 
     @Test
@@ -100,7 +127,7 @@ class ConfigClientFullTest {
     }
 
     // -----------------------------------------------------------------------
-    // update() — with parent preservation (line 189) and null description
+    // update() — with parent preservation and null description
     // -----------------------------------------------------------------------
 
     @Test
@@ -110,7 +137,8 @@ class ConfigClientFullTest {
                 Map.of("a", 1), Map.of(), null, null);
 
         ConfigResource resource = makeResource(CONFIG_ID, "svc", "Name", null,
-                PARENT_ID, Map.of("a", 1), Map.of());
+                PARENT_ID, Map.of("a", itemDef(1, ConfigItemDefinition.TypeEnum.NUMBER)),
+                Map.of());
         when(mockApi.updateConfig(eq(UUID.fromString(CONFIG_ID)), any()))
                 .thenReturn(singleResponse(resource));
 
@@ -130,7 +158,6 @@ class ConfigClientFullTest {
                 null, Map.of(), Map.of());
         when(mockApi.updateConfig(any(), any())).thenReturn(singleResponse(resource));
 
-        // Both existing.description() and params.description() are null
         UpdateConfigParams params = UpdateConfigParams.builder().build();
         Config result = configClient.update(existing, params);
 
@@ -151,16 +178,17 @@ class ConfigClientFullTest {
     }
 
     // -----------------------------------------------------------------------
-    // connect() with parent chain — exercises fetchChain lambda
+    // connect() with parent chain
     // -----------------------------------------------------------------------
 
     @Test
     void connect_withMultipleLevelChain_buildsFullChain() throws ApiException {
-        // grandparent -> parent -> child
         ConfigResource grandparent = makeResource(GRANDPARENT_ID, "gp", "Grandparent", null,
-                null, Map.of("x", 1), Map.of());
+                null, Map.of("x", itemDef(1, ConfigItemDefinition.TypeEnum.NUMBER)),
+                Map.of());
         ConfigResource parent = makeResource(PARENT_ID, "parent", "Parent", null,
-                GRANDPARENT_ID, Map.of("y", 2), Map.of());
+                GRANDPARENT_ID, Map.of("y", itemDef(2, ConfigItemDefinition.TypeEnum.NUMBER)),
+                Map.of());
 
         when(mockApi.getConfig(UUID.fromString(PARENT_ID)))
                 .thenReturn(singleResponse(parent));
@@ -179,30 +207,27 @@ class ConfigClientFullTest {
     }
 
     // -----------------------------------------------------------------------
-    // parseResource — environments with non-Map entries (line 333-334)
+    // parseResource — environments with empty override
     // -----------------------------------------------------------------------
 
     @Test
-    void get_resourceWithNonMapEnvironmentEntry_isSkipped() throws ApiException {
-        // An environment entry whose value is not a Map should be skipped
-        Map<String, Object> envs = new java.util.HashMap<>();
-        envs.put("production", Map.of("values", Map.of("a", 1)));
-        envs.put("bad_entry", "this is not a map");
+    void get_resourceWithEmptyEnvironmentOverride_handledGracefully() throws ApiException {
+        EnvironmentOverride emptyOverride = new EnvironmentOverride();
 
         ConfigResource resource = makeResource(CONFIG_ID, "svc", "Name", null,
-                null, Map.of(), envs);
+                null, Map.of(), Map.of("production", envOverride(Map.of("a", 1)),
+                        "staging", emptyOverride));
         when(mockApi.getConfig(UUID.fromString(CONFIG_ID)))
                 .thenReturn(singleResponse(resource));
 
         Config config = configClient.get(CONFIG_ID);
 
-        // Only "production" should be in environments, "bad_entry" should be skipped
         assertTrue(config.environments().containsKey("production"));
-        assertFalse(config.environments().containsKey("bad_entry"));
+        assertTrue(config.environments().containsKey("staging"));
     }
 
     // -----------------------------------------------------------------------
-    // parseResource — null id from resource (line 343)
+    // parseResource — null id from resource
     // -----------------------------------------------------------------------
 
     @Test
@@ -217,7 +242,7 @@ class ConfigClientFullTest {
     }
 
     // -----------------------------------------------------------------------
-    // mapException — null message (line 368)
+    // mapException — null message
     // -----------------------------------------------------------------------
 
     @Test
@@ -231,14 +256,14 @@ class ConfigClientFullTest {
     }
 
     // -----------------------------------------------------------------------
-    // connect() + refresh() — exercises fetchChain (lines 296, 305-311)
+    // connect() + refresh()
     // -----------------------------------------------------------------------
 
     @Test
     void connect_thenRefresh_exercisesFetchChain() throws ApiException {
-        // Root config, no parent
         ConfigResource resource = makeResource(CONFIG_ID, "svc", "Svc",
-                null, null, Map.of("a", 1), Map.of());
+                null, null, Map.of("a", itemDef(1, ConfigItemDefinition.TypeEnum.NUMBER)),
+                Map.of());
         when(mockApi.getConfig(UUID.fromString(CONFIG_ID)))
                 .thenReturn(singleResponse(resource));
 
@@ -249,13 +274,12 @@ class ConfigClientFullTest {
         try (ConfigRuntime runtime = configClient.connect(config, "prod")) {
             assertEquals(1, runtime.get("a"));
 
-            // Now update mock to return different values for the refresh
             ConfigResource updated = makeResource(CONFIG_ID, "svc", "Svc",
-                    null, null, Map.of("a", 99), Map.of());
+                    null, null, Map.of("a", itemDef(99, ConfigItemDefinition.TypeEnum.NUMBER)),
+                    Map.of());
             when(mockApi.getConfig(UUID.fromString(CONFIG_ID)))
                     .thenReturn(singleResponse(updated));
 
-            // Refresh triggers fetchChain which calls get() on each ID
             runtime.refresh();
 
             assertEquals(99, runtime.get("a"));
@@ -268,7 +292,6 @@ class ConfigClientFullTest {
 
     @Test
     void setValues_existingEnvWithoutValuesKey_createsNewValuesMap() throws ApiException {
-        // Env data exists but has no "values" key
         Map<String, Object> existingEnv = new java.util.HashMap<>();
         existingEnv.put("other", "data");
 
@@ -277,7 +300,7 @@ class ConfigClientFullTest {
                 Map.of("production", existingEnv), null, null);
 
         ConfigResource resource = makeResource(CONFIG_ID, "svc", "Name", null,
-                null, Map.of(), Map.of("production", Map.of("values", Map.of("key", "val"))));
+                null, Map.of(), Map.of("production", envOverride(Map.of("key", "val"))));
         when(mockApi.updateConfig(any(), any())).thenReturn(singleResponse(resource));
 
         Config result = configClient.setValues(existing, Map.of("key", "val"), "production");

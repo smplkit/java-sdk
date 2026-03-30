@@ -6,16 +6,20 @@ import com.smplkit.errors.SmplValidationException;
 import com.smplkit.errors.SmplException;
 import com.smplkit.internal.generated.config.ApiException;
 import com.smplkit.internal.generated.config.api.ConfigsApi;
-import com.smplkit.internal.generated.config.model.Config;
+import com.smplkit.internal.generated.config.model.ConfigItemDefinition;
+import com.smplkit.internal.generated.config.model.ConfigItemOverride;
 import com.smplkit.internal.generated.config.model.ConfigListResponse;
+import com.smplkit.internal.generated.config.model.ConfigOutput;
 import com.smplkit.internal.generated.config.model.ConfigResource;
 import com.smplkit.internal.generated.config.model.ConfigResponse;
+import com.smplkit.internal.generated.config.model.EnvironmentOverride;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;
 
 import java.net.http.HttpClient;
 import java.time.OffsetDateTime;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
@@ -48,16 +52,15 @@ class ConfigClientTest {
     // -----------------------------------------------------------------------
 
     private ConfigResource makeResource(String id, String key, String name, String description,
-                                        String parent, Map<String, Object> values,
-                                        Map<String, Object> environments,
+                                        String parent, Map<String, ConfigItemDefinition> items,
+                                        Map<String, EnvironmentOverride> environments,
                                         OffsetDateTime createdAt, OffsetDateTime updatedAt) {
-        // Use @JsonCreator constructor for timestamps; setters for other fields
-        Config attrs = new Config(createdAt, updatedAt);
+        ConfigOutput attrs = new ConfigOutput(createdAt, updatedAt);
         if (name != null) attrs.setName(name); else attrs.setName("");
         if (key != null) attrs.setKey(key);
         if (description != null) attrs.setDescription(description);
         if (parent != null) attrs.setParent(parent);
-        if (values != null) attrs.setValues(values);
+        if (items != null) attrs.setItems(items);
         if (environments != null) attrs.setEnvironments(environments);
 
         ConfigResource resource = new ConfigResource();
@@ -65,6 +68,29 @@ class ConfigClientTest {
         resource.setType(ConfigResource.TypeEnum.CONFIG);
         resource.setAttributes(attrs);
         return resource;
+    }
+
+    /** Helper to create a typed item definition with a raw value. */
+    private static ConfigItemDefinition itemDef(Object value, ConfigItemDefinition.TypeEnum type) {
+        ConfigItemDefinition def = new ConfigItemDefinition();
+        def.setValue(value);
+        def.setType(type);
+        return def;
+    }
+
+    /** Helper to create an environment override with wrapped values. */
+    private static EnvironmentOverride envOverride(Map<String, Object> rawValues) {
+        EnvironmentOverride override = new EnvironmentOverride();
+        if (rawValues != null) {
+            Map<String, ConfigItemOverride> wrapped = new HashMap<>();
+            for (Map.Entry<String, Object> entry : rawValues.entrySet()) {
+                ConfigItemOverride item = new ConfigItemOverride();
+                item.setValue(entry.getValue());
+                wrapped.put(entry.getKey(), item);
+            }
+            override.setValues(wrapped);
+        }
+        return override;
     }
 
     private ConfigResponse singleResponse(ConfigResource resource) {
@@ -87,7 +113,9 @@ class ConfigClientTest {
     void getById_returnsConfig() throws ApiException {
         OffsetDateTime now = OffsetDateTime.now();
         ConfigResource resource = makeResource(CONFIG_ID, "user_service", "User Service",
-                "Main user service config", null, Map.of("timeout", 30), Map.of(), now, now);
+                "Main user service config", null,
+                Map.of("timeout", itemDef(30, ConfigItemDefinition.TypeEnum.NUMBER)),
+                Map.of(), now, now);
         when(mockApi.getConfig(UUID.fromString(CONFIG_ID))).thenReturn(singleResponse(resource));
 
         com.smplkit.config.Config config = configClient.get(CONFIG_ID);
@@ -97,7 +125,7 @@ class ConfigClientTest {
         assertEquals("User Service", config.name());
         assertEquals("Main user service config", config.description());
         assertNull(config.parent());
-        assertEquals(30, config.values().get("timeout"));
+        assertEquals(30, config.items().get("timeout"));
         assertNotNull(config.createdAt());
         assertNotNull(config.updatedAt());
     }
@@ -112,7 +140,7 @@ class ConfigClientTest {
         assertEquals("", config.key());
         assertEquals("", config.name());
         assertNull(config.description());
-        assertTrue(config.values().isEmpty());
+        assertTrue(config.items().isEmpty());
         assertTrue(config.environments().isEmpty());
         assertNull(config.createdAt());
         assertNull(config.updatedAt());
@@ -219,7 +247,9 @@ class ConfigClientTest {
     @Test
     void create_sendsBodyAndReturnsConfig() throws ApiException {
         ConfigResource resource = makeResource(CONFIG_ID, "user_service", "User Service",
-                "Main user service config", null, Map.of("timeout", 30), Map.of(), null, null);
+                "Main user service config", null,
+                Map.of("timeout", itemDef(30, ConfigItemDefinition.TypeEnum.NUMBER)),
+                Map.of(), null, null);
         when(mockApi.createConfig(any())).thenReturn(singleResponse(resource));
 
         CreateConfigParams params = CreateConfigParams.builder("User Service")
@@ -309,7 +339,8 @@ class ConfigClientTest {
                 Map.of("a", 1), Map.of(), null, null);
 
         ConfigResource updated = makeResource(CONFIG_ID, "svc", "New Name", "New desc",
-                null, Map.of("a", 2), Map.of(), null, null);
+                null, Map.of("a", itemDef(2, ConfigItemDefinition.TypeEnum.NUMBER)),
+                Map.of(), null, null);
         when(mockApi.updateConfig(eq(UUID.fromString(CONFIG_ID)), any()))
                 .thenReturn(singleResponse(updated));
 
@@ -331,7 +362,8 @@ class ConfigClientTest {
                 Map.of("x", 10), Map.of(), null, null);
 
         ConfigResource resource = makeResource(CONFIG_ID, "svc", "My Name", "My Desc",
-                null, Map.of("x", 10), Map.of(), null, null);
+                null, Map.of("x", itemDef(10, ConfigItemDefinition.TypeEnum.NUMBER)),
+                Map.of(), null, null);
         when(mockApi.updateConfig(any(), any())).thenReturn(singleResponse(resource));
 
         // No fields set on params — everything should be preserved
@@ -347,7 +379,8 @@ class ConfigClientTest {
                 CONFIG_ID, "svc", "Name", null, null, Map.of(), Map.of(), null, null);
 
         ConfigResource resource = makeResource(CONFIG_ID, "svc", "Name", null, null,
-                Map.of(), Map.of("production", Map.of("values", Map.of("k", "v"))), null, null);
+                Map.of(), Map.of("production", envOverride(Map.of("k", "v"))),
+                null, null);
         when(mockApi.updateConfig(any(), any())).thenReturn(singleResponse(resource));
 
         UpdateConfigParams params = UpdateConfigParams.builder()
@@ -373,7 +406,8 @@ class ConfigClientTest {
                 Map.of("production", existingEnv), null, null);
 
         ConfigResource resource = makeResource(CONFIG_ID, "svc", "Name", null, null,
-                Map.of(), Map.of("production", Map.of("values", Map.of("a", 1, "b", 2))), null, null);
+                Map.of(), Map.of("production", envOverride(Map.of("a", 1, "b", 2))),
+                null, null);
         when(mockApi.updateConfig(any(), any())).thenReturn(singleResponse(resource));
 
         com.smplkit.config.Config result = configClient.setValues(existing, Map.of("b", 2), "production");
@@ -388,7 +422,8 @@ class ConfigClientTest {
                 CONFIG_ID, "svc", "Name", null, null, Map.of(), Map.of(), null, null);
 
         ConfigResource resource = makeResource(CONFIG_ID, "svc", "Name", null, null,
-                Map.of(), Map.of("staging", Map.of("values", Map.of("key", "val"))), null, null);
+                Map.of(), Map.of("staging", envOverride(Map.of("key", "val"))),
+                null, null);
         when(mockApi.updateConfig(any(), any())).thenReturn(singleResponse(resource));
 
         com.smplkit.config.Config result = configClient.setValues(existing, Map.of("key", "val"), "staging");
@@ -406,7 +441,8 @@ class ConfigClientTest {
                 CONFIG_ID, "svc", "Name", null, null, Map.of(), Map.of(), null, null);
 
         ConfigResource resource = makeResource(CONFIG_ID, "svc", "Name", null, null,
-                Map.of(), Map.of("production", Map.of("values", Map.of("timeout", 60))), null, null);
+                Map.of(), Map.of("production", envOverride(Map.of("timeout", 60))),
+                null, null);
         when(mockApi.updateConfig(any(), any())).thenReturn(singleResponse(resource));
 
         com.smplkit.config.Config result = configClient.setValue(existing, "timeout", 60, "production");
@@ -422,7 +458,9 @@ class ConfigClientTest {
     void connect_rootConfig_returnsRuntimeWithValues() throws ApiException {
         // Config with no parent — chain is just [config]
         ConfigResource resource = makeResource(CONFIG_ID, "user_service", "User Service",
-                null, null, Map.of("timeout", 30), Map.of(), null, null);
+                null, null,
+                Map.of("timeout", itemDef(30, ConfigItemDefinition.TypeEnum.NUMBER)),
+                Map.of(), null, null);
         when(mockApi.getConfig(UUID.fromString(CONFIG_ID))).thenReturn(singleResponse(resource));
 
         com.smplkit.config.Config config = new com.smplkit.config.Config(
@@ -438,7 +476,8 @@ class ConfigClientTest {
     void connect_withParent_buildsChain() throws ApiException {
         // Child config whose parent is another config
         ConfigResource parent = makeResource(CONFIG_ID, "common", "Common", null, null,
-                Map.of("shared", "yes"), Map.of(), null, null);
+                Map.of("shared", itemDef("yes", ConfigItemDefinition.TypeEnum.STRING)),
+                Map.of(), null, null);
         when(mockApi.getConfig(UUID.fromString(CONFIG_ID))).thenReturn(singleResponse(parent));
 
         com.smplkit.config.Config childConfig = new com.smplkit.config.Config(
@@ -493,10 +532,10 @@ class ConfigClientTest {
     }
 
     @Test
-    void configRecord_nullValues_defaultToEmptyMap() {
+    void configRecord_nullItems_defaultToEmptyMap() {
         com.smplkit.config.Config config = new com.smplkit.config.Config("id1", "key1", "name", null, null, null, null, null, null);
-        assertNotNull(config.values());
-        assertTrue(config.values().isEmpty());
+        assertNotNull(config.items());
+        assertTrue(config.items().isEmpty());
         assertNotNull(config.environments());
         assertTrue(config.environments().isEmpty());
     }

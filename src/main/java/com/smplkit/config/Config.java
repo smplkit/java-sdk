@@ -7,13 +7,17 @@ import java.util.Objects;
 /**
  * Immutable representation of a configuration resource from the Smpl Config service.
  *
+ * <p>Items contain extracted raw values for runtime compatibility.
+ * The API returns typed item definitions, but this record stores
+ * the unwrapped raw values keyed by item name.</p>
+ *
  * @param id           unique identifier (UUID)
  * @param key          human-readable key (e.g., "user_service")
  * @param name         display name
  * @param description  optional description (may be null)
  * @param parent       parent config UUID, or null for root configs
- * @param values       base values map
- * @param environments map of environment names to their override maps
+ * @param items        base items map (raw values extracted from typed definitions)
+ * @param environments map of environment names to their override maps (raw values extracted)
  * @param createdAt    creation timestamp (may be null)
  * @param updatedAt    last-modified timestamp (may be null)
  */
@@ -23,7 +27,7 @@ public record Config(
         String name,
         String description,
         String parent,
-        Map<String, Object> values,
+        Map<String, Object> items,
         Map<String, Map<String, Object>> environments,
         Instant createdAt,
         Instant updatedAt
@@ -35,7 +39,7 @@ public record Config(
         Objects.requireNonNull(id, "id must not be null");
         Objects.requireNonNull(key, "key must not be null");
         Objects.requireNonNull(name, "name must not be null");
-        values = values != null ? Map.copyOf(values) : Map.of();
+        items = items != null ? Map.copyOf(items) : Map.of();
         environments = environments != null ? Map.copyOf(environments) : Map.of();
     }
 
