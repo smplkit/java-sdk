@@ -42,7 +42,7 @@ import com.smplkit.internal.generated.app.ApiClient;
   Limit.JSON_PROPERTY_UNIT,
   Limit.JSON_PROPERTY_DISPLAY_FORMAT
 })
-@jakarta.annotation.Generated(value = "org.openapitools.codegen.languages.JavaClientCodegen", date = "2026-03-29T17:28:39.959187-04:00[America/New_York]", comments = "Generator version: 7.21.0")
+@jakarta.annotation.Generated(value = "org.openapitools.codegen.languages.JavaClientCodegen", date = "2026-03-30T09:45:20.125008942Z[Etc/UTC]", comments = "Generator version: 7.21.0")
 public class Limit {
   public static final String JSON_PROPERTY_DISPLAY_NAME = "display_name";
   @jakarta.annotation.Nonnull

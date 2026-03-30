@@ -1,6 +1,6 @@
 /*
- * smplkit Logging API
- * API for the smplkit logging service.
+ * smplkit Config API
+ * Configuration management API for smplkit.
  *
  * The version of the OpenAPI document: 0.1.0
  * 
@@ -11,7 +11,7 @@
  */
 
 
-package com.smplkit.internal.generated.logging.model;
+package com.smplkit.internal.generated.config.model;
 
 import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
@@ -24,11 +24,11 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonTypeName;
 import com.fasterxml.jackson.annotation.JsonValue;
+import com.smplkit.internal.generated.config.model.ConfigItemDefinition;
+import com.smplkit.internal.generated.config.model.EnvironmentOverride;
 import java.time.OffsetDateTime;
-import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 import org.openapitools.jackson.nullable.JsonNullable;
 import com.fasterxml.jackson.annotation.JsonIgnore;
@@ -37,22 +37,22 @@ import java.util.NoSuchElementException;
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 
 
-import com.smplkit.internal.generated.logging.ApiClient;
+import com.smplkit.internal.generated.config.ApiClient;
 /**
- * Logger
+ * ConfigInput
  */
 @JsonPropertyOrder({
-  Logger.JSON_PROPERTY_KEY,
-  Logger.JSON_PROPERTY_NAME,
-  Logger.JSON_PROPERTY_DESCRIPTION,
-  Logger.JSON_PROPERTY_ALIASES,
-  Logger.JSON_PROPERTY_DEFAULT,
-  Logger.JSON_PROPERTY_ENVIRONMENTS,
-  Logger.JSON_PROPERTY_CREATED_AT,
-  Logger.JSON_PROPERTY_UPDATED_AT
+  ConfigInput.JSON_PROPERTY_KEY,
+  ConfigInput.JSON_PROPERTY_NAME,
+  ConfigInput.JSON_PROPERTY_DESCRIPTION,
+  ConfigInput.JSON_PROPERTY_PARENT,
+  ConfigInput.JSON_PROPERTY_ITEMS,
+  ConfigInput.JSON_PROPERTY_ENVIRONMENTS,
+  ConfigInput.JSON_PROPERTY_CREATED_AT,
+  ConfigInput.JSON_PROPERTY_UPDATED_AT
 })
-@jakarta.annotation.Generated(value = "org.openapitools.codegen.languages.JavaClientCodegen", date = "2026-03-30T09:45:30.156356670Z[Etc/UTC]", comments = "Generator version: 7.21.0")
-public class Logger {
+@jakarta.annotation.Generated(value = "org.openapitools.codegen.languages.JavaClientCodegen", date = "2026-03-30T09:45:24.441527397Z[Etc/UTC]", comments = "Generator version: 7.21.0")
+public class ConfigInput {
   public static final String JSON_PROPERTY_KEY = "key";
   private JsonNullable<String> key = JsonNullable.<String>undefined();
 
@@ -63,15 +63,14 @@ public class Logger {
   public static final String JSON_PROPERTY_DESCRIPTION = "description";
   private JsonNullable<String> description = JsonNullable.<String>undefined();
 
-  public static final String JSON_PROPERTY_ALIASES = "aliases";
-  private JsonNullable<List<String>> aliases = JsonNullable.<List<String>>undefined();
+  public static final String JSON_PROPERTY_PARENT = "parent";
+  private JsonNullable<String> parent = JsonNullable.<String>undefined();
 
-  public static final String JSON_PROPERTY_DEFAULT = "default";
-  @jakarta.annotation.Nonnull
-  private String _default;
+  public static final String JSON_PROPERTY_ITEMS = "items";
+  private JsonNullable<Map<String, ConfigItemDefinition>> items = JsonNullable.<Map<String, ConfigItemDefinition>>undefined();
 
   public static final String JSON_PROPERTY_ENVIRONMENTS = "environments";
-  private JsonNullable<Map<String, Object>> environments = JsonNullable.<Map<String, Object>>undefined();
+  private JsonNullable<Map<String, EnvironmentOverride>> environments = JsonNullable.<Map<String, EnvironmentOverride>>undefined();
 
   public static final String JSON_PROPERTY_CREATED_AT = "created_at";
   private JsonNullable<OffsetDateTime> createdAt = JsonNullable.<OffsetDateTime>undefined();
@@ -79,11 +78,11 @@ public class Logger {
   public static final String JSON_PROPERTY_UPDATED_AT = "updated_at";
   private JsonNullable<OffsetDateTime> updatedAt = JsonNullable.<OffsetDateTime>undefined();
 
-  public Logger() { 
+  public ConfigInput() { 
   }
 
   @JsonCreator
-  public Logger(
+  public ConfigInput(
     @JsonProperty(JSON_PROPERTY_CREATED_AT) OffsetDateTime createdAt, 
     @JsonProperty(JSON_PROPERTY_UPDATED_AT) OffsetDateTime updatedAt
   ) {
@@ -92,7 +91,7 @@ public class Logger {
     this.updatedAt = updatedAt == null ? JsonNullable.<OffsetDateTime>undefined() : JsonNullable.of(updatedAt);
   }
 
-  public Logger key(@jakarta.annotation.Nullable String key) {
+  public ConfigInput key(@jakarta.annotation.Nullable String key) {
     this.key = JsonNullable.<String>of(key);
     return this;
   }
@@ -124,7 +123,7 @@ public class Logger {
   }
 
 
-  public Logger name(@jakarta.annotation.Nonnull String name) {
+  public ConfigInput name(@jakarta.annotation.Nonnull String name) {
     this.name = name;
     return this;
   }
@@ -148,7 +147,7 @@ public class Logger {
   }
 
 
-  public Logger description(@jakarta.annotation.Nullable String description) {
+  public ConfigInput description(@jakarta.annotation.Nullable String description) {
     this.description = JsonNullable.<String>of(description);
     return this;
   }
@@ -180,17 +179,49 @@ public class Logger {
   }
 
 
-  public Logger aliases(@jakarta.annotation.Nullable List<String> aliases) {
-    this.aliases = JsonNullable.<List<String>>of(aliases);
+  public ConfigInput parent(@jakarta.annotation.Nullable String parent) {
+    this.parent = JsonNullable.<String>of(parent);
     return this;
   }
 
-  public Logger addAliasesItem(String aliasesItem) {
-    if (this.aliases == null || !this.aliases.isPresent()) {
-      this.aliases = JsonNullable.<List<String>>of(new ArrayList<>());
+  /**
+   * Get parent
+   * @return parent
+   */
+  @jakarta.annotation.Nullable
+  @JsonIgnore
+  public String getParent() {
+        return parent.orElse(null);
+  }
+
+  @JsonProperty(value = JSON_PROPERTY_PARENT, required = false)
+  @JsonInclude(value = JsonInclude.Include.USE_DEFAULTS)
+
+  public JsonNullable<String> getParent_JsonNullable() {
+    return parent;
+  }
+  
+  @JsonProperty(JSON_PROPERTY_PARENT)
+  public void setParent_JsonNullable(JsonNullable<String> parent) {
+    this.parent = parent;
+  }
+
+  public void setParent(@jakarta.annotation.Nullable String parent) {
+    this.parent = JsonNullable.<String>of(parent);
+  }
+
+
+  public ConfigInput items(@jakarta.annotation.Nullable Map<String, ConfigItemDefinition> items) {
+    this.items = JsonNullable.<Map<String, ConfigItemDefinition>>of(items);
+    return this;
+  }
+
+  public ConfigInput putItemsItem(String key, ConfigItemDefinition itemsItem) {
+    if (this.items == null || !this.items.isPresent()) {
+      this.items = JsonNullable.<Map<String, ConfigItemDefinition>>of(new HashMap<>());
     }
     try {
-      this.aliases.get().add(aliasesItem);
+      this.items.get().put(key, itemsItem);
     } catch (java.util.NoSuchElementException e) {
       // this can never happen, as we make sure above that the value is present
     }
@@ -198,64 +229,40 @@ public class Logger {
   }
 
   /**
-   * Get aliases
-   * @return aliases
+   * Get items
+   * @return items
    */
   @jakarta.annotation.Nullable
   @JsonIgnore
-  public List<String> getAliases() {
-        return aliases.orElse(null);
+  public Map<String, ConfigItemDefinition> getItems() {
+        return items.orElse(null);
   }
 
-  @JsonProperty(value = JSON_PROPERTY_ALIASES, required = false)
+  @JsonProperty(value = JSON_PROPERTY_ITEMS, required = false)
   @JsonInclude(value = JsonInclude.Include.USE_DEFAULTS)
 
-  public JsonNullable<List<String>> getAliases_JsonNullable() {
-    return aliases;
+  public JsonNullable<Map<String, ConfigItemDefinition>> getItems_JsonNullable() {
+    return items;
   }
   
-  @JsonProperty(JSON_PROPERTY_ALIASES)
-  public void setAliases_JsonNullable(JsonNullable<List<String>> aliases) {
-    this.aliases = aliases;
+  @JsonProperty(JSON_PROPERTY_ITEMS)
+  public void setItems_JsonNullable(JsonNullable<Map<String, ConfigItemDefinition>> items) {
+    this.items = items;
   }
 
-  public void setAliases(@jakarta.annotation.Nullable List<String> aliases) {
-    this.aliases = JsonNullable.<List<String>>of(aliases);
+  public void setItems(@jakarta.annotation.Nullable Map<String, ConfigItemDefinition> items) {
+    this.items = JsonNullable.<Map<String, ConfigItemDefinition>>of(items);
   }
 
 
-  public Logger _default(@jakarta.annotation.Nonnull String _default) {
-    this._default = _default;
+  public ConfigInput environments(@jakarta.annotation.Nullable Map<String, EnvironmentOverride> environments) {
+    this.environments = JsonNullable.<Map<String, EnvironmentOverride>>of(environments);
     return this;
   }
 
-  /**
-   * Get _default
-   * @return _default
-   */
-  @jakarta.annotation.Nonnull
-  @JsonProperty(value = JSON_PROPERTY_DEFAULT, required = true)
-  @JsonInclude(value = JsonInclude.Include.ALWAYS)
-  public String getDefault() {
-    return _default;
-  }
-
-
-  @JsonProperty(value = JSON_PROPERTY_DEFAULT, required = true)
-  @JsonInclude(value = JsonInclude.Include.ALWAYS)
-  public void setDefault(@jakarta.annotation.Nonnull String _default) {
-    this._default = _default;
-  }
-
-
-  public Logger environments(@jakarta.annotation.Nullable Map<String, Object> environments) {
-    this.environments = JsonNullable.<Map<String, Object>>of(environments);
-    return this;
-  }
-
-  public Logger putEnvironmentsItem(String key, Object environmentsItem) {
+  public ConfigInput putEnvironmentsItem(String key, EnvironmentOverride environmentsItem) {
     if (this.environments == null || !this.environments.isPresent()) {
-      this.environments = JsonNullable.<Map<String, Object>>of(new HashMap<>());
+      this.environments = JsonNullable.<Map<String, EnvironmentOverride>>of(new HashMap<>());
     }
     try {
       this.environments.get().put(key, environmentsItem);
@@ -271,24 +278,24 @@ public class Logger {
    */
   @jakarta.annotation.Nullable
   @JsonIgnore
-  public Map<String, Object> getEnvironments() {
+  public Map<String, EnvironmentOverride> getEnvironments() {
         return environments.orElse(null);
   }
 
   @JsonProperty(value = JSON_PROPERTY_ENVIRONMENTS, required = false)
-  @JsonInclude(content = JsonInclude.Include.ALWAYS, value = JsonInclude.Include.USE_DEFAULTS)
+  @JsonInclude(value = JsonInclude.Include.USE_DEFAULTS)
 
-  public JsonNullable<Map<String, Object>> getEnvironments_JsonNullable() {
+  public JsonNullable<Map<String, EnvironmentOverride>> getEnvironments_JsonNullable() {
     return environments;
   }
   
   @JsonProperty(JSON_PROPERTY_ENVIRONMENTS)
-  public void setEnvironments_JsonNullable(JsonNullable<Map<String, Object>> environments) {
+  public void setEnvironments_JsonNullable(JsonNullable<Map<String, EnvironmentOverride>> environments) {
     this.environments = environments;
   }
 
-  public void setEnvironments(@jakarta.annotation.Nullable Map<String, Object> environments) {
-    this.environments = JsonNullable.<Map<String, Object>>of(environments);
+  public void setEnvironments(@jakarta.annotation.Nullable Map<String, EnvironmentOverride> environments) {
+    this.environments = JsonNullable.<Map<String, EnvironmentOverride>>of(environments);
   }
 
 
@@ -349,7 +356,7 @@ public class Logger {
 
 
   /**
-   * Return true if this Logger object is equal to o.
+   * Return true if this Config-Input object is equal to o.
    */
   @Override
   public boolean equals(Object o) {
@@ -359,15 +366,15 @@ public class Logger {
     if (o == null || getClass() != o.getClass()) {
       return false;
     }
-    Logger logger = (Logger) o;
-    return equalsNullable(this.key, logger.key) &&
-        Objects.equals(this.name, logger.name) &&
-        equalsNullable(this.description, logger.description) &&
-        equalsNullable(this.aliases, logger.aliases) &&
-        Objects.equals(this._default, logger._default) &&
-        equalsNullable(this.environments, logger.environments) &&
-        equalsNullable(this.createdAt, logger.createdAt) &&
-        equalsNullable(this.updatedAt, logger.updatedAt);
+    ConfigInput configInput = (ConfigInput) o;
+    return equalsNullable(this.key, configInput.key) &&
+        Objects.equals(this.name, configInput.name) &&
+        equalsNullable(this.description, configInput.description) &&
+        equalsNullable(this.parent, configInput.parent) &&
+        equalsNullable(this.items, configInput.items) &&
+        equalsNullable(this.environments, configInput.environments) &&
+        equalsNullable(this.createdAt, configInput.createdAt) &&
+        equalsNullable(this.updatedAt, configInput.updatedAt);
   }
 
   private static <T> boolean equalsNullable(JsonNullable<T> a, JsonNullable<T> b) {
@@ -376,7 +383,7 @@ public class Logger {
 
   @Override
   public int hashCode() {
-    return Objects.hash(hashCodeNullable(key), name, hashCodeNullable(description), hashCodeNullable(aliases), _default, hashCodeNullable(environments), hashCodeNullable(createdAt), hashCodeNullable(updatedAt));
+    return Objects.hash(hashCodeNullable(key), name, hashCodeNullable(description), hashCodeNullable(parent), hashCodeNullable(items), hashCodeNullable(environments), hashCodeNullable(createdAt), hashCodeNullable(updatedAt));
   }
 
   private static <T> int hashCodeNullable(JsonNullable<T> a) {
@@ -389,12 +396,12 @@ public class Logger {
   @Override
   public String toString() {
     StringBuilder sb = new StringBuilder();
-    sb.append("class Logger {\n");
+    sb.append("class ConfigInput {\n");
     sb.append("    key: ").append(toIndentedString(key)).append("\n");
     sb.append("    name: ").append(toIndentedString(name)).append("\n");
     sb.append("    description: ").append(toIndentedString(description)).append("\n");
-    sb.append("    aliases: ").append(toIndentedString(aliases)).append("\n");
-    sb.append("    _default: ").append(toIndentedString(_default)).append("\n");
+    sb.append("    parent: ").append(toIndentedString(parent)).append("\n");
+    sb.append("    items: ").append(toIndentedString(items)).append("\n");
     sb.append("    environments: ").append(toIndentedString(environments)).append("\n");
     sb.append("    createdAt: ").append(toIndentedString(createdAt)).append("\n");
     sb.append("    updatedAt: ").append(toIndentedString(updatedAt)).append("\n");
@@ -457,26 +464,28 @@ public class Logger {
       joiner.add(String.format(java.util.Locale.ROOT, "%sdescription%s=%s", prefix, suffix, ApiClient.urlEncode(ApiClient.valueToString(getDescription()))));
     }
 
-    // add `aliases` to the URL query string
-    if (getAliases() != null) {
-      for (int i = 0; i < getAliases().size(); i++) {
-        joiner.add(String.format(java.util.Locale.ROOT, "%saliases%s%s=%s", prefix, suffix,
-            "".equals(suffix) ? "" : String.format(java.util.Locale.ROOT, "%s%d%s", containerPrefix, i, containerSuffix),
-            ApiClient.urlEncode(ApiClient.valueToString(getAliases().get(i)))));
-      }
+    // add `parent` to the URL query string
+    if (getParent() != null) {
+      joiner.add(String.format(java.util.Locale.ROOT, "%sparent%s=%s", prefix, suffix, ApiClient.urlEncode(ApiClient.valueToString(getParent()))));
     }
 
-    // add `default` to the URL query string
-    if (getDefault() != null) {
-      joiner.add(String.format(java.util.Locale.ROOT, "%sdefault%s=%s", prefix, suffix, ApiClient.urlEncode(ApiClient.valueToString(getDefault()))));
+    // add `items` to the URL query string
+    if (getItems() != null) {
+      for (String _key : getItems().keySet()) {
+        if (getItems().get(_key) != null) {
+          joiner.add(getItems().get(_key).toUrlQueryString(String.format(java.util.Locale.ROOT, "%sitems%s%s", prefix, suffix,
+              "".equals(suffix) ? "" : String.format(java.util.Locale.ROOT, "%s%d%s", containerPrefix, _key, containerSuffix))));
+        }
+      }
     }
 
     // add `environments` to the URL query string
     if (getEnvironments() != null) {
       for (String _key : getEnvironments().keySet()) {
-        joiner.add(String.format(java.util.Locale.ROOT, "%senvironments%s%s=%s", prefix, suffix,
-            "".equals(suffix) ? "" : String.format(java.util.Locale.ROOT, "%s%d%s", containerPrefix, _key, containerSuffix),
-            getEnvironments().get(_key), ApiClient.urlEncode(ApiClient.valueToString(getEnvironments().get(_key)))));
+        if (getEnvironments().get(_key) != null) {
+          joiner.add(getEnvironments().get(_key).toUrlQueryString(String.format(java.util.Locale.ROOT, "%senvironments%s%s", prefix, suffix,
+              "".equals(suffix) ? "" : String.format(java.util.Locale.ROOT, "%s%d%s", containerPrefix, _key, containerSuffix))));
+        }
       }
     }
 

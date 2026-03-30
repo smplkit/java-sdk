@@ -1,6 +1,6 @@
 /*
- * smplkit API
- * API for the smplkit platform.
+ * smplkit Config API
+ * Configuration management API for smplkit.
  *
  * The version of the OpenAPI document: 0.1.0
  * 
@@ -11,7 +11,7 @@
  */
 
 
-package com.smplkit.internal.generated.app.model;
+package com.smplkit.internal.generated.config.model;
 
 import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
@@ -24,53 +24,52 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonTypeName;
 import com.fasterxml.jackson.annotation.JsonValue;
-import com.smplkit.internal.generated.app.model.EnvironmentResource;
 import java.util.Arrays;
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 
 
-import com.smplkit.internal.generated.app.ApiClient;
+import com.smplkit.internal.generated.config.ApiClient;
 /**
- * EnvironmentResponse
+ * Schema for an environment override — value only, no type/description.
  */
 @JsonPropertyOrder({
-  EnvironmentResponse.JSON_PROPERTY_DATA
+  ConfigItemOverride.JSON_PROPERTY_VALUE
 })
-@jakarta.annotation.Generated(value = "org.openapitools.codegen.languages.JavaClientCodegen", date = "2026-03-30T09:45:20.125008942Z[Etc/UTC]", comments = "Generator version: 7.21.0")
-public class EnvironmentResponse {
-  public static final String JSON_PROPERTY_DATA = "data";
-  @jakarta.annotation.Nonnull
-  private EnvironmentResource data;
+@jakarta.annotation.Generated(value = "org.openapitools.codegen.languages.JavaClientCodegen", date = "2026-03-30T09:45:24.441527397Z[Etc/UTC]", comments = "Generator version: 7.21.0")
+public class ConfigItemOverride {
+  public static final String JSON_PROPERTY_VALUE = "value";
+  @jakarta.annotation.Nullable
+  private Object value = null;
 
-  public EnvironmentResponse() { 
+  public ConfigItemOverride() { 
   }
 
-  public EnvironmentResponse data(@jakarta.annotation.Nonnull EnvironmentResource data) {
-    this.data = data;
+  public ConfigItemOverride value(@jakarta.annotation.Nullable Object value) {
+    this.value = value;
     return this;
   }
 
   /**
-   * Get data
-   * @return data
+   * Get value
+   * @return value
    */
-  @jakarta.annotation.Nonnull
-  @JsonProperty(value = JSON_PROPERTY_DATA, required = true)
+  @jakarta.annotation.Nullable
+  @JsonProperty(value = JSON_PROPERTY_VALUE, required = false)
   @JsonInclude(value = JsonInclude.Include.ALWAYS)
-  public EnvironmentResource getData() {
-    return data;
+  public Object getValue() {
+    return value;
   }
 
 
-  @JsonProperty(value = JSON_PROPERTY_DATA, required = true)
+  @JsonProperty(value = JSON_PROPERTY_VALUE, required = false)
   @JsonInclude(value = JsonInclude.Include.ALWAYS)
-  public void setData(@jakarta.annotation.Nonnull EnvironmentResource data) {
-    this.data = data;
+  public void setValue(@jakarta.annotation.Nullable Object value) {
+    this.value = value;
   }
 
 
   /**
-   * Return true if this EnvironmentResponse object is equal to o.
+   * Return true if this ConfigItemOverride object is equal to o.
    */
   @Override
   public boolean equals(Object o) {
@@ -80,20 +79,20 @@ public class EnvironmentResponse {
     if (o == null || getClass() != o.getClass()) {
       return false;
     }
-    EnvironmentResponse environmentResponse = (EnvironmentResponse) o;
-    return Objects.equals(this.data, environmentResponse.data);
+    ConfigItemOverride configItemOverride = (ConfigItemOverride) o;
+    return Objects.equals(this.value, configItemOverride.value);
   }
 
   @Override
   public int hashCode() {
-    return Objects.hash(data);
+    return Objects.hash(value);
   }
 
   @Override
   public String toString() {
     StringBuilder sb = new StringBuilder();
-    sb.append("class EnvironmentResponse {\n");
-    sb.append("    data: ").append(toIndentedString(data)).append("\n");
+    sb.append("class ConfigItemOverride {\n");
+    sb.append("    value: ").append(toIndentedString(value)).append("\n");
     sb.append("}");
     return sb.toString();
   }
@@ -138,9 +137,9 @@ public class EnvironmentResponse {
 
     StringJoiner joiner = new StringJoiner("&");
 
-    // add `data` to the URL query string
-    if (getData() != null) {
-      joiner.add(getData().toUrlQueryString(prefix + "data" + suffix));
+    // add `value` to the URL query string
+    if (getValue() != null) {
+      joiner.add(String.format(java.util.Locale.ROOT, "%svalue%s=%s", prefix, suffix, ApiClient.urlEncode(ApiClient.valueToString(getValue()))));
     }
 
     return joiner.toString();
