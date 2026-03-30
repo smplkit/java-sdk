@@ -24,7 +24,6 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonTypeName;
 import com.fasterxml.jackson.annotation.JsonValue;
-import com.smplkit.internal.generated.config.model.ConfigOutput;
 import java.util.Arrays;
 import org.openapitools.jackson.nullable.JsonNullable;
 import com.fasterxml.jackson.annotation.JsonIgnore;
@@ -35,23 +34,30 @@ import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 
 import com.smplkit.internal.generated.config.ApiClient;
 /**
- * ConfigResource
+ * Schema for a single config item.
  */
 @JsonPropertyOrder({
-  ConfigResource.JSON_PROPERTY_ID,
-  ConfigResource.JSON_PROPERTY_TYPE,
-  ConfigResource.JSON_PROPERTY_ATTRIBUTES
+  ConfigItemDefinition.JSON_PROPERTY_VALUE,
+  ConfigItemDefinition.JSON_PROPERTY_TYPE,
+  ConfigItemDefinition.JSON_PROPERTY_DESCRIPTION
 })
 @jakarta.annotation.Generated(value = "org.openapitools.codegen.languages.JavaClientCodegen", date = "2026-03-30T09:45:24.441527397Z[Etc/UTC]", comments = "Generator version: 7.21.0")
-public class ConfigResource {
-  public static final String JSON_PROPERTY_ID = "id";
-  private JsonNullable<String> id = JsonNullable.<String>undefined();
+public class ConfigItemDefinition {
+  public static final String JSON_PROPERTY_VALUE = "value";
+  @jakarta.annotation.Nullable
+  private Object value = null;
 
   /**
    * Gets or Sets type
    */
   public enum TypeEnum {
-    CONFIG(String.valueOf("config"));
+    STRING(String.valueOf("STRING")),
+    
+    NUMBER(String.valueOf("NUMBER")),
+    
+    BOOLEAN(String.valueOf("BOOLEAN")),
+    
+    JSON(String.valueOf("JSON"));
 
     private String value;
 
@@ -76,55 +82,45 @@ public class ConfigResource {
           return b;
         }
       }
-      throw new IllegalArgumentException("Unexpected value '" + value + "'");
+      return null;
     }
   }
 
   public static final String JSON_PROPERTY_TYPE = "type";
-  @jakarta.annotation.Nonnull
-  private TypeEnum type;
+  private JsonNullable<TypeEnum> type = JsonNullable.<TypeEnum>undefined();
 
-  public static final String JSON_PROPERTY_ATTRIBUTES = "attributes";
-  @jakarta.annotation.Nonnull
-  private ConfigOutput attributes;
+  public static final String JSON_PROPERTY_DESCRIPTION = "description";
+  private JsonNullable<String> description = JsonNullable.<String>undefined();
 
-  public ConfigResource() { 
+  public ConfigItemDefinition() { 
   }
 
-  public ConfigResource id(@jakarta.annotation.Nullable String id) {
-    this.id = JsonNullable.<String>of(id);
+  public ConfigItemDefinition value(@jakarta.annotation.Nullable Object value) {
+    this.value = value;
     return this;
   }
 
   /**
-   * Get id
-   * @return id
+   * Get value
+   * @return value
    */
   @jakarta.annotation.Nullable
-  @JsonIgnore
-  public String getId() {
-        return id.orElse(null);
-  }
-
-  @JsonProperty(value = JSON_PROPERTY_ID, required = false)
-  @JsonInclude(value = JsonInclude.Include.USE_DEFAULTS)
-
-  public JsonNullable<String> getId_JsonNullable() {
-    return id;
-  }
-  
-  @JsonProperty(JSON_PROPERTY_ID)
-  public void setId_JsonNullable(JsonNullable<String> id) {
-    this.id = id;
-  }
-
-  public void setId(@jakarta.annotation.Nullable String id) {
-    this.id = JsonNullable.<String>of(id);
+  @JsonProperty(value = JSON_PROPERTY_VALUE, required = false)
+  @JsonInclude(value = JsonInclude.Include.ALWAYS)
+  public Object getValue() {
+    return value;
   }
 
 
-  public ConfigResource type(@jakarta.annotation.Nonnull TypeEnum type) {
-    this.type = type;
+  @JsonProperty(value = JSON_PROPERTY_VALUE, required = false)
+  @JsonInclude(value = JsonInclude.Include.ALWAYS)
+  public void setValue(@jakarta.annotation.Nullable Object value) {
+    this.value = value;
+  }
+
+
+  public ConfigItemDefinition type(@jakarta.annotation.Nullable TypeEnum type) {
+    this.type = JsonNullable.<TypeEnum>of(type);
     return this;
   }
 
@@ -132,47 +128,63 @@ public class ConfigResource {
    * Get type
    * @return type
    */
-  @jakarta.annotation.Nonnull
-  @JsonProperty(value = JSON_PROPERTY_TYPE, required = true)
-  @JsonInclude(value = JsonInclude.Include.ALWAYS)
+  @jakarta.annotation.Nullable
+  @JsonIgnore
   public TypeEnum getType() {
-    return type;
+        return type.orElse(null);
   }
 
+  @JsonProperty(value = JSON_PROPERTY_TYPE, required = false)
+  @JsonInclude(value = JsonInclude.Include.USE_DEFAULTS)
 
-  @JsonProperty(value = JSON_PROPERTY_TYPE, required = true)
-  @JsonInclude(value = JsonInclude.Include.ALWAYS)
-  public void setType(@jakarta.annotation.Nonnull TypeEnum type) {
+  public JsonNullable<TypeEnum> getType_JsonNullable() {
+    return type;
+  }
+  
+  @JsonProperty(JSON_PROPERTY_TYPE)
+  public void setType_JsonNullable(JsonNullable<TypeEnum> type) {
     this.type = type;
   }
 
+  public void setType(@jakarta.annotation.Nullable TypeEnum type) {
+    this.type = JsonNullable.<TypeEnum>of(type);
+  }
 
-  public ConfigResource attributes(@jakarta.annotation.Nonnull ConfigOutput attributes) {
-    this.attributes = attributes;
+
+  public ConfigItemDefinition description(@jakarta.annotation.Nullable String description) {
+    this.description = JsonNullable.<String>of(description);
     return this;
   }
 
   /**
-   * Get attributes
-   * @return attributes
+   * Get description
+   * @return description
    */
-  @jakarta.annotation.Nonnull
-  @JsonProperty(value = JSON_PROPERTY_ATTRIBUTES, required = true)
-  @JsonInclude(value = JsonInclude.Include.ALWAYS)
-  public ConfigOutput getAttributes() {
-    return attributes;
+  @jakarta.annotation.Nullable
+  @JsonIgnore
+  public String getDescription() {
+        return description.orElse(null);
   }
 
+  @JsonProperty(value = JSON_PROPERTY_DESCRIPTION, required = false)
+  @JsonInclude(value = JsonInclude.Include.USE_DEFAULTS)
 
-  @JsonProperty(value = JSON_PROPERTY_ATTRIBUTES, required = true)
-  @JsonInclude(value = JsonInclude.Include.ALWAYS)
-  public void setAttributes(@jakarta.annotation.Nonnull ConfigOutput attributes) {
-    this.attributes = attributes;
+  public JsonNullable<String> getDescription_JsonNullable() {
+    return description;
+  }
+  
+  @JsonProperty(JSON_PROPERTY_DESCRIPTION)
+  public void setDescription_JsonNullable(JsonNullable<String> description) {
+    this.description = description;
+  }
+
+  public void setDescription(@jakarta.annotation.Nullable String description) {
+    this.description = JsonNullable.<String>of(description);
   }
 
 
   /**
-   * Return true if this ConfigResource object is equal to o.
+   * Return true if this ConfigItemDefinition object is equal to o.
    */
   @Override
   public boolean equals(Object o) {
@@ -182,10 +194,10 @@ public class ConfigResource {
     if (o == null || getClass() != o.getClass()) {
       return false;
     }
-    ConfigResource configResource = (ConfigResource) o;
-    return equalsNullable(this.id, configResource.id) &&
-        Objects.equals(this.type, configResource.type) &&
-        Objects.equals(this.attributes, configResource.attributes);
+    ConfigItemDefinition configItemDefinition = (ConfigItemDefinition) o;
+    return Objects.equals(this.value, configItemDefinition.value) &&
+        equalsNullable(this.type, configItemDefinition.type) &&
+        equalsNullable(this.description, configItemDefinition.description);
   }
 
   private static <T> boolean equalsNullable(JsonNullable<T> a, JsonNullable<T> b) {
@@ -194,7 +206,7 @@ public class ConfigResource {
 
   @Override
   public int hashCode() {
-    return Objects.hash(hashCodeNullable(id), type, attributes);
+    return Objects.hash(value, hashCodeNullable(type), hashCodeNullable(description));
   }
 
   private static <T> int hashCodeNullable(JsonNullable<T> a) {
@@ -207,10 +219,10 @@ public class ConfigResource {
   @Override
   public String toString() {
     StringBuilder sb = new StringBuilder();
-    sb.append("class ConfigResource {\n");
-    sb.append("    id: ").append(toIndentedString(id)).append("\n");
+    sb.append("class ConfigItemDefinition {\n");
+    sb.append("    value: ").append(toIndentedString(value)).append("\n");
     sb.append("    type: ").append(toIndentedString(type)).append("\n");
-    sb.append("    attributes: ").append(toIndentedString(attributes)).append("\n");
+    sb.append("    description: ").append(toIndentedString(description)).append("\n");
     sb.append("}");
     return sb.toString();
   }
@@ -255,9 +267,9 @@ public class ConfigResource {
 
     StringJoiner joiner = new StringJoiner("&");
 
-    // add `id` to the URL query string
-    if (getId() != null) {
-      joiner.add(String.format(java.util.Locale.ROOT, "%sid%s=%s", prefix, suffix, ApiClient.urlEncode(ApiClient.valueToString(getId()))));
+    // add `value` to the URL query string
+    if (getValue() != null) {
+      joiner.add(String.format(java.util.Locale.ROOT, "%svalue%s=%s", prefix, suffix, ApiClient.urlEncode(ApiClient.valueToString(getValue()))));
     }
 
     // add `type` to the URL query string
@@ -265,9 +277,9 @@ public class ConfigResource {
       joiner.add(String.format(java.util.Locale.ROOT, "%stype%s=%s", prefix, suffix, ApiClient.urlEncode(ApiClient.valueToString(getType()))));
     }
 
-    // add `attributes` to the URL query string
-    if (getAttributes() != null) {
-      joiner.add(getAttributes().toUrlQueryString(prefix + "attributes" + suffix));
+    // add `description` to the URL query string
+    if (getDescription() != null) {
+      joiner.add(String.format(java.util.Locale.ROOT, "%sdescription%s=%s", prefix, suffix, ApiClient.urlEncode(ApiClient.valueToString(getDescription()))));
     }
 
     return joiner.toString();

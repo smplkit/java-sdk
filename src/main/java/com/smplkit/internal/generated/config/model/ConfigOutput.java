@@ -24,6 +24,8 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonTypeName;
 import com.fasterxml.jackson.annotation.JsonValue;
+import com.smplkit.internal.generated.config.model.ConfigItemDefinition;
+import com.smplkit.internal.generated.config.model.EnvironmentOverride;
 import java.time.OffsetDateTime;
 import java.util.Arrays;
 import java.util.HashMap;
@@ -37,20 +39,20 @@ import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 
 import com.smplkit.internal.generated.config.ApiClient;
 /**
- * Config
+ * ConfigOutput
  */
 @JsonPropertyOrder({
-  Config.JSON_PROPERTY_KEY,
-  Config.JSON_PROPERTY_NAME,
-  Config.JSON_PROPERTY_DESCRIPTION,
-  Config.JSON_PROPERTY_PARENT,
-  Config.JSON_PROPERTY_VALUES,
-  Config.JSON_PROPERTY_ENVIRONMENTS,
-  Config.JSON_PROPERTY_CREATED_AT,
-  Config.JSON_PROPERTY_UPDATED_AT
+  ConfigOutput.JSON_PROPERTY_KEY,
+  ConfigOutput.JSON_PROPERTY_NAME,
+  ConfigOutput.JSON_PROPERTY_DESCRIPTION,
+  ConfigOutput.JSON_PROPERTY_PARENT,
+  ConfigOutput.JSON_PROPERTY_ITEMS,
+  ConfigOutput.JSON_PROPERTY_ENVIRONMENTS,
+  ConfigOutput.JSON_PROPERTY_CREATED_AT,
+  ConfigOutput.JSON_PROPERTY_UPDATED_AT
 })
-@jakarta.annotation.Generated(value = "org.openapitools.codegen.languages.JavaClientCodegen", date = "2026-03-29T17:28:40.749040-04:00[America/New_York]", comments = "Generator version: 7.21.0")
-public class Config {
+@jakarta.annotation.Generated(value = "org.openapitools.codegen.languages.JavaClientCodegen", date = "2026-03-30T09:45:24.441527397Z[Etc/UTC]", comments = "Generator version: 7.21.0")
+public class ConfigOutput {
   public static final String JSON_PROPERTY_KEY = "key";
   private JsonNullable<String> key = JsonNullable.<String>undefined();
 
@@ -64,11 +66,11 @@ public class Config {
   public static final String JSON_PROPERTY_PARENT = "parent";
   private JsonNullable<String> parent = JsonNullable.<String>undefined();
 
-  public static final String JSON_PROPERTY_VALUES = "values";
-  private JsonNullable<Map<String, Object>> values = JsonNullable.<Map<String, Object>>undefined();
+  public static final String JSON_PROPERTY_ITEMS = "items";
+  private JsonNullable<Map<String, ConfigItemDefinition>> items = JsonNullable.<Map<String, ConfigItemDefinition>>undefined();
 
   public static final String JSON_PROPERTY_ENVIRONMENTS = "environments";
-  private JsonNullable<Map<String, Object>> environments = JsonNullable.<Map<String, Object>>undefined();
+  private JsonNullable<Map<String, EnvironmentOverride>> environments = JsonNullable.<Map<String, EnvironmentOverride>>undefined();
 
   public static final String JSON_PROPERTY_CREATED_AT = "created_at";
   private JsonNullable<OffsetDateTime> createdAt = JsonNullable.<OffsetDateTime>undefined();
@@ -76,11 +78,11 @@ public class Config {
   public static final String JSON_PROPERTY_UPDATED_AT = "updated_at";
   private JsonNullable<OffsetDateTime> updatedAt = JsonNullable.<OffsetDateTime>undefined();
 
-  public Config() { 
+  public ConfigOutput() { 
   }
 
   @JsonCreator
-  public Config(
+  public ConfigOutput(
     @JsonProperty(JSON_PROPERTY_CREATED_AT) OffsetDateTime createdAt, 
     @JsonProperty(JSON_PROPERTY_UPDATED_AT) OffsetDateTime updatedAt
   ) {
@@ -89,7 +91,7 @@ public class Config {
     this.updatedAt = updatedAt == null ? JsonNullable.<OffsetDateTime>undefined() : JsonNullable.of(updatedAt);
   }
 
-  public Config key(@jakarta.annotation.Nullable String key) {
+  public ConfigOutput key(@jakarta.annotation.Nullable String key) {
     this.key = JsonNullable.<String>of(key);
     return this;
   }
@@ -121,7 +123,7 @@ public class Config {
   }
 
 
-  public Config name(@jakarta.annotation.Nonnull String name) {
+  public ConfigOutput name(@jakarta.annotation.Nonnull String name) {
     this.name = name;
     return this;
   }
@@ -145,7 +147,7 @@ public class Config {
   }
 
 
-  public Config description(@jakarta.annotation.Nullable String description) {
+  public ConfigOutput description(@jakarta.annotation.Nullable String description) {
     this.description = JsonNullable.<String>of(description);
     return this;
   }
@@ -177,7 +179,7 @@ public class Config {
   }
 
 
-  public Config parent(@jakarta.annotation.Nullable String parent) {
+  public ConfigOutput parent(@jakarta.annotation.Nullable String parent) {
     this.parent = JsonNullable.<String>of(parent);
     return this;
   }
@@ -209,17 +211,17 @@ public class Config {
   }
 
 
-  public Config values(@jakarta.annotation.Nullable Map<String, Object> values) {
-    this.values = JsonNullable.<Map<String, Object>>of(values);
+  public ConfigOutput items(@jakarta.annotation.Nullable Map<String, ConfigItemDefinition> items) {
+    this.items = JsonNullable.<Map<String, ConfigItemDefinition>>of(items);
     return this;
   }
 
-  public Config putValuesItem(String key, Object valuesItem) {
-    if (this.values == null || !this.values.isPresent()) {
-      this.values = JsonNullable.<Map<String, Object>>of(new HashMap<>());
+  public ConfigOutput putItemsItem(String key, ConfigItemDefinition itemsItem) {
+    if (this.items == null || !this.items.isPresent()) {
+      this.items = JsonNullable.<Map<String, ConfigItemDefinition>>of(new HashMap<>());
     }
     try {
-      this.values.get().put(key, valuesItem);
+      this.items.get().put(key, itemsItem);
     } catch (java.util.NoSuchElementException e) {
       // this can never happen, as we make sure above that the value is present
     }
@@ -227,40 +229,40 @@ public class Config {
   }
 
   /**
-   * Get values
-   * @return values
+   * Get items
+   * @return items
    */
   @jakarta.annotation.Nullable
   @JsonIgnore
-  public Map<String, Object> getValues() {
-        return values.orElse(null);
+  public Map<String, ConfigItemDefinition> getItems() {
+        return items.orElse(null);
   }
 
-  @JsonProperty(value = JSON_PROPERTY_VALUES, required = false)
-  @JsonInclude(content = JsonInclude.Include.ALWAYS, value = JsonInclude.Include.USE_DEFAULTS)
+  @JsonProperty(value = JSON_PROPERTY_ITEMS, required = false)
+  @JsonInclude(value = JsonInclude.Include.USE_DEFAULTS)
 
-  public JsonNullable<Map<String, Object>> getValues_JsonNullable() {
-    return values;
+  public JsonNullable<Map<String, ConfigItemDefinition>> getItems_JsonNullable() {
+    return items;
   }
   
-  @JsonProperty(JSON_PROPERTY_VALUES)
-  public void setValues_JsonNullable(JsonNullable<Map<String, Object>> values) {
-    this.values = values;
+  @JsonProperty(JSON_PROPERTY_ITEMS)
+  public void setItems_JsonNullable(JsonNullable<Map<String, ConfigItemDefinition>> items) {
+    this.items = items;
   }
 
-  public void setValues(@jakarta.annotation.Nullable Map<String, Object> values) {
-    this.values = JsonNullable.<Map<String, Object>>of(values);
+  public void setItems(@jakarta.annotation.Nullable Map<String, ConfigItemDefinition> items) {
+    this.items = JsonNullable.<Map<String, ConfigItemDefinition>>of(items);
   }
 
 
-  public Config environments(@jakarta.annotation.Nullable Map<String, Object> environments) {
-    this.environments = JsonNullable.<Map<String, Object>>of(environments);
+  public ConfigOutput environments(@jakarta.annotation.Nullable Map<String, EnvironmentOverride> environments) {
+    this.environments = JsonNullable.<Map<String, EnvironmentOverride>>of(environments);
     return this;
   }
 
-  public Config putEnvironmentsItem(String key, Object environmentsItem) {
+  public ConfigOutput putEnvironmentsItem(String key, EnvironmentOverride environmentsItem) {
     if (this.environments == null || !this.environments.isPresent()) {
-      this.environments = JsonNullable.<Map<String, Object>>of(new HashMap<>());
+      this.environments = JsonNullable.<Map<String, EnvironmentOverride>>of(new HashMap<>());
     }
     try {
       this.environments.get().put(key, environmentsItem);
@@ -276,24 +278,24 @@ public class Config {
    */
   @jakarta.annotation.Nullable
   @JsonIgnore
-  public Map<String, Object> getEnvironments() {
+  public Map<String, EnvironmentOverride> getEnvironments() {
         return environments.orElse(null);
   }
 
   @JsonProperty(value = JSON_PROPERTY_ENVIRONMENTS, required = false)
-  @JsonInclude(content = JsonInclude.Include.ALWAYS, value = JsonInclude.Include.USE_DEFAULTS)
+  @JsonInclude(value = JsonInclude.Include.USE_DEFAULTS)
 
-  public JsonNullable<Map<String, Object>> getEnvironments_JsonNullable() {
+  public JsonNullable<Map<String, EnvironmentOverride>> getEnvironments_JsonNullable() {
     return environments;
   }
   
   @JsonProperty(JSON_PROPERTY_ENVIRONMENTS)
-  public void setEnvironments_JsonNullable(JsonNullable<Map<String, Object>> environments) {
+  public void setEnvironments_JsonNullable(JsonNullable<Map<String, EnvironmentOverride>> environments) {
     this.environments = environments;
   }
 
-  public void setEnvironments(@jakarta.annotation.Nullable Map<String, Object> environments) {
-    this.environments = JsonNullable.<Map<String, Object>>of(environments);
+  public void setEnvironments(@jakarta.annotation.Nullable Map<String, EnvironmentOverride> environments) {
+    this.environments = JsonNullable.<Map<String, EnvironmentOverride>>of(environments);
   }
 
 
@@ -354,7 +356,7 @@ public class Config {
 
 
   /**
-   * Return true if this Config object is equal to o.
+   * Return true if this Config-Output object is equal to o.
    */
   @Override
   public boolean equals(Object o) {
@@ -364,15 +366,15 @@ public class Config {
     if (o == null || getClass() != o.getClass()) {
       return false;
     }
-    Config config = (Config) o;
-    return equalsNullable(this.key, config.key) &&
-        Objects.equals(this.name, config.name) &&
-        equalsNullable(this.description, config.description) &&
-        equalsNullable(this.parent, config.parent) &&
-        equalsNullable(this.values, config.values) &&
-        equalsNullable(this.environments, config.environments) &&
-        equalsNullable(this.createdAt, config.createdAt) &&
-        equalsNullable(this.updatedAt, config.updatedAt);
+    ConfigOutput configOutput = (ConfigOutput) o;
+    return equalsNullable(this.key, configOutput.key) &&
+        Objects.equals(this.name, configOutput.name) &&
+        equalsNullable(this.description, configOutput.description) &&
+        equalsNullable(this.parent, configOutput.parent) &&
+        equalsNullable(this.items, configOutput.items) &&
+        equalsNullable(this.environments, configOutput.environments) &&
+        equalsNullable(this.createdAt, configOutput.createdAt) &&
+        equalsNullable(this.updatedAt, configOutput.updatedAt);
   }
 
   private static <T> boolean equalsNullable(JsonNullable<T> a, JsonNullable<T> b) {
@@ -381,7 +383,7 @@ public class Config {
 
   @Override
   public int hashCode() {
-    return Objects.hash(hashCodeNullable(key), name, hashCodeNullable(description), hashCodeNullable(parent), hashCodeNullable(values), hashCodeNullable(environments), hashCodeNullable(createdAt), hashCodeNullable(updatedAt));
+    return Objects.hash(hashCodeNullable(key), name, hashCodeNullable(description), hashCodeNullable(parent), hashCodeNullable(items), hashCodeNullable(environments), hashCodeNullable(createdAt), hashCodeNullable(updatedAt));
   }
 
   private static <T> int hashCodeNullable(JsonNullable<T> a) {
@@ -394,12 +396,12 @@ public class Config {
   @Override
   public String toString() {
     StringBuilder sb = new StringBuilder();
-    sb.append("class Config {\n");
+    sb.append("class ConfigOutput {\n");
     sb.append("    key: ").append(toIndentedString(key)).append("\n");
     sb.append("    name: ").append(toIndentedString(name)).append("\n");
     sb.append("    description: ").append(toIndentedString(description)).append("\n");
     sb.append("    parent: ").append(toIndentedString(parent)).append("\n");
-    sb.append("    values: ").append(toIndentedString(values)).append("\n");
+    sb.append("    items: ").append(toIndentedString(items)).append("\n");
     sb.append("    environments: ").append(toIndentedString(environments)).append("\n");
     sb.append("    createdAt: ").append(toIndentedString(createdAt)).append("\n");
     sb.append("    updatedAt: ").append(toIndentedString(updatedAt)).append("\n");
@@ -467,21 +469,23 @@ public class Config {
       joiner.add(String.format(java.util.Locale.ROOT, "%sparent%s=%s", prefix, suffix, ApiClient.urlEncode(ApiClient.valueToString(getParent()))));
     }
 
-    // add `values` to the URL query string
-    if (getValues() != null) {
-      for (String _key : getValues().keySet()) {
-        joiner.add(String.format(java.util.Locale.ROOT, "%svalues%s%s=%s", prefix, suffix,
-            "".equals(suffix) ? "" : String.format(java.util.Locale.ROOT, "%s%d%s", containerPrefix, _key, containerSuffix),
-            getValues().get(_key), ApiClient.urlEncode(ApiClient.valueToString(getValues().get(_key)))));
+    // add `items` to the URL query string
+    if (getItems() != null) {
+      for (String _key : getItems().keySet()) {
+        if (getItems().get(_key) != null) {
+          joiner.add(getItems().get(_key).toUrlQueryString(String.format(java.util.Locale.ROOT, "%sitems%s%s", prefix, suffix,
+              "".equals(suffix) ? "" : String.format(java.util.Locale.ROOT, "%s%d%s", containerPrefix, _key, containerSuffix))));
+        }
       }
     }
 
     // add `environments` to the URL query string
     if (getEnvironments() != null) {
       for (String _key : getEnvironments().keySet()) {
-        joiner.add(String.format(java.util.Locale.ROOT, "%senvironments%s%s=%s", prefix, suffix,
-            "".equals(suffix) ? "" : String.format(java.util.Locale.ROOT, "%s%d%s", containerPrefix, _key, containerSuffix),
-            getEnvironments().get(_key), ApiClient.urlEncode(ApiClient.valueToString(getEnvironments().get(_key)))));
+        if (getEnvironments().get(_key) != null) {
+          joiner.add(getEnvironments().get(_key).toUrlQueryString(String.format(java.util.Locale.ROOT, "%senvironments%s%s", prefix, suffix,
+              "".equals(suffix) ? "" : String.format(java.util.Locale.ROOT, "%s%d%s", containerPrefix, _key, containerSuffix))));
+        }
       }
     }
 
