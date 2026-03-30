@@ -290,6 +290,40 @@ class ConfigClientTest {
     }
 
     @Test
+    void create_withBooleanValue_infersBooleanType() throws ApiException {
+        // Exercises inferType with a Boolean value → ConfigItemDefinition.TypeEnum.BOOLEAN
+        ConfigResource resource = makeResource(CONFIG_ID, "flags", "Flags", null, null,
+                Map.of("enabled", itemDef(true, ConfigItemDefinition.TypeEnum.BOOLEAN)),
+                Map.of(), null, null);
+        when(mockApi.createConfig(any())).thenReturn(singleResponse(resource));
+
+        CreateConfigParams params = CreateConfigParams.builder("Flags")
+                .values(Map.of("enabled", Boolean.TRUE))
+                .build();
+        com.smplkit.config.Config config = configClient.create(params);
+
+        assertNotNull(config);
+        verify(mockApi).createConfig(any());
+    }
+
+    @Test
+    void create_withJsonValue_infersJsonType() throws ApiException {
+        // Exercises inferType with a non-primitive value → ConfigItemDefinition.TypeEnum.JSON
+        ConfigResource resource = makeResource(CONFIG_ID, "complex", "Complex", null, null,
+                Map.of("nested", itemDef(Map.of("k", "v"), ConfigItemDefinition.TypeEnum.JSON)),
+                Map.of(), null, null);
+        when(mockApi.createConfig(any())).thenReturn(singleResponse(resource));
+
+        CreateConfigParams params = CreateConfigParams.builder("Complex")
+                .values(Map.of("nested", Map.of("k", "v")))
+                .build();
+        com.smplkit.config.Config config = configClient.create(params);
+
+        assertNotNull(config);
+        verify(mockApi).createConfig(any());
+    }
+
+    @Test
     void create_422_throwsValidationException() throws ApiException {
         when(mockApi.createConfig(any()))
                 .thenThrow(new ApiException(422, "Validation error"));
