@@ -24,7 +24,7 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonTypeName;
 import com.fasterxml.jackson.annotation.JsonValue;
-import com.smplkit.internal.generated.config.model.ConfigOutput;
+import com.smplkit.internal.generated.config.model.Config;
 import java.util.Arrays;
 import org.openapitools.jackson.nullable.JsonNullable;
 import com.fasterxml.jackson.annotation.JsonIgnore;
@@ -42,7 +42,7 @@ import com.smplkit.internal.generated.config.ApiClient;
   ConfigResource.JSON_PROPERTY_TYPE,
   ConfigResource.JSON_PROPERTY_ATTRIBUTES
 })
-@jakarta.annotation.Generated(value = "org.openapitools.codegen.languages.JavaClientCodegen", date = "2026-03-31T00:50:27.836776328Z[Etc/UTC]", comments = "Generator version: 7.21.0")
+@jakarta.annotation.Generated(value = "org.openapitools.codegen.languages.JavaClientCodegen", date = "2026-03-31T01:17:54.288479549Z[Etc/UTC]", comments = "Generator version: 7.21.0")
 public class ConfigResource {
   public static final String JSON_PROPERTY_ID = "id";
   private JsonNullable<String> id = JsonNullable.<String>undefined();
@@ -86,7 +86,7 @@ public class ConfigResource {
 
   public static final String JSON_PROPERTY_ATTRIBUTES = "attributes";
   @jakarta.annotation.Nonnull
-  private ConfigOutput attributes;
+  private Config attributes;
 
   public ConfigResource() { 
   }
@@ -147,7 +147,7 @@ public class ConfigResource {
   }
 
 
-  public ConfigResource attributes(@jakarta.annotation.Nonnull ConfigOutput attributes) {
+  public ConfigResource attributes(@jakarta.annotation.Nonnull Config attributes) {
     this.attributes = attributes;
     return this;
   }
@@ -159,14 +159,14 @@ public class ConfigResource {
   @jakarta.annotation.Nonnull
   @JsonProperty(value = JSON_PROPERTY_ATTRIBUTES, required = true)
   @JsonInclude(value = JsonInclude.Include.ALWAYS)
-  public ConfigOutput getAttributes() {
+  public Config getAttributes() {
     return attributes;
   }
 
 
   @JsonProperty(value = JSON_PROPERTY_ATTRIBUTES, required = true)
   @JsonInclude(value = JsonInclude.Include.ALWAYS)
-  public void setAttributes(@jakarta.annotation.Nonnull ConfigOutput attributes) {
+  public void setAttributes(@jakarta.annotation.Nonnull Config attributes) {
     this.attributes = attributes;
   }
 

@@ -42,7 +42,7 @@ import com.smplkit.internal.generated.app.ApiClient;
   ProductResource.JSON_PROPERTY_TYPE,
   ProductResource.JSON_PROPERTY_ATTRIBUTES
 })
-@jakarta.annotation.Generated(value = "org.openapitools.codegen.languages.JavaClientCodegen", date = "2026-03-31T00:50:24.002790486Z[Etc/UTC]", comments = "Generator version: 7.21.0")
+@jakarta.annotation.Generated(value = "org.openapitools.codegen.languages.JavaClientCodegen", date = "2026-03-31T01:17:50.348713565Z[Etc/UTC]", comments = "Generator version: 7.21.0")
 public class ProductResource {
   public static final String JSON_PROPERTY_ID = "id";
   private JsonNullable<String> id = JsonNullable.<String>undefined();
