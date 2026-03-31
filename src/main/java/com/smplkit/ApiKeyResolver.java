@@ -6,22 +6,19 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
 
 /**
  * Resolves an API key from an explicit value, environment variable, or config file.
  */
 final class ApiKeyResolver {
 
-    private static final Pattern API_KEY_PATTERN = Pattern.compile(
-            "\\[default\\]\\s*[\\s\\S]*?api_key\\s*=\\s*\"([^\"]+)\"");
-
     private static final String NO_API_KEY_MESSAGE =
             "No API key provided. Set one of:\n" +
             "  1. Call .apiKey() on the builder or use SmplClient.create(apiKey)\n" +
             "  2. Set the SMPLKIT_API_KEY environment variable\n" +
-            "  3. Add api_key to [default] in ~/.smplkit";
+            "  3. Create a ~/.smplkit file with:\n" +
+            "     [default]\n" +
+            "     api_key = your_key_here";
 
     private ApiKeyResolver() {
         // Utility class
@@ -54,16 +51,42 @@ final class ApiKeyResolver {
 
         if (Files.exists(configPath)) {
             try {
-                String content = Files.readString(configPath);
-                Matcher matcher = API_KEY_PATTERN.matcher(content);
-                if (matcher.find()) {
-                    return matcher.group(1);
+                String apiKey = parseIniApiKey(Files.readString(configPath));
+                if (apiKey != null) {
+                    return apiKey;
                 }
             } catch (IOException e) {
-                // Malformed file — skip
+                // Unreadable file — skip
             }
         }
 
         throw new SmplException(NO_API_KEY_MESSAGE, 0, null);
+    }
+
+    /**
+     * Parses an INI-format config file and returns the api_key from the [default] section.
+     */
+    private static String parseIniApiKey(String content) {
+        boolean inDefault = false;
+        for (String line : content.split("\n")) {
+            String trimmed = line.trim();
+            if (trimmed.isEmpty() || trimmed.startsWith("#")) {
+                continue;
+            }
+            if (trimmed.startsWith("[")) {
+                inDefault = trimmed.equalsIgnoreCase("[default]");
+                continue;
+            }
+            if (inDefault && trimmed.startsWith("api_key")) {
+                int eqIndex = trimmed.indexOf('=');
+                if (eqIndex != -1) {
+                    String value = trimmed.substring(eqIndex + 1).trim();
+                    if (!value.isEmpty()) {
+                        return value;
+                    }
+                }
+            }
+        }
+        return null;
     }
 }

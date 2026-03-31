@@ -49,11 +49,15 @@ class SmplClientTest {
         // When no explicit key, no env var, and no config file, build() should throw
         // SmplException. This test relies on SMPLKIT_API_KEY not being set in the
         // test environment and ~/.smplkit not existing with a valid key.
-        // In CI this is always true.
-        SmplClientBuilder builder = SmplClient.builder();
+        // In CI this is always true; skip locally if either is present.
         String envKey = System.getenv("SMPLKIT_API_KEY");
+        boolean hasConfigFile = java.nio.file.Files.exists(
+                java.nio.file.Paths.get(System.getProperty("user.home"), ".smplkit"));
         if (envKey == null || envKey.isEmpty()) {
-            assertThrows(com.smplkit.errors.SmplException.class, builder::build);
+            if (!hasConfigFile) {
+                SmplClientBuilder builder = SmplClient.builder();
+                assertThrows(com.smplkit.errors.SmplException.class, builder::build);
+            }
         }
     }
 

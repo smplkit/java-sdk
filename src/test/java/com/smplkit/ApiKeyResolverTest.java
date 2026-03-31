@@ -25,7 +25,7 @@ class ApiKeyResolverTest {
     @Test
     void configFileUsedWhenNoExplicitNoEnv(@TempDir Path tempDir) throws IOException {
         Path configFile = tempDir.resolve(".smplkit");
-        Files.writeString(configFile, "[default]\napi_key = \"sk_api_file\"\n");
+        Files.writeString(configFile, "[default]\napi_key = sk_api_file\n");
         assertEquals("sk_api_file", ApiKeyResolver.resolve(null, null, configFile));
     }
 
@@ -55,21 +55,21 @@ class ApiKeyResolverTest {
     @Test
     void envTakesPrecedenceOverFile(@TempDir Path tempDir) throws IOException {
         Path configFile = tempDir.resolve(".smplkit");
-        Files.writeString(configFile, "[default]\napi_key = \"sk_api_file\"\n");
+        Files.writeString(configFile, "[default]\napi_key = sk_api_file\n");
         assertEquals("sk_api_env", ApiKeyResolver.resolve(null, "sk_api_env", configFile));
     }
 
     @Test
     void emptyEnvVarTreatedAsUnset(@TempDir Path tempDir) throws IOException {
         Path configFile = tempDir.resolve(".smplkit");
-        Files.writeString(configFile, "[default]\napi_key = \"sk_api_file\"\n");
+        Files.writeString(configFile, "[default]\napi_key = sk_api_file\n");
         assertEquals("sk_api_file", ApiKeyResolver.resolve(null, "", configFile));
     }
 
     @Test
     void malformedFileIsSkipped(@TempDir Path tempDir) throws IOException {
         Path configFile = tempDir.resolve(".smplkit");
-        Files.writeString(configFile, "not valid toml");
+        Files.writeString(configFile, "not valid ini");
         assertThrows(SmplException.class,
                 () -> ApiKeyResolver.resolve(null, null, configFile));
     }
@@ -77,7 +77,30 @@ class ApiKeyResolverTest {
     @Test
     void fileWithoutApiKeyThrows(@TempDir Path tempDir) throws IOException {
         Path configFile = tempDir.resolve(".smplkit");
-        Files.writeString(configFile, "[default]\nother_key = \"value\"\n");
+        Files.writeString(configFile, "[default]\nother_key = value\n");
+        assertThrows(SmplException.class,
+                () -> ApiKeyResolver.resolve(null, null, configFile));
+    }
+
+    @Test
+    void commentsAreIgnored(@TempDir Path tempDir) throws IOException {
+        Path configFile = tempDir.resolve(".smplkit");
+        Files.writeString(configFile, "# This is a comment\n[default]\n# another comment\napi_key = sk_api_comment\n");
+        assertEquals("sk_api_comment", ApiKeyResolver.resolve(null, null, configFile));
+    }
+
+    @Test
+    void missingDefaultSectionThrows(@TempDir Path tempDir) throws IOException {
+        Path configFile = tempDir.resolve(".smplkit");
+        Files.writeString(configFile, "[staging]\napi_key = sk_api_staging\n");
+        assertThrows(SmplException.class,
+                () -> ApiKeyResolver.resolve(null, null, configFile));
+    }
+
+    @Test
+    void defaultSectionWithoutApiKeyThrows(@TempDir Path tempDir) throws IOException {
+        Path configFile = tempDir.resolve(".smplkit");
+        Files.writeString(configFile, "[default]\nsome_other = value\n");
         assertThrows(SmplException.class,
                 () -> ApiKeyResolver.resolve(null, null, configFile));
     }
