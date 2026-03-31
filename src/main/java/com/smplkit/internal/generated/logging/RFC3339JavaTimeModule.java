@@ -19,7 +19,7 @@ import java.time.ZonedDateTime;
 import com.fasterxml.jackson.databind.module.SimpleModule;
 import com.fasterxml.jackson.databind.Module.SetupContext;
 
-@jakarta.annotation.Generated(value = "org.openapitools.codegen.languages.JavaClientCodegen", date = "2026-03-31T00:50:33.570331477Z[Etc/UTC]", comments = "Generator version: 7.21.0")
+@jakarta.annotation.Generated(value = "org.openapitools.codegen.languages.JavaClientCodegen", date = "2026-03-31T01:18:00.136640005Z[Etc/UTC]", comments = "Generator version: 7.21.0")
 public class RFC3339JavaTimeModule extends SimpleModule {
     private static final long serialVersionUID = 1L;
 

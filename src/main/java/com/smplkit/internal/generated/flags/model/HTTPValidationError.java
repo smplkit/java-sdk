@@ -38,7 +38,7 @@ import com.smplkit.internal.generated.flags.ApiClient;
 @JsonPropertyOrder({
   HTTPValidationError.JSON_PROPERTY_DETAIL
 })
-@jakarta.annotation.Generated(value = "org.openapitools.codegen.languages.JavaClientCodegen", date = "2026-03-31T00:50:30.690326942Z[Etc/UTC]", comments = "Generator version: 7.21.0")
+@jakarta.annotation.Generated(value = "org.openapitools.codegen.languages.JavaClientCodegen", date = "2026-03-31T01:17:57.185779220Z[Etc/UTC]", comments = "Generator version: 7.21.0")
 public class HTTPValidationError {
   public static final String JSON_PROPERTY_DETAIL = "detail";
   @jakarta.annotation.Nullable

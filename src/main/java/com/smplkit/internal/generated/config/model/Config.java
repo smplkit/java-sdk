@@ -39,20 +39,20 @@ import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 
 import com.smplkit.internal.generated.config.ApiClient;
 /**
- * ConfigOutput
+ * Config
  */
 @JsonPropertyOrder({
-  ConfigOutput.JSON_PROPERTY_KEY,
-  ConfigOutput.JSON_PROPERTY_NAME,
-  ConfigOutput.JSON_PROPERTY_DESCRIPTION,
-  ConfigOutput.JSON_PROPERTY_PARENT,
-  ConfigOutput.JSON_PROPERTY_ITEMS,
-  ConfigOutput.JSON_PROPERTY_ENVIRONMENTS,
-  ConfigOutput.JSON_PROPERTY_CREATED_AT,
-  ConfigOutput.JSON_PROPERTY_UPDATED_AT
+  Config.JSON_PROPERTY_KEY,
+  Config.JSON_PROPERTY_NAME,
+  Config.JSON_PROPERTY_DESCRIPTION,
+  Config.JSON_PROPERTY_PARENT,
+  Config.JSON_PROPERTY_ITEMS,
+  Config.JSON_PROPERTY_ENVIRONMENTS,
+  Config.JSON_PROPERTY_CREATED_AT,
+  Config.JSON_PROPERTY_UPDATED_AT
 })
-@jakarta.annotation.Generated(value = "org.openapitools.codegen.languages.JavaClientCodegen", date = "2026-03-31T00:50:27.836776328Z[Etc/UTC]", comments = "Generator version: 7.21.0")
-public class ConfigOutput {
+@jakarta.annotation.Generated(value = "org.openapitools.codegen.languages.JavaClientCodegen", date = "2026-03-31T01:17:54.288479549Z[Etc/UTC]", comments = "Generator version: 7.21.0")
+public class Config {
   public static final String JSON_PROPERTY_KEY = "key";
   private JsonNullable<String> key = JsonNullable.<String>undefined();
 
@@ -78,11 +78,11 @@ public class ConfigOutput {
   public static final String JSON_PROPERTY_UPDATED_AT = "updated_at";
   private JsonNullable<OffsetDateTime> updatedAt = JsonNullable.<OffsetDateTime>undefined();
 
-  public ConfigOutput() { 
+  public Config() { 
   }
 
   @JsonCreator
-  public ConfigOutput(
+  public Config(
     @JsonProperty(JSON_PROPERTY_CREATED_AT) OffsetDateTime createdAt, 
     @JsonProperty(JSON_PROPERTY_UPDATED_AT) OffsetDateTime updatedAt
   ) {
@@ -91,7 +91,7 @@ public class ConfigOutput {
     this.updatedAt = updatedAt == null ? JsonNullable.<OffsetDateTime>undefined() : JsonNullable.of(updatedAt);
   }
 
-  public ConfigOutput key(@jakarta.annotation.Nullable String key) {
+  public Config key(@jakarta.annotation.Nullable String key) {
     this.key = JsonNullable.<String>of(key);
     return this;
   }
@@ -123,7 +123,7 @@ public class ConfigOutput {
   }
 
 
-  public ConfigOutput name(@jakarta.annotation.Nonnull String name) {
+  public Config name(@jakarta.annotation.Nonnull String name) {
     this.name = name;
     return this;
   }
@@ -147,7 +147,7 @@ public class ConfigOutput {
   }
 
 
-  public ConfigOutput description(@jakarta.annotation.Nullable String description) {
+  public Config description(@jakarta.annotation.Nullable String description) {
     this.description = JsonNullable.<String>of(description);
     return this;
   }
@@ -179,7 +179,7 @@ public class ConfigOutput {
   }
 
 
-  public ConfigOutput parent(@jakarta.annotation.Nullable String parent) {
+  public Config parent(@jakarta.annotation.Nullable String parent) {
     this.parent = JsonNullable.<String>of(parent);
     return this;
   }
@@ -211,12 +211,12 @@ public class ConfigOutput {
   }
 
 
-  public ConfigOutput items(@jakarta.annotation.Nullable Map<String, ConfigItemDefinition> items) {
+  public Config items(@jakarta.annotation.Nullable Map<String, ConfigItemDefinition> items) {
     this.items = JsonNullable.<Map<String, ConfigItemDefinition>>of(items);
     return this;
   }
 
-  public ConfigOutput putItemsItem(String key, ConfigItemDefinition itemsItem) {
+  public Config putItemsItem(String key, ConfigItemDefinition itemsItem) {
     if (this.items == null || !this.items.isPresent()) {
       this.items = JsonNullable.<Map<String, ConfigItemDefinition>>of(new HashMap<>());
     }
@@ -255,12 +255,12 @@ public class ConfigOutput {
   }
 
 
-  public ConfigOutput environments(@jakarta.annotation.Nullable Map<String, EnvironmentOverride> environments) {
+  public Config environments(@jakarta.annotation.Nullable Map<String, EnvironmentOverride> environments) {
     this.environments = JsonNullable.<Map<String, EnvironmentOverride>>of(environments);
     return this;
   }
 
-  public ConfigOutput putEnvironmentsItem(String key, EnvironmentOverride environmentsItem) {
+  public Config putEnvironmentsItem(String key, EnvironmentOverride environmentsItem) {
     if (this.environments == null || !this.environments.isPresent()) {
       this.environments = JsonNullable.<Map<String, EnvironmentOverride>>of(new HashMap<>());
     }
@@ -356,7 +356,7 @@ public class ConfigOutput {
 
 
   /**
-   * Return true if this Config-Output object is equal to o.
+   * Return true if this Config object is equal to o.
    */
   @Override
   public boolean equals(Object o) {
@@ -366,15 +366,15 @@ public class ConfigOutput {
     if (o == null || getClass() != o.getClass()) {
       return false;
     }
-    ConfigOutput configOutput = (ConfigOutput) o;
-    return equalsNullable(this.key, configOutput.key) &&
-        Objects.equals(this.name, configOutput.name) &&
-        equalsNullable(this.description, configOutput.description) &&
-        equalsNullable(this.parent, configOutput.parent) &&
-        equalsNullable(this.items, configOutput.items) &&
-        equalsNullable(this.environments, configOutput.environments) &&
-        equalsNullable(this.createdAt, configOutput.createdAt) &&
-        equalsNullable(this.updatedAt, configOutput.updatedAt);
+    Config config = (Config) o;
+    return equalsNullable(this.key, config.key) &&
+        Objects.equals(this.name, config.name) &&
+        equalsNullable(this.description, config.description) &&
+        equalsNullable(this.parent, config.parent) &&
+        equalsNullable(this.items, config.items) &&
+        equalsNullable(this.environments, config.environments) &&
+        equalsNullable(this.createdAt, config.createdAt) &&
+        equalsNullable(this.updatedAt, config.updatedAt);
   }
 
   private static <T> boolean equalsNullable(JsonNullable<T> a, JsonNullable<T> b) {
@@ -396,7 +396,7 @@ public class ConfigOutput {
   @Override
   public String toString() {
     StringBuilder sb = new StringBuilder();
-    sb.append("class ConfigOutput {\n");
+    sb.append("class Config {\n");
     sb.append("    key: ").append(toIndentedString(key)).append("\n");
     sb.append("    name: ").append(toIndentedString(name)).append("\n");
     sb.append("    description: ").append(toIndentedString(description)).append("\n");

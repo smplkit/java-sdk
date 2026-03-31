@@ -35,7 +35,7 @@ import com.smplkit.internal.generated.config.ApiClient;
 @JsonPropertyOrder({
   ConfigItemOverride.JSON_PROPERTY_VALUE
 })
-@jakarta.annotation.Generated(value = "org.openapitools.codegen.languages.JavaClientCodegen", date = "2026-03-31T00:50:27.836776328Z[Etc/UTC]", comments = "Generator version: 7.21.0")
+@jakarta.annotation.Generated(value = "org.openapitools.codegen.languages.JavaClientCodegen", date = "2026-03-31T01:17:54.288479549Z[Etc/UTC]", comments = "Generator version: 7.21.0")
 public class ConfigItemOverride {
   public static final String JSON_PROPERTY_VALUE = "value";
   @jakarta.annotation.Nullable
