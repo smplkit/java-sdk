@@ -9,7 +9,6 @@ import com.smplkit.internal.generated.config.api.ConfigsApi;
 import com.smplkit.internal.generated.config.model.ConfigItemDefinition;
 import com.smplkit.internal.generated.config.model.ConfigItemOverride;
 import com.smplkit.internal.generated.config.model.ConfigListResponse;
-import com.smplkit.internal.generated.config.model.ConfigOutput;
 import com.smplkit.internal.generated.config.model.ConfigResource;
 import com.smplkit.internal.generated.config.model.ConfigResponse;
 import com.smplkit.internal.generated.config.model.EnvironmentOverride;
@@ -55,7 +54,7 @@ class ConfigClientTest {
                                         String parent, Map<String, ConfigItemDefinition> items,
                                         Map<String, EnvironmentOverride> environments,
                                         OffsetDateTime createdAt, OffsetDateTime updatedAt) {
-        ConfigOutput attrs = new ConfigOutput(createdAt, updatedAt);
+        var attrs = new com.smplkit.internal.generated.config.model.Config(createdAt, updatedAt);
         if (name != null) attrs.setName(name); else attrs.setName("");
         if (key != null) attrs.setKey(key);
         if (description != null) attrs.setDescription(description);

@@ -6,11 +6,9 @@ import com.smplkit.errors.SmplNotFoundException;
 import com.smplkit.errors.SmplValidationException;
 import com.smplkit.internal.generated.config.ApiException;
 import com.smplkit.internal.generated.config.api.ConfigsApi;
-import com.smplkit.internal.generated.config.model.ConfigInput;
 import com.smplkit.internal.generated.config.model.ConfigItemDefinition;
 import com.smplkit.internal.generated.config.model.ConfigItemOverride;
 import com.smplkit.internal.generated.config.model.ConfigListResponse;
-import com.smplkit.internal.generated.config.model.ConfigOutput;
 import com.smplkit.internal.generated.config.model.ConfigResource;
 import com.smplkit.internal.generated.config.model.ConfigResponse;
 import com.smplkit.internal.generated.config.model.EnvironmentOverride;
@@ -101,7 +99,7 @@ public final class ConfigClient {
      */
     public Config create(CreateConfigParams params) {
         try {
-            ConfigInput attrs = new ConfigInput();
+            var attrs = new com.smplkit.internal.generated.config.model.Config();
             attrs.setName(params.name());
             if (params.key() != null) {
                 attrs.setKey(params.key());
@@ -182,7 +180,7 @@ public final class ConfigClient {
             Map<String, Map<String, Object>> environments =
                     params.environments() != null ? params.environments() : config.environments();
 
-            ConfigInput attrs = new ConfigInput();
+            var attrs = new com.smplkit.internal.generated.config.model.Config();
             attrs.setName(name);
             if (description != null) {
                 attrs.setDescription(description);
@@ -319,7 +317,7 @@ public final class ConfigClient {
      */
     private Config parseResource(ConfigResource resource) {
         String id = resource.getId();
-        ConfigOutput attrs = resource.getAttributes();
+        var attrs = resource.getAttributes();
 
         String key = attrs.getKey();
         String name = attrs.getName();
