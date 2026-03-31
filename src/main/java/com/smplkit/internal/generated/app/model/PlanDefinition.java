@@ -32,16 +32,16 @@ import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 
 import com.smplkit.internal.generated.app.ApiClient;
 /**
- * Plan
+ * PlanDefinition
  */
 @JsonPropertyOrder({
-  Plan.JSON_PROPERTY_DISPLAY_NAME,
-  Plan.JSON_PROPERTY_DESCRIPTION,
-  Plan.JSON_PROPERTY_PRICE_MONTHLY_CENTS,
-  Plan.JSON_PROPERTY_LIMITS
+  PlanDefinition.JSON_PROPERTY_DISPLAY_NAME,
+  PlanDefinition.JSON_PROPERTY_DESCRIPTION,
+  PlanDefinition.JSON_PROPERTY_PRICE_MONTHLY_CENTS,
+  PlanDefinition.JSON_PROPERTY_LIMITS
 })
-@jakarta.annotation.Generated(value = "org.openapitools.codegen.languages.JavaClientCodegen", date = "2026-03-30T09:45:20.125008942Z[Etc/UTC]", comments = "Generator version: 7.21.0")
-public class Plan {
+@jakarta.annotation.Generated(value = "org.openapitools.codegen.languages.JavaClientCodegen", date = "2026-03-31T00:50:24.002790486Z[Etc/UTC]", comments = "Generator version: 7.21.0")
+public class PlanDefinition {
   public static final String JSON_PROPERTY_DISPLAY_NAME = "display_name";
   @jakarta.annotation.Nonnull
   private String displayName;
@@ -58,10 +58,10 @@ public class Plan {
   @jakarta.annotation.Nonnull
   private Map<String, Integer> limits = new HashMap<>();
 
-  public Plan() { 
+  public PlanDefinition() { 
   }
 
-  public Plan displayName(@jakarta.annotation.Nonnull String displayName) {
+  public PlanDefinition displayName(@jakarta.annotation.Nonnull String displayName) {
     this.displayName = displayName;
     return this;
   }
@@ -85,7 +85,7 @@ public class Plan {
   }
 
 
-  public Plan description(@jakarta.annotation.Nonnull String description) {
+  public PlanDefinition description(@jakarta.annotation.Nonnull String description) {
     this.description = description;
     return this;
   }
@@ -109,7 +109,7 @@ public class Plan {
   }
 
 
-  public Plan priceMonthlyCents(@jakarta.annotation.Nonnull Integer priceMonthlyCents) {
+  public PlanDefinition priceMonthlyCents(@jakarta.annotation.Nonnull Integer priceMonthlyCents) {
     this.priceMonthlyCents = priceMonthlyCents;
     return this;
   }
@@ -133,12 +133,12 @@ public class Plan {
   }
 
 
-  public Plan limits(@jakarta.annotation.Nonnull Map<String, Integer> limits) {
+  public PlanDefinition limits(@jakarta.annotation.Nonnull Map<String, Integer> limits) {
     this.limits = limits;
     return this;
   }
 
-  public Plan putLimitsItem(String key, Integer limitsItem) {
+  public PlanDefinition putLimitsItem(String key, Integer limitsItem) {
     if (this.limits == null) {
       this.limits = new HashMap<>();
     }
@@ -166,7 +166,7 @@ public class Plan {
 
 
   /**
-   * Return true if this Plan object is equal to o.
+   * Return true if this PlanDefinition object is equal to o.
    */
   @Override
   public boolean equals(Object o) {
@@ -176,11 +176,11 @@ public class Plan {
     if (o == null || getClass() != o.getClass()) {
       return false;
     }
-    Plan plan = (Plan) o;
-    return Objects.equals(this.displayName, plan.displayName) &&
-        Objects.equals(this.description, plan.description) &&
-        Objects.equals(this.priceMonthlyCents, plan.priceMonthlyCents) &&
-        Objects.equals(this.limits, plan.limits);
+    PlanDefinition planDefinition = (PlanDefinition) o;
+    return Objects.equals(this.displayName, planDefinition.displayName) &&
+        Objects.equals(this.description, planDefinition.description) &&
+        Objects.equals(this.priceMonthlyCents, planDefinition.priceMonthlyCents) &&
+        Objects.equals(this.limits, planDefinition.limits);
   }
 
   @Override
@@ -191,7 +191,7 @@ public class Plan {
   @Override
   public String toString() {
     StringBuilder sb = new StringBuilder();
-    sb.append("class Plan {\n");
+    sb.append("class PlanDefinition {\n");
     sb.append("    displayName: ").append(toIndentedString(displayName)).append("\n");
     sb.append("    description: ").append(toIndentedString(description)).append("\n");
     sb.append("    priceMonthlyCents: ").append(toIndentedString(priceMonthlyCents)).append("\n");

@@ -36,7 +36,7 @@ import com.smplkit.internal.generated.app.ApiClient;
   InvitationCreateItem.JSON_PROPERTY_EMAIL,
   InvitationCreateItem.JSON_PROPERTY_ROLE
 })
-@jakarta.annotation.Generated(value = "org.openapitools.codegen.languages.JavaClientCodegen", date = "2026-03-30T09:45:20.125008942Z[Etc/UTC]", comments = "Generator version: 7.21.0")
+@jakarta.annotation.Generated(value = "org.openapitools.codegen.languages.JavaClientCodegen", date = "2026-03-31T00:50:24.002790486Z[Etc/UTC]", comments = "Generator version: 7.21.0")
 public class InvitationCreateItem {
   public static final String JSON_PROPERTY_EMAIL = "email";
   @jakarta.annotation.Nonnull

@@ -24,26 +24,26 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonTypeName;
 import com.fasterxml.jackson.annotation.JsonValue;
+import com.smplkit.internal.generated.app.model.LimitDefinition;
+import com.smplkit.internal.generated.app.model.PlanDefinition;
 import java.util.Arrays;
-import org.openapitools.jackson.nullable.JsonNullable;
-import com.fasterxml.jackson.annotation.JsonIgnore;
-import org.openapitools.jackson.nullable.JsonNullable;
-import java.util.NoSuchElementException;
+import java.util.HashMap;
+import java.util.Map;
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 
 
 import com.smplkit.internal.generated.app.ApiClient;
 /**
- * Limit
+ * Product
  */
 @JsonPropertyOrder({
-  Limit.JSON_PROPERTY_DISPLAY_NAME,
-  Limit.JSON_PROPERTY_DESCRIPTION,
-  Limit.JSON_PROPERTY_UNIT,
-  Limit.JSON_PROPERTY_DISPLAY_FORMAT
+  Product.JSON_PROPERTY_DISPLAY_NAME,
+  Product.JSON_PROPERTY_DESCRIPTION,
+  Product.JSON_PROPERTY_LIMITS,
+  Product.JSON_PROPERTY_PLANS
 })
-@jakarta.annotation.Generated(value = "org.openapitools.codegen.languages.JavaClientCodegen", date = "2026-03-30T09:45:20.125008942Z[Etc/UTC]", comments = "Generator version: 7.21.0")
-public class Limit {
+@jakarta.annotation.Generated(value = "org.openapitools.codegen.languages.JavaClientCodegen", date = "2026-03-31T00:50:24.002790486Z[Etc/UTC]", comments = "Generator version: 7.21.0")
+public class Product {
   public static final String JSON_PROPERTY_DISPLAY_NAME = "display_name";
   @jakarta.annotation.Nonnull
   private String displayName;
@@ -52,17 +52,18 @@ public class Limit {
   @jakarta.annotation.Nonnull
   private String description;
 
-  public static final String JSON_PROPERTY_UNIT = "unit";
+  public static final String JSON_PROPERTY_LIMITS = "limits";
   @jakarta.annotation.Nonnull
-  private String unit;
+  private Map<String, LimitDefinition> limits = new HashMap<>();
 
-  public static final String JSON_PROPERTY_DISPLAY_FORMAT = "display_format";
-  private JsonNullable<String> displayFormat = JsonNullable.<String>undefined();
+  public static final String JSON_PROPERTY_PLANS = "plans";
+  @jakarta.annotation.Nonnull
+  private Map<String, PlanDefinition> plans = new HashMap<>();
 
-  public Limit() { 
+  public Product() { 
   }
 
-  public Limit displayName(@jakarta.annotation.Nonnull String displayName) {
+  public Product displayName(@jakarta.annotation.Nonnull String displayName) {
     this.displayName = displayName;
     return this;
   }
@@ -86,7 +87,7 @@ public class Limit {
   }
 
 
-  public Limit description(@jakarta.annotation.Nonnull String description) {
+  public Product description(@jakarta.annotation.Nonnull String description) {
     this.description = description;
     return this;
   }
@@ -110,64 +111,72 @@ public class Limit {
   }
 
 
-  public Limit unit(@jakarta.annotation.Nonnull String unit) {
-    this.unit = unit;
+  public Product limits(@jakarta.annotation.Nonnull Map<String, LimitDefinition> limits) {
+    this.limits = limits;
+    return this;
+  }
+
+  public Product putLimitsItem(String key, LimitDefinition limitsItem) {
+    if (this.limits == null) {
+      this.limits = new HashMap<>();
+    }
+    this.limits.put(key, limitsItem);
     return this;
   }
 
   /**
-   * Get unit
-   * @return unit
+   * Get limits
+   * @return limits
    */
   @jakarta.annotation.Nonnull
-  @JsonProperty(value = JSON_PROPERTY_UNIT, required = true)
+  @JsonProperty(value = JSON_PROPERTY_LIMITS, required = true)
   @JsonInclude(value = JsonInclude.Include.ALWAYS)
-  public String getUnit() {
-    return unit;
+  public Map<String, LimitDefinition> getLimits() {
+    return limits;
   }
 
 
-  @JsonProperty(value = JSON_PROPERTY_UNIT, required = true)
+  @JsonProperty(value = JSON_PROPERTY_LIMITS, required = true)
   @JsonInclude(value = JsonInclude.Include.ALWAYS)
-  public void setUnit(@jakarta.annotation.Nonnull String unit) {
-    this.unit = unit;
+  public void setLimits(@jakarta.annotation.Nonnull Map<String, LimitDefinition> limits) {
+    this.limits = limits;
   }
 
 
-  public Limit displayFormat(@jakarta.annotation.Nullable String displayFormat) {
-    this.displayFormat = JsonNullable.<String>of(displayFormat);
+  public Product plans(@jakarta.annotation.Nonnull Map<String, PlanDefinition> plans) {
+    this.plans = plans;
+    return this;
+  }
+
+  public Product putPlansItem(String key, PlanDefinition plansItem) {
+    if (this.plans == null) {
+      this.plans = new HashMap<>();
+    }
+    this.plans.put(key, plansItem);
     return this;
   }
 
   /**
-   * Get displayFormat
-   * @return displayFormat
+   * Get plans
+   * @return plans
    */
-  @jakarta.annotation.Nullable
-  @JsonIgnore
-  public String getDisplayFormat() {
-        return displayFormat.orElse(null);
+  @jakarta.annotation.Nonnull
+  @JsonProperty(value = JSON_PROPERTY_PLANS, required = true)
+  @JsonInclude(value = JsonInclude.Include.ALWAYS)
+  public Map<String, PlanDefinition> getPlans() {
+    return plans;
   }
 
-  @JsonProperty(value = JSON_PROPERTY_DISPLAY_FORMAT, required = false)
-  @JsonInclude(value = JsonInclude.Include.USE_DEFAULTS)
 
-  public JsonNullable<String> getDisplayFormat_JsonNullable() {
-    return displayFormat;
-  }
-  
-  @JsonProperty(JSON_PROPERTY_DISPLAY_FORMAT)
-  public void setDisplayFormat_JsonNullable(JsonNullable<String> displayFormat) {
-    this.displayFormat = displayFormat;
-  }
-
-  public void setDisplayFormat(@jakarta.annotation.Nullable String displayFormat) {
-    this.displayFormat = JsonNullable.<String>of(displayFormat);
+  @JsonProperty(value = JSON_PROPERTY_PLANS, required = true)
+  @JsonInclude(value = JsonInclude.Include.ALWAYS)
+  public void setPlans(@jakarta.annotation.Nonnull Map<String, PlanDefinition> plans) {
+    this.plans = plans;
   }
 
 
   /**
-   * Return true if this Limit object is equal to o.
+   * Return true if this Product object is equal to o.
    */
   @Override
   public boolean equals(Object o) {
@@ -177,37 +186,26 @@ public class Limit {
     if (o == null || getClass() != o.getClass()) {
       return false;
     }
-    Limit limit = (Limit) o;
-    return Objects.equals(this.displayName, limit.displayName) &&
-        Objects.equals(this.description, limit.description) &&
-        Objects.equals(this.unit, limit.unit) &&
-        equalsNullable(this.displayFormat, limit.displayFormat);
-  }
-
-  private static <T> boolean equalsNullable(JsonNullable<T> a, JsonNullable<T> b) {
-    return a == b || (a != null && b != null && a.isPresent() && b.isPresent() && Objects.deepEquals(a.get(), b.get()));
+    Product product = (Product) o;
+    return Objects.equals(this.displayName, product.displayName) &&
+        Objects.equals(this.description, product.description) &&
+        Objects.equals(this.limits, product.limits) &&
+        Objects.equals(this.plans, product.plans);
   }
 
   @Override
   public int hashCode() {
-    return Objects.hash(displayName, description, unit, hashCodeNullable(displayFormat));
-  }
-
-  private static <T> int hashCodeNullable(JsonNullable<T> a) {
-    if (a == null) {
-      return 1;
-    }
-    return a.isPresent() ? Arrays.deepHashCode(new Object[]{a.get()}) : 31;
+    return Objects.hash(displayName, description, limits, plans);
   }
 
   @Override
   public String toString() {
     StringBuilder sb = new StringBuilder();
-    sb.append("class Limit {\n");
+    sb.append("class Product {\n");
     sb.append("    displayName: ").append(toIndentedString(displayName)).append("\n");
     sb.append("    description: ").append(toIndentedString(description)).append("\n");
-    sb.append("    unit: ").append(toIndentedString(unit)).append("\n");
-    sb.append("    displayFormat: ").append(toIndentedString(displayFormat)).append("\n");
+    sb.append("    limits: ").append(toIndentedString(limits)).append("\n");
+    sb.append("    plans: ").append(toIndentedString(plans)).append("\n");
     sb.append("}");
     return sb.toString();
   }
@@ -262,14 +260,24 @@ public class Limit {
       joiner.add(String.format(java.util.Locale.ROOT, "%sdescription%s=%s", prefix, suffix, ApiClient.urlEncode(ApiClient.valueToString(getDescription()))));
     }
 
-    // add `unit` to the URL query string
-    if (getUnit() != null) {
-      joiner.add(String.format(java.util.Locale.ROOT, "%sunit%s=%s", prefix, suffix, ApiClient.urlEncode(ApiClient.valueToString(getUnit()))));
+    // add `limits` to the URL query string
+    if (getLimits() != null) {
+      for (String _key : getLimits().keySet()) {
+        if (getLimits().get(_key) != null) {
+          joiner.add(getLimits().get(_key).toUrlQueryString(String.format(java.util.Locale.ROOT, "%slimits%s%s", prefix, suffix,
+              "".equals(suffix) ? "" : String.format(java.util.Locale.ROOT, "%s%d%s", containerPrefix, _key, containerSuffix))));
+        }
+      }
     }
 
-    // add `display_format` to the URL query string
-    if (getDisplayFormat() != null) {
-      joiner.add(String.format(java.util.Locale.ROOT, "%sdisplay_format%s=%s", prefix, suffix, ApiClient.urlEncode(ApiClient.valueToString(getDisplayFormat()))));
+    // add `plans` to the URL query string
+    if (getPlans() != null) {
+      for (String _key : getPlans().keySet()) {
+        if (getPlans().get(_key) != null) {
+          joiner.add(getPlans().get(_key).toUrlQueryString(String.format(java.util.Locale.ROOT, "%splans%s%s", prefix, suffix,
+              "".equals(suffix) ? "" : String.format(java.util.Locale.ROOT, "%s%d%s", containerPrefix, _key, containerSuffix))));
+        }
+      }
     }
 
     return joiner.toString();

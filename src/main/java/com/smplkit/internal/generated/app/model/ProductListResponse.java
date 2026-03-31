@@ -24,7 +24,7 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonTypeName;
 import com.fasterxml.jackson.annotation.JsonValue;
-import com.smplkit.internal.generated.app.model.PlanResource;
+import com.smplkit.internal.generated.app.model.ProductResource;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -33,26 +33,26 @@ import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 
 import com.smplkit.internal.generated.app.ApiClient;
 /**
- * PlanListResponse
+ * ProductListResponse
  */
 @JsonPropertyOrder({
-  PlanListResponse.JSON_PROPERTY_DATA
+  ProductListResponse.JSON_PROPERTY_DATA
 })
-@jakarta.annotation.Generated(value = "org.openapitools.codegen.languages.JavaClientCodegen", date = "2026-03-30T09:45:20.125008942Z[Etc/UTC]", comments = "Generator version: 7.21.0")
-public class PlanListResponse {
+@jakarta.annotation.Generated(value = "org.openapitools.codegen.languages.JavaClientCodegen", date = "2026-03-31T00:50:24.002790486Z[Etc/UTC]", comments = "Generator version: 7.21.0")
+public class ProductListResponse {
   public static final String JSON_PROPERTY_DATA = "data";
   @jakarta.annotation.Nonnull
-  private List<PlanResource> data = new ArrayList<>();
+  private List<ProductResource> data = new ArrayList<>();
 
-  public PlanListResponse() { 
+  public ProductListResponse() { 
   }
 
-  public PlanListResponse data(@jakarta.annotation.Nonnull List<PlanResource> data) {
+  public ProductListResponse data(@jakarta.annotation.Nonnull List<ProductResource> data) {
     this.data = data;
     return this;
   }
 
-  public PlanListResponse addDataItem(PlanResource dataItem) {
+  public ProductListResponse addDataItem(ProductResource dataItem) {
     if (this.data == null) {
       this.data = new ArrayList<>();
     }
@@ -67,20 +67,20 @@ public class PlanListResponse {
   @jakarta.annotation.Nonnull
   @JsonProperty(value = JSON_PROPERTY_DATA, required = true)
   @JsonInclude(value = JsonInclude.Include.ALWAYS)
-  public List<PlanResource> getData() {
+  public List<ProductResource> getData() {
     return data;
   }
 
 
   @JsonProperty(value = JSON_PROPERTY_DATA, required = true)
   @JsonInclude(value = JsonInclude.Include.ALWAYS)
-  public void setData(@jakarta.annotation.Nonnull List<PlanResource> data) {
+  public void setData(@jakarta.annotation.Nonnull List<ProductResource> data) {
     this.data = data;
   }
 
 
   /**
-   * Return true if this PlanListResponse object is equal to o.
+   * Return true if this ProductListResponse object is equal to o.
    */
   @Override
   public boolean equals(Object o) {
@@ -90,8 +90,8 @@ public class PlanListResponse {
     if (o == null || getClass() != o.getClass()) {
       return false;
     }
-    PlanListResponse planListResponse = (PlanListResponse) o;
-    return Objects.equals(this.data, planListResponse.data);
+    ProductListResponse productListResponse = (ProductListResponse) o;
+    return Objects.equals(this.data, productListResponse.data);
   }
 
   @Override
@@ -102,7 +102,7 @@ public class PlanListResponse {
   @Override
   public String toString() {
     StringBuilder sb = new StringBuilder();
-    sb.append("class PlanListResponse {\n");
+    sb.append("class ProductListResponse {\n");
     sb.append("    data: ").append(toIndentedString(data)).append("\n");
     sb.append("}");
     return sb.toString();
