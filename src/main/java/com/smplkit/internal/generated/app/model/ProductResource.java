@@ -24,7 +24,7 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonTypeName;
 import com.fasterxml.jackson.annotation.JsonValue;
-import com.smplkit.internal.generated.app.model.Limit;
+import com.smplkit.internal.generated.app.model.Product;
 import java.util.Arrays;
 import org.openapitools.jackson.nullable.JsonNullable;
 import com.fasterxml.jackson.annotation.JsonIgnore;
@@ -35,15 +35,15 @@ import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 
 import com.smplkit.internal.generated.app.ApiClient;
 /**
- * LimitResource
+ * ProductResource
  */
 @JsonPropertyOrder({
-  LimitResource.JSON_PROPERTY_ID,
-  LimitResource.JSON_PROPERTY_TYPE,
-  LimitResource.JSON_PROPERTY_ATTRIBUTES
+  ProductResource.JSON_PROPERTY_ID,
+  ProductResource.JSON_PROPERTY_TYPE,
+  ProductResource.JSON_PROPERTY_ATTRIBUTES
 })
-@jakarta.annotation.Generated(value = "org.openapitools.codegen.languages.JavaClientCodegen", date = "2026-03-30T09:45:20.125008942Z[Etc/UTC]", comments = "Generator version: 7.21.0")
-public class LimitResource {
+@jakarta.annotation.Generated(value = "org.openapitools.codegen.languages.JavaClientCodegen", date = "2026-03-31T00:50:24.002790486Z[Etc/UTC]", comments = "Generator version: 7.21.0")
+public class ProductResource {
   public static final String JSON_PROPERTY_ID = "id";
   private JsonNullable<String> id = JsonNullable.<String>undefined();
 
@@ -51,7 +51,7 @@ public class LimitResource {
    * Gets or Sets type
    */
   public enum TypeEnum {
-    LIMIT(String.valueOf("limit"));
+    PRODUCT(String.valueOf("product"));
 
     private String value;
 
@@ -86,12 +86,12 @@ public class LimitResource {
 
   public static final String JSON_PROPERTY_ATTRIBUTES = "attributes";
   @jakarta.annotation.Nonnull
-  private Limit attributes;
+  private Product attributes;
 
-  public LimitResource() { 
+  public ProductResource() { 
   }
 
-  public LimitResource id(@jakarta.annotation.Nullable String id) {
+  public ProductResource id(@jakarta.annotation.Nullable String id) {
     this.id = JsonNullable.<String>of(id);
     return this;
   }
@@ -123,7 +123,7 @@ public class LimitResource {
   }
 
 
-  public LimitResource type(@jakarta.annotation.Nonnull TypeEnum type) {
+  public ProductResource type(@jakarta.annotation.Nonnull TypeEnum type) {
     this.type = type;
     return this;
   }
@@ -147,7 +147,7 @@ public class LimitResource {
   }
 
 
-  public LimitResource attributes(@jakarta.annotation.Nonnull Limit attributes) {
+  public ProductResource attributes(@jakarta.annotation.Nonnull Product attributes) {
     this.attributes = attributes;
     return this;
   }
@@ -159,20 +159,20 @@ public class LimitResource {
   @jakarta.annotation.Nonnull
   @JsonProperty(value = JSON_PROPERTY_ATTRIBUTES, required = true)
   @JsonInclude(value = JsonInclude.Include.ALWAYS)
-  public Limit getAttributes() {
+  public Product getAttributes() {
     return attributes;
   }
 
 
   @JsonProperty(value = JSON_PROPERTY_ATTRIBUTES, required = true)
   @JsonInclude(value = JsonInclude.Include.ALWAYS)
-  public void setAttributes(@jakarta.annotation.Nonnull Limit attributes) {
+  public void setAttributes(@jakarta.annotation.Nonnull Product attributes) {
     this.attributes = attributes;
   }
 
 
   /**
-   * Return true if this LimitResource object is equal to o.
+   * Return true if this ProductResource object is equal to o.
    */
   @Override
   public boolean equals(Object o) {
@@ -182,10 +182,10 @@ public class LimitResource {
     if (o == null || getClass() != o.getClass()) {
       return false;
     }
-    LimitResource limitResource = (LimitResource) o;
-    return equalsNullable(this.id, limitResource.id) &&
-        Objects.equals(this.type, limitResource.type) &&
-        Objects.equals(this.attributes, limitResource.attributes);
+    ProductResource productResource = (ProductResource) o;
+    return equalsNullable(this.id, productResource.id) &&
+        Objects.equals(this.type, productResource.type) &&
+        Objects.equals(this.attributes, productResource.attributes);
   }
 
   private static <T> boolean equalsNullable(JsonNullable<T> a, JsonNullable<T> b) {
@@ -207,7 +207,7 @@ public class LimitResource {
   @Override
   public String toString() {
     StringBuilder sb = new StringBuilder();
-    sb.append("class LimitResource {\n");
+    sb.append("class ProductResource {\n");
     sb.append("    id: ").append(toIndentedString(id)).append("\n");
     sb.append("    type: ").append(toIndentedString(type)).append("\n");
     sb.append("    attributes: ").append(toIndentedString(attributes)).append("\n");

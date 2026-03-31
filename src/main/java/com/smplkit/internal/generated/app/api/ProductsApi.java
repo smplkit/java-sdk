@@ -19,8 +19,7 @@ import com.smplkit.internal.generated.app.Configuration;
 import com.smplkit.internal.generated.app.Pair;
 
 import com.smplkit.internal.generated.app.model.ErrorResponse;
-import com.smplkit.internal.generated.app.model.LimitListResponse;
-import com.smplkit.internal.generated.app.model.PlanListResponse;
+import com.smplkit.internal.generated.app.model.ProductListResponse;
 
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -47,8 +46,8 @@ import java.util.Map;
 import java.util.Set;
 import java.util.function.Consumer;
 
-@jakarta.annotation.Generated(value = "org.openapitools.codegen.languages.JavaClientCodegen", date = "2026-03-30T09:45:20.125008942Z[Etc/UTC]", comments = "Generator version: 7.21.0")
-public class PlansApi {
+@jakarta.annotation.Generated(value = "org.openapitools.codegen.languages.JavaClientCodegen", date = "2026-03-31T00:50:24.002790486Z[Etc/UTC]", comments = "Generator version: 7.21.0")
+public class ProductsApi {
   /**
    * Utility class for extending HttpRequest.Builder functionality.
    */
@@ -77,11 +76,11 @@ public class PlansApi {
   private final Consumer<HttpResponse<InputStream>> memberVarResponseInterceptor;
   private final Consumer<HttpResponse<InputStream>> memberVarAsyncResponseInterceptor;
 
-  public PlansApi() {
+  public ProductsApi() {
     this(Configuration.getDefaultApiClient());
   }
 
-  public PlansApi(ApiClient apiClient) {
+  public ProductsApi(ApiClient apiClient) {
     memberVarHttpClient = apiClient.getHttpClient();
     memberVarObjectMapper = apiClient.getObjectMapper();
     memberVarBaseUri = apiClient.getBaseUri();
@@ -165,46 +164,46 @@ public class PlansApi {
   }
 
   /**
-   * List Limits
-   * Return all limit definitions as JSON:API resources.
-   * @return LimitListResponse
+   * List Products
+   * Return all products with their plans and limits as JSON:API resources.
+   * @return ProductListResponse
    * @throws ApiException if fails to make API call
    */
-  public LimitListResponse listLimits() throws ApiException {
-    return listLimits(null);
+  public ProductListResponse listProducts() throws ApiException {
+    return listProducts(null);
   }
 
   /**
-   * List Limits
-   * Return all limit definitions as JSON:API resources.
+   * List Products
+   * Return all products with their plans and limits as JSON:API resources.
    * @param headers Optional headers to include in the request
-   * @return LimitListResponse
+   * @return ProductListResponse
    * @throws ApiException if fails to make API call
    */
-  public LimitListResponse listLimits(Map<String, String> headers) throws ApiException {
-    ApiResponse<LimitListResponse> localVarResponse = listLimitsWithHttpInfo(headers);
+  public ProductListResponse listProducts(Map<String, String> headers) throws ApiException {
+    ApiResponse<ProductListResponse> localVarResponse = listProductsWithHttpInfo(headers);
     return localVarResponse.getData();
   }
 
   /**
-   * List Limits
-   * Return all limit definitions as JSON:API resources.
-   * @return ApiResponse&lt;LimitListResponse&gt;
+   * List Products
+   * Return all products with their plans and limits as JSON:API resources.
+   * @return ApiResponse&lt;ProductListResponse&gt;
    * @throws ApiException if fails to make API call
    */
-  public ApiResponse<LimitListResponse> listLimitsWithHttpInfo() throws ApiException {
-    return listLimitsWithHttpInfo(null);
+  public ApiResponse<ProductListResponse> listProductsWithHttpInfo() throws ApiException {
+    return listProductsWithHttpInfo(null);
   }
 
   /**
-   * List Limits
-   * Return all limit definitions as JSON:API resources.
+   * List Products
+   * Return all products with their plans and limits as JSON:API resources.
    * @param headers Optional headers to include in the request
-   * @return ApiResponse&lt;LimitListResponse&gt;
+   * @return ApiResponse&lt;ProductListResponse&gt;
    * @throws ApiException if fails to make API call
    */
-  public ApiResponse<LimitListResponse> listLimitsWithHttpInfo(Map<String, String> headers) throws ApiException {
-    HttpRequest.Builder localVarRequestBuilder = listLimitsRequestBuilder(headers);
+  public ApiResponse<ProductListResponse> listProductsWithHttpInfo(Map<String, String> headers) throws ApiException {
+    HttpRequest.Builder localVarRequestBuilder = listProductsRequestBuilder(headers);
     try {
       HttpResponse<InputStream> localVarResponse = memberVarHttpClient.send(
           localVarRequestBuilder.build(),
@@ -215,11 +214,11 @@ public class PlansApi {
       InputStream localVarResponseBody = null;
       try {
         if (localVarResponse.statusCode()/ 100 != 2) {
-          throw getApiException("listLimits", localVarResponse);
+          throw getApiException("listProducts", localVarResponse);
         }
         localVarResponseBody = ApiClient.getResponseBody(localVarResponse);
         if (localVarResponseBody == null) {
-          return new ApiResponse<LimitListResponse>(
+          return new ApiResponse<ProductListResponse>(
               localVarResponse.statusCode(),
               localVarResponse.headers().map(),
               null
@@ -229,10 +228,10 @@ public class PlansApi {
         
         
         String responseBody = new String(localVarResponseBody.readAllBytes());
-        LimitListResponse responseValue = responseBody.isBlank()? null: memberVarObjectMapper.readValue(responseBody, new TypeReference<LimitListResponse>() {});
+        ProductListResponse responseValue = responseBody.isBlank()? null: memberVarObjectMapper.readValue(responseBody, new TypeReference<ProductListResponse>() {});
         
 
-        return new ApiResponse<LimitListResponse>(
+        return new ApiResponse<ProductListResponse>(
             localVarResponse.statusCode(),
             localVarResponse.headers().map(),
             responseValue
@@ -251,120 +250,11 @@ public class PlansApi {
     }
   }
 
-  private HttpRequest.Builder listLimitsRequestBuilder(Map<String, String> headers) throws ApiException {
+  private HttpRequest.Builder listProductsRequestBuilder(Map<String, String> headers) throws ApiException {
 
     HttpRequest.Builder localVarRequestBuilder = HttpRequest.newBuilder();
 
-    String localVarPath = "/api/v1/limits";
-
-    localVarRequestBuilder.uri(URI.create(memberVarBaseUri + localVarPath));
-
-    localVarRequestBuilder.header("Accept", "application/vnd.api+json");
-
-    localVarRequestBuilder.method("GET", HttpRequest.BodyPublishers.noBody());
-    if (memberVarReadTimeout != null) {
-      localVarRequestBuilder.timeout(memberVarReadTimeout);
-    }
-    // Add custom headers if provided
-    localVarRequestBuilder = HttpRequestBuilderExtensions.withAdditionalHeaders(localVarRequestBuilder, headers);
-    if (memberVarInterceptor != null) {
-      memberVarInterceptor.accept(localVarRequestBuilder);
-    }
-    return localVarRequestBuilder;
-  }
-
-  /**
-   * List Plans
-   * Return all subscription plans as JSON:API resources.
-   * @return PlanListResponse
-   * @throws ApiException if fails to make API call
-   */
-  public PlanListResponse listPlans() throws ApiException {
-    return listPlans(null);
-  }
-
-  /**
-   * List Plans
-   * Return all subscription plans as JSON:API resources.
-   * @param headers Optional headers to include in the request
-   * @return PlanListResponse
-   * @throws ApiException if fails to make API call
-   */
-  public PlanListResponse listPlans(Map<String, String> headers) throws ApiException {
-    ApiResponse<PlanListResponse> localVarResponse = listPlansWithHttpInfo(headers);
-    return localVarResponse.getData();
-  }
-
-  /**
-   * List Plans
-   * Return all subscription plans as JSON:API resources.
-   * @return ApiResponse&lt;PlanListResponse&gt;
-   * @throws ApiException if fails to make API call
-   */
-  public ApiResponse<PlanListResponse> listPlansWithHttpInfo() throws ApiException {
-    return listPlansWithHttpInfo(null);
-  }
-
-  /**
-   * List Plans
-   * Return all subscription plans as JSON:API resources.
-   * @param headers Optional headers to include in the request
-   * @return ApiResponse&lt;PlanListResponse&gt;
-   * @throws ApiException if fails to make API call
-   */
-  public ApiResponse<PlanListResponse> listPlansWithHttpInfo(Map<String, String> headers) throws ApiException {
-    HttpRequest.Builder localVarRequestBuilder = listPlansRequestBuilder(headers);
-    try {
-      HttpResponse<InputStream> localVarResponse = memberVarHttpClient.send(
-          localVarRequestBuilder.build(),
-          HttpResponse.BodyHandlers.ofInputStream());
-      if (memberVarResponseInterceptor != null) {
-        memberVarResponseInterceptor.accept(localVarResponse);
-      }
-      InputStream localVarResponseBody = null;
-      try {
-        if (localVarResponse.statusCode()/ 100 != 2) {
-          throw getApiException("listPlans", localVarResponse);
-        }
-        localVarResponseBody = ApiClient.getResponseBody(localVarResponse);
-        if (localVarResponseBody == null) {
-          return new ApiResponse<PlanListResponse>(
-              localVarResponse.statusCode(),
-              localVarResponse.headers().map(),
-              null
-          );
-        }
-
-        
-        
-        String responseBody = new String(localVarResponseBody.readAllBytes());
-        PlanListResponse responseValue = responseBody.isBlank()? null: memberVarObjectMapper.readValue(responseBody, new TypeReference<PlanListResponse>() {});
-        
-
-        return new ApiResponse<PlanListResponse>(
-            localVarResponse.statusCode(),
-            localVarResponse.headers().map(),
-            responseValue
-        );
-      } finally {
-        if (localVarResponseBody != null) {
-          localVarResponseBody.close();
-        }
-      }
-    } catch (IOException e) {
-      throw new ApiException(e);
-    }
-    catch (InterruptedException e) {
-      Thread.currentThread().interrupt();
-      throw new ApiException(e);
-    }
-  }
-
-  private HttpRequest.Builder listPlansRequestBuilder(Map<String, String> headers) throws ApiException {
-
-    HttpRequest.Builder localVarRequestBuilder = HttpRequest.newBuilder();
-
-    String localVarPath = "/api/v1/plans";
+    String localVarPath = "/api/v1/products";
 
     localVarRequestBuilder.uri(URI.create(memberVarBaseUri + localVarPath));
 
