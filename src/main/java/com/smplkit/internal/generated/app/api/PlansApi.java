@@ -19,7 +19,7 @@ import com.smplkit.internal.generated.app.Configuration;
 import com.smplkit.internal.generated.app.Pair;
 
 import com.smplkit.internal.generated.app.model.ErrorResponse;
-import com.smplkit.internal.generated.app.model.ProductListResponse;
+import com.smplkit.internal.generated.app.model.PlanListResponse;
 
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -47,7 +47,7 @@ import java.util.Set;
 import java.util.function.Consumer;
 
 @jakarta.annotation.Generated(value = "org.openapitools.codegen.languages.JavaClientCodegen", date = "2026-04-01T22:33:36.657116370Z[Etc/UTC]", comments = "Generator version: 7.21.0")
-public class ProductsApi {
+public class PlansApi {
   /**
    * Utility class for extending HttpRequest.Builder functionality.
    */
@@ -76,11 +76,11 @@ public class ProductsApi {
   private final Consumer<HttpResponse<InputStream>> memberVarResponseInterceptor;
   private final Consumer<HttpResponse<InputStream>> memberVarAsyncResponseInterceptor;
 
-  public ProductsApi() {
+  public PlansApi() {
     this(Configuration.getDefaultApiClient());
   }
 
-  public ProductsApi(ApiClient apiClient) {
+  public PlansApi(ApiClient apiClient) {
     memberVarHttpClient = apiClient.getHttpClient();
     memberVarObjectMapper = apiClient.getObjectMapper();
     memberVarBaseUri = apiClient.getBaseUri();
@@ -164,46 +164,46 @@ public class ProductsApi {
   }
 
   /**
-   * List Products
-   * Return all products with their plans and limits as JSON:API resources.
-   * @return ProductListResponse
+   * List Plans
+   * Return all plan tier definitions as JSON:API resources.
+   * @return PlanListResponse
    * @throws ApiException if fails to make API call
    */
-  public ProductListResponse listProducts() throws ApiException {
-    return listProducts(null);
+  public PlanListResponse listPlans() throws ApiException {
+    return listPlans(null);
   }
 
   /**
-   * List Products
-   * Return all products with their plans and limits as JSON:API resources.
+   * List Plans
+   * Return all plan tier definitions as JSON:API resources.
    * @param headers Optional headers to include in the request
-   * @return ProductListResponse
+   * @return PlanListResponse
    * @throws ApiException if fails to make API call
    */
-  public ProductListResponse listProducts(Map<String, String> headers) throws ApiException {
-    ApiResponse<ProductListResponse> localVarResponse = listProductsWithHttpInfo(headers);
+  public PlanListResponse listPlans(Map<String, String> headers) throws ApiException {
+    ApiResponse<PlanListResponse> localVarResponse = listPlansWithHttpInfo(headers);
     return localVarResponse.getData();
   }
 
   /**
-   * List Products
-   * Return all products with their plans and limits as JSON:API resources.
-   * @return ApiResponse&lt;ProductListResponse&gt;
+   * List Plans
+   * Return all plan tier definitions as JSON:API resources.
+   * @return ApiResponse&lt;PlanListResponse&gt;
    * @throws ApiException if fails to make API call
    */
-  public ApiResponse<ProductListResponse> listProductsWithHttpInfo() throws ApiException {
-    return listProductsWithHttpInfo(null);
+  public ApiResponse<PlanListResponse> listPlansWithHttpInfo() throws ApiException {
+    return listPlansWithHttpInfo(null);
   }
 
   /**
-   * List Products
-   * Return all products with their plans and limits as JSON:API resources.
+   * List Plans
+   * Return all plan tier definitions as JSON:API resources.
    * @param headers Optional headers to include in the request
-   * @return ApiResponse&lt;ProductListResponse&gt;
+   * @return ApiResponse&lt;PlanListResponse&gt;
    * @throws ApiException if fails to make API call
    */
-  public ApiResponse<ProductListResponse> listProductsWithHttpInfo(Map<String, String> headers) throws ApiException {
-    HttpRequest.Builder localVarRequestBuilder = listProductsRequestBuilder(headers);
+  public ApiResponse<PlanListResponse> listPlansWithHttpInfo(Map<String, String> headers) throws ApiException {
+    HttpRequest.Builder localVarRequestBuilder = listPlansRequestBuilder(headers);
     try {
       HttpResponse<InputStream> localVarResponse = memberVarHttpClient.send(
           localVarRequestBuilder.build(),
@@ -214,11 +214,11 @@ public class ProductsApi {
       InputStream localVarResponseBody = null;
       try {
         if (localVarResponse.statusCode()/ 100 != 2) {
-          throw getApiException("listProducts", localVarResponse);
+          throw getApiException("listPlans", localVarResponse);
         }
         localVarResponseBody = ApiClient.getResponseBody(localVarResponse);
         if (localVarResponseBody == null) {
-          return new ApiResponse<ProductListResponse>(
+          return new ApiResponse<PlanListResponse>(
               localVarResponse.statusCode(),
               localVarResponse.headers().map(),
               null
@@ -228,10 +228,10 @@ public class ProductsApi {
         
         
         String responseBody = new String(localVarResponseBody.readAllBytes());
-        ProductListResponse responseValue = responseBody.isBlank()? null: memberVarObjectMapper.readValue(responseBody, new TypeReference<ProductListResponse>() {});
+        PlanListResponse responseValue = responseBody.isBlank()? null: memberVarObjectMapper.readValue(responseBody, new TypeReference<PlanListResponse>() {});
         
 
-        return new ApiResponse<ProductListResponse>(
+        return new ApiResponse<PlanListResponse>(
             localVarResponse.statusCode(),
             localVarResponse.headers().map(),
             responseValue
@@ -250,11 +250,11 @@ public class ProductsApi {
     }
   }
 
-  private HttpRequest.Builder listProductsRequestBuilder(Map<String, String> headers) throws ApiException {
+  private HttpRequest.Builder listPlansRequestBuilder(Map<String, String> headers) throws ApiException {
 
     HttpRequest.Builder localVarRequestBuilder = HttpRequest.newBuilder();
 
-    String localVarPath = "/api/v1/products";
+    String localVarPath = "/api/v1/plans";
 
     localVarRequestBuilder.uri(URI.create(memberVarBaseUri + localVarPath));
 
