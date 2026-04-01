@@ -54,7 +54,7 @@ import com.smplkit.internal.generated.flags.ApiClient;
   Flag.JSON_PROPERTY_CREATED_AT,
   Flag.JSON_PROPERTY_UPDATED_AT
 })
-@jakarta.annotation.Generated(value = "org.openapitools.codegen.languages.JavaClientCodegen", date = "2026-03-31T01:17:57.185779220Z[Etc/UTC]", comments = "Generator version: 7.21.0")
+@jakarta.annotation.Generated(value = "org.openapitools.codegen.languages.JavaClientCodegen", date = "2026-04-01T01:26:18.180766222Z[Etc/UTC]", comments = "Generator version: 7.21.0")
 public class Flag {
   public static final String JSON_PROPERTY_KEY = "key";
   @jakarta.annotation.Nonnull
@@ -65,7 +65,8 @@ public class Flag {
   private String name;
 
   public static final String JSON_PROPERTY_DESCRIPTION = "description";
-  private JsonNullable<String> description = JsonNullable.<String>undefined();
+  @jakarta.annotation.Nullable
+  private String description = "";
 
   public static final String JSON_PROPERTY_TYPE = "type";
   @jakarta.annotation.Nonnull
@@ -151,7 +152,7 @@ public class Flag {
 
 
   public Flag description(@jakarta.annotation.Nullable String description) {
-    this.description = JsonNullable.<String>of(description);
+    this.description = description;
     return this;
   }
 
@@ -160,25 +161,17 @@ public class Flag {
    * @return description
    */
   @jakarta.annotation.Nullable
-  @JsonIgnore
+  @JsonProperty(value = JSON_PROPERTY_DESCRIPTION, required = false)
+  @JsonInclude(value = JsonInclude.Include.USE_DEFAULTS)
   public String getDescription() {
-        return description.orElse(null);
+    return description;
   }
+
 
   @JsonProperty(value = JSON_PROPERTY_DESCRIPTION, required = false)
   @JsonInclude(value = JsonInclude.Include.USE_DEFAULTS)
-
-  public JsonNullable<String> getDescription_JsonNullable() {
-    return description;
-  }
-  
-  @JsonProperty(JSON_PROPERTY_DESCRIPTION)
-  public void setDescription_JsonNullable(JsonNullable<String> description) {
-    this.description = description;
-  }
-
   public void setDescription(@jakarta.annotation.Nullable String description) {
-    this.description = JsonNullable.<String>of(description);
+    this.description = description;
   }
 
 
@@ -212,7 +205,7 @@ public class Flag {
   }
 
   /**
-   * Default value; must reference a value in the values array
+   * Get _default
    * @return _default
    */
   @jakarta.annotation.Nullable
@@ -364,7 +357,7 @@ public class Flag {
     Flag flag = (Flag) o;
     return Objects.equals(this.key, flag.key) &&
         Objects.equals(this.name, flag.name) &&
-        equalsNullable(this.description, flag.description) &&
+        Objects.equals(this.description, flag.description) &&
         Objects.equals(this.type, flag.type) &&
         Objects.equals(this._default, flag._default) &&
         Objects.equals(this.values, flag.values) &&
@@ -379,7 +372,7 @@ public class Flag {
 
   @Override
   public int hashCode() {
-    return Objects.hash(key, name, hashCodeNullable(description), type, _default, values, environments, hashCodeNullable(createdAt), hashCodeNullable(updatedAt));
+    return Objects.hash(key, name, description, type, _default, values, environments, hashCodeNullable(createdAt), hashCodeNullable(updatedAt));
   }
 
   private static <T> int hashCodeNullable(JsonNullable<T> a) {
