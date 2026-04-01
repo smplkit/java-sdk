@@ -25,6 +25,9 @@ dependencies {
     implementation("org.openapitools:jackson-databind-nullable:0.2.6")
     compileOnly("jakarta.annotation:jakarta.annotation-api:2.1.1")
 
+    // JSON Logic evaluation for flags runtime
+    implementation("io.github.jamsesso:json-logic-java:1.0.7")
+
     testImplementation("org.junit.jupiter:junit-jupiter:5.10.2")
     testImplementation("org.mockito:mockito-core:5.11.0")
     testRuntimeOnly("org.junit.platform:junit-platform-launcher")

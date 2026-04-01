@@ -1,8 +1,11 @@
 package com.smplkit;
 
 import com.smplkit.config.ConfigClient;
+import com.smplkit.flags.FlagsClient;
+import com.smplkit.flags.SharedWebSocket;
 import com.smplkit.internal.generated.config.ApiClient;
 import com.smplkit.internal.generated.config.api.ConfigsApi;
+import com.smplkit.internal.generated.flags.api.FlagsApi;
 
 import java.net.http.HttpClient;
 import java.time.Duration;
@@ -16,6 +19,7 @@ import java.time.Duration;
  *         .apiKey("sk_api_...")
  *         .build()) {
  *     Config cfg = client.config().get("my-config-id");
+ *     client.flags().connect("production");
  * }
  * }</pre>
  *
@@ -24,8 +28,12 @@ import java.time.Duration;
 public final class SmplClient implements AutoCloseable {
 
     private static final String CONFIG_BASE_URL = "https://config.smplkit.com";
+    private static final String FLAGS_BASE_URL = "https://flags.smplkit.com";
+    private static final String APP_BASE_URL = "https://app.smplkit.com";
 
     private final ConfigClient config;
+    private final FlagsClient flags;
+    private final SharedWebSocket sharedWs;
     private final HttpClient httpClient;
 
     /**
@@ -38,7 +46,9 @@ public final class SmplClient implements AutoCloseable {
         this.httpClient = HttpClient.newBuilder()
                 .connectTimeout(timeout)
                 .build();
+        this.sharedWs = new SharedWebSocket(httpClient, APP_BASE_URL, apiKey);
         this.config = buildConfigClient(httpClient, apiKey, timeout);
+        this.flags = buildFlagsClient(httpClient, apiKey, timeout, sharedWs);
     }
 
     /**
@@ -50,7 +60,9 @@ public final class SmplClient implements AutoCloseable {
      */
     SmplClient(HttpClient httpClient, String apiKey, Duration timeout) {
         this.httpClient = httpClient;
+        this.sharedWs = new SharedWebSocket(httpClient, APP_BASE_URL, apiKey);
         this.config = buildConfigClient(httpClient, apiKey, timeout);
+        this.flags = buildFlagsClient(httpClient, apiKey, timeout, sharedWs);
     }
 
     private static ConfigClient buildConfigClient(HttpClient httpClient, String apiKey, Duration timeout) {
@@ -63,6 +75,25 @@ public final class SmplClient implements AutoCloseable {
         return new ConfigClient(configsApi, httpClient, apiKey);
     }
 
+    private static FlagsClient buildFlagsClient(HttpClient httpClient, String apiKey,
+                                                 Duration timeout, SharedWebSocket sharedWs) {
+        com.smplkit.internal.generated.flags.ApiClient flagsApiClient =
+                new com.smplkit.internal.generated.flags.ApiClient();
+        flagsApiClient.updateBaseUri(FLAGS_BASE_URL);
+        flagsApiClient.setRequestInterceptor(authInterceptor(apiKey));
+        flagsApiClient.setReadTimeout(timeout);
+        FlagsApi flagsApi = new FlagsApi(flagsApiClient);
+        FlagsClient client = new FlagsClient(flagsApi, httpClient, apiKey,
+                FLAGS_BASE_URL, APP_BASE_URL, timeout);
+        client.setSharedWs(sharedWs);
+        return client;
+    }
+
+    /** Package-private for testing: builds the auth header interceptor. */
+    static java.util.function.Consumer<java.net.http.HttpRequest.Builder> authInterceptor(String apiKey) {
+        return builder -> builder.header("Authorization", "Bearer " + apiKey);
+    }
+
     /**
      * Returns the Config service client.
      *
@@ -70,6 +101,15 @@ public final class SmplClient implements AutoCloseable {
      */
     public ConfigClient config() {
         return config;
+    }
+
+    /**
+     * Returns the Flags service client.
+     *
+     * @return the flags client
+     */
+    public FlagsClient flags() {
+        return flags;
     }
 
     /**
@@ -104,11 +144,10 @@ public final class SmplClient implements AutoCloseable {
     }
 
     /**
-     * Closes the underlying HTTP client resources.
+     * Closes the underlying resources including the shared WebSocket.
      */
     @Override
     public void close() {
-        // java.net.http.HttpClient does not require explicit closing in JDK 17,
-        // but we implement AutoCloseable for forward compatibility and resource management.
+        sharedWs.close();
     }
 }

@@ -1,6 +1,7 @@
 package com.smplkit;
 
 import com.smplkit.config.ConfigClient;
+import com.smplkit.flags.FlagsClient;
 import org.junit.jupiter.api.Test;
 
 import java.time.Duration;
@@ -41,6 +42,17 @@ class SmplClientTest {
             ConfigClient config = client.config();
             assertNotNull(config);
             assertSame(config, client.config(), "config() should return the same instance");
+        }
+    }
+
+    @Test
+    void flagsReturnsFlagsClient() {
+        try (SmplClient client = SmplClient.builder()
+                .apiKey("test-key")
+                .build()) {
+            FlagsClient flags = client.flags();
+            assertNotNull(flags);
+            assertSame(flags, client.flags(), "flags() should return the same instance");
         }
     }
 
@@ -110,6 +122,21 @@ class SmplClientTest {
         assertDoesNotThrow(client::close);
         // Should be safe to close twice
         assertDoesNotThrow(client::close);
+    }
+
+    @Test
+    void authInterceptor_addsAuthorizationHeader() {
+        java.util.function.Consumer<java.net.http.HttpRequest.Builder> interceptor =
+                SmplClient.authInterceptor("sk_test_123");
+
+        java.net.http.HttpRequest.Builder builder = java.net.http.HttpRequest.newBuilder()
+                .uri(java.net.URI.create("https://example.com"));
+        interceptor.accept(builder);
+        java.net.http.HttpRequest request = builder.build();
+
+        assertTrue(request.headers().map().containsKey("Authorization"));
+        assertEquals("Bearer sk_test_123",
+                request.headers().firstValue("Authorization").orElse(""));
     }
 
     @Test
