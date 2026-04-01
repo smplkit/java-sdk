@@ -18,6 +18,8 @@ import com.smplkit.internal.generated.flags.ApiResponse;
 import com.smplkit.internal.generated.flags.Configuration;
 import com.smplkit.internal.generated.flags.Pair;
 
+import com.smplkit.internal.generated.flags.model.FlagListResponse;
+import com.smplkit.internal.generated.flags.model.FlagResponse;
 import com.smplkit.internal.generated.flags.model.HTTPValidationError;
 import com.smplkit.internal.generated.flags.model.ResponseFlag;
 import java.util.UUID;
@@ -47,7 +49,7 @@ import java.util.Map;
 import java.util.Set;
 import java.util.function.Consumer;
 
-@jakarta.annotation.Generated(value = "org.openapitools.codegen.languages.JavaClientCodegen", date = "2026-03-31T01:17:57.185779220Z[Etc/UTC]", comments = "Generator version: 7.21.0")
+@jakarta.annotation.Generated(value = "org.openapitools.codegen.languages.JavaClientCodegen", date = "2026-04-01T01:26:18.180766222Z[Etc/UTC]", comments = "Generator version: 7.21.0")
 public class FlagsApi {
   /**
    * Utility class for extending HttpRequest.Builder functionality.
@@ -168,10 +170,10 @@ public class FlagsApi {
    * Create Flag
    * 
    * @param responseFlag  (required)
-   * @return Object
+   * @return FlagResponse
    * @throws ApiException if fails to make API call
    */
-  public Object createFlag(@jakarta.annotation.Nonnull ResponseFlag responseFlag) throws ApiException {
+  public FlagResponse createFlag(@jakarta.annotation.Nonnull ResponseFlag responseFlag) throws ApiException {
     return createFlag(responseFlag, null);
   }
 
@@ -180,11 +182,11 @@ public class FlagsApi {
    * 
    * @param responseFlag  (required)
    * @param headers Optional headers to include in the request
-   * @return Object
+   * @return FlagResponse
    * @throws ApiException if fails to make API call
    */
-  public Object createFlag(@jakarta.annotation.Nonnull ResponseFlag responseFlag, Map<String, String> headers) throws ApiException {
-    ApiResponse<Object> localVarResponse = createFlagWithHttpInfo(responseFlag, headers);
+  public FlagResponse createFlag(@jakarta.annotation.Nonnull ResponseFlag responseFlag, Map<String, String> headers) throws ApiException {
+    ApiResponse<FlagResponse> localVarResponse = createFlagWithHttpInfo(responseFlag, headers);
     return localVarResponse.getData();
   }
 
@@ -192,10 +194,10 @@ public class FlagsApi {
    * Create Flag
    * 
    * @param responseFlag  (required)
-   * @return ApiResponse&lt;Object&gt;
+   * @return ApiResponse&lt;FlagResponse&gt;
    * @throws ApiException if fails to make API call
    */
-  public ApiResponse<Object> createFlagWithHttpInfo(@jakarta.annotation.Nonnull ResponseFlag responseFlag) throws ApiException {
+  public ApiResponse<FlagResponse> createFlagWithHttpInfo(@jakarta.annotation.Nonnull ResponseFlag responseFlag) throws ApiException {
     return createFlagWithHttpInfo(responseFlag, null);
   }
 
@@ -204,10 +206,10 @@ public class FlagsApi {
    * 
    * @param responseFlag  (required)
    * @param headers Optional headers to include in the request
-   * @return ApiResponse&lt;Object&gt;
+   * @return ApiResponse&lt;FlagResponse&gt;
    * @throws ApiException if fails to make API call
    */
-  public ApiResponse<Object> createFlagWithHttpInfo(@jakarta.annotation.Nonnull ResponseFlag responseFlag, Map<String, String> headers) throws ApiException {
+  public ApiResponse<FlagResponse> createFlagWithHttpInfo(@jakarta.annotation.Nonnull ResponseFlag responseFlag, Map<String, String> headers) throws ApiException {
     HttpRequest.Builder localVarRequestBuilder = createFlagRequestBuilder(responseFlag, headers);
     try {
       HttpResponse<InputStream> localVarResponse = memberVarHttpClient.send(
@@ -223,7 +225,7 @@ public class FlagsApi {
         }
         localVarResponseBody = ApiClient.getResponseBody(localVarResponse);
         if (localVarResponseBody == null) {
-          return new ApiResponse<Object>(
+          return new ApiResponse<FlagResponse>(
               localVarResponse.statusCode(),
               localVarResponse.headers().map(),
               null
@@ -233,10 +235,10 @@ public class FlagsApi {
         
         
         String responseBody = new String(localVarResponseBody.readAllBytes());
-        Object responseValue = responseBody.isBlank()? null: memberVarObjectMapper.readValue(responseBody, new TypeReference<Object>() {});
+        FlagResponse responseValue = responseBody.isBlank()? null: memberVarObjectMapper.readValue(responseBody, new TypeReference<FlagResponse>() {});
         
 
-        return new ApiResponse<Object>(
+        return new ApiResponse<FlagResponse>(
             localVarResponse.statusCode(),
             localVarResponse.headers().map(),
             responseValue
@@ -268,7 +270,7 @@ public class FlagsApi {
     localVarRequestBuilder.uri(URI.create(memberVarBaseUri + localVarPath));
 
     localVarRequestBuilder.header("Content-Type", "application/json");
-    localVarRequestBuilder.header("Accept", "application/json");
+    localVarRequestBuilder.header("Accept", "application/vnd.api+json");
 
     try {
       byte[] localVarPostBody = memberVarObjectMapper.writeValueAsBytes(responseFlag);
@@ -377,7 +379,7 @@ public class FlagsApi {
 
     localVarRequestBuilder.uri(URI.create(memberVarBaseUri + localVarPath));
 
-    localVarRequestBuilder.header("Accept", "application/json");
+    localVarRequestBuilder.header("Accept", "application/vnd.api+json");
 
     localVarRequestBuilder.method("DELETE", HttpRequest.BodyPublishers.noBody());
     if (memberVarReadTimeout != null) {
@@ -395,10 +397,10 @@ public class FlagsApi {
    * Get Flag
    * 
    * @param id  (required)
-   * @return Object
+   * @return FlagResponse
    * @throws ApiException if fails to make API call
    */
-  public Object getFlag(@jakarta.annotation.Nonnull UUID id) throws ApiException {
+  public FlagResponse getFlag(@jakarta.annotation.Nonnull UUID id) throws ApiException {
     return getFlag(id, null);
   }
 
@@ -407,11 +409,11 @@ public class FlagsApi {
    * 
    * @param id  (required)
    * @param headers Optional headers to include in the request
-   * @return Object
+   * @return FlagResponse
    * @throws ApiException if fails to make API call
    */
-  public Object getFlag(@jakarta.annotation.Nonnull UUID id, Map<String, String> headers) throws ApiException {
-    ApiResponse<Object> localVarResponse = getFlagWithHttpInfo(id, headers);
+  public FlagResponse getFlag(@jakarta.annotation.Nonnull UUID id, Map<String, String> headers) throws ApiException {
+    ApiResponse<FlagResponse> localVarResponse = getFlagWithHttpInfo(id, headers);
     return localVarResponse.getData();
   }
 
@@ -419,10 +421,10 @@ public class FlagsApi {
    * Get Flag
    * 
    * @param id  (required)
-   * @return ApiResponse&lt;Object&gt;
+   * @return ApiResponse&lt;FlagResponse&gt;
    * @throws ApiException if fails to make API call
    */
-  public ApiResponse<Object> getFlagWithHttpInfo(@jakarta.annotation.Nonnull UUID id) throws ApiException {
+  public ApiResponse<FlagResponse> getFlagWithHttpInfo(@jakarta.annotation.Nonnull UUID id) throws ApiException {
     return getFlagWithHttpInfo(id, null);
   }
 
@@ -431,10 +433,10 @@ public class FlagsApi {
    * 
    * @param id  (required)
    * @param headers Optional headers to include in the request
-   * @return ApiResponse&lt;Object&gt;
+   * @return ApiResponse&lt;FlagResponse&gt;
    * @throws ApiException if fails to make API call
    */
-  public ApiResponse<Object> getFlagWithHttpInfo(@jakarta.annotation.Nonnull UUID id, Map<String, String> headers) throws ApiException {
+  public ApiResponse<FlagResponse> getFlagWithHttpInfo(@jakarta.annotation.Nonnull UUID id, Map<String, String> headers) throws ApiException {
     HttpRequest.Builder localVarRequestBuilder = getFlagRequestBuilder(id, headers);
     try {
       HttpResponse<InputStream> localVarResponse = memberVarHttpClient.send(
@@ -450,7 +452,7 @@ public class FlagsApi {
         }
         localVarResponseBody = ApiClient.getResponseBody(localVarResponse);
         if (localVarResponseBody == null) {
-          return new ApiResponse<Object>(
+          return new ApiResponse<FlagResponse>(
               localVarResponse.statusCode(),
               localVarResponse.headers().map(),
               null
@@ -460,10 +462,10 @@ public class FlagsApi {
         
         
         String responseBody = new String(localVarResponseBody.readAllBytes());
-        Object responseValue = responseBody.isBlank()? null: memberVarObjectMapper.readValue(responseBody, new TypeReference<Object>() {});
+        FlagResponse responseValue = responseBody.isBlank()? null: memberVarObjectMapper.readValue(responseBody, new TypeReference<FlagResponse>() {});
         
 
-        return new ApiResponse<Object>(
+        return new ApiResponse<FlagResponse>(
             localVarResponse.statusCode(),
             localVarResponse.headers().map(),
             responseValue
@@ -495,7 +497,7 @@ public class FlagsApi {
 
     localVarRequestBuilder.uri(URI.create(memberVarBaseUri + localVarPath));
 
-    localVarRequestBuilder.header("Accept", "application/json");
+    localVarRequestBuilder.header("Accept", "application/vnd.api+json");
 
     localVarRequestBuilder.method("GET", HttpRequest.BodyPublishers.noBody());
     if (memberVarReadTimeout != null) {
@@ -514,10 +516,10 @@ public class FlagsApi {
    * 
    * @param filterKey  (optional)
    * @param filterType  (optional)
-   * @return Object
+   * @return FlagListResponse
    * @throws ApiException if fails to make API call
    */
-  public Object listFlags(@jakarta.annotation.Nullable String filterKey, @jakarta.annotation.Nullable String filterType) throws ApiException {
+  public FlagListResponse listFlags(@jakarta.annotation.Nullable String filterKey, @jakarta.annotation.Nullable String filterType) throws ApiException {
     return listFlags(filterKey, filterType, null);
   }
 
@@ -527,11 +529,11 @@ public class FlagsApi {
    * @param filterKey  (optional)
    * @param filterType  (optional)
    * @param headers Optional headers to include in the request
-   * @return Object
+   * @return FlagListResponse
    * @throws ApiException if fails to make API call
    */
-  public Object listFlags(@jakarta.annotation.Nullable String filterKey, @jakarta.annotation.Nullable String filterType, Map<String, String> headers) throws ApiException {
-    ApiResponse<Object> localVarResponse = listFlagsWithHttpInfo(filterKey, filterType, headers);
+  public FlagListResponse listFlags(@jakarta.annotation.Nullable String filterKey, @jakarta.annotation.Nullable String filterType, Map<String, String> headers) throws ApiException {
+    ApiResponse<FlagListResponse> localVarResponse = listFlagsWithHttpInfo(filterKey, filterType, headers);
     return localVarResponse.getData();
   }
 
@@ -540,10 +542,10 @@ public class FlagsApi {
    * 
    * @param filterKey  (optional)
    * @param filterType  (optional)
-   * @return ApiResponse&lt;Object&gt;
+   * @return ApiResponse&lt;FlagListResponse&gt;
    * @throws ApiException if fails to make API call
    */
-  public ApiResponse<Object> listFlagsWithHttpInfo(@jakarta.annotation.Nullable String filterKey, @jakarta.annotation.Nullable String filterType) throws ApiException {
+  public ApiResponse<FlagListResponse> listFlagsWithHttpInfo(@jakarta.annotation.Nullable String filterKey, @jakarta.annotation.Nullable String filterType) throws ApiException {
     return listFlagsWithHttpInfo(filterKey, filterType, null);
   }
 
@@ -553,10 +555,10 @@ public class FlagsApi {
    * @param filterKey  (optional)
    * @param filterType  (optional)
    * @param headers Optional headers to include in the request
-   * @return ApiResponse&lt;Object&gt;
+   * @return ApiResponse&lt;FlagListResponse&gt;
    * @throws ApiException if fails to make API call
    */
-  public ApiResponse<Object> listFlagsWithHttpInfo(@jakarta.annotation.Nullable String filterKey, @jakarta.annotation.Nullable String filterType, Map<String, String> headers) throws ApiException {
+  public ApiResponse<FlagListResponse> listFlagsWithHttpInfo(@jakarta.annotation.Nullable String filterKey, @jakarta.annotation.Nullable String filterType, Map<String, String> headers) throws ApiException {
     HttpRequest.Builder localVarRequestBuilder = listFlagsRequestBuilder(filterKey, filterType, headers);
     try {
       HttpResponse<InputStream> localVarResponse = memberVarHttpClient.send(
@@ -572,7 +574,7 @@ public class FlagsApi {
         }
         localVarResponseBody = ApiClient.getResponseBody(localVarResponse);
         if (localVarResponseBody == null) {
-          return new ApiResponse<Object>(
+          return new ApiResponse<FlagListResponse>(
               localVarResponse.statusCode(),
               localVarResponse.headers().map(),
               null
@@ -582,10 +584,10 @@ public class FlagsApi {
         
         
         String responseBody = new String(localVarResponseBody.readAllBytes());
-        Object responseValue = responseBody.isBlank()? null: memberVarObjectMapper.readValue(responseBody, new TypeReference<Object>() {});
+        FlagListResponse responseValue = responseBody.isBlank()? null: memberVarObjectMapper.readValue(responseBody, new TypeReference<FlagListResponse>() {});
         
 
-        return new ApiResponse<Object>(
+        return new ApiResponse<FlagListResponse>(
             localVarResponse.statusCode(),
             localVarResponse.headers().map(),
             responseValue
@@ -629,7 +631,7 @@ public class FlagsApi {
       localVarRequestBuilder.uri(URI.create(memberVarBaseUri + localVarPath));
     }
 
-    localVarRequestBuilder.header("Accept", "application/json");
+    localVarRequestBuilder.header("Accept", "application/vnd.api+json");
 
     localVarRequestBuilder.method("GET", HttpRequest.BodyPublishers.noBody());
     if (memberVarReadTimeout != null) {
@@ -648,10 +650,10 @@ public class FlagsApi {
    * 
    * @param id  (required)
    * @param responseFlag  (required)
-   * @return Object
+   * @return FlagResponse
    * @throws ApiException if fails to make API call
    */
-  public Object updateFlag(@jakarta.annotation.Nonnull UUID id, @jakarta.annotation.Nonnull ResponseFlag responseFlag) throws ApiException {
+  public FlagResponse updateFlag(@jakarta.annotation.Nonnull UUID id, @jakarta.annotation.Nonnull ResponseFlag responseFlag) throws ApiException {
     return updateFlag(id, responseFlag, null);
   }
 
@@ -661,11 +663,11 @@ public class FlagsApi {
    * @param id  (required)
    * @param responseFlag  (required)
    * @param headers Optional headers to include in the request
-   * @return Object
+   * @return FlagResponse
    * @throws ApiException if fails to make API call
    */
-  public Object updateFlag(@jakarta.annotation.Nonnull UUID id, @jakarta.annotation.Nonnull ResponseFlag responseFlag, Map<String, String> headers) throws ApiException {
-    ApiResponse<Object> localVarResponse = updateFlagWithHttpInfo(id, responseFlag, headers);
+  public FlagResponse updateFlag(@jakarta.annotation.Nonnull UUID id, @jakarta.annotation.Nonnull ResponseFlag responseFlag, Map<String, String> headers) throws ApiException {
+    ApiResponse<FlagResponse> localVarResponse = updateFlagWithHttpInfo(id, responseFlag, headers);
     return localVarResponse.getData();
   }
 
@@ -674,10 +676,10 @@ public class FlagsApi {
    * 
    * @param id  (required)
    * @param responseFlag  (required)
-   * @return ApiResponse&lt;Object&gt;
+   * @return ApiResponse&lt;FlagResponse&gt;
    * @throws ApiException if fails to make API call
    */
-  public ApiResponse<Object> updateFlagWithHttpInfo(@jakarta.annotation.Nonnull UUID id, @jakarta.annotation.Nonnull ResponseFlag responseFlag) throws ApiException {
+  public ApiResponse<FlagResponse> updateFlagWithHttpInfo(@jakarta.annotation.Nonnull UUID id, @jakarta.annotation.Nonnull ResponseFlag responseFlag) throws ApiException {
     return updateFlagWithHttpInfo(id, responseFlag, null);
   }
 
@@ -687,10 +689,10 @@ public class FlagsApi {
    * @param id  (required)
    * @param responseFlag  (required)
    * @param headers Optional headers to include in the request
-   * @return ApiResponse&lt;Object&gt;
+   * @return ApiResponse&lt;FlagResponse&gt;
    * @throws ApiException if fails to make API call
    */
-  public ApiResponse<Object> updateFlagWithHttpInfo(@jakarta.annotation.Nonnull UUID id, @jakarta.annotation.Nonnull ResponseFlag responseFlag, Map<String, String> headers) throws ApiException {
+  public ApiResponse<FlagResponse> updateFlagWithHttpInfo(@jakarta.annotation.Nonnull UUID id, @jakarta.annotation.Nonnull ResponseFlag responseFlag, Map<String, String> headers) throws ApiException {
     HttpRequest.Builder localVarRequestBuilder = updateFlagRequestBuilder(id, responseFlag, headers);
     try {
       HttpResponse<InputStream> localVarResponse = memberVarHttpClient.send(
@@ -706,7 +708,7 @@ public class FlagsApi {
         }
         localVarResponseBody = ApiClient.getResponseBody(localVarResponse);
         if (localVarResponseBody == null) {
-          return new ApiResponse<Object>(
+          return new ApiResponse<FlagResponse>(
               localVarResponse.statusCode(),
               localVarResponse.headers().map(),
               null
@@ -716,10 +718,10 @@ public class FlagsApi {
         
         
         String responseBody = new String(localVarResponseBody.readAllBytes());
-        Object responseValue = responseBody.isBlank()? null: memberVarObjectMapper.readValue(responseBody, new TypeReference<Object>() {});
+        FlagResponse responseValue = responseBody.isBlank()? null: memberVarObjectMapper.readValue(responseBody, new TypeReference<FlagResponse>() {});
         
 
-        return new ApiResponse<Object>(
+        return new ApiResponse<FlagResponse>(
             localVarResponse.statusCode(),
             localVarResponse.headers().map(),
             responseValue
@@ -756,7 +758,7 @@ public class FlagsApi {
     localVarRequestBuilder.uri(URI.create(memberVarBaseUri + localVarPath));
 
     localVarRequestBuilder.header("Content-Type", "application/json");
-    localVarRequestBuilder.header("Accept", "application/json");
+    localVarRequestBuilder.header("Accept", "application/vnd.api+json");
 
     try {
       byte[] localVarPostBody = memberVarObjectMapper.writeValueAsBytes(responseFlag);
