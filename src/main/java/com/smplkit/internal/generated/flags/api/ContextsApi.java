@@ -50,7 +50,7 @@ import java.util.Map;
 import java.util.Set;
 import java.util.function.Consumer;
 
-@jakarta.annotation.Generated(value = "org.openapitools.codegen.languages.JavaClientCodegen", date = "2026-04-01T01:26:18.180766222Z[Etc/UTC]", comments = "Generator version: 7.21.0")
+@jakarta.annotation.Generated(value = "org.openapitools.codegen.languages.JavaClientCodegen", date = "2026-04-01T22:33:44.215930957Z[Etc/UTC]", comments = "Generator version: 7.21.0")
 public class ContextsApi {
   /**
    * Utility class for extending HttpRequest.Builder functionality.

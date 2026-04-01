@@ -24,26 +24,21 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonTypeName;
 import com.fasterxml.jackson.annotation.JsonValue;
-import com.smplkit.internal.generated.app.model.LimitDefinition;
-import com.smplkit.internal.generated.app.model.PlanDefinition;
 import java.util.Arrays;
-import java.util.HashMap;
-import java.util.Map;
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 
 
 import com.smplkit.internal.generated.app.ApiClient;
 /**
- * Product
+ * Plan
  */
 @JsonPropertyOrder({
-  Product.JSON_PROPERTY_DISPLAY_NAME,
-  Product.JSON_PROPERTY_DESCRIPTION,
-  Product.JSON_PROPERTY_LIMITS,
-  Product.JSON_PROPERTY_PLANS
+  Plan.JSON_PROPERTY_DISPLAY_NAME,
+  Plan.JSON_PROPERTY_DESCRIPTION,
+  Plan.JSON_PROPERTY_SORT_ORDER
 })
 @jakarta.annotation.Generated(value = "org.openapitools.codegen.languages.JavaClientCodegen", date = "2026-04-01T22:33:36.657116370Z[Etc/UTC]", comments = "Generator version: 7.21.0")
-public class Product {
+public class Plan {
   public static final String JSON_PROPERTY_DISPLAY_NAME = "display_name";
   @jakarta.annotation.Nonnull
   private String displayName;
@@ -52,18 +47,14 @@ public class Product {
   @jakarta.annotation.Nonnull
   private String description;
 
-  public static final String JSON_PROPERTY_LIMITS = "limits";
+  public static final String JSON_PROPERTY_SORT_ORDER = "sort_order";
   @jakarta.annotation.Nonnull
-  private Map<String, LimitDefinition> limits = new HashMap<>();
+  private Integer sortOrder;
 
-  public static final String JSON_PROPERTY_PLANS = "plans";
-  @jakarta.annotation.Nonnull
-  private Map<String, PlanDefinition> plans = new HashMap<>();
-
-  public Product() { 
+  public Plan() { 
   }
 
-  public Product displayName(@jakarta.annotation.Nonnull String displayName) {
+  public Plan displayName(@jakarta.annotation.Nonnull String displayName) {
     this.displayName = displayName;
     return this;
   }
@@ -87,7 +78,7 @@ public class Product {
   }
 
 
-  public Product description(@jakarta.annotation.Nonnull String description) {
+  public Plan description(@jakarta.annotation.Nonnull String description) {
     this.description = description;
     return this;
   }
@@ -111,72 +102,32 @@ public class Product {
   }
 
 
-  public Product limits(@jakarta.annotation.Nonnull Map<String, LimitDefinition> limits) {
-    this.limits = limits;
-    return this;
-  }
-
-  public Product putLimitsItem(String key, LimitDefinition limitsItem) {
-    if (this.limits == null) {
-      this.limits = new HashMap<>();
-    }
-    this.limits.put(key, limitsItem);
+  public Plan sortOrder(@jakarta.annotation.Nonnull Integer sortOrder) {
+    this.sortOrder = sortOrder;
     return this;
   }
 
   /**
-   * Get limits
-   * @return limits
+   * Get sortOrder
+   * @return sortOrder
    */
   @jakarta.annotation.Nonnull
-  @JsonProperty(value = JSON_PROPERTY_LIMITS, required = true)
+  @JsonProperty(value = JSON_PROPERTY_SORT_ORDER, required = true)
   @JsonInclude(value = JsonInclude.Include.ALWAYS)
-  public Map<String, LimitDefinition> getLimits() {
-    return limits;
+  public Integer getSortOrder() {
+    return sortOrder;
   }
 
 
-  @JsonProperty(value = JSON_PROPERTY_LIMITS, required = true)
+  @JsonProperty(value = JSON_PROPERTY_SORT_ORDER, required = true)
   @JsonInclude(value = JsonInclude.Include.ALWAYS)
-  public void setLimits(@jakarta.annotation.Nonnull Map<String, LimitDefinition> limits) {
-    this.limits = limits;
-  }
-
-
-  public Product plans(@jakarta.annotation.Nonnull Map<String, PlanDefinition> plans) {
-    this.plans = plans;
-    return this;
-  }
-
-  public Product putPlansItem(String key, PlanDefinition plansItem) {
-    if (this.plans == null) {
-      this.plans = new HashMap<>();
-    }
-    this.plans.put(key, plansItem);
-    return this;
-  }
-
-  /**
-   * Get plans
-   * @return plans
-   */
-  @jakarta.annotation.Nonnull
-  @JsonProperty(value = JSON_PROPERTY_PLANS, required = true)
-  @JsonInclude(value = JsonInclude.Include.ALWAYS)
-  public Map<String, PlanDefinition> getPlans() {
-    return plans;
-  }
-
-
-  @JsonProperty(value = JSON_PROPERTY_PLANS, required = true)
-  @JsonInclude(value = JsonInclude.Include.ALWAYS)
-  public void setPlans(@jakarta.annotation.Nonnull Map<String, PlanDefinition> plans) {
-    this.plans = plans;
+  public void setSortOrder(@jakarta.annotation.Nonnull Integer sortOrder) {
+    this.sortOrder = sortOrder;
   }
 
 
   /**
-   * Return true if this Product object is equal to o.
+   * Return true if this Plan object is equal to o.
    */
   @Override
   public boolean equals(Object o) {
@@ -186,26 +137,24 @@ public class Product {
     if (o == null || getClass() != o.getClass()) {
       return false;
     }
-    Product product = (Product) o;
-    return Objects.equals(this.displayName, product.displayName) &&
-        Objects.equals(this.description, product.description) &&
-        Objects.equals(this.limits, product.limits) &&
-        Objects.equals(this.plans, product.plans);
+    Plan plan = (Plan) o;
+    return Objects.equals(this.displayName, plan.displayName) &&
+        Objects.equals(this.description, plan.description) &&
+        Objects.equals(this.sortOrder, plan.sortOrder);
   }
 
   @Override
   public int hashCode() {
-    return Objects.hash(displayName, description, limits, plans);
+    return Objects.hash(displayName, description, sortOrder);
   }
 
   @Override
   public String toString() {
     StringBuilder sb = new StringBuilder();
-    sb.append("class Product {\n");
+    sb.append("class Plan {\n");
     sb.append("    displayName: ").append(toIndentedString(displayName)).append("\n");
     sb.append("    description: ").append(toIndentedString(description)).append("\n");
-    sb.append("    limits: ").append(toIndentedString(limits)).append("\n");
-    sb.append("    plans: ").append(toIndentedString(plans)).append("\n");
+    sb.append("    sortOrder: ").append(toIndentedString(sortOrder)).append("\n");
     sb.append("}");
     return sb.toString();
   }
@@ -260,24 +209,9 @@ public class Product {
       joiner.add(String.format(java.util.Locale.ROOT, "%sdescription%s=%s", prefix, suffix, ApiClient.urlEncode(ApiClient.valueToString(getDescription()))));
     }
 
-    // add `limits` to the URL query string
-    if (getLimits() != null) {
-      for (String _key : getLimits().keySet()) {
-        if (getLimits().get(_key) != null) {
-          joiner.add(getLimits().get(_key).toUrlQueryString(String.format(java.util.Locale.ROOT, "%slimits%s%s", prefix, suffix,
-              "".equals(suffix) ? "" : String.format(java.util.Locale.ROOT, "%s%d%s", containerPrefix, _key, containerSuffix))));
-        }
-      }
-    }
-
-    // add `plans` to the URL query string
-    if (getPlans() != null) {
-      for (String _key : getPlans().keySet()) {
-        if (getPlans().get(_key) != null) {
-          joiner.add(getPlans().get(_key).toUrlQueryString(String.format(java.util.Locale.ROOT, "%splans%s%s", prefix, suffix,
-              "".equals(suffix) ? "" : String.format(java.util.Locale.ROOT, "%s%d%s", containerPrefix, _key, containerSuffix))));
-        }
-      }
+    // add `sort_order` to the URL query string
+    if (getSortOrder() != null) {
+      joiner.add(String.format(java.util.Locale.ROOT, "%ssort_order%s=%s", prefix, suffix, ApiClient.urlEncode(ApiClient.valueToString(getSortOrder()))));
     }
 
     return joiner.toString();

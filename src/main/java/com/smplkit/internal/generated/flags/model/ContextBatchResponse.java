@@ -35,7 +35,7 @@ import com.smplkit.internal.generated.flags.ApiClient;
 @JsonPropertyOrder({
   ContextBatchResponse.JSON_PROPERTY_REGISTERED
 })
-@jakarta.annotation.Generated(value = "org.openapitools.codegen.languages.JavaClientCodegen", date = "2026-04-01T01:26:18.180766222Z[Etc/UTC]", comments = "Generator version: 7.21.0")
+@jakarta.annotation.Generated(value = "org.openapitools.codegen.languages.JavaClientCodegen", date = "2026-04-01T22:33:44.215930957Z[Etc/UTC]", comments = "Generator version: 7.21.0")
 public class ContextBatchResponse {
   public static final String JSON_PROPERTY_REGISTERED = "registered";
   @jakarta.annotation.Nonnull

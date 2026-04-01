@@ -1,6 +1,6 @@
 /*
- * smplkit Config API
- * Configuration management API for smplkit.
+ * smplkit API
+ * API for the smplkit platform.
  *
  * The version of the OpenAPI document: 0.1.0
  * 
@@ -11,7 +11,7 @@
  */
 
 
-package com.smplkit.internal.generated.config.model;
+package com.smplkit.internal.generated.app.model;
 
 import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
@@ -24,7 +24,7 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonTypeName;
 import com.fasterxml.jackson.annotation.JsonValue;
-import com.smplkit.internal.generated.config.model.Config;
+import com.smplkit.internal.generated.app.model.Plan;
 import java.util.Arrays;
 import org.openapitools.jackson.nullable.JsonNullable;
 import com.fasterxml.jackson.annotation.JsonIgnore;
@@ -33,17 +33,17 @@ import java.util.NoSuchElementException;
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 
 
-import com.smplkit.internal.generated.config.ApiClient;
+import com.smplkit.internal.generated.app.ApiClient;
 /**
- * ConfigResource
+ * PlanResource
  */
 @JsonPropertyOrder({
-  ConfigResource.JSON_PROPERTY_ID,
-  ConfigResource.JSON_PROPERTY_TYPE,
-  ConfigResource.JSON_PROPERTY_ATTRIBUTES
+  PlanResource.JSON_PROPERTY_ID,
+  PlanResource.JSON_PROPERTY_TYPE,
+  PlanResource.JSON_PROPERTY_ATTRIBUTES
 })
-@jakarta.annotation.Generated(value = "org.openapitools.codegen.languages.JavaClientCodegen", date = "2026-04-01T22:33:40.667692331Z[Etc/UTC]", comments = "Generator version: 7.21.0")
-public class ConfigResource {
+@jakarta.annotation.Generated(value = "org.openapitools.codegen.languages.JavaClientCodegen", date = "2026-04-01T22:33:36.657116370Z[Etc/UTC]", comments = "Generator version: 7.21.0")
+public class PlanResource {
   public static final String JSON_PROPERTY_ID = "id";
   private JsonNullable<String> id = JsonNullable.<String>undefined();
 
@@ -51,7 +51,7 @@ public class ConfigResource {
    * Gets or Sets type
    */
   public enum TypeEnum {
-    CONFIG(String.valueOf("config"));
+    PLAN(String.valueOf("plan"));
 
     private String value;
 
@@ -86,12 +86,12 @@ public class ConfigResource {
 
   public static final String JSON_PROPERTY_ATTRIBUTES = "attributes";
   @jakarta.annotation.Nonnull
-  private Config attributes;
+  private Plan attributes;
 
-  public ConfigResource() { 
+  public PlanResource() { 
   }
 
-  public ConfigResource id(@jakarta.annotation.Nullable String id) {
+  public PlanResource id(@jakarta.annotation.Nullable String id) {
     this.id = JsonNullable.<String>of(id);
     return this;
   }
@@ -123,7 +123,7 @@ public class ConfigResource {
   }
 
 
-  public ConfigResource type(@jakarta.annotation.Nonnull TypeEnum type) {
+  public PlanResource type(@jakarta.annotation.Nonnull TypeEnum type) {
     this.type = type;
     return this;
   }
@@ -147,7 +147,7 @@ public class ConfigResource {
   }
 
 
-  public ConfigResource attributes(@jakarta.annotation.Nonnull Config attributes) {
+  public PlanResource attributes(@jakarta.annotation.Nonnull Plan attributes) {
     this.attributes = attributes;
     return this;
   }
@@ -159,20 +159,20 @@ public class ConfigResource {
   @jakarta.annotation.Nonnull
   @JsonProperty(value = JSON_PROPERTY_ATTRIBUTES, required = true)
   @JsonInclude(value = JsonInclude.Include.ALWAYS)
-  public Config getAttributes() {
+  public Plan getAttributes() {
     return attributes;
   }
 
 
   @JsonProperty(value = JSON_PROPERTY_ATTRIBUTES, required = true)
   @JsonInclude(value = JsonInclude.Include.ALWAYS)
-  public void setAttributes(@jakarta.annotation.Nonnull Config attributes) {
+  public void setAttributes(@jakarta.annotation.Nonnull Plan attributes) {
     this.attributes = attributes;
   }
 
 
   /**
-   * Return true if this ConfigResource object is equal to o.
+   * Return true if this PlanResource object is equal to o.
    */
   @Override
   public boolean equals(Object o) {
@@ -182,10 +182,10 @@ public class ConfigResource {
     if (o == null || getClass() != o.getClass()) {
       return false;
     }
-    ConfigResource configResource = (ConfigResource) o;
-    return equalsNullable(this.id, configResource.id) &&
-        Objects.equals(this.type, configResource.type) &&
-        Objects.equals(this.attributes, configResource.attributes);
+    PlanResource planResource = (PlanResource) o;
+    return equalsNullable(this.id, planResource.id) &&
+        Objects.equals(this.type, planResource.type) &&
+        Objects.equals(this.attributes, planResource.attributes);
   }
 
   private static <T> boolean equalsNullable(JsonNullable<T> a, JsonNullable<T> b) {
@@ -207,7 +207,7 @@ public class ConfigResource {
   @Override
   public String toString() {
     StringBuilder sb = new StringBuilder();
-    sb.append("class ConfigResource {\n");
+    sb.append("class PlanResource {\n");
     sb.append("    id: ").append(toIndentedString(id)).append("\n");
     sb.append("    type: ").append(toIndentedString(type)).append("\n");
     sb.append("    attributes: ").append(toIndentedString(attributes)).append("\n");

@@ -35,21 +35,11 @@ import com.smplkit.internal.generated.app.ApiClient;
  * PlanDefinition
  */
 @JsonPropertyOrder({
-  PlanDefinition.JSON_PROPERTY_DISPLAY_NAME,
-  PlanDefinition.JSON_PROPERTY_DESCRIPTION,
   PlanDefinition.JSON_PROPERTY_PRICE_MONTHLY_CENTS,
   PlanDefinition.JSON_PROPERTY_LIMITS
 })
-@jakarta.annotation.Generated(value = "org.openapitools.codegen.languages.JavaClientCodegen", date = "2026-04-01T01:26:11.080994378Z[Etc/UTC]", comments = "Generator version: 7.21.0")
+@jakarta.annotation.Generated(value = "org.openapitools.codegen.languages.JavaClientCodegen", date = "2026-04-01T22:33:36.657116370Z[Etc/UTC]", comments = "Generator version: 7.21.0")
 public class PlanDefinition {
-  public static final String JSON_PROPERTY_DISPLAY_NAME = "display_name";
-  @jakarta.annotation.Nonnull
-  private String displayName;
-
-  public static final String JSON_PROPERTY_DESCRIPTION = "description";
-  @jakarta.annotation.Nonnull
-  private String description;
-
   public static final String JSON_PROPERTY_PRICE_MONTHLY_CENTS = "price_monthly_cents";
   @jakarta.annotation.Nonnull
   private Integer priceMonthlyCents;
@@ -60,54 +50,6 @@ public class PlanDefinition {
 
   public PlanDefinition() { 
   }
-
-  public PlanDefinition displayName(@jakarta.annotation.Nonnull String displayName) {
-    this.displayName = displayName;
-    return this;
-  }
-
-  /**
-   * Get displayName
-   * @return displayName
-   */
-  @jakarta.annotation.Nonnull
-  @JsonProperty(value = JSON_PROPERTY_DISPLAY_NAME, required = true)
-  @JsonInclude(value = JsonInclude.Include.ALWAYS)
-  public String getDisplayName() {
-    return displayName;
-  }
-
-
-  @JsonProperty(value = JSON_PROPERTY_DISPLAY_NAME, required = true)
-  @JsonInclude(value = JsonInclude.Include.ALWAYS)
-  public void setDisplayName(@jakarta.annotation.Nonnull String displayName) {
-    this.displayName = displayName;
-  }
-
-
-  public PlanDefinition description(@jakarta.annotation.Nonnull String description) {
-    this.description = description;
-    return this;
-  }
-
-  /**
-   * Get description
-   * @return description
-   */
-  @jakarta.annotation.Nonnull
-  @JsonProperty(value = JSON_PROPERTY_DESCRIPTION, required = true)
-  @JsonInclude(value = JsonInclude.Include.ALWAYS)
-  public String getDescription() {
-    return description;
-  }
-
-
-  @JsonProperty(value = JSON_PROPERTY_DESCRIPTION, required = true)
-  @JsonInclude(value = JsonInclude.Include.ALWAYS)
-  public void setDescription(@jakarta.annotation.Nonnull String description) {
-    this.description = description;
-  }
-
 
   public PlanDefinition priceMonthlyCents(@jakarta.annotation.Nonnull Integer priceMonthlyCents) {
     this.priceMonthlyCents = priceMonthlyCents;
@@ -177,23 +119,19 @@ public class PlanDefinition {
       return false;
     }
     PlanDefinition planDefinition = (PlanDefinition) o;
-    return Objects.equals(this.displayName, planDefinition.displayName) &&
-        Objects.equals(this.description, planDefinition.description) &&
-        Objects.equals(this.priceMonthlyCents, planDefinition.priceMonthlyCents) &&
+    return Objects.equals(this.priceMonthlyCents, planDefinition.priceMonthlyCents) &&
         Objects.equals(this.limits, planDefinition.limits);
   }
 
   @Override
   public int hashCode() {
-    return Objects.hash(displayName, description, priceMonthlyCents, limits);
+    return Objects.hash(priceMonthlyCents, limits);
   }
 
   @Override
   public String toString() {
     StringBuilder sb = new StringBuilder();
     sb.append("class PlanDefinition {\n");
-    sb.append("    displayName: ").append(toIndentedString(displayName)).append("\n");
-    sb.append("    description: ").append(toIndentedString(description)).append("\n");
     sb.append("    priceMonthlyCents: ").append(toIndentedString(priceMonthlyCents)).append("\n");
     sb.append("    limits: ").append(toIndentedString(limits)).append("\n");
     sb.append("}");
@@ -239,16 +177,6 @@ public class PlanDefinition {
     }
 
     StringJoiner joiner = new StringJoiner("&");
-
-    // add `display_name` to the URL query string
-    if (getDisplayName() != null) {
-      joiner.add(String.format(java.util.Locale.ROOT, "%sdisplay_name%s=%s", prefix, suffix, ApiClient.urlEncode(ApiClient.valueToString(getDisplayName()))));
-    }
-
-    // add `description` to the URL query string
-    if (getDescription() != null) {
-      joiner.add(String.format(java.util.Locale.ROOT, "%sdescription%s=%s", prefix, suffix, ApiClient.urlEncode(ApiClient.valueToString(getDescription()))));
-    }
 
     // add `price_monthly_cents` to the URL query string
     if (getPriceMonthlyCents() != null) {
