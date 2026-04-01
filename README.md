@@ -85,6 +85,117 @@ try (SmplClient client = SmplClient.builder()
 }
 ```
 
+## Flags
+
+The Flags module provides feature flag management and a prescriptive runtime tier with typed flag handles, local evaluation, and real-time updates.
+
+### Management API
+
+```java
+import com.smplkit.flags.*;
+
+try (SmplClient client = SmplClient.builder()
+        .apiKey("sk_api_...")
+        .build()) {
+
+    // Create a boolean flag
+    FlagResource flag = client.flags().create(
+        CreateFlagParams.builder("dark-mode", "Dark Mode", FlagType.BOOLEAN)
+            .defaultValue(false)
+            .description("Controls the dark mode UI theme.")
+            .build());
+
+    // Add a targeting rule
+    flag = flag.addRule(new Rule("Enable for enterprise")
+        .environment("production")
+        .when("user.plan", "==", "enterprise")
+        .serve(true)
+        .build());
+
+    // Update a flag
+    flag = flag.update(UpdateFlagParams.builder()
+        .description("Updated description")
+        .build());
+
+    // List and delete
+    List<FlagResource> flags = client.flags().list();
+    client.flags().delete(flag.id());
+}
+```
+
+### Runtime Tier (Typed Handles)
+
+```java
+try (SmplClient client = SmplClient.builder()
+        .apiKey("sk_api_...")
+        .build()) {
+
+    // 1. Declare typed flag handles (at startup)
+    FlagHandle<Boolean> darkMode = client.flags().boolFlag("dark-mode", false);
+    FlagHandle<String> banner = client.flags().stringFlag("banner-text", "Welcome!");
+    FlagHandle<Number> rateLimit = client.flags().numberFlag("rate-limit", 100);
+    FlagHandle<Object> uiConfig = client.flags().jsonFlag("ui-config",
+        Map.of("theme", "light"));
+
+    // 2. Set a context provider (called on every evaluation)
+    client.flags().setContextProvider(() -> List.of(
+        Context.builder("user", "user-42")
+            .attr("plan", "enterprise")
+            .attr("country", "US")
+            .build()
+    ));
+
+    // 3. Connect to an environment (fetches flags, starts WebSocket)
+    client.flags().connect("production");
+
+    // 4. Evaluate — synchronous, local, zero network
+    boolean isDarkMode = darkMode.get();           // true (enterprise rule matches)
+    String bannerText = banner.get();              // resolved value or default
+    Number limit = rateLimit.get();                // resolved value or default
+
+    // 5. Override context per-request
+    Context guest = Context.builder("user", "guest-1")
+        .attr("plan", "free")
+        .build();
+    boolean guestDarkMode = darkMode.get(List.of(guest));  // false
+
+    // 6. Listen for changes
+    darkMode.onChange(event ->
+        System.out.println("Flag changed: " + event.key()));
+
+    // 7. Disconnect when done
+    client.flags().disconnect();
+}
+```
+
+### Context Types
+
+```java
+// Create a context type for targeting
+client.flags().createContextType("user", Map.of(
+    "name", "User",
+    "attributes", Map.of(
+        "plan", Map.of("type", "string"),
+        "country", Map.of("type", "string")
+    )
+));
+
+// List and delete context types
+List<Map<String, Object>> types = client.flags().listContextTypes();
+client.flags().deleteContextType(typeId);
+```
+
+### Stateless Evaluation (HTTP)
+
+For serverless or one-off checks without `connect()`:
+
+```java
+Object result = client.flags().evaluate("dark-mode", "production",
+    List.of(Context.builder("user", "user-42")
+        .attr("plan", "enterprise")
+        .build()));
+```
+
 ## Configuration
 
 The API key is resolved using the following priority:
