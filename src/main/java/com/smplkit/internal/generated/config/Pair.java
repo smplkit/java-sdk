@@ -13,7 +13,7 @@
 
 package com.smplkit.internal.generated.config;
 
-@jakarta.annotation.Generated(value = "org.openapitools.codegen.languages.JavaClientCodegen", date = "2026-04-01T22:33:40.667692331Z[Etc/UTC]", comments = "Generator version: 7.21.0")
+@jakarta.annotation.Generated(value = "org.openapitools.codegen.languages.JavaClientCodegen", date = "2026-04-02T23:28:55.804580994Z[Etc/UTC]", comments = "Generator version: 7.21.0")
 public class Pair {
   private final String name;
   private final String value;

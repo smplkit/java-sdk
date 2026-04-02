@@ -43,7 +43,7 @@ import com.smplkit.internal.generated.flags.ApiClient;
   FlagRule.JSON_PROPERTY_LOGIC,
   FlagRule.JSON_PROPERTY_VALUE
 })
-@jakarta.annotation.Generated(value = "org.openapitools.codegen.languages.JavaClientCodegen", date = "2026-04-01T22:33:44.215930957Z[Etc/UTC]", comments = "Generator version: 7.21.0")
+@jakarta.annotation.Generated(value = "org.openapitools.codegen.languages.JavaClientCodegen", date = "2026-04-02T23:28:58.768545785Z[Etc/UTC]", comments = "Generator version: 7.21.0")
 public class FlagRule {
   public static final String JSON_PROPERTY_DESCRIPTION = "description";
   private JsonNullable<String> description = JsonNullable.<String>undefined();
