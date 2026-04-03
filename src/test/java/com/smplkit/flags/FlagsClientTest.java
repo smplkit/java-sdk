@@ -8,6 +8,7 @@ import com.smplkit.internal.generated.flags.api.FlagsApi;
 import com.smplkit.internal.generated.flags.model.FlagListResponse;
 import com.smplkit.internal.generated.flags.model.FlagResponse;
 import com.smplkit.internal.generated.flags.model.ResponseFlag;
+import com.smplkit.errors.SmplNotConnectedException;
 import com.smplkit.errors.SmplNotFoundException;
 import com.smplkit.errors.SmplValidationException;
 import org.junit.jupiter.api.BeforeEach;
@@ -138,9 +139,9 @@ class FlagsClientTest {
     }
 
     @Test
-    void handleGet_returnsDefault_whenNotConnected() {
+    void handleGet_throwsWhenNotConnected() {
         FlagHandle<Boolean> handle = client.boolFlag("feature-x", false);
-        assertFalse(handle.get());
+        assertThrows(SmplNotConnectedException.class, () -> handle.get());
     }
 
     @Test
@@ -371,7 +372,7 @@ class FlagsClientTest {
                                  Map<String, Object> environments) throws ApiException {
         when(mockApi.listFlags(isNull(), isNull())).thenReturn(makeFlagListResponse(
                 TEST_FLAG_ID, key, type, defaultValue, environments));
-        client.connect("staging");
+        client.connectInternal("staging");
     }
 
     private void setupFlagStoreForRefresh(String key, String type, Object defaultValue,
@@ -382,7 +383,7 @@ class FlagsClientTest {
 
     private void setupEmptyFlagStore() throws ApiException {
         when(mockApi.listFlags(isNull(), isNull())).thenReturn(new FlagListResponse().data(List.of()));
-        client.connect("staging");
+        client.connectInternal("staging");
     }
 
     private static FlagResponse makeFlagResponse(String id, String key, String name,

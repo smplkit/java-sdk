@@ -194,9 +194,9 @@ class FlagsClientFullTest {
         client.disconnect();
         assertEquals("disconnected", client.connectionStatus());
 
-        // After disconnect, handle returns default
+        // After disconnect, handle throws SmplNotConnectedException
         FlagHandle<Boolean> handle = client.boolFlag("after-disconnect", true);
-        assertTrue(handle.get());
+        assertThrows(com.smplkit.errors.SmplNotConnectedException.class, () -> handle.get());
     }
 
     // --- Refresh ---
@@ -743,7 +743,7 @@ class FlagsClientFullTest {
         when(mockApi.listFlags(isNull(), isNull())).thenReturn(OBJECT_MAPPER.convertValue(
                 Map.of("data", List.of(Map.of("id", FLAG_ID, "type", "flag", "attributes", attrs))),
                 FlagListResponse.class));
-        client.connect("staging");
+        client.connectInternal("staging");
 
         FlagHandle<Boolean> handle = client.boolFlag("feature-x", true);
         // Flag default is null, env has no specific default, no rules → returns null → handle returns code default
@@ -755,7 +755,7 @@ class FlagsClientFullTest {
     private void connectWithFlag(String key, String type, Object defaultValue,
                                   Map<String, Object> environments) throws ApiException {
         setupList(key, type, defaultValue, environments);
-        client.connect("staging");
+        client.connectInternal("staging");
     }
 
     private void setupList(String key, String type, Object defaultValue,

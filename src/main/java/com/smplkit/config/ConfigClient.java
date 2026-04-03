@@ -2,6 +2,7 @@ package com.smplkit.config;
 
 import com.smplkit.errors.SmplConflictException;
 import com.smplkit.errors.SmplException;
+import com.smplkit.errors.SmplNotConnectedException;
 import com.smplkit.errors.SmplNotFoundException;
 import com.smplkit.errors.SmplValidationException;
 import com.smplkit.internal.generated.config.ApiException;
@@ -40,6 +41,8 @@ public final class ConfigClient {
     private final ConfigsApi configsApi;
     private final HttpClient httpClient;
     private final String apiKey;
+    private volatile boolean connected;
+    private final Map<String, Map<String, Object>> configCache = new HashMap<>();
 
     /**
      * Creates a new ConfigClient. Use {@link com.smplkit.SmplClient} to obtain an instance.
@@ -295,6 +298,75 @@ public final class ConfigClient {
                 () -> fetchChain(chainIds),
                 fetchCount
         );
+    }
+
+    /**
+     * Internal connect called by SmplClient.connect(). Fetches all configs,
+     * resolves values for the given environment, and caches them.
+     *
+     * @param environment the target environment
+     */
+    /** @hidden Internal — called by SmplClient.connect(). */
+    public void connectInternal(String environment) {
+        List<Config> allConfigs = list();
+        configCache.clear();
+        for (Config cfg : allConfigs) {
+            configCache.put(cfg.key(), resolveConfigValues(cfg, environment));
+        }
+        connected = true;
+    }
+
+    /**
+     * Prescriptive access: returns a resolved config value.
+     *
+     * @param configKey the config key
+     * @param itemKey   the item key within the config
+     * @return the resolved value, or null if not found
+     * @throws SmplNotConnectedException if connect() has not been called
+     */
+    public Object getValue(String configKey, String itemKey) {
+        if (!connected) {
+            throw new SmplNotConnectedException();
+        }
+        Map<String, Object> resolved = configCache.get(configKey);
+        if (resolved == null) return null;
+        return resolved.get(itemKey);
+    }
+
+    /**
+     * Prescriptive access: returns all resolved values for a config.
+     *
+     * @param configKey the config key
+     * @return unmodifiable map of resolved values, or null if not found
+     * @throws SmplNotConnectedException if connect() has not been called
+     */
+    public Map<String, Object> getValues(String configKey) {
+        if (!connected) {
+            throw new SmplNotConnectedException();
+        }
+        Map<String, Object> resolved = configCache.get(configKey);
+        if (resolved == null) return null;
+        return Collections.unmodifiableMap(resolved);
+    }
+
+    /** Resolves config values for an environment, applying environment overrides. */
+    @SuppressWarnings("unchecked")
+    private Map<String, Object> resolveConfigValues(Config config, String environment) {
+        Map<String, Object> resolved = new HashMap<>(config.items());
+        Map<String, Map<String, Object>> envs = config.environments();
+        if (envs != null && envs.containsKey(environment)) {
+            Map<String, Object> envData = envs.get(environment);
+            Object values = envData.get("values");
+            if (values instanceof Map) {
+                resolved.putAll((Map<String, Object>) values);
+            }
+        }
+        return resolved;
+    }
+
+    /** Package-private: check if connected (for testing). */
+    boolean isConnected() {
+        return connected;
     }
 
     // -----------------------------------------------------------------------

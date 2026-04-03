@@ -16,10 +16,10 @@ class SmplClientFullTest {
     void realClient_exercisesRequestInterceptor() {
         // Build a real client (not mocked) and attempt an API call.
         // The call will fail (no real server), but the request interceptor lambda
-        // (line 60: builder -> builder.header("Authorization", "Bearer " + apiKey))
         // will be executed before the request fails.
         try (SmplClient client = SmplClient.builder()
                 .apiKey("test-key")
+                .environment("test")
                 .timeout(Duration.ofMillis(500))
                 .build()) {
 

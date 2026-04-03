@@ -384,7 +384,7 @@ class FlagsClientCoverageTest {
         when(mockApi.listFlags(isNull(), isNull())).thenReturn(OBJECT_MAPPER.convertValue(
                 Map.of("data", List.of(Map.of("id", FLAG_ID, "type", "flag", "attributes", attrs))),
                 FlagListResponse.class));
-        client.connect("staging");
+        client.connectInternal("staging");
 
         FlagHandle<String> handle = client.stringFlag("feature-x", "fallback");
         assertEquals("fallback", handle.get(List.of()));
@@ -653,7 +653,7 @@ class FlagsClientCoverageTest {
         when(mockApi.listFlags(isNull(), isNull())).thenReturn(OBJECT_MAPPER.convertValue(
                 Map.of("data", List.of(Map.of("id", FLAG_ID, "type", "flag", "attributes", attrs))),
                 FlagListResponse.class));
-        client.connect("staging");
+        client.connectInternal("staging");
 
         FlagHandle<String> handle = client.stringFlag("color", "red");
         assertEquals("red", handle.get(List.of()));
@@ -665,7 +665,7 @@ class FlagsClientCoverageTest {
     void handleGet_nullDefaultValue_returnsNull() throws Exception {
         // Set up a flag where evaluation returns null: flag not in store → evaluateHandle returns defaultValue (null)
         when(mockApi.listFlags(isNull(), isNull())).thenReturn(new FlagListResponse().data(List.of()));
-        client.connect("staging");
+        client.connectInternal("staging");
 
         // Create a handle with null default for a key not in the store
         FlagHandle<Boolean> handle = new FlagHandle<>("nonexistent", null, Boolean.class);
@@ -681,7 +681,7 @@ class FlagsClientCoverageTest {
                                  Map<String, Object> environments) throws ApiException {
         when(mockApi.listFlags(isNull(), isNull())).thenReturn(makeFlagListResponse(
                 FLAG_ID, key, type, defaultValue, environments));
-        client.connect("staging");
+        client.connectInternal("staging");
     }
 
     @Test

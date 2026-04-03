@@ -112,7 +112,10 @@ class ApiKeyResolverTest {
 
     @Test
     void createFactoryWithApiKey() {
-        try (SmplClient client = SmplClient.create("sk_api_test")) {
+        try (SmplClient client = SmplClient.builder()
+                .apiKey("sk_api_test")
+                .environment("test")
+                .build()) {
             assertNotNull(client);
         }
     }

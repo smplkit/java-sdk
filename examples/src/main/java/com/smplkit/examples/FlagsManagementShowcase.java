@@ -56,6 +56,7 @@ public class FlagsManagementShowcase {
 
         try (SmplClient client = SmplClient.builder()
                 .apiKey(apiKey)
+                .environment("production")
                 .build()) {
 
             step("SmplClient initialized");

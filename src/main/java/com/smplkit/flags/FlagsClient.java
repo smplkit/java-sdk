@@ -5,6 +5,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
 import com.smplkit.errors.SmplConflictException;
 import com.smplkit.errors.SmplException;
+import com.smplkit.errors.SmplNotConnectedException;
 import com.smplkit.errors.SmplNotFoundException;
 import com.smplkit.errors.SmplValidationException;
 import com.smplkit.internal.generated.flags.ApiException;
@@ -113,6 +114,9 @@ public final class FlagsClient {
     // Context provider
     private volatile Supplier<List<Context>> contextProvider;
 
+    // Service name from parent SmplClient (for auto-injection)
+    private volatile String parentService;
+
     // Shared WebSocket reference (set by SmplClient)
     private volatile SharedWebSocket sharedWs;
     private final Consumer<Map<String, Object>> flagChangedHandler;
@@ -155,6 +159,11 @@ public final class FlagsClient {
 
     public void setSharedWs(SharedWebSocket ws) {
         this.sharedWs = ws;
+    }
+
+    /** Sets the parent service name for automatic context injection. */
+    public void setParentService(String service) {
+        this.parentService = service;
     }
 
     // -----------------------------------------------------------------------
@@ -454,19 +463,13 @@ public final class FlagsClient {
     // -----------------------------------------------------------------------
 
     /**
-     * Connects to the flags runtime for the given environment.
-     * Fetches all flag definitions and starts listening for changes.
+     * Internal connect called by SmplClient.connect(). Fetches all flag definitions
+     * and registers WebSocket listeners.
      *
      * @param environment the target environment
      */
-    public void connect(String environment) {
-        connect(environment, Duration.ofSeconds(10));
-    }
-
-    /**
-     * Connects to the flags runtime with a custom timeout.
-     */
-    public void connect(String environment, Duration connectTimeout) {
+    /** @hidden Internal — called by SmplClient.connect(). */
+    public void connectInternal(String environment) {
         this.environment = Objects.requireNonNull(environment);
         connectionStatus = "connecting";
 
@@ -481,7 +484,6 @@ public final class FlagsClient {
         if (ws != null) {
             ws.on("flag_changed", flagChangedHandler);
             ws.on("flag_deleted", flagDeletedHandler);
-            ws.ensureConnected(connectTimeout);
         }
 
         connected = true;
@@ -626,7 +628,9 @@ public final class FlagsClient {
      */
     @SuppressWarnings("unchecked")
     Object evaluateHandle(String key, Object defaultValue, List<Context> contexts) {
-        if (!connected) return defaultValue;
+        if (!connected) {
+            throw new SmplNotConnectedException();
+        }
 
         Map<String, Object> flagData = flagStore.get(key);
         if (flagData == null) return defaultValue;
@@ -740,6 +744,10 @@ public final class FlagsClient {
             for (Context ctx : contexts) {
                 evalData.put(ctx.type(), ctx.toEvalDict());
             }
+        }
+        // Auto-inject service context if configured and not already provided
+        if (parentService != null && !evalData.containsKey("service")) {
+            evalData.put("service", Map.of("key", parentService));
         }
         return evalData;
     }

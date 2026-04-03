@@ -62,6 +62,7 @@ public class FlagsDemoSetup {
 
         try (SmplClient client = SmplClient.builder()
                 .apiKey(apiKey)
+                .environment("staging")
                 .build()) {
 
             step("SmplClient initialized");
@@ -196,7 +197,7 @@ public class FlagsDemoSetup {
             // ==================================================================
             section("5. Connect to Staging");
 
-            client.flags().connect("staging");
+            client.connect();
             step("Connected to 'staging' environment");
 
             // Declare typed handles for evaluation.

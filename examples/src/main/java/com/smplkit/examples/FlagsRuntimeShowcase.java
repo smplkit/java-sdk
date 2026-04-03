@@ -61,6 +61,7 @@ public class FlagsRuntimeShowcase {
 
         try (SmplClient client = SmplClient.builder()
                 .apiKey(apiKey)
+                .environment("staging")
                 .build()) {
 
             step("SmplClient initialized");
@@ -153,7 +154,7 @@ public class FlagsRuntimeShowcase {
 
             // connect() fetches all flag definitions for the given environment
             // and starts listening for real-time changes via WebSocket.
-            client.flags().connect("staging");
+            client.connect();
             step("Connected to 'staging' environment");
             step("Connection status: " + client.flags().connectionStatus());
 

@@ -60,6 +60,7 @@ public class ConfigShowcase {
         // It implements AutoCloseable for try-with-resources.
         try (SmplClient client = SmplClient.builder()
                 .apiKey(apiKey)
+                .environment("production")
                 .build()) {
 
             step("SmplClient initialized");

@@ -26,6 +26,7 @@ import java.util.UUID;
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.ArgumentMatchers.isNull;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
@@ -618,5 +619,32 @@ class ConfigClientTest {
     void createConfigParams_requiresName() {
         assertThrows(NullPointerException.class, () ->
                 CreateConfigParams.builder(null));
+    }
+
+    // --- Prescriptive access (Phase 2) ---
+
+    @Test
+    void isConnected_falseByDefault() {
+        assertFalse(configClient.isConnected());
+    }
+
+    @Test
+    void connectInternal_setsConnectedState() throws ApiException {
+        when(mockApi.listConfigs(isNull(), isNull()))
+                .thenReturn(new ConfigListResponse().data(java.util.List.of()));
+        configClient.connectInternal("production");
+        assertTrue(configClient.isConnected());
+    }
+
+    @Test
+    void getValue_throwsWhenNotConnected() {
+        assertThrows(com.smplkit.errors.SmplNotConnectedException.class,
+                () -> configClient.getValue("cfg", "key"));
+    }
+
+    @Test
+    void getValues_throwsWhenNotConnected() {
+        assertThrows(com.smplkit.errors.SmplNotConnectedException.class,
+                () -> configClient.getValues("cfg"));
     }
 }
