@@ -78,7 +78,7 @@ mavenPublishing {
 
     pom {
         name.set("smplkit Java SDK")
-        description.set("Official Java SDK for the smplkit platform")
+        description.set("Official Java SDK for the smplkit platform.")
         url.set("https://github.com/smplkit/java-sdk")
 
         licenses {
