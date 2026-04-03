@@ -16,19 +16,25 @@ import com.smplkit.internal.generated.config.model.EnvironmentOverride;
 import com.smplkit.internal.generated.config.model.ResourceConfig;
 import com.smplkit.internal.generated.config.model.ResponseConfig;
 
-import java.net.http.HttpClient;
 import java.time.Instant;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
+import java.util.Set;
 import java.util.UUID;
+import java.util.function.Consumer;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 /**
  * Client for the Smpl Config service.
  *
- * <p>Provides CRUD operations on configuration resources and runtime connection.
+ * <p>Provides CRUD operations on configuration resources and prescriptive
+ * typed access after {@link com.smplkit.SmplClient#connect()}.
  * Obtained via {@link com.smplkit.SmplClient#config()}.</p>
  *
  * <p>All methods communicate with the server synchronously and raise
@@ -36,26 +42,28 @@ import java.util.UUID;
  */
 public final class ConfigClient {
 
-    private static final String WS_BASE_URL = "https://config.smplkit.com";
+    private static final Logger LOG = Logger.getLogger("smplkit.config");
 
     private final ConfigsApi configsApi;
-    private final HttpClient httpClient;
-    private final String apiKey;
     private volatile boolean connected;
-    private final Map<String, Map<String, Object>> configCache = new HashMap<>();
+    private volatile String environment;
+    private Map<String, Map<String, Object>> configCache = new HashMap<>();
+    private final List<ListenerEntry> listeners = Collections.synchronizedList(new ArrayList<>());
 
     /**
      * Creates a new ConfigClient. Use {@link com.smplkit.SmplClient} to obtain an instance.
      *
      * @param configsApi the generated API client
-     * @param httpClient the HTTP client (used for WebSocket in ConfigRuntime)
-     * @param apiKey     the API key (used for WebSocket auth)
+     * @param httpClient the HTTP client (unused after ConfigRuntime removal, kept for API compat)
+     * @param apiKey     the API key (unused after ConfigRuntime removal, kept for API compat)
      */
-    public ConfigClient(ConfigsApi configsApi, HttpClient httpClient, String apiKey) {
+    public ConfigClient(ConfigsApi configsApi, java.net.http.HttpClient httpClient, String apiKey) {
         this.configsApi = configsApi;
-        this.httpClient = httpClient;
-        this.apiKey = apiKey;
     }
+
+    // -----------------------------------------------------------------------
+    // Management-plane CRUD
+    // -----------------------------------------------------------------------
 
     /**
      * Fetches a single config by UUID.
@@ -227,7 +235,7 @@ public final class ConfigClient {
         Map<String, Object> existingValues = existingEnv.containsKey("values")
                 ? new HashMap<>((Map<String, Object>) existingEnv.get("values"))
                 : new HashMap<>();
-        Map<String, Object> merged = ConfigRuntime.deepMerge(existingValues, newValues);
+        Map<String, Object> merged = Resolver.deepMerge(existingValues, newValues);
 
         Map<String, Object> envData = new HashMap<>(existingEnv);
         envData.put("values", merged);
@@ -252,53 +260,9 @@ public final class ConfigClient {
         return setValues(config, Map.of(key, value), environment);
     }
 
-    /**
-     * Connects to a config for runtime use, returning a fully-resolved {@link ConfigRuntime}.
-     *
-     * <p>Fetches the full parent chain, resolves values for the given environment,
-     * and starts a WebSocket for real-time updates.</p>
-     *
-     * @param config      the config to connect to
-     * @param environment the target environment name
-     * @return a ready-to-use {@link ConfigRuntime}
-     */
-    public ConfigRuntime connect(Config config, String environment) {
-        // Build the chain: child-first, walk parent links via get()
-        List<Config> configChain = new ArrayList<>();
-        Config current = config;
-        while (current != null) {
-            configChain.add(current);
-            if (current.parent() != null) {
-                current = get(current.parent());
-            } else {
-                break;
-            }
-        }
-        int fetchCount = configChain.size();
-
-        List<ConfigRuntime.ChainEntry> chain = new ArrayList<>();
-        for (Config c : configChain) {
-            chain.add(new ConfigRuntime.ChainEntry(c.id(), c.items(), c.environments()));
-        }
-
-        // fetchChainFn for refresh/reconnect — re-fetches the same chain
-        List<String> chainIds = new ArrayList<>();
-        for (Config c : configChain) {
-            chainIds.add(c.id());
-        }
-
-        return ConfigRuntime.create(
-                chain,
-                config.id(),
-                config.key(),
-                environment,
-                httpClient,
-                apiKey,
-                WS_BASE_URL,
-                () -> fetchChain(chainIds),
-                fetchCount
-        );
-    }
+    // -----------------------------------------------------------------------
+    // Prescriptive access — connect once, read everywhere
+    // -----------------------------------------------------------------------
 
     /**
      * Internal connect called by SmplClient.connect(). Fetches all configs,
@@ -308,11 +272,27 @@ public final class ConfigClient {
      */
     /** @hidden Internal — called by SmplClient.connect(). */
     public void connectInternal(String environment) {
+        this.environment = environment;
         List<Config> allConfigs = list();
-        configCache.clear();
+        Map<String, Config> configById = new HashMap<>();
         for (Config cfg : allConfigs) {
-            configCache.put(cfg.key(), resolveConfigValues(cfg, environment));
+            configById.put(cfg.id(), cfg);
         }
+
+        Map<String, Map<String, Object>> newCache = new HashMap<>();
+        for (Config cfg : allConfigs) {
+            List<Resolver.ChainEntry> chain = new ArrayList<>();
+            chain.add(toChainEntry(cfg));
+            Config current = cfg;
+            while (current.parent() != null && configById.containsKey(current.parent())) {
+                Config parent = configById.get(current.parent());
+                chain.add(toChainEntry(parent));
+                current = parent;
+            }
+            newCache.put(cfg.key(), Resolver.resolve(chain, environment));
+        }
+
+        configCache = newCache;
         connected = true;
     }
 
@@ -349,19 +329,133 @@ public final class ConfigClient {
         return Collections.unmodifiableMap(resolved);
     }
 
-    /** Resolves config values for an environment, applying environment overrides. */
-    @SuppressWarnings("unchecked")
-    private Map<String, Object> resolveConfigValues(Config config, String environment) {
-        Map<String, Object> resolved = new HashMap<>(config.items());
-        Map<String, Map<String, Object>> envs = config.environments();
-        if (envs != null && envs.containsKey(environment)) {
-            Map<String, Object> envData = envs.get(environment);
-            Object values = envData.get("values");
-            if (values instanceof Map) {
-                resolved.putAll((Map<String, Object>) values);
+    /**
+     * Returns the value for {@code itemKey} as a {@link String}, or {@code defaultValue}
+     * if absent or not a string.
+     *
+     * @throws SmplNotConnectedException if connect() has not been called
+     */
+    public String getString(String configKey, String itemKey, String defaultValue) {
+        Object val = getValue(configKey, itemKey);
+        return val instanceof String s ? s : defaultValue;
+    }
+
+    /**
+     * Returns the value for {@code itemKey} as an {@code int}, or {@code defaultValue}
+     * if absent or not a number.
+     *
+     * @throws SmplNotConnectedException if connect() has not been called
+     */
+    public int getInt(String configKey, String itemKey, int defaultValue) {
+        Object val = getValue(configKey, itemKey);
+        return val instanceof Number n ? n.intValue() : defaultValue;
+    }
+
+    /**
+     * Returns the value for {@code itemKey} as a {@code boolean}, or {@code defaultValue}
+     * if absent or not a boolean.
+     *
+     * @throws SmplNotConnectedException if connect() has not been called
+     */
+    public boolean getBool(String configKey, String itemKey, boolean defaultValue) {
+        Object val = getValue(configKey, itemKey);
+        return val instanceof Boolean b ? b : defaultValue;
+    }
+
+    /**
+     * Re-fetches all configs, re-resolves values for the current environment,
+     * and fires change listeners for any values that differ from the previous cache.
+     *
+     * @throws SmplNotConnectedException if connect() has not been called
+     */
+    public void refresh() {
+        if (!connected) {
+            throw new SmplNotConnectedException();
+        }
+        String env = this.environment;
+
+        List<Config> allConfigs = list();
+        Map<String, Config> configById = new HashMap<>();
+        for (Config cfg : allConfigs) {
+            configById.put(cfg.id(), cfg);
+        }
+
+        Map<String, Map<String, Object>> newCache = new HashMap<>();
+        for (Config cfg : allConfigs) {
+            List<Resolver.ChainEntry> chain = new ArrayList<>();
+            chain.add(toChainEntry(cfg));
+            Config current = cfg;
+            while (current.parent() != null && configById.containsKey(current.parent())) {
+                Config parent = configById.get(current.parent());
+                chain.add(toChainEntry(parent));
+                current = parent;
+            }
+            newCache.put(cfg.key(), Resolver.resolve(chain, env));
+        }
+
+        Map<String, Map<String, Object>> oldCache = configCache;
+        configCache = newCache;
+        diffAndFire(oldCache, newCache, "manual");
+    }
+
+    /**
+     * Registers a listener that fires when any config value changes.
+     *
+     * @param listener called with a {@link ChangeEvent} on each change
+     */
+    public void onChange(Consumer<ChangeEvent> listener) {
+        listeners.add(new ListenerEntry(null, null, listener));
+    }
+
+    /**
+     * Registers a listener that fires when the specified config/item values change.
+     *
+     * @param listener  called with a {@link ChangeEvent} on each matching change
+     * @param configKey only fire for changes to this config (null = all)
+     * @param itemKey   only fire for changes to this item (null = all items in config)
+     */
+    public void onChange(Consumer<ChangeEvent> listener, String configKey, String itemKey) {
+        listeners.add(new ListenerEntry(configKey, itemKey, listener));
+    }
+
+    /**
+     * Compares old and new caches, fires change listeners for any differences.
+     */
+    void diffAndFire(
+            Map<String, Map<String, Object>> oldCache,
+            Map<String, Map<String, Object>> newCache,
+            String source
+    ) {
+        Set<String> allConfigKeys = new HashSet<>();
+        allConfigKeys.addAll(oldCache.keySet());
+        allConfigKeys.addAll(newCache.keySet());
+
+        for (String cfgKey : allConfigKeys) {
+            Map<String, Object> oldItems = oldCache.getOrDefault(cfgKey, Map.of());
+            Map<String, Object> newItems = newCache.getOrDefault(cfgKey, Map.of());
+
+            Set<String> allItemKeys = new HashSet<>();
+            allItemKeys.addAll(oldItems.keySet());
+            allItemKeys.addAll(newItems.keySet());
+
+            for (String itemKey : allItemKeys) {
+                Object oldVal = oldItems.get(itemKey);
+                Object newVal = newItems.get(itemKey);
+                if (Objects.equals(oldVal, newVal)) continue;
+
+                ChangeEvent event = new ChangeEvent(cfgKey, itemKey, oldVal, newVal, source);
+                for (ListenerEntry entry : listeners) {
+                    if (entry.configKey != null && !entry.configKey.equals(cfgKey)) continue;
+                    if (entry.itemKey != null && !entry.itemKey.equals(itemKey)) continue;
+                    try {
+                        entry.listener.accept(event);
+                    } catch (Exception e) {
+                        LOG.log(Level.WARNING,
+                                "Exception in onChange listener for " + cfgKey + "/" + itemKey, e);
+                    }
+                }
             }
         }
-        return resolved;
     }
 
     /** Package-private: check if connected (for testing). */
@@ -373,13 +467,8 @@ public final class ConfigClient {
     // Internal helpers
     // -----------------------------------------------------------------------
 
-    private List<ConfigRuntime.ChainEntry> fetchChain(List<String> ids) {
-        List<ConfigRuntime.ChainEntry> entries = new ArrayList<>(ids.size());
-        for (String id : ids) {
-            Config c = get(id);
-            entries.add(new ConfigRuntime.ChainEntry(c.id(), c.items(), c.environments()));
-        }
-        return entries;
+    private static Resolver.ChainEntry toChainEntry(Config config) {
+        return new Resolver.ChainEntry(config.id(), config.items(), config.environments());
     }
 
     /**
@@ -501,4 +590,6 @@ public final class ConfigClient {
             default -> new SmplException(msg, code, body);
         };
     }
+
+    private record ListenerEntry(String configKey, String itemKey, Consumer<ChangeEvent> listener) {}
 }

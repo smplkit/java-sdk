@@ -177,35 +177,6 @@ class ConfigClientFullTest {
     }
 
     // -----------------------------------------------------------------------
-    // connect() with parent chain
-    // -----------------------------------------------------------------------
-
-    @Test
-    void connect_withMultipleLevelChain_buildsFullChain() throws ApiException {
-        ConfigResource grandparent = makeResource(GRANDPARENT_ID, "gp", "Grandparent", null,
-                null, Map.of("x", itemDef(1, ConfigItemDefinition.TypeEnum.NUMBER)),
-                Map.of());
-        ConfigResource parent = makeResource(PARENT_ID, "parent", "Parent", null,
-                GRANDPARENT_ID, Map.of("y", itemDef(2, ConfigItemDefinition.TypeEnum.NUMBER)),
-                Map.of());
-
-        when(mockApi.getConfig(UUID.fromString(PARENT_ID)))
-                .thenReturn(singleResponse(parent));
-        when(mockApi.getConfig(UUID.fromString(GRANDPARENT_ID)))
-                .thenReturn(singleResponse(grandparent));
-
-        Config child = new Config(
-                CONFIG_ID, "child", "Child", null, PARENT_ID,
-                Map.of("z", 3), Map.of(), null, null);
-
-        try (ConfigRuntime runtime = configClient.connect(child, "prod")) {
-            assertEquals(1, runtime.get("x"));
-            assertEquals(2, runtime.get("y"));
-            assertEquals(3, runtime.get("z"));
-        }
-    }
-
-    // -----------------------------------------------------------------------
     // parseResource — environments with empty override
     // -----------------------------------------------------------------------
 
@@ -252,37 +223,6 @@ class ConfigClientFullTest {
         SmplException ex = assertThrows(SmplException.class, () ->
                 configClient.get(CONFIG_ID));
         assertTrue(ex.getMessage().contains("503"));
-    }
-
-    // -----------------------------------------------------------------------
-    // connect() + refresh()
-    // -----------------------------------------------------------------------
-
-    @Test
-    void connect_thenRefresh_exercisesFetchChain() throws ApiException {
-        ConfigResource resource = makeResource(CONFIG_ID, "svc", "Svc",
-                null, null, Map.of("a", itemDef(1, ConfigItemDefinition.TypeEnum.NUMBER)),
-                Map.of());
-        when(mockApi.getConfig(UUID.fromString(CONFIG_ID)))
-                .thenReturn(singleResponse(resource));
-
-        Config config = new Config(
-                CONFIG_ID, "svc", "Svc", null, null,
-                Map.of("a", 1), Map.of(), null, null);
-
-        try (ConfigRuntime runtime = configClient.connect(config, "prod")) {
-            assertEquals(1, runtime.get("a"));
-
-            ConfigResource updated = makeResource(CONFIG_ID, "svc", "Svc",
-                    null, null, Map.of("a", itemDef(99, ConfigItemDefinition.TypeEnum.NUMBER)),
-                    Map.of());
-            when(mockApi.getConfig(UUID.fromString(CONFIG_ID)))
-                    .thenReturn(singleResponse(updated));
-
-            runtime.refresh();
-
-            assertEquals(99, runtime.get("a"));
-        }
     }
 
     // -----------------------------------------------------------------------

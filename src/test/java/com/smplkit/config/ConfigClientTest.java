@@ -485,46 +485,6 @@ class ConfigClientTest {
     }
 
     // -----------------------------------------------------------------------
-    // connect()
-    // -----------------------------------------------------------------------
-
-    @Test
-    void connect_rootConfig_returnsRuntimeWithValues() throws ApiException {
-        // Config with no parent — chain is just [config]
-        ConfigResource resource = makeResource(CONFIG_ID, "user_service", "User Service",
-                null, null,
-                Map.of("timeout", itemDef(30, ConfigItemDefinition.TypeEnum.NUMBER)),
-                Map.of(), null, null);
-        when(mockApi.getConfig(UUID.fromString(CONFIG_ID))).thenReturn(singleResponse(resource));
-
-        com.smplkit.config.Config config = new com.smplkit.config.Config(
-                CONFIG_ID, "user_service", "User Service", null, null,
-                Map.of("timeout", 30), Map.of(), null, null);
-
-        try (ConfigRuntime runtime = configClient.connect(config, "production")) {
-            assertEquals(30, runtime.get("timeout"));
-        }
-    }
-
-    @Test
-    void connect_withParent_buildsChain() throws ApiException {
-        // Child config whose parent is another config
-        ConfigResource parent = makeResource(CONFIG_ID, "common", "Common", null, null,
-                Map.of("shared", itemDef("yes", ConfigItemDefinition.TypeEnum.STRING)),
-                Map.of(), null, null);
-        when(mockApi.getConfig(UUID.fromString(CONFIG_ID))).thenReturn(singleResponse(parent));
-
-        com.smplkit.config.Config childConfig = new com.smplkit.config.Config(
-                CONFIG_ID_2, "user_service", "User Service", null, CONFIG_ID,
-                Map.of("timeout", 30), Map.of(), null, null);
-
-        try (ConfigRuntime runtime = configClient.connect(childConfig, "production")) {
-            assertEquals(30, runtime.get("timeout"));
-            assertEquals("yes", runtime.get("shared")); // inherited from parent
-        }
-    }
-
-    // -----------------------------------------------------------------------
     // Error mapping
     // -----------------------------------------------------------------------
 
