@@ -568,7 +568,7 @@ public final class FlagsClient {
 
         Map<String, Object> body = Map.of("contexts", batch);
         try {
-            doAppRequest("PUT", "/api/v1/contexts/bulk", body);
+            doAppRequest("POST", "/api/v1/contexts/bulk", body);
         } catch (Exception e) {
             LOG.log(Level.FINE, "Context flush failed", e);
         }
@@ -768,8 +768,8 @@ public final class FlagsClient {
         if (contextBuffer.containsKey(compositeKey)) return;
 
         Map<String, Object> entry = new HashMap<>();
-        entry.put("type", ctx.type());
-        entry.put("key", ctx.key());
+        entry.put("id", ctx.type() + ":" + ctx.key());
+        entry.put("name", ctx.name() != null ? ctx.name() : ctx.key());
         entry.put("attributes", ctx.attributes());
         contextBuffer.put(compositeKey, entry);
         pendingContexts.add(entry);
