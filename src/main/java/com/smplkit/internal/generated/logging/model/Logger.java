@@ -51,7 +51,7 @@ import com.smplkit.internal.generated.logging.ApiClient;
   Logger.JSON_PROPERTY_CREATED_AT,
   Logger.JSON_PROPERTY_UPDATED_AT
 })
-@jakarta.annotation.Generated(value = "org.openapitools.codegen.languages.JavaClientCodegen", date = "2026-04-03T08:57:35.738712071Z[Etc/UTC]", comments = "Generator version: 7.21.0")
+@jakarta.annotation.Generated(value = "org.openapitools.codegen.languages.JavaClientCodegen", date = "2026-04-03T04:34:14.716800-04:00[America/New_York]", comments = "Generator version: 7.21.0")
 public class Logger {
   public static final String JSON_PROPERTY_KEY = "key";
   private JsonNullable<String> key = JsonNullable.<String>undefined();
