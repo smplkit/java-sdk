@@ -39,10 +39,11 @@ import com.smplkit.internal.generated.app.ApiClient;
 @JsonPropertyOrder({
   Product.JSON_PROPERTY_DISPLAY_NAME,
   Product.JSON_PROPERTY_DESCRIPTION,
+  Product.JSON_PROPERTY_COMING_SOON,
   Product.JSON_PROPERTY_LIMITS,
   Product.JSON_PROPERTY_PLANS
 })
-@jakarta.annotation.Generated(value = "org.openapitools.codegen.languages.JavaClientCodegen", date = "2026-04-02T23:28:51.811529456Z[Etc/UTC]", comments = "Generator version: 7.21.0")
+@jakarta.annotation.Generated(value = "org.openapitools.codegen.languages.JavaClientCodegen", date = "2026-04-03T08:57:25.846222389Z[Etc/UTC]", comments = "Generator version: 7.21.0")
 public class Product {
   public static final String JSON_PROPERTY_DISPLAY_NAME = "display_name";
   @jakarta.annotation.Nonnull
@@ -51,6 +52,10 @@ public class Product {
   public static final String JSON_PROPERTY_DESCRIPTION = "description";
   @jakarta.annotation.Nonnull
   private String description;
+
+  public static final String JSON_PROPERTY_COMING_SOON = "coming_soon";
+  @jakarta.annotation.Nullable
+  private Boolean comingSoon = false;
 
   public static final String JSON_PROPERTY_LIMITS = "limits";
   @jakarta.annotation.Nonnull
@@ -108,6 +113,30 @@ public class Product {
   @JsonInclude(value = JsonInclude.Include.ALWAYS)
   public void setDescription(@jakarta.annotation.Nonnull String description) {
     this.description = description;
+  }
+
+
+  public Product comingSoon(@jakarta.annotation.Nullable Boolean comingSoon) {
+    this.comingSoon = comingSoon;
+    return this;
+  }
+
+  /**
+   * Get comingSoon
+   * @return comingSoon
+   */
+  @jakarta.annotation.Nullable
+  @JsonProperty(value = JSON_PROPERTY_COMING_SOON, required = false)
+  @JsonInclude(value = JsonInclude.Include.USE_DEFAULTS)
+  public Boolean getComingSoon() {
+    return comingSoon;
+  }
+
+
+  @JsonProperty(value = JSON_PROPERTY_COMING_SOON, required = false)
+  @JsonInclude(value = JsonInclude.Include.USE_DEFAULTS)
+  public void setComingSoon(@jakarta.annotation.Nullable Boolean comingSoon) {
+    this.comingSoon = comingSoon;
   }
 
 
@@ -189,13 +218,14 @@ public class Product {
     Product product = (Product) o;
     return Objects.equals(this.displayName, product.displayName) &&
         Objects.equals(this.description, product.description) &&
+        Objects.equals(this.comingSoon, product.comingSoon) &&
         Objects.equals(this.limits, product.limits) &&
         Objects.equals(this.plans, product.plans);
   }
 
   @Override
   public int hashCode() {
-    return Objects.hash(displayName, description, limits, plans);
+    return Objects.hash(displayName, description, comingSoon, limits, plans);
   }
 
   @Override
@@ -204,6 +234,7 @@ public class Product {
     sb.append("class Product {\n");
     sb.append("    displayName: ").append(toIndentedString(displayName)).append("\n");
     sb.append("    description: ").append(toIndentedString(description)).append("\n");
+    sb.append("    comingSoon: ").append(toIndentedString(comingSoon)).append("\n");
     sb.append("    limits: ").append(toIndentedString(limits)).append("\n");
     sb.append("    plans: ").append(toIndentedString(plans)).append("\n");
     sb.append("}");
@@ -258,6 +289,11 @@ public class Product {
     // add `description` to the URL query string
     if (getDescription() != null) {
       joiner.add(String.format(java.util.Locale.ROOT, "%sdescription%s=%s", prefix, suffix, ApiClient.urlEncode(ApiClient.valueToString(getDescription()))));
+    }
+
+    // add `coming_soon` to the URL query string
+    if (getComingSoon() != null) {
+      joiner.add(String.format(java.util.Locale.ROOT, "%scoming_soon%s=%s", prefix, suffix, ApiClient.urlEncode(ApiClient.valueToString(getComingSoon()))));
     }
 
     // add `limits` to the URL query string

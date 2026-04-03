@@ -44,7 +44,7 @@ import com.smplkit.internal.generated.app.ApiClient;
   Error.JSON_PROPERTY_DETAIL,
   Error.JSON_PROPERTY_SOURCE
 })
-@jakarta.annotation.Generated(value = "org.openapitools.codegen.languages.JavaClientCodegen", date = "2026-04-02T23:28:51.811529456Z[Etc/UTC]", comments = "Generator version: 7.21.0")
+@jakarta.annotation.Generated(value = "org.openapitools.codegen.languages.JavaClientCodegen", date = "2026-04-03T08:57:25.846222389Z[Etc/UTC]", comments = "Generator version: 7.21.0")
 public class Error {
   public static final String JSON_PROPERTY_STATUS = "status";
   @jakarta.annotation.Nonnull
