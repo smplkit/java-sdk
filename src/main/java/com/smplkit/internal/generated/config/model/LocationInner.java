@@ -44,7 +44,7 @@ import com.fasterxml.jackson.databind.ser.std.StdSerializer;
 import com.smplkit.internal.generated.config.ApiClient;
 import com.smplkit.internal.generated.config.JSON;
 
-@jakarta.annotation.Generated(value = "org.openapitools.codegen.languages.JavaClientCodegen", date = "2026-04-02T23:28:55.804580994Z[Etc/UTC]", comments = "Generator version: 7.21.0")
+@jakarta.annotation.Generated(value = "org.openapitools.codegen.languages.JavaClientCodegen", date = "2026-04-03T08:57:30.101564667Z[Etc/UTC]", comments = "Generator version: 7.21.0")
 @JsonDeserialize(using=LocationInner.LocationInnerDeserializer.class)
 @JsonSerialize(using = LocationInner.LocationInnerSerializer.class)
 public class LocationInner extends AbstractOpenApiSchema {
