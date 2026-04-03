@@ -566,7 +566,7 @@ public final class FlagsClient {
         List<Map<String, Object>> batch = drainPendingContexts();
         if (batch.isEmpty()) return;
 
-        Map<String, Object> body = Map.of("data", batch);
+        Map<String, Object> body = Map.of("contexts", batch);
         try {
             doAppRequest("PUT", "/api/v1/contexts/bulk", body);
         } catch (Exception e) {
@@ -768,10 +768,9 @@ public final class FlagsClient {
         if (contextBuffer.containsKey(compositeKey)) return;
 
         Map<String, Object> entry = new HashMap<>();
-        entry.put("id", compositeKey);
-        entry.put("name", ctx.name() != null ? ctx.name() : ctx.key());
+        entry.put("type", ctx.type());
+        entry.put("key", ctx.key());
         entry.put("attributes", ctx.attributes());
-        entry.put("context_type", ctx.type());
         contextBuffer.put(compositeKey, entry);
         pendingContexts.add(entry);
     }
