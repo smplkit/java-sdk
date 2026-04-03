@@ -1,8 +1,7 @@
 plugins {
     `java-library`
     jacoco
-    `maven-publish`
-    signing
+    id("com.vanniktech.maven.publish") version "0.36.0"
 }
 
 group = "com.smplkit"
@@ -13,8 +12,6 @@ java {
     toolchain {
         languageVersion.set(JavaLanguageVersion.of(17))
     }
-    withSourcesJar()
-    withJavadocJar()
 }
 
 repositories {
@@ -70,67 +67,36 @@ tasks.check {
     dependsOn(tasks.jacocoTestCoverageVerification)
 }
 
-publishing {
-    publications {
-        create<MavenPublication>("mavenJava") {
-            from(components["java"])
+mavenPublishing {
+    publishToMavenCentral(automaticRelease = true)
+    signAllPublications()
 
-            groupId = "com.smplkit"
-            artifactId = "smplkit-sdk"
+    coordinates("com.smplkit", "smplkit-sdk", version.toString())
 
-            pom {
-                name.set("smplkit Java SDK")
-                description.set("Official Java SDK for the smplkit platform")
-                url.set("https://github.com/smplkit/java-sdk")
+    pom {
+        name.set("smplkit Java SDK")
+        description.set("Official Java SDK for the smplkit platform")
+        url.set("https://github.com/smplkit/java-sdk")
 
-                licenses {
-                    license {
-                        name.set("MIT License")
-                        url.set("https://opensource.org/licenses/MIT")
-                    }
-                }
-
-                developers {
-                    developer {
-                        id.set("smplkit")
-                        name.set("Smpl Solutions LLC")
-                        url.set("https://smplkit.com")
-                    }
-                }
-
-                scm {
-                    connection.set("scm:git:git://github.com/smplkit/java-sdk.git")
-                    developerConnection.set("scm:git:ssh://github.com/smplkit/java-sdk.git")
-                    url.set("https://github.com/smplkit/java-sdk")
-                }
+        licenses {
+            license {
+                name.set("MIT License")
+                url.set("https://opensource.org/licenses/MIT")
             }
         }
-    }
 
-    repositories {
-        maven {
-            name = "OSSRH"
-            val releasesUrl = uri("https://s01.oss.sonatype.org/service/local/staging/deploy/maven2/")
-            val snapshotsUrl = uri("https://s01.oss.sonatype.org/content/repositories/snapshots/")
-            url = if (version.toString().endsWith("SNAPSHOT")) snapshotsUrl else releasesUrl
-            credentials {
-                username = findProperty("ossrhUsername") as String? ?: System.getenv("OSSRH_USERNAME") ?: ""
-                password = findProperty("ossrhPassword") as String? ?: System.getenv("OSSRH_PASSWORD") ?: ""
+        developers {
+            developer {
+                id.set("smplkit")
+                name.set("Smpl Solutions LLC")
+                url.set("https://smplkit.com")
             }
         }
-    }
-}
 
-signing {
-    val signingKey = findProperty("signing.key") as String? ?: System.getenv("GPG_SIGNING_KEY")
-    val signingPassword = findProperty("signing.password") as String? ?: System.getenv("GPG_SIGNING_PASSWORD")
-    if (signingKey != null && signingPassword != null) {
-        useInMemoryPgpKeys(signingKey, signingPassword)
+        scm {
+            connection.set("scm:git:git://github.com/smplkit/java-sdk.git")
+            developerConnection.set("scm:git:ssh://github.com/smplkit/java-sdk.git")
+            url.set("https://github.com/smplkit/java-sdk")
+        }
     }
-    sign(publishing.publications["mavenJava"])
-}
-
-// Only require signing when actually publishing (not during local builds)
-tasks.withType<Sign>().configureEach {
-    onlyIf { gradle.taskGraph.hasTask("publish") }
 }

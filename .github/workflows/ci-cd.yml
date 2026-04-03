@@ -1,0 +1,119 @@
+name: CI/CD
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        java-version: [17, 21]
+
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          fetch-depth: 0
+
+      - name: Set up JDK ${{ matrix.java-version }}
+        uses: actions/setup-java@v4
+        with:
+          java-version: ${{ matrix.java-version }}
+          distribution: temurin
+
+      - name: Setup Gradle
+        uses: gradle/actions/setup-gradle@v3
+
+      - name: Build and test
+        run: ./gradlew build
+
+      - name: Upload coverage report
+        if: matrix.java-version == 17
+        uses: actions/upload-artifact@v4
+        with:
+          name: coverage-report
+          path: build/reports/jacoco/test/
+
+  release:
+    needs: build
+    if: github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    environment: production
+    permissions:
+      contents: write
+      issues: write
+      pull-requests: write
+      id-token: write
+
+    steps:
+      - name: Check out code
+        uses: actions/checkout@v6
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+
+      - name: Set up Node
+        uses: actions/setup-node@v6
+        with:
+          node-version-file: ".nvmrc"
+
+      - name: Record latest tag before release
+        id: before
+        run: echo "tag=$(git describe --tags --abbrev=0 2>/dev/null || echo '')" >> "$GITHUB_OUTPUT"
+
+      - name: Run semantic-release
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: npx --yes semantic-release
+
+      - name: Check if a new release was created
+        id: check
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          LATEST_TAG=$(gh api repos/${{ github.repository }}/tags --jq '.[0].name' 2>/dev/null || echo '')
+          if [ "$LATEST_TAG" != "${{ steps.before.outputs.tag }}" ] && [ -n "$LATEST_TAG" ]; then
+            VERSION="${LATEST_TAG#v}"
+            echo "released=true" >> "$GITHUB_OUTPUT"
+            echo "version=${VERSION}" >> "$GITHUB_OUTPUT"
+            echo "New release detected: ${LATEST_TAG}"
+          else
+            echo "released=false" >> "$GITHUB_OUTPUT"
+            echo "No new release."
+          fi
+
+      - name: Set up JDK 17
+        if: steps.check.outputs.released == 'true'
+        uses: actions/setup-java@v4
+        with:
+          java-version: '17'
+          distribution: temurin
+
+      - name: Setup Gradle
+        if: steps.check.outputs.released == 'true'
+        uses: gradle/actions/setup-gradle@v3
+
+      - name: Publish to Maven Central
+        if: steps.check.outputs.released == 'true'
+        run: ./gradlew publishAndReleaseToMavenCentral -PprojectVersion=${{ steps.check.outputs.version }}
+        env:
+          ORG_GRADLE_PROJECT_mavenCentralUsername: ${{ secrets.MAVEN_CENTRAL_USERNAME }}
+          ORG_GRADLE_PROJECT_mavenCentralPassword: ${{ secrets.MAVEN_CENTRAL_PASSWORD }}
+          ORG_GRADLE_PROJECT_signingInMemoryKey: ${{ secrets.GPG_SIGNING_KEY }}
+          ORG_GRADLE_PROJECT_signingInMemoryKeyPassword: ${{ secrets.GPG_SIGNING_PASSWORD }}
+
+      - name: Summary
+        run: |
+          echo "## Publish" >> "$GITHUB_STEP_SUMMARY"
+          echo "" >> "$GITHUB_STEP_SUMMARY"
+          if [ "${{ steps.check.outputs.released }}" = "true" ]; then
+            echo "**Version:** v${{ steps.check.outputs.version }}" >> "$GITHUB_STEP_SUMMARY"
+            echo "**Published to Maven Central:** yes" >> "$GITHUB_STEP_SUMMARY"
+          else
+            echo "No release warranted by commits since last release." >> "$GITHUB_STEP_SUMMARY"
+          fi
