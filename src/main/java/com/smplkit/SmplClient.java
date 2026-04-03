@@ -142,7 +142,7 @@ public final class SmplClient implements AutoCloseable {
                     .header("Authorization", "Bearer " + apiKey)
                     .header("Content-Type", "application/json")
                     .timeout(timeout)
-                    .PUT(HttpRequest.BodyPublishers.ofString(json))
+                    .POST(HttpRequest.BodyPublishers.ofString(json))
                     .build();
 
             httpClient.send(request, HttpResponse.BodyHandlers.ofString());

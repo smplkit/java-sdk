@@ -768,8 +768,8 @@ public final class FlagsClient {
         if (contextBuffer.containsKey(compositeKey)) return;
 
         Map<String, Object> entry = new HashMap<>();
-        entry.put("id", ctx.type() + ":" + ctx.key());
-        entry.put("name", ctx.name() != null ? ctx.name() : ctx.key());
+        entry.put("type", ctx.type());
+        entry.put("key", ctx.key());
         entry.put("attributes", ctx.attributes());
         contextBuffer.put(compositeKey, entry);
         pendingContexts.add(entry);
