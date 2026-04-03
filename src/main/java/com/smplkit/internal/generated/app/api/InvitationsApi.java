@@ -49,7 +49,7 @@ import java.util.Map;
 import java.util.Set;
 import java.util.function.Consumer;
 
-@jakarta.annotation.Generated(value = "org.openapitools.codegen.languages.JavaClientCodegen", date = "2026-04-03T04:34:12.729213-04:00[America/New_York]", comments = "Generator version: 7.21.0")
+@jakarta.annotation.Generated(value = "org.openapitools.codegen.languages.JavaClientCodegen", date = "2026-04-03T09:16:27.835353075Z[Etc/UTC]", comments = "Generator version: 7.21.0")
 public class InvitationsApi {
   /**
    * Utility class for extending HttpRequest.Builder functionality.
