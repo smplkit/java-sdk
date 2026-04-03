@@ -24,7 +24,7 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonTypeName;
 import com.fasterxml.jackson.annotation.JsonValue;
-// Object replaced with Object — openapi-generator bug for anyOf: [{}, {type: null}]
+import com.smplkit.internal.generated.flags.model.AnyOf;
 import com.smplkit.internal.generated.flags.model.FlagRule;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -45,14 +45,14 @@ import com.smplkit.internal.generated.flags.ApiClient;
   FlagEnvironment.JSON_PROPERTY_DEFAULT,
   FlagEnvironment.JSON_PROPERTY_RULES
 })
-@jakarta.annotation.Generated(value = "org.openapitools.codegen.languages.JavaClientCodegen", date = "2026-04-03T08:57:33.062399165Z[Etc/UTC]", comments = "Generator version: 7.21.0")
+@jakarta.annotation.Generated(value = "org.openapitools.codegen.languages.JavaClientCodegen", date = "2026-04-03T09:16:34.784572713Z[Etc/UTC]", comments = "Generator version: 7.21.0")
 public class FlagEnvironment {
   public static final String JSON_PROPERTY_ENABLED = "enabled";
   @jakarta.annotation.Nullable
   private Boolean enabled = false;
 
   public static final String JSON_PROPERTY_DEFAULT = "default";
-  private JsonNullable<Object> _default = JsonNullable.<Object>undefined();
+  private JsonNullable<AnyOf> _default = JsonNullable.<AnyOf>undefined();
 
   public static final String JSON_PROPERTY_RULES = "rules";
   @jakarta.annotation.Nullable
@@ -85,8 +85,8 @@ public class FlagEnvironment {
   }
 
 
-  public FlagEnvironment _default(@jakarta.annotation.Nullable Object _default) {
-    this._default = JsonNullable.<Object>of(_default);
+  public FlagEnvironment _default(@jakarta.annotation.Nullable AnyOf _default) {
+    this._default = JsonNullable.<AnyOf>of(_default);
     return this;
   }
 
@@ -96,24 +96,24 @@ public class FlagEnvironment {
    */
   @jakarta.annotation.Nullable
   @JsonIgnore
-  public Object getDefault() {
+  public AnyOf getDefault() {
         return _default.orElse(null);
   }
 
   @JsonProperty(value = JSON_PROPERTY_DEFAULT, required = false)
   @JsonInclude(value = JsonInclude.Include.USE_DEFAULTS)
 
-  public JsonNullable<Object> getDefault_JsonNullable() {
+  public JsonNullable<AnyOf> getDefault_JsonNullable() {
     return _default;
   }
   
   @JsonProperty(JSON_PROPERTY_DEFAULT)
-  public void setDefault_JsonNullable(JsonNullable<Object> _default) {
+  public void setDefault_JsonNullable(JsonNullable<AnyOf> _default) {
     this._default = _default;
   }
 
-  public void setDefault(@jakarta.annotation.Nullable Object _default) {
-    this._default = JsonNullable.<Object>of(_default);
+  public void setDefault(@jakarta.annotation.Nullable AnyOf _default) {
+    this._default = JsonNullable.<AnyOf>of(_default);
   }
 
 
@@ -240,7 +240,7 @@ public class FlagEnvironment {
 
     // add `default` to the URL query string
     if (getDefault() != null) {
-      joiner.add(String.format(java.util.Locale.ROOT, "%sdefault%s=%s", prefix, suffix, ApiClient.urlEncode(ApiClient.valueToString(getDefault()))));
+      joiner.add(getDefault().toUrlQueryString(prefix + "default" + suffix));
     }
 
     // add `rules` to the URL query string

@@ -42,7 +42,7 @@ import com.smplkit.internal.generated.config.ApiClient;
 @JsonPropertyOrder({
   EnvironmentOverride.JSON_PROPERTY_VALUES
 })
-@jakarta.annotation.Generated(value = "org.openapitools.codegen.languages.JavaClientCodegen", date = "2026-04-03T04:34:13.586015-04:00[America/New_York]", comments = "Generator version: 7.21.0")
+@jakarta.annotation.Generated(value = "org.openapitools.codegen.languages.JavaClientCodegen", date = "2026-04-03T09:16:31.902259876Z[Etc/UTC]", comments = "Generator version: 7.21.0")
 public class EnvironmentOverride {
   public static final String JSON_PROPERTY_VALUES = "values";
   private JsonNullable<Map<String, ConfigItemOverride>> values = JsonNullable.<Map<String, ConfigItemOverride>>undefined();
