@@ -24,28 +24,28 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonTypeName;
 import com.fasterxml.jackson.annotation.JsonValue;
-import com.smplkit.internal.generated.logging.model.ResourceLogger;
+import com.smplkit.internal.generated.logging.model.ResourceLogGroup;
 import java.util.Arrays;
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 
 
 import com.smplkit.internal.generated.logging.ApiClient;
 /**
- * ResponseLogger
+ * ResponseLogGroup
  */
 @JsonPropertyOrder({
-  ResponseLogger.JSON_PROPERTY_DATA
+  ResponseLogGroup.JSON_PROPERTY_DATA
 })
 @jakarta.annotation.Generated(value = "org.openapitools.codegen.languages.JavaClientCodegen", date = "2026-04-03T11:37:40.843497407Z[Etc/UTC]", comments = "Generator version: 7.21.0")
-public class ResponseLogger {
+public class ResponseLogGroup {
   public static final String JSON_PROPERTY_DATA = "data";
   @jakarta.annotation.Nonnull
-  private ResourceLogger data;
+  private ResourceLogGroup data;
 
-  public ResponseLogger() { 
+  public ResponseLogGroup() { 
   }
 
-  public ResponseLogger data(@jakarta.annotation.Nonnull ResourceLogger data) {
+  public ResponseLogGroup data(@jakarta.annotation.Nonnull ResourceLogGroup data) {
     this.data = data;
     return this;
   }
@@ -57,20 +57,20 @@ public class ResponseLogger {
   @jakarta.annotation.Nonnull
   @JsonProperty(value = JSON_PROPERTY_DATA, required = true)
   @JsonInclude(value = JsonInclude.Include.ALWAYS)
-  public ResourceLogger getData() {
+  public ResourceLogGroup getData() {
     return data;
   }
 
 
   @JsonProperty(value = JSON_PROPERTY_DATA, required = true)
   @JsonInclude(value = JsonInclude.Include.ALWAYS)
-  public void setData(@jakarta.annotation.Nonnull ResourceLogger data) {
+  public void setData(@jakarta.annotation.Nonnull ResourceLogGroup data) {
     this.data = data;
   }
 
 
   /**
-   * Return true if this Response_Logger_ object is equal to o.
+   * Return true if this Response_LogGroup_ object is equal to o.
    */
   @Override
   public boolean equals(Object o) {
@@ -80,8 +80,8 @@ public class ResponseLogger {
     if (o == null || getClass() != o.getClass()) {
       return false;
     }
-    ResponseLogger responseLogger = (ResponseLogger) o;
-    return Objects.equals(this.data, responseLogger.data);
+    ResponseLogGroup responseLogGroup = (ResponseLogGroup) o;
+    return Objects.equals(this.data, responseLogGroup.data);
   }
 
   @Override
@@ -92,7 +92,7 @@ public class ResponseLogger {
   @Override
   public String toString() {
     StringBuilder sb = new StringBuilder();
-    sb.append("class ResponseLogger {\n");
+    sb.append("class ResponseLogGroup {\n");
     sb.append("    data: ").append(toIndentedString(data)).append("\n");
     sb.append("}");
     return sb.toString();
