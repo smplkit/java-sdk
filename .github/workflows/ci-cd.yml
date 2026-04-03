@@ -39,8 +39,20 @@ jobs:
           name: coverage-report
           path: build/reports/jacoco/test/
 
+  ci-gate:
+    if: always()
+    needs: [build]
+    runs-on: ubuntu-latest
+    steps:
+      - name: Verify all checks passed
+        run: |
+          if [[ "${{ contains(needs.*.result, 'failure') || contains(needs.*.result, 'cancelled') }}" == "true" ]]; then
+            echo "One or more required jobs failed or were cancelled."
+            exit 1
+          fi
+
   release:
-    needs: build
+    needs: [ci-gate]
     if: github.ref == 'refs/heads/main'
     runs-on: ubuntu-latest
     environment: production
