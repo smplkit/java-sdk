@@ -1,7 +1,11 @@
 package com.smplkit.flags;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
+import org.openapitools.jackson.nullable.JsonNullableModule;
 import com.smplkit.internal.generated.flags.ApiException;
 import com.smplkit.internal.generated.flags.api.FlagsApi;
+import com.smplkit.internal.generated.flags.model.FlagListResponse;
 import com.smplkit.internal.generated.flags.model.ResponseFlag;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -9,6 +13,7 @@ import org.mockito.Mockito;
 
 import java.net.http.HttpClient;
 import java.time.Duration;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -23,6 +28,9 @@ import static org.mockito.Mockito.*;
  */
 class FlagsClientWebSocketTest {
 
+    private static final ObjectMapper OBJECT_MAPPER = new ObjectMapper()
+            .registerModule(new JavaTimeModule())
+            .registerModule(new JsonNullableModule());
     private FlagsApi mockApi;
     private FlagsClient client;
     private SharedWebSocket sharedWs;
@@ -165,13 +173,18 @@ class FlagsClientWebSocketTest {
     // --- Helpers ---
 
     private void setupList(String key, Map<String, Object> environments) throws ApiException {
-        Map<String, Object> listResponse = Map.of("data", List.of(
-                Map.of("id", FLAG_ID, "attributes", Map.of(
-                        "key", key, "name", key, "type", "BOOLEAN",
-                        "default", false, "values", List.of(),
-                        "environments", environments
-                ))
-        ));
+        Map<String, Object> attrs = new HashMap<>();
+        attrs.put("key", key);
+        attrs.put("name", key);
+        attrs.put("type", "BOOLEAN");
+        attrs.put("default", false);
+        attrs.put("values", List.of());
+        attrs.put("environments", environments);
+        FlagListResponse listResponse = OBJECT_MAPPER.convertValue(Map.of("data", List.of(Map.of(
+                "id", FLAG_ID,
+                "type", "flag",
+                "attributes", attrs
+        ))), FlagListResponse.class);
         when(mockApi.listFlags(isNull(), isNull())).thenReturn(listResponse);
     }
 }

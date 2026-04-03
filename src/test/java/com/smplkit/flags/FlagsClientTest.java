@@ -1,12 +1,12 @@
 package com.smplkit.flags;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
+import org.openapitools.jackson.nullable.JsonNullableModule;
 import com.smplkit.internal.generated.flags.ApiException;
 import com.smplkit.internal.generated.flags.api.FlagsApi;
-import com.smplkit.internal.generated.flags.model.Flag;
-import com.smplkit.internal.generated.flags.model.FlagEnvironment;
-import com.smplkit.internal.generated.flags.model.FlagRule;
-import com.smplkit.internal.generated.flags.model.FlagValue;
-import com.smplkit.internal.generated.flags.model.ResourceFlag;
+import com.smplkit.internal.generated.flags.model.FlagListResponse;
+import com.smplkit.internal.generated.flags.model.FlagResponse;
 import com.smplkit.internal.generated.flags.model.ResponseFlag;
 import com.smplkit.errors.SmplNotFoundException;
 import com.smplkit.errors.SmplValidationException;
@@ -29,6 +29,9 @@ import static org.mockito.Mockito.*;
 
 class FlagsClientTest {
 
+    private static final ObjectMapper OBJECT_MAPPER = new ObjectMapper()
+            .registerModule(new JavaTimeModule())
+            .registerModule(new JsonNullableModule());
     private FlagsApi mockApi;
     private FlagsClient client;
     private static final String TEST_FLAG_ID = "11111111-1111-1111-1111-111111111111";
@@ -44,7 +47,7 @@ class FlagsClientTest {
 
     @Test
     void create_sendsCorrectRequest() throws ApiException {
-        Map<String, Object> response = makeApiResponse(TEST_FLAG_ID, "my-flag", "My Flag",
+        FlagResponse response = makeFlagResponse(TEST_FLAG_ID, "my-flag", "My Flag",
                 "BOOLEAN", false, List.of(
                         Map.of("name", "True", "value", true),
                         Map.of("name", "False", "value", false)
@@ -61,7 +64,7 @@ class FlagsClientTest {
 
     @Test
     void get_fetchesByUuid() throws ApiException {
-        Map<String, Object> response = makeApiResponse(TEST_FLAG_ID, "my-flag", "My Flag",
+        FlagResponse response = makeFlagResponse(TEST_FLAG_ID, "my-flag", "My Flag",
                 "BOOLEAN", false, List.of(), Map.of());
         when(mockApi.getFlag(UUID.fromString(TEST_FLAG_ID))).thenReturn(response);
 
@@ -80,16 +83,17 @@ class FlagsClientTest {
 
     @Test
     void list_returnsAllFlags() throws ApiException {
-        Map<String, Object> listResponse = Map.of("data", List.of(
-                Map.of("id", TEST_FLAG_ID, "attributes", Map.of(
+        Map<String, Object> listMap = Map.of("data", List.of(
+                Map.of("id", TEST_FLAG_ID, "type", "flag", "attributes", Map.of(
                         "key", "flag-1", "name", "Flag 1", "type", "BOOLEAN",
                         "default", false, "values", List.of(), "environments", Map.of()
                 )),
-                Map.of("id", "22222222-2222-2222-2222-222222222222", "attributes", Map.of(
+                Map.of("id", "22222222-2222-2222-2222-222222222222", "type", "flag", "attributes", Map.of(
                         "key", "flag-2", "name", "Flag 2", "type", "STRING",
                         "default", "red", "values", List.of(), "environments", Map.of()
                 ))
         ));
+        FlagListResponse listResponse = OBJECT_MAPPER.convertValue(listMap, FlagListResponse.class);
         when(mockApi.listFlags(isNull(), isNull())).thenReturn(listResponse);
 
         List<FlagResource> result = client.list();
@@ -365,40 +369,26 @@ class FlagsClientTest {
      */
     private void setupFlagStore(String key, String type, Object defaultValue,
                                  Map<String, Object> environments) throws ApiException {
-        Map<String, Object> listResponse = Map.of("data", List.of(
-                Map.of("id", TEST_FLAG_ID, "attributes", Map.of(
-                        "key", key, "name", key, "type", type,
-                        "default", defaultValue, "values", List.of(),
-                        "environments", environments
-                ))
-        ));
-        when(mockApi.listFlags(isNull(), isNull())).thenReturn(listResponse);
-
-        // Connect to populate the store (no WS since sharedWs is null)
+        when(mockApi.listFlags(isNull(), isNull())).thenReturn(makeFlagListResponse(
+                TEST_FLAG_ID, key, type, defaultValue, environments));
         client.connect("staging");
     }
 
     private void setupFlagStoreForRefresh(String key, String type, Object defaultValue,
                                            Map<String, Object> environments) throws ApiException {
-        Map<String, Object> listResponse = Map.of("data", List.of(
-                Map.of("id", TEST_FLAG_ID, "attributes", Map.of(
-                        "key", key, "name", key, "type", type,
-                        "default", defaultValue, "values", List.of(),
-                        "environments", environments
-                ))
-        ));
-        when(mockApi.listFlags(isNull(), isNull())).thenReturn(listResponse);
+        when(mockApi.listFlags(isNull(), isNull())).thenReturn(makeFlagListResponse(
+                TEST_FLAG_ID, key, type, defaultValue, environments));
     }
 
     private void setupEmptyFlagStore() throws ApiException {
-        when(mockApi.listFlags(isNull(), isNull())).thenReturn(Map.of("data", List.of()));
+        when(mockApi.listFlags(isNull(), isNull())).thenReturn(new FlagListResponse().data(List.of()));
         client.connect("staging");
     }
 
-    private static Map<String, Object> makeApiResponse(String id, String key, String name,
-                                                         String type, Object defaultValue,
-                                                         List<Map<String, Object>> values,
-                                                         Map<String, Object> environments) {
+    private static FlagResponse makeFlagResponse(String id, String key, String name,
+                                                   String type, Object defaultValue,
+                                                   List<Map<String, Object>> values,
+                                                   Map<String, Object> environments) {
         Map<String, Object> attrs = new HashMap<>();
         attrs.put("key", key);
         attrs.put("name", name);
@@ -406,9 +396,29 @@ class FlagsClientTest {
         attrs.put("default", defaultValue);
         attrs.put("values", values);
         attrs.put("environments", environments);
-        return Map.of("data", Map.of(
+        Map<String, Object> map = Map.of("data", Map.of(
                 "id", id,
+                "type", "flag",
                 "attributes", attrs
         ));
+        return OBJECT_MAPPER.convertValue(map, FlagResponse.class);
+    }
+
+    private static FlagListResponse makeFlagListResponse(String id, String key, String type,
+                                                           Object defaultValue,
+                                                           Map<String, Object> environments) {
+        Map<String, Object> attrs = new HashMap<>();
+        attrs.put("key", key);
+        attrs.put("name", key);
+        attrs.put("type", type);
+        attrs.put("default", defaultValue);
+        attrs.put("values", List.of());
+        attrs.put("environments", environments);
+        Map<String, Object> map = Map.of("data", List.of(Map.of(
+                "id", id,
+                "type", "flag",
+                "attributes", attrs
+        )));
+        return OBJECT_MAPPER.convertValue(map, FlagListResponse.class);
     }
 }

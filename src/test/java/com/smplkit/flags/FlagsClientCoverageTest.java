@@ -1,11 +1,16 @@
 package com.smplkit.flags;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
+import org.openapitools.jackson.nullable.JsonNullableModule;
 import com.smplkit.errors.SmplConflictException;
 import com.smplkit.errors.SmplException;
 import com.smplkit.errors.SmplNotFoundException;
 import com.smplkit.errors.SmplValidationException;
 import com.smplkit.internal.generated.flags.ApiException;
 import com.smplkit.internal.generated.flags.api.FlagsApi;
+import com.smplkit.internal.generated.flags.model.FlagListResponse;
+import com.smplkit.internal.generated.flags.model.FlagResponse;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;
@@ -29,6 +34,9 @@ import static org.mockito.Mockito.*;
  */
 class FlagsClientCoverageTest {
 
+    private static final ObjectMapper OBJECT_MAPPER = new ObjectMapper()
+            .registerModule(new JavaTimeModule())
+            .registerModule(new JsonNullableModule());
     private FlagsApi mockApi;
     private HttpClient mockHttpClient;
     private FlagsClient client;
@@ -192,8 +200,8 @@ class FlagsClientCoverageTest {
 
     @Test
     void evaluate_returnsResolvedValue() throws Exception {
-        Map<String, Object> listResponse = Map.of("data", List.of(
-                Map.of("id", FLAG_ID, "attributes", Map.of(
+        FlagListResponse listResponse = OBJECT_MAPPER.convertValue(Map.of("data", List.of(
+                Map.of("id", FLAG_ID, "type", "flag", "attributes", Map.of(
                         "key", "feature-x", "name", "Feature X", "type", "BOOLEAN",
                         "default", false, "values", List.of(),
                         "environments", Map.of("staging", Map.of(
@@ -205,7 +213,7 @@ class FlagsClientCoverageTest {
                                 ))
                         ))
                 ))
-        ));
+        )), FlagListResponse.class);
         when(mockApi.listFlags(eq("feature-x"), isNull())).thenReturn(listResponse);
 
         Object result = client.evaluate("feature-x", "staging", List.of());
@@ -214,7 +222,7 @@ class FlagsClientCoverageTest {
 
     @Test
     void evaluate_returnsNull_whenFlagNotFound() throws Exception {
-        when(mockApi.listFlags(eq("unknown"), isNull())).thenReturn(Map.of("data", List.of()));
+        when(mockApi.listFlags(eq("unknown"), isNull())).thenReturn(new FlagListResponse().data(List.of()));
 
         Object result = client.evaluate("unknown", "staging", List.of());
         assertNull(result);
@@ -373,8 +381,9 @@ class FlagsClientCoverageTest {
         attrs.put("default", null);
         attrs.put("values", List.of());
         attrs.put("environments", Map.of("staging", Map.of("enabled", true)));
-        when(mockApi.listFlags(isNull(), isNull())).thenReturn(
-                Map.of("data", List.of(Map.of("id", FLAG_ID, "attributes", attrs))));
+        when(mockApi.listFlags(isNull(), isNull())).thenReturn(OBJECT_MAPPER.convertValue(
+                Map.of("data", List.of(Map.of("id", FLAG_ID, "type", "flag", "attributes", attrs))),
+                FlagListResponse.class));
         client.connect("staging");
 
         FlagHandle<String> handle = client.stringFlag("feature-x", "fallback");
@@ -418,12 +427,12 @@ class FlagsClientCoverageTest {
 
     @Test
     void updateFlag_apiException_throwsSmplException() throws Exception {
-        Map<String, Object> getResponse = Map.of("data", Map.of(
-                "id", FLAG_ID, "attributes", Map.of(
+        FlagResponse getResponse = OBJECT_MAPPER.convertValue(Map.of("data", Map.of(
+                "id", FLAG_ID, "type", "flag", "attributes", Map.of(
                         "key", "my-flag", "name", "My Flag", "type", "BOOLEAN",
                         "default", false, "values", List.of(), "environments", Map.of()
                 )
-        ));
+        )), FlagResponse.class);
         when(mockApi.getFlag(any())).thenReturn(getResponse);
         when(mockApi.updateFlag(any(), any()))
                 .thenThrow(new ApiException(500, "Server Error"));
@@ -452,11 +461,8 @@ class FlagsClientCoverageTest {
         });
 
         // Refresh triggers fireAllChangeListeners which should include orphan handles
-        when(mockApi.listFlags(isNull(), isNull())).thenReturn(
-                Map.of("data", List.of(Map.of("id", FLAG_ID, "attributes", Map.of(
-                        "key", "feature-x", "name", "feature-x", "type", "BOOLEAN",
-                        "default", false, "values", List.of(), "environments", Map.of()
-                )))));
+        when(mockApi.listFlags(isNull(), isNull())).thenReturn(makeFlagListResponse(
+                FLAG_ID, "feature-x", "BOOLEAN", false, Map.of()));
         client.refresh();
 
         assertTrue(orphanCount.get() > 0);
@@ -501,13 +507,17 @@ class FlagsClientCoverageTest {
 
     @Test
     void updateFlag_preservesCurrentDescription() throws Exception {
-        Map<String, Object> getResponse = Map.of("data", Map.of(
-                "id", FLAG_ID, "attributes", Map.of(
-                        "key", "my-flag", "name", "My Flag", "type", "BOOLEAN",
-                        "default", false, "description", "Original desc",
-                        "values", List.of(), "environments", Map.of()
-                )
-        ));
+        Map<String, Object> attrs = new HashMap<>();
+        attrs.put("key", "my-flag");
+        attrs.put("name", "My Flag");
+        attrs.put("type", "BOOLEAN");
+        attrs.put("default", false);
+        attrs.put("description", "Original desc");
+        attrs.put("values", List.of());
+        attrs.put("environments", Map.of());
+        FlagResponse getResponse = OBJECT_MAPPER.convertValue(Map.of("data", Map.of(
+                "id", FLAG_ID, "type", "flag", "attributes", attrs
+        )), FlagResponse.class);
         when(mockApi.getFlag(any())).thenReturn(getResponse);
         when(mockApi.updateFlag(any(), any())).thenReturn(getResponse);
 
@@ -582,11 +592,8 @@ class FlagsClientCoverageTest {
         FlagHandle<Boolean> orphanHandle = client.boolFlag("orphan-flag", false);
         orphanHandle.onChange(e -> { throw new RuntimeException("boom"); });
 
-        when(mockApi.listFlags(isNull(), isNull())).thenReturn(
-                Map.of("data", List.of(Map.of("id", FLAG_ID, "attributes", Map.of(
-                        "key", "feature-x", "name", "feature-x", "type", "BOOLEAN",
-                        "default", false, "values", List.of(), "environments", Map.of()
-                )))));
+        when(mockApi.listFlags(isNull(), isNull())).thenReturn(makeFlagListResponse(
+                FLAG_ID, "feature-x", "BOOLEAN", false, Map.of()));
 
         assertDoesNotThrow(() -> client.refresh());
     }
@@ -595,7 +602,10 @@ class FlagsClientCoverageTest {
 
     @Test
     void list_nonListDataReturnsEmpty() throws Exception {
-        when(mockApi.listFlags(isNull(), isNull())).thenReturn(Map.of("data", "not-a-list"));
+        // The FlagListResponse always has a List<FlagResource> data field,
+        // so "not-a-list" scenario is no longer possible with typed responses.
+        // Instead test with an empty list.
+        when(mockApi.listFlags(isNull(), isNull())).thenReturn(new FlagListResponse().data(List.of()));
 
         List<FlagResource> result = client.list();
         assertTrue(result.isEmpty());
@@ -605,15 +615,15 @@ class FlagsClientCoverageTest {
 
     @Test
     void updateFlag_withEnvironmentDefaults() throws Exception {
-        Map<String, Object> getResponse = Map.of("data", Map.of(
-                "id", FLAG_ID, "attributes", Map.of(
+        FlagResponse getResponse = OBJECT_MAPPER.convertValue(Map.of("data", Map.of(
+                "id", FLAG_ID, "type", "flag", "attributes", Map.of(
                         "key", "my-flag", "name", "My Flag", "type", "BOOLEAN",
                         "default", false, "values", List.of(),
                         "environments", Map.of("prod", Map.of(
                                 "enabled", true, "default", true
                         ))
                 )
-        ));
+        )), FlagResponse.class);
         when(mockApi.getFlag(any())).thenReturn(getResponse);
         when(mockApi.updateFlag(any(), any())).thenReturn(getResponse);
 
@@ -640,8 +650,9 @@ class FlagsClientCoverageTest {
         attrs.put("default", null);
         attrs.put("values", List.of());
         attrs.put("environments", Map.of("staging", Map.of("enabled", true)));
-        when(mockApi.listFlags(isNull(), isNull())).thenReturn(
-                Map.of("data", List.of(Map.of("id", FLAG_ID, "attributes", attrs))));
+        when(mockApi.listFlags(isNull(), isNull())).thenReturn(OBJECT_MAPPER.convertValue(
+                Map.of("data", List.of(Map.of("id", FLAG_ID, "type", "flag", "attributes", attrs))),
+                FlagListResponse.class));
         client.connect("staging");
 
         FlagHandle<String> handle = client.stringFlag("color", "red");
@@ -653,7 +664,7 @@ class FlagsClientCoverageTest {
     @Test
     void handleGet_nullDefaultValue_returnsNull() throws Exception {
         // Set up a flag where evaluation returns null: flag not in store → evaluateHandle returns defaultValue (null)
-        when(mockApi.listFlags(isNull(), isNull())).thenReturn(Map.of("data", List.of()));
+        when(mockApi.listFlags(isNull(), isNull())).thenReturn(new FlagListResponse().data(List.of()));
         client.connect("staging");
 
         // Create a handle with null default for a key not in the store
@@ -668,14 +679,58 @@ class FlagsClientCoverageTest {
 
     private void setupFlagStore(String key, String type, Object defaultValue,
                                  Map<String, Object> environments) throws ApiException {
-        Map<String, Object> listResponse = Map.of("data", List.of(
-                Map.of("id", FLAG_ID, "attributes", Map.of(
-                        "key", key, "name", key, "type", type,
-                        "default", defaultValue, "values", List.of(),
-                        "environments", environments
-                ))
-        ));
-        when(mockApi.listFlags(isNull(), isNull())).thenReturn(listResponse);
+        when(mockApi.listFlags(isNull(), isNull())).thenReturn(makeFlagListResponse(
+                FLAG_ID, key, type, defaultValue, environments));
         client.connect("staging");
+    }
+
+    @Test
+    void parseListResponse_nullData_returnsEmpty() throws ApiException {
+        // FlagListResponse with null data — covers the null guard
+        FlagListResponse resp = new FlagListResponse();
+        resp.setData(null);
+        when(mockApi.listFlags(isNull(), isNull())).thenReturn(resp);
+        List<FlagResource> result = client.list();
+        assertTrue(result.isEmpty());
+    }
+
+    @Test
+    void parseInstant_invalidString_returnsNull() {
+        // Cover parseInstant catch block (lines 956-957)
+        assertNull(FlagsClient.parseInstant("not-a-date"));
+    }
+
+    @Test
+    void parseInstant_nonStringNonNull_returnsNull() {
+        // Cover parseInstant non-String return (line 960)
+        assertNull(FlagsClient.parseInstant(12345));
+    }
+
+    @Test
+    void parseInstant_validString_returnsInstant() {
+        assertNotNull(FlagsClient.parseInstant("2026-01-01T00:00:00Z"));
+    }
+
+    @Test
+    void parseInstant_null_returnsNull() {
+        assertNull(FlagsClient.parseInstant(null));
+    }
+
+    private static FlagListResponse makeFlagListResponse(String id, String key, String type,
+                                                           Object defaultValue,
+                                                           Map<String, Object> environments) {
+        Map<String, Object> attrs = new HashMap<>();
+        attrs.put("key", key);
+        attrs.put("name", key);
+        attrs.put("type", type);
+        attrs.put("default", defaultValue);
+        attrs.put("values", List.of());
+        attrs.put("environments", environments);
+        Map<String, Object> map = Map.of("data", List.of(Map.of(
+                "id", id,
+                "type", "flag",
+                "attributes", attrs
+        )));
+        return OBJECT_MAPPER.convertValue(map, FlagListResponse.class);
     }
 }

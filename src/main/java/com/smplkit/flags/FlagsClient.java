@@ -2,6 +2,7 @@ package com.smplkit.flags;
 
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.SerializationFeature;
 import com.smplkit.errors.SmplConflictException;
 import com.smplkit.errors.SmplException;
 import com.smplkit.errors.SmplNotFoundException;
@@ -10,12 +11,16 @@ import com.smplkit.internal.generated.flags.ApiException;
 import com.smplkit.internal.generated.flags.api.FlagsApi;
 import com.smplkit.internal.generated.flags.model.Flag;
 import com.smplkit.internal.generated.flags.model.FlagEnvironment;
+import com.smplkit.internal.generated.flags.model.FlagListResponse;
+import com.smplkit.internal.generated.flags.model.FlagResponse;
 import com.smplkit.internal.generated.flags.model.FlagRule;
 import com.smplkit.internal.generated.flags.model.FlagValue;
 import com.smplkit.internal.generated.flags.model.ResourceFlag;
 import com.smplkit.internal.generated.flags.model.ResponseFlag;
 import io.github.jamsesso.jsonlogic.JsonLogic;
 import io.github.jamsesso.jsonlogic.JsonLogicException;
+import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
+import org.openapitools.jackson.nullable.JsonNullableModule;
 
 import java.net.URI;
 import java.net.http.HttpClient;
@@ -54,7 +59,10 @@ import java.util.logging.Logger;
 public final class FlagsClient {
 
     private static final Logger LOG = Logger.getLogger("smplkit.flags");
-    private static final ObjectMapper OBJECT_MAPPER = new ObjectMapper();
+    private static final ObjectMapper OBJECT_MAPPER = new ObjectMapper()
+            .registerModule(new JavaTimeModule())
+            .registerModule(new JsonNullableModule())
+            .disable(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS);
     private static final JsonLogic JSON_LOGIC = new JsonLogic();
     private static final int CACHE_MAX_SIZE = 10_000;
     private static final int CONTEXT_BUFFER_MAX_SIZE = 10_000;
@@ -184,7 +192,7 @@ public final class FlagsClient {
 
             ResourceFlag data = new ResourceFlag().type("flag").attributes(attrs);
             ResponseFlag body = new ResponseFlag().data(data);
-            Object response = flagsApi.createFlag(body);
+            FlagResponse response = flagsApi.createFlag(body);
             return parseResponse(response);
         } catch (ApiException e) {
             throw mapException(e);
@@ -196,7 +204,7 @@ public final class FlagsClient {
      */
     public FlagResource get(String flagId) {
         try {
-            Object response = flagsApi.getFlag(UUID.fromString(flagId));
+            FlagResponse response = flagsApi.getFlag(UUID.fromString(flagId));
             return parseResponse(response);
         } catch (ApiException e) {
             throw mapException(e);
@@ -208,7 +216,7 @@ public final class FlagsClient {
      */
     public List<FlagResource> list() {
         try {
-            Object response = flagsApi.listFlags(null, null);
+            FlagListResponse response = flagsApi.listFlags(null, null);
             return parseListResponse(response);
         } catch (ApiException e) {
             throw mapException(e);
@@ -271,7 +279,7 @@ public final class FlagsClient {
 
             ResourceFlag data = new ResourceFlag().id(current.id()).type("flag").attributes(attrs);
             ResponseFlag body = new ResponseFlag().data(data);
-            Object response = flagsApi.updateFlag(UUID.fromString(current.id()), body);
+            FlagResponse response = flagsApi.updateFlag(UUID.fromString(current.id()), body);
             return parseResponse(response);
         } catch (ApiException e) {
             throw mapException(e);
@@ -597,7 +605,7 @@ public final class FlagsClient {
         // Fetch the flag
         List<FlagResource> allFlags;
         try {
-            Object response = flagsApi.listFlags(key, null);
+            FlagListResponse response = flagsApi.listFlags(key, null);
             allFlags = parseListResponse(response);
         } catch (ApiException e) {
             throw mapException(e);
@@ -890,29 +898,26 @@ public final class FlagsClient {
     }
 
     // -----------------------------------------------------------------------
-    // Internal — Response parsing (FlagsApi returns Object, not typed)
+    // Internal — Response parsing
     // -----------------------------------------------------------------------
 
     @SuppressWarnings("unchecked")
-    private FlagResource parseResponse(Object response) {
-        Map<String, Object> resp = (Map<String, Object>) response;
+    private FlagResource parseResponse(FlagResponse response) {
+        Map<String, Object> resp = OBJECT_MAPPER.convertValue(response, new TypeReference<Map<String, Object>>() {});
         Map<String, Object> data = (Map<String, Object>) resp.get("data");
         return parseFlagData(data);
     }
 
     @SuppressWarnings("unchecked")
-    private List<FlagResource> parseListResponse(Object response) {
-        Map<String, Object> resp = (Map<String, Object>) response;
-        Object data = resp.get("data");
-        if (data instanceof List) {
-            List<Map<String, Object>> items = (List<Map<String, Object>>) data;
-            List<FlagResource> result = new ArrayList<>(items.size());
-            for (Map<String, Object> item : items) {
-                result.add(parseFlagData(item));
-            }
-            return result;
+    private List<FlagResource> parseListResponse(FlagListResponse response) {
+        Map<String, Object> resp = OBJECT_MAPPER.convertValue(response, new TypeReference<Map<String, Object>>() {});
+        List<Map<String, Object>> items = (List<Map<String, Object>>) resp.get("data");
+        if (items == null) return List.of();
+        List<FlagResource> result = new ArrayList<>(items.size());
+        for (Map<String, Object> item : items) {
+            result.add(parseFlagData(item));
         }
-        return List.of();
+        return result;
     }
 
     @SuppressWarnings("unchecked")
@@ -940,7 +945,7 @@ public final class FlagsClient {
         return resource;
     }
 
-    private static Instant parseInstant(Object value) {
+    static Instant parseInstant(Object value) {
         if (value == null) return null;
         if (value instanceof String s) {
             try {

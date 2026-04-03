@@ -74,6 +74,23 @@ class SmplExceptionTest {
     }
 
     @Test
+    void notConnectedExceptionDefaultMessage() {
+        SmplNotConnectedException ex = new SmplNotConnectedException();
+        assertInstanceOf(SmplException.class, ex);
+        assertEquals("SmplClient is not connected. Call connect() first.", ex.getMessage());
+        assertEquals(0, ex.statusCode());
+        assertNull(ex.responseBody());
+    }
+
+    @Test
+    void notConnectedExceptionCustomMessage() {
+        SmplNotConnectedException ex = new SmplNotConnectedException("custom message");
+        assertEquals("custom message", ex.getMessage());
+        assertEquals(0, ex.statusCode());
+        assertNull(ex.responseBody());
+    }
+
+    @Test
     void allExceptionsCatchableAsSmplException() {
         // Verify all subtypes can be caught as SmplException
         SmplException[] exceptions = {
