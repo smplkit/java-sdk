@@ -24,29 +24,39 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonTypeName;
 import com.fasterxml.jackson.annotation.JsonValue;
-import com.smplkit.internal.generated.logging.model.ResourceLogger;
+import com.smplkit.internal.generated.logging.model.LogGroupResource;
+import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.List;
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 
 
 import com.smplkit.internal.generated.logging.ApiClient;
 /**
- * ResponseLogger
+ * LogGroupListResponse
  */
 @JsonPropertyOrder({
-  ResponseLogger.JSON_PROPERTY_DATA
+  LogGroupListResponse.JSON_PROPERTY_DATA
 })
 @jakarta.annotation.Generated(value = "org.openapitools.codegen.languages.JavaClientCodegen", date = "2026-04-03T11:37:40.843497407Z[Etc/UTC]", comments = "Generator version: 7.21.0")
-public class ResponseLogger {
+public class LogGroupListResponse {
   public static final String JSON_PROPERTY_DATA = "data";
   @jakarta.annotation.Nonnull
-  private ResourceLogger data;
+  private List<LogGroupResource> data = new ArrayList<>();
 
-  public ResponseLogger() { 
+  public LogGroupListResponse() { 
   }
 
-  public ResponseLogger data(@jakarta.annotation.Nonnull ResourceLogger data) {
+  public LogGroupListResponse data(@jakarta.annotation.Nonnull List<LogGroupResource> data) {
     this.data = data;
+    return this;
+  }
+
+  public LogGroupListResponse addDataItem(LogGroupResource dataItem) {
+    if (this.data == null) {
+      this.data = new ArrayList<>();
+    }
+    this.data.add(dataItem);
     return this;
   }
 
@@ -57,20 +67,20 @@ public class ResponseLogger {
   @jakarta.annotation.Nonnull
   @JsonProperty(value = JSON_PROPERTY_DATA, required = true)
   @JsonInclude(value = JsonInclude.Include.ALWAYS)
-  public ResourceLogger getData() {
+  public List<LogGroupResource> getData() {
     return data;
   }
 
 
   @JsonProperty(value = JSON_PROPERTY_DATA, required = true)
   @JsonInclude(value = JsonInclude.Include.ALWAYS)
-  public void setData(@jakarta.annotation.Nonnull ResourceLogger data) {
+  public void setData(@jakarta.annotation.Nonnull List<LogGroupResource> data) {
     this.data = data;
   }
 
 
   /**
-   * Return true if this Response_Logger_ object is equal to o.
+   * Return true if this LogGroupListResponse object is equal to o.
    */
   @Override
   public boolean equals(Object o) {
@@ -80,8 +90,8 @@ public class ResponseLogger {
     if (o == null || getClass() != o.getClass()) {
       return false;
     }
-    ResponseLogger responseLogger = (ResponseLogger) o;
-    return Objects.equals(this.data, responseLogger.data);
+    LogGroupListResponse logGroupListResponse = (LogGroupListResponse) o;
+    return Objects.equals(this.data, logGroupListResponse.data);
   }
 
   @Override
@@ -92,7 +102,7 @@ public class ResponseLogger {
   @Override
   public String toString() {
     StringBuilder sb = new StringBuilder();
-    sb.append("class ResponseLogger {\n");
+    sb.append("class LogGroupListResponse {\n");
     sb.append("    data: ").append(toIndentedString(data)).append("\n");
     sb.append("}");
     return sb.toString();
@@ -140,7 +150,12 @@ public class ResponseLogger {
 
     // add `data` to the URL query string
     if (getData() != null) {
-      joiner.add(getData().toUrlQueryString(prefix + "data" + suffix));
+      for (int i = 0; i < getData().size(); i++) {
+        if (getData().get(i) != null) {
+          joiner.add(getData().get(i).toUrlQueryString(String.format(java.util.Locale.ROOT, "%sdata%s%s", prefix, suffix,
+          "".equals(suffix) ? "" : String.format(java.util.Locale.ROOT, "%s%d%s", containerPrefix, i, containerSuffix))));
+        }
+      }
     }
 
     return joiner.toString();

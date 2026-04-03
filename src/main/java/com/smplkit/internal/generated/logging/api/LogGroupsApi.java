@@ -20,11 +20,9 @@ import com.smplkit.internal.generated.logging.Pair;
 
 import com.smplkit.internal.generated.logging.model.ErrorResponse;
 import com.smplkit.internal.generated.logging.model.HTTPValidationError;
-import com.smplkit.internal.generated.logging.model.LoggerBulkRequest;
-import com.smplkit.internal.generated.logging.model.LoggerBulkResponse;
-import com.smplkit.internal.generated.logging.model.LoggerListResponse;
-import com.smplkit.internal.generated.logging.model.LoggerResponse;
-import com.smplkit.internal.generated.logging.model.ResponseLogger;
+import com.smplkit.internal.generated.logging.model.LogGroupListResponse;
+import com.smplkit.internal.generated.logging.model.LogGroupResponse;
+import com.smplkit.internal.generated.logging.model.ResponseLogGroup;
 import java.util.UUID;
 
 import com.fasterxml.jackson.core.type.TypeReference;
@@ -53,7 +51,7 @@ import java.util.Set;
 import java.util.function.Consumer;
 
 @jakarta.annotation.Generated(value = "org.openapitools.codegen.languages.JavaClientCodegen", date = "2026-04-03T11:37:40.843497407Z[Etc/UTC]", comments = "Generator version: 7.21.0")
-public class LoggersApi {
+public class LogGroupsApi {
   /**
    * Utility class for extending HttpRequest.Builder functionality.
    */
@@ -82,11 +80,11 @@ public class LoggersApi {
   private final Consumer<HttpResponse<InputStream>> memberVarResponseInterceptor;
   private final Consumer<HttpResponse<InputStream>> memberVarAsyncResponseInterceptor;
 
-  public LoggersApi() {
+  public LogGroupsApi() {
     this(Configuration.getDefaultApiClient());
   }
 
-  public LoggersApi(ApiClient apiClient) {
+  public LogGroupsApi(ApiClient apiClient) {
     memberVarHttpClient = apiClient.getHttpClient();
     memberVarObjectMapper = apiClient.getObjectMapper();
     memberVarBaseUri = apiClient.getBaseUri();
@@ -170,50 +168,50 @@ public class LoggersApi {
   }
 
   /**
-   * Bulk Register Loggers
+   * Create Log Group
    * 
-   * @param loggerBulkRequest  (required)
-   * @return LoggerBulkResponse
+   * @param responseLogGroup  (required)
+   * @return LogGroupResponse
    * @throws ApiException if fails to make API call
    */
-  public LoggerBulkResponse bulkRegisterLoggers(@jakarta.annotation.Nonnull LoggerBulkRequest loggerBulkRequest) throws ApiException {
-    return bulkRegisterLoggers(loggerBulkRequest, null);
+  public LogGroupResponse createLogGroup(@jakarta.annotation.Nonnull ResponseLogGroup responseLogGroup) throws ApiException {
+    return createLogGroup(responseLogGroup, null);
   }
 
   /**
-   * Bulk Register Loggers
+   * Create Log Group
    * 
-   * @param loggerBulkRequest  (required)
+   * @param responseLogGroup  (required)
    * @param headers Optional headers to include in the request
-   * @return LoggerBulkResponse
+   * @return LogGroupResponse
    * @throws ApiException if fails to make API call
    */
-  public LoggerBulkResponse bulkRegisterLoggers(@jakarta.annotation.Nonnull LoggerBulkRequest loggerBulkRequest, Map<String, String> headers) throws ApiException {
-    ApiResponse<LoggerBulkResponse> localVarResponse = bulkRegisterLoggersWithHttpInfo(loggerBulkRequest, headers);
+  public LogGroupResponse createLogGroup(@jakarta.annotation.Nonnull ResponseLogGroup responseLogGroup, Map<String, String> headers) throws ApiException {
+    ApiResponse<LogGroupResponse> localVarResponse = createLogGroupWithHttpInfo(responseLogGroup, headers);
     return localVarResponse.getData();
   }
 
   /**
-   * Bulk Register Loggers
+   * Create Log Group
    * 
-   * @param loggerBulkRequest  (required)
-   * @return ApiResponse&lt;LoggerBulkResponse&gt;
+   * @param responseLogGroup  (required)
+   * @return ApiResponse&lt;LogGroupResponse&gt;
    * @throws ApiException if fails to make API call
    */
-  public ApiResponse<LoggerBulkResponse> bulkRegisterLoggersWithHttpInfo(@jakarta.annotation.Nonnull LoggerBulkRequest loggerBulkRequest) throws ApiException {
-    return bulkRegisterLoggersWithHttpInfo(loggerBulkRequest, null);
+  public ApiResponse<LogGroupResponse> createLogGroupWithHttpInfo(@jakarta.annotation.Nonnull ResponseLogGroup responseLogGroup) throws ApiException {
+    return createLogGroupWithHttpInfo(responseLogGroup, null);
   }
 
   /**
-   * Bulk Register Loggers
+   * Create Log Group
    * 
-   * @param loggerBulkRequest  (required)
+   * @param responseLogGroup  (required)
    * @param headers Optional headers to include in the request
-   * @return ApiResponse&lt;LoggerBulkResponse&gt;
+   * @return ApiResponse&lt;LogGroupResponse&gt;
    * @throws ApiException if fails to make API call
    */
-  public ApiResponse<LoggerBulkResponse> bulkRegisterLoggersWithHttpInfo(@jakarta.annotation.Nonnull LoggerBulkRequest loggerBulkRequest, Map<String, String> headers) throws ApiException {
-    HttpRequest.Builder localVarRequestBuilder = bulkRegisterLoggersRequestBuilder(loggerBulkRequest, headers);
+  public ApiResponse<LogGroupResponse> createLogGroupWithHttpInfo(@jakarta.annotation.Nonnull ResponseLogGroup responseLogGroup, Map<String, String> headers) throws ApiException {
+    HttpRequest.Builder localVarRequestBuilder = createLogGroupRequestBuilder(responseLogGroup, headers);
     try {
       HttpResponse<InputStream> localVarResponse = memberVarHttpClient.send(
           localVarRequestBuilder.build(),
@@ -224,11 +222,11 @@ public class LoggersApi {
       InputStream localVarResponseBody = null;
       try {
         if (localVarResponse.statusCode()/ 100 != 2) {
-          throw getApiException("bulkRegisterLoggers", localVarResponse);
+          throw getApiException("createLogGroup", localVarResponse);
         }
         localVarResponseBody = ApiClient.getResponseBody(localVarResponse);
         if (localVarResponseBody == null) {
-          return new ApiResponse<LoggerBulkResponse>(
+          return new ApiResponse<LogGroupResponse>(
               localVarResponse.statusCode(),
               localVarResponse.headers().map(),
               null
@@ -238,10 +236,10 @@ public class LoggersApi {
         
         
         String responseBody = new String(localVarResponseBody.readAllBytes());
-        LoggerBulkResponse responseValue = responseBody.isBlank()? null: memberVarObjectMapper.readValue(responseBody, new TypeReference<LoggerBulkResponse>() {});
+        LogGroupResponse responseValue = responseBody.isBlank()? null: memberVarObjectMapper.readValue(responseBody, new TypeReference<LogGroupResponse>() {});
         
 
-        return new ApiResponse<LoggerBulkResponse>(
+        return new ApiResponse<LogGroupResponse>(
             localVarResponse.statusCode(),
             localVarResponse.headers().map(),
             responseValue
@@ -260,15 +258,15 @@ public class LoggersApi {
     }
   }
 
-  private HttpRequest.Builder bulkRegisterLoggersRequestBuilder(@jakarta.annotation.Nonnull LoggerBulkRequest loggerBulkRequest, Map<String, String> headers) throws ApiException {
-    // verify the required parameter 'loggerBulkRequest' is set
-    if (loggerBulkRequest == null) {
-      throw new ApiException(400, "Missing the required parameter 'loggerBulkRequest' when calling bulkRegisterLoggers");
+  private HttpRequest.Builder createLogGroupRequestBuilder(@jakarta.annotation.Nonnull ResponseLogGroup responseLogGroup, Map<String, String> headers) throws ApiException {
+    // verify the required parameter 'responseLogGroup' is set
+    if (responseLogGroup == null) {
+      throw new ApiException(400, "Missing the required parameter 'responseLogGroup' when calling createLogGroup");
     }
 
     HttpRequest.Builder localVarRequestBuilder = HttpRequest.newBuilder();
 
-    String localVarPath = "/api/v1/loggers/bulk";
+    String localVarPath = "/api/v1/log_groups";
 
     localVarRequestBuilder.uri(URI.create(memberVarBaseUri + localVarPath));
 
@@ -276,7 +274,7 @@ public class LoggersApi {
     localVarRequestBuilder.header("Accept", "application/vnd.api+json");
 
     try {
-      byte[] localVarPostBody = memberVarObjectMapper.writeValueAsBytes(loggerBulkRequest);
+      byte[] localVarPostBody = memberVarObjectMapper.writeValueAsBytes(responseLogGroup);
       localVarRequestBuilder.method("POST", HttpRequest.BodyPublishers.ofByteArray(localVarPostBody));
     } catch (IOException e) {
       throw new ApiException(e);
@@ -293,50 +291,47 @@ public class LoggersApi {
   }
 
   /**
-   * Create Logger
+   * Delete Log Group
    * 
-   * @param responseLogger  (required)
-   * @return LoggerResponse
+   * @param id  (required)
    * @throws ApiException if fails to make API call
    */
-  public LoggerResponse createLogger(@jakarta.annotation.Nonnull ResponseLogger responseLogger) throws ApiException {
-    return createLogger(responseLogger, null);
+  public void deleteLogGroup(@jakarta.annotation.Nonnull UUID id) throws ApiException {
+    deleteLogGroup(id, null);
   }
 
   /**
-   * Create Logger
+   * Delete Log Group
    * 
-   * @param responseLogger  (required)
+   * @param id  (required)
    * @param headers Optional headers to include in the request
-   * @return LoggerResponse
    * @throws ApiException if fails to make API call
    */
-  public LoggerResponse createLogger(@jakarta.annotation.Nonnull ResponseLogger responseLogger, Map<String, String> headers) throws ApiException {
-    ApiResponse<LoggerResponse> localVarResponse = createLoggerWithHttpInfo(responseLogger, headers);
-    return localVarResponse.getData();
+  public void deleteLogGroup(@jakarta.annotation.Nonnull UUID id, Map<String, String> headers) throws ApiException {
+    deleteLogGroupWithHttpInfo(id, headers);
   }
 
   /**
-   * Create Logger
+   * Delete Log Group
    * 
-   * @param responseLogger  (required)
-   * @return ApiResponse&lt;LoggerResponse&gt;
+   * @param id  (required)
+   * @return ApiResponse&lt;Void&gt;
    * @throws ApiException if fails to make API call
    */
-  public ApiResponse<LoggerResponse> createLoggerWithHttpInfo(@jakarta.annotation.Nonnull ResponseLogger responseLogger) throws ApiException {
-    return createLoggerWithHttpInfo(responseLogger, null);
+  public ApiResponse<Void> deleteLogGroupWithHttpInfo(@jakarta.annotation.Nonnull UUID id) throws ApiException {
+    return deleteLogGroupWithHttpInfo(id, null);
   }
 
   /**
-   * Create Logger
+   * Delete Log Group
    * 
-   * @param responseLogger  (required)
+   * @param id  (required)
    * @param headers Optional headers to include in the request
-   * @return ApiResponse&lt;LoggerResponse&gt;
+   * @return ApiResponse&lt;Void&gt;
    * @throws ApiException if fails to make API call
    */
-  public ApiResponse<LoggerResponse> createLoggerWithHttpInfo(@jakarta.annotation.Nonnull ResponseLogger responseLogger, Map<String, String> headers) throws ApiException {
-    HttpRequest.Builder localVarRequestBuilder = createLoggerRequestBuilder(responseLogger, headers);
+  public ApiResponse<Void> deleteLogGroupWithHttpInfo(@jakarta.annotation.Nonnull UUID id, Map<String, String> headers) throws ApiException {
+    HttpRequest.Builder localVarRequestBuilder = deleteLogGroupRequestBuilder(id, headers);
     try {
       HttpResponse<InputStream> localVarResponse = memberVarHttpClient.send(
           localVarRequestBuilder.build(),
@@ -347,127 +342,7 @@ public class LoggersApi {
       InputStream localVarResponseBody = null;
       try {
         if (localVarResponse.statusCode()/ 100 != 2) {
-          throw getApiException("createLogger", localVarResponse);
-        }
-        localVarResponseBody = ApiClient.getResponseBody(localVarResponse);
-        if (localVarResponseBody == null) {
-          return new ApiResponse<LoggerResponse>(
-              localVarResponse.statusCode(),
-              localVarResponse.headers().map(),
-              null
-          );
-        }
-
-        
-        
-        String responseBody = new String(localVarResponseBody.readAllBytes());
-        LoggerResponse responseValue = responseBody.isBlank()? null: memberVarObjectMapper.readValue(responseBody, new TypeReference<LoggerResponse>() {});
-        
-
-        return new ApiResponse<LoggerResponse>(
-            localVarResponse.statusCode(),
-            localVarResponse.headers().map(),
-            responseValue
-        );
-      } finally {
-        if (localVarResponseBody != null) {
-          localVarResponseBody.close();
-        }
-      }
-    } catch (IOException e) {
-      throw new ApiException(e);
-    }
-    catch (InterruptedException e) {
-      Thread.currentThread().interrupt();
-      throw new ApiException(e);
-    }
-  }
-
-  private HttpRequest.Builder createLoggerRequestBuilder(@jakarta.annotation.Nonnull ResponseLogger responseLogger, Map<String, String> headers) throws ApiException {
-    // verify the required parameter 'responseLogger' is set
-    if (responseLogger == null) {
-      throw new ApiException(400, "Missing the required parameter 'responseLogger' when calling createLogger");
-    }
-
-    HttpRequest.Builder localVarRequestBuilder = HttpRequest.newBuilder();
-
-    String localVarPath = "/api/v1/loggers";
-
-    localVarRequestBuilder.uri(URI.create(memberVarBaseUri + localVarPath));
-
-    localVarRequestBuilder.header("Content-Type", "application/json");
-    localVarRequestBuilder.header("Accept", "application/vnd.api+json");
-
-    try {
-      byte[] localVarPostBody = memberVarObjectMapper.writeValueAsBytes(responseLogger);
-      localVarRequestBuilder.method("POST", HttpRequest.BodyPublishers.ofByteArray(localVarPostBody));
-    } catch (IOException e) {
-      throw new ApiException(e);
-    }
-    if (memberVarReadTimeout != null) {
-      localVarRequestBuilder.timeout(memberVarReadTimeout);
-    }
-    // Add custom headers if provided
-    localVarRequestBuilder = HttpRequestBuilderExtensions.withAdditionalHeaders(localVarRequestBuilder, headers);
-    if (memberVarInterceptor != null) {
-      memberVarInterceptor.accept(localVarRequestBuilder);
-    }
-    return localVarRequestBuilder;
-  }
-
-  /**
-   * Delete Logger
-   * 
-   * @param id  (required)
-   * @throws ApiException if fails to make API call
-   */
-  public void deleteLogger(@jakarta.annotation.Nonnull UUID id) throws ApiException {
-    deleteLogger(id, null);
-  }
-
-  /**
-   * Delete Logger
-   * 
-   * @param id  (required)
-   * @param headers Optional headers to include in the request
-   * @throws ApiException if fails to make API call
-   */
-  public void deleteLogger(@jakarta.annotation.Nonnull UUID id, Map<String, String> headers) throws ApiException {
-    deleteLoggerWithHttpInfo(id, headers);
-  }
-
-  /**
-   * Delete Logger
-   * 
-   * @param id  (required)
-   * @return ApiResponse&lt;Void&gt;
-   * @throws ApiException if fails to make API call
-   */
-  public ApiResponse<Void> deleteLoggerWithHttpInfo(@jakarta.annotation.Nonnull UUID id) throws ApiException {
-    return deleteLoggerWithHttpInfo(id, null);
-  }
-
-  /**
-   * Delete Logger
-   * 
-   * @param id  (required)
-   * @param headers Optional headers to include in the request
-   * @return ApiResponse&lt;Void&gt;
-   * @throws ApiException if fails to make API call
-   */
-  public ApiResponse<Void> deleteLoggerWithHttpInfo(@jakarta.annotation.Nonnull UUID id, Map<String, String> headers) throws ApiException {
-    HttpRequest.Builder localVarRequestBuilder = deleteLoggerRequestBuilder(id, headers);
-    try {
-      HttpResponse<InputStream> localVarResponse = memberVarHttpClient.send(
-          localVarRequestBuilder.build(),
-          HttpResponse.BodyHandlers.ofInputStream());
-      if (memberVarResponseInterceptor != null) {
-        memberVarResponseInterceptor.accept(localVarResponse);
-      }
-      InputStream localVarResponseBody = null;
-      try {
-        if (localVarResponse.statusCode()/ 100 != 2) {
-          throw getApiException("deleteLogger", localVarResponse);
+          throw getApiException("deleteLogGroup", localVarResponse);
         }
         localVarResponseBody = ApiClient.getResponseBody(localVarResponse);
         if (localVarResponseBody != null) {
@@ -492,15 +367,15 @@ public class LoggersApi {
     }
   }
 
-  private HttpRequest.Builder deleteLoggerRequestBuilder(@jakarta.annotation.Nonnull UUID id, Map<String, String> headers) throws ApiException {
+  private HttpRequest.Builder deleteLogGroupRequestBuilder(@jakarta.annotation.Nonnull UUID id, Map<String, String> headers) throws ApiException {
     // verify the required parameter 'id' is set
     if (id == null) {
-      throw new ApiException(400, "Missing the required parameter 'id' when calling deleteLogger");
+      throw new ApiException(400, "Missing the required parameter 'id' when calling deleteLogGroup");
     }
 
     HttpRequest.Builder localVarRequestBuilder = HttpRequest.newBuilder();
 
-    String localVarPath = "/api/v1/loggers/{id}"
+    String localVarPath = "/api/v1/log_groups/{id}"
         .replace("{id}", ApiClient.urlEncode(id.toString()));
 
     localVarRequestBuilder.uri(URI.create(memberVarBaseUri + localVarPath));
@@ -520,50 +395,50 @@ public class LoggersApi {
   }
 
   /**
-   * Get Logger
+   * Get Log Group
    * 
    * @param id  (required)
-   * @return LoggerResponse
+   * @return LogGroupResponse
    * @throws ApiException if fails to make API call
    */
-  public LoggerResponse getLogger(@jakarta.annotation.Nonnull UUID id) throws ApiException {
-    return getLogger(id, null);
+  public LogGroupResponse getLogGroup(@jakarta.annotation.Nonnull UUID id) throws ApiException {
+    return getLogGroup(id, null);
   }
 
   /**
-   * Get Logger
+   * Get Log Group
    * 
    * @param id  (required)
    * @param headers Optional headers to include in the request
-   * @return LoggerResponse
+   * @return LogGroupResponse
    * @throws ApiException if fails to make API call
    */
-  public LoggerResponse getLogger(@jakarta.annotation.Nonnull UUID id, Map<String, String> headers) throws ApiException {
-    ApiResponse<LoggerResponse> localVarResponse = getLoggerWithHttpInfo(id, headers);
+  public LogGroupResponse getLogGroup(@jakarta.annotation.Nonnull UUID id, Map<String, String> headers) throws ApiException {
+    ApiResponse<LogGroupResponse> localVarResponse = getLogGroupWithHttpInfo(id, headers);
     return localVarResponse.getData();
   }
 
   /**
-   * Get Logger
+   * Get Log Group
    * 
    * @param id  (required)
-   * @return ApiResponse&lt;LoggerResponse&gt;
+   * @return ApiResponse&lt;LogGroupResponse&gt;
    * @throws ApiException if fails to make API call
    */
-  public ApiResponse<LoggerResponse> getLoggerWithHttpInfo(@jakarta.annotation.Nonnull UUID id) throws ApiException {
-    return getLoggerWithHttpInfo(id, null);
+  public ApiResponse<LogGroupResponse> getLogGroupWithHttpInfo(@jakarta.annotation.Nonnull UUID id) throws ApiException {
+    return getLogGroupWithHttpInfo(id, null);
   }
 
   /**
-   * Get Logger
+   * Get Log Group
    * 
    * @param id  (required)
    * @param headers Optional headers to include in the request
-   * @return ApiResponse&lt;LoggerResponse&gt;
+   * @return ApiResponse&lt;LogGroupResponse&gt;
    * @throws ApiException if fails to make API call
    */
-  public ApiResponse<LoggerResponse> getLoggerWithHttpInfo(@jakarta.annotation.Nonnull UUID id, Map<String, String> headers) throws ApiException {
-    HttpRequest.Builder localVarRequestBuilder = getLoggerRequestBuilder(id, headers);
+  public ApiResponse<LogGroupResponse> getLogGroupWithHttpInfo(@jakarta.annotation.Nonnull UUID id, Map<String, String> headers) throws ApiException {
+    HttpRequest.Builder localVarRequestBuilder = getLogGroupRequestBuilder(id, headers);
     try {
       HttpResponse<InputStream> localVarResponse = memberVarHttpClient.send(
           localVarRequestBuilder.build(),
@@ -574,11 +449,11 @@ public class LoggersApi {
       InputStream localVarResponseBody = null;
       try {
         if (localVarResponse.statusCode()/ 100 != 2) {
-          throw getApiException("getLogger", localVarResponse);
+          throw getApiException("getLogGroup", localVarResponse);
         }
         localVarResponseBody = ApiClient.getResponseBody(localVarResponse);
         if (localVarResponseBody == null) {
-          return new ApiResponse<LoggerResponse>(
+          return new ApiResponse<LogGroupResponse>(
               localVarResponse.statusCode(),
               localVarResponse.headers().map(),
               null
@@ -588,10 +463,10 @@ public class LoggersApi {
         
         
         String responseBody = new String(localVarResponseBody.readAllBytes());
-        LoggerResponse responseValue = responseBody.isBlank()? null: memberVarObjectMapper.readValue(responseBody, new TypeReference<LoggerResponse>() {});
+        LogGroupResponse responseValue = responseBody.isBlank()? null: memberVarObjectMapper.readValue(responseBody, new TypeReference<LogGroupResponse>() {});
         
 
-        return new ApiResponse<LoggerResponse>(
+        return new ApiResponse<LogGroupResponse>(
             localVarResponse.statusCode(),
             localVarResponse.headers().map(),
             responseValue
@@ -610,15 +485,15 @@ public class LoggersApi {
     }
   }
 
-  private HttpRequest.Builder getLoggerRequestBuilder(@jakarta.annotation.Nonnull UUID id, Map<String, String> headers) throws ApiException {
+  private HttpRequest.Builder getLogGroupRequestBuilder(@jakarta.annotation.Nonnull UUID id, Map<String, String> headers) throws ApiException {
     // verify the required parameter 'id' is set
     if (id == null) {
-      throw new ApiException(400, "Missing the required parameter 'id' when calling getLogger");
+      throw new ApiException(400, "Missing the required parameter 'id' when calling getLogGroup");
     }
 
     HttpRequest.Builder localVarRequestBuilder = HttpRequest.newBuilder();
 
-    String localVarPath = "/api/v1/loggers/{id}"
+    String localVarPath = "/api/v1/log_groups/{id}"
         .replace("{id}", ApiClient.urlEncode(id.toString()));
 
     localVarRequestBuilder.uri(URI.create(memberVarBaseUri + localVarPath));
@@ -638,54 +513,46 @@ public class LoggersApi {
   }
 
   /**
-   * List Loggers
+   * List Log Groups
    * 
-   * @param filterKey  (optional)
-   * @param filterManaged  (optional)
-   * @return LoggerListResponse
+   * @return LogGroupListResponse
    * @throws ApiException if fails to make API call
    */
-  public LoggerListResponse listLoggers(@jakarta.annotation.Nullable String filterKey, @jakarta.annotation.Nullable Boolean filterManaged) throws ApiException {
-    return listLoggers(filterKey, filterManaged, null);
+  public LogGroupListResponse listLogGroups() throws ApiException {
+    return listLogGroups(null);
   }
 
   /**
-   * List Loggers
+   * List Log Groups
    * 
-   * @param filterKey  (optional)
-   * @param filterManaged  (optional)
    * @param headers Optional headers to include in the request
-   * @return LoggerListResponse
+   * @return LogGroupListResponse
    * @throws ApiException if fails to make API call
    */
-  public LoggerListResponse listLoggers(@jakarta.annotation.Nullable String filterKey, @jakarta.annotation.Nullable Boolean filterManaged, Map<String, String> headers) throws ApiException {
-    ApiResponse<LoggerListResponse> localVarResponse = listLoggersWithHttpInfo(filterKey, filterManaged, headers);
+  public LogGroupListResponse listLogGroups(Map<String, String> headers) throws ApiException {
+    ApiResponse<LogGroupListResponse> localVarResponse = listLogGroupsWithHttpInfo(headers);
     return localVarResponse.getData();
   }
 
   /**
-   * List Loggers
+   * List Log Groups
    * 
-   * @param filterKey  (optional)
-   * @param filterManaged  (optional)
-   * @return ApiResponse&lt;LoggerListResponse&gt;
+   * @return ApiResponse&lt;LogGroupListResponse&gt;
    * @throws ApiException if fails to make API call
    */
-  public ApiResponse<LoggerListResponse> listLoggersWithHttpInfo(@jakarta.annotation.Nullable String filterKey, @jakarta.annotation.Nullable Boolean filterManaged) throws ApiException {
-    return listLoggersWithHttpInfo(filterKey, filterManaged, null);
+  public ApiResponse<LogGroupListResponse> listLogGroupsWithHttpInfo() throws ApiException {
+    return listLogGroupsWithHttpInfo(null);
   }
 
   /**
-   * List Loggers
+   * List Log Groups
    * 
-   * @param filterKey  (optional)
-   * @param filterManaged  (optional)
    * @param headers Optional headers to include in the request
-   * @return ApiResponse&lt;LoggerListResponse&gt;
+   * @return ApiResponse&lt;LogGroupListResponse&gt;
    * @throws ApiException if fails to make API call
    */
-  public ApiResponse<LoggerListResponse> listLoggersWithHttpInfo(@jakarta.annotation.Nullable String filterKey, @jakarta.annotation.Nullable Boolean filterManaged, Map<String, String> headers) throws ApiException {
-    HttpRequest.Builder localVarRequestBuilder = listLoggersRequestBuilder(filterKey, filterManaged, headers);
+  public ApiResponse<LogGroupListResponse> listLogGroupsWithHttpInfo(Map<String, String> headers) throws ApiException {
+    HttpRequest.Builder localVarRequestBuilder = listLogGroupsRequestBuilder(headers);
     try {
       HttpResponse<InputStream> localVarResponse = memberVarHttpClient.send(
           localVarRequestBuilder.build(),
@@ -696,11 +563,11 @@ public class LoggersApi {
       InputStream localVarResponseBody = null;
       try {
         if (localVarResponse.statusCode()/ 100 != 2) {
-          throw getApiException("listLoggers", localVarResponse);
+          throw getApiException("listLogGroups", localVarResponse);
         }
         localVarResponseBody = ApiClient.getResponseBody(localVarResponse);
         if (localVarResponseBody == null) {
-          return new ApiResponse<LoggerListResponse>(
+          return new ApiResponse<LogGroupListResponse>(
               localVarResponse.statusCode(),
               localVarResponse.headers().map(),
               null
@@ -710,10 +577,10 @@ public class LoggersApi {
         
         
         String responseBody = new String(localVarResponseBody.readAllBytes());
-        LoggerListResponse responseValue = responseBody.isBlank()? null: memberVarObjectMapper.readValue(responseBody, new TypeReference<LoggerListResponse>() {});
+        LogGroupListResponse responseValue = responseBody.isBlank()? null: memberVarObjectMapper.readValue(responseBody, new TypeReference<LogGroupListResponse>() {});
         
 
-        return new ApiResponse<LoggerListResponse>(
+        return new ApiResponse<LogGroupListResponse>(
             localVarResponse.statusCode(),
             localVarResponse.headers().map(),
             responseValue
@@ -732,30 +599,13 @@ public class LoggersApi {
     }
   }
 
-  private HttpRequest.Builder listLoggersRequestBuilder(@jakarta.annotation.Nullable String filterKey, @jakarta.annotation.Nullable Boolean filterManaged, Map<String, String> headers) throws ApiException {
+  private HttpRequest.Builder listLogGroupsRequestBuilder(Map<String, String> headers) throws ApiException {
 
     HttpRequest.Builder localVarRequestBuilder = HttpRequest.newBuilder();
 
-    String localVarPath = "/api/v1/loggers";
+    String localVarPath = "/api/v1/log_groups";
 
-    List<Pair> localVarQueryParams = new ArrayList<>();
-    StringJoiner localVarQueryStringJoiner = new StringJoiner("&");
-    String localVarQueryParameterBaseName;
-    localVarQueryParameterBaseName = "filter[key]";
-    localVarQueryParams.addAll(ApiClient.parameterToPairs("filter[key]", filterKey));
-    localVarQueryParameterBaseName = "filter[managed]";
-    localVarQueryParams.addAll(ApiClient.parameterToPairs("filter[managed]", filterManaged));
-
-    if (!localVarQueryParams.isEmpty() || localVarQueryStringJoiner.length() != 0) {
-      StringJoiner queryJoiner = new StringJoiner("&");
-      localVarQueryParams.forEach(p -> queryJoiner.add(p.getName() + '=' + p.getValue()));
-      if (localVarQueryStringJoiner.length() != 0) {
-        queryJoiner.add(localVarQueryStringJoiner.toString());
-      }
-      localVarRequestBuilder.uri(URI.create(memberVarBaseUri + localVarPath + '?' + queryJoiner.toString()));
-    } else {
-      localVarRequestBuilder.uri(URI.create(memberVarBaseUri + localVarPath));
-    }
+    localVarRequestBuilder.uri(URI.create(memberVarBaseUri + localVarPath));
 
     localVarRequestBuilder.header("Accept", "application/vnd.api+json");
 
@@ -772,54 +622,54 @@ public class LoggersApi {
   }
 
   /**
-   * Update Logger
+   * Update Log Group
    * 
    * @param id  (required)
-   * @param responseLogger  (required)
-   * @return LoggerResponse
+   * @param responseLogGroup  (required)
+   * @return LogGroupResponse
    * @throws ApiException if fails to make API call
    */
-  public LoggerResponse updateLogger(@jakarta.annotation.Nonnull UUID id, @jakarta.annotation.Nonnull ResponseLogger responseLogger) throws ApiException {
-    return updateLogger(id, responseLogger, null);
+  public LogGroupResponse updateLogGroup(@jakarta.annotation.Nonnull UUID id, @jakarta.annotation.Nonnull ResponseLogGroup responseLogGroup) throws ApiException {
+    return updateLogGroup(id, responseLogGroup, null);
   }
 
   /**
-   * Update Logger
+   * Update Log Group
    * 
    * @param id  (required)
-   * @param responseLogger  (required)
+   * @param responseLogGroup  (required)
    * @param headers Optional headers to include in the request
-   * @return LoggerResponse
+   * @return LogGroupResponse
    * @throws ApiException if fails to make API call
    */
-  public LoggerResponse updateLogger(@jakarta.annotation.Nonnull UUID id, @jakarta.annotation.Nonnull ResponseLogger responseLogger, Map<String, String> headers) throws ApiException {
-    ApiResponse<LoggerResponse> localVarResponse = updateLoggerWithHttpInfo(id, responseLogger, headers);
+  public LogGroupResponse updateLogGroup(@jakarta.annotation.Nonnull UUID id, @jakarta.annotation.Nonnull ResponseLogGroup responseLogGroup, Map<String, String> headers) throws ApiException {
+    ApiResponse<LogGroupResponse> localVarResponse = updateLogGroupWithHttpInfo(id, responseLogGroup, headers);
     return localVarResponse.getData();
   }
 
   /**
-   * Update Logger
+   * Update Log Group
    * 
    * @param id  (required)
-   * @param responseLogger  (required)
-   * @return ApiResponse&lt;LoggerResponse&gt;
+   * @param responseLogGroup  (required)
+   * @return ApiResponse&lt;LogGroupResponse&gt;
    * @throws ApiException if fails to make API call
    */
-  public ApiResponse<LoggerResponse> updateLoggerWithHttpInfo(@jakarta.annotation.Nonnull UUID id, @jakarta.annotation.Nonnull ResponseLogger responseLogger) throws ApiException {
-    return updateLoggerWithHttpInfo(id, responseLogger, null);
+  public ApiResponse<LogGroupResponse> updateLogGroupWithHttpInfo(@jakarta.annotation.Nonnull UUID id, @jakarta.annotation.Nonnull ResponseLogGroup responseLogGroup) throws ApiException {
+    return updateLogGroupWithHttpInfo(id, responseLogGroup, null);
   }
 
   /**
-   * Update Logger
+   * Update Log Group
    * 
    * @param id  (required)
-   * @param responseLogger  (required)
+   * @param responseLogGroup  (required)
    * @param headers Optional headers to include in the request
-   * @return ApiResponse&lt;LoggerResponse&gt;
+   * @return ApiResponse&lt;LogGroupResponse&gt;
    * @throws ApiException if fails to make API call
    */
-  public ApiResponse<LoggerResponse> updateLoggerWithHttpInfo(@jakarta.annotation.Nonnull UUID id, @jakarta.annotation.Nonnull ResponseLogger responseLogger, Map<String, String> headers) throws ApiException {
-    HttpRequest.Builder localVarRequestBuilder = updateLoggerRequestBuilder(id, responseLogger, headers);
+  public ApiResponse<LogGroupResponse> updateLogGroupWithHttpInfo(@jakarta.annotation.Nonnull UUID id, @jakarta.annotation.Nonnull ResponseLogGroup responseLogGroup, Map<String, String> headers) throws ApiException {
+    HttpRequest.Builder localVarRequestBuilder = updateLogGroupRequestBuilder(id, responseLogGroup, headers);
     try {
       HttpResponse<InputStream> localVarResponse = memberVarHttpClient.send(
           localVarRequestBuilder.build(),
@@ -830,11 +680,11 @@ public class LoggersApi {
       InputStream localVarResponseBody = null;
       try {
         if (localVarResponse.statusCode()/ 100 != 2) {
-          throw getApiException("updateLogger", localVarResponse);
+          throw getApiException("updateLogGroup", localVarResponse);
         }
         localVarResponseBody = ApiClient.getResponseBody(localVarResponse);
         if (localVarResponseBody == null) {
-          return new ApiResponse<LoggerResponse>(
+          return new ApiResponse<LogGroupResponse>(
               localVarResponse.statusCode(),
               localVarResponse.headers().map(),
               null
@@ -844,10 +694,10 @@ public class LoggersApi {
         
         
         String responseBody = new String(localVarResponseBody.readAllBytes());
-        LoggerResponse responseValue = responseBody.isBlank()? null: memberVarObjectMapper.readValue(responseBody, new TypeReference<LoggerResponse>() {});
+        LogGroupResponse responseValue = responseBody.isBlank()? null: memberVarObjectMapper.readValue(responseBody, new TypeReference<LogGroupResponse>() {});
         
 
-        return new ApiResponse<LoggerResponse>(
+        return new ApiResponse<LogGroupResponse>(
             localVarResponse.statusCode(),
             localVarResponse.headers().map(),
             responseValue
@@ -866,19 +716,19 @@ public class LoggersApi {
     }
   }
 
-  private HttpRequest.Builder updateLoggerRequestBuilder(@jakarta.annotation.Nonnull UUID id, @jakarta.annotation.Nonnull ResponseLogger responseLogger, Map<String, String> headers) throws ApiException {
+  private HttpRequest.Builder updateLogGroupRequestBuilder(@jakarta.annotation.Nonnull UUID id, @jakarta.annotation.Nonnull ResponseLogGroup responseLogGroup, Map<String, String> headers) throws ApiException {
     // verify the required parameter 'id' is set
     if (id == null) {
-      throw new ApiException(400, "Missing the required parameter 'id' when calling updateLogger");
+      throw new ApiException(400, "Missing the required parameter 'id' when calling updateLogGroup");
     }
-    // verify the required parameter 'responseLogger' is set
-    if (responseLogger == null) {
-      throw new ApiException(400, "Missing the required parameter 'responseLogger' when calling updateLogger");
+    // verify the required parameter 'responseLogGroup' is set
+    if (responseLogGroup == null) {
+      throw new ApiException(400, "Missing the required parameter 'responseLogGroup' when calling updateLogGroup");
     }
 
     HttpRequest.Builder localVarRequestBuilder = HttpRequest.newBuilder();
 
-    String localVarPath = "/api/v1/loggers/{id}"
+    String localVarPath = "/api/v1/log_groups/{id}"
         .replace("{id}", ApiClient.urlEncode(id.toString()));
 
     localVarRequestBuilder.uri(URI.create(memberVarBaseUri + localVarPath));
@@ -887,7 +737,7 @@ public class LoggersApi {
     localVarRequestBuilder.header("Accept", "application/vnd.api+json");
 
     try {
-      byte[] localVarPostBody = memberVarObjectMapper.writeValueAsBytes(responseLogger);
+      byte[] localVarPostBody = memberVarObjectMapper.writeValueAsBytes(responseLogGroup);
       localVarRequestBuilder.method("PUT", HttpRequest.BodyPublishers.ofByteArray(localVarPostBody));
     } catch (IOException e) {
       throw new ApiException(e);

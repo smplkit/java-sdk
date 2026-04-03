@@ -25,10 +25,8 @@ import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonTypeName;
 import com.fasterxml.jackson.annotation.JsonValue;
 import java.time.OffsetDateTime;
-import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 import org.openapitools.jackson.nullable.JsonNullable;
 import com.fasterxml.jackson.annotation.JsonIgnore;
@@ -39,21 +37,19 @@ import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 
 import com.smplkit.internal.generated.logging.ApiClient;
 /**
- * Logger
+ * LogGroup
  */
 @JsonPropertyOrder({
-  Logger.JSON_PROPERTY_KEY,
-  Logger.JSON_PROPERTY_NAME,
-  Logger.JSON_PROPERTY_LEVEL,
-  Logger.JSON_PROPERTY_GROUP,
-  Logger.JSON_PROPERTY_MANAGED,
-  Logger.JSON_PROPERTY_SOURCES,
-  Logger.JSON_PROPERTY_ENVIRONMENTS,
-  Logger.JSON_PROPERTY_CREATED_AT,
-  Logger.JSON_PROPERTY_UPDATED_AT
+  LogGroup.JSON_PROPERTY_KEY,
+  LogGroup.JSON_PROPERTY_NAME,
+  LogGroup.JSON_PROPERTY_LEVEL,
+  LogGroup.JSON_PROPERTY_GROUP,
+  LogGroup.JSON_PROPERTY_ENVIRONMENTS,
+  LogGroup.JSON_PROPERTY_CREATED_AT,
+  LogGroup.JSON_PROPERTY_UPDATED_AT
 })
 @jakarta.annotation.Generated(value = "org.openapitools.codegen.languages.JavaClientCodegen", date = "2026-04-03T11:37:40.843497407Z[Etc/UTC]", comments = "Generator version: 7.21.0")
-public class Logger {
+public class LogGroup {
   public static final String JSON_PROPERTY_KEY = "key";
   private JsonNullable<String> key = JsonNullable.<String>undefined();
 
@@ -67,12 +63,6 @@ public class Logger {
   public static final String JSON_PROPERTY_GROUP = "group";
   private JsonNullable<String> group = JsonNullable.<String>undefined();
 
-  public static final String JSON_PROPERTY_MANAGED = "managed";
-  private JsonNullable<Boolean> managed = JsonNullable.<Boolean>undefined();
-
-  public static final String JSON_PROPERTY_SOURCES = "sources";
-  private JsonNullable<List<Map<String, Object>>> sources = JsonNullable.<List<Map<String, Object>>>undefined();
-
   public static final String JSON_PROPERTY_ENVIRONMENTS = "environments";
   private JsonNullable<Map<String, Object>> environments = JsonNullable.<Map<String, Object>>undefined();
 
@@ -82,24 +72,20 @@ public class Logger {
   public static final String JSON_PROPERTY_UPDATED_AT = "updated_at";
   private JsonNullable<OffsetDateTime> updatedAt = JsonNullable.<OffsetDateTime>undefined();
 
-  public Logger() { 
+  public LogGroup() { 
   }
 
   @JsonCreator
-  public Logger(
-    @JsonProperty(JSON_PROPERTY_MANAGED) Boolean managed, 
-    @JsonProperty(JSON_PROPERTY_SOURCES) List<Map<String, Object>> sources, 
+  public LogGroup(
     @JsonProperty(JSON_PROPERTY_CREATED_AT) OffsetDateTime createdAt, 
     @JsonProperty(JSON_PROPERTY_UPDATED_AT) OffsetDateTime updatedAt
   ) {
   this();
-    this.managed = managed == null ? JsonNullable.<Boolean>undefined() : JsonNullable.of(managed);
-    this.sources = sources == null ? JsonNullable.<List<Map<String, Object>>>undefined() : JsonNullable.of(sources);
     this.createdAt = createdAt == null ? JsonNullable.<OffsetDateTime>undefined() : JsonNullable.of(createdAt);
     this.updatedAt = updatedAt == null ? JsonNullable.<OffsetDateTime>undefined() : JsonNullable.of(updatedAt);
   }
 
-  public Logger key(@jakarta.annotation.Nullable String key) {
+  public LogGroup key(@jakarta.annotation.Nullable String key) {
     this.key = JsonNullable.<String>of(key);
     return this;
   }
@@ -131,7 +117,7 @@ public class Logger {
   }
 
 
-  public Logger name(@jakarta.annotation.Nonnull String name) {
+  public LogGroup name(@jakarta.annotation.Nonnull String name) {
     this.name = name;
     return this;
   }
@@ -155,7 +141,7 @@ public class Logger {
   }
 
 
-  public Logger level(@jakarta.annotation.Nullable String level) {
+  public LogGroup level(@jakarta.annotation.Nullable String level) {
     this.level = JsonNullable.<String>of(level);
     return this;
   }
@@ -187,7 +173,7 @@ public class Logger {
   }
 
 
-  public Logger group(@jakarta.annotation.Nullable String group) {
+  public LogGroup group(@jakarta.annotation.Nullable String group) {
     this.group = JsonNullable.<String>of(group);
     return this;
   }
@@ -219,68 +205,12 @@ public class Logger {
   }
 
 
-  /**
-   * Get managed
-   * @return managed
-   */
-  @jakarta.annotation.Nullable
-  @JsonIgnore
-  public Boolean getManaged() {
-    
-    if (managed == null) {
-      managed = JsonNullable.<Boolean>undefined();
-    }
-    return managed.orElse(null);
-  }
-
-  @JsonProperty(value = JSON_PROPERTY_MANAGED, required = false)
-  @JsonInclude(value = JsonInclude.Include.USE_DEFAULTS)
-
-  public JsonNullable<Boolean> getManaged_JsonNullable() {
-    return managed;
-  }
-  
-  @JsonProperty(JSON_PROPERTY_MANAGED)
-  private void setManaged_JsonNullable(JsonNullable<Boolean> managed) {
-    this.managed = managed;
-  }
-
-
-
-  /**
-   * Get sources
-   * @return sources
-   */
-  @jakarta.annotation.Nullable
-  @JsonIgnore
-  public List<Map<String, Object>> getSources() {
-    
-    if (sources == null) {
-      sources = JsonNullable.<List<Map<String, Object>>>undefined();
-    }
-    return sources.orElse(null);
-  }
-
-  @JsonProperty(value = JSON_PROPERTY_SOURCES, required = false)
-  @JsonInclude(value = JsonInclude.Include.USE_DEFAULTS)
-
-  public JsonNullable<List<Map<String, Object>>> getSources_JsonNullable() {
-    return sources;
-  }
-  
-  @JsonProperty(JSON_PROPERTY_SOURCES)
-  private void setSources_JsonNullable(JsonNullable<List<Map<String, Object>>> sources) {
-    this.sources = sources;
-  }
-
-
-
-  public Logger environments(@jakarta.annotation.Nullable Map<String, Object> environments) {
+  public LogGroup environments(@jakarta.annotation.Nullable Map<String, Object> environments) {
     this.environments = JsonNullable.<Map<String, Object>>of(environments);
     return this;
   }
 
-  public Logger putEnvironmentsItem(String key, Object environmentsItem) {
+  public LogGroup putEnvironmentsItem(String key, Object environmentsItem) {
     if (this.environments == null || !this.environments.isPresent()) {
       this.environments = JsonNullable.<Map<String, Object>>of(new HashMap<>());
     }
@@ -376,7 +306,7 @@ public class Logger {
 
 
   /**
-   * Return true if this Logger object is equal to o.
+   * Return true if this LogGroup object is equal to o.
    */
   @Override
   public boolean equals(Object o) {
@@ -386,16 +316,14 @@ public class Logger {
     if (o == null || getClass() != o.getClass()) {
       return false;
     }
-    Logger logger = (Logger) o;
-    return equalsNullable(this.key, logger.key) &&
-        Objects.equals(this.name, logger.name) &&
-        equalsNullable(this.level, logger.level) &&
-        equalsNullable(this.group, logger.group) &&
-        equalsNullable(this.managed, logger.managed) &&
-        equalsNullable(this.sources, logger.sources) &&
-        equalsNullable(this.environments, logger.environments) &&
-        equalsNullable(this.createdAt, logger.createdAt) &&
-        equalsNullable(this.updatedAt, logger.updatedAt);
+    LogGroup logGroup = (LogGroup) o;
+    return equalsNullable(this.key, logGroup.key) &&
+        Objects.equals(this.name, logGroup.name) &&
+        equalsNullable(this.level, logGroup.level) &&
+        equalsNullable(this.group, logGroup.group) &&
+        equalsNullable(this.environments, logGroup.environments) &&
+        equalsNullable(this.createdAt, logGroup.createdAt) &&
+        equalsNullable(this.updatedAt, logGroup.updatedAt);
   }
 
   private static <T> boolean equalsNullable(JsonNullable<T> a, JsonNullable<T> b) {
@@ -404,7 +332,7 @@ public class Logger {
 
   @Override
   public int hashCode() {
-    return Objects.hash(hashCodeNullable(key), name, hashCodeNullable(level), hashCodeNullable(group), hashCodeNullable(managed), hashCodeNullable(sources), hashCodeNullable(environments), hashCodeNullable(createdAt), hashCodeNullable(updatedAt));
+    return Objects.hash(hashCodeNullable(key), name, hashCodeNullable(level), hashCodeNullable(group), hashCodeNullable(environments), hashCodeNullable(createdAt), hashCodeNullable(updatedAt));
   }
 
   private static <T> int hashCodeNullable(JsonNullable<T> a) {
@@ -417,13 +345,11 @@ public class Logger {
   @Override
   public String toString() {
     StringBuilder sb = new StringBuilder();
-    sb.append("class Logger {\n");
+    sb.append("class LogGroup {\n");
     sb.append("    key: ").append(toIndentedString(key)).append("\n");
     sb.append("    name: ").append(toIndentedString(name)).append("\n");
     sb.append("    level: ").append(toIndentedString(level)).append("\n");
     sb.append("    group: ").append(toIndentedString(group)).append("\n");
-    sb.append("    managed: ").append(toIndentedString(managed)).append("\n");
-    sb.append("    sources: ").append(toIndentedString(sources)).append("\n");
     sb.append("    environments: ").append(toIndentedString(environments)).append("\n");
     sb.append("    createdAt: ").append(toIndentedString(createdAt)).append("\n");
     sb.append("    updatedAt: ").append(toIndentedString(updatedAt)).append("\n");
@@ -489,20 +415,6 @@ public class Logger {
     // add `group` to the URL query string
     if (getGroup() != null) {
       joiner.add(String.format(java.util.Locale.ROOT, "%sgroup%s=%s", prefix, suffix, ApiClient.urlEncode(ApiClient.valueToString(getGroup()))));
-    }
-
-    // add `managed` to the URL query string
-    if (getManaged() != null) {
-      joiner.add(String.format(java.util.Locale.ROOT, "%smanaged%s=%s", prefix, suffix, ApiClient.urlEncode(ApiClient.valueToString(getManaged()))));
-    }
-
-    // add `sources` to the URL query string
-    if (getSources() != null) {
-      for (int i = 0; i < getSources().size(); i++) {
-        joiner.add(String.format(java.util.Locale.ROOT, "%ssources%s%s=%s", prefix, suffix,
-            "".equals(suffix) ? "" : String.format(java.util.Locale.ROOT, "%s%d%s", containerPrefix, i, containerSuffix),
-            ApiClient.urlEncode(ApiClient.valueToString(getSources().get(i)))));
-      }
     }
 
     // add `environments` to the URL query string

@@ -24,53 +24,63 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonTypeName;
 import com.fasterxml.jackson.annotation.JsonValue;
-import com.smplkit.internal.generated.logging.model.ResourceLogger;
+import com.smplkit.internal.generated.logging.model.LoggerBulkItem;
+import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.List;
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 
 
 import com.smplkit.internal.generated.logging.ApiClient;
 /**
- * ResponseLogger
+ * LoggerBulkRequest
  */
 @JsonPropertyOrder({
-  ResponseLogger.JSON_PROPERTY_DATA
+  LoggerBulkRequest.JSON_PROPERTY_LOGGERS
 })
 @jakarta.annotation.Generated(value = "org.openapitools.codegen.languages.JavaClientCodegen", date = "2026-04-03T11:37:40.843497407Z[Etc/UTC]", comments = "Generator version: 7.21.0")
-public class ResponseLogger {
-  public static final String JSON_PROPERTY_DATA = "data";
+public class LoggerBulkRequest {
+  public static final String JSON_PROPERTY_LOGGERS = "loggers";
   @jakarta.annotation.Nonnull
-  private ResourceLogger data;
+  private List<LoggerBulkItem> loggers = new ArrayList<>();
 
-  public ResponseLogger() { 
+  public LoggerBulkRequest() { 
   }
 
-  public ResponseLogger data(@jakarta.annotation.Nonnull ResourceLogger data) {
-    this.data = data;
+  public LoggerBulkRequest loggers(@jakarta.annotation.Nonnull List<LoggerBulkItem> loggers) {
+    this.loggers = loggers;
+    return this;
+  }
+
+  public LoggerBulkRequest addLoggersItem(LoggerBulkItem loggersItem) {
+    if (this.loggers == null) {
+      this.loggers = new ArrayList<>();
+    }
+    this.loggers.add(loggersItem);
     return this;
   }
 
   /**
-   * Get data
-   * @return data
+   * Get loggers
+   * @return loggers
    */
   @jakarta.annotation.Nonnull
-  @JsonProperty(value = JSON_PROPERTY_DATA, required = true)
+  @JsonProperty(value = JSON_PROPERTY_LOGGERS, required = true)
   @JsonInclude(value = JsonInclude.Include.ALWAYS)
-  public ResourceLogger getData() {
-    return data;
+  public List<LoggerBulkItem> getLoggers() {
+    return loggers;
   }
 
 
-  @JsonProperty(value = JSON_PROPERTY_DATA, required = true)
+  @JsonProperty(value = JSON_PROPERTY_LOGGERS, required = true)
   @JsonInclude(value = JsonInclude.Include.ALWAYS)
-  public void setData(@jakarta.annotation.Nonnull ResourceLogger data) {
-    this.data = data;
+  public void setLoggers(@jakarta.annotation.Nonnull List<LoggerBulkItem> loggers) {
+    this.loggers = loggers;
   }
 
 
   /**
-   * Return true if this Response_Logger_ object is equal to o.
+   * Return true if this LoggerBulkRequest object is equal to o.
    */
   @Override
   public boolean equals(Object o) {
@@ -80,20 +90,20 @@ public class ResponseLogger {
     if (o == null || getClass() != o.getClass()) {
       return false;
     }
-    ResponseLogger responseLogger = (ResponseLogger) o;
-    return Objects.equals(this.data, responseLogger.data);
+    LoggerBulkRequest loggerBulkRequest = (LoggerBulkRequest) o;
+    return Objects.equals(this.loggers, loggerBulkRequest.loggers);
   }
 
   @Override
   public int hashCode() {
-    return Objects.hash(data);
+    return Objects.hash(loggers);
   }
 
   @Override
   public String toString() {
     StringBuilder sb = new StringBuilder();
-    sb.append("class ResponseLogger {\n");
-    sb.append("    data: ").append(toIndentedString(data)).append("\n");
+    sb.append("class LoggerBulkRequest {\n");
+    sb.append("    loggers: ").append(toIndentedString(loggers)).append("\n");
     sb.append("}");
     return sb.toString();
   }
@@ -138,9 +148,14 @@ public class ResponseLogger {
 
     StringJoiner joiner = new StringJoiner("&");
 
-    // add `data` to the URL query string
-    if (getData() != null) {
-      joiner.add(getData().toUrlQueryString(prefix + "data" + suffix));
+    // add `loggers` to the URL query string
+    if (getLoggers() != null) {
+      for (int i = 0; i < getLoggers().size(); i++) {
+        if (getLoggers().get(i) != null) {
+          joiner.add(getLoggers().get(i).toUrlQueryString(String.format(java.util.Locale.ROOT, "%sloggers%s%s", prefix, suffix,
+          "".equals(suffix) ? "" : String.format(java.util.Locale.ROOT, "%s%d%s", containerPrefix, i, containerSuffix))));
+        }
+      }
     }
 
     return joiner.toString();

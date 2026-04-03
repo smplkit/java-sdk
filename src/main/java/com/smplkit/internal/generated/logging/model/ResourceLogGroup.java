@@ -24,7 +24,7 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonTypeName;
 import com.fasterxml.jackson.annotation.JsonValue;
-import com.smplkit.internal.generated.logging.model.Logger;
+import com.smplkit.internal.generated.logging.model.LogGroup;
 import java.util.Arrays;
 import org.openapitools.jackson.nullable.JsonNullable;
 import com.fasterxml.jackson.annotation.JsonIgnore;
@@ -35,63 +35,30 @@ import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 
 import com.smplkit.internal.generated.logging.ApiClient;
 /**
- * LoggerResource
+ * ResourceLogGroup
  */
 @JsonPropertyOrder({
-  LoggerResource.JSON_PROPERTY_ID,
-  LoggerResource.JSON_PROPERTY_TYPE,
-  LoggerResource.JSON_PROPERTY_ATTRIBUTES
+  ResourceLogGroup.JSON_PROPERTY_ID,
+  ResourceLogGroup.JSON_PROPERTY_TYPE,
+  ResourceLogGroup.JSON_PROPERTY_ATTRIBUTES
 })
 @jakarta.annotation.Generated(value = "org.openapitools.codegen.languages.JavaClientCodegen", date = "2026-04-03T11:37:40.843497407Z[Etc/UTC]", comments = "Generator version: 7.21.0")
-public class LoggerResource {
+public class ResourceLogGroup {
   public static final String JSON_PROPERTY_ID = "id";
   private JsonNullable<String> id = JsonNullable.<String>undefined();
 
-  /**
-   * Gets or Sets type
-   */
-  public enum TypeEnum {
-    LOGGER(String.valueOf("logger"));
-
-    private String value;
-
-    TypeEnum(String value) {
-      this.value = value;
-    }
-
-    @JsonValue
-    public String getValue() {
-      return value;
-    }
-
-    @Override
-    public String toString() {
-      return String.valueOf(value);
-    }
-
-    @JsonCreator
-    public static TypeEnum fromValue(String value) {
-      for (TypeEnum b : TypeEnum.values()) {
-        if (b.value.equals(value)) {
-          return b;
-        }
-      }
-      throw new IllegalArgumentException("Unexpected value '" + value + "'");
-    }
-  }
-
   public static final String JSON_PROPERTY_TYPE = "type";
-  @jakarta.annotation.Nonnull
-  private TypeEnum type;
+  @jakarta.annotation.Nullable
+  private String type = "";
 
   public static final String JSON_PROPERTY_ATTRIBUTES = "attributes";
   @jakarta.annotation.Nonnull
-  private Logger attributes;
+  private LogGroup attributes;
 
-  public LoggerResource() { 
+  public ResourceLogGroup() { 
   }
 
-  public LoggerResource id(@jakarta.annotation.Nullable String id) {
+  public ResourceLogGroup id(@jakarta.annotation.Nullable String id) {
     this.id = JsonNullable.<String>of(id);
     return this;
   }
@@ -123,7 +90,7 @@ public class LoggerResource {
   }
 
 
-  public LoggerResource type(@jakarta.annotation.Nonnull TypeEnum type) {
+  public ResourceLogGroup type(@jakarta.annotation.Nullable String type) {
     this.type = type;
     return this;
   }
@@ -132,22 +99,22 @@ public class LoggerResource {
    * Get type
    * @return type
    */
-  @jakarta.annotation.Nonnull
-  @JsonProperty(value = JSON_PROPERTY_TYPE, required = true)
-  @JsonInclude(value = JsonInclude.Include.ALWAYS)
-  public TypeEnum getType() {
+  @jakarta.annotation.Nullable
+  @JsonProperty(value = JSON_PROPERTY_TYPE, required = false)
+  @JsonInclude(value = JsonInclude.Include.USE_DEFAULTS)
+  public String getType() {
     return type;
   }
 
 
-  @JsonProperty(value = JSON_PROPERTY_TYPE, required = true)
-  @JsonInclude(value = JsonInclude.Include.ALWAYS)
-  public void setType(@jakarta.annotation.Nonnull TypeEnum type) {
+  @JsonProperty(value = JSON_PROPERTY_TYPE, required = false)
+  @JsonInclude(value = JsonInclude.Include.USE_DEFAULTS)
+  public void setType(@jakarta.annotation.Nullable String type) {
     this.type = type;
   }
 
 
-  public LoggerResource attributes(@jakarta.annotation.Nonnull Logger attributes) {
+  public ResourceLogGroup attributes(@jakarta.annotation.Nonnull LogGroup attributes) {
     this.attributes = attributes;
     return this;
   }
@@ -159,20 +126,20 @@ public class LoggerResource {
   @jakarta.annotation.Nonnull
   @JsonProperty(value = JSON_PROPERTY_ATTRIBUTES, required = true)
   @JsonInclude(value = JsonInclude.Include.ALWAYS)
-  public Logger getAttributes() {
+  public LogGroup getAttributes() {
     return attributes;
   }
 
 
   @JsonProperty(value = JSON_PROPERTY_ATTRIBUTES, required = true)
   @JsonInclude(value = JsonInclude.Include.ALWAYS)
-  public void setAttributes(@jakarta.annotation.Nonnull Logger attributes) {
+  public void setAttributes(@jakarta.annotation.Nonnull LogGroup attributes) {
     this.attributes = attributes;
   }
 
 
   /**
-   * Return true if this LoggerResource object is equal to o.
+   * Return true if this Resource_LogGroup_ object is equal to o.
    */
   @Override
   public boolean equals(Object o) {
@@ -182,10 +149,10 @@ public class LoggerResource {
     if (o == null || getClass() != o.getClass()) {
       return false;
     }
-    LoggerResource loggerResource = (LoggerResource) o;
-    return equalsNullable(this.id, loggerResource.id) &&
-        Objects.equals(this.type, loggerResource.type) &&
-        Objects.equals(this.attributes, loggerResource.attributes);
+    ResourceLogGroup resourceLogGroup = (ResourceLogGroup) o;
+    return equalsNullable(this.id, resourceLogGroup.id) &&
+        Objects.equals(this.type, resourceLogGroup.type) &&
+        Objects.equals(this.attributes, resourceLogGroup.attributes);
   }
 
   private static <T> boolean equalsNullable(JsonNullable<T> a, JsonNullable<T> b) {
@@ -207,7 +174,7 @@ public class LoggerResource {
   @Override
   public String toString() {
     StringBuilder sb = new StringBuilder();
-    sb.append("class LoggerResource {\n");
+    sb.append("class ResourceLogGroup {\n");
     sb.append("    id: ").append(toIndentedString(id)).append("\n");
     sb.append("    type: ").append(toIndentedString(type)).append("\n");
     sb.append("    attributes: ").append(toIndentedString(attributes)).append("\n");

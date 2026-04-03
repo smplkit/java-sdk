@@ -24,53 +24,52 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonTypeName;
 import com.fasterxml.jackson.annotation.JsonValue;
-import com.smplkit.internal.generated.logging.model.ResourceLogger;
 import java.util.Arrays;
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 
 
 import com.smplkit.internal.generated.logging.ApiClient;
 /**
- * ResponseLogger
+ * LoggerBulkResponse
  */
 @JsonPropertyOrder({
-  ResponseLogger.JSON_PROPERTY_DATA
+  LoggerBulkResponse.JSON_PROPERTY_REGISTERED
 })
 @jakarta.annotation.Generated(value = "org.openapitools.codegen.languages.JavaClientCodegen", date = "2026-04-03T11:37:40.843497407Z[Etc/UTC]", comments = "Generator version: 7.21.0")
-public class ResponseLogger {
-  public static final String JSON_PROPERTY_DATA = "data";
+public class LoggerBulkResponse {
+  public static final String JSON_PROPERTY_REGISTERED = "registered";
   @jakarta.annotation.Nonnull
-  private ResourceLogger data;
+  private Integer registered;
 
-  public ResponseLogger() { 
+  public LoggerBulkResponse() { 
   }
 
-  public ResponseLogger data(@jakarta.annotation.Nonnull ResourceLogger data) {
-    this.data = data;
+  public LoggerBulkResponse registered(@jakarta.annotation.Nonnull Integer registered) {
+    this.registered = registered;
     return this;
   }
 
   /**
-   * Get data
-   * @return data
+   * Get registered
+   * @return registered
    */
   @jakarta.annotation.Nonnull
-  @JsonProperty(value = JSON_PROPERTY_DATA, required = true)
+  @JsonProperty(value = JSON_PROPERTY_REGISTERED, required = true)
   @JsonInclude(value = JsonInclude.Include.ALWAYS)
-  public ResourceLogger getData() {
-    return data;
+  public Integer getRegistered() {
+    return registered;
   }
 
 
-  @JsonProperty(value = JSON_PROPERTY_DATA, required = true)
+  @JsonProperty(value = JSON_PROPERTY_REGISTERED, required = true)
   @JsonInclude(value = JsonInclude.Include.ALWAYS)
-  public void setData(@jakarta.annotation.Nonnull ResourceLogger data) {
-    this.data = data;
+  public void setRegistered(@jakarta.annotation.Nonnull Integer registered) {
+    this.registered = registered;
   }
 
 
   /**
-   * Return true if this Response_Logger_ object is equal to o.
+   * Return true if this LoggerBulkResponse object is equal to o.
    */
   @Override
   public boolean equals(Object o) {
@@ -80,20 +79,20 @@ public class ResponseLogger {
     if (o == null || getClass() != o.getClass()) {
       return false;
     }
-    ResponseLogger responseLogger = (ResponseLogger) o;
-    return Objects.equals(this.data, responseLogger.data);
+    LoggerBulkResponse loggerBulkResponse = (LoggerBulkResponse) o;
+    return Objects.equals(this.registered, loggerBulkResponse.registered);
   }
 
   @Override
   public int hashCode() {
-    return Objects.hash(data);
+    return Objects.hash(registered);
   }
 
   @Override
   public String toString() {
     StringBuilder sb = new StringBuilder();
-    sb.append("class ResponseLogger {\n");
-    sb.append("    data: ").append(toIndentedString(data)).append("\n");
+    sb.append("class LoggerBulkResponse {\n");
+    sb.append("    registered: ").append(toIndentedString(registered)).append("\n");
     sb.append("}");
     return sb.toString();
   }
@@ -138,9 +137,9 @@ public class ResponseLogger {
 
     StringJoiner joiner = new StringJoiner("&");
 
-    // add `data` to the URL query string
-    if (getData() != null) {
-      joiner.add(getData().toUrlQueryString(prefix + "data" + suffix));
+    // add `registered` to the URL query string
+    if (getRegistered() != null) {
+      joiner.add(String.format(java.util.Locale.ROOT, "%sregistered%s=%s", prefix, suffix, ApiClient.urlEncode(ApiClient.valueToString(getRegistered()))));
     }
 
     return joiner.toString();
