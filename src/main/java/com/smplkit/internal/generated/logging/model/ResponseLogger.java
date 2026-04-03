@@ -36,7 +36,7 @@ import com.smplkit.internal.generated.logging.ApiClient;
 @JsonPropertyOrder({
   ResponseLogger.JSON_PROPERTY_DATA
 })
-@jakarta.annotation.Generated(value = "org.openapitools.codegen.languages.JavaClientCodegen", date = "2026-04-03T09:16:37.567222284Z[Etc/UTC]", comments = "Generator version: 7.21.0")
+@jakarta.annotation.Generated(value = "org.openapitools.codegen.languages.JavaClientCodegen", date = "2026-04-03T05:52:09.142139-04:00[America/New_York]", comments = "Generator version: 7.21.0")
 public class ResponseLogger {
   public static final String JSON_PROPERTY_DATA = "data";
   @jakarta.annotation.Nonnull

@@ -31,6 +31,8 @@ fi
 
 echo "Regenerating clients from OpenAPI specs (using $OPENAPI_GEN)..."
 
+DOWNGRADE="$SCRIPT_DIR/downgrade-spec.py"
+
 for spec in "$SPEC_DIR"/*.json; do
     name=$(basename "$spec" .json)
     pkg_base="com.smplkit.internal.generated.${name}"
@@ -38,12 +40,21 @@ for spec in "$SPEC_DIR"/*.json; do
 
     echo "  Generating $name from $(basename "$spec")..."
 
+    # openapi-generator produces broken AnyOf references for OpenAPI 3.1
+    # anyOf-with-null patterns. Downgrade to 3.0 if needed.
+    gen_spec="$spec"
+    if python3 -c "import json,sys; sys.exit(0 if json.load(open('$spec')).get('openapi','').startswith('3.1') else 1)" 2>/dev/null; then
+        gen_spec=$(mktemp).json
+        python3 "$DOWNGRADE" "$spec" > "$gen_spec"
+        echo "    Downgraded $name spec from 3.1 to 3.0.3"
+    fi
+
     # Generate to a temp directory to avoid polluting the source tree with
     # Maven project scaffolding (pom.xml, README, test files, etc.)
     temp_dir=$(mktemp -d)
 
     $OPENAPI_GEN generate \
-        -i "$spec" \
+        -i "$gen_spec" \
         -g java \
         -o "$temp_dir" \
         --additional-properties="library=native,useJakartaEe=true,invokerPackage=${pkg_base},apiPackage=${pkg_base}.api,modelPackage=${pkg_base}.model" \
@@ -62,6 +73,7 @@ for spec in "$SPEC_DIR"/*.json; do
     fi
 
     rm -rf "$temp_dir"
+    [ "$gen_spec" != "$spec" ] && rm -f "$gen_spec"
 
     echo "  Done: $name"
 done
