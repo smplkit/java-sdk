@@ -36,7 +36,7 @@ import com.smplkit.internal.generated.flags.ApiClient;
 @JsonPropertyOrder({
   ResponseFlag.JSON_PROPERTY_DATA
 })
-@jakarta.annotation.Generated(value = "org.openapitools.codegen.languages.JavaClientCodegen", date = "2026-04-03T09:16:34.784572713Z[Etc/UTC]", comments = "Generator version: 7.21.0")
+@jakarta.annotation.Generated(value = "org.openapitools.codegen.languages.JavaClientCodegen", date = "2026-04-03T09:47:32.953964788Z[Etc/UTC]", comments = "Generator version: 7.21.0")
 public class ResponseFlag {
   public static final String JSON_PROPERTY_DATA = "data";
   @jakarta.annotation.Nonnull
