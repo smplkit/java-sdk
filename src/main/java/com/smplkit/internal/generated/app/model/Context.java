@@ -47,7 +47,7 @@ import com.smplkit.internal.generated.app.ApiClient;
   Context.JSON_PROPERTY_CREATED_AT,
   Context.JSON_PROPERTY_UPDATED_AT
 })
-@jakarta.annotation.Generated(value = "org.openapitools.codegen.languages.JavaClientCodegen", date = "2026-04-04T10:20:56.768759Z[Etc/UTC]", comments = "Generator version: 7.21.0")
+@jakarta.annotation.Generated(value = "org.openapitools.codegen.languages.JavaClientCodegen", date = "2026-04-04T12:30:43.252960504Z[Etc/UTC]", comments = "Generator version: 7.21.0")
 public class Context {
   public static final String JSON_PROPERTY_KEY = "key";
   @jakarta.annotation.Nonnull
