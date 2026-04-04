@@ -610,8 +610,8 @@ public final class FlagsClient {
                 @SuppressWarnings("unchecked")
                 Map<String, Object> attrs = (Map<String, Object>) entry.get("attributes");
                 ContextBulkItem item = new ContextBulkItem()
-                        .id(type + ":" + key)
-                        .name((String) entry.get("name"))
+                        .type(type)
+                        .key(key)
                         .attributes(attrs);
                 items.add(item);
             }

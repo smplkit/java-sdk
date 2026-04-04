@@ -375,9 +375,10 @@ class Phase2CoverageTest {
 
         client.connect();
 
-        // Verify service registration was called with correct id format
+        // Verify service registration was called with correct type and key
         verify(mockContextsApi).bulkRegisterContexts(
-                argThat(req -> req.getContexts().get(0).getId().equals("service:test-svc")));
+                argThat(req -> req.getContexts().get(0).getType().equals("service")
+                        && req.getContexts().get(0).getKey().equals("test-svc")));
         client.close();
     }
 

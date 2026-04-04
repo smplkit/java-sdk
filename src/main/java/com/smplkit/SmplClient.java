@@ -151,7 +151,8 @@ public final class SmplClient implements AutoCloseable {
     private void registerServiceContext() {
         try {
             ContextBulkItem item = new ContextBulkItem()
-                    .id("service:" + service)
+                    .type("service")
+                    .key(service)
                     .attributes(Map.of("name", service));
             ContextBulkRegister reqBody = new ContextBulkRegister()
                     .contexts(List.of(item));
