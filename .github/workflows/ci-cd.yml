@@ -39,6 +39,12 @@ jobs:
           name: coverage-report
           path: build/reports/jacoco/test/
 
+      - name: Upload coverage to Codecov
+        uses: codecov/codecov-action@v5
+        with:
+          token: ${{ secrets.CODECOV_TOKEN }}
+          fail_ci_if_error: false
+
   ci-gate:
     if: always()
     needs: [build]

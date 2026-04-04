@@ -1,6 +1,6 @@
 # smplkit Java SDK
 
-[![Maven Central](https://img.shields.io/maven-central/v/com.smplkit/smplkit-sdk)](https://central.sonatype.com/artifact/com.smplkit/smplkit-sdk) [![Build](https://github.com/smplkit/java-sdk/actions/workflows/ci-cd.yml/badge.svg)](https://github.com/smplkit/java-sdk/actions) [![License](https://img.shields.io/github/license/smplkit/java-sdk)](LICENSE) [![Docs](https://img.shields.io/badge/docs-docs.smplkit.com-blue)](https://docs.smplkit.com)
+[![Maven Central](https://img.shields.io/maven-central/v/com.smplkit/smplkit-sdk)](https://central.sonatype.com/artifact/com.smplkit/smplkit-sdk) [![Build](https://github.com/smplkit/java-sdk/actions/workflows/ci-cd.yml/badge.svg)](https://github.com/smplkit/java-sdk/actions) [![Coverage](https://codecov.io/gh/smplkit/java-sdk/branch/main/graph/badge.svg)](https://codecov.io/gh/smplkit/java-sdk) [![License](https://img.shields.io/github/license/smplkit/java-sdk)](LICENSE) [![Docs](https://img.shields.io/badge/docs-docs.smplkit.com-blue)](https://docs.smplkit.com)
 
 The official Java SDK for [smplkit](https://www.smplkit.com) — simple application infrastructure that just works.
 
