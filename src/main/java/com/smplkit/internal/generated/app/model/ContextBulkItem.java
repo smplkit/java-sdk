@@ -27,10 +27,6 @@ import com.fasterxml.jackson.annotation.JsonValue;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
-import org.openapitools.jackson.nullable.JsonNullable;
-import com.fasterxml.jackson.annotation.JsonIgnore;
-import org.openapitools.jackson.nullable.JsonNullable;
-import java.util.NoSuchElementException;
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 
 
@@ -39,18 +35,19 @@ import com.smplkit.internal.generated.app.ApiClient;
  * ContextBulkItem
  */
 @JsonPropertyOrder({
-  ContextBulkItem.JSON_PROPERTY_ID,
-  ContextBulkItem.JSON_PROPERTY_NAME,
+  ContextBulkItem.JSON_PROPERTY_TYPE,
+  ContextBulkItem.JSON_PROPERTY_KEY,
   ContextBulkItem.JSON_PROPERTY_ATTRIBUTES
 })
-@jakarta.annotation.Generated(value = "org.openapitools.codegen.languages.JavaClientCodegen", date = "2026-04-03T05:52:06.948467-04:00[America/New_York]", comments = "Generator version: 7.21.0")
+@jakarta.annotation.Generated(value = "org.openapitools.codegen.languages.JavaClientCodegen", date = "2026-04-04T09:56:14.535981960Z[Etc/UTC]", comments = "Generator version: 7.21.0")
 public class ContextBulkItem {
-  public static final String JSON_PROPERTY_ID = "id";
+  public static final String JSON_PROPERTY_TYPE = "type";
   @jakarta.annotation.Nonnull
-  private String id;
+  private String type;
 
-  public static final String JSON_PROPERTY_NAME = "name";
-  private JsonNullable<String> name = JsonNullable.<String>undefined();
+  public static final String JSON_PROPERTY_KEY = "key";
+  @jakarta.annotation.Nonnull
+  private String key;
 
   public static final String JSON_PROPERTY_ATTRIBUTES = "attributes";
   @jakarta.annotation.Nullable
@@ -59,59 +56,51 @@ public class ContextBulkItem {
   public ContextBulkItem() { 
   }
 
-  public ContextBulkItem id(@jakarta.annotation.Nonnull String id) {
-    this.id = id;
+  public ContextBulkItem type(@jakarta.annotation.Nonnull String type) {
+    this.type = type;
     return this;
   }
 
   /**
-   * Composite logical ID: type:key (e.g., &#39;user:123&#39;)
-   * @return id
+   * Context type key: &#39;user&#39;, &#39;account&#39;, &#39;device&#39;
+   * @return type
    */
   @jakarta.annotation.Nonnull
-  @JsonProperty(value = JSON_PROPERTY_ID, required = true)
+  @JsonProperty(value = JSON_PROPERTY_TYPE, required = true)
   @JsonInclude(value = JsonInclude.Include.ALWAYS)
-  public String getId() {
-    return id;
+  public String getType() {
+    return type;
   }
 
 
-  @JsonProperty(value = JSON_PROPERTY_ID, required = true)
+  @JsonProperty(value = JSON_PROPERTY_TYPE, required = true)
   @JsonInclude(value = JsonInclude.Include.ALWAYS)
-  public void setId(@jakarta.annotation.Nonnull String id) {
-    this.id = id;
+  public void setType(@jakarta.annotation.Nonnull String type) {
+    this.type = type;
   }
 
 
-  public ContextBulkItem name(@jakarta.annotation.Nullable String name) {
-    this.name = JsonNullable.<String>of(name);
+  public ContextBulkItem key(@jakarta.annotation.Nonnull String key) {
+    this.key = key;
     return this;
   }
 
   /**
-   * Human-readable display name; defaults to key
-   * @return name
+   * Entity identifier: &#39;user-123&#39;, &#39;acme-corp&#39;
+   * @return key
    */
-  @jakarta.annotation.Nullable
-  @JsonIgnore
-  public String getName() {
-        return name.orElse(null);
+  @jakarta.annotation.Nonnull
+  @JsonProperty(value = JSON_PROPERTY_KEY, required = true)
+  @JsonInclude(value = JsonInclude.Include.ALWAYS)
+  public String getKey() {
+    return key;
   }
 
-  @JsonProperty(value = JSON_PROPERTY_NAME, required = false)
-  @JsonInclude(value = JsonInclude.Include.USE_DEFAULTS)
 
-  public JsonNullable<String> getName_JsonNullable() {
-    return name;
-  }
-  
-  @JsonProperty(JSON_PROPERTY_NAME)
-  public void setName_JsonNullable(JsonNullable<String> name) {
-    this.name = name;
-  }
-
-  public void setName(@jakarta.annotation.Nullable String name) {
-    this.name = JsonNullable.<String>of(name);
+  @JsonProperty(value = JSON_PROPERTY_KEY, required = true)
+  @JsonInclude(value = JsonInclude.Include.ALWAYS)
+  public void setKey(@jakarta.annotation.Nonnull String key) {
+    this.key = key;
   }
 
 
@@ -159,33 +148,22 @@ public class ContextBulkItem {
       return false;
     }
     ContextBulkItem contextBulkItem = (ContextBulkItem) o;
-    return Objects.equals(this.id, contextBulkItem.id) &&
-        equalsNullable(this.name, contextBulkItem.name) &&
+    return Objects.equals(this.type, contextBulkItem.type) &&
+        Objects.equals(this.key, contextBulkItem.key) &&
         Objects.equals(this.attributes, contextBulkItem.attributes);
-  }
-
-  private static <T> boolean equalsNullable(JsonNullable<T> a, JsonNullable<T> b) {
-    return a == b || (a != null && b != null && a.isPresent() && b.isPresent() && Objects.deepEquals(a.get(), b.get()));
   }
 
   @Override
   public int hashCode() {
-    return Objects.hash(id, hashCodeNullable(name), attributes);
-  }
-
-  private static <T> int hashCodeNullable(JsonNullable<T> a) {
-    if (a == null) {
-      return 1;
-    }
-    return a.isPresent() ? Arrays.deepHashCode(new Object[]{a.get()}) : 31;
+    return Objects.hash(type, key, attributes);
   }
 
   @Override
   public String toString() {
     StringBuilder sb = new StringBuilder();
     sb.append("class ContextBulkItem {\n");
-    sb.append("    id: ").append(toIndentedString(id)).append("\n");
-    sb.append("    name: ").append(toIndentedString(name)).append("\n");
+    sb.append("    type: ").append(toIndentedString(type)).append("\n");
+    sb.append("    key: ").append(toIndentedString(key)).append("\n");
     sb.append("    attributes: ").append(toIndentedString(attributes)).append("\n");
     sb.append("}");
     return sb.toString();
@@ -231,14 +209,14 @@ public class ContextBulkItem {
 
     StringJoiner joiner = new StringJoiner("&");
 
-    // add `id` to the URL query string
-    if (getId() != null) {
-      joiner.add(String.format(java.util.Locale.ROOT, "%sid%s=%s", prefix, suffix, ApiClient.urlEncode(ApiClient.valueToString(getId()))));
+    // add `type` to the URL query string
+    if (getType() != null) {
+      joiner.add(String.format(java.util.Locale.ROOT, "%stype%s=%s", prefix, suffix, ApiClient.urlEncode(ApiClient.valueToString(getType()))));
     }
 
-    // add `name` to the URL query string
-    if (getName() != null) {
-      joiner.add(String.format(java.util.Locale.ROOT, "%sname%s=%s", prefix, suffix, ApiClient.urlEncode(ApiClient.valueToString(getName()))));
+    // add `key` to the URL query string
+    if (getKey() != null) {
+      joiner.add(String.format(java.util.Locale.ROOT, "%skey%s=%s", prefix, suffix, ApiClient.urlEncode(ApiClient.valueToString(getKey()))));
     }
 
     // add `attributes` to the URL query string
