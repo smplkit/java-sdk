@@ -57,7 +57,7 @@ for spec in "$SPEC_DIR"/*.json; do
         -i "$gen_spec" \
         -g java \
         -o "$temp_dir" \
-        --additional-properties="library=native,useJakartaEe=true,invokerPackage=${pkg_base},apiPackage=${pkg_base}.api,modelPackage=${pkg_base}.model" \
+        --additional-properties="library=native,useJakartaEe=true,hideGenerationTimestamp=true,invokerPackage=${pkg_base},apiPackage=${pkg_base}.api,modelPackage=${pkg_base}.model" \
         2>&1 | tail -1
 
     # Remove previously generated Java files for this spec (preserve package-info.java)

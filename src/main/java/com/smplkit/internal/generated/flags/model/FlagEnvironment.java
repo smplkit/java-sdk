@@ -44,7 +44,7 @@ import com.smplkit.internal.generated.flags.ApiClient;
   FlagEnvironment.JSON_PROPERTY_DEFAULT,
   FlagEnvironment.JSON_PROPERTY_RULES
 })
-@jakarta.annotation.Generated(value = "org.openapitools.codegen.languages.JavaClientCodegen", date = "2026-04-04T10:36:12.945950286Z[Etc/UTC]", comments = "Generator version: 7.21.0")
+@jakarta.annotation.Generated(value = "org.openapitools.codegen.languages.JavaClientCodegen", comments = "Generator version: 7.21.0")
 public class FlagEnvironment {
   public static final String JSON_PROPERTY_ENABLED = "enabled";
   @jakarta.annotation.Nullable

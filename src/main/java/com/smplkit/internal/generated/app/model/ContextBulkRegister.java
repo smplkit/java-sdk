@@ -38,7 +38,7 @@ import com.smplkit.internal.generated.app.ApiClient;
 @JsonPropertyOrder({
   ContextBulkRegister.JSON_PROPERTY_CONTEXTS
 })
-@jakarta.annotation.Generated(value = "org.openapitools.codegen.languages.JavaClientCodegen", date = "2026-04-04T12:30:43.252960504Z[Etc/UTC]", comments = "Generator version: 7.21.0")
+@jakarta.annotation.Generated(value = "org.openapitools.codegen.languages.JavaClientCodegen", comments = "Generator version: 7.21.0")
 public class ContextBulkRegister {
   public static final String JSON_PROPERTY_CONTEXTS = "contexts";
   @jakarta.annotation.Nonnull
