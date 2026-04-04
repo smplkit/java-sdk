@@ -36,7 +36,7 @@ import com.smplkit.internal.generated.flags.ApiClient;
   FlagValue.JSON_PROPERTY_NAME,
   FlagValue.JSON_PROPERTY_VALUE
 })
-@jakarta.annotation.Generated(value = "org.openapitools.codegen.languages.JavaClientCodegen", date = "2026-04-03T05:52:08.517984-04:00[America/New_York]", comments = "Generator version: 7.21.0")
+@jakarta.annotation.Generated(value = "org.openapitools.codegen.languages.JavaClientCodegen", date = "2026-04-04T10:36:12.945950286Z[Etc/UTC]", comments = "Generator version: 7.21.0")
 public class FlagValue {
   public static final String JSON_PROPERTY_NAME = "name";
   @jakarta.annotation.Nonnull
