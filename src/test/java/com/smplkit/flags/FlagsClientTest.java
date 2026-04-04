@@ -40,7 +40,8 @@ class FlagsClientTest {
     @BeforeEach
     void setUp() {
         mockApi = Mockito.mock(FlagsApi.class);
-        client = new FlagsClient(mockApi, HttpClient.newHttpClient(), "test-key",
+        client = new FlagsClient(mockApi, null, null,
+                HttpClient.newHttpClient(), "test-key",
                 "https://flags.smplkit.com", "https://app.smplkit.com", Duration.ofSeconds(5));
     }
 

@@ -8,6 +8,16 @@ import com.smplkit.errors.SmplException;
 import com.smplkit.errors.SmplNotConnectedException;
 import com.smplkit.errors.SmplNotFoundException;
 import com.smplkit.errors.SmplValidationException;
+import com.smplkit.internal.generated.app.api.ContextTypesApi;
+import com.smplkit.internal.generated.app.api.ContextsApi;
+import com.smplkit.internal.generated.app.model.ContextBulkItem;
+import com.smplkit.internal.generated.app.model.ContextBulkRegister;
+import com.smplkit.internal.generated.app.model.ContextType;
+import com.smplkit.internal.generated.app.model.ContextTypeListResponse;
+import com.smplkit.internal.generated.app.model.ContextTypeResource;
+import com.smplkit.internal.generated.app.model.ContextTypeResponse;
+import com.smplkit.internal.generated.app.model.ContextListResponse;
+import com.smplkit.internal.generated.app.model.ContextResource;
 import com.smplkit.internal.generated.flags.ApiException;
 import com.smplkit.internal.generated.flags.api.FlagsApi;
 import com.smplkit.internal.generated.flags.model.Flag;
@@ -23,10 +33,7 @@ import io.github.jamsesso.jsonlogic.JsonLogicException;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import org.openapitools.jackson.nullable.JsonNullableModule;
 
-import java.net.URI;
 import java.net.http.HttpClient;
-import java.net.http.HttpRequest;
-import java.net.http.HttpResponse;
 import java.time.Duration;
 import java.time.Instant;
 import java.time.OffsetDateTime;
@@ -70,6 +77,8 @@ public final class FlagsClient {
     private static final int CONTEXT_BATCH_FLUSH_SIZE = 100;
 
     private final FlagsApi flagsApi;
+    private final ContextTypesApi contextTypesApi;
+    private final ContextsApi contextsApi;
     private final HttpClient httpClient;
     private final String apiKey;
     private final String flagsBaseUrl;
@@ -125,9 +134,12 @@ public final class FlagsClient {
     /**
      * Creates a new FlagsClient.
      */
-    public FlagsClient(FlagsApi flagsApi, HttpClient httpClient, String apiKey,
+    public FlagsClient(FlagsApi flagsApi, ContextTypesApi contextTypesApi, ContextsApi contextsApi,
+                       HttpClient httpClient, String apiKey,
                        String flagsBaseUrl, String appBaseUrl, Duration timeout) {
         this.flagsApi = flagsApi;
+        this.contextTypesApi = contextTypesApi;
+        this.contextsApi = contextsApi;
         this.httpClient = httpClient;
         this.apiKey = apiKey;
         this.flagsBaseUrl = flagsBaseUrl;
@@ -147,6 +159,8 @@ public final class FlagsClient {
     /** Package-private test constructor. */
     FlagsClient() {
         this.flagsApi = null;
+        this.contextTypesApi = null;
+        this.contextsApi = null;
         this.httpClient = null;
         this.apiKey = null;
         this.flagsBaseUrl = null;
@@ -334,52 +348,68 @@ public final class FlagsClient {
     /**
      * Creates a context type.
      */
-    @SuppressWarnings("unchecked")
     public Map<String, Object> createContextType(String key, Map<String, Object> options) {
-        Map<String, Object> attrs = new HashMap<>();
-        attrs.put("key", key);
-        if (options != null) {
-            if (options.containsKey("name")) attrs.put("name", options.get("name"));
-            if (options.containsKey("attributes")) attrs.put("attributes", options.get("attributes"));
-        }
-        Map<String, Object> data = Map.of("data", Map.of("type", "context_type", "attributes", attrs));
-        String responseBody = doAppRequest("POST", "/api/v1/context_types", data);
         try {
-            Map<String, Object> resp = OBJECT_MAPPER.readValue(responseBody, new TypeReference<>() {});
-            return (Map<String, Object>) resp.get("data");
-        } catch (Exception e) {
-            throw new SmplException("Failed to parse context type response", 0, responseBody);
+            ContextType attrs = new ContextType().key(key).name(key);
+            if (options != null) {
+                if (options.containsKey("name")) attrs.name((String) options.get("name"));
+                if (options.containsKey("attributes")) {
+                    @SuppressWarnings("unchecked")
+                    Map<String, Object> attrMap = (Map<String, Object>) options.get("attributes");
+                    attrs.attributes(attrMap);
+                }
+            }
+            ContextTypeResource resource = new ContextTypeResource()
+                    .type(ContextTypeResource.TypeEnum.CONTEXT_TYPE)
+                    .attributes(attrs);
+            ContextTypeResponse reqBody = new ContextTypeResponse().data(resource);
+            ContextTypeResponse resp = contextTypesApi.createContextType(reqBody);
+            return contextTypeResourceToMap(resp.getData());
+        } catch (com.smplkit.internal.generated.app.ApiException e) {
+            throw mapAppApiException(e);
         }
     }
 
     /**
      * Updates a context type.
      */
-    @SuppressWarnings("unchecked")
     public Map<String, Object> updateContextType(String id, Map<String, Object> options) {
-        Map<String, Object> attrs = new HashMap<>(options);
-        Map<String, Object> data = Map.of("data", Map.of("type", "context_type", "id", id, "attributes", attrs));
-        String responseBody = doAppRequest("PUT", "/api/v1/context_types/" + id, data);
         try {
-            Map<String, Object> resp = OBJECT_MAPPER.readValue(responseBody, new TypeReference<>() {});
-            return (Map<String, Object>) resp.get("data");
-        } catch (Exception e) {
-            throw new SmplException("Failed to parse context type response", 0, responseBody);
+            ContextType attrs = new ContextType();
+            if (options.containsKey("key")) attrs.key((String) options.get("key"));
+            if (options.containsKey("name")) attrs.name((String) options.get("name"));
+            if (options.containsKey("attributes")) {
+                @SuppressWarnings("unchecked")
+                Map<String, Object> attrMap = (Map<String, Object>) options.get("attributes");
+                attrs.attributes(attrMap);
+            }
+            ContextTypeResource resource = new ContextTypeResource()
+                    .id(id)
+                    .type(ContextTypeResource.TypeEnum.CONTEXT_TYPE)
+                    .attributes(attrs);
+            ContextTypeResponse reqBody = new ContextTypeResponse().data(resource);
+            ContextTypeResponse resp = contextTypesApi.updateContextType(UUID.fromString(id), reqBody);
+            return contextTypeResourceToMap(resp.getData());
+        } catch (com.smplkit.internal.generated.app.ApiException e) {
+            throw mapAppApiException(e);
         }
     }
 
     /**
      * Lists all context types.
      */
-    @SuppressWarnings("unchecked")
     public List<Map<String, Object>> listContextTypes() {
-        String responseBody = doAppRequest("GET", "/api/v1/context_types", null);
         try {
-            Map<String, Object> resp = OBJECT_MAPPER.readValue(responseBody, new TypeReference<>() {});
-            Object data = resp.get("data");
-            return data instanceof List ? (List<Map<String, Object>>) data : List.of();
-        } catch (Exception e) {
-            throw new SmplException("Failed to parse context types response", 0, responseBody);
+            ContextTypeListResponse resp = contextTypesApi.listContextTypes();
+            List<Map<String, Object>> result = new ArrayList<>();
+            if (resp.getData() != null) {
+                for (ContextTypeResource r : resp.getData()) {
+                    result.add(contextTypeResourceToMap(r));
+                }
+            }
+            return result;
+        } catch (com.smplkit.internal.generated.app.ApiException e) {
+            throw mapAppApiException(e);
         }
     }
 
@@ -387,22 +417,28 @@ public final class FlagsClient {
      * Deletes a context type.
      */
     public void deleteContextType(String id) {
-        doAppRequest("DELETE", "/api/v1/context_types/" + id, null);
+        try {
+            contextTypesApi.deleteContextType(UUID.fromString(id));
+        } catch (com.smplkit.internal.generated.app.ApiException e) {
+            throw mapAppApiException(e);
+        }
     }
 
     /**
      * Lists contexts for a given context type key.
      */
-    @SuppressWarnings("unchecked")
     public List<Map<String, Object>> listContexts(String contextTypeKey) {
-        String responseBody = doAppRequest("GET",
-                "/api/v1/contexts?filter[context_type]=" + contextTypeKey, null);
         try {
-            Map<String, Object> resp = OBJECT_MAPPER.readValue(responseBody, new TypeReference<>() {});
-            Object data = resp.get("data");
-            return data instanceof List ? (List<Map<String, Object>>) data : List.of();
-        } catch (Exception e) {
-            throw new SmplException("Failed to parse contexts response", 0, responseBody);
+            ContextListResponse resp = contextsApi.listContexts(contextTypeKey);
+            List<Map<String, Object>> result = new ArrayList<>();
+            if (resp.getData() != null) {
+                for (ContextResource r : resp.getData()) {
+                    result.add(OBJECT_MAPPER.convertValue(r, new TypeReference<>() {}));
+                }
+            }
+            return result;
+        } catch (com.smplkit.internal.generated.app.ApiException e) {
+            throw mapAppApiException(e);
         }
     }
 
@@ -566,9 +602,21 @@ public final class FlagsClient {
         List<Map<String, Object>> batch = drainPendingContexts();
         if (batch.isEmpty()) return;
 
-        Map<String, Object> body = Map.of("contexts", batch);
         try {
-            doAppRequest("POST", "/api/v1/contexts/bulk", body);
+            List<ContextBulkItem> items = new ArrayList<>();
+            for (Map<String, Object> entry : batch) {
+                String type = (String) entry.get("type");
+                String key = (String) entry.get("key");
+                @SuppressWarnings("unchecked")
+                Map<String, Object> attrs = (Map<String, Object>) entry.get("attributes");
+                ContextBulkItem item = new ContextBulkItem()
+                        .id(type + ":" + key)
+                        .name((String) entry.get("name"))
+                        .attributes(attrs);
+                items.add(item);
+            }
+            ContextBulkRegister reqBody = new ContextBulkRegister().contexts(items);
+            contextsApi.bulkRegisterContexts(reqBody);
         } catch (Exception e) {
             LOG.log(Level.FINE, "Context flush failed", e);
         }
@@ -857,51 +905,23 @@ public final class FlagsClient {
     }
 
     // -----------------------------------------------------------------------
-    // Internal — HTTP helpers for app service (context types, contexts)
+    // Internal — helpers for generated app API
     // -----------------------------------------------------------------------
 
-    private String doAppRequest(String method, String path, Object body) {
-        try {
-            String url = appBaseUrl + path;
-            HttpRequest.Builder builder = HttpRequest.newBuilder()
-                    .uri(URI.create(url))
-                    .header("Authorization", "Bearer " + apiKey)
-                    .header("Content-Type", "application/json")
-                    .header("Accept", "application/json");
+    private Map<String, Object> contextTypeResourceToMap(ContextTypeResource resource) {
+        return OBJECT_MAPPER.convertValue(resource, new TypeReference<>() {});
+    }
 
-            if (timeout != null) {
-                builder.timeout(timeout);
-            }
-
-            switch (method) {
-                case "GET" -> builder.GET();
-                case "DELETE" -> builder.DELETE();
-                case "POST" -> builder.method("POST", HttpRequest.BodyPublishers.ofString(
-                        OBJECT_MAPPER.writeValueAsString(body)));
-                case "PUT" -> builder.method("PUT", HttpRequest.BodyPublishers.ofString(
-                        OBJECT_MAPPER.writeValueAsString(body)));
-            }
-
-            HttpResponse<String> response = httpClient.send(builder.build(),
-                    HttpResponse.BodyHandlers.ofString());
-
-            int status = response.statusCode();
-            if (status >= 400) {
-                String msg = "HTTP " + status;
-                String respBody = response.body();
-                throw switch (status) {
-                    case 404 -> new SmplNotFoundException(msg, respBody);
-                    case 409 -> new SmplConflictException(msg, respBody);
-                    case 422 -> new SmplValidationException(msg, respBody);
-                    default -> new SmplException(msg, status, respBody);
-                };
-            }
-            return response.body();
-        } catch (SmplException e) {
-            throw e;
-        } catch (Exception e) {
-            throw new SmplException("Request to app service failed: " + e.getMessage(), 0, null, e);
-        }
+    private SmplException mapAppApiException(com.smplkit.internal.generated.app.ApiException e) {
+        int status = e.getCode();
+        String body = e.getResponseBody();
+        String msg = "HTTP " + status;
+        return switch (status) {
+            case 404 -> new SmplNotFoundException(msg, body);
+            case 409 -> new SmplConflictException(msg, body);
+            case 422 -> new SmplValidationException(msg, body);
+            default -> new SmplException(msg, status, body);
+        };
     }
 
     // -----------------------------------------------------------------------

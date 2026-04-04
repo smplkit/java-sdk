@@ -7,6 +7,15 @@ import com.smplkit.errors.SmplConflictException;
 import com.smplkit.errors.SmplException;
 import com.smplkit.errors.SmplNotFoundException;
 import com.smplkit.errors.SmplValidationException;
+import com.smplkit.internal.generated.app.api.ContextTypesApi;
+import com.smplkit.internal.generated.app.api.ContextsApi;
+import com.smplkit.internal.generated.app.model.ContextBulkRegister;
+import com.smplkit.internal.generated.app.model.ContextListResponse;
+import com.smplkit.internal.generated.app.model.ContextResource;
+import com.smplkit.internal.generated.app.model.ContextType;
+import com.smplkit.internal.generated.app.model.ContextTypeListResponse;
+import com.smplkit.internal.generated.app.model.ContextTypeResource;
+import com.smplkit.internal.generated.app.model.ContextTypeResponse;
 import com.smplkit.internal.generated.flags.ApiException;
 import com.smplkit.internal.generated.flags.api.FlagsApi;
 import com.smplkit.internal.generated.flags.model.FlagListResponse;
@@ -16,12 +25,11 @@ import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;
 
 import java.net.http.HttpClient;
-import java.net.http.HttpRequest;
-import java.net.http.HttpResponse;
 import java.time.Duration;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.UUID;
 import java.util.concurrent.atomic.AtomicInteger;
 
 import static org.junit.jupiter.api.Assertions.*;
@@ -38,7 +46,8 @@ class FlagsClientCoverageTest {
             .registerModule(new JavaTimeModule())
             .registerModule(new JsonNullableModule());
     private FlagsApi mockApi;
-    private HttpClient mockHttpClient;
+    private ContextTypesApi mockContextTypesApi;
+    private ContextsApi mockContextsApi;
     private FlagsClient client;
     private static final String FLAG_ID = "11111111-1111-1111-1111-111111111111";
 
@@ -46,29 +55,26 @@ class FlagsClientCoverageTest {
     @BeforeEach
     void setUp() throws Exception {
         mockApi = Mockito.mock(FlagsApi.class);
-        mockHttpClient = Mockito.mock(HttpClient.class);
-        client = new FlagsClient(mockApi, mockHttpClient, "test-key",
+        mockContextTypesApi = Mockito.mock(ContextTypesApi.class);
+        mockContextsApi = Mockito.mock(ContextsApi.class);
+        client = new FlagsClient(mockApi, mockContextTypesApi, mockContextsApi,
+                Mockito.mock(HttpClient.class), "test-key",
                 "https://flags.smplkit.com", "https://app.smplkit.com", Duration.ofSeconds(5));
     }
 
-    // --- doAppRequest / context type methods ---
-
-    @SuppressWarnings("unchecked")
-    private HttpResponse<String> mockHttpResponse(int status, String body) throws Exception {
-        HttpResponse<String> response = Mockito.mock(HttpResponse.class);
-        when(response.statusCode()).thenReturn(status);
-        when(response.body()).thenReturn(body);
-        when(mockHttpClient.send(any(HttpRequest.class), any(HttpResponse.BodyHandler.class)))
-                .thenReturn(response);
-        return response;
-    }
+    // --- context type methods ---
 
     @Test
     void createContextType_success() throws Exception {
-        mockHttpResponse(200, "{\"data\":{\"id\":\"ct-1\",\"attributes\":{\"key\":\"user\"}}}");
+        ContextTypeResource resource = new ContextTypeResource()
+                .id("ct-1")
+                .type(ContextTypeResource.TypeEnum.CONTEXT_TYPE)
+                .attributes(new ContextType().key("user").name("User"));
+        when(mockContextTypesApi.createContextType(any(ContextTypeResponse.class)))
+                .thenReturn(new ContextTypeResponse().data(resource));
 
         Map<String, Object> result = client.createContextType("user",
-                Map.of("name", "User", "attributes", List.of("plan", "region")));
+                Map.of("name", "User", "attributes", Map.of("plan", "string")));
 
         assertNotNull(result);
         assertEquals("ct-1", result.get("id"));
@@ -76,124 +82,147 @@ class FlagsClientCoverageTest {
 
     @Test
     void createContextType_withNullOptions() throws Exception {
-        mockHttpResponse(200, "{\"data\":{\"id\":\"ct-1\",\"attributes\":{\"key\":\"user\"}}}");
+        ContextTypeResource resource = new ContextTypeResource()
+                .id("ct-1")
+                .type(ContextTypeResource.TypeEnum.CONTEXT_TYPE)
+                .attributes(new ContextType().key("user").name("user"));
+        when(mockContextTypesApi.createContextType(any(ContextTypeResponse.class)))
+                .thenReturn(new ContextTypeResponse().data(resource));
 
         Map<String, Object> result = client.createContextType("user", null);
         assertNotNull(result);
     }
 
     @Test
-    void createContextType_parseError() throws Exception {
-        mockHttpResponse(200, "not-json");
-
-        assertThrows(SmplException.class, () -> client.createContextType("user", null));
-    }
-
-    @Test
     void updateContextType_success() throws Exception {
-        mockHttpResponse(200, "{\"data\":{\"id\":\"ct-1\",\"attributes\":{\"key\":\"user\",\"name\":\"Updated\"}}}");
+        String id = "11111111-1111-1111-1111-111111111111";
+        ContextTypeResource resource = new ContextTypeResource()
+                .id(id)
+                .type(ContextTypeResource.TypeEnum.CONTEXT_TYPE)
+                .attributes(new ContextType().key("user").name("Updated"));
+        when(mockContextTypesApi.updateContextType(eq(UUID.fromString(id)), any(ContextTypeResponse.class)))
+                .thenReturn(new ContextTypeResponse().data(resource));
 
-        Map<String, Object> result = client.updateContextType("ct-1", Map.of("name", "Updated"));
+        Map<String, Object> result = client.updateContextType(id, Map.of("name", "Updated"));
         assertNotNull(result);
     }
 
     @Test
-    void updateContextType_parseError() throws Exception {
-        mockHttpResponse(200, "not-json");
-
-        assertThrows(SmplException.class, () -> client.updateContextType("ct-1", Map.of()));
-    }
-
-    @Test
     void listContextTypes_success() throws Exception {
-        mockHttpResponse(200, "{\"data\":[{\"id\":\"ct-1\"},{\"id\":\"ct-2\"}]}");
+        ContextTypeResource r1 = new ContextTypeResource().id("ct-1")
+                .type(ContextTypeResource.TypeEnum.CONTEXT_TYPE)
+                .attributes(new ContextType().key("user").name("User"));
+        ContextTypeResource r2 = new ContextTypeResource().id("ct-2")
+                .type(ContextTypeResource.TypeEnum.CONTEXT_TYPE)
+                .attributes(new ContextType().key("device").name("Device"));
+        when(mockContextTypesApi.listContextTypes())
+                .thenReturn(new ContextTypeListResponse().data(List.of(r1, r2)));
 
         List<Map<String, Object>> result = client.listContextTypes();
         assertEquals(2, result.size());
     }
 
     @Test
-    void listContextTypes_nonListData() throws Exception {
-        mockHttpResponse(200, "{\"data\":\"not-a-list\"}");
+    void updateContextType_withKeyAndAttributes() throws Exception {
+        String id = "11111111-1111-1111-1111-111111111111";
+        ContextTypeResource resource = new ContextTypeResource()
+                .id(id)
+                .type(ContextTypeResource.TypeEnum.CONTEXT_TYPE)
+                .attributes(new ContextType().key("user-v2").name("User"));
+        when(mockContextTypesApi.updateContextType(eq(UUID.fromString(id)), any(ContextTypeResponse.class)))
+                .thenReturn(new ContextTypeResponse().data(resource));
 
-        List<Map<String, Object>> result = client.listContextTypes();
-        assertTrue(result.isEmpty());
+        Map<String, Object> result = client.updateContextType(id,
+                Map.of("key", "user-v2", "name", "User", "attributes", Map.of("plan", "string")));
+        assertNotNull(result);
     }
 
     @Test
-    void listContextTypes_parseError() throws Exception {
-        mockHttpResponse(200, "not-json");
+    void updateContextType_apiError() throws Exception {
+        String id = "11111111-1111-1111-1111-111111111111";
+        when(mockContextTypesApi.updateContextType(eq(UUID.fromString(id)), any(ContextTypeResponse.class)))
+                .thenThrow(new com.smplkit.internal.generated.app.ApiException(500, "server error"));
+
+        assertThrows(SmplException.class, () -> client.updateContextType(id, Map.of("name", "X")));
+    }
+
+    @Test
+    void listContextTypes_apiError() throws Exception {
+        when(mockContextTypesApi.listContextTypes())
+                .thenThrow(new com.smplkit.internal.generated.app.ApiException(500, "server error"));
 
         assertThrows(SmplException.class, () -> client.listContextTypes());
     }
 
     @Test
     void deleteContextType_success() throws Exception {
-        mockHttpResponse(200, "");
+        String id = "11111111-1111-1111-1111-111111111111";
+        doNothing().when(mockContextTypesApi).deleteContextType(UUID.fromString(id));
 
-        assertDoesNotThrow(() -> client.deleteContextType("ct-1"));
+        assertDoesNotThrow(() -> client.deleteContextType(id));
     }
 
     @Test
     void listContexts_success() throws Exception {
-        mockHttpResponse(200, "{\"data\":[{\"id\":\"ctx-1\"},{\"id\":\"ctx-2\"}]}");
+        ContextResource ctx1 = new ContextResource().id("ctx-1");
+        ContextResource ctx2 = new ContextResource().id("ctx-2");
+        when(mockContextsApi.listContexts(eq("user")))
+                .thenReturn(new ContextListResponse().data(List.of(ctx1, ctx2)));
 
         List<Map<String, Object>> result = client.listContexts("user");
         assertEquals(2, result.size());
     }
 
     @Test
-    void listContexts_nonListData() throws Exception {
-        mockHttpResponse(200, "{\"data\":\"not-a-list\"}");
+    void listContexts_usesContextTypeId() throws Exception {
+        when(mockContextsApi.listContexts(eq("device")))
+                .thenReturn(new ContextListResponse().data(List.of()));
 
-        List<Map<String, Object>> result = client.listContexts("user");
-        assertTrue(result.isEmpty());
+        client.listContexts("device");
+        verify(mockContextsApi).listContexts("device");
+    }
+
+    // --- App API error status codes ---
+
+    @Test
+    void contextType_404_throwsNotFound() throws Exception {
+        String id = "11111111-1111-1111-1111-111111111111";
+        doThrow(new com.smplkit.internal.generated.app.ApiException(404, "not found"))
+                .when(mockContextTypesApi).deleteContextType(UUID.fromString(id));
+
+        assertThrows(SmplNotFoundException.class, () -> client.deleteContextType(id));
     }
 
     @Test
-    void listContexts_parseError() throws Exception {
-        mockHttpResponse(200, "not-json");
-
-        assertThrows(SmplException.class, () -> client.listContexts("user"));
-    }
-
-    // --- doAppRequest HTTP error status codes ---
-
-    @Test
-    void doAppRequest_404_throwsNotFound() throws Exception {
-        mockHttpResponse(404, "not found");
-
-        assertThrows(SmplNotFoundException.class, () -> client.deleteContextType("ct-1"));
-    }
-
-    @Test
-    void doAppRequest_409_throwsConflict() throws Exception {
-        mockHttpResponse(409, "conflict");
+    void contextType_409_throwsConflict() throws Exception {
+        when(mockContextTypesApi.createContextType(any(ContextTypeResponse.class)))
+                .thenThrow(new com.smplkit.internal.generated.app.ApiException(409, "conflict"));
 
         assertThrows(SmplConflictException.class, () -> client.createContextType("user", null));
     }
 
     @Test
-    void doAppRequest_422_throwsValidation() throws Exception {
-        mockHttpResponse(422, "invalid");
+    void contextType_422_throwsValidation() throws Exception {
+        when(mockContextTypesApi.createContextType(any(ContextTypeResponse.class)))
+                .thenThrow(new com.smplkit.internal.generated.app.ApiException(422, "invalid"));
 
         assertThrows(SmplValidationException.class, () -> client.createContextType("user", null));
     }
 
     @Test
-    void doAppRequest_500_throwsGeneric() throws Exception {
-        mockHttpResponse(500, "server error");
+    void contextType_500_throwsGeneric() throws Exception {
+        when(mockContextTypesApi.createContextType(any(ContextTypeResponse.class)))
+                .thenThrow(new com.smplkit.internal.generated.app.ApiException(500, "server error"));
 
         assertThrows(SmplException.class, () -> client.createContextType("user", null));
     }
 
-    @SuppressWarnings("unchecked")
     @Test
-    void doAppRequest_connectionFailure_throwsSmplException() throws Exception {
-        when(mockHttpClient.send(any(HttpRequest.class), any(HttpResponse.BodyHandler.class)))
-                .thenThrow(new java.io.IOException("connection refused"));
+    void listContexts_apiException() throws Exception {
+        when(mockContextsApi.listContexts(anyString()))
+                .thenThrow(new com.smplkit.internal.generated.app.ApiException(500, "server error"));
 
-        assertThrows(SmplException.class, () -> client.createContextType("user", null));
+        assertThrows(SmplException.class, () -> client.listContexts("user"));
     }
 
     // --- Stateless evaluate ---
@@ -240,7 +269,6 @@ class FlagsClientCoverageTest {
 
     @Test
     void flushContexts_sendsBufferedContexts() throws Exception {
-        mockHttpResponse(200, "");
         setupFlagStore("feature-x", "BOOLEAN", false, Map.of(
                 "staging", Map.of("enabled", true, "default", true)
         ));
@@ -248,7 +276,7 @@ class FlagsClientCoverageTest {
         client.register(new Context("user", "u-1", Map.of("plan", "premium")));
         client.flushContexts();
 
-        verify(mockHttpClient).send(any(HttpRequest.class), any(HttpResponse.BodyHandler.class));
+        verify(mockContextsApi).bulkRegisterContexts(any(ContextBulkRegister.class));
     }
 
     @Test
@@ -257,15 +285,14 @@ class FlagsClientCoverageTest {
 
         client.flushContexts();
 
-        // No HTTP call should have been made
-        verify(mockHttpClient, never()).send(any(HttpRequest.class), any(HttpResponse.BodyHandler.class));
+        // No API call should have been made
+        verify(mockContextsApi, never()).bulkRegisterContexts(any(ContextBulkRegister.class));
     }
 
     @Test
-    @SuppressWarnings("unchecked")
     void flushContexts_handlesException() throws Exception {
-        when(mockHttpClient.send(any(HttpRequest.class), any(HttpResponse.BodyHandler.class)))
-                .thenThrow(new java.io.IOException("fail"));
+        when(mockContextsApi.bulkRegisterContexts(any(ContextBulkRegister.class)))
+                .thenThrow(new com.smplkit.internal.generated.app.ApiException(500, "fail"));
 
         setupFlagStore("feature-x", "BOOLEAN", false, Map.of(
                 "staging", Map.of("enabled", true)
@@ -273,7 +300,7 @@ class FlagsClientCoverageTest {
 
         client.register(new Context("user", "u-1", Map.of("plan", "premium")));
 
-        // Should not throw even though HTTP fails
+        // Should not throw even though API fails
         assertDoesNotThrow(() -> client.flushContexts());
     }
 
@@ -472,7 +499,6 @@ class FlagsClientCoverageTest {
 
     @Test
     void evaluateHandle_triggersEagerFlush_whenBatchFull() throws Exception {
-        mockHttpResponse(200, "");
         setupFlagStore("feature-x", "BOOLEAN", false, Map.of(
                 "staging", Map.of("enabled", true, "default", true)
         ));
@@ -491,16 +517,21 @@ class FlagsClientCoverageTest {
         Thread.sleep(100);
     }
 
-    // --- doAppRequest with PUT method ---
+    // --- updateContextType calls generated API ---
 
     @Test
-    void doAppRequest_putMethod() throws Exception {
-        mockHttpResponse(200, "{\"data\":{\"id\":\"ct-1\"}}");
+    void updateContextType_callsGeneratedApi() throws Exception {
+        String id = "11111111-1111-1111-1111-111111111111";
+        ContextTypeResource resource = new ContextTypeResource()
+                .id(id)
+                .type(ContextTypeResource.TypeEnum.CONTEXT_TYPE)
+                .attributes(new ContextType().key("user").name("Updated"));
+        when(mockContextTypesApi.updateContextType(eq(UUID.fromString(id)), any(ContextTypeResponse.class)))
+                .thenReturn(new ContextTypeResponse().data(resource));
 
-        client.updateContextType("ct-1", Map.of("name", "Updated"));
+        client.updateContextType(id, Map.of("name", "Updated"));
 
-        verify(mockHttpClient).send(argThat(req ->
-                req.method().equals("PUT")), any());
+        verify(mockContextTypesApi).updateContextType(eq(UUID.fromString(id)), any(ContextTypeResponse.class));
     }
 
     // --- updateFlag: current description preserved when params don't set it ---
@@ -566,12 +597,11 @@ class FlagsClientCoverageTest {
     // --- flushContextsSafe: catches exception ---
 
     @Test
-    @SuppressWarnings("unchecked")
     void flushContextsSafe_catchesException() throws Exception {
         // flushContextsSafe wraps flushContexts and catches exceptions
-        // We need flushContexts to throw, which happens when doAppRequest fails
-        when(mockHttpClient.send(any(HttpRequest.class), any(HttpResponse.BodyHandler.class)))
-                .thenThrow(new java.io.IOException("connection refused"));
+        // We need bulk register to throw
+        when(mockContextsApi.bulkRegisterContexts(any(ContextBulkRegister.class)))
+                .thenThrow(new com.smplkit.internal.generated.app.ApiException(500, "connection refused"));
 
         setupFlagStore("feature-x", "BOOLEAN", false, Map.of(
                 "staging", Map.of("enabled", true)

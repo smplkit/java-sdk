@@ -3,14 +3,15 @@ package com.smplkit;
 import com.smplkit.config.ConfigClient;
 import com.smplkit.flags.FlagsClient;
 import com.smplkit.flags.SharedWebSocket;
+import com.smplkit.internal.generated.app.api.ContextTypesApi;
+import com.smplkit.internal.generated.app.api.ContextsApi;
+import com.smplkit.internal.generated.app.model.ContextBulkItem;
+import com.smplkit.internal.generated.app.model.ContextBulkRegister;
 import com.smplkit.internal.generated.config.ApiClient;
 import com.smplkit.internal.generated.config.api.ConfigsApi;
 import com.smplkit.internal.generated.flags.api.FlagsApi;
 
-import java.net.URI;
 import java.net.http.HttpClient;
-import java.net.http.HttpRequest;
-import java.net.http.HttpResponse;
 import java.time.Duration;
 import java.util.List;
 import java.util.Map;
@@ -45,6 +46,7 @@ public final class SmplClient implements AutoCloseable {
     private FlagsClient flags;
     private final SharedWebSocket sharedWs;
     private final HttpClient httpClient;
+    private final ContextsApi contextsApi;
     private final String environment;
     private final String service;
     private final String apiKey;
@@ -63,6 +65,7 @@ public final class SmplClient implements AutoCloseable {
                 .connectTimeout(timeout)
                 .build();
         this.sharedWs = new SharedWebSocket(httpClient, APP_BASE_URL, apiKey);
+        this.contextsApi = buildContextsApi(APP_BASE_URL, apiKey, timeout);
         this.config = buildConfigClient(httpClient, apiKey, timeout);
         this.flags = buildFlagsClient(httpClient, apiKey, timeout, sharedWs);
         this.flags.setParentService(service);
@@ -78,6 +81,7 @@ public final class SmplClient implements AutoCloseable {
         this.timeout = timeout;
         this.httpClient = httpClient;
         this.sharedWs = new SharedWebSocket(httpClient, APP_BASE_URL, apiKey);
+        this.contextsApi = buildContextsApi(APP_BASE_URL, apiKey, timeout);
         this.config = buildConfigClient(httpClient, apiKey, timeout);
         this.flags = buildFlagsClient(httpClient, apiKey, timeout, sharedWs);
         this.flags.setParentService(service);
@@ -94,6 +98,24 @@ public final class SmplClient implements AutoCloseable {
         this.timeout = timeout;
         this.httpClient = httpClient;
         this.sharedWs = new SharedWebSocket(httpClient, APP_BASE_URL, apiKey);
+        this.contextsApi = buildContextsApi(APP_BASE_URL, apiKey, timeout);
+        this.config = config;
+        this.flags = flags;
+        this.flags.setParentService(service);
+    }
+
+    /**
+     * Package-private constructor for testing with injectable sub-clients and contextsApi.
+     */
+    SmplClient(HttpClient httpClient, String apiKey, String environment, String service,
+               Duration timeout, FlagsClient flags, ConfigClient config, ContextsApi contextsApi) {
+        this.apiKey = apiKey;
+        this.environment = environment;
+        this.service = service;
+        this.timeout = timeout;
+        this.httpClient = httpClient;
+        this.sharedWs = new SharedWebSocket(httpClient, APP_BASE_URL, apiKey);
+        this.contextsApi = contextsApi;
         this.config = config;
         this.flags = flags;
         this.flags.setParentService(service);
@@ -128,24 +150,12 @@ public final class SmplClient implements AutoCloseable {
 
     private void registerServiceContext() {
         try {
-            Map<String, Object> context = Map.of(
-                    "type", "service",
-                    "key", service,
-                    "attributes", Map.of("name", service));
-            Map<String, Object> body = Map.of("contexts", List.of(context));
-
-            String json = new com.fasterxml.jackson.databind.ObjectMapper()
-                    .writeValueAsString(body);
-
-            HttpRequest request = HttpRequest.newBuilder()
-                    .uri(URI.create(APP_BASE_URL + "/api/v1/contexts/bulk"))
-                    .header("Authorization", "Bearer " + apiKey)
-                    .header("Content-Type", "application/json")
-                    .timeout(timeout)
-                    .POST(HttpRequest.BodyPublishers.ofString(json))
-                    .build();
-
-            httpClient.send(request, HttpResponse.BodyHandlers.ofString());
+            ContextBulkItem item = new ContextBulkItem()
+                    .id("service:" + service)
+                    .attributes(Map.of("name", service));
+            ContextBulkRegister reqBody = new ContextBulkRegister()
+                    .contexts(List.of(item));
+            contextsApi.bulkRegisterContexts(reqBody);
         } catch (Exception e) {
             LOG.log(Level.WARNING, "Failed to register service context", e);
         }
@@ -169,10 +179,28 @@ public final class SmplClient implements AutoCloseable {
         flagsApiClient.setRequestInterceptor(authInterceptor(apiKey));
         flagsApiClient.setReadTimeout(timeout);
         FlagsApi flagsApi = new FlagsApi(flagsApiClient);
-        FlagsClient client = new FlagsClient(flagsApi, httpClient, apiKey,
-                FLAGS_BASE_URL, APP_BASE_URL, timeout);
+
+        com.smplkit.internal.generated.app.ApiClient appApiClient =
+                new com.smplkit.internal.generated.app.ApiClient();
+        appApiClient.updateBaseUri(APP_BASE_URL);
+        appApiClient.setRequestInterceptor(authInterceptor(apiKey));
+        appApiClient.setReadTimeout(timeout);
+        ContextTypesApi contextTypesApi = new ContextTypesApi(appApiClient);
+        ContextsApi contextsApi = new ContextsApi(appApiClient);
+
+        FlagsClient client = new FlagsClient(flagsApi, contextTypesApi, contextsApi,
+                httpClient, apiKey, FLAGS_BASE_URL, APP_BASE_URL, timeout);
         client.setSharedWs(sharedWs);
         return client;
+    }
+
+    private static ContextsApi buildContextsApi(String baseUrl, String apiKey, Duration timeout) {
+        com.smplkit.internal.generated.app.ApiClient appApiClient =
+                new com.smplkit.internal.generated.app.ApiClient();
+        appApiClient.updateBaseUri(baseUrl);
+        appApiClient.setRequestInterceptor(authInterceptor(apiKey));
+        appApiClient.setReadTimeout(timeout);
+        return new ContextsApi(appApiClient);
     }
 
     /** Package-private for testing: builds the auth header interceptor. */
