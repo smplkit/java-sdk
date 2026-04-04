@@ -87,13 +87,11 @@ public class Logger {
 
   @JsonCreator
   public Logger(
-    @JsonProperty(JSON_PROPERTY_MANAGED) Boolean managed, 
     @JsonProperty(JSON_PROPERTY_SOURCES) List<Map<String, Object>> sources, 
     @JsonProperty(JSON_PROPERTY_CREATED_AT) OffsetDateTime createdAt, 
     @JsonProperty(JSON_PROPERTY_UPDATED_AT) OffsetDateTime updatedAt
   ) {
   this();
-    this.managed = managed == null ? JsonNullable.<Boolean>undefined() : JsonNullable.of(managed);
     this.sources = sources == null ? JsonNullable.<List<Map<String, Object>>>undefined() : JsonNullable.of(sources);
     this.createdAt = createdAt == null ? JsonNullable.<OffsetDateTime>undefined() : JsonNullable.of(createdAt);
     this.updatedAt = updatedAt == null ? JsonNullable.<OffsetDateTime>undefined() : JsonNullable.of(updatedAt);
@@ -219,6 +217,11 @@ public class Logger {
   }
 
 
+  public Logger managed(@jakarta.annotation.Nullable Boolean managed) {
+    this.managed = JsonNullable.<Boolean>of(managed);
+    return this;
+  }
+
   /**
    * Get managed
    * @return managed
@@ -226,11 +229,7 @@ public class Logger {
   @jakarta.annotation.Nullable
   @JsonIgnore
   public Boolean getManaged() {
-    
-    if (managed == null) {
-      managed = JsonNullable.<Boolean>undefined();
-    }
-    return managed.orElse(null);
+        return managed.orElse(null);
   }
 
   @JsonProperty(value = JSON_PROPERTY_MANAGED, required = false)
@@ -241,10 +240,13 @@ public class Logger {
   }
   
   @JsonProperty(JSON_PROPERTY_MANAGED)
-  private void setManaged_JsonNullable(JsonNullable<Boolean> managed) {
+  public void setManaged_JsonNullable(JsonNullable<Boolean> managed) {
     this.managed = managed;
   }
 
+  public void setManaged(@jakarta.annotation.Nullable Boolean managed) {
+    this.managed = JsonNullable.<Boolean>of(managed);
+  }
 
 
   /**
