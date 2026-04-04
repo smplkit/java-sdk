@@ -37,7 +37,7 @@ import com.smplkit.internal.generated.app.ApiClient;
   Plan.JSON_PROPERTY_DESCRIPTION,
   Plan.JSON_PROPERTY_SORT_ORDER
 })
-@jakarta.annotation.Generated(value = "org.openapitools.codegen.languages.JavaClientCodegen", date = "2026-04-03T05:52:06.948467-04:00[America/New_York]", comments = "Generator version: 7.21.0")
+@jakarta.annotation.Generated(value = "org.openapitools.codegen.languages.JavaClientCodegen", date = "2026-04-04T10:20:56.768759Z[Etc/UTC]", comments = "Generator version: 7.21.0")
 public class Plan {
   public static final String JSON_PROPERTY_DISPLAY_NAME = "display_name";
   @jakarta.annotation.Nonnull
