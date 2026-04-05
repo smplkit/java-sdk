@@ -35,33 +35,33 @@ import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 
 import com.smplkit.internal.generated.app.ApiClient;
 /**
- * Account
+ * ShowcaseAccount
  */
 @JsonPropertyOrder({
-  Account.JSON_PROPERTY_NAME,
-  Account.JSON_PROPERTY_KEY,
-  Account.JSON_PROPERTY_HAS_STRIPE_CUSTOMER,
-  Account.JSON_PROPERTY_ACCOUNT_TYPE,
-  Account.JSON_PROPERTY_EXPIRES_AT,
-  Account.JSON_PROPERTY_CREATED_AT,
-  Account.JSON_PROPERTY_DELETED_AT
+  ShowcaseAccount.JSON_PROPERTY_NAME,
+  ShowcaseAccount.JSON_PROPERTY_KEY,
+  ShowcaseAccount.JSON_PROPERTY_ACCOUNT_TYPE,
+  ShowcaseAccount.JSON_PROPERTY_API_KEY,
+  ShowcaseAccount.JSON_PROPERTY_EXPIRES_AT,
+  ShowcaseAccount.JSON_PROPERTY_CREATED_AT
 })
 @jakarta.annotation.Generated(value = "org.openapitools.codegen.languages.JavaClientCodegen", comments = "Generator version: 7.21.0")
-public class Account {
+public class ShowcaseAccount {
   public static final String JSON_PROPERTY_NAME = "name";
-  @jakarta.annotation.Nonnull
-  private String name;
+  @jakarta.annotation.Nullable
+  private String name = "";
 
   public static final String JSON_PROPERTY_KEY = "key";
-  @jakarta.annotation.Nonnull
-  private String key;
-
-  public static final String JSON_PROPERTY_HAS_STRIPE_CUSTOMER = "has_stripe_customer";
   @jakarta.annotation.Nullable
-  private Boolean hasStripeCustomer = false;
+  private String key = "";
 
   public static final String JSON_PROPERTY_ACCOUNT_TYPE = "account_type";
-  private JsonNullable<String> accountType = JsonNullable.<String>undefined();
+  @jakarta.annotation.Nullable
+  private String accountType = "SHOWCASE";
+
+  public static final String JSON_PROPERTY_API_KEY = "api_key";
+  @jakarta.annotation.Nullable
+  private String apiKey = "";
 
   public static final String JSON_PROPERTY_EXPIRES_AT = "expires_at";
   private JsonNullable<OffsetDateTime> expiresAt = JsonNullable.<OffsetDateTime>undefined();
@@ -69,85 +69,50 @@ public class Account {
   public static final String JSON_PROPERTY_CREATED_AT = "created_at";
   private JsonNullable<OffsetDateTime> createdAt = JsonNullable.<OffsetDateTime>undefined();
 
-  public static final String JSON_PROPERTY_DELETED_AT = "deleted_at";
-  private JsonNullable<OffsetDateTime> deletedAt = JsonNullable.<OffsetDateTime>undefined();
-
-  public Account() { 
+  public ShowcaseAccount() { 
   }
 
   @JsonCreator
-  public Account(
-    @JsonProperty(JSON_PROPERTY_HAS_STRIPE_CUSTOMER) Boolean hasStripeCustomer, 
+  public ShowcaseAccount(
+    @JsonProperty(JSON_PROPERTY_NAME) String name, 
+    @JsonProperty(JSON_PROPERTY_KEY) String key, 
     @JsonProperty(JSON_PROPERTY_ACCOUNT_TYPE) String accountType, 
+    @JsonProperty(JSON_PROPERTY_API_KEY) String apiKey, 
     @JsonProperty(JSON_PROPERTY_EXPIRES_AT) OffsetDateTime expiresAt, 
-    @JsonProperty(JSON_PROPERTY_CREATED_AT) OffsetDateTime createdAt, 
-    @JsonProperty(JSON_PROPERTY_DELETED_AT) OffsetDateTime deletedAt
+    @JsonProperty(JSON_PROPERTY_CREATED_AT) OffsetDateTime createdAt
   ) {
   this();
-    this.hasStripeCustomer = hasStripeCustomer;
-    this.accountType = accountType == null ? JsonNullable.<String>undefined() : JsonNullable.of(accountType);
+    this.name = name;
+    this.key = key;
+    this.accountType = accountType;
+    this.apiKey = apiKey;
     this.expiresAt = expiresAt == null ? JsonNullable.<OffsetDateTime>undefined() : JsonNullable.of(expiresAt);
     this.createdAt = createdAt == null ? JsonNullable.<OffsetDateTime>undefined() : JsonNullable.of(createdAt);
-    this.deletedAt = deletedAt == null ? JsonNullable.<OffsetDateTime>undefined() : JsonNullable.of(deletedAt);
-  }
-
-  public Account name(@jakarta.annotation.Nonnull String name) {
-    this.name = name;
-    return this;
   }
 
   /**
    * Get name
    * @return name
    */
-  @jakarta.annotation.Nonnull
-  @JsonProperty(value = JSON_PROPERTY_NAME, required = true)
-  @JsonInclude(value = JsonInclude.Include.ALWAYS)
+  @jakarta.annotation.Nullable
+  @JsonProperty(value = JSON_PROPERTY_NAME, required = false)
+  @JsonInclude(value = JsonInclude.Include.USE_DEFAULTS)
   public String getName() {
     return name;
   }
 
 
-  @JsonProperty(value = JSON_PROPERTY_NAME, required = true)
-  @JsonInclude(value = JsonInclude.Include.ALWAYS)
-  public void setName(@jakarta.annotation.Nonnull String name) {
-    this.name = name;
-  }
 
-
-  public Account key(@jakarta.annotation.Nonnull String key) {
-    this.key = key;
-    return this;
-  }
 
   /**
    * Get key
    * @return key
    */
-  @jakarta.annotation.Nonnull
-  @JsonProperty(value = JSON_PROPERTY_KEY, required = true)
-  @JsonInclude(value = JsonInclude.Include.ALWAYS)
+  @jakarta.annotation.Nullable
+  @JsonProperty(value = JSON_PROPERTY_KEY, required = false)
+  @JsonInclude(value = JsonInclude.Include.USE_DEFAULTS)
   public String getKey() {
     return key;
-  }
-
-
-  @JsonProperty(value = JSON_PROPERTY_KEY, required = true)
-  @JsonInclude(value = JsonInclude.Include.ALWAYS)
-  public void setKey(@jakarta.annotation.Nonnull String key) {
-    this.key = key;
-  }
-
-
-  /**
-   * Get hasStripeCustomer
-   * @return hasStripeCustomer
-   */
-  @jakarta.annotation.Nullable
-  @JsonProperty(value = JSON_PROPERTY_HAS_STRIPE_CUSTOMER, required = false)
-  @JsonInclude(value = JsonInclude.Include.USE_DEFAULTS)
-  public Boolean getHasStripeCustomer() {
-    return hasStripeCustomer;
   }
 
 
@@ -158,26 +123,26 @@ public class Account {
    * @return accountType
    */
   @jakarta.annotation.Nullable
-  @JsonIgnore
-  public String getAccountType() {
-    
-    if (accountType == null) {
-      accountType = JsonNullable.<String>undefined();
-    }
-    return accountType.orElse(null);
-  }
-
   @JsonProperty(value = JSON_PROPERTY_ACCOUNT_TYPE, required = false)
   @JsonInclude(value = JsonInclude.Include.USE_DEFAULTS)
-
-  public JsonNullable<String> getAccountType_JsonNullable() {
+  public String getAccountType() {
     return accountType;
   }
-  
-  @JsonProperty(JSON_PROPERTY_ACCOUNT_TYPE)
-  private void setAccountType_JsonNullable(JsonNullable<String> accountType) {
-    this.accountType = accountType;
+
+
+
+
+  /**
+   * Get apiKey
+   * @return apiKey
+   */
+  @jakarta.annotation.Nullable
+  @JsonProperty(value = JSON_PROPERTY_API_KEY, required = false)
+  @JsonInclude(value = JsonInclude.Include.USE_DEFAULTS)
+  public String getApiKey() {
+    return apiKey;
   }
+
 
 
 
@@ -238,35 +203,7 @@ public class Account {
 
 
   /**
-   * Get deletedAt
-   * @return deletedAt
-   */
-  @jakarta.annotation.Nullable
-  @JsonIgnore
-  public OffsetDateTime getDeletedAt() {
-    
-    if (deletedAt == null) {
-      deletedAt = JsonNullable.<OffsetDateTime>undefined();
-    }
-    return deletedAt.orElse(null);
-  }
-
-  @JsonProperty(value = JSON_PROPERTY_DELETED_AT, required = false)
-  @JsonInclude(value = JsonInclude.Include.USE_DEFAULTS)
-
-  public JsonNullable<OffsetDateTime> getDeletedAt_JsonNullable() {
-    return deletedAt;
-  }
-  
-  @JsonProperty(JSON_PROPERTY_DELETED_AT)
-  private void setDeletedAt_JsonNullable(JsonNullable<OffsetDateTime> deletedAt) {
-    this.deletedAt = deletedAt;
-  }
-
-
-
-  /**
-   * Return true if this Account object is equal to o.
+   * Return true if this ShowcaseAccount object is equal to o.
    */
   @Override
   public boolean equals(Object o) {
@@ -276,14 +213,13 @@ public class Account {
     if (o == null || getClass() != o.getClass()) {
       return false;
     }
-    Account account = (Account) o;
-    return Objects.equals(this.name, account.name) &&
-        Objects.equals(this.key, account.key) &&
-        Objects.equals(this.hasStripeCustomer, account.hasStripeCustomer) &&
-        equalsNullable(this.accountType, account.accountType) &&
-        equalsNullable(this.expiresAt, account.expiresAt) &&
-        equalsNullable(this.createdAt, account.createdAt) &&
-        equalsNullable(this.deletedAt, account.deletedAt);
+    ShowcaseAccount showcaseAccount = (ShowcaseAccount) o;
+    return Objects.equals(this.name, showcaseAccount.name) &&
+        Objects.equals(this.key, showcaseAccount.key) &&
+        Objects.equals(this.accountType, showcaseAccount.accountType) &&
+        Objects.equals(this.apiKey, showcaseAccount.apiKey) &&
+        equalsNullable(this.expiresAt, showcaseAccount.expiresAt) &&
+        equalsNullable(this.createdAt, showcaseAccount.createdAt);
   }
 
   private static <T> boolean equalsNullable(JsonNullable<T> a, JsonNullable<T> b) {
@@ -292,7 +228,7 @@ public class Account {
 
   @Override
   public int hashCode() {
-    return Objects.hash(name, key, hasStripeCustomer, hashCodeNullable(accountType), hashCodeNullable(expiresAt), hashCodeNullable(createdAt), hashCodeNullable(deletedAt));
+    return Objects.hash(name, key, accountType, apiKey, hashCodeNullable(expiresAt), hashCodeNullable(createdAt));
   }
 
   private static <T> int hashCodeNullable(JsonNullable<T> a) {
@@ -305,14 +241,13 @@ public class Account {
   @Override
   public String toString() {
     StringBuilder sb = new StringBuilder();
-    sb.append("class Account {\n");
+    sb.append("class ShowcaseAccount {\n");
     sb.append("    name: ").append(toIndentedString(name)).append("\n");
     sb.append("    key: ").append(toIndentedString(key)).append("\n");
-    sb.append("    hasStripeCustomer: ").append(toIndentedString(hasStripeCustomer)).append("\n");
     sb.append("    accountType: ").append(toIndentedString(accountType)).append("\n");
+    sb.append("    apiKey: ").append(toIndentedString(apiKey)).append("\n");
     sb.append("    expiresAt: ").append(toIndentedString(expiresAt)).append("\n");
     sb.append("    createdAt: ").append(toIndentedString(createdAt)).append("\n");
-    sb.append("    deletedAt: ").append(toIndentedString(deletedAt)).append("\n");
     sb.append("}");
     return sb.toString();
   }
@@ -367,14 +302,14 @@ public class Account {
       joiner.add(String.format(java.util.Locale.ROOT, "%skey%s=%s", prefix, suffix, ApiClient.urlEncode(ApiClient.valueToString(getKey()))));
     }
 
-    // add `has_stripe_customer` to the URL query string
-    if (getHasStripeCustomer() != null) {
-      joiner.add(String.format(java.util.Locale.ROOT, "%shas_stripe_customer%s=%s", prefix, suffix, ApiClient.urlEncode(ApiClient.valueToString(getHasStripeCustomer()))));
-    }
-
     // add `account_type` to the URL query string
     if (getAccountType() != null) {
       joiner.add(String.format(java.util.Locale.ROOT, "%saccount_type%s=%s", prefix, suffix, ApiClient.urlEncode(ApiClient.valueToString(getAccountType()))));
+    }
+
+    // add `api_key` to the URL query string
+    if (getApiKey() != null) {
+      joiner.add(String.format(java.util.Locale.ROOT, "%sapi_key%s=%s", prefix, suffix, ApiClient.urlEncode(ApiClient.valueToString(getApiKey()))));
     }
 
     // add `expires_at` to the URL query string
@@ -385,11 +320,6 @@ public class Account {
     // add `created_at` to the URL query string
     if (getCreatedAt() != null) {
       joiner.add(String.format(java.util.Locale.ROOT, "%screated_at%s=%s", prefix, suffix, ApiClient.urlEncode(ApiClient.valueToString(getCreatedAt()))));
-    }
-
-    // add `deleted_at` to the URL query string
-    if (getDeletedAt() != null) {
-      joiner.add(String.format(java.util.Locale.ROOT, "%sdeleted_at%s=%s", prefix, suffix, ApiClient.urlEncode(ApiClient.valueToString(getDeletedAt()))));
     }
 
     return joiner.toString();
