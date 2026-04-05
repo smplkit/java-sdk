@@ -20,6 +20,7 @@ class SmplClientFullTest {
         try (SmplClient client = SmplClient.builder()
                 .apiKey("test-key")
                 .environment("test")
+                .service("test-service")
                 .timeout(Duration.ofMillis(500))
                 .build()) {
 

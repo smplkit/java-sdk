@@ -75,7 +75,7 @@ class Phase2CoverageTest {
     }
 
     @Test
-    void connect_withoutService_skipsRegistration() throws Exception {
+    void connect_withService_registersContext() throws Exception {
         HttpClient mockHttp = mock(HttpClient.class);
         @SuppressWarnings("unchecked")
         HttpResponse<String> mockResponse = mock(HttpResponse.class);
@@ -84,17 +84,15 @@ class Phase2CoverageTest {
         when(mockHttp.send(any(HttpRequest.class), any(HttpResponse.BodyHandler.class)))
                 .thenReturn(mockResponse);
 
-        SmplClient client = new SmplClient(mockHttp, "test-key", "staging", null,
+        SmplClient client = new SmplClient(mockHttp, "test-key", "staging", "test-service",
                 Duration.ofSeconds(5));
 
         try {
             client.connect();
         } catch (Exception e) {
-            // Expected
+            // Expected — real HTTP calls may fail
         }
 
-        // With no service, the first HTTP call should be from flags.connectInternal,
-        // not from registerServiceContext
         client.close();
     }
 
@@ -108,7 +106,7 @@ class Phase2CoverageTest {
         when(mockHttp.send(any(HttpRequest.class), any(HttpResponse.BodyHandler.class)))
                 .thenReturn(mockResponse);
 
-        SmplClient client = new SmplClient(mockHttp, "test-key", "staging", null,
+        SmplClient client = new SmplClient(mockHttp, "test-key", "staging", "test-service",
                 Duration.ofSeconds(5));
         assertFalse(client.isConnected());
 
@@ -124,10 +122,11 @@ class Phase2CoverageTest {
     }
 
     @Test
-    void createWithApiKeyAndEnvironment() {
-        try (SmplClient client = SmplClient.create("test-key", "test")) {
+    void createWithApiKeyEnvironmentAndService() {
+        try (SmplClient client = SmplClient.create("test-key", "test", "test-service")) {
             assertNotNull(client);
             assertEquals("test", client.environment());
+            assertEquals("test-service", client.service());
         }
     }
 
@@ -388,7 +387,7 @@ class Phase2CoverageTest {
         when(mockHttp.send(any(HttpRequest.class), any(HttpResponse.BodyHandler.class)))
                 .thenThrow(new IOException("Connection refused"));
 
-        SmplClient client = new SmplClient(mockHttp, "test-key", "staging", "test-svc",
+        SmplClient client = new SmplClient(mockHttp, "test-key", "staging", "test-service",
                 Duration.ofSeconds(5));
 
         // connect() should not throw even if service registration fails
@@ -439,7 +438,7 @@ class Phase2CoverageTest {
     }
 
     @Test
-    void connect_withoutService_fullPath() throws Exception {
+    void connect_withService_fullPath() throws Exception {
         HttpClient mockHttp = mock(HttpClient.class);
         @SuppressWarnings("unchecked")
         HttpResponse<String> mockResponse = mock(HttpResponse.class);
@@ -460,17 +459,18 @@ class Phase2CoverageTest {
                 .thenReturn(new ConfigListResponse().data(List.of()));
         ConfigClient configClient = new ConfigClient(mockConfigsApi, mockHttp, "test-key");
 
-        // No service
-        SmplClient client = new SmplClient(mockHttp, "test-key", "staging", null,
-                Duration.ofSeconds(5), flagsClient, configClient);
+        com.smplkit.internal.generated.app.api.ContextsApi mockContextsApi =
+                mock(com.smplkit.internal.generated.app.api.ContextsApi.class);
+
+        SmplClient client = new SmplClient(mockHttp, "test-key", "staging", "test-service",
+                Duration.ofSeconds(5), flagsClient, configClient, mockContextsApi);
 
         client.connect();
         assertTrue(client.isConnected());
 
-        // No service registration call (only flags/config list + WS)
-        verify(mockHttp, never()).send(
-                argThat(req -> req.uri().toString().contains("/api/v1/contexts/bulk")),
-                any());
+        // Service registration should have been called
+        verify(mockContextsApi).bulkRegisterContexts(
+                any(com.smplkit.internal.generated.app.model.ContextBulkRegister.class));
 
         client.close();
     }
@@ -497,8 +497,11 @@ class Phase2CoverageTest {
                 .thenReturn(new ConfigListResponse().data(List.of()));
         ConfigClient configClient = new ConfigClient(mockConfigsApi, mockHttp, "test-key");
 
-        SmplClient client = new SmplClient(mockHttp, "test-key", "staging", null,
-                Duration.ofSeconds(5), flagsClient, configClient);
+        com.smplkit.internal.generated.app.api.ContextsApi mockContextsApi =
+                mock(com.smplkit.internal.generated.app.api.ContextsApi.class);
+
+        SmplClient client = new SmplClient(mockHttp, "test-key", "staging", "test-service",
+                Duration.ofSeconds(5), flagsClient, configClient, mockContextsApi);
 
         client.connect();
         assertTrue(client.isConnected());

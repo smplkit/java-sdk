@@ -54,6 +54,7 @@ public class ConfigManagementShowcase {
         try (SmplClient client = SmplClient.builder()
                 .apiKey(apiKey)
                 .environment("production")
+                .service("config-management-showcase")
                 .build()) {
 
             step("SmplClient initialized with environment=production");

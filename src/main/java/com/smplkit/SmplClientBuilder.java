@@ -57,7 +57,7 @@ public final class SmplClientBuilder {
      * Sets the service name for automatic service context injection.
      *
      * <p>If not set, falls back to the {@code SMPLKIT_SERVICE} environment variable.
-     * Optional — null is valid (no service context will be injected).</p>
+     * Required — build() will throw if no service can be resolved.</p>
      *
      * @param service the service name
      * @return this builder
@@ -81,20 +81,20 @@ public final class SmplClientBuilder {
     /**
      * Builds and returns a new {@link SmplClient}.
      *
-     * <p>If no API key was set via {@link #apiKey(String)}, the builder resolves
-     * it from the {@code SMPLKIT_API_KEY} environment variable or the
-     * {@code ~/.smplkit} configuration file.</p>
-     *
-     * <p>Environment is required: resolved from {@link #environment(String)} or
-     * the {@code SMPLKIT_ENVIRONMENT} environment variable.</p>
+     * <p>Resolution order:</p>
+     * <ol>
+     *   <li>Environment: {@link #environment(String)} or {@code SMPLKIT_ENVIRONMENT} env var</li>
+     *   <li>Service: {@link #service(String)} or {@code SMPLKIT_SERVICE} env var</li>
+     *   <li>API key: {@link #apiKey(String)} or {@code SMPLKIT_API_KEY} env var or {@code ~/.smplkit} file</li>
+     * </ol>
      *
      * @return the configured client
-     * @throws SmplException if no API key or environment can be resolved
+     * @throws SmplException if environment, service, or API key cannot be resolved
      */
     public SmplClient build() {
-        String resolvedKey = ApiKeyResolver.resolve(apiKey);
         String resolvedEnvironment = resolveEnvironment();
         String resolvedService = resolveService();
+        String resolvedKey = ApiKeyResolver.resolve(apiKey, resolvedEnvironment);
         return new SmplClient(resolvedKey, resolvedEnvironment, resolvedService, timeout);
     }
 
@@ -129,6 +129,10 @@ public final class SmplClientBuilder {
         if (envVar != null && !envVar.isEmpty()) {
             return envVar;
         }
-        return null;
+        throw new SmplException(
+                "No service provided. Set one of:\n" +
+                "  1. Call .service() on the builder\n" +
+                "  2. Set the SMPLKIT_SERVICE environment variable",
+                0, null);
     }
 }

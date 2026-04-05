@@ -20,11 +20,12 @@ class SmplClientTest {
         try (SmplClient client = SmplClient.builder()
                 .apiKey("test-key")
                 .environment("test")
+                .service("test-service")
                 .build()) {
             assertNotNull(client);
             assertNotNull(client.config());
             assertEquals("test", client.environment());
-            assertNull(client.service());
+            assertEquals("test-service", client.service());
         }
     }
 
@@ -33,6 +34,7 @@ class SmplClientTest {
         try (SmplClient client = SmplClient.builder()
                 .apiKey("test-key")
                 .environment("staging")
+                .service("test-service")
                 .timeout(Duration.ofSeconds(60))
                 .build()) {
             assertNotNull(client);
@@ -58,6 +60,7 @@ class SmplClientTest {
         try (SmplClient client = SmplClient.builder()
                 .apiKey("test-key")
                 .environment("test")
+                .service("test-service")
                 .build()) {
             ConfigClient config = client.config();
             assertNotNull(config);
@@ -70,6 +73,7 @@ class SmplClientTest {
         try (SmplClient client = SmplClient.builder()
                 .apiKey("test-key")
                 .environment("test")
+                .service("test-service")
                 .build()) {
             FlagsClient flags = client.flags();
             assertNotNull(flags);
@@ -79,14 +83,14 @@ class SmplClientTest {
 
     @Test
     void builderWithoutEnvironment_throwsSmplException() {
-        SmplClientBuilder builder = SmplClient.builder().apiKey("test-key");
+        SmplClientBuilder builder = SmplClient.builder().apiKey("test-key").service("test-service");
         // resolveEnvironment with null env var should throw
         assertThrows(SmplException.class, () -> builder.resolveEnvironment(null));
     }
 
     @Test
     void builderWithEnvironmentEnvVar_resolvesFromEnvVar() {
-        SmplClientBuilder builder = SmplClient.builder().apiKey("test-key");
+        SmplClientBuilder builder = SmplClient.builder().apiKey("test-key").service("test-service");
         assertEquals("from-env", builder.resolveEnvironment("from-env"));
     }
 
@@ -111,9 +115,12 @@ class SmplClientTest {
     }
 
     @Test
-    void builderWithNoService_returnsNull() {
+    void builderWithNoService_throwsSmplException() {
         SmplClientBuilder builder = SmplClient.builder();
-        assertNull(builder.resolveService(null));
+        SmplException ex = assertThrows(SmplException.class, () -> builder.resolveService(null));
+        assertTrue(ex.getMessage().contains("No service provided"));
+        assertTrue(ex.getMessage().contains(".service()"));
+        assertTrue(ex.getMessage().contains("SMPLKIT_SERVICE"));
     }
 
     @Test
@@ -123,7 +130,7 @@ class SmplClientTest {
                 java.nio.file.Paths.get(System.getProperty("user.home"), ".smplkit"));
         if (envKey == null || envKey.isEmpty()) {
             if (!hasConfigFile) {
-                SmplClientBuilder builder = SmplClient.builder().environment("test");
+                SmplClientBuilder builder = SmplClient.builder().environment("test").service("test-service");
                 assertThrows(SmplException.class, builder::build);
             }
         }
@@ -157,14 +164,17 @@ class SmplClientTest {
     void createNoArg_coversStaticFactory() throws Exception {
         setEnv("SMPLKIT_API_KEY", "sk_api_test_create");
         setEnv("SMPLKIT_ENVIRONMENT", "test-env");
+        setEnv("SMPLKIT_SERVICE", "test-service");
         try {
             SmplClient result = SmplClient.create();
             assertNotNull(result);
             assertEquals("test-env", result.environment());
+            assertEquals("test-service", result.service());
             result.close();
         } finally {
             clearEnv("SMPLKIT_API_KEY");
             clearEnv("SMPLKIT_ENVIRONMENT");
+            clearEnv("SMPLKIT_SERVICE");
         }
     }
 
@@ -189,6 +199,7 @@ class SmplClientTest {
         SmplClient client = SmplClient.builder()
                 .apiKey("test-key")
                 .environment("test")
+                .service("test-service")
                 .build();
         assertDoesNotThrow(client::close);
         // Should be safe to close twice
@@ -200,6 +211,7 @@ class SmplClientTest {
         try (SmplClient client = SmplClient.builder()
                 .apiKey("test-key")
                 .environment("test")
+                .service("test-service")
                 .build()) {
             assertFalse(client.isConnected());
         }
@@ -223,11 +235,11 @@ class SmplClientTest {
     @Test
     void packagePrivateConstructorWithHttpClient_createsClient() {
         java.net.http.HttpClient httpClient = java.net.http.HttpClient.newHttpClient();
-        SmplClient client = new SmplClient(httpClient, "test-key", "test", null,
+        SmplClient client = new SmplClient(httpClient, "test-key", "test", "test-service",
                 Duration.ofSeconds(30));
         assertNotNull(client);
         assertNotNull(client.config());
         assertEquals("test", client.environment());
-        assertNull(client.service());
+        assertEquals("test-service", client.service());
     }
 }

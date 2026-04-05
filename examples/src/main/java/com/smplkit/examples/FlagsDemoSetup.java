@@ -63,6 +63,7 @@ public class FlagsDemoSetup {
         try (SmplClient client = SmplClient.builder()
                 .apiKey(apiKey)
                 .environment("staging")
+                .service("flags-demo-setup")
                 .build()) {
 
             step("SmplClient initialized");

@@ -132,9 +132,7 @@ public final class SmplClient implements AutoCloseable {
         if (connected) return;
 
         // Register service context (fire-and-forget)
-        if (service != null) {
-            registerServiceContext();
-        }
+        registerServiceContext();
 
         // Connect flags runtime
         flags.connectInternal(environment);
@@ -231,7 +229,7 @@ public final class SmplClient implements AutoCloseable {
     }
 
     /**
-     * Returns the configured service name, or null if not set.
+     * Returns the configured service name.
      */
     public String service() {
         return service;
@@ -257,14 +255,15 @@ public final class SmplClient implements AutoCloseable {
     }
 
     /**
-     * Creates a new {@link SmplClient} with the given API key and environment.
+     * Creates a new {@link SmplClient} with the given API key, environment, and service.
      *
      * @param apiKey      the API key
      * @param environment the target environment
+     * @param service     the service name
      * @return a new client
      */
-    public static SmplClient create(String apiKey, String environment) {
-        return builder().apiKey(apiKey).environment(environment).build();
+    public static SmplClient create(String apiKey, String environment, String service) {
+        return builder().apiKey(apiKey).environment(environment).service(service).build();
     }
 
     /**

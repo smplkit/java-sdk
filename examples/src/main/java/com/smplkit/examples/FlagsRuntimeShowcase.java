@@ -62,6 +62,7 @@ public class FlagsRuntimeShowcase {
         try (SmplClient client = SmplClient.builder()
                 .apiKey(apiKey)
                 .environment("staging")
+                .service("flags-runtime-showcase")
                 .build()) {
 
             step("SmplClient initialized");

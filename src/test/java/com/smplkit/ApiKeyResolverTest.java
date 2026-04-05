@@ -14,26 +14,26 @@ class ApiKeyResolverTest {
 
     @Test
     void explicitKeyReturned() {
-        assertEquals("sk_api_explicit", ApiKeyResolver.resolve("sk_api_explicit", null, Path.of("/nonexistent")));
+        assertEquals("sk_api_explicit", ApiKeyResolver.resolve("sk_api_explicit", "production", null, Path.of("/nonexistent")));
     }
 
     @Test
     void envVarUsedWhenNoExplicit() {
-        assertEquals("sk_api_env", ApiKeyResolver.resolve(null, "sk_api_env", Path.of("/nonexistent")));
+        assertEquals("sk_api_env", ApiKeyResolver.resolve(null, "production", "sk_api_env", Path.of("/nonexistent")));
     }
 
     @Test
     void configFileUsedWhenNoExplicitNoEnv(@TempDir Path tempDir) throws IOException {
         Path configFile = tempDir.resolve(".smplkit");
         Files.writeString(configFile, "[default]\napi_key = sk_api_file\n");
-        assertEquals("sk_api_file", ApiKeyResolver.resolve(null, null, configFile));
+        assertEquals("sk_api_file", ApiKeyResolver.resolve(null, "production", null, configFile));
     }
 
     @Test
     void throwsWhenNoKeyAnywhere(@TempDir Path tempDir) {
         Path configFile = tempDir.resolve(".smplkit");
         SmplException ex = assertThrows(SmplException.class,
-                () -> ApiKeyResolver.resolve(null, null, configFile));
+                () -> ApiKeyResolver.resolve(null, "production", null, configFile));
         assertTrue(ex.getMessage().contains("No API key provided"));
     }
 
@@ -41,29 +41,31 @@ class ApiKeyResolverTest {
     void errorMessageListsAllMethods(@TempDir Path tempDir) {
         Path configFile = tempDir.resolve(".smplkit");
         SmplException ex = assertThrows(SmplException.class,
-                () -> ApiKeyResolver.resolve(null, null, configFile));
+                () -> ApiKeyResolver.resolve(null, "staging", null, configFile));
         assertTrue(ex.getMessage().contains(".apiKey()"));
         assertTrue(ex.getMessage().contains("SMPLKIT_API_KEY"));
         assertTrue(ex.getMessage().contains("~/.smplkit"));
+        // Error message should show the resolved environment name
+        assertTrue(ex.getMessage().contains("[staging]"));
     }
 
     @Test
     void explicitTakesPrecedenceOverEnv() {
-        assertEquals("sk_api_explicit", ApiKeyResolver.resolve("sk_api_explicit", "sk_api_env", Path.of("/nonexistent")));
+        assertEquals("sk_api_explicit", ApiKeyResolver.resolve("sk_api_explicit", "production", "sk_api_env", Path.of("/nonexistent")));
     }
 
     @Test
     void envTakesPrecedenceOverFile(@TempDir Path tempDir) throws IOException {
         Path configFile = tempDir.resolve(".smplkit");
         Files.writeString(configFile, "[default]\napi_key = sk_api_file\n");
-        assertEquals("sk_api_env", ApiKeyResolver.resolve(null, "sk_api_env", configFile));
+        assertEquals("sk_api_env", ApiKeyResolver.resolve(null, "production", "sk_api_env", configFile));
     }
 
     @Test
     void emptyEnvVarTreatedAsUnset(@TempDir Path tempDir) throws IOException {
         Path configFile = tempDir.resolve(".smplkit");
         Files.writeString(configFile, "[default]\napi_key = sk_api_file\n");
-        assertEquals("sk_api_file", ApiKeyResolver.resolve(null, "", configFile));
+        assertEquals("sk_api_file", ApiKeyResolver.resolve(null, "production", "", configFile));
     }
 
     @Test
@@ -71,7 +73,7 @@ class ApiKeyResolverTest {
         Path configFile = tempDir.resolve(".smplkit");
         Files.writeString(configFile, "not valid ini");
         assertThrows(SmplException.class,
-                () -> ApiKeyResolver.resolve(null, null, configFile));
+                () -> ApiKeyResolver.resolve(null, "production", null, configFile));
     }
 
     @Test
@@ -79,14 +81,14 @@ class ApiKeyResolverTest {
         Path configFile = tempDir.resolve(".smplkit");
         Files.writeString(configFile, "[default]\nother_key = value\n");
         assertThrows(SmplException.class,
-                () -> ApiKeyResolver.resolve(null, null, configFile));
+                () -> ApiKeyResolver.resolve(null, "production", null, configFile));
     }
 
     @Test
     void commentsAreIgnored(@TempDir Path tempDir) throws IOException {
         Path configFile = tempDir.resolve(".smplkit");
         Files.writeString(configFile, "# This is a comment\n[default]\n# another comment\napi_key = sk_api_comment\n");
-        assertEquals("sk_api_comment", ApiKeyResolver.resolve(null, null, configFile));
+        assertEquals("sk_api_comment", ApiKeyResolver.resolve(null, "production", null, configFile));
     }
 
     @Test
@@ -94,7 +96,22 @@ class ApiKeyResolverTest {
         Path configFile = tempDir.resolve(".smplkit");
         Files.writeString(configFile, "[staging]\napi_key = sk_api_staging\n");
         assertThrows(SmplException.class,
-                () -> ApiKeyResolver.resolve(null, null, configFile));
+                () -> ApiKeyResolver.resolve(null, "production", null, configFile));
+    }
+
+    @Test
+    void environmentSectionTakesPrecedenceOverDefault(@TempDir Path tempDir) throws IOException {
+        Path configFile = tempDir.resolve(".smplkit");
+        Files.writeString(configFile,
+                "[default]\napi_key = sk_api_default\n\n[staging]\napi_key = sk_api_staging\n");
+        assertEquals("sk_api_staging", ApiKeyResolver.resolve(null, "staging", null, configFile));
+    }
+
+    @Test
+    void fallsBackToDefaultWhenEnvironmentSectionMissing(@TempDir Path tempDir) throws IOException {
+        Path configFile = tempDir.resolve(".smplkit");
+        Files.writeString(configFile, "[default]\napi_key = sk_api_default\n");
+        assertEquals("sk_api_default", ApiKeyResolver.resolve(null, "staging", null, configFile));
     }
 
     @Test
@@ -102,12 +119,12 @@ class ApiKeyResolverTest {
         Path configFile = tempDir.resolve(".smplkit");
         Files.writeString(configFile, "[default]\nsome_other = value\n");
         assertThrows(SmplException.class,
-                () -> ApiKeyResolver.resolve(null, null, configFile));
+                () -> ApiKeyResolver.resolve(null, "production", null, configFile));
     }
 
     @Test
     void emptyExplicitFallsThrough() {
-        assertEquals("sk_api_env", ApiKeyResolver.resolve("", "sk_api_env", Path.of("/nonexistent")));
+        assertEquals("sk_api_env", ApiKeyResolver.resolve("", "production", "sk_api_env", Path.of("/nonexistent")));
     }
 
     @Test
@@ -115,6 +132,7 @@ class ApiKeyResolverTest {
         try (SmplClient client = SmplClient.builder()
                 .apiKey("sk_api_test")
                 .environment("test")
+                .service("test-service")
                 .build()) {
             assertNotNull(client);
         }
@@ -127,6 +145,6 @@ class ApiKeyResolverTest {
         Path configFile = tempDir.resolve(".smplkit");
         Files.createDirectory(configFile);
         assertThrows(SmplException.class,
-                () -> ApiKeyResolver.resolve(null, null, configFile));
+                () -> ApiKeyResolver.resolve(null, "production", null, configFile));
     }
 }

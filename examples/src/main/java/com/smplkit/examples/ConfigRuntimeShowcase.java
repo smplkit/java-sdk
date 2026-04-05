@@ -54,6 +54,7 @@ public class ConfigRuntimeShowcase {
         try (SmplClient client = SmplClient.builder()
                 .apiKey(apiKey)
                 .environment("production")
+                .service("config-runtime-showcase")
                 .build()) {
 
             step("SmplClient initialized with environment=production");

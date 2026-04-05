@@ -12,27 +12,29 @@ import java.nio.file.Paths;
  */
 final class ApiKeyResolver {
 
-    private static final String NO_API_KEY_MESSAGE =
-            "No API key provided. Set one of:\n" +
-            "  1. Call .apiKey() on the builder or use SmplClient.create(apiKey)\n" +
-            "  2. Set the SMPLKIT_API_KEY environment variable\n" +
-            "  3. Create a ~/.smplkit file with:\n" +
-            "     [default]\n" +
-            "     api_key = your_key_here";
-
     private ApiKeyResolver() {
         // Utility class
+    }
+
+    private static String noApiKeyMessage(String environment) {
+        return "No API key provided. Set one of:\n" +
+                "  1. Call .apiKey() on the builder or use SmplClient.create(apiKey)\n" +
+                "  2. Set the SMPLKIT_API_KEY environment variable\n" +
+                "  3. Create a ~/.smplkit file with:\n" +
+                "     [" + environment + "]\n" +
+                "     api_key = your_key_here";
     }
 
     /**
      * Resolves an API key using the fallback chain: explicit → env var → config file.
      *
-     * @param explicit the explicitly provided API key, or null
+     * @param explicit    the explicitly provided API key, or null
+     * @param environment the already-resolved environment name
      * @return the resolved API key
      * @throws SmplException if no API key can be resolved
      */
-    static String resolve(String explicit) {
-        return resolve(explicit,
+    static String resolve(String explicit, String environment) {
+        return resolve(explicit, environment,
                 System.getenv("SMPLKIT_API_KEY"),
                 Paths.get(System.getProperty("user.home"), ".smplkit"));
     }
@@ -40,7 +42,7 @@ final class ApiKeyResolver {
     /**
      * Package-private overload for testing.
      */
-    static String resolve(String explicit, String envVal, Path configPath) {
+    static String resolve(String explicit, String environment, String envVal, Path configPath) {
         if (explicit != null && !explicit.isEmpty()) {
             return explicit;
         }
@@ -51,7 +53,7 @@ final class ApiKeyResolver {
 
         if (Files.exists(configPath)) {
             try {
-                String apiKey = parseIniApiKey(Files.readString(configPath));
+                String apiKey = parseIniApiKey(Files.readString(configPath), environment);
                 if (apiKey != null) {
                     return apiKey;
                 }
@@ -60,24 +62,36 @@ final class ApiKeyResolver {
             }
         }
 
-        throw new SmplException(NO_API_KEY_MESSAGE, 0, null);
+        throw new SmplException(noApiKeyMessage(environment), 0, null);
     }
 
     /**
-     * Parses an INI-format config file and returns the api_key from the [default] section.
+     * Parses an INI-format config file and returns the api_key, trying the
+     * [{environment}] section first, then falling back to [default].
      */
-    private static String parseIniApiKey(String content) {
-        boolean inDefault = false;
+    private static String parseIniApiKey(String content, String environment) {
+        String envKey = parseSection(content, "[" + environment + "]");
+        if (envKey != null) {
+            return envKey;
+        }
+        return parseSection(content, "[default]");
+    }
+
+    /**
+     * Parses an INI-format config file and returns the api_key from the given section.
+     */
+    private static String parseSection(String content, String sectionHeader) {
+        boolean inSection = false;
         for (String line : content.split("\n")) {
             String trimmed = line.trim();
             if (trimmed.isEmpty() || trimmed.startsWith("#")) {
                 continue;
             }
             if (trimmed.startsWith("[")) {
-                inDefault = trimmed.equalsIgnoreCase("[default]");
+                inSection = trimmed.equalsIgnoreCase(sectionHeader);
                 continue;
             }
-            if (inDefault && trimmed.startsWith("api_key")) {
+            if (inSection && trimmed.startsWith("api_key")) {
                 int eqIndex = trimmed.indexOf('=');
                 if (eqIndex != -1) {
                     String value = trimmed.substring(eqIndex + 1).trim();
