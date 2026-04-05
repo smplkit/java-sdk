@@ -6,8 +6,6 @@ The official Java SDK for [smplkit](https://www.smplkit.com) — simple applicat
 
 ## Installation
 
-> **Note:** The package is not yet available on Maven Central — coming soon. The coordinates below will work once publishing is live.
-
 ### Gradle (Kotlin DSL)
 
 ```kotlin
