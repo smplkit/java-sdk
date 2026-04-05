@@ -1,5 +1,6 @@
 package com.smplkit.config;
 
+import com.smplkit.errors.ApiExceptionHandler;
 import com.smplkit.errors.SmplConflictException;
 import com.smplkit.errors.SmplException;
 import com.smplkit.errors.SmplNotConnectedException;
@@ -580,15 +581,7 @@ public final class ConfigClient {
     }
 
     private static SmplException mapException(ApiException e) {
-        int code = e.getCode();
-        String body = e.getResponseBody();
-        String msg = e.getMessage() != null ? e.getMessage() : "HTTP " + code;
-        return switch (code) {
-            case 404 -> new SmplNotFoundException(msg, body);
-            case 409 -> new SmplConflictException(msg, body);
-            case 422 -> new SmplValidationException(msg, body);
-            default -> new SmplException(msg, code, body);
-        };
+        return ApiExceptionHandler.mapApiException(e.getCode(), e.getResponseBody());
     }
 
     private record ListenerEntry(String configKey, String itemKey, Consumer<ChangeEvent> listener) {}

@@ -3,6 +3,7 @@ package com.smplkit.flags;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
+import com.smplkit.errors.ApiExceptionHandler;
 import com.smplkit.errors.SmplConflictException;
 import com.smplkit.errors.SmplException;
 import com.smplkit.errors.SmplNotConnectedException;
@@ -913,15 +914,7 @@ public final class FlagsClient {
     }
 
     private SmplException mapAppApiException(com.smplkit.internal.generated.app.ApiException e) {
-        int status = e.getCode();
-        String body = e.getResponseBody();
-        String msg = "HTTP " + status;
-        return switch (status) {
-            case 404 -> new SmplNotFoundException(msg, body);
-            case 409 -> new SmplConflictException(msg, body);
-            case 422 -> new SmplValidationException(msg, body);
-            default -> new SmplException(msg, status, body);
-        };
+        return ApiExceptionHandler.mapApiException(e.getCode(), e.getResponseBody());
     }
 
     // -----------------------------------------------------------------------
@@ -1016,15 +1009,7 @@ public final class FlagsClient {
     }
 
     private static SmplException mapException(ApiException e) {
-        int code = e.getCode();
-        String body = e.getResponseBody();
-        String msg = e.getMessage() != null ? e.getMessage() : "HTTP " + code;
-        return switch (code) {
-            case 404 -> new SmplNotFoundException(msg, body);
-            case 409 -> new SmplConflictException(msg, body);
-            case 422 -> new SmplValidationException(msg, body);
-            default -> new SmplException(msg, code, body);
-        };
+        return ApiExceptionHandler.mapApiException(e.getCode(), e.getResponseBody());
     }
 
     /** Package-private: simulate a WebSocket flag_changed event (testing). */

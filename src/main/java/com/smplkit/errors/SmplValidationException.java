@@ -1,7 +1,9 @@
 package com.smplkit.errors;
 
+import java.util.List;
+
 /**
- * Raised when the server rejects a request due to validation errors (HTTP 422).
+ * Raised when the server rejects a request due to validation errors (HTTP 400 or 422).
  */
 public class SmplValidationException extends SmplException {
 
@@ -13,5 +15,17 @@ public class SmplValidationException extends SmplException {
      */
     public SmplValidationException(String message, String responseBody) {
         super(message, 422, responseBody);
+    }
+
+    /**
+     * Creates a new SmplValidationException with parsed JSON:API errors.
+     *
+     * @param message      human-readable error description
+     * @param statusCode   HTTP status code (400 or 422)
+     * @param responseBody raw response body
+     * @param errors       parsed error details
+     */
+    public SmplValidationException(String message, int statusCode, String responseBody, List<ApiError> errors) {
+        super(message, statusCode, responseBody, errors);
     }
 }
