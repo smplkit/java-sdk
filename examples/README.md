@@ -7,7 +7,7 @@ Runnable examples demonstrating the [smplkit Java SDK](https://github.com/smplki
 ## Prerequisites
 
 1. Java 17+
-2. A valid smplkit API key (create one in the [smplkit console](https://app.smplkit.com)).
+2. A valid smplkit API key, provided via `SMPLKIT_API_KEY` env var or `~/.smplkit` config file (create one in the [smplkit console](https://app.smplkit.com)).
 3. At least one config created in your smplkit account (every account comes with a `common` config by default).
 
 ## Config Showcase
@@ -16,7 +16,7 @@ Runnable examples demonstrating the [smplkit Java SDK](https://github.com/smplki
 
 An end-to-end walkthrough of the Smpl Config SDK covering:
 
-- **Client initialization** — `SmplClient.builder().apiKey(...).build()`
+- **Client initialization** — `SmplClient.builder().environment(...).service(...).build()`
 - **Management-plane CRUD** — create, update, list, get by key, and delete configs
 - **Environment overrides** — `setValues()` and `setValue()` for per-environment configuration
 - **Multi-level inheritance** — child → parent → common hierarchy setup
@@ -28,7 +28,6 @@ An end-to-end walkthrough of the Smpl Config SDK covering:
 ### Running
 
 ```bash
-export SMPLKIT_API_KEY="sk_api_..."
 ./gradlew :examples:run
 ```
 

@@ -26,13 +26,12 @@ import java.util.Map;
  *
  * <p>Prerequisites:</p>
  * <ul>
- *   <li>A valid smplkit API key (set via {@code SMPLKIT_API_KEY} env var)</li>
+ *   <li>A valid smplkit API key, provided via {@code SMPLKIT_API_KEY} env var or {@code ~/.smplkit} config file</li>
  *   <li>The smplkit Config service running and reachable</li>
  * </ul>
  *
  * <p>Usage:</p>
  * <pre>
- *   export SMPLKIT_API_KEY="sk_api_..."
  *   ./gradlew :examples:run -PmainClass=com.smplkit.examples.ConfigRuntimeShowcase
  * </pre>
  */
@@ -44,17 +43,29 @@ public class ConfigRuntimeShowcase {
         // ======================================================================
         section("1. SDK Initialization + Demo Setup");
 
-        String apiKey = System.getenv("SMPLKIT_API_KEY");
-        if (apiKey == null || apiKey.isBlank()) {
-            System.err.println("ERROR: Set the SMPLKIT_API_KEY environment variable before running.");
-            System.err.println("  export SMPLKIT_API_KEY='sk_api_...'");
-            System.exit(1);
-        }
-
+        // The SmplClient builder resolves three required parameters:
+        //
+        //   apiKey       — not passed here; resolved automatically from the
+        //                  SMPLKIT_API_KEY environment variable or the
+        //                  ~/.smplkit configuration file.
+        //
+        //   environment  — the target environment. Can also be resolved from
+        //                  SMPLKIT_ENVIRONMENT if not passed.
+        //
+        //   service      — identifies this SDK instance. Can also be resolved
+        //                  from SMPLKIT_SERVICE if not passed.
+        //
+        // To pass the API key explicitly:
+        //
+        //   SmplClient client = SmplClient.builder()
+        //       .apiKey("sk_api_...")
+        //       .environment("production")
+        //       .service("showcase-service")
+        //       .build();
+        //
         try (SmplClient client = SmplClient.builder()
-                .apiKey(apiKey)
                 .environment("production")
-                .service("config-runtime-showcase")
+                .service("showcase-service")
                 .build()) {
 
             step("SmplClient initialized with environment=production");
