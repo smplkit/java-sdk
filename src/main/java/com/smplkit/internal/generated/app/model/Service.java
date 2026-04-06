@@ -39,7 +39,6 @@ import com.smplkit.internal.generated.app.ApiClient;
  */
 @JsonPropertyOrder({
   Service.JSON_PROPERTY_NAME,
-  Service.JSON_PROPERTY_KEY,
   Service.JSON_PROPERTY_CREATED_AT,
   Service.JSON_PROPERTY_UPDATED_AT
 })
@@ -48,9 +47,6 @@ public class Service {
   public static final String JSON_PROPERTY_NAME = "name";
   @jakarta.annotation.Nonnull
   private String name;
-
-  public static final String JSON_PROPERTY_KEY = "key";
-  private JsonNullable<String> key = JsonNullable.<String>undefined();
 
   public static final String JSON_PROPERTY_CREATED_AT = "created_at";
   private JsonNullable<OffsetDateTime> createdAt = JsonNullable.<OffsetDateTime>undefined();
@@ -92,38 +88,6 @@ public class Service {
   @JsonInclude(value = JsonInclude.Include.ALWAYS)
   public void setName(@jakarta.annotation.Nonnull String name) {
     this.name = name;
-  }
-
-
-  public Service key(@jakarta.annotation.Nullable String key) {
-    this.key = JsonNullable.<String>of(key);
-    return this;
-  }
-
-  /**
-   * Get key
-   * @return key
-   */
-  @jakarta.annotation.Nullable
-  @JsonIgnore
-  public String getKey() {
-        return key.orElse(null);
-  }
-
-  @JsonProperty(value = JSON_PROPERTY_KEY, required = false)
-  @JsonInclude(value = JsonInclude.Include.USE_DEFAULTS)
-
-  public JsonNullable<String> getKey_JsonNullable() {
-    return key;
-  }
-  
-  @JsonProperty(JSON_PROPERTY_KEY)
-  public void setKey_JsonNullable(JsonNullable<String> key) {
-    this.key = key;
-  }
-
-  public void setKey(@jakarta.annotation.Nullable String key) {
-    this.key = JsonNullable.<String>of(key);
   }
 
 
@@ -196,7 +160,6 @@ public class Service {
     }
     Service service = (Service) o;
     return Objects.equals(this.name, service.name) &&
-        equalsNullable(this.key, service.key) &&
         equalsNullable(this.createdAt, service.createdAt) &&
         equalsNullable(this.updatedAt, service.updatedAt);
   }
@@ -207,7 +170,7 @@ public class Service {
 
   @Override
   public int hashCode() {
-    return Objects.hash(name, hashCodeNullable(key), hashCodeNullable(createdAt), hashCodeNullable(updatedAt));
+    return Objects.hash(name, hashCodeNullable(createdAt), hashCodeNullable(updatedAt));
   }
 
   private static <T> int hashCodeNullable(JsonNullable<T> a) {
@@ -222,7 +185,6 @@ public class Service {
     StringBuilder sb = new StringBuilder();
     sb.append("class Service {\n");
     sb.append("    name: ").append(toIndentedString(name)).append("\n");
-    sb.append("    key: ").append(toIndentedString(key)).append("\n");
     sb.append("    createdAt: ").append(toIndentedString(createdAt)).append("\n");
     sb.append("    updatedAt: ").append(toIndentedString(updatedAt)).append("\n");
     sb.append("}");
@@ -272,11 +234,6 @@ public class Service {
     // add `name` to the URL query string
     if (getName() != null) {
       joiner.add(String.format(java.util.Locale.ROOT, "%sname%s=%s", prefix, suffix, ApiClient.urlEncode(ApiClient.valueToString(getName()))));
-    }
-
-    // add `key` to the URL query string
-    if (getKey() != null) {
-      joiner.add(String.format(java.util.Locale.ROOT, "%skey%s=%s", prefix, suffix, ApiClient.urlEncode(ApiClient.valueToString(getKey()))));
     }
 
     // add `created_at` to the URL query string

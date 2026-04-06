@@ -21,7 +21,6 @@ import com.smplkit.internal.generated.app.Pair;
 import com.smplkit.internal.generated.app.model.ErrorResponse;
 import com.smplkit.internal.generated.app.model.ServiceListResponse;
 import com.smplkit.internal.generated.app.model.ServiceResponse;
-import java.util.UUID;
 
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -294,7 +293,7 @@ public class ServicesApi {
    * @param id  (required)
    * @throws ApiException if fails to make API call
    */
-  public void deleteService(@jakarta.annotation.Nonnull UUID id) throws ApiException {
+  public void deleteService(@jakarta.annotation.Nonnull String id) throws ApiException {
     deleteService(id, null);
   }
 
@@ -305,7 +304,7 @@ public class ServicesApi {
    * @param headers Optional headers to include in the request
    * @throws ApiException if fails to make API call
    */
-  public void deleteService(@jakarta.annotation.Nonnull UUID id, Map<String, String> headers) throws ApiException {
+  public void deleteService(@jakarta.annotation.Nonnull String id, Map<String, String> headers) throws ApiException {
     deleteServiceWithHttpInfo(id, headers);
   }
 
@@ -316,7 +315,7 @@ public class ServicesApi {
    * @return ApiResponse&lt;Void&gt;
    * @throws ApiException if fails to make API call
    */
-  public ApiResponse<Void> deleteServiceWithHttpInfo(@jakarta.annotation.Nonnull UUID id) throws ApiException {
+  public ApiResponse<Void> deleteServiceWithHttpInfo(@jakarta.annotation.Nonnull String id) throws ApiException {
     return deleteServiceWithHttpInfo(id, null);
   }
 
@@ -328,7 +327,7 @@ public class ServicesApi {
    * @return ApiResponse&lt;Void&gt;
    * @throws ApiException if fails to make API call
    */
-  public ApiResponse<Void> deleteServiceWithHttpInfo(@jakarta.annotation.Nonnull UUID id, Map<String, String> headers) throws ApiException {
+  public ApiResponse<Void> deleteServiceWithHttpInfo(@jakarta.annotation.Nonnull String id, Map<String, String> headers) throws ApiException {
     HttpRequest.Builder localVarRequestBuilder = deleteServiceRequestBuilder(id, headers);
     try {
       HttpResponse<InputStream> localVarResponse = memberVarHttpClient.send(
@@ -365,7 +364,7 @@ public class ServicesApi {
     }
   }
 
-  private HttpRequest.Builder deleteServiceRequestBuilder(@jakarta.annotation.Nonnull UUID id, Map<String, String> headers) throws ApiException {
+  private HttpRequest.Builder deleteServiceRequestBuilder(@jakarta.annotation.Nonnull String id, Map<String, String> headers) throws ApiException {
     // verify the required parameter 'id' is set
     if (id == null) {
       throw new ApiException(400, "Missing the required parameter 'id' when calling deleteService");
@@ -399,7 +398,7 @@ public class ServicesApi {
    * @return ServiceResponse
    * @throws ApiException if fails to make API call
    */
-  public ServiceResponse getService(@jakarta.annotation.Nonnull UUID id) throws ApiException {
+  public ServiceResponse getService(@jakarta.annotation.Nonnull String id) throws ApiException {
     return getService(id, null);
   }
 
@@ -411,7 +410,7 @@ public class ServicesApi {
    * @return ServiceResponse
    * @throws ApiException if fails to make API call
    */
-  public ServiceResponse getService(@jakarta.annotation.Nonnull UUID id, Map<String, String> headers) throws ApiException {
+  public ServiceResponse getService(@jakarta.annotation.Nonnull String id, Map<String, String> headers) throws ApiException {
     ApiResponse<ServiceResponse> localVarResponse = getServiceWithHttpInfo(id, headers);
     return localVarResponse.getData();
   }
@@ -423,7 +422,7 @@ public class ServicesApi {
    * @return ApiResponse&lt;ServiceResponse&gt;
    * @throws ApiException if fails to make API call
    */
-  public ApiResponse<ServiceResponse> getServiceWithHttpInfo(@jakarta.annotation.Nonnull UUID id) throws ApiException {
+  public ApiResponse<ServiceResponse> getServiceWithHttpInfo(@jakarta.annotation.Nonnull String id) throws ApiException {
     return getServiceWithHttpInfo(id, null);
   }
 
@@ -435,7 +434,7 @@ public class ServicesApi {
    * @return ApiResponse&lt;ServiceResponse&gt;
    * @throws ApiException if fails to make API call
    */
-  public ApiResponse<ServiceResponse> getServiceWithHttpInfo(@jakarta.annotation.Nonnull UUID id, Map<String, String> headers) throws ApiException {
+  public ApiResponse<ServiceResponse> getServiceWithHttpInfo(@jakarta.annotation.Nonnull String id, Map<String, String> headers) throws ApiException {
     HttpRequest.Builder localVarRequestBuilder = getServiceRequestBuilder(id, headers);
     try {
       HttpResponse<InputStream> localVarResponse = memberVarHttpClient.send(
@@ -483,7 +482,7 @@ public class ServicesApi {
     }
   }
 
-  private HttpRequest.Builder getServiceRequestBuilder(@jakarta.annotation.Nonnull UUID id, Map<String, String> headers) throws ApiException {
+  private HttpRequest.Builder getServiceRequestBuilder(@jakarta.annotation.Nonnull String id, Map<String, String> headers) throws ApiException {
     // verify the required parameter 'id' is set
     if (id == null) {
       throw new ApiException(400, "Missing the required parameter 'id' when calling getService");
@@ -646,7 +645,7 @@ public class ServicesApi {
    * @return ServiceResponse
    * @throws ApiException if fails to make API call
    */
-  public ServiceResponse updateService(@jakarta.annotation.Nonnull UUID id, @jakarta.annotation.Nonnull ServiceResponse serviceResponse) throws ApiException {
+  public ServiceResponse updateService(@jakarta.annotation.Nonnull String id, @jakarta.annotation.Nonnull ServiceResponse serviceResponse) throws ApiException {
     return updateService(id, serviceResponse, null);
   }
 
@@ -659,7 +658,7 @@ public class ServicesApi {
    * @return ServiceResponse
    * @throws ApiException if fails to make API call
    */
-  public ServiceResponse updateService(@jakarta.annotation.Nonnull UUID id, @jakarta.annotation.Nonnull ServiceResponse serviceResponse, Map<String, String> headers) throws ApiException {
+  public ServiceResponse updateService(@jakarta.annotation.Nonnull String id, @jakarta.annotation.Nonnull ServiceResponse serviceResponse, Map<String, String> headers) throws ApiException {
     ApiResponse<ServiceResponse> localVarResponse = updateServiceWithHttpInfo(id, serviceResponse, headers);
     return localVarResponse.getData();
   }
@@ -672,7 +671,7 @@ public class ServicesApi {
    * @return ApiResponse&lt;ServiceResponse&gt;
    * @throws ApiException if fails to make API call
    */
-  public ApiResponse<ServiceResponse> updateServiceWithHttpInfo(@jakarta.annotation.Nonnull UUID id, @jakarta.annotation.Nonnull ServiceResponse serviceResponse) throws ApiException {
+  public ApiResponse<ServiceResponse> updateServiceWithHttpInfo(@jakarta.annotation.Nonnull String id, @jakarta.annotation.Nonnull ServiceResponse serviceResponse) throws ApiException {
     return updateServiceWithHttpInfo(id, serviceResponse, null);
   }
 
@@ -685,7 +684,7 @@ public class ServicesApi {
    * @return ApiResponse&lt;ServiceResponse&gt;
    * @throws ApiException if fails to make API call
    */
-  public ApiResponse<ServiceResponse> updateServiceWithHttpInfo(@jakarta.annotation.Nonnull UUID id, @jakarta.annotation.Nonnull ServiceResponse serviceResponse, Map<String, String> headers) throws ApiException {
+  public ApiResponse<ServiceResponse> updateServiceWithHttpInfo(@jakarta.annotation.Nonnull String id, @jakarta.annotation.Nonnull ServiceResponse serviceResponse, Map<String, String> headers) throws ApiException {
     HttpRequest.Builder localVarRequestBuilder = updateServiceRequestBuilder(id, serviceResponse, headers);
     try {
       HttpResponse<InputStream> localVarResponse = memberVarHttpClient.send(
@@ -733,7 +732,7 @@ public class ServicesApi {
     }
   }
 
-  private HttpRequest.Builder updateServiceRequestBuilder(@jakarta.annotation.Nonnull UUID id, @jakarta.annotation.Nonnull ServiceResponse serviceResponse, Map<String, String> headers) throws ApiException {
+  private HttpRequest.Builder updateServiceRequestBuilder(@jakarta.annotation.Nonnull String id, @jakarta.annotation.Nonnull ServiceResponse serviceResponse, Map<String, String> headers) throws ApiException {
     // verify the required parameter 'id' is set
     if (id == null) {
       throw new ApiException(400, "Missing the required parameter 'id' when calling updateService");
