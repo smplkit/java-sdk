@@ -19,6 +19,7 @@ import com.smplkit.internal.generated.app.Configuration;
 import com.smplkit.internal.generated.app.Pair;
 
 import com.smplkit.internal.generated.app.model.ErrorResponse;
+import com.smplkit.internal.generated.app.model.InvitationAcceptRequest;
 import com.smplkit.internal.generated.app.model.InvitationBulkCreateRequest;
 import com.smplkit.internal.generated.app.model.InvitationListResponse;
 import com.smplkit.internal.generated.app.model.InvitationResponse;
@@ -169,48 +170,48 @@ public class InvitationsApi {
   /**
    * Accept Invitation
    * 
-   * @param token  (required)
-   * @return Object
+   * @param invitationAcceptRequest  (required)
+   * @return InvitationResponse
    * @throws ApiException if fails to make API call
    */
-  public Object acceptInvitation(@jakarta.annotation.Nonnull String token) throws ApiException {
-    return acceptInvitation(token, null);
+  public InvitationResponse acceptInvitation(@jakarta.annotation.Nonnull InvitationAcceptRequest invitationAcceptRequest) throws ApiException {
+    return acceptInvitation(invitationAcceptRequest, null);
   }
 
   /**
    * Accept Invitation
    * 
-   * @param token  (required)
+   * @param invitationAcceptRequest  (required)
    * @param headers Optional headers to include in the request
-   * @return Object
+   * @return InvitationResponse
    * @throws ApiException if fails to make API call
    */
-  public Object acceptInvitation(@jakarta.annotation.Nonnull String token, Map<String, String> headers) throws ApiException {
-    ApiResponse<Object> localVarResponse = acceptInvitationWithHttpInfo(token, headers);
+  public InvitationResponse acceptInvitation(@jakarta.annotation.Nonnull InvitationAcceptRequest invitationAcceptRequest, Map<String, String> headers) throws ApiException {
+    ApiResponse<InvitationResponse> localVarResponse = acceptInvitationWithHttpInfo(invitationAcceptRequest, headers);
     return localVarResponse.getData();
   }
 
   /**
    * Accept Invitation
    * 
-   * @param token  (required)
-   * @return ApiResponse&lt;Object&gt;
+   * @param invitationAcceptRequest  (required)
+   * @return ApiResponse&lt;InvitationResponse&gt;
    * @throws ApiException if fails to make API call
    */
-  public ApiResponse<Object> acceptInvitationWithHttpInfo(@jakarta.annotation.Nonnull String token) throws ApiException {
-    return acceptInvitationWithHttpInfo(token, null);
+  public ApiResponse<InvitationResponse> acceptInvitationWithHttpInfo(@jakarta.annotation.Nonnull InvitationAcceptRequest invitationAcceptRequest) throws ApiException {
+    return acceptInvitationWithHttpInfo(invitationAcceptRequest, null);
   }
 
   /**
    * Accept Invitation
    * 
-   * @param token  (required)
+   * @param invitationAcceptRequest  (required)
    * @param headers Optional headers to include in the request
-   * @return ApiResponse&lt;Object&gt;
+   * @return ApiResponse&lt;InvitationResponse&gt;
    * @throws ApiException if fails to make API call
    */
-  public ApiResponse<Object> acceptInvitationWithHttpInfo(@jakarta.annotation.Nonnull String token, Map<String, String> headers) throws ApiException {
-    HttpRequest.Builder localVarRequestBuilder = acceptInvitationRequestBuilder(token, headers);
+  public ApiResponse<InvitationResponse> acceptInvitationWithHttpInfo(@jakarta.annotation.Nonnull InvitationAcceptRequest invitationAcceptRequest, Map<String, String> headers) throws ApiException {
+    HttpRequest.Builder localVarRequestBuilder = acceptInvitationRequestBuilder(invitationAcceptRequest, headers);
     try {
       HttpResponse<InputStream> localVarResponse = memberVarHttpClient.send(
           localVarRequestBuilder.build(),
@@ -225,7 +226,7 @@ public class InvitationsApi {
         }
         localVarResponseBody = ApiClient.getResponseBody(localVarResponse);
         if (localVarResponseBody == null) {
-          return new ApiResponse<Object>(
+          return new ApiResponse<InvitationResponse>(
               localVarResponse.statusCode(),
               localVarResponse.headers().map(),
               null
@@ -235,10 +236,10 @@ public class InvitationsApi {
         
         
         String responseBody = new String(localVarResponseBody.readAllBytes());
-        Object responseValue = responseBody.isBlank()? null: memberVarObjectMapper.readValue(responseBody, new TypeReference<Object>() {});
+        InvitationResponse responseValue = responseBody.isBlank()? null: memberVarObjectMapper.readValue(responseBody, new TypeReference<InvitationResponse>() {});
         
 
-        return new ApiResponse<Object>(
+        return new ApiResponse<InvitationResponse>(
             localVarResponse.statusCode(),
             localVarResponse.headers().map(),
             responseValue
@@ -257,36 +258,27 @@ public class InvitationsApi {
     }
   }
 
-  private HttpRequest.Builder acceptInvitationRequestBuilder(@jakarta.annotation.Nonnull String token, Map<String, String> headers) throws ApiException {
-    // verify the required parameter 'token' is set
-    if (token == null) {
-      throw new ApiException(400, "Missing the required parameter 'token' when calling acceptInvitation");
+  private HttpRequest.Builder acceptInvitationRequestBuilder(@jakarta.annotation.Nonnull InvitationAcceptRequest invitationAcceptRequest, Map<String, String> headers) throws ApiException {
+    // verify the required parameter 'invitationAcceptRequest' is set
+    if (invitationAcceptRequest == null) {
+      throw new ApiException(400, "Missing the required parameter 'invitationAcceptRequest' when calling acceptInvitation");
     }
 
     HttpRequest.Builder localVarRequestBuilder = HttpRequest.newBuilder();
 
     String localVarPath = "/api/v1/invitations/accept";
 
-    List<Pair> localVarQueryParams = new ArrayList<>();
-    StringJoiner localVarQueryStringJoiner = new StringJoiner("&");
-    String localVarQueryParameterBaseName;
-    localVarQueryParameterBaseName = "token";
-    localVarQueryParams.addAll(ApiClient.parameterToPairs("token", token));
+    localVarRequestBuilder.uri(URI.create(memberVarBaseUri + localVarPath));
 
-    if (!localVarQueryParams.isEmpty() || localVarQueryStringJoiner.length() != 0) {
-      StringJoiner queryJoiner = new StringJoiner("&");
-      localVarQueryParams.forEach(p -> queryJoiner.add(p.getName() + '=' + p.getValue()));
-      if (localVarQueryStringJoiner.length() != 0) {
-        queryJoiner.add(localVarQueryStringJoiner.toString());
-      }
-      localVarRequestBuilder.uri(URI.create(memberVarBaseUri + localVarPath + '?' + queryJoiner.toString()));
-    } else {
-      localVarRequestBuilder.uri(URI.create(memberVarBaseUri + localVarPath));
-    }
-
+    localVarRequestBuilder.header("Content-Type", "application/vnd.api+json");
     localVarRequestBuilder.header("Accept", "application/vnd.api+json");
 
-    localVarRequestBuilder.method("GET", HttpRequest.BodyPublishers.noBody());
+    try {
+      byte[] localVarPostBody = memberVarObjectMapper.writeValueAsBytes(invitationAcceptRequest);
+      localVarRequestBuilder.method("POST", HttpRequest.BodyPublishers.ofByteArray(localVarPostBody));
+    } catch (IOException e) {
+      throw new ApiException(e);
+    }
     if (memberVarReadTimeout != null) {
       localVarRequestBuilder.timeout(memberVarReadTimeout);
     }
