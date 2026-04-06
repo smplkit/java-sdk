@@ -39,8 +39,8 @@ import com.smplkit.internal.generated.app.ApiClient;
  */
 @JsonPropertyOrder({
   Environment.JSON_PROPERTY_NAME,
-  Environment.JSON_PROPERTY_KEY,
   Environment.JSON_PROPERTY_COLOR,
+  Environment.JSON_PROPERTY_CLASSIFICATION,
   Environment.JSON_PROPERTY_CREATED_AT,
   Environment.JSON_PROPERTY_UPDATED_AT
 })
@@ -50,11 +50,11 @@ public class Environment {
   @jakarta.annotation.Nonnull
   private String name;
 
-  public static final String JSON_PROPERTY_KEY = "key";
-  private JsonNullable<String> key = JsonNullable.<String>undefined();
-
   public static final String JSON_PROPERTY_COLOR = "color";
   private JsonNullable<String> color = JsonNullable.<String>undefined();
+
+  public static final String JSON_PROPERTY_CLASSIFICATION = "classification";
+  private JsonNullable<String> classification = JsonNullable.<String>undefined();
 
   public static final String JSON_PROPERTY_CREATED_AT = "created_at";
   private JsonNullable<OffsetDateTime> createdAt = JsonNullable.<OffsetDateTime>undefined();
@@ -67,10 +67,12 @@ public class Environment {
 
   @JsonCreator
   public Environment(
+    @JsonProperty(JSON_PROPERTY_CLASSIFICATION) String classification, 
     @JsonProperty(JSON_PROPERTY_CREATED_AT) OffsetDateTime createdAt, 
     @JsonProperty(JSON_PROPERTY_UPDATED_AT) OffsetDateTime updatedAt
   ) {
   this();
+    this.classification = classification == null ? JsonNullable.<String>undefined() : JsonNullable.of(classification);
     this.createdAt = createdAt == null ? JsonNullable.<OffsetDateTime>undefined() : JsonNullable.of(createdAt);
     this.updatedAt = updatedAt == null ? JsonNullable.<OffsetDateTime>undefined() : JsonNullable.of(updatedAt);
   }
@@ -96,38 +98,6 @@ public class Environment {
   @JsonInclude(value = JsonInclude.Include.ALWAYS)
   public void setName(@jakarta.annotation.Nonnull String name) {
     this.name = name;
-  }
-
-
-  public Environment key(@jakarta.annotation.Nullable String key) {
-    this.key = JsonNullable.<String>of(key);
-    return this;
-  }
-
-  /**
-   * Get key
-   * @return key
-   */
-  @jakarta.annotation.Nullable
-  @JsonIgnore
-  public String getKey() {
-        return key.orElse(null);
-  }
-
-  @JsonProperty(value = JSON_PROPERTY_KEY, required = false)
-  @JsonInclude(value = JsonInclude.Include.USE_DEFAULTS)
-
-  public JsonNullable<String> getKey_JsonNullable() {
-    return key;
-  }
-  
-  @JsonProperty(JSON_PROPERTY_KEY)
-  public void setKey_JsonNullable(JsonNullable<String> key) {
-    this.key = key;
-  }
-
-  public void setKey(@jakarta.annotation.Nullable String key) {
-    this.key = JsonNullable.<String>of(key);
   }
 
 
@@ -161,6 +131,34 @@ public class Environment {
   public void setColor(@jakarta.annotation.Nullable String color) {
     this.color = JsonNullable.<String>of(color);
   }
+
+
+  /**
+   * Get classification
+   * @return classification
+   */
+  @jakarta.annotation.Nullable
+  @JsonIgnore
+  public String getClassification() {
+    
+    if (classification == null) {
+      classification = JsonNullable.<String>undefined();
+    }
+    return classification.orElse(null);
+  }
+
+  @JsonProperty(value = JSON_PROPERTY_CLASSIFICATION, required = false)
+  @JsonInclude(value = JsonInclude.Include.USE_DEFAULTS)
+
+  public JsonNullable<String> getClassification_JsonNullable() {
+    return classification;
+  }
+  
+  @JsonProperty(JSON_PROPERTY_CLASSIFICATION)
+  private void setClassification_JsonNullable(JsonNullable<String> classification) {
+    this.classification = classification;
+  }
+
 
 
   /**
@@ -232,8 +230,8 @@ public class Environment {
     }
     Environment environment = (Environment) o;
     return Objects.equals(this.name, environment.name) &&
-        equalsNullable(this.key, environment.key) &&
         equalsNullable(this.color, environment.color) &&
+        equalsNullable(this.classification, environment.classification) &&
         equalsNullable(this.createdAt, environment.createdAt) &&
         equalsNullable(this.updatedAt, environment.updatedAt);
   }
@@ -244,7 +242,7 @@ public class Environment {
 
   @Override
   public int hashCode() {
-    return Objects.hash(name, hashCodeNullable(key), hashCodeNullable(color), hashCodeNullable(createdAt), hashCodeNullable(updatedAt));
+    return Objects.hash(name, hashCodeNullable(color), hashCodeNullable(classification), hashCodeNullable(createdAt), hashCodeNullable(updatedAt));
   }
 
   private static <T> int hashCodeNullable(JsonNullable<T> a) {
@@ -259,8 +257,8 @@ public class Environment {
     StringBuilder sb = new StringBuilder();
     sb.append("class Environment {\n");
     sb.append("    name: ").append(toIndentedString(name)).append("\n");
-    sb.append("    key: ").append(toIndentedString(key)).append("\n");
     sb.append("    color: ").append(toIndentedString(color)).append("\n");
+    sb.append("    classification: ").append(toIndentedString(classification)).append("\n");
     sb.append("    createdAt: ").append(toIndentedString(createdAt)).append("\n");
     sb.append("    updatedAt: ").append(toIndentedString(updatedAt)).append("\n");
     sb.append("}");
@@ -312,14 +310,14 @@ public class Environment {
       joiner.add(String.format(java.util.Locale.ROOT, "%sname%s=%s", prefix, suffix, ApiClient.urlEncode(ApiClient.valueToString(getName()))));
     }
 
-    // add `key` to the URL query string
-    if (getKey() != null) {
-      joiner.add(String.format(java.util.Locale.ROOT, "%skey%s=%s", prefix, suffix, ApiClient.urlEncode(ApiClient.valueToString(getKey()))));
-    }
-
     // add `color` to the URL query string
     if (getColor() != null) {
       joiner.add(String.format(java.util.Locale.ROOT, "%scolor%s=%s", prefix, suffix, ApiClient.urlEncode(ApiClient.valueToString(getColor()))));
+    }
+
+    // add `classification` to the URL query string
+    if (getClassification() != null) {
+      joiner.add(String.format(java.util.Locale.ROOT, "%sclassification%s=%s", prefix, suffix, ApiClient.urlEncode(ApiClient.valueToString(getClassification()))));
     }
 
     // add `created_at` to the URL query string

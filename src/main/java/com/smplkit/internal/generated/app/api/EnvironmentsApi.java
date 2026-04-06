@@ -21,7 +21,6 @@ import com.smplkit.internal.generated.app.Pair;
 import com.smplkit.internal.generated.app.model.EnvironmentListResponse;
 import com.smplkit.internal.generated.app.model.EnvironmentResponse;
 import com.smplkit.internal.generated.app.model.ErrorResponse;
-import java.util.UUID;
 
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -294,7 +293,7 @@ public class EnvironmentsApi {
    * @param id  (required)
    * @throws ApiException if fails to make API call
    */
-  public void deleteEnvironment(@jakarta.annotation.Nonnull UUID id) throws ApiException {
+  public void deleteEnvironment(@jakarta.annotation.Nonnull String id) throws ApiException {
     deleteEnvironment(id, null);
   }
 
@@ -305,7 +304,7 @@ public class EnvironmentsApi {
    * @param headers Optional headers to include in the request
    * @throws ApiException if fails to make API call
    */
-  public void deleteEnvironment(@jakarta.annotation.Nonnull UUID id, Map<String, String> headers) throws ApiException {
+  public void deleteEnvironment(@jakarta.annotation.Nonnull String id, Map<String, String> headers) throws ApiException {
     deleteEnvironmentWithHttpInfo(id, headers);
   }
 
@@ -316,7 +315,7 @@ public class EnvironmentsApi {
    * @return ApiResponse&lt;Void&gt;
    * @throws ApiException if fails to make API call
    */
-  public ApiResponse<Void> deleteEnvironmentWithHttpInfo(@jakarta.annotation.Nonnull UUID id) throws ApiException {
+  public ApiResponse<Void> deleteEnvironmentWithHttpInfo(@jakarta.annotation.Nonnull String id) throws ApiException {
     return deleteEnvironmentWithHttpInfo(id, null);
   }
 
@@ -328,7 +327,7 @@ public class EnvironmentsApi {
    * @return ApiResponse&lt;Void&gt;
    * @throws ApiException if fails to make API call
    */
-  public ApiResponse<Void> deleteEnvironmentWithHttpInfo(@jakarta.annotation.Nonnull UUID id, Map<String, String> headers) throws ApiException {
+  public ApiResponse<Void> deleteEnvironmentWithHttpInfo(@jakarta.annotation.Nonnull String id, Map<String, String> headers) throws ApiException {
     HttpRequest.Builder localVarRequestBuilder = deleteEnvironmentRequestBuilder(id, headers);
     try {
       HttpResponse<InputStream> localVarResponse = memberVarHttpClient.send(
@@ -365,7 +364,7 @@ public class EnvironmentsApi {
     }
   }
 
-  private HttpRequest.Builder deleteEnvironmentRequestBuilder(@jakarta.annotation.Nonnull UUID id, Map<String, String> headers) throws ApiException {
+  private HttpRequest.Builder deleteEnvironmentRequestBuilder(@jakarta.annotation.Nonnull String id, Map<String, String> headers) throws ApiException {
     // verify the required parameter 'id' is set
     if (id == null) {
       throw new ApiException(400, "Missing the required parameter 'id' when calling deleteEnvironment");
@@ -399,7 +398,7 @@ public class EnvironmentsApi {
    * @return EnvironmentResponse
    * @throws ApiException if fails to make API call
    */
-  public EnvironmentResponse getEnvironment(@jakarta.annotation.Nonnull UUID id) throws ApiException {
+  public EnvironmentResponse getEnvironment(@jakarta.annotation.Nonnull String id) throws ApiException {
     return getEnvironment(id, null);
   }
 
@@ -411,7 +410,7 @@ public class EnvironmentsApi {
    * @return EnvironmentResponse
    * @throws ApiException if fails to make API call
    */
-  public EnvironmentResponse getEnvironment(@jakarta.annotation.Nonnull UUID id, Map<String, String> headers) throws ApiException {
+  public EnvironmentResponse getEnvironment(@jakarta.annotation.Nonnull String id, Map<String, String> headers) throws ApiException {
     ApiResponse<EnvironmentResponse> localVarResponse = getEnvironmentWithHttpInfo(id, headers);
     return localVarResponse.getData();
   }
@@ -423,7 +422,7 @@ public class EnvironmentsApi {
    * @return ApiResponse&lt;EnvironmentResponse&gt;
    * @throws ApiException if fails to make API call
    */
-  public ApiResponse<EnvironmentResponse> getEnvironmentWithHttpInfo(@jakarta.annotation.Nonnull UUID id) throws ApiException {
+  public ApiResponse<EnvironmentResponse> getEnvironmentWithHttpInfo(@jakarta.annotation.Nonnull String id) throws ApiException {
     return getEnvironmentWithHttpInfo(id, null);
   }
 
@@ -435,7 +434,7 @@ public class EnvironmentsApi {
    * @return ApiResponse&lt;EnvironmentResponse&gt;
    * @throws ApiException if fails to make API call
    */
-  public ApiResponse<EnvironmentResponse> getEnvironmentWithHttpInfo(@jakarta.annotation.Nonnull UUID id, Map<String, String> headers) throws ApiException {
+  public ApiResponse<EnvironmentResponse> getEnvironmentWithHttpInfo(@jakarta.annotation.Nonnull String id, Map<String, String> headers) throws ApiException {
     HttpRequest.Builder localVarRequestBuilder = getEnvironmentRequestBuilder(id, headers);
     try {
       HttpResponse<InputStream> localVarResponse = memberVarHttpClient.send(
@@ -483,7 +482,7 @@ public class EnvironmentsApi {
     }
   }
 
-  private HttpRequest.Builder getEnvironmentRequestBuilder(@jakarta.annotation.Nonnull UUID id, Map<String, String> headers) throws ApiException {
+  private HttpRequest.Builder getEnvironmentRequestBuilder(@jakarta.annotation.Nonnull String id, Map<String, String> headers) throws ApiException {
     // verify the required parameter 'id' is set
     if (id == null) {
       throw new ApiException(400, "Missing the required parameter 'id' when calling getEnvironment");
@@ -646,7 +645,7 @@ public class EnvironmentsApi {
    * @return EnvironmentResponse
    * @throws ApiException if fails to make API call
    */
-  public EnvironmentResponse updateEnvironment(@jakarta.annotation.Nonnull UUID id, @jakarta.annotation.Nonnull EnvironmentResponse environmentResponse) throws ApiException {
+  public EnvironmentResponse updateEnvironment(@jakarta.annotation.Nonnull String id, @jakarta.annotation.Nonnull EnvironmentResponse environmentResponse) throws ApiException {
     return updateEnvironment(id, environmentResponse, null);
   }
 
@@ -659,7 +658,7 @@ public class EnvironmentsApi {
    * @return EnvironmentResponse
    * @throws ApiException if fails to make API call
    */
-  public EnvironmentResponse updateEnvironment(@jakarta.annotation.Nonnull UUID id, @jakarta.annotation.Nonnull EnvironmentResponse environmentResponse, Map<String, String> headers) throws ApiException {
+  public EnvironmentResponse updateEnvironment(@jakarta.annotation.Nonnull String id, @jakarta.annotation.Nonnull EnvironmentResponse environmentResponse, Map<String, String> headers) throws ApiException {
     ApiResponse<EnvironmentResponse> localVarResponse = updateEnvironmentWithHttpInfo(id, environmentResponse, headers);
     return localVarResponse.getData();
   }
@@ -672,7 +671,7 @@ public class EnvironmentsApi {
    * @return ApiResponse&lt;EnvironmentResponse&gt;
    * @throws ApiException if fails to make API call
    */
-  public ApiResponse<EnvironmentResponse> updateEnvironmentWithHttpInfo(@jakarta.annotation.Nonnull UUID id, @jakarta.annotation.Nonnull EnvironmentResponse environmentResponse) throws ApiException {
+  public ApiResponse<EnvironmentResponse> updateEnvironmentWithHttpInfo(@jakarta.annotation.Nonnull String id, @jakarta.annotation.Nonnull EnvironmentResponse environmentResponse) throws ApiException {
     return updateEnvironmentWithHttpInfo(id, environmentResponse, null);
   }
 
@@ -685,7 +684,7 @@ public class EnvironmentsApi {
    * @return ApiResponse&lt;EnvironmentResponse&gt;
    * @throws ApiException if fails to make API call
    */
-  public ApiResponse<EnvironmentResponse> updateEnvironmentWithHttpInfo(@jakarta.annotation.Nonnull UUID id, @jakarta.annotation.Nonnull EnvironmentResponse environmentResponse, Map<String, String> headers) throws ApiException {
+  public ApiResponse<EnvironmentResponse> updateEnvironmentWithHttpInfo(@jakarta.annotation.Nonnull String id, @jakarta.annotation.Nonnull EnvironmentResponse environmentResponse, Map<String, String> headers) throws ApiException {
     HttpRequest.Builder localVarRequestBuilder = updateEnvironmentRequestBuilder(id, environmentResponse, headers);
     try {
       HttpResponse<InputStream> localVarResponse = memberVarHttpClient.send(
@@ -733,7 +732,7 @@ public class EnvironmentsApi {
     }
   }
 
-  private HttpRequest.Builder updateEnvironmentRequestBuilder(@jakarta.annotation.Nonnull UUID id, @jakarta.annotation.Nonnull EnvironmentResponse environmentResponse, Map<String, String> headers) throws ApiException {
+  private HttpRequest.Builder updateEnvironmentRequestBuilder(@jakarta.annotation.Nonnull String id, @jakarta.annotation.Nonnull EnvironmentResponse environmentResponse, Map<String, String> headers) throws ApiException {
     // verify the required parameter 'id' is set
     if (id == null) {
       throw new ApiException(400, "Missing the required parameter 'id' when calling updateEnvironment");
