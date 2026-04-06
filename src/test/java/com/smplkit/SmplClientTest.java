@@ -242,4 +242,50 @@ class SmplClientTest {
         assertEquals("test", client.environment());
         assertEquals("test-service", client.service());
     }
+
+    @Test
+    void packagePrivateConstructorWithInjectableSubClients_createsClient() {
+        java.net.http.HttpClient httpClient = java.net.http.HttpClient.newHttpClient();
+
+        // Create real sub-clients using the same pattern as the builder
+        com.smplkit.internal.generated.flags.ApiClient flagsApiClient =
+                new com.smplkit.internal.generated.flags.ApiClient();
+        flagsApiClient.updateBaseUri("https://flags.smplkit.com");
+        flagsApiClient.setRequestInterceptor(SmplClient.authInterceptor("test-key"));
+        flagsApiClient.setReadTimeout(Duration.ofSeconds(5));
+        com.smplkit.internal.generated.flags.api.FlagsApi flagsApi =
+                new com.smplkit.internal.generated.flags.api.FlagsApi(flagsApiClient);
+
+        com.smplkit.internal.generated.app.ApiClient appApiClient =
+                new com.smplkit.internal.generated.app.ApiClient();
+        appApiClient.updateBaseUri("https://app.smplkit.com");
+        appApiClient.setRequestInterceptor(SmplClient.authInterceptor("test-key"));
+        appApiClient.setReadTimeout(Duration.ofSeconds(5));
+
+        com.smplkit.flags.FlagsClient flagsClient = new com.smplkit.flags.FlagsClient(
+                flagsApi, null, null,
+                httpClient, "test-key",
+                "https://flags.smplkit.com", "https://app.smplkit.com", Duration.ofSeconds(5));
+
+        com.smplkit.internal.generated.config.ApiClient configApiClient =
+                new com.smplkit.internal.generated.config.ApiClient();
+        configApiClient.updateBaseUri("https://config.smplkit.com");
+        configApiClient.setRequestInterceptor(
+                builder -> builder.header("Authorization", "Bearer test-key"));
+        configApiClient.setReadTimeout(Duration.ofSeconds(5));
+        com.smplkit.internal.generated.config.api.ConfigsApi configsApi =
+                new com.smplkit.internal.generated.config.api.ConfigsApi(configApiClient);
+        com.smplkit.config.ConfigClient configClient =
+                new com.smplkit.config.ConfigClient(configsApi, httpClient, "test-key");
+
+        SmplClient client = new SmplClient(httpClient, "test-key", "test", "test-service",
+                Duration.ofSeconds(5), flagsClient, configClient);
+        assertNotNull(client);
+        assertNotNull(client.config());
+        assertNotNull(client.flags());
+        assertEquals("test", client.environment());
+        assertEquals("test-service", client.service());
+        assertFalse(client.isConnected());
+        client.close();
+    }
 }
