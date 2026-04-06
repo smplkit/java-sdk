@@ -23,6 +23,7 @@ import com.smplkit.internal.generated.app.model.ErrorResponse;
 import com.smplkit.internal.generated.app.model.LoginRequest;
 import com.smplkit.internal.generated.app.model.OidcProvider;
 import com.smplkit.internal.generated.app.model.RegisterRequest;
+import com.smplkit.internal.generated.app.model.VerifyEmailRequest;
 
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -695,6 +696,224 @@ public class AuthApi {
 
     try {
       byte[] localVarPostBody = memberVarObjectMapper.writeValueAsBytes(registerRequest);
+      localVarRequestBuilder.method("POST", HttpRequest.BodyPublishers.ofByteArray(localVarPostBody));
+    } catch (IOException e) {
+      throw new ApiException(e);
+    }
+    if (memberVarReadTimeout != null) {
+      localVarRequestBuilder.timeout(memberVarReadTimeout);
+    }
+    // Add custom headers if provided
+    localVarRequestBuilder = HttpRequestBuilderExtensions.withAdditionalHeaders(localVarRequestBuilder, headers);
+    if (memberVarInterceptor != null) {
+      memberVarInterceptor.accept(localVarRequestBuilder);
+    }
+    return localVarRequestBuilder;
+  }
+
+  /**
+   * Resend Verification Email
+   * Resends the email verification link to the authenticated user.
+   * @throws ApiException if fails to make API call
+   */
+  public void resendVerification() throws ApiException {
+    resendVerification(null);
+  }
+
+  /**
+   * Resend Verification Email
+   * Resends the email verification link to the authenticated user.
+   * @param headers Optional headers to include in the request
+   * @throws ApiException if fails to make API call
+   */
+  public void resendVerification(Map<String, String> headers) throws ApiException {
+    resendVerificationWithHttpInfo(headers);
+  }
+
+  /**
+   * Resend Verification Email
+   * Resends the email verification link to the authenticated user.
+   * @return ApiResponse&lt;Void&gt;
+   * @throws ApiException if fails to make API call
+   */
+  public ApiResponse<Void> resendVerificationWithHttpInfo() throws ApiException {
+    return resendVerificationWithHttpInfo(null);
+  }
+
+  /**
+   * Resend Verification Email
+   * Resends the email verification link to the authenticated user.
+   * @param headers Optional headers to include in the request
+   * @return ApiResponse&lt;Void&gt;
+   * @throws ApiException if fails to make API call
+   */
+  public ApiResponse<Void> resendVerificationWithHttpInfo(Map<String, String> headers) throws ApiException {
+    HttpRequest.Builder localVarRequestBuilder = resendVerificationRequestBuilder(headers);
+    try {
+      HttpResponse<InputStream> localVarResponse = memberVarHttpClient.send(
+          localVarRequestBuilder.build(),
+          HttpResponse.BodyHandlers.ofInputStream());
+      if (memberVarResponseInterceptor != null) {
+        memberVarResponseInterceptor.accept(localVarResponse);
+      }
+      InputStream localVarResponseBody = null;
+      try {
+        if (localVarResponse.statusCode()/ 100 != 2) {
+          throw getApiException("resendVerification", localVarResponse);
+        }
+        localVarResponseBody = ApiClient.getResponseBody(localVarResponse);
+        if (localVarResponseBody != null) {
+          localVarResponseBody.readAllBytes();
+        }
+        return new ApiResponse<>(
+            localVarResponse.statusCode(),
+            localVarResponse.headers().map(),
+            null
+        );
+      } finally {
+        if (localVarResponseBody != null) {
+          localVarResponseBody.close();
+        }
+      }
+    } catch (IOException e) {
+      throw new ApiException(e);
+    }
+    catch (InterruptedException e) {
+      Thread.currentThread().interrupt();
+      throw new ApiException(e);
+    }
+  }
+
+  private HttpRequest.Builder resendVerificationRequestBuilder(Map<String, String> headers) throws ApiException {
+
+    HttpRequest.Builder localVarRequestBuilder = HttpRequest.newBuilder();
+
+    String localVarPath = "/api/v1/auth/resend-verification";
+
+    localVarRequestBuilder.uri(URI.create(memberVarBaseUri + localVarPath));
+
+    localVarRequestBuilder.header("Accept", "application/json");
+
+    localVarRequestBuilder.method("POST", HttpRequest.BodyPublishers.noBody());
+    if (memberVarReadTimeout != null) {
+      localVarRequestBuilder.timeout(memberVarReadTimeout);
+    }
+    // Add custom headers if provided
+    localVarRequestBuilder = HttpRequestBuilderExtensions.withAdditionalHeaders(localVarRequestBuilder, headers);
+    if (memberVarInterceptor != null) {
+      memberVarInterceptor.accept(localVarRequestBuilder);
+    }
+    return localVarRequestBuilder;
+  }
+
+  /**
+   * Verify Email
+   * Verifies a user&#39;s email address using the token from the verification email.
+   * @param verifyEmailRequest  (required)
+   * @return AuthTokenResponse
+   * @throws ApiException if fails to make API call
+   */
+  public AuthTokenResponse verifyEmail(@jakarta.annotation.Nonnull VerifyEmailRequest verifyEmailRequest) throws ApiException {
+    return verifyEmail(verifyEmailRequest, null);
+  }
+
+  /**
+   * Verify Email
+   * Verifies a user&#39;s email address using the token from the verification email.
+   * @param verifyEmailRequest  (required)
+   * @param headers Optional headers to include in the request
+   * @return AuthTokenResponse
+   * @throws ApiException if fails to make API call
+   */
+  public AuthTokenResponse verifyEmail(@jakarta.annotation.Nonnull VerifyEmailRequest verifyEmailRequest, Map<String, String> headers) throws ApiException {
+    ApiResponse<AuthTokenResponse> localVarResponse = verifyEmailWithHttpInfo(verifyEmailRequest, headers);
+    return localVarResponse.getData();
+  }
+
+  /**
+   * Verify Email
+   * Verifies a user&#39;s email address using the token from the verification email.
+   * @param verifyEmailRequest  (required)
+   * @return ApiResponse&lt;AuthTokenResponse&gt;
+   * @throws ApiException if fails to make API call
+   */
+  public ApiResponse<AuthTokenResponse> verifyEmailWithHttpInfo(@jakarta.annotation.Nonnull VerifyEmailRequest verifyEmailRequest) throws ApiException {
+    return verifyEmailWithHttpInfo(verifyEmailRequest, null);
+  }
+
+  /**
+   * Verify Email
+   * Verifies a user&#39;s email address using the token from the verification email.
+   * @param verifyEmailRequest  (required)
+   * @param headers Optional headers to include in the request
+   * @return ApiResponse&lt;AuthTokenResponse&gt;
+   * @throws ApiException if fails to make API call
+   */
+  public ApiResponse<AuthTokenResponse> verifyEmailWithHttpInfo(@jakarta.annotation.Nonnull VerifyEmailRequest verifyEmailRequest, Map<String, String> headers) throws ApiException {
+    HttpRequest.Builder localVarRequestBuilder = verifyEmailRequestBuilder(verifyEmailRequest, headers);
+    try {
+      HttpResponse<InputStream> localVarResponse = memberVarHttpClient.send(
+          localVarRequestBuilder.build(),
+          HttpResponse.BodyHandlers.ofInputStream());
+      if (memberVarResponseInterceptor != null) {
+        memberVarResponseInterceptor.accept(localVarResponse);
+      }
+      InputStream localVarResponseBody = null;
+      try {
+        if (localVarResponse.statusCode()/ 100 != 2) {
+          throw getApiException("verifyEmail", localVarResponse);
+        }
+        localVarResponseBody = ApiClient.getResponseBody(localVarResponse);
+        if (localVarResponseBody == null) {
+          return new ApiResponse<AuthTokenResponse>(
+              localVarResponse.statusCode(),
+              localVarResponse.headers().map(),
+              null
+          );
+        }
+
+        
+        
+        String responseBody = new String(localVarResponseBody.readAllBytes());
+        AuthTokenResponse responseValue = responseBody.isBlank()? null: memberVarObjectMapper.readValue(responseBody, new TypeReference<AuthTokenResponse>() {});
+        
+
+        return new ApiResponse<AuthTokenResponse>(
+            localVarResponse.statusCode(),
+            localVarResponse.headers().map(),
+            responseValue
+        );
+      } finally {
+        if (localVarResponseBody != null) {
+          localVarResponseBody.close();
+        }
+      }
+    } catch (IOException e) {
+      throw new ApiException(e);
+    }
+    catch (InterruptedException e) {
+      Thread.currentThread().interrupt();
+      throw new ApiException(e);
+    }
+  }
+
+  private HttpRequest.Builder verifyEmailRequestBuilder(@jakarta.annotation.Nonnull VerifyEmailRequest verifyEmailRequest, Map<String, String> headers) throws ApiException {
+    // verify the required parameter 'verifyEmailRequest' is set
+    if (verifyEmailRequest == null) {
+      throw new ApiException(400, "Missing the required parameter 'verifyEmailRequest' when calling verifyEmail");
+    }
+
+    HttpRequest.Builder localVarRequestBuilder = HttpRequest.newBuilder();
+
+    String localVarPath = "/api/v1/auth/verify-email";
+
+    localVarRequestBuilder.uri(URI.create(memberVarBaseUri + localVarPath));
+
+    localVarRequestBuilder.header("Content-Type", "application/json");
+    localVarRequestBuilder.header("Accept", "application/json");
+
+    try {
+      byte[] localVarPostBody = memberVarObjectMapper.writeValueAsBytes(verifyEmailRequest);
       localVarRequestBuilder.method("POST", HttpRequest.BodyPublishers.ofByteArray(localVarPostBody));
     } catch (IOException e) {
       throw new ApiException(e);
