@@ -41,6 +41,7 @@ import com.smplkit.internal.generated.app.ApiClient;
   Account.JSON_PROPERTY_NAME,
   Account.JSON_PROPERTY_KEY,
   Account.JSON_PROPERTY_HAS_STRIPE_CUSTOMER,
+  Account.JSON_PROPERTY_EXPIRES_AT,
   Account.JSON_PROPERTY_CREATED_AT,
   Account.JSON_PROPERTY_DELETED_AT
 })
@@ -58,6 +59,9 @@ public class Account {
   @jakarta.annotation.Nullable
   private Boolean hasStripeCustomer = false;
 
+  public static final String JSON_PROPERTY_EXPIRES_AT = "expires_at";
+  private JsonNullable<OffsetDateTime> expiresAt = JsonNullable.<OffsetDateTime>undefined();
+
   public static final String JSON_PROPERTY_CREATED_AT = "created_at";
   private JsonNullable<OffsetDateTime> createdAt = JsonNullable.<OffsetDateTime>undefined();
 
@@ -70,11 +74,13 @@ public class Account {
   @JsonCreator
   public Account(
     @JsonProperty(JSON_PROPERTY_HAS_STRIPE_CUSTOMER) Boolean hasStripeCustomer, 
+    @JsonProperty(JSON_PROPERTY_EXPIRES_AT) OffsetDateTime expiresAt, 
     @JsonProperty(JSON_PROPERTY_CREATED_AT) OffsetDateTime createdAt, 
     @JsonProperty(JSON_PROPERTY_DELETED_AT) OffsetDateTime deletedAt
   ) {
   this();
     this.hasStripeCustomer = hasStripeCustomer;
+    this.expiresAt = expiresAt == null ? JsonNullable.<OffsetDateTime>undefined() : JsonNullable.of(expiresAt);
     this.createdAt = createdAt == null ? JsonNullable.<OffsetDateTime>undefined() : JsonNullable.of(createdAt);
     this.deletedAt = deletedAt == null ? JsonNullable.<OffsetDateTime>undefined() : JsonNullable.of(deletedAt);
   }
@@ -138,6 +144,34 @@ public class Account {
     return hasStripeCustomer;
   }
 
+
+
+
+  /**
+   * Get expiresAt
+   * @return expiresAt
+   */
+  @jakarta.annotation.Nullable
+  @JsonIgnore
+  public OffsetDateTime getExpiresAt() {
+    
+    if (expiresAt == null) {
+      expiresAt = JsonNullable.<OffsetDateTime>undefined();
+    }
+    return expiresAt.orElse(null);
+  }
+
+  @JsonProperty(value = JSON_PROPERTY_EXPIRES_AT, required = false)
+  @JsonInclude(value = JsonInclude.Include.USE_DEFAULTS)
+
+  public JsonNullable<OffsetDateTime> getExpiresAt_JsonNullable() {
+    return expiresAt;
+  }
+  
+  @JsonProperty(JSON_PROPERTY_EXPIRES_AT)
+  private void setExpiresAt_JsonNullable(JsonNullable<OffsetDateTime> expiresAt) {
+    this.expiresAt = expiresAt;
+  }
 
 
 
@@ -212,6 +246,7 @@ public class Account {
     return Objects.equals(this.name, account.name) &&
         Objects.equals(this.key, account.key) &&
         Objects.equals(this.hasStripeCustomer, account.hasStripeCustomer) &&
+        equalsNullable(this.expiresAt, account.expiresAt) &&
         equalsNullable(this.createdAt, account.createdAt) &&
         equalsNullable(this.deletedAt, account.deletedAt);
   }
@@ -222,7 +257,7 @@ public class Account {
 
   @Override
   public int hashCode() {
-    return Objects.hash(name, key, hasStripeCustomer, hashCodeNullable(createdAt), hashCodeNullable(deletedAt));
+    return Objects.hash(name, key, hasStripeCustomer, hashCodeNullable(expiresAt), hashCodeNullable(createdAt), hashCodeNullable(deletedAt));
   }
 
   private static <T> int hashCodeNullable(JsonNullable<T> a) {
@@ -239,6 +274,7 @@ public class Account {
     sb.append("    name: ").append(toIndentedString(name)).append("\n");
     sb.append("    key: ").append(toIndentedString(key)).append("\n");
     sb.append("    hasStripeCustomer: ").append(toIndentedString(hasStripeCustomer)).append("\n");
+    sb.append("    expiresAt: ").append(toIndentedString(expiresAt)).append("\n");
     sb.append("    createdAt: ").append(toIndentedString(createdAt)).append("\n");
     sb.append("    deletedAt: ").append(toIndentedString(deletedAt)).append("\n");
     sb.append("}");
@@ -298,6 +334,11 @@ public class Account {
     // add `has_stripe_customer` to the URL query string
     if (getHasStripeCustomer() != null) {
       joiner.add(String.format(java.util.Locale.ROOT, "%shas_stripe_customer%s=%s", prefix, suffix, ApiClient.urlEncode(ApiClient.valueToString(getHasStripeCustomer()))));
+    }
+
+    // add `expires_at` to the URL query string
+    if (getExpiresAt() != null) {
+      joiner.add(String.format(java.util.Locale.ROOT, "%sexpires_at%s=%s", prefix, suffix, ApiClient.urlEncode(ApiClient.valueToString(getExpiresAt()))));
     }
 
     // add `created_at` to the URL query string
