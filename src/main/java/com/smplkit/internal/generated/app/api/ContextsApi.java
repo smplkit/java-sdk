@@ -23,7 +23,6 @@ import com.smplkit.internal.generated.app.model.ContextBulkRegister;
 import com.smplkit.internal.generated.app.model.ContextListResponse;
 import com.smplkit.internal.generated.app.model.ContextResponse;
 import com.smplkit.internal.generated.app.model.ErrorResponse;
-import java.util.UUID;
 
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -296,7 +295,7 @@ public class ContextsApi {
    * @param id  (required)
    * @throws ApiException if fails to make API call
    */
-  public void deleteContext(@jakarta.annotation.Nonnull UUID id) throws ApiException {
+  public void deleteContext(@jakarta.annotation.Nonnull String id) throws ApiException {
     deleteContext(id, null);
   }
 
@@ -307,7 +306,7 @@ public class ContextsApi {
    * @param headers Optional headers to include in the request
    * @throws ApiException if fails to make API call
    */
-  public void deleteContext(@jakarta.annotation.Nonnull UUID id, Map<String, String> headers) throws ApiException {
+  public void deleteContext(@jakarta.annotation.Nonnull String id, Map<String, String> headers) throws ApiException {
     deleteContextWithHttpInfo(id, headers);
   }
 
@@ -318,7 +317,7 @@ public class ContextsApi {
    * @return ApiResponse&lt;Void&gt;
    * @throws ApiException if fails to make API call
    */
-  public ApiResponse<Void> deleteContextWithHttpInfo(@jakarta.annotation.Nonnull UUID id) throws ApiException {
+  public ApiResponse<Void> deleteContextWithHttpInfo(@jakarta.annotation.Nonnull String id) throws ApiException {
     return deleteContextWithHttpInfo(id, null);
   }
 
@@ -330,7 +329,7 @@ public class ContextsApi {
    * @return ApiResponse&lt;Void&gt;
    * @throws ApiException if fails to make API call
    */
-  public ApiResponse<Void> deleteContextWithHttpInfo(@jakarta.annotation.Nonnull UUID id, Map<String, String> headers) throws ApiException {
+  public ApiResponse<Void> deleteContextWithHttpInfo(@jakarta.annotation.Nonnull String id, Map<String, String> headers) throws ApiException {
     HttpRequest.Builder localVarRequestBuilder = deleteContextRequestBuilder(id, headers);
     try {
       HttpResponse<InputStream> localVarResponse = memberVarHttpClient.send(
@@ -367,7 +366,7 @@ public class ContextsApi {
     }
   }
 
-  private HttpRequest.Builder deleteContextRequestBuilder(@jakarta.annotation.Nonnull UUID id, Map<String, String> headers) throws ApiException {
+  private HttpRequest.Builder deleteContextRequestBuilder(@jakarta.annotation.Nonnull String id, Map<String, String> headers) throws ApiException {
     // verify the required parameter 'id' is set
     if (id == null) {
       throw new ApiException(400, "Missing the required parameter 'id' when calling deleteContext");
@@ -401,7 +400,7 @@ public class ContextsApi {
    * @return ContextResponse
    * @throws ApiException if fails to make API call
    */
-  public ContextResponse getContext(@jakarta.annotation.Nonnull UUID id) throws ApiException {
+  public ContextResponse getContext(@jakarta.annotation.Nonnull String id) throws ApiException {
     return getContext(id, null);
   }
 
@@ -413,7 +412,7 @@ public class ContextsApi {
    * @return ContextResponse
    * @throws ApiException if fails to make API call
    */
-  public ContextResponse getContext(@jakarta.annotation.Nonnull UUID id, Map<String, String> headers) throws ApiException {
+  public ContextResponse getContext(@jakarta.annotation.Nonnull String id, Map<String, String> headers) throws ApiException {
     ApiResponse<ContextResponse> localVarResponse = getContextWithHttpInfo(id, headers);
     return localVarResponse.getData();
   }
@@ -425,7 +424,7 @@ public class ContextsApi {
    * @return ApiResponse&lt;ContextResponse&gt;
    * @throws ApiException if fails to make API call
    */
-  public ApiResponse<ContextResponse> getContextWithHttpInfo(@jakarta.annotation.Nonnull UUID id) throws ApiException {
+  public ApiResponse<ContextResponse> getContextWithHttpInfo(@jakarta.annotation.Nonnull String id) throws ApiException {
     return getContextWithHttpInfo(id, null);
   }
 
@@ -437,7 +436,7 @@ public class ContextsApi {
    * @return ApiResponse&lt;ContextResponse&gt;
    * @throws ApiException if fails to make API call
    */
-  public ApiResponse<ContextResponse> getContextWithHttpInfo(@jakarta.annotation.Nonnull UUID id, Map<String, String> headers) throws ApiException {
+  public ApiResponse<ContextResponse> getContextWithHttpInfo(@jakarta.annotation.Nonnull String id, Map<String, String> headers) throws ApiException {
     HttpRequest.Builder localVarRequestBuilder = getContextRequestBuilder(id, headers);
     try {
       HttpResponse<InputStream> localVarResponse = memberVarHttpClient.send(
@@ -485,7 +484,7 @@ public class ContextsApi {
     }
   }
 
-  private HttpRequest.Builder getContextRequestBuilder(@jakarta.annotation.Nonnull UUID id, Map<String, String> headers) throws ApiException {
+  private HttpRequest.Builder getContextRequestBuilder(@jakarta.annotation.Nonnull String id, Map<String, String> headers) throws ApiException {
     // verify the required parameter 'id' is set
     if (id == null) {
       throw new ApiException(400, "Missing the required parameter 'id' when calling getContext");

@@ -40,7 +40,6 @@ import com.smplkit.internal.generated.app.ApiClient;
  * Context
  */
 @JsonPropertyOrder({
-  Context.JSON_PROPERTY_KEY,
   Context.JSON_PROPERTY_NAME,
   Context.JSON_PROPERTY_CONTEXT_TYPE,
   Context.JSON_PROPERTY_ATTRIBUTES,
@@ -49,10 +48,6 @@ import com.smplkit.internal.generated.app.ApiClient;
 })
 @jakarta.annotation.Generated(value = "org.openapitools.codegen.languages.JavaClientCodegen", comments = "Generator version: 7.21.0")
 public class Context {
-  public static final String JSON_PROPERTY_KEY = "key";
-  @jakarta.annotation.Nonnull
-  private String key;
-
   public static final String JSON_PROPERTY_NAME = "name";
   @jakarta.annotation.Nullable
   private String name = "";
@@ -83,30 +78,6 @@ public class Context {
     this.createdAt = createdAt == null ? JsonNullable.<OffsetDateTime>undefined() : JsonNullable.of(createdAt);
     this.updatedAt = updatedAt == null ? JsonNullable.<OffsetDateTime>undefined() : JsonNullable.of(updatedAt);
   }
-
-  public Context key(@jakarta.annotation.Nonnull String key) {
-    this.key = key;
-    return this;
-  }
-
-  /**
-   * Entity identifier: user-123, acme-corp
-   * @return key
-   */
-  @jakarta.annotation.Nonnull
-  @JsonProperty(value = JSON_PROPERTY_KEY, required = true)
-  @JsonInclude(value = JsonInclude.Include.ALWAYS)
-  public String getKey() {
-    return key;
-  }
-
-
-  @JsonProperty(value = JSON_PROPERTY_KEY, required = true)
-  @JsonInclude(value = JsonInclude.Include.ALWAYS)
-  public void setKey(@jakarta.annotation.Nonnull String key) {
-    this.key = key;
-  }
-
 
   public Context name(@jakarta.annotation.Nullable String name) {
     this.name = name;
@@ -256,8 +227,7 @@ public class Context {
       return false;
     }
     Context context = (Context) o;
-    return Objects.equals(this.key, context.key) &&
-        Objects.equals(this.name, context.name) &&
+    return Objects.equals(this.name, context.name) &&
         Objects.equals(this.contextType, context.contextType) &&
         Objects.equals(this.attributes, context.attributes) &&
         equalsNullable(this.createdAt, context.createdAt) &&
@@ -270,7 +240,7 @@ public class Context {
 
   @Override
   public int hashCode() {
-    return Objects.hash(key, name, contextType, attributes, hashCodeNullable(createdAt), hashCodeNullable(updatedAt));
+    return Objects.hash(name, contextType, attributes, hashCodeNullable(createdAt), hashCodeNullable(updatedAt));
   }
 
   private static <T> int hashCodeNullable(JsonNullable<T> a) {
@@ -284,7 +254,6 @@ public class Context {
   public String toString() {
     StringBuilder sb = new StringBuilder();
     sb.append("class Context {\n");
-    sb.append("    key: ").append(toIndentedString(key)).append("\n");
     sb.append("    name: ").append(toIndentedString(name)).append("\n");
     sb.append("    contextType: ").append(toIndentedString(contextType)).append("\n");
     sb.append("    attributes: ").append(toIndentedString(attributes)).append("\n");
@@ -333,11 +302,6 @@ public class Context {
     }
 
     StringJoiner joiner = new StringJoiner("&");
-
-    // add `key` to the URL query string
-    if (getKey() != null) {
-      joiner.add(String.format(java.util.Locale.ROOT, "%skey%s=%s", prefix, suffix, ApiClient.urlEncode(ApiClient.valueToString(getKey()))));
-    }
 
     // add `name` to the URL query string
     if (getName() != null) {
