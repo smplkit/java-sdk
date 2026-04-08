@@ -70,6 +70,7 @@ public final class SmplClient implements AutoCloseable {
         this.sharedWs = new SharedWebSocket(httpClient, APP_BASE_URL, apiKey);
         this.contextsApi = buildContextsApi(APP_BASE_URL, apiKey, timeout);
         this.config = buildConfigClient(httpClient, apiKey, timeout);
+        this.config.setEnvironment(environment);
         this.flags = buildFlagsClient(httpClient, apiKey, timeout, sharedWs, environment, service);
         this.logging = buildLoggingClient(httpClient, apiKey, timeout, environment, service);
     }
@@ -86,6 +87,7 @@ public final class SmplClient implements AutoCloseable {
         this.sharedWs = new SharedWebSocket(httpClient, APP_BASE_URL, apiKey);
         this.contextsApi = buildContextsApi(APP_BASE_URL, apiKey, timeout);
         this.config = buildConfigClient(httpClient, apiKey, timeout);
+        this.config.setEnvironment(environment);
         this.flags = buildFlagsClient(httpClient, apiKey, timeout, sharedWs, environment, service);
         this.logging = buildLoggingClient(httpClient, apiKey, timeout, environment, service);
     }
