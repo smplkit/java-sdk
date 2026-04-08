@@ -26,6 +26,8 @@ import com.fasterxml.jackson.annotation.JsonTypeName;
 import com.fasterxml.jackson.annotation.JsonValue;
 import java.time.OffsetDateTime;
 import java.util.Arrays;
+import java.util.HashMap;
+import java.util.Map;
 import org.openapitools.jackson.nullable.JsonNullable;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import org.openapitools.jackson.nullable.JsonNullable;
@@ -43,7 +45,8 @@ import com.smplkit.internal.generated.app.ApiClient;
   Account.JSON_PROPERTY_HAS_STRIPE_CUSTOMER,
   Account.JSON_PROPERTY_EXPIRES_AT,
   Account.JSON_PROPERTY_CREATED_AT,
-  Account.JSON_PROPERTY_DELETED_AT
+  Account.JSON_PROPERTY_DELETED_AT,
+  Account.JSON_PROPERTY_PRODUCT_SUBSCRIPTIONS
 })
 @jakarta.annotation.Generated(value = "org.openapitools.codegen.languages.JavaClientCodegen", comments = "Generator version: 7.21.0")
 public class Account {
@@ -68,6 +71,9 @@ public class Account {
   public static final String JSON_PROPERTY_DELETED_AT = "deleted_at";
   private JsonNullable<OffsetDateTime> deletedAt = JsonNullable.<OffsetDateTime>undefined();
 
+  public static final String JSON_PROPERTY_PRODUCT_SUBSCRIPTIONS = "product_subscriptions";
+  private JsonNullable<Map<String, Object>> productSubscriptions = JsonNullable.<Map<String, Object>>undefined();
+
   public Account() { 
   }
 
@@ -76,13 +82,15 @@ public class Account {
     @JsonProperty(JSON_PROPERTY_HAS_STRIPE_CUSTOMER) Boolean hasStripeCustomer, 
     @JsonProperty(JSON_PROPERTY_EXPIRES_AT) OffsetDateTime expiresAt, 
     @JsonProperty(JSON_PROPERTY_CREATED_AT) OffsetDateTime createdAt, 
-    @JsonProperty(JSON_PROPERTY_DELETED_AT) OffsetDateTime deletedAt
+    @JsonProperty(JSON_PROPERTY_DELETED_AT) OffsetDateTime deletedAt, 
+    @JsonProperty(JSON_PROPERTY_PRODUCT_SUBSCRIPTIONS) Map<String, Object> productSubscriptions
   ) {
   this();
     this.hasStripeCustomer = hasStripeCustomer;
     this.expiresAt = expiresAt == null ? JsonNullable.<OffsetDateTime>undefined() : JsonNullable.of(expiresAt);
     this.createdAt = createdAt == null ? JsonNullable.<OffsetDateTime>undefined() : JsonNullable.of(createdAt);
     this.deletedAt = deletedAt == null ? JsonNullable.<OffsetDateTime>undefined() : JsonNullable.of(deletedAt);
+    this.productSubscriptions = productSubscriptions == null ? JsonNullable.<Map<String, Object>>undefined() : JsonNullable.of(productSubscriptions);
   }
 
   public Account name(@jakarta.annotation.Nonnull String name) {
@@ -232,6 +240,34 @@ public class Account {
 
 
   /**
+   * Get productSubscriptions
+   * @return productSubscriptions
+   */
+  @jakarta.annotation.Nullable
+  @JsonIgnore
+  public Map<String, Object> getProductSubscriptions() {
+    
+    if (productSubscriptions == null) {
+      productSubscriptions = JsonNullable.<Map<String, Object>>undefined();
+    }
+    return productSubscriptions.orElse(null);
+  }
+
+  @JsonProperty(value = JSON_PROPERTY_PRODUCT_SUBSCRIPTIONS, required = false)
+  @JsonInclude(content = JsonInclude.Include.ALWAYS, value = JsonInclude.Include.USE_DEFAULTS)
+
+  public JsonNullable<Map<String, Object>> getProductSubscriptions_JsonNullable() {
+    return productSubscriptions;
+  }
+  
+  @JsonProperty(JSON_PROPERTY_PRODUCT_SUBSCRIPTIONS)
+  private void setProductSubscriptions_JsonNullable(JsonNullable<Map<String, Object>> productSubscriptions) {
+    this.productSubscriptions = productSubscriptions;
+  }
+
+
+
+  /**
    * Return true if this Account object is equal to o.
    */
   @Override
@@ -248,7 +284,8 @@ public class Account {
         Objects.equals(this.hasStripeCustomer, account.hasStripeCustomer) &&
         equalsNullable(this.expiresAt, account.expiresAt) &&
         equalsNullable(this.createdAt, account.createdAt) &&
-        equalsNullable(this.deletedAt, account.deletedAt);
+        equalsNullable(this.deletedAt, account.deletedAt) &&
+        equalsNullable(this.productSubscriptions, account.productSubscriptions);
   }
 
   private static <T> boolean equalsNullable(JsonNullable<T> a, JsonNullable<T> b) {
@@ -257,7 +294,7 @@ public class Account {
 
   @Override
   public int hashCode() {
-    return Objects.hash(name, key, hasStripeCustomer, hashCodeNullable(expiresAt), hashCodeNullable(createdAt), hashCodeNullable(deletedAt));
+    return Objects.hash(name, key, hasStripeCustomer, hashCodeNullable(expiresAt), hashCodeNullable(createdAt), hashCodeNullable(deletedAt), hashCodeNullable(productSubscriptions));
   }
 
   private static <T> int hashCodeNullable(JsonNullable<T> a) {
@@ -277,6 +314,7 @@ public class Account {
     sb.append("    expiresAt: ").append(toIndentedString(expiresAt)).append("\n");
     sb.append("    createdAt: ").append(toIndentedString(createdAt)).append("\n");
     sb.append("    deletedAt: ").append(toIndentedString(deletedAt)).append("\n");
+    sb.append("    productSubscriptions: ").append(toIndentedString(productSubscriptions)).append("\n");
     sb.append("}");
     return sb.toString();
   }
@@ -349,6 +387,15 @@ public class Account {
     // add `deleted_at` to the URL query string
     if (getDeletedAt() != null) {
       joiner.add(String.format(java.util.Locale.ROOT, "%sdeleted_at%s=%s", prefix, suffix, ApiClient.urlEncode(ApiClient.valueToString(getDeletedAt()))));
+    }
+
+    // add `product_subscriptions` to the URL query string
+    if (getProductSubscriptions() != null) {
+      for (String _key : getProductSubscriptions().keySet()) {
+        joiner.add(String.format(java.util.Locale.ROOT, "%sproduct_subscriptions%s%s=%s", prefix, suffix,
+            "".equals(suffix) ? "" : String.format(java.util.Locale.ROOT, "%s%d%s", containerPrefix, _key, containerSuffix),
+            getProductSubscriptions().get(_key), ApiClient.urlEncode(ApiClient.valueToString(getProductSubscriptions().get(_key)))));
+      }
     }
 
     return joiner.toString();
