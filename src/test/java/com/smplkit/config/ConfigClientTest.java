@@ -597,14 +597,12 @@ class ConfigClientTest {
     }
 
     @Test
-    void getValue_throwsWhenNotConnected() {
-        assertThrows(com.smplkit.errors.SmplNotConnectedException.class,
-                () -> configClient.getValue("cfg", "key"));
+    void getValue_returnsNullWhenNotConnected() {
+        assertNull(configClient.getValue("cfg", "key"));
     }
 
     @Test
-    void getValues_throwsWhenNotConnected() {
-        assertThrows(com.smplkit.errors.SmplNotConnectedException.class,
-                () -> configClient.getValues("cfg"));
+    void getValues_returnsNullWhenNotConnected() {
+        assertNull(configClient.getValues("cfg"));
     }
 }

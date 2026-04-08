@@ -1,4 +1,4 @@
-package com.smplkit.flags;
+package com.smplkit;
 
 import java.util.Collections;
 import java.util.HashMap;
@@ -69,7 +69,7 @@ public final class Context {
      * Converts this context to the evaluation dict format used by JSON Logic.
      * The result is a map with the context key injected as "key".
      */
-    Map<String, Object> toEvalDict() {
+    public Map<String, Object> toEvalDict() {
         Map<String, Object> dict = new HashMap<>(attributes);
         dict.put("key", key);
         return dict;

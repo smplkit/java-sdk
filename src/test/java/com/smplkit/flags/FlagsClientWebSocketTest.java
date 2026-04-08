@@ -3,6 +3,7 @@ package com.smplkit.flags;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import org.openapitools.jackson.nullable.JsonNullableModule;
+import com.smplkit.SharedWebSocket;
 import com.smplkit.internal.generated.flags.ApiException;
 import com.smplkit.internal.generated.flags.api.FlagsApi;
 import com.smplkit.internal.generated.flags.model.FlagListResponse;
@@ -130,8 +131,8 @@ class FlagsClientWebSocketTest {
         assertTrue(handle.get(List.of()));
 
         client.disconnect();
-        assertThrows(com.smplkit.errors.SmplNotConnectedException.class,
-                () -> handle.get(List.of()));
+        // After disconnect, flag store is cleared, handle returns default
+        assertFalse(handle.get(List.of()));
     }
 
     @Test

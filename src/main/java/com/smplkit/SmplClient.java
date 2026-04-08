@@ -2,7 +2,6 @@ package com.smplkit;
 
 import com.smplkit.config.ConfigClient;
 import com.smplkit.flags.FlagsClient;
-import com.smplkit.flags.SharedWebSocket;
 import com.smplkit.internal.generated.app.api.ContextTypesApi;
 import com.smplkit.internal.generated.app.api.ContextsApi;
 import com.smplkit.internal.generated.app.model.ContextBulkItem;

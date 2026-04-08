@@ -1,4 +1,4 @@
-package com.smplkit.flags;
+package com.smplkit;
 
 import java.util.ArrayList;
 import java.util.HashMap;

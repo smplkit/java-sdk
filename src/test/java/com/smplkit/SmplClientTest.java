@@ -2,7 +2,6 @@ package com.smplkit;
 
 import com.smplkit.config.ConfigClient;
 import com.smplkit.errors.SmplException;
-import com.smplkit.errors.SmplNotConnectedException;
 import com.smplkit.flags.FlagsClient;
 import org.junit.jupiter.api.Test;
 

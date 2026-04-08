@@ -1,4 +1,4 @@
-package com.smplkit.flags;
+package com.smplkit;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 
@@ -21,8 +21,8 @@ import java.util.logging.Logger;
  * Shared WebSocket connection to the smplkit event gateway.
  *
  * <p>Connects to {@code wss://app.smplkit.com/api/ws/v1/events?api_key={key}}
- * and dispatches events to registered listeners. Both config and flags modules
- * share this connection.</p>
+ * and dispatches events to registered listeners. Config, flags, and logging
+ * modules share this connection.</p>
  */
 public final class SharedWebSocket {
 
@@ -34,15 +34,15 @@ public final class SharedWebSocket {
     private final String wsUrl;
     private final ConcurrentHashMap<String, List<Consumer<Map<String, Object>>>> listeners = new ConcurrentHashMap<>();
 
-    volatile WebSocket webSocket;
-    volatile boolean closed = false;
+    public volatile WebSocket webSocket;
+    public volatile boolean closed = false;
     private volatile String connectionStatus = "disconnected";
-    volatile CountDownLatch connectedLatch;
+    public volatile CountDownLatch connectedLatch;
     private Thread wsThread;
 
     /** Functional interface for WebSocket creation, injectable for testing. */
     @FunctionalInterface
-    interface WsConnector {
+    public interface WsConnector {
         WebSocket connect(URI uri, WebSocket.Listener listener) throws Exception;
     }
 
@@ -55,22 +55,22 @@ public final class SharedWebSocket {
                 .buildAsync(uri, listener).join();
     }
 
-    /** Package-private test constructor that doesn't auto-connect. */
-    SharedWebSocket() {
+    /** Test constructor that doesn't auto-connect. */
+    public SharedWebSocket() {
         this.httpClient = null;
         this.wsUrl = null;
         this.wsConnector = null;
     }
 
-    /** Package-private test constructor with injectable connector. */
-    SharedWebSocket(WsConnector connector, String wsUrl) {
+    /** Test constructor with injectable connector. */
+    public SharedWebSocket(WsConnector connector, String wsUrl) {
         this.httpClient = null;
         this.wsUrl = wsUrl;
         this.wsConnector = connector;
     }
 
-    /** Package-private for testing. */
-    static String buildWsUrl(String baseUrl, String apiKey) {
+    /** Builds the WebSocket URL from an HTTP base URL and API key. */
+    public static String buildWsUrl(String baseUrl, String apiKey) {
         String ws;
         if (baseUrl.startsWith("https://")) {
             ws = "wss://" + baseUrl.substring("https://".length());
@@ -157,8 +157,8 @@ public final class SharedWebSocket {
         return connectionStatus;
     }
 
-    /** Package-private for testing: simulates receiving a raw WS message. */
-    void simulateMessage(String rawMessage) {
+    /** Simulates receiving a raw WS message (for testing). */
+    public void simulateMessage(String rawMessage) {
         if ("ping".equals(rawMessage)) return;
         try {
             @SuppressWarnings("unchecked")
@@ -183,7 +183,7 @@ public final class SharedWebSocket {
         }
     }
 
-    void setConnectionStatus(String status) {
+    public void setConnectionStatus(String status) {
         this.connectionStatus = status;
     }
 
@@ -191,8 +191,8 @@ public final class SharedWebSocket {
     // Background thread
     // -----------------------------------------------------------------------
 
-    /** Package-private for testing. */
-    void wsThreadEntry() {
+    /** Entry point for the WebSocket background thread. */
+    public void wsThreadEntry() {
         try {
             connectToServer();
         } catch (Exception e) {
@@ -203,8 +203,8 @@ public final class SharedWebSocket {
         }
     }
 
-    /** Package-private for testing. */
-    void connectToServer() throws Exception {
+    /** Connects to the server and blocks until the connection closes. */
+    public void connectToServer() throws Exception {
         connectionStatus = "connecting";
         LOG.fine("Connecting shared WebSocket");
 
@@ -218,8 +218,8 @@ public final class SharedWebSocket {
         closedLatch.await();
     }
 
-    /** Package-private for testing. */
-    void reconnect(int attempt) {
+    /** Reconnects with exponential backoff. */
+    public void reconnect(int attempt) {
         while (!closed) {
             connectionStatus = "reconnecting";
             int delay = BACKOFF_SECONDS[Math.min(attempt, BACKOFF_SECONDS.length - 1)];
@@ -242,8 +242,8 @@ public final class SharedWebSocket {
         }
     }
 
-    /** Package-private for testing. */
-    void dispatch(String event, Map<String, Object> data) {
+    /** Dispatches an event to all registered listeners. */
+    public void dispatch(String event, Map<String, Object> data) {
         List<Consumer<Map<String, Object>>> eventListeners = listeners.get(event);
         if (eventListeners == null) return;
         for (Consumer<Map<String, Object>> callback : eventListeners) {
@@ -259,13 +259,12 @@ public final class SharedWebSocket {
     // WebSocket listener
     // -----------------------------------------------------------------------
 
-    /** Package-private for testing. */
-    class WsListener implements WebSocket.Listener {
+    /** WebSocket.Listener implementation for handling messages. */
+    public class WsListener implements WebSocket.Listener {
         private final CountDownLatch closedLatch;
         private final StringBuilder textBuffer = new StringBuilder();
 
-        /** Package-private for testing. */
-        WsListener(CountDownLatch closedLatch) {
+        public WsListener(CountDownLatch closedLatch) {
             this.closedLatch = closedLatch;
         }
 

@@ -4,8 +4,6 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import com.smplkit.config.Config;
 import com.smplkit.config.ConfigClient;
-import com.smplkit.errors.SmplNotConnectedException;
-import com.smplkit.flags.Context;
 import com.smplkit.flags.FlagHandle;
 import com.smplkit.flags.FlagsClient;
 import com.smplkit.internal.generated.config.ApiException;
@@ -137,8 +135,7 @@ class Phase2CoverageTest {
         ConfigsApi mockApi = mock(ConfigsApi.class);
         ConfigClient configClient = new ConfigClient(mockApi, HttpClient.newHttpClient(), "test-key");
 
-        assertThrows(SmplNotConnectedException.class,
-                () -> configClient.getValue("my-config", "host"));
+        assertNull(configClient.getValue("my-config", "host"));
     }
 
     @Test
@@ -146,8 +143,7 @@ class Phase2CoverageTest {
         ConfigsApi mockApi = mock(ConfigsApi.class);
         ConfigClient configClient = new ConfigClient(mockApi, HttpClient.newHttpClient(), "test-key");
 
-        assertThrows(SmplNotConnectedException.class,
-                () -> configClient.getValues("my-config"));
+        assertNull(configClient.getValues("my-config"));
     }
 
     @Test
@@ -179,9 +175,8 @@ class Phase2CoverageTest {
         when(mockApi.listConfigs(isNull(), isNull())).thenReturn(listResponse);
 
         ConfigClient configClient = new ConfigClient(mockApi, HttpClient.newHttpClient(), "test-key");
-        // Not connected yet — getValue should throw
-        assertThrows(SmplNotConnectedException.class,
-                () -> configClient.getValue("db-config", "host"));
+        // Not connected yet — getValue returns null from empty cache
+        assertNull(configClient.getValue("db-config", "host"));
 
         configClient.connectInternal("production");
 

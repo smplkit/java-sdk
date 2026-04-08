@@ -4,7 +4,7 @@ import com.smplkit.SmplClient;
 import com.smplkit.flags.CreateFlagParams;
 import com.smplkit.flags.FlagResource;
 import com.smplkit.flags.FlagType;
-import com.smplkit.flags.Rule;
+import com.smplkit.Rule;
 import com.smplkit.flags.UpdateFlagParams;
 
 import java.util.ArrayList;

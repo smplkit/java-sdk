@@ -8,7 +8,8 @@ import com.smplkit.internal.generated.flags.api.FlagsApi;
 import com.smplkit.internal.generated.flags.model.FlagListResponse;
 import com.smplkit.internal.generated.flags.model.FlagResponse;
 import com.smplkit.internal.generated.flags.model.ResponseFlag;
-import com.smplkit.errors.SmplNotConnectedException;
+import com.smplkit.Context;
+import com.smplkit.SharedWebSocket;
 import com.smplkit.errors.SmplNotFoundException;
 import com.smplkit.errors.SmplValidationException;
 import org.junit.jupiter.api.BeforeEach;
@@ -140,9 +141,10 @@ class FlagsClientTest {
     }
 
     @Test
-    void handleGet_throwsWhenNotConnected() {
+    void handleGet_returnsDefaultWhenNotConnected() {
         FlagHandle<Boolean> handle = client.boolFlag("feature-x", false);
-        assertThrows(SmplNotConnectedException.class, () -> handle.get());
+        // No connected check; empty flag store returns default
+        assertFalse(handle.get());
     }
 
     @Test

@@ -1,14 +1,14 @@
 package com.smplkit.examples;
 
 import com.smplkit.SmplClient;
-import com.smplkit.flags.Context;
+import com.smplkit.Context;
 import com.smplkit.flags.CreateFlagParams;
 import com.smplkit.flags.FlagChangeEvent;
 import com.smplkit.flags.FlagHandle;
 import com.smplkit.flags.FlagResource;
 import com.smplkit.flags.FlagStats;
 import com.smplkit.flags.FlagType;
-import com.smplkit.flags.Rule;
+import com.smplkit.Rule;
 import com.smplkit.flags.UpdateFlagParams;
 
 import java.util.ArrayList;

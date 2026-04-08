@@ -1,6 +1,5 @@
 package com.smplkit.config;
 
-import com.smplkit.errors.SmplNotConnectedException;
 import com.smplkit.internal.generated.config.ApiException;
 import com.smplkit.internal.generated.config.api.ConfigsApi;
 import com.smplkit.internal.generated.config.model.ConfigItemDefinition;
@@ -169,27 +168,24 @@ class ConfigPrescriptiveTest {
     // -----------------------------------------------------------------------
 
     @Test
-    void getString_notConnected_throws() {
-        assertThrows(SmplNotConnectedException.class,
-                () -> configClient.getString("app", "name", "x"));
+    void getString_notConnected_returnsDefault() {
+        assertEquals("x", configClient.getString("app", "name", "x"));
     }
 
     @Test
-    void getInt_notConnected_throws() {
-        assertThrows(SmplNotConnectedException.class,
-                () -> configClient.getInt("app", "count", 0));
+    void getInt_notConnected_returnsDefault() {
+        assertEquals(0, configClient.getInt("app", "count", 0));
     }
 
     @Test
-    void getBool_notConnected_throws() {
-        assertThrows(SmplNotConnectedException.class,
-                () -> configClient.getBool("app", "flag", false));
+    void getBool_notConnected_returnsDefault() {
+        assertFalse(configClient.getBool("app", "flag", false));
     }
 
     @Test
-    void refresh_notConnected_throws() {
-        assertThrows(SmplNotConnectedException.class,
-                () -> configClient.refresh());
+    void refresh_notConnected_noOp() {
+        // refresh() no longer throws when not connected; it's a no-op with empty cache
+        assertDoesNotThrow(() -> configClient.refresh());
     }
 
     // -----------------------------------------------------------------------

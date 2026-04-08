@@ -3,7 +3,6 @@ package com.smplkit.config;
 import com.smplkit.errors.ApiExceptionHandler;
 import com.smplkit.errors.SmplConflictException;
 import com.smplkit.errors.SmplException;
-import com.smplkit.errors.SmplNotConnectedException;
 import com.smplkit.errors.SmplNotFoundException;
 import com.smplkit.errors.SmplValidationException;
 import com.smplkit.internal.generated.config.ApiException;
@@ -303,12 +302,8 @@ public final class ConfigClient {
      * @param configKey the config key
      * @param itemKey   the item key within the config
      * @return the resolved value, or null if not found
-     * @throws SmplNotConnectedException if connect() has not been called
      */
     public Object getValue(String configKey, String itemKey) {
-        if (!connected) {
-            throw new SmplNotConnectedException();
-        }
         Map<String, Object> resolved = configCache.get(configKey);
         if (resolved == null) return null;
         return resolved.get(itemKey);
@@ -319,12 +314,8 @@ public final class ConfigClient {
      *
      * @param configKey the config key
      * @return unmodifiable map of resolved values, or null if not found
-     * @throws SmplNotConnectedException if connect() has not been called
      */
     public Map<String, Object> getValues(String configKey) {
-        if (!connected) {
-            throw new SmplNotConnectedException();
-        }
         Map<String, Object> resolved = configCache.get(configKey);
         if (resolved == null) return null;
         return Collections.unmodifiableMap(resolved);
@@ -334,7 +325,6 @@ public final class ConfigClient {
      * Returns the value for {@code itemKey} as a {@link String}, or {@code defaultValue}
      * if absent or not a string.
      *
-     * @throws SmplNotConnectedException if connect() has not been called
      */
     public String getString(String configKey, String itemKey, String defaultValue) {
         Object val = getValue(configKey, itemKey);
@@ -345,7 +335,6 @@ public final class ConfigClient {
      * Returns the value for {@code itemKey} as an {@code int}, or {@code defaultValue}
      * if absent or not a number.
      *
-     * @throws SmplNotConnectedException if connect() has not been called
      */
     public int getInt(String configKey, String itemKey, int defaultValue) {
         Object val = getValue(configKey, itemKey);
@@ -356,7 +345,6 @@ public final class ConfigClient {
      * Returns the value for {@code itemKey} as a {@code boolean}, or {@code defaultValue}
      * if absent or not a boolean.
      *
-     * @throws SmplNotConnectedException if connect() has not been called
      */
     public boolean getBool(String configKey, String itemKey, boolean defaultValue) {
         Object val = getValue(configKey, itemKey);
@@ -367,13 +355,10 @@ public final class ConfigClient {
      * Re-fetches all configs, re-resolves values for the current environment,
      * and fires change listeners for any values that differ from the previous cache.
      *
-     * @throws SmplNotConnectedException if connect() has not been called
      */
     public void refresh() {
-        if (!connected) {
-            throw new SmplNotConnectedException();
-        }
         String env = this.environment;
+        if (env == null) return; // Not yet initialized
 
         List<Config> allConfigs = list();
         Map<String, Config> configById = new HashMap<>();

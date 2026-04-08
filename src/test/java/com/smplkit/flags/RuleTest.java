@@ -1,5 +1,6 @@
 package com.smplkit.flags;
 
+import com.smplkit.Rule;
 import org.junit.jupiter.api.Test;
 
 import java.util.List;

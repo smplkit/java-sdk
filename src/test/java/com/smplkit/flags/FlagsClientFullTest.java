@@ -3,6 +3,8 @@ package com.smplkit.flags;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import org.openapitools.jackson.nullable.JsonNullableModule;
+import com.smplkit.Context;
+import com.smplkit.Rule;
 import com.smplkit.errors.SmplConflictException;
 import com.smplkit.errors.SmplException;
 import com.smplkit.errors.SmplNotFoundException;
@@ -195,9 +197,9 @@ class FlagsClientFullTest {
         client.disconnect();
         assertEquals("disconnected", client.connectionStatus());
 
-        // After disconnect, handle throws SmplNotConnectedException
+        // After disconnect, flag store is cleared, handle returns default
         FlagHandle<Boolean> handle = client.boolFlag("after-disconnect", true);
-        assertThrows(com.smplkit.errors.SmplNotConnectedException.class, () -> handle.get());
+        assertTrue(handle.get());
     }
 
     // --- Refresh ---

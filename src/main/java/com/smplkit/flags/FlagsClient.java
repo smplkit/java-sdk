@@ -6,7 +6,8 @@ import com.fasterxml.jackson.databind.SerializationFeature;
 import com.smplkit.errors.ApiExceptionHandler;
 import com.smplkit.errors.SmplConflictException;
 import com.smplkit.errors.SmplException;
-import com.smplkit.errors.SmplNotConnectedException;
+import com.smplkit.Context;
+import com.smplkit.SharedWebSocket;
 import com.smplkit.errors.SmplNotFoundException;
 import com.smplkit.errors.SmplValidationException;
 import com.smplkit.internal.generated.app.api.ContextTypesApi;
@@ -677,10 +678,6 @@ public final class FlagsClient {
      */
     @SuppressWarnings("unchecked")
     Object evaluateHandle(String key, Object defaultValue, List<Context> contexts) {
-        if (!connected) {
-            throw new SmplNotConnectedException();
-        }
-
         Map<String, Object> flagData = flagStore.get(key);
         if (flagData == null) return defaultValue;
 
