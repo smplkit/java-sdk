@@ -2,12 +2,15 @@ package com.smplkit;
 
 import com.smplkit.config.ConfigClient;
 import com.smplkit.flags.FlagsClient;
+import com.smplkit.logging.LoggingClient;
 import com.smplkit.internal.generated.app.api.ContextsApi;
 import com.smplkit.internal.generated.app.model.ContextBulkItem;
 import com.smplkit.internal.generated.app.model.ContextBulkRegister;
 import com.smplkit.internal.generated.config.ApiClient;
 import com.smplkit.internal.generated.config.api.ConfigsApi;
 import com.smplkit.internal.generated.flags.api.FlagsApi;
+import com.smplkit.internal.generated.logging.api.LogGroupsApi;
+import com.smplkit.internal.generated.logging.api.LoggersApi;
 
 import java.net.http.HttpClient;
 import java.time.Duration;
@@ -39,9 +42,11 @@ public final class SmplClient implements AutoCloseable {
     private static final String CONFIG_BASE_URL = "https://config.smplkit.com";
     private static final String FLAGS_BASE_URL = "https://flags.smplkit.com";
     private static final String APP_BASE_URL = "https://app.smplkit.com";
+    private static final String LOGGING_BASE_URL = "https://logging.smplkit.com";
 
     private ConfigClient config;
     private FlagsClient flags;
+    private LoggingClient logging;
     private final SharedWebSocket sharedWs;
     private final HttpClient httpClient;
     private final ContextsApi contextsApi;
@@ -65,6 +70,7 @@ public final class SmplClient implements AutoCloseable {
         this.contextsApi = buildContextsApi(APP_BASE_URL, apiKey, timeout);
         this.config = buildConfigClient(httpClient, apiKey, timeout);
         this.flags = buildFlagsClient(httpClient, apiKey, timeout, sharedWs, environment, service);
+        this.logging = buildLoggingClient(httpClient, apiKey, timeout, environment, service);
 
         // Register service context (fire-and-forget, background thread)
         Thread bgThread = new Thread(this::registerServiceContext, "smplkit-svc-ctx");
@@ -85,6 +91,7 @@ public final class SmplClient implements AutoCloseable {
         this.contextsApi = buildContextsApi(APP_BASE_URL, apiKey, timeout);
         this.config = buildConfigClient(httpClient, apiKey, timeout);
         this.flags = buildFlagsClient(httpClient, apiKey, timeout, sharedWs, environment, service);
+        this.logging = buildLoggingClient(httpClient, apiKey, timeout, environment, service);
 
         Thread bgThread = new Thread(this::registerServiceContext, "smplkit-svc-ctx");
         bgThread.setDaemon(true);
@@ -107,6 +114,7 @@ public final class SmplClient implements AutoCloseable {
         this.flags = flags;
         this.flags.setParentService(service);
         this.flags.setEnvironment(environment);
+        this.logging = buildLoggingClient(httpClient, apiKey, timeout, environment, service);
     }
 
     /**
@@ -125,6 +133,7 @@ public final class SmplClient implements AutoCloseable {
         this.flags = flags;
         this.flags.setParentService(service);
         this.flags.setEnvironment(environment);
+        this.logging = buildLoggingClient(httpClient, apiKey, timeout, environment, service);
 
         // Synchronous registration for testability (contextsApi is injected)
         registerServiceContext();
@@ -193,6 +202,22 @@ public final class SmplClient implements AutoCloseable {
         return builder -> builder.header("Authorization", "Bearer " + apiKey);
     }
 
+    private static LoggingClient buildLoggingClient(HttpClient httpClient, String apiKey,
+                                                    Duration timeout, String environment,
+                                                    String service) {
+        com.smplkit.internal.generated.logging.ApiClient loggingApiClient =
+                new com.smplkit.internal.generated.logging.ApiClient();
+        loggingApiClient.updateBaseUri(LOGGING_BASE_URL);
+        loggingApiClient.setRequestInterceptor(authInterceptor(apiKey));
+        loggingApiClient.setReadTimeout(timeout);
+        LoggersApi loggersApi = new LoggersApi(loggingApiClient);
+        LogGroupsApi logGroupsApi = new LogGroupsApi(loggingApiClient);
+        LoggingClient client = new LoggingClient(loggersApi, logGroupsApi, httpClient, apiKey);
+        client.setEnvironment(environment);
+        client.setService(service);
+        return client;
+    }
+
     /** Returns the Config service client. */
     public ConfigClient config() {
         return config;
@@ -201,6 +226,11 @@ public final class SmplClient implements AutoCloseable {
     /** Returns the Flags service client. */
     public FlagsClient flags() {
         return flags;
+    }
+
+    /** Returns the Logging service client. */
+    public LoggingClient logging() {
+        return logging;
     }
 
     /** Returns the configured environment. */
@@ -239,6 +269,9 @@ public final class SmplClient implements AutoCloseable {
      */
     @Override
     public void close() {
+        if (logging != null) {
+            logging.close();
+        }
         sharedWs.close();
     }
 }

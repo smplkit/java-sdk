@@ -3,6 +3,7 @@ package com.smplkit;
 import com.smplkit.config.ConfigClient;
 import com.smplkit.errors.SmplException;
 import com.smplkit.flags.FlagsClient;
+import com.smplkit.logging.LoggingClient;
 import org.junit.jupiter.api.Test;
 
 import java.time.Duration;
@@ -77,6 +78,19 @@ class SmplClientTest {
             FlagsClient flags = client.flags();
             assertNotNull(flags);
             assertSame(flags, client.flags(), "flags() should return the same instance");
+        }
+    }
+
+    @Test
+    void loggingReturnsLoggingClient() {
+        try (SmplClient client = SmplClient.builder()
+                .apiKey("test-key")
+                .environment("test")
+                .service("test-service")
+                .build()) {
+            LoggingClient logging = client.logging();
+            assertNotNull(logging);
+            assertSame(logging, client.logging(), "logging() should return the same instance");
         }
     }
 
