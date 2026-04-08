@@ -54,6 +54,7 @@ public final class SmplClient implements AutoCloseable {
     private final String service;
     private final String apiKey;
     private final Duration timeout;
+    private volatile boolean serviceContextRegistered;
 
     /**
      * Creates a new SmplClient. Package-private; use {@link #builder()}.
@@ -71,11 +72,6 @@ public final class SmplClient implements AutoCloseable {
         this.config = buildConfigClient(httpClient, apiKey, timeout);
         this.flags = buildFlagsClient(httpClient, apiKey, timeout, sharedWs, environment, service);
         this.logging = buildLoggingClient(httpClient, apiKey, timeout, environment, service);
-
-        // Register service context (fire-and-forget, background thread)
-        Thread bgThread = new Thread(this::registerServiceContext, "smplkit-svc-ctx");
-        bgThread.setDaemon(true);
-        bgThread.start();
     }
 
     /**
@@ -92,10 +88,6 @@ public final class SmplClient implements AutoCloseable {
         this.config = buildConfigClient(httpClient, apiKey, timeout);
         this.flags = buildFlagsClient(httpClient, apiKey, timeout, sharedWs, environment, service);
         this.logging = buildLoggingClient(httpClient, apiKey, timeout, environment, service);
-
-        Thread bgThread = new Thread(this::registerServiceContext, "smplkit-svc-ctx");
-        bgThread.setDaemon(true);
-        bgThread.start();
     }
 
     /**
@@ -220,17 +212,28 @@ public final class SmplClient implements AutoCloseable {
 
     /** Returns the Config service client. */
     public ConfigClient config() {
+        ensureServiceContextRegistered();
         return config;
     }
 
     /** Returns the Flags service client. */
     public FlagsClient flags() {
+        ensureServiceContextRegistered();
         return flags;
     }
 
     /** Returns the Logging service client. */
     public LoggingClient logging() {
+        ensureServiceContextRegistered();
         return logging;
+    }
+
+    private void ensureServiceContextRegistered() {
+        if (serviceContextRegistered) return;
+        serviceContextRegistered = true;
+        Thread bgThread = new Thread(this::registerServiceContext, "smplkit-svc-ctx");
+        bgThread.setDaemon(true);
+        bgThread.start();
     }
 
     /** Returns the configured environment. */
