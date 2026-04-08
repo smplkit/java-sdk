@@ -396,23 +396,25 @@ public class UsersApi {
    * List Users
    * 
    * @param filterAccount  (optional)
+   * @param filterEmail  (optional)
    * @return UserListResponse
    * @throws ApiException if fails to make API call
    */
-  public UserListResponse listUsers(@jakarta.annotation.Nullable String filterAccount) throws ApiException {
-    return listUsers(filterAccount, null);
+  public UserListResponse listUsers(@jakarta.annotation.Nullable String filterAccount, @jakarta.annotation.Nullable String filterEmail) throws ApiException {
+    return listUsers(filterAccount, filterEmail, null);
   }
 
   /**
    * List Users
    * 
    * @param filterAccount  (optional)
+   * @param filterEmail  (optional)
    * @param headers Optional headers to include in the request
    * @return UserListResponse
    * @throws ApiException if fails to make API call
    */
-  public UserListResponse listUsers(@jakarta.annotation.Nullable String filterAccount, Map<String, String> headers) throws ApiException {
-    ApiResponse<UserListResponse> localVarResponse = listUsersWithHttpInfo(filterAccount, headers);
+  public UserListResponse listUsers(@jakarta.annotation.Nullable String filterAccount, @jakarta.annotation.Nullable String filterEmail, Map<String, String> headers) throws ApiException {
+    ApiResponse<UserListResponse> localVarResponse = listUsersWithHttpInfo(filterAccount, filterEmail, headers);
     return localVarResponse.getData();
   }
 
@@ -420,23 +422,25 @@ public class UsersApi {
    * List Users
    * 
    * @param filterAccount  (optional)
+   * @param filterEmail  (optional)
    * @return ApiResponse&lt;UserListResponse&gt;
    * @throws ApiException if fails to make API call
    */
-  public ApiResponse<UserListResponse> listUsersWithHttpInfo(@jakarta.annotation.Nullable String filterAccount) throws ApiException {
-    return listUsersWithHttpInfo(filterAccount, null);
+  public ApiResponse<UserListResponse> listUsersWithHttpInfo(@jakarta.annotation.Nullable String filterAccount, @jakarta.annotation.Nullable String filterEmail) throws ApiException {
+    return listUsersWithHttpInfo(filterAccount, filterEmail, null);
   }
 
   /**
    * List Users
    * 
    * @param filterAccount  (optional)
+   * @param filterEmail  (optional)
    * @param headers Optional headers to include in the request
    * @return ApiResponse&lt;UserListResponse&gt;
    * @throws ApiException if fails to make API call
    */
-  public ApiResponse<UserListResponse> listUsersWithHttpInfo(@jakarta.annotation.Nullable String filterAccount, Map<String, String> headers) throws ApiException {
-    HttpRequest.Builder localVarRequestBuilder = listUsersRequestBuilder(filterAccount, headers);
+  public ApiResponse<UserListResponse> listUsersWithHttpInfo(@jakarta.annotation.Nullable String filterAccount, @jakarta.annotation.Nullable String filterEmail, Map<String, String> headers) throws ApiException {
+    HttpRequest.Builder localVarRequestBuilder = listUsersRequestBuilder(filterAccount, filterEmail, headers);
     try {
       HttpResponse<InputStream> localVarResponse = memberVarHttpClient.send(
           localVarRequestBuilder.build(),
@@ -483,7 +487,7 @@ public class UsersApi {
     }
   }
 
-  private HttpRequest.Builder listUsersRequestBuilder(@jakarta.annotation.Nullable String filterAccount, Map<String, String> headers) throws ApiException {
+  private HttpRequest.Builder listUsersRequestBuilder(@jakarta.annotation.Nullable String filterAccount, @jakarta.annotation.Nullable String filterEmail, Map<String, String> headers) throws ApiException {
 
     HttpRequest.Builder localVarRequestBuilder = HttpRequest.newBuilder();
 
@@ -494,6 +498,8 @@ public class UsersApi {
     String localVarQueryParameterBaseName;
     localVarQueryParameterBaseName = "filter[account]";
     localVarQueryParams.addAll(ApiClient.parameterToPairs("filter[account]", filterAccount));
+    localVarQueryParameterBaseName = "filter[email]";
+    localVarQueryParams.addAll(ApiClient.parameterToPairs("filter[email]", filterEmail));
 
     if (!localVarQueryParams.isEmpty() || localVarQueryStringJoiner.length() != 0) {
       StringJoiner queryJoiner = new StringJoiner("&");
