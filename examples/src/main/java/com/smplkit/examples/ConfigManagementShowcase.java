@@ -2,8 +2,6 @@ package com.smplkit.examples;
 
 import com.smplkit.SmplClient;
 import com.smplkit.config.Config;
-import com.smplkit.config.CreateConfigParams;
-import com.smplkit.config.UpdateConfigParams;
 
 import java.util.List;
 import java.util.Map;
@@ -15,13 +13,12 @@ import java.util.Map;
  * <p>Demonstrates the management-plane API for configurations, covering:</p>
  * <ul>
  *   <li>Client initialization ({@link SmplClient})</li>
- *   <li>Updating the built-in common config with base values</li>
- *   <li>Environment-specific overrides via {@code setValues} / {@code setValue}</li>
- *   <li>Creating child configs with parent inheritance</li>
+ *   <li>Creating configs with {@code new_()} + {@code save()}</li>
+ *   <li>Getting configs by key</li>
+ *   <li>Listing all configs</li>
+ *   <li>Updating configs via mutation + {@code save()}</li>
  *   <li>Multi-level hierarchy: auth_module &rarr; user_service &rarr; common</li>
- *   <li>Listing all configs and fetching by ID</li>
- *   <li>Updating an existing config</li>
- *   <li>Cleanup of all created resources</li>
+ *   <li>Deleting configs by key</li>
  * </ul>
  *
  * <p>Prerequisites:</p>
@@ -43,26 +40,6 @@ public class ConfigManagementShowcase {
         // ======================================================================
         section("1. SDK Initialization");
 
-        // The SmplClient builder resolves three required parameters:
-        //
-        //   apiKey       — not passed here; resolved automatically from the
-        //                  SMPLKIT_API_KEY environment variable or the
-        //                  ~/.smplkit configuration file.
-        //
-        //   environment  — the target environment. Can also be resolved from
-        //                  SMPLKIT_ENVIRONMENT if not passed.
-        //
-        //   service      — identifies this SDK instance. Can also be resolved
-        //                  from SMPLKIT_SERVICE if not passed.
-        //
-        // To pass the API key explicitly:
-        //
-        //   SmplClient client = SmplClient.builder()
-        //       .apiKey("sk_api_...")
-        //       .environment("production")
-        //       .service("showcase-service")
-        //       .build();
-        //
         try (SmplClient client = SmplClient.builder()
                 .environment("production")
                 .service("showcase-service")
@@ -75,103 +52,73 @@ public class ConfigManagementShowcase {
             // ==================================================================
             section("2a. Update the Common Config");
 
-            Config common = client.config().getByKey("common");
-            step("Fetched common config: id=" + common.id() + ", key=" + common.key());
+            Config common = client.config().get("common");
+            step("Fetched common config: id=" + common.getId() + ", key=" + common.getKey());
 
-            common = client.config().update(common, UpdateConfigParams.builder()
-                    .description("Organization-wide shared configuration")
-                    .values(Map.of(
-                            "app_name", "Acme SaaS Platform",
-                            "support_email", "support@acme.dev",
-                            "max_retries", 3,
-                            "request_timeout_ms", 5000,
-                            "log_level", "info",
-                            "feature_analytics", true
-                    ))
-                    .build());
+            common.setDescription("Organization-wide shared configuration");
+            common.setItems(Map.of(
+                    "app_name", Map.of("value", "Acme SaaS Platform"),
+                    "support_email", Map.of("value", "support@acme.dev"),
+                    "max_retries", Map.of("value", 3),
+                    "request_timeout_ms", Map.of("value", 5000),
+                    "log_level", Map.of("value", "info"),
+                    "feature_analytics", Map.of("value", true)
+            ));
+            common.save();
             step("Common config base values set (6 items)");
-            step("  app_name = Acme SaaS Platform");
-            step("  support_email = support@acme.dev");
-            step("  max_retries = 3");
-            step("  request_timeout_ms = 5000");
-            step("  log_level = info");
-            step("  feature_analytics = true");
 
             // ==================================================================
             // 2b. ENVIRONMENT OVERRIDES
             // ==================================================================
             section("2b. Environment Overrides");
 
-            common = client.config().setValues(common, Map.of(
+            Map<String, Object> prodEnv = new java.util.HashMap<>();
+            prodEnv.put("values", Map.of(
                     "max_retries", 5,
                     "request_timeout_ms", 10000,
                     "log_level", "warn"
-            ), "production");
-            step("Production overrides set on common config");
-            step("  max_retries = 5 (was 3)");
-            step("  request_timeout_ms = 10000 (was 5000)");
-            step("  log_level = warn (was info)");
-
-            common = client.config().setValues(common, Map.of(
+            ));
+            Map<String, Object> stagingEnv = new java.util.HashMap<>();
+            stagingEnv.put("values", Map.of(
                     "max_retries", 10,
                     "log_level", "debug"
-            ), "staging");
-            step("Staging overrides set on common config");
-            step("  max_retries = 10 (was 3)");
-            step("  log_level = debug (was info)");
+            ));
+            common.setEnvironments(Map.of("production", prodEnv, "staging", stagingEnv));
+            common.save();
+            step("Production and staging overrides set on common config");
 
             // ==================================================================
             // 3a. CREATE USER SERVICE CONFIG
             // ==================================================================
             section("3a. Create User Service Config");
 
-            Config userService = client.config().create(CreateConfigParams.builder("User Service")
-                    .key("user_service")
-                    .parent(common.id())
-                    .values(Map.of(
-                            "cache_ttl_seconds", 300,
-                            "enable_signup", true,
-                            "pagination_default_page_size", 50,
-                            "session_timeout_minutes", 30
-                    ))
-                    .build());
-            step("Created user_service config: id=" + userService.id()
-                    + ", parent=" + common.id());
-            step("  Inherits from: common");
-
-            userService = client.config().setValues(userService, Map.of(
-                    "cache_ttl_seconds", 600,
-                    "enable_signup", false,
-                    "session_timeout_minutes", 60
-            ), "production");
-            step("User service production overrides set");
+            Config userService = client.config().new_("user_service", "User Service", null, common.getId());
+            userService.setItems(Map.of(
+                    "cache_ttl_seconds", Map.of("value", 300),
+                    "enable_signup", Map.of("value", true),
+                    "pagination_default_page_size", Map.of("value", 50),
+                    "session_timeout_minutes", Map.of("value", 30)
+            ));
+            userService.save();
+            step("Created user_service config: id=" + userService.getId()
+                    + ", parent=" + common.getId());
 
             // ==================================================================
             // 3b. CREATE AUTH MODULE CONFIG (CHILD)
             // ==================================================================
             section("3b. Create Auth Module Config (child of user_service)");
 
-            Config authModule = client.config().create(CreateConfigParams.builder("Auth Module")
-                    .key("auth_module")
-                    .parent(userService.id())
-                    .values(Map.of(
-                            "mfa_enabled", false,
-                            "token_expiry_minutes", 15,
-                            "max_login_attempts", 5,
-                            "lockout_duration_minutes", 30,
-                            "password_min_length", 8
-                    ))
-                    .build());
-            step("Created auth_module config: id=" + authModule.id()
-                    + ", parent=" + userService.id());
-            step("  Inherits from: user_service -> common");
-
-            authModule = client.config().setValues(authModule, Map.of(
-                    "mfa_enabled", true,
-                    "token_expiry_minutes", 10,
-                    "max_login_attempts", 3
-            ), "production");
-            step("Auth module production overrides set");
+            Config authModule = client.config().new_("auth_module", "Auth Module", null, userService.getId());
+            authModule.setItems(Map.of(
+                    "mfa_enabled", Map.of("value", false),
+                    "token_expiry_minutes", Map.of("value", 15),
+                    "max_login_attempts", Map.of("value", 5),
+                    "lockout_duration_minutes", Map.of("value", 30),
+                    "password_min_length", Map.of("value", 8)
+            ));
+            authModule.save();
+            step("Created auth_module config: id=" + authModule.getId()
+                    + ", parent=" + userService.getId());
 
             // ==================================================================
             // 4a. LIST ALL CONFIGS
@@ -181,72 +128,56 @@ public class ConfigManagementShowcase {
             List<Config> allConfigs = client.config().list();
             step("Total configs in account: " + allConfigs.size());
             for (Config c : allConfigs) {
-                step("  " + c.key() + " (id=" + c.id() + ") — " + c.name());
+                step("  " + c.getKey() + " (id=" + c.getId() + ") - " + c.getName());
             }
 
             // ==================================================================
-            // 4b. GET CONFIG BY ID
+            // 4b. GET CONFIG BY KEY
             // ==================================================================
-            section("4b. Get Config by ID");
+            section("4b. Get Config by Key");
 
-            Config fetchedUserService = client.config().get(userService.id());
-            step("Fetched by ID: key=" + fetchedUserService.key()
-                    + ", name=" + fetchedUserService.name());
+            Config fetchedUserService = client.config().get("user_service");
+            step("Fetched by key: key=" + fetchedUserService.getKey()
+                    + ", name=" + fetchedUserService.getName());
 
-            Config fetchedAuthModule = client.config().get(authModule.id());
-            step("Fetched by ID: key=" + fetchedAuthModule.key()
-                    + ", name=" + fetchedAuthModule.name());
+            Config fetchedAuthModule = client.config().get("auth_module");
+            step("Fetched by key: key=" + fetchedAuthModule.getKey()
+                    + ", name=" + fetchedAuthModule.getName());
 
             // ==================================================================
             // 5. UPDATE A CONFIG
             // ==================================================================
             section("5. Update a Config");
 
-            userService = client.config().update(userService, UpdateConfigParams.builder()
-                    .description("Updated: User service with new pagination settings")
-                    .build());
-            step("Updated user_service description: " + userService.description());
-
-            authModule = client.config().setValue(authModule, "password_min_length", 12, null);
-            step("Updated auth_module/password_min_length base value to 12");
-
-            authModule = client.config().setValue(authModule, "lockout_duration_minutes", 60, "production");
-            step("Updated auth_module/lockout_duration_minutes production override to 60");
+            userService = client.config().get("user_service");
+            userService.setDescription("Updated: User service with new pagination settings");
+            userService.save();
+            step("Updated user_service description: " + userService.getDescription());
 
             // ==================================================================
             // 6. CLEANUP
             // ==================================================================
             section("6. Cleanup");
 
-            // Delete children first (reverse order of creation).
-            client.config().delete(authModule.id());
-            step("Deleted auth_module (" + authModule.id() + ")");
+            client.config().delete("auth_module");
+            step("Deleted auth_module");
 
-            client.config().delete(userService.id());
-            step("Deleted user_service (" + userService.id() + ")");
+            client.config().delete("user_service");
+            step("Deleted user_service");
 
-            // Reset common config to empty.
-            Config latestCommon = client.config().getByKey("common");
-            client.config().update(latestCommon, UpdateConfigParams.builder()
-                    .description("")
-                    .values(Map.of())
-                    .environments(Map.of())
-                    .build());
+            Config latestCommon = client.config().get("common");
+            latestCommon.setDescription("");
+            latestCommon.setItems(Map.of());
+            latestCommon.setEnvironments(Map.of());
+            latestCommon.save();
             step("Common config reset to empty");
 
-        } // SmplClient.close() is called here
+        }
 
-        // ======================================================================
-        // DONE
-        // ======================================================================
         section("ALL DONE");
         System.out.println("  The Config Management showcase completed successfully.");
         System.out.println("  All created resources have been cleaned up.\n");
     }
-
-    // -----------------------------------------------------------------------
-    // Helpers
-    // -----------------------------------------------------------------------
 
     private static void section(String title) {
         System.out.println("\n" + "=".repeat(60));
@@ -255,6 +186,6 @@ public class ConfigManagementShowcase {
     }
 
     private static void step(String description) {
-        System.out.println("  \u2192 " + description);
+        System.out.println("  -> " + description);
     }
 }

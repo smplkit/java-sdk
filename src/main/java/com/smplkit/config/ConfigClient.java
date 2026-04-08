@@ -1,10 +1,10 @@
 package com.smplkit.config;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.smplkit.Helpers;
 import com.smplkit.errors.ApiExceptionHandler;
-import com.smplkit.errors.SmplConflictException;
 import com.smplkit.errors.SmplException;
 import com.smplkit.errors.SmplNotFoundException;
-import com.smplkit.errors.SmplValidationException;
 import com.smplkit.internal.generated.config.ApiException;
 import com.smplkit.internal.generated.config.api.ConfigsApi;
 import com.smplkit.internal.generated.config.model.ConfigItemDefinition;
@@ -33,12 +33,13 @@ import java.util.logging.Logger;
 /**
  * Client for the Smpl Config service.
  *
- * <p>Provides CRUD operations on configuration resources and prescriptive
- * typed access after {@link com.smplkit.SmplClient#connect()}.
- * Obtained via {@link com.smplkit.SmplClient#config()}.</p>
+ * <p>Provides management CRUD ({@link #new_(String)}, {@link #get(String)},
+ * {@link #list()}, {@link #delete(String)}) and runtime resolution
+ * ({@link #resolve(String)}, {@link #subscribe(String)}, {@link #onChange}).</p>
  *
- * <p>All methods communicate with the server synchronously and raise
- * structured exceptions on failure.</p>
+ * <p>Management methods always use HTTP and do NOT trigger lazy init.
+ * Runtime methods ({@code resolve}, {@code subscribe}) trigger lazy init
+ * on first call, which bulk-fetches all configs and resolves inheritance.</p>
  */
 public final class ConfigClient {
 
@@ -54,41 +55,70 @@ public final class ConfigClient {
      * Creates a new ConfigClient. Use {@link com.smplkit.SmplClient} to obtain an instance.
      *
      * @param configsApi the generated API client
-     * @param httpClient the HTTP client (unused after ConfigRuntime removal, kept for API compat)
-     * @param apiKey     the API key (unused after ConfigRuntime removal, kept for API compat)
+     * @param httpClient the HTTP client (kept for API compat)
+     * @param apiKey     the API key (kept for API compat)
      */
     public ConfigClient(ConfigsApi configsApi, java.net.http.HttpClient httpClient, String apiKey) {
         this.configsApi = configsApi;
     }
 
     // -----------------------------------------------------------------------
-    // Management-plane CRUD
+    // Environment
     // -----------------------------------------------------------------------
 
     /**
-     * Fetches a single config by UUID.
+     * Sets the target environment for config resolution.
      *
-     * @param id the config UUID
-     * @return the matching config
-     * @throws SmplNotFoundException if no matching config exists
+     * @param environment the environment name (e.g. "production")
      */
-    public Config get(String id) {
-        try {
-            ConfigResponse response = configsApi.getConfig(UUID.fromString(id));
-            return parseResource(response.getData());
-        } catch (ApiException e) {
-            throw mapException(e);
-        }
+    public void setEnvironment(String environment) {
+        this.environment = environment;
+    }
+
+    // -----------------------------------------------------------------------
+    // Management: factory methods
+    // -----------------------------------------------------------------------
+
+    /**
+     * Returns an unsaved {@link Config} with {@code id=null}.
+     * Call {@link Config#save()} to persist.
+     *
+     * @param key human-readable key
+     * @return a new unsaved Config
+     */
+    public Config new_(String key) {
+        return new_(key, null, null, null);
     }
 
     /**
-     * Fetches a single config by its human-readable key.
+     * Returns an unsaved {@link Config} with {@code id=null}.
+     * Call {@link Config#save()} to persist.
+     *
+     * @param key         human-readable key
+     * @param name        display name (auto-generated from key if null)
+     * @param description optional description
+     * @param parent      parent config UUID, or null
+     * @return a new unsaved Config
+     */
+    public Config new_(String key, String name, String description, String parent) {
+        Config config = new Config(this, key, name != null ? name : Helpers.keyToDisplayName(key));
+        config.setDescription(description);
+        config.setParent(parent);
+        return config;
+    }
+
+    // -----------------------------------------------------------------------
+    // Management: CRUD
+    // -----------------------------------------------------------------------
+
+    /**
+     * Fetches a config by its human-readable key. Always HTTP.
      *
      * @param key the config key
-     * @return the matching config
+     * @return the matching Config
      * @throws SmplNotFoundException if no matching config exists
      */
-    public Config getByKey(String key) {
+    public Config get(String key) {
         try {
             ConfigListResponse response = configsApi.listConfigs(key, null);
             List<ConfigResource> data = response.getData();
@@ -102,43 +132,7 @@ public final class ConfigClient {
     }
 
     /**
-     * Creates a new config.
-     *
-     * @param params the creation parameters
-     * @return the created config
-     * @throws SmplValidationException if the server rejects the request
-     */
-    public Config create(CreateConfigParams params) {
-        try {
-            var attrs = new com.smplkit.internal.generated.config.model.Config();
-            attrs.setName(params.name());
-            if (params.key() != null) {
-                attrs.setKey(params.key());
-            }
-            if (params.description() != null) {
-                attrs.setDescription(params.description());
-            }
-            if (params.parent() != null) {
-                attrs.setParent(params.parent());
-            }
-            if (params.values() != null) {
-                attrs.setItems(wrapValuesAsItems(params.values()));
-            }
-
-            ResourceConfig data = new ResourceConfig()
-                    .type("config")
-                    .attributes(attrs);
-            ResponseConfig body = new ResponseConfig().data(data);
-
-            ConfigResponse response = configsApi.createConfig(body);
-            return parseResource(response.getData());
-        } catch (ApiException e) {
-            throw mapException(e);
-        }
-    }
-
-    /**
-     * Lists all configs for the account.
+     * Lists all configs for the account. Always HTTP.
      *
      * @return an unmodifiable list of configs
      */
@@ -160,60 +154,53 @@ public final class ConfigClient {
     }
 
     /**
-     * Deletes a config by UUID.
+     * Deletes a config by key. Resolves key to UUID internally.
      *
-     * @param id the UUID of the config to delete
-     * @throws SmplNotFoundException     if the config does not exist
-     * @throws SmplConflictException     if the config has children
+     * @param key the config key
+     * @throws SmplNotFoundException if the config does not exist
      */
-    public void delete(String id) {
+    public void delete(String key) {
+        Config config = get(key);
         try {
-            configsApi.deleteConfig(UUID.fromString(id));
+            configsApi.deleteConfig(UUID.fromString(config.getId()));
         } catch (ApiException e) {
             throw mapException(e);
         }
     }
 
-    /**
-     * Updates an existing config with the provided parameters.
-     *
-     * <p>Only fields set on {@code params} are changed; unset fields retain their current values.</p>
-     *
-     * @param config the current config (provides the UUID and default values)
-     * @param params fields to update
-     * @return the updated config
-     */
-    public Config update(Config config, UpdateConfigParams params) {
-        try {
-            String name = params.name() != null ? params.name() : config.name();
-            String description = params.description() != null ? params.description() : config.description();
-            Map<String, Object> items = params.values() != null ? params.values() : config.items();
-            Map<String, Map<String, Object>> environments =
-                    params.environments() != null ? params.environments() : config.environments();
+    // -----------------------------------------------------------------------
+    // Internal: create / update (called by Config.save())
+    // -----------------------------------------------------------------------
 
+    /**
+     * Internal: POST a new config. Called by {@link Config#save()} when id is null.
+     */
+    Config _createConfig(Config config) {
+        try {
             var attrs = new com.smplkit.internal.generated.config.model.Config();
-            attrs.setName(name);
-            if (description != null) {
-                attrs.setDescription(description);
+            attrs.setName(config.getName());
+            if (config.getKey() != null) {
+                attrs.setKey(config.getKey());
             }
-            // Always preserve parent so PUT doesn't clear it
-            if (config.parent() != null) {
-                attrs.setParent(config.parent());
+            if (config.getDescription() != null) {
+                attrs.setDescription(config.getDescription());
             }
-            if (items != null) {
-                attrs.setItems(wrapValuesAsItems(items));
+            if (config.getParent() != null) {
+                attrs.setParent(config.getParent());
             }
-            if (environments != null) {
-                attrs.setEnvironments(wrapEnvironments(environments));
+            if (config.getItems() != null && !config.getItems().isEmpty()) {
+                attrs.setItems(wrapValuesAsItems(config.getResolvedItems()));
+            }
+            if (config.getEnvironments() != null && !config.getEnvironments().isEmpty()) {
+                attrs.setEnvironments(wrapEnvironments(config.getEnvironments()));
             }
 
             ResourceConfig data = new ResourceConfig()
-                    .id(config.id())
                     .type("config")
                     .attributes(attrs);
             ResponseConfig body = new ResponseConfig().data(data);
 
-            ConfigResponse response = configsApi.updateConfig(UUID.fromString(config.id()), body);
+            ConfigResponse response = configsApi.createConfig(body);
             return parseResource(response.getData());
         } catch (ApiException e) {
             throw mapException(e);
@@ -221,188 +208,199 @@ public final class ConfigClient {
     }
 
     /**
-     * Sets (deep-merges) values for a specific environment on an existing config.
-     *
-     * @param config      the config to update
-     * @param newValues   the values to merge in
-     * @param environment the target environment name (e.g. {@code "production"})
-     * @return the updated config
+     * Internal: PUT a full config update. Called by {@link Config#save()} when id is set.
      */
-    public Config setValues(Config config, Map<String, Object> newValues, String environment) {
-        Map<String, Map<String, Object>> envs = new HashMap<>(config.environments());
-        Map<String, Object> existingEnv = envs.getOrDefault(environment, new HashMap<>());
-        @SuppressWarnings("unchecked")
-        Map<String, Object> existingValues = existingEnv.containsKey("values")
-                ? new HashMap<>((Map<String, Object>) existingEnv.get("values"))
-                : new HashMap<>();
-        Map<String, Object> merged = Resolver.deepMerge(existingValues, newValues);
-
-        Map<String, Object> envData = new HashMap<>(existingEnv);
-        envData.put("values", merged);
-        envs.put(environment, envData);
-
-        UpdateConfigParams params = UpdateConfigParams.builder()
-                .environments(envs)
-                .build();
-        return update(config, params);
-    }
-
-    /**
-     * Sets a single key/value pair for a specific environment on an existing config.
-     *
-     * @param config      the config to update
-     * @param key         the config key to set
-     * @param value       the new value
-     * @param environment the target environment name
-     * @return the updated config
-     */
-    public Config setValue(Config config, String key, Object value, String environment) {
-        return setValues(config, Map.of(key, value), environment);
-    }
-
-    // -----------------------------------------------------------------------
-    // Prescriptive access — connect once, read everywhere
-    // -----------------------------------------------------------------------
-
-    /**
-     * Internal connect called by SmplClient.connect(). Fetches all configs,
-     * resolves values for the given environment, and caches them.
-     *
-     * @param environment the target environment
-     */
-    /** @hidden Internal — called by SmplClient.connect(). */
-    public void connectInternal(String environment) {
-        this.environment = environment;
-        List<Config> allConfigs = list();
-        Map<String, Config> configById = new HashMap<>();
-        for (Config cfg : allConfigs) {
-            configById.put(cfg.id(), cfg);
-        }
-
-        Map<String, Map<String, Object>> newCache = new HashMap<>();
-        for (Config cfg : allConfigs) {
-            List<Resolver.ChainEntry> chain = new ArrayList<>();
-            chain.add(toChainEntry(cfg));
-            Config current = cfg;
-            while (current.parent() != null && configById.containsKey(current.parent())) {
-                Config parent = configById.get(current.parent());
-                chain.add(toChainEntry(parent));
-                current = parent;
+    Config _updateConfig(Config config) {
+        try {
+            var attrs = new com.smplkit.internal.generated.config.model.Config();
+            attrs.setName(config.getName());
+            if (config.getDescription() != null) {
+                attrs.setDescription(config.getDescription());
             }
-            newCache.put(cfg.key(), Resolver.resolve(chain, environment));
+            if (config.getParent() != null) {
+                attrs.setParent(config.getParent());
+            }
+            if (config.getItems() != null) {
+                attrs.setItems(wrapValuesAsItems(config.getResolvedItems()));
+            }
+            if (config.getEnvironments() != null) {
+                attrs.setEnvironments(wrapEnvironments(config.getEnvironments()));
+            }
+
+            ResourceConfig data = new ResourceConfig()
+                    .id(config.getId())
+                    .type("config")
+                    .attributes(attrs);
+            ResponseConfig body = new ResponseConfig().data(data);
+
+            ConfigResponse response = configsApi.updateConfig(
+                    UUID.fromString(config.getId()), body);
+            return parseResource(response.getData());
+        } catch (ApiException e) {
+            throw mapException(e);
         }
+    }
 
-        configCache = newCache;
-        connected = true;
+    // -----------------------------------------------------------------------
+    // Runtime: resolve / subscribe
+    // -----------------------------------------------------------------------
+
+    /**
+     * Returns resolved config values for the given key as a flat map.
+     *
+     * <p>Triggers lazy init via {@link #_connectInternal()} on first call.</p>
+     *
+     * @param key the config key
+     * @return resolved values map, or an empty map if not found
+     */
+    public Map<String, Object> resolve(String key) {
+        _connectInternal();
+        return new HashMap<>(configCache.getOrDefault(key, Map.of()));
     }
 
     /**
-     * Prescriptive access: returns a resolved config value.
+     * Returns resolved config values mapped to a model type.
      *
-     * @param configKey the config key
-     * @param itemKey   the item key within the config
-     * @return the resolved value, or null if not found
+     * <p>Dot-notation keys are unflattened into a nested map, then converted
+     * to the model type via Jackson's {@code ObjectMapper.convertValue}.</p>
+     *
+     * @param key   the config key
+     * @param model the target model class
+     * @param <T>   the model type
+     * @return an instance of the model type
      */
-    public Object getValue(String configKey, String itemKey) {
-        Map<String, Object> resolved = configCache.get(configKey);
-        if (resolved == null) return null;
-        return resolved.get(itemKey);
+    public <T> T resolve(String key, Class<T> model) {
+        _connectInternal();
+        Map<String, Object> values = new HashMap<>(configCache.getOrDefault(key, Map.of()));
+        Map<String, Object> nested = unflatten(values);
+        ObjectMapper mapper = new ObjectMapper();
+        return mapper.convertValue(nested, model);
     }
 
     /**
-     * Prescriptive access: returns all resolved values for a config.
+     * Returns a {@link LiveConfig} proxy for the given key (Map mode).
      *
-     * @param configKey the config key
-     * @return unmodifiable map of resolved values, or null if not found
+     * <p>The proxy delegates to the latest cache state on every access,
+     * so values update automatically after {@link #refresh()}.</p>
+     *
+     * @param key the config key
+     * @return a LiveConfig proxy
      */
-    public Map<String, Object> getValues(String configKey) {
-        Map<String, Object> resolved = configCache.get(configKey);
-        if (resolved == null) return null;
-        return Collections.unmodifiableMap(resolved);
+    @SuppressWarnings("unchecked")
+    public LiveConfig<Map<String, Object>> subscribe(String key) {
+        _connectInternal();
+        return new LiveConfig<>(this, key, null);
     }
 
     /**
-     * Returns the value for {@code itemKey} as a {@link String}, or {@code defaultValue}
-     * if absent or not a string.
+     * Returns a {@link LiveConfig} proxy for the given key (model mode).
      *
+     * @param key   the config key
+     * @param model the target model class
+     * @param <T>   the model type
+     * @return a LiveConfig proxy
      */
-    public String getString(String configKey, String itemKey, String defaultValue) {
-        Object val = getValue(configKey, itemKey);
-        return val instanceof String s ? s : defaultValue;
+    public <T> LiveConfig<T> subscribe(String key, Class<T> model) {
+        _connectInternal();
+        return new LiveConfig<>(this, key, model);
     }
 
-    /**
-     * Returns the value for {@code itemKey} as an {@code int}, or {@code defaultValue}
-     * if absent or not a number.
-     *
-     */
-    public int getInt(String configKey, String itemKey, int defaultValue) {
-        Object val = getValue(configKey, itemKey);
-        return val instanceof Number n ? n.intValue() : defaultValue;
-    }
-
-    /**
-     * Returns the value for {@code itemKey} as a {@code boolean}, or {@code defaultValue}
-     * if absent or not a boolean.
-     *
-     */
-    public boolean getBool(String configKey, String itemKey, boolean defaultValue) {
-        Object val = getValue(configKey, itemKey);
-        return val instanceof Boolean b ? b : defaultValue;
-    }
+    // -----------------------------------------------------------------------
+    // Runtime: refresh / change listeners
+    // -----------------------------------------------------------------------
 
     /**
      * Re-fetches all configs, re-resolves values for the current environment,
      * and fires change listeners for any values that differ from the previous cache.
-     *
      */
     public void refresh() {
         String env = this.environment;
-        if (env == null) return; // Not yet initialized
+        if (env == null) return;
 
-        List<Config> allConfigs = list();
-        Map<String, Config> configById = new HashMap<>();
-        for (Config cfg : allConfigs) {
-            configById.put(cfg.id(), cfg);
-        }
-
-        Map<String, Map<String, Object>> newCache = new HashMap<>();
-        for (Config cfg : allConfigs) {
-            List<Resolver.ChainEntry> chain = new ArrayList<>();
-            chain.add(toChainEntry(cfg));
-            Config current = cfg;
-            while (current.parent() != null && configById.containsKey(current.parent())) {
-                Config parent = configById.get(current.parent());
-                chain.add(toChainEntry(parent));
-                current = parent;
-            }
-            newCache.put(cfg.key(), Resolver.resolve(chain, env));
-        }
-
+        Map<String, Map<String, Object>> newCache = buildCache(env);
         Map<String, Map<String, Object>> oldCache = configCache;
         configCache = newCache;
         diffAndFire(oldCache, newCache, "manual");
     }
 
     /**
-     * Registers a listener that fires when any config value changes.
+     * Registers a global change listener that fires when any config value changes.
      *
-     * @param listener called with a {@link ChangeEvent} on each change
+     * @param listener called with a {@link ConfigChangeEvent} on each change
      */
-    public void onChange(Consumer<ChangeEvent> listener) {
+    public void onChange(Consumer<ConfigChangeEvent> listener) {
         listeners.add(new ListenerEntry(null, null, listener));
     }
 
     /**
-     * Registers a listener that fires when the specified config/item values change.
+     * Registers a config-scoped change listener.
      *
-     * @param listener  called with a {@link ChangeEvent} on each matching change
-     * @param configKey only fire for changes to this config (null = all)
-     * @param itemKey   only fire for changes to this item (null = all items in config)
+     * @param configKey only fire for changes to this config
+     * @param listener  called with a {@link ConfigChangeEvent} on each matching change
      */
-    public void onChange(Consumer<ChangeEvent> listener, String configKey, String itemKey) {
+    public void onChange(String configKey, Consumer<ConfigChangeEvent> listener) {
+        listeners.add(new ListenerEntry(configKey, null, listener));
+    }
+
+    /**
+     * Registers an item-scoped change listener.
+     *
+     * @param configKey only fire for changes to this config
+     * @param itemKey   only fire for changes to this item
+     * @param listener  called with a {@link ConfigChangeEvent} on each matching change
+     */
+    public void onChange(String configKey, String itemKey, Consumer<ConfigChangeEvent> listener) {
         listeners.add(new ListenerEntry(configKey, itemKey, listener));
     }
+
+    // -----------------------------------------------------------------------
+    // Lazy init
+    // -----------------------------------------------------------------------
+
+    /**
+     * Lazy init: fetch all configs, resolve inheritance, cache resolved values.
+     * Idempotent -- returns immediately if already connected.
+     */
+    void _connectInternal() {
+        if (connected) return;
+        String env = this.environment;
+        if (env == null) return;
+
+        configCache = buildCache(env);
+        connected = true;
+    }
+
+    // -----------------------------------------------------------------------
+    // Internal: cache building
+    // -----------------------------------------------------------------------
+
+    private Map<String, Map<String, Object>> buildCache(String env) {
+        List<Config> allConfigs = list();
+        Map<String, Config> configById = new HashMap<>();
+        for (Config cfg : allConfigs) {
+            if (cfg.getId() != null) {
+                configById.put(cfg.getId(), cfg);
+            }
+        }
+
+        Map<String, Map<String, Object>> newCache = new HashMap<>();
+        for (Config cfg : allConfigs) {
+            List<Resolver.ChainEntry> chain = new ArrayList<>();
+            chain.add(toChainEntry(cfg));
+            Config current = cfg;
+            while (current.getParent() != null && configById.containsKey(current.getParent())) {
+                Config parent = configById.get(current.getParent());
+                chain.add(toChainEntry(parent));
+                current = parent;
+            }
+            newCache.put(cfg.getKey(), Resolver.resolve(chain, env));
+        }
+        return newCache;
+    }
+
+    // -----------------------------------------------------------------------
+    // Internal: diff and fire
+    // -----------------------------------------------------------------------
 
     /**
      * Compares old and new caches, fires change listeners for any differences.
@@ -429,7 +427,7 @@ public final class ConfigClient {
                 Object newVal = newItems.get(itemKey);
                 if (Objects.equals(oldVal, newVal)) continue;
 
-                ChangeEvent event = new ChangeEvent(cfgKey, itemKey, oldVal, newVal, source);
+                ConfigChangeEvent event = new ConfigChangeEvent(cfgKey, itemKey, oldVal, newVal, source);
                 for (ListenerEntry entry : listeners) {
                     if (entry.configKey != null && !entry.configKey.equals(cfgKey)) continue;
                     if (entry.itemKey != null && !entry.itemKey.equals(itemKey)) continue;
@@ -444,6 +442,17 @@ public final class ConfigClient {
         }
     }
 
+    // -----------------------------------------------------------------------
+    // Package-private: cache access (for LiveConfig)
+    // -----------------------------------------------------------------------
+
+    /**
+     * Returns resolved values for a key from the cache. Used by {@link LiveConfig}.
+     */
+    Map<String, Object> _getResolvedCache(String key) {
+        return configCache.getOrDefault(key, Map.of());
+    }
+
     /** Package-private: check if connected (for testing). */
     boolean isConnected() {
         return connected;
@@ -454,15 +463,29 @@ public final class ConfigClient {
     // -----------------------------------------------------------------------
 
     private static Resolver.ChainEntry toChainEntry(Config config) {
-        return new Resolver.ChainEntry(config.id(), config.items(), config.environments());
+        // Resolver needs resolved items (plain values) and environments
+        Map<String, Object> resolvedItems = config.getResolvedItems();
+        @SuppressWarnings("unchecked")
+        Map<String, Map<String, Object>> envMap = new HashMap<>();
+        for (Map.Entry<String, Object> entry : config.getEnvironments().entrySet()) {
+            if (entry.getValue() instanceof Map) {
+                @SuppressWarnings("unchecked")
+                Map<String, Object> val = (Map<String, Object>) entry.getValue();
+                envMap.put(entry.getKey(), val);
+            }
+        }
+        return new Resolver.ChainEntry(
+                config.getId() != null ? config.getId() : "",
+                resolvedItems,
+                envMap);
     }
 
     /**
-     * Parses a generated ConfigResource into the SDK's Config record.
+     * Parses a generated ConfigResource into the SDK's Config.
      *
-     * <p>Extracts raw values from typed item definitions and environment overrides.</p>
+     * <p>Stores the FULL typed shape from the API in the items field.</p>
      */
-    private Config parseResource(ConfigResource resource) {
+    Config parseResource(ConfigResource resource) {
         String id = resource.getId();
         var attrs = resource.getAttributes();
 
@@ -471,17 +494,25 @@ public final class ConfigClient {
         String description = attrs.getDescription();
         String parent = attrs.getParent();
 
-        // Extract raw values from typed items: {key: ConfigItemDefinition} -> {key: rawValue}
+        // Store the FULL typed shape: {key: {value, type, description}}
         Map<String, Object> items = new HashMap<>();
         Map<String, ConfigItemDefinition> rawItems = attrs.getItems();
         if (rawItems != null) {
             for (Map.Entry<String, ConfigItemDefinition> entry : rawItems.entrySet()) {
-                items.put(entry.getKey(), entry.getValue().getValue());
+                Map<String, Object> itemData = new HashMap<>();
+                itemData.put("value", entry.getValue().getValue());
+                if (entry.getValue().getType() != null) {
+                    itemData.put("type", entry.getValue().getType().getValue());
+                }
+                if (entry.getValue().getDescription() != null) {
+                    itemData.put("description", entry.getValue().getDescription());
+                }
+                items.put(entry.getKey(), itemData);
             }
         }
 
-        // Extract environments with raw values from overrides
-        Map<String, Map<String, Object>> environments = new HashMap<>();
+        // Extract environments
+        Map<String, Object> environments = new HashMap<>();
         Map<String, EnvironmentOverride> rawEnvs = attrs.getEnvironments();
         if (rawEnvs != null) {
             for (Map.Entry<String, EnvironmentOverride> envEntry : rawEnvs.entrySet()) {
@@ -502,24 +533,22 @@ public final class ConfigClient {
         Instant createdAt = attrs.getCreatedAt() != null ? attrs.getCreatedAt().toInstant() : null;
         Instant updatedAt = attrs.getUpdatedAt() != null ? attrs.getUpdatedAt().toInstant() : null;
 
-        return new Config(
-                id != null ? id : "",
-                key != null ? key : "",
-                name != null ? name : "",
-                description,
-                parent,
-                items,
-                environments,
-                createdAt,
-                updatedAt
-        );
+        Config config = new Config(this, key != null ? key : "", name != null ? name : "");
+        config.setId(id != null ? id : "");
+        config.setDescription(description);
+        config.setParent(parent);
+        config.setItems(items);
+        config.setEnvironments(environments);
+        config.setCreatedAt(createdAt);
+        config.setUpdatedAt(updatedAt);
+        return config;
     }
 
     /**
-     * Wraps raw values as typed items for the API.
+     * Wraps resolved values as typed items for the API.
      * Each value is wrapped as a ConfigItemDefinition with inferred type.
      */
-    private static Map<String, ConfigItemDefinition> wrapValuesAsItems(Map<String, Object> values) {
+    static Map<String, ConfigItemDefinition> wrapValuesAsItems(Map<String, Object> values) {
         Map<String, ConfigItemDefinition> items = new HashMap<>();
         for (Map.Entry<String, Object> entry : values.entrySet()) {
             ConfigItemDefinition def = new ConfigItemDefinition();
@@ -535,22 +564,23 @@ public final class ConfigClient {
      * with ConfigItemOverride wrappers.
      */
     @SuppressWarnings("unchecked")
-    private static Map<String, EnvironmentOverride> wrapEnvironments(
-            Map<String, Map<String, Object>> environments) {
+    static Map<String, EnvironmentOverride> wrapEnvironments(Map<String, Object> environments) {
         Map<String, EnvironmentOverride> result = new HashMap<>();
-        for (Map.Entry<String, Map<String, Object>> entry : environments.entrySet()) {
+        for (Map.Entry<String, Object> entry : environments.entrySet()) {
             EnvironmentOverride override = new EnvironmentOverride();
-            Map<String, Object> envData = entry.getValue();
-            Object rawValues = envData.get("values");
-            if (rawValues instanceof Map) {
-                Map<String, Object> valuesMap = (Map<String, Object>) rawValues;
-                Map<String, ConfigItemOverride> wrappedValues = new HashMap<>();
-                for (Map.Entry<String, Object> valEntry : valuesMap.entrySet()) {
-                    ConfigItemOverride itemOverride = new ConfigItemOverride();
-                    itemOverride.setValue(valEntry.getValue());
-                    wrappedValues.put(valEntry.getKey(), itemOverride);
+            if (entry.getValue() instanceof Map) {
+                Map<String, Object> envData = (Map<String, Object>) entry.getValue();
+                Object rawValues = envData.get("values");
+                if (rawValues instanceof Map) {
+                    Map<String, Object> valuesMap = (Map<String, Object>) rawValues;
+                    Map<String, ConfigItemOverride> wrappedValues = new HashMap<>();
+                    for (Map.Entry<String, Object> valEntry : valuesMap.entrySet()) {
+                        ConfigItemOverride itemOverride = new ConfigItemOverride();
+                        itemOverride.setValue(valEntry.getValue());
+                        wrappedValues.put(valEntry.getKey(), itemOverride);
+                    }
+                    override.setValues(wrappedValues);
                 }
-                override.setValues(wrappedValues);
             }
             result.put(entry.getKey(), override);
         }
@@ -558,16 +588,38 @@ public final class ConfigClient {
     }
 
     /** Infers the type string for a value. */
-    private static ConfigItemDefinition.TypeEnum inferType(Object value) {
+    static ConfigItemDefinition.TypeEnum inferType(Object value) {
         if (value instanceof String) return ConfigItemDefinition.TypeEnum.STRING;
         if (value instanceof Number) return ConfigItemDefinition.TypeEnum.NUMBER;
         if (value instanceof Boolean) return ConfigItemDefinition.TypeEnum.BOOLEAN;
         return ConfigItemDefinition.TypeEnum.JSON;
     }
 
+    /**
+     * Converts dot-notation keys to nested maps.
+     *
+     * <p>Example: {@code {"database.host": "localhost", "database.port": 5432}}
+     * becomes {@code {"database": {"host": "localhost", "port": 5432}}}.</p>
+     */
+    @SuppressWarnings("unchecked")
+    static Map<String, Object> unflatten(Map<String, Object> flat) {
+        Map<String, Object> result = new HashMap<>();
+        for (Map.Entry<String, Object> entry : flat.entrySet()) {
+            String[] parts = entry.getKey().split("\\.");
+            Map<String, Object> current = result;
+            for (int i = 0; i < parts.length - 1; i++) {
+                current = (Map<String, Object>) current.computeIfAbsent(
+                        parts[i], k -> new HashMap<>());
+            }
+            current.put(parts[parts.length - 1], entry.getValue());
+        }
+        return result;
+    }
+
     private static SmplException mapException(ApiException e) {
         return ApiExceptionHandler.mapApiException(e.getCode(), e.getResponseBody());
     }
 
-    private record ListenerEntry(String configKey, String itemKey, Consumer<ChangeEvent> listener) {}
+    private record ListenerEntry(String configKey, String itemKey,
+                                 Consumer<ConfigChangeEvent> listener) {}
 }

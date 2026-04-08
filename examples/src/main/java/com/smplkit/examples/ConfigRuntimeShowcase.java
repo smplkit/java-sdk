@@ -1,8 +1,9 @@
 package com.smplkit.examples;
 
 import com.smplkit.SmplClient;
-import com.smplkit.config.ChangeEvent;
 import com.smplkit.config.Config;
+import com.smplkit.config.ConfigChangeEvent;
+import com.smplkit.config.LiveConfig;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -15,9 +16,8 @@ import java.util.Map;
  * <p>Demonstrates the runtime (prescriptive) tier of the Config SDK, covering:</p>
  * <ul>
  *   <li>Client initialization and demo hierarchy setup via {@link ConfigRuntimeSetup}</li>
- *   <li>Connecting to the runtime via {@code connect()}</li>
- *   <li>Typed accessors: {@code getString}, {@code getInt}, {@code getBool}</li>
- *   <li>Raw access: {@code getValues}, {@code getValue}</li>
+ *   <li>Resolved values via {@code resolve()}</li>
+ *   <li>Live subscriptions via {@code subscribe()}</li>
  *   <li>Multi-level inheritance: auth_module &rarr; user_service &rarr; common</li>
  *   <li>Real-time updates via global and key-specific {@code onChange} listeners</li>
  *   <li>Manual refresh via {@code refresh()}</li>
@@ -43,26 +43,6 @@ public class ConfigRuntimeShowcase {
         // ======================================================================
         section("1. SDK Initialization + Demo Setup");
 
-        // The SmplClient builder resolves three required parameters:
-        //
-        //   apiKey       — not passed here; resolved automatically from the
-        //                  SMPLKIT_API_KEY environment variable or the
-        //                  ~/.smplkit configuration file.
-        //
-        //   environment  — the target environment. Can also be resolved from
-        //                  SMPLKIT_ENVIRONMENT if not passed.
-        //
-        //   service      — identifies this SDK instance. Can also be resolved
-        //                  from SMPLKIT_SERVICE if not passed.
-        //
-        // To pass the API key explicitly:
-        //
-        //   SmplClient client = SmplClient.builder()
-        //       .apiKey("sk_api_...")
-        //       .environment("production")
-        //       .service("showcase-service")
-        //       .build();
-        //
         try (SmplClient client = SmplClient.builder()
                 .environment("production")
                 .service("showcase-service")
@@ -70,132 +50,89 @@ public class ConfigRuntimeShowcase {
 
             step("SmplClient initialized with environment=production");
 
-            // Create the three-level hierarchy: common -> user_service -> auth_module
             ConfigRuntimeSetup.DemoConfigs demo = ConfigRuntimeSetup.setupDemoConfigs(client);
 
             // ==================================================================
-            // 2. PRESCRIPTIVE ACCESS — Lazy-init on first read
+            // 2. PRESCRIPTIVE ACCESS via resolve()
             // ==================================================================
-            section("2. Prescriptive Access");
+            section("2. Prescriptive Access via resolve()");
 
-            // --- Typed accessors ---
-            String appName = client.config().getString("common", "app_name", "Unknown");
-            step("common/app_name (string) = " + appName);
+            Map<String, Object> commonValues = client.config().resolve("common");
+            step("common resolved values: " + commonValues.size() + " keys");
+            step("  app_name = " + commonValues.get("app_name"));
+            step("  max_retries = " + commonValues.get("max_retries"));
 
-            int retries = client.config().getInt("common", "max_retries", 1);
-            step("common/max_retries (int) = " + retries);
-            // Expected: 5 (production override)
-
-            boolean signup = client.config().getBool("user_service", "enable_signup", true);
-            step("user_service/enable_signup (bool) = " + signup);
-            // Expected: false (production override)
-
-            String logLevel = client.config().getString("common", "log_level", "debug");
-            step("common/log_level (string) = " + logLevel);
-            // Expected: "warn" (production override)
-
-            // --- Raw access ---
-            Map<String, Object> allValues = client.config().getValues("user_service");
-            step("user_service total keys: " + (allValues != null ? allValues.size() : 0));
-
-            Object missing = client.config().getValue("user_service", "nonexistent_item");
-            step("nonexistent item = " + missing);
+            Map<String, Object> userServiceValues = client.config().resolve("user_service");
+            step("user_service resolved values: " + userServiceValues.size() + " keys");
+            step("  enable_signup = " + userServiceValues.get("enable_signup"));
 
             // ==================================================================
-            // 3. MULTI-LEVEL INHERITANCE
+            // 3. SUBSCRIBE — live updates
             // ==================================================================
-            section("3. Multi-Level Inheritance");
+            section("3. Subscribe - Live Updates");
+
+            LiveConfig<Map<String, Object>> liveCommon = client.config().subscribe("common");
+            step("Subscribed to common config");
+            step("  Current max_retries = " + liveCommon.getAsMap().get("max_retries"));
+
+            // ==================================================================
+            // 4. MULTI-LEVEL INHERITANCE
+            // ==================================================================
+            section("4. Multi-Level Inheritance");
 
             step("Hierarchy: common -> user_service -> auth_module");
 
-            // auth_module inherits from user_service, which inherits from common.
-            // Values cascade: auth_module sees its own values, plus user_service's,
-            // plus common's, with more-specific configs winning on conflicts.
-
-            boolean mfa = client.config().getBool("auth_module", "mfa_enabled", false);
-            step("auth_module/mfa_enabled (bool) = " + mfa);
-            // Expected: true (production override on auth_module)
-
-            int tokenExpiry = client.config().getInt("auth_module", "token_expiry_minutes", 30);
-            step("auth_module/token_expiry_minutes (int) = " + tokenExpiry);
-            // Expected: 10 (production override on auth_module)
-
-            int maxAttempts = client.config().getInt("auth_module", "max_login_attempts", 10);
-            step("auth_module/max_login_attempts (int) = " + maxAttempts);
-            // Expected: 3 (production override on auth_module)
-
-            // Inherited from user_service
-            int cacheTtl = client.config().getInt("auth_module", "cache_ttl_seconds", 0);
-            step("auth_module/cache_ttl_seconds (int, inherited from user_service) = " + cacheTtl);
-            // Expected: 600 (production override on user_service)
-
-            // Inherited from common (two levels up)
-            String inheritedAppName = client.config().getString("auth_module", "app_name", "N/A");
-            step("auth_module/app_name (string, inherited from common) = " + inheritedAppName);
-            // Expected: "Acme SaaS Platform" (base value from common)
-
-            String inheritedEmail = client.config().getString("auth_module", "support_email", "N/A");
-            step("auth_module/support_email (string, inherited from common) = " + inheritedEmail);
-            // Expected: "support@acme.dev"
-
-            // All resolved values for auth_module (own + inherited)
-            Map<String, Object> authValues = client.config().getValues("auth_module");
-            step("auth_module total resolved keys: " + (authValues != null ? authValues.size() : 0));
+            Map<String, Object> authValues = client.config().resolve("auth_module");
+            step("auth_module resolved values: " + authValues.size() + " keys");
+            step("  mfa_enabled = " + authValues.get("mfa_enabled"));
+            step("  app_name (inherited from common) = " + authValues.get("app_name"));
 
             // ==================================================================
-            // 4. ONCHANGE + REFRESH
+            // 5. ONCHANGE + REFRESH
             // ==================================================================
-            section("4. OnChange + Refresh");
+            section("5. OnChange + Refresh");
 
-            // Global listener — fires for any config change.
-            List<ChangeEvent> changes = new ArrayList<>();
+            List<ConfigChangeEvent> changes = new ArrayList<>();
             client.config().onChange(evt -> {
                 changes.add(evt);
                 System.out.println("    [CHANGE] " + evt.configKey() + "/" + evt.itemKey()
-                        + ": " + evt.oldValue() + " \u2192 " + evt.newValue());
+                        + ": " + evt.oldValue() + " -> " + evt.newValue());
             });
             step("Global change listener registered");
 
-            // Key-specific listener — fires only for common/max_retries.
-            List<ChangeEvent> retryChanges = new ArrayList<>();
-            client.config().onChange(
-                    retryChanges::add,
-                    "common",
-                    "max_retries");
-            step("Key-specific listener registered for common/max_retries");
+            List<ConfigChangeEvent> retryChanges = new ArrayList<>();
+            client.config().onChange("common", "max_retries", retryChanges::add);
+            step("Item-scoped listener registered for common/max_retries");
 
-            // Update via management API, then refresh to pick up the change.
-            Config latestCommon = client.config().getByKey("common");
-            client.config().setValue(latestCommon, "max_retries", 7, "production");
+            Config latestCommon = client.config().get("common");
+            Map<String, Object> prodEnv = new java.util.HashMap<>();
+            prodEnv.put("values", Map.of(
+                    "max_retries", 7,
+                    "request_timeout_ms", 10000,
+                    "log_level", "warn"
+            ));
+            latestCommon.setEnvironments(Map.of("production", prodEnv));
+            latestCommon.save();
             step("Updated max_retries to 7 via management API");
 
             client.config().refresh();
             step("Manual refresh completed");
 
-            int newRetries = client.config().getInt("common", "max_retries", 1);
-            step("max_retries after refresh = " + newRetries);
-            // Expected: 7
-
+            step("max_retries after refresh = " + client.config().resolve("common").get("max_retries"));
+            step("Live common max_retries = " + liveCommon.getAsMap().get("max_retries"));
             step("Global changes: " + changes.size() + ", retry-specific: " + retryChanges.size());
 
             // ==================================================================
-            // 5. CLEANUP
+            // 6. CLEANUP
             // ==================================================================
             ConfigRuntimeSetup.teardownDemoConfigs(client, demo);
 
-        } // SmplClient.close() is called here
+        }
 
-        // ======================================================================
-        // DONE
-        // ======================================================================
         section("ALL DONE");
         System.out.println("  The Config Runtime showcase completed successfully.");
         System.out.println("  All created resources have been cleaned up.\n");
     }
-
-    // -----------------------------------------------------------------------
-    // Helpers
-    // -----------------------------------------------------------------------
 
     private static void section(String title) {
         System.out.println("\n" + "=".repeat(60));
@@ -204,6 +141,6 @@ public class ConfigRuntimeShowcase {
     }
 
     private static void step(String description) {
-        System.out.println("  \u2192 " + description);
+        System.out.println("  -> " + description);
     }
 }

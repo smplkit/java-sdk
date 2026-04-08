@@ -36,23 +36,16 @@ class Phase2CoverageTest {
     // --- ConfigClient prescriptive access ---
 
     @Test
-    void getValue_returnsNullWhenNotConnected() {
+    void resolve_returnsEmptyMapWhenNotConnected() {
         ConfigsApi mockApi = mock(ConfigsApi.class);
         ConfigClient configClient = new ConfigClient(mockApi, HttpClient.newHttpClient(), "test-key");
 
-        assertNull(configClient.getValue("my-config", "host"));
+        Map<String, Object> values = configClient.resolve("my-config");
+        assertTrue(values.isEmpty());
     }
 
     @Test
-    void getValues_returnsNullWhenNotConnected() {
-        ConfigsApi mockApi = mock(ConfigsApi.class);
-        ConfigClient configClient = new ConfigClient(mockApi, HttpClient.newHttpClient(), "test-key");
-
-        assertNull(configClient.getValues("my-config"));
-    }
-
-    @Test
-    void connectInternal_fetchesAndCachesConfigs() throws ApiException {
+    void resolve_fetchesAndCachesConfigs() throws ApiException {
         ConfigsApi mockApi = mock(ConfigsApi.class);
 
         Map<String, Object> configData = new HashMap<>();
@@ -78,19 +71,24 @@ class Phase2CoverageTest {
                 ConfigListResponse.class);
         when(mockApi.listConfigs(isNull(), isNull())).thenReturn(listResponse);
 
+        // Without setEnvironment, resolve returns empty (no lazy init)
+        ConfigClient noEnvClient = new ConfigClient(mockApi, HttpClient.newHttpClient(), "test-key");
+        assertTrue(noEnvClient.resolve("db-config").isEmpty());
+
+        // With setEnvironment, resolve triggers lazy init and returns data
         ConfigClient configClient = new ConfigClient(mockApi, HttpClient.newHttpClient(), "test-key");
-        assertNull(configClient.getValue("db-config", "host"));
+        configClient.setEnvironment("production");
 
-        configClient.connectInternal("production");
+        Map<String, Object> resolved = configClient.resolve("db-config");
+        assertEquals("prod-db.example.com", resolved.get("host"));
+        assertEquals(5432, resolved.get("port"));
 
-        assertEquals("prod-db.example.com", configClient.getValue("db-config", "host"));
-        assertEquals(5432, configClient.getValue("db-config", "port"));
-        assertNull(configClient.getValue("db-config", "nonexistent"));
-        assertNull(configClient.getValue("nonexistent-config", "host"));
+        // Nonexistent config
+        assertTrue(configClient.resolve("nonexistent-config").isEmpty());
     }
 
     @Test
-    void getValues_returnsFullResolvedMap() throws ApiException {
+    void resolve_returnsFullResolvedMap() throws ApiException {
         ConfigsApi mockApi = mock(ConfigsApi.class);
 
         ConfigListResponse listResponse = OBJECT_MAPPER.convertValue(
@@ -108,13 +106,13 @@ class Phase2CoverageTest {
         when(mockApi.listConfigs(isNull(), isNull())).thenReturn(listResponse);
 
         ConfigClient configClient = new ConfigClient(mockApi, HttpClient.newHttpClient(), "test-key");
-        configClient.connectInternal("staging");
+        configClient.setEnvironment("staging");
 
-        Map<String, Object> values = configClient.getValues("app-config");
+        Map<String, Object> values = configClient.resolve("app-config");
         assertNotNull(values);
         assertEquals("Default Title", values.get("title"));
 
-        assertNull(configClient.getValues("unknown"));
+        assertTrue(configClient.resolve("unknown").isEmpty());
     }
 
     // --- Service context auto-injection in flag evaluation ---
@@ -152,7 +150,6 @@ class Phase2CoverageTest {
                 FlagListResponse.class);
         when(mockApi.listFlags(isNull(), isNull())).thenReturn(flagList);
 
-        // get() triggers lazy init (_connectInternal) automatically
         Flag<Boolean> handle = flagsClient.booleanFlag("svc-flag", false);
         assertTrue(handle.get(List.of()));
     }
@@ -190,7 +187,6 @@ class Phase2CoverageTest {
                 FlagListResponse.class);
         when(mockApi.listFlags(isNull(), isNull())).thenReturn(flagList);
 
-        // get() triggers lazy init; explicit service context with different key should NOT match
         Flag<Boolean> handle = flagsClient.booleanFlag("svc-flag", false);
         Context explicitService = new Context("service", "other-service", Map.of());
         assertFalse(handle.get(List.of(explicitService)));
@@ -202,7 +198,6 @@ class Phase2CoverageTest {
         FlagsClient flagsClient = new FlagsClient(mockApi, null, HttpClient.newHttpClient(),
                 "test-key", "https://flags.smplkit.com", "https://app.smplkit.com",
                 Duration.ofSeconds(5));
-        // No setParentService
         flagsClient.setEnvironment("staging");
 
         Map<String, Object> attrs = new HashMap<>();
@@ -229,7 +224,6 @@ class Phase2CoverageTest {
                 FlagListResponse.class);
         when(mockApi.listFlags(isNull(), isNull())).thenReturn(flagList);
 
-        // get() triggers lazy init; without service the rule should NOT match
         Flag<Boolean> handle = flagsClient.booleanFlag("svc-flag", false);
         assertFalse(handle.get(List.of()));
     }
@@ -247,17 +241,12 @@ class Phase2CoverageTest {
 
     @Test
     void smplClient_registersServiceContext_viaStandardConstructor() throws Exception {
-        // The standard (non-injectable) constructors call registerServiceContext().
-        // Use the 5-param HttpClient constructor which calls buildContextsApi internally.
-        // The call will fail (no real server) but we just verify it doesn't throw.
         HttpClient mockHttp = mock(HttpClient.class);
         when(mockHttp.send(any(), any())).thenThrow(new java.io.IOException("No server"));
 
-        // This constructor calls registerServiceContext() which catches exceptions
         SmplClient client = new SmplClient(mockHttp, "test-key", "staging", "my-service",
                 Duration.ofSeconds(5));
 
-        // service() confirms the client was constructed
         assertEquals("my-service", client.service());
         client.close();
     }
@@ -278,11 +267,9 @@ class Phase2CoverageTest {
         ConfigsApi mockConfigsApi = mock(ConfigsApi.class);
         ConfigClient configClient = new ConfigClient(mockConfigsApi, mockHttp, "test-key");
 
-        // Constructor should not throw even if context registration fails
         assertDoesNotThrow(() -> {
             try (SmplClient client = new SmplClient(mockHttp, "test-key", "staging", "test-service",
                     Duration.ofSeconds(5), flagsClient, configClient, mockContextsApi)) {
-                // The constructor calls registerServiceContext() which swallows the exception
                 verify(mockContextsApi).bulkRegisterContexts(any());
             }
         });
@@ -318,10 +305,9 @@ class Phase2CoverageTest {
         when(mockApi.listFlags(isNull(), isNull()))
                 .thenReturn(new FlagListResponse().data(List.of()));
 
-        // Two evaluations trigger only one listFlags call (lazy init is idempotent)
         Flag<Boolean> handle = flagsClient.booleanFlag("unknown-flag", false);
-        handle.get(List.of()); // triggers lazy init
-        handle.get(List.of()); // should NOT re-init
+        handle.get(List.of());
+        handle.get(List.of());
 
         verify(mockApi, times(1)).listFlags(isNull(), isNull());
     }

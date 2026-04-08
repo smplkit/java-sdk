@@ -9,11 +9,11 @@ package com.smplkit.config;
  * @param newValue  the updated value (may be {@code null} if the item was removed)
  * @param source    how the change was delivered: {@code "websocket"}, {@code "manual"}
  */
-public record ChangeEvent(String configKey, String itemKey, Object oldValue, Object newValue, String source) {
+public record ConfigChangeEvent(String configKey, String itemKey, Object oldValue, Object newValue, String source) {
 
     @Override
     public String toString() {
-        return "ChangeEvent[configKey=" + configKey
+        return "ConfigChangeEvent[configKey=" + configKey
                 + ", itemKey=" + itemKey
                 + ", oldValue=" + oldValue
                 + ", newValue=" + newValue
