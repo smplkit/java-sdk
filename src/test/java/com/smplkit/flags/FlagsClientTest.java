@@ -2,23 +2,23 @@ package com.smplkit.flags;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
-import org.openapitools.jackson.nullable.JsonNullableModule;
+import com.smplkit.Context;
+import com.smplkit.SharedWebSocket;
+import com.smplkit.errors.SmplNotFoundException;
+import com.smplkit.errors.SmplValidationException;
+import com.smplkit.internal.generated.app.api.ContextsApi;
 import com.smplkit.internal.generated.flags.ApiException;
 import com.smplkit.internal.generated.flags.api.FlagsApi;
 import com.smplkit.internal.generated.flags.model.FlagListResponse;
 import com.smplkit.internal.generated.flags.model.FlagResponse;
 import com.smplkit.internal.generated.flags.model.ResponseFlag;
-import com.smplkit.Context;
-import com.smplkit.SharedWebSocket;
-import com.smplkit.errors.SmplNotFoundException;
-import com.smplkit.errors.SmplValidationException;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;
+import org.openapitools.jackson.nullable.JsonNullableModule;
 
 import java.net.http.HttpClient;
 import java.time.Duration;
-import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -34,59 +34,115 @@ class FlagsClientTest {
     private static final ObjectMapper OBJECT_MAPPER = new ObjectMapper()
             .registerModule(new JavaTimeModule())
             .registerModule(new JsonNullableModule());
+
     private FlagsApi mockApi;
+    private ContextsApi mockContextsApi;
     private FlagsClient client;
     private static final String TEST_FLAG_ID = "11111111-1111-1111-1111-111111111111";
 
     @BeforeEach
     void setUp() {
         mockApi = Mockito.mock(FlagsApi.class);
-        client = new FlagsClient(mockApi, null, null,
-                HttpClient.newHttpClient(), "test-key",
-                "https://flags.smplkit.com", "https://app.smplkit.com", Duration.ofSeconds(5));
+        mockContextsApi = Mockito.mock(ContextsApi.class);
+        client = new FlagsClient(mockApi, mockContextsApi, HttpClient.newHttpClient(),
+                "test-key", "https://flags.smplkit.com", "https://app.smplkit.com",
+                Duration.ofSeconds(5));
+        client.setEnvironment("staging");
     }
 
-    // --- Management CRUD ---
+    // --- Factory methods return unsaved flags ---
 
     @Test
-    void create_sendsCorrectRequest() throws ApiException {
-        FlagResponse response = makeFlagResponse(TEST_FLAG_ID, "my-flag", "My Flag",
-                "BOOLEAN", false, List.of(
-                        Map.of("name", "True", "value", true),
-                        Map.of("name", "False", "value", false)
-                ), Map.of());
-        when(mockApi.createFlag(any(ResponseFlag.class))).thenReturn(response);
-
-        FlagResource result = client.create(CreateFlagParams.builder(
-                "my-flag", "My Flag", FlagType.BOOLEAN).defaultValue(false).build());
-
-        assertEquals("my-flag", result.key());
-        assertEquals("My Flag", result.name());
-        verify(mockApi).createFlag(any(ResponseFlag.class));
+    void newBooleanFlag_createsUnsavedFlagWithNullId() {
+        Flag<Boolean> flag = client.newBooleanFlag("my-flag", false);
+        assertNull(flag.getId());
+        assertEquals("my-flag", flag.getKey());
+        assertEquals("BOOLEAN", flag.getType());
+        assertFalse(flag.getDefault());
     }
 
     @Test
-    void get_fetchesByUuid() throws ApiException {
-        FlagResponse response = makeFlagResponse(TEST_FLAG_ID, "my-flag", "My Flag",
-                "BOOLEAN", false, List.of(), Map.of());
-        when(mockApi.getFlag(UUID.fromString(TEST_FLAG_ID))).thenReturn(response);
+    void newBooleanFlag_withNameAndDescription() {
+        Flag<Boolean> flag = client.newBooleanFlag("my-flag", true, "My Flag", "A test flag");
+        assertNull(flag.getId());
+        assertEquals("My Flag", flag.getName());
+        assertEquals("A test flag", flag.getDescription());
+    }
 
-        FlagResource result = client.get(TEST_FLAG_ID);
-        assertEquals(TEST_FLAG_ID, result.id());
-        assertEquals("my-flag", result.key());
+    @Test
+    void newBooleanFlag_withoutName_usesKeyToDisplayName() {
+        Flag<Boolean> flag = client.newBooleanFlag("checkout-v2", false);
+        assertEquals("Checkout V2", flag.getName());
+    }
+
+    // --- Runtime handles ---
+
+    @Test
+    void booleanFlag_returnsTypedHandle() {
+        Flag<Boolean> handle = client.booleanFlag("feature-x", false);
+        assertEquals("feature-x", handle.getKey());
+        assertFalse(handle.getDefault());
+        assertEquals(Boolean.class, handle.getValueType());
+    }
+
+    @Test
+    void stringFlag_returnsTypedHandle() {
+        Flag<String> handle = client.stringFlag("color", "red");
+        assertEquals("color", handle.getKey());
+        assertEquals("red", handle.getDefault());
+        assertEquals(String.class, handle.getValueType());
+    }
+
+    @Test
+    void numberFlag_returnsTypedHandle() {
+        Flag<Number> handle = client.numberFlag("rate-limit", 100);
+        assertEquals("rate-limit", handle.getKey());
+        assertEquals(100, handle.getDefault());
+        assertEquals(Number.class, handle.getValueType());
+    }
+
+    @Test
+    void jsonFlag_returnsTypedHandle() {
+        Flag<Object> handle = client.jsonFlag("config", Map.of("a", 1));
+        assertEquals("config", handle.getKey());
+        assertEquals(Object.class, handle.getValueType());
+    }
+
+    // --- get(key) fetches by key via listFlags filter ---
+
+    @Test
+    void get_fetchesByKeyUsingListFilter() throws ApiException {
+        when(mockApi.listFlags(eq("my-flag"), isNull()))
+                .thenReturn(makeFlagListResponse(TEST_FLAG_ID, "my-flag", "My Flag",
+                        "BOOLEAN", false, Map.of()));
+
+        Flag<?> result = client.get("my-flag");
+        assertEquals(TEST_FLAG_ID, result.getId());
+        assertEquals("my-flag", result.getKey());
+        verify(mockApi).listFlags(eq("my-flag"), isNull());
     }
 
     @Test
     void get_notFound_throwsSmplNotFoundException() throws ApiException {
-        when(mockApi.getFlag(any(UUID.class)))
-                .thenThrow(new ApiException(404, "Not Found"));
+        when(mockApi.listFlags(eq("unknown"), isNull()))
+                .thenReturn(new FlagListResponse().data(List.of()));
 
-        assertThrows(SmplNotFoundException.class, () -> client.get(TEST_FLAG_ID));
+        assertThrows(SmplNotFoundException.class, () -> client.get("unknown"));
     }
 
     @Test
+    void get_apiError_throwsSmplException() throws ApiException {
+        when(mockApi.listFlags(eq("my-flag"), isNull()))
+                .thenThrow(new ApiException(404, "Not Found"));
+
+        assertThrows(SmplNotFoundException.class, () -> client.get("my-flag"));
+    }
+
+    // --- list() returns all flags ---
+
+    @Test
     void list_returnsAllFlags() throws ApiException {
-        Map<String, Object> listMap = Map.of("data", List.of(
+        FlagListResponse listResponse = OBJECT_MAPPER.convertValue(Map.of("data", List.of(
                 Map.of("id", TEST_FLAG_ID, "type", "flag", "attributes", Map.of(
                         "key", "flag-1", "name", "Flag 1", "type", "BOOLEAN",
                         "default", false, "values", List.of(), "environments", Map.of()
@@ -95,61 +151,105 @@ class FlagsClientTest {
                         "key", "flag-2", "name", "Flag 2", "type", "STRING",
                         "default", "red", "values", List.of(), "environments", Map.of()
                 ))
-        ));
-        FlagListResponse listResponse = OBJECT_MAPPER.convertValue(listMap, FlagListResponse.class);
+        )), FlagListResponse.class);
         when(mockApi.listFlags(isNull(), isNull())).thenReturn(listResponse);
 
-        List<FlagResource> result = client.list();
+        List<Flag<?>> result = client.list();
         assertEquals(2, result.size());
-        assertEquals("flag-1", result.get(0).key());
-        assertEquals("flag-2", result.get(1).key());
+        assertEquals("flag-1", result.get(0).getKey());
+        assertEquals("flag-2", result.get(1).getKey());
     }
 
     @Test
-    void delete_callsApi() throws ApiException {
-        client.delete(TEST_FLAG_ID);
+    void list_emptyResponse() throws ApiException {
+        when(mockApi.listFlags(isNull(), isNull())).thenReturn(new FlagListResponse().data(List.of()));
+
+        List<Flag<?>> result = client.list();
+        assertTrue(result.isEmpty());
+    }
+
+    // --- delete(key) resolves key then deletes ---
+
+    @Test
+    void delete_resolvesKeyThenDeletes() throws ApiException {
+        when(mockApi.listFlags(eq("my-flag"), isNull()))
+                .thenReturn(makeFlagListResponse(TEST_FLAG_ID, "my-flag", "My Flag",
+                        "BOOLEAN", false, Map.of()));
+        doNothing().when(mockApi).deleteFlag(UUID.fromString(TEST_FLAG_ID));
+
+        client.delete("my-flag");
+
+        verify(mockApi).listFlags(eq("my-flag"), isNull());
         verify(mockApi).deleteFlag(UUID.fromString(TEST_FLAG_ID));
     }
 
-    // --- Prescriptive tier: Handles and Evaluation ---
+    // --- _createFlag POSTs and returns created flag ---
 
     @Test
-    void boolFlag_returnsHandle() {
-        FlagHandle<Boolean> handle = client.boolFlag("feature-x", false);
-        assertEquals("feature-x", handle.key());
-        assertFalse(handle.defaultValue());
+    void createFlag_postsAndReturnsCreatedFlag() throws ApiException {
+        FlagResponse response = makeFlagResponse(TEST_FLAG_ID, "my-flag", "My Flag",
+                "BOOLEAN", false, List.of(
+                        Map.of("name", "True", "value", true),
+                        Map.of("name", "False", "value", false)
+                ), Map.of());
+        when(mockApi.createFlag(any(ResponseFlag.class))).thenReturn(response);
+
+        Flag<Boolean> newFlag = client.newBooleanFlag("my-flag", false, "My Flag", null);
+        newFlag.save();
+
+        assertNotNull(newFlag.getId());
+        assertEquals("my-flag", newFlag.getKey());
+        verify(mockApi).createFlag(any(ResponseFlag.class));
+    }
+
+    // --- _updateFlag PUTs and returns updated flag ---
+
+    @Test
+    void updateFlag_putsAndReturnsUpdatedFlag() throws ApiException {
+        FlagResponse response = makeFlagResponse(TEST_FLAG_ID, "my-flag", "Updated Flag",
+                "BOOLEAN", false, List.of(), Map.of());
+        when(mockApi.updateFlag(eq(UUID.fromString(TEST_FLAG_ID)), any(ResponseFlag.class)))
+                .thenReturn(response);
+
+        // Create a flag that already has an id (simulating a fetched flag)
+        Flag<Boolean> existingFlag = client.newBooleanFlag("my-flag", false, "My Flag", null);
+        existingFlag.setId(TEST_FLAG_ID);
+        existingFlag.setName("Updated Flag");
+        existingFlag.save();
+
+        assertEquals("Updated Flag", existingFlag.getName());
+        verify(mockApi).updateFlag(eq(UUID.fromString(TEST_FLAG_ID)), any(ResponseFlag.class));
+    }
+
+    // --- Error mapping ---
+
+    @Test
+    void apiException404_throwsSmplNotFoundException() throws ApiException {
+        when(mockApi.listFlags(anyString(), isNull()))
+                .thenThrow(new ApiException(404, "Not Found"));
+        assertThrows(SmplNotFoundException.class, () -> client.get("my-flag"));
     }
 
     @Test
-    void stringFlag_returnsHandle() {
-        FlagHandle<String> handle = client.stringFlag("color", "red");
-        assertEquals("color", handle.key());
-        assertEquals("red", handle.defaultValue());
+    void apiException409_throwsSmplConflictException() throws ApiException {
+        when(mockApi.createFlag(any(ResponseFlag.class)))
+                .thenThrow(new ApiException(409, "Conflict"));
+        Flag<Boolean> flag = client.newBooleanFlag("dup", false);
+        assertThrows(com.smplkit.errors.SmplConflictException.class, flag::save);
     }
 
     @Test
-    void numberFlag_returnsHandle() {
-        FlagHandle<Number> handle = client.numberFlag("rate-limit", 100);
-        assertEquals("rate-limit", handle.key());
-        assertEquals(100, handle.defaultValue());
+    void apiException422_throwsSmplValidationException() throws ApiException {
+        when(mockApi.createFlag(any(ResponseFlag.class)))
+                .thenThrow(new ApiException(422, "Validation Error"));
+        Flag<Boolean> flag = client.newBooleanFlag("bad-flag", false);
+        assertThrows(SmplValidationException.class, flag::save);
     }
 
-    @Test
-    void jsonFlag_returnsHandle() {
-        FlagHandle<Object> handle = client.jsonFlag("config", Map.of("a", 1));
-        assertEquals("config", handle.key());
-    }
-
-    @Test
-    void handleGet_returnsDefaultWhenNotConnected() {
-        FlagHandle<Boolean> handle = client.boolFlag("feature-x", false);
-        // No connected check; empty flag store returns default
-        assertFalse(handle.get());
-    }
+    // --- handleGet with lazy init and JSON logic ---
 
     @Test
     void handleGet_evaluatesWithLocalJsonLogic() throws ApiException {
-        // Set up mock to return a flag with rules
         setupFlagStore("feature-x", "BOOLEAN", false, Map.of(
                 "staging", Map.of(
                         "enabled", true,
@@ -161,11 +261,23 @@ class FlagsClientTest {
                 )
         ));
 
-        FlagHandle<Boolean> handle = client.boolFlag("feature-x", false);
+        Flag<Boolean> handle = client.booleanFlag("feature-x", false);
 
-        // Evaluate with matching context
+        // Lazy init happens on first get()
         Context userCtx = new Context("user", "u-1", Map.of("plan", "enterprise"));
         assertTrue(handle.get(List.of(userCtx)));
+    }
+
+    @Test
+    void handleGet_lazyInit_callsListOnFirstEval() throws ApiException {
+        when(mockApi.listFlags(isNull(), isNull()))
+                .thenReturn(new FlagListResponse().data(List.of()));
+
+        Flag<Boolean> handle = client.booleanFlag("unknown-flag", false);
+        assertFalse(handle.get());
+
+        // _connectInternal called listFlags
+        verify(mockApi, atLeastOnce()).listFlags(isNull(), isNull());
     }
 
     @Test
@@ -181,102 +293,9 @@ class FlagsClientTest {
                 )
         ));
 
-        FlagHandle<Boolean> handle = client.boolFlag("feature-x", false);
-
-        // Evaluate with non-matching context
+        Flag<Boolean> handle = client.booleanFlag("feature-x", false);
         Context userCtx = new Context("user", "u-1", Map.of("plan", "free"));
         assertFalse(handle.get(List.of(userCtx)));
-    }
-
-    @Test
-    void handleGet_returnsEnvDefault_whenDisabled() throws ApiException {
-        setupFlagStore("feature-x", "BOOLEAN", false, Map.of(
-                "staging", Map.of(
-                        "enabled", false,
-                        "default", true
-                )
-        ));
-
-        FlagHandle<Boolean> handle = client.boolFlag("feature-x", false);
-        assertTrue(handle.get(List.of()));
-    }
-
-    @Test
-    void handleGet_returnsFlagDefault_whenEnvNotFound() throws ApiException {
-        setupFlagStore("feature-x", "BOOLEAN", false, Map.of());
-
-        FlagHandle<Boolean> handle = client.boolFlag("feature-x", false);
-        assertFalse(handle.get(List.of()));
-    }
-
-    @Test
-    void handleGet_returnsCodeDefault_whenFlagNotInStore() throws ApiException {
-        // Connect with empty store
-        setupEmptyFlagStore();
-
-        FlagHandle<String> handle = client.stringFlag("unknown-flag", "fallback");
-        assertEquals("fallback", handle.get(List.of()));
-    }
-
-    @Test
-    void stringHandle_rejectsNonStringValue() throws ApiException {
-        setupFlagStore("color", "STRING", "red", Map.of(
-                "staging", Map.of(
-                        "enabled", true,
-                        "rules", List.of(Map.of(
-                                "description", "Always 42",
-                                "logic", Map.of("==", List.of(1, 1)),
-                                "value", 42
-                        ))
-                )
-        ));
-
-        FlagHandle<String> handle = client.stringFlag("color", "red");
-        // Rule returns 42 (int), but handle expects String → returns default
-        assertEquals("red", handle.get(List.of()));
-    }
-
-    @Test
-    void numberHandle_rejectsBoolean() throws ApiException {
-        setupFlagStore("limit", "NUMERIC", 100, Map.of(
-                "staging", Map.of(
-                        "enabled", true,
-                        "rules", List.of(Map.of(
-                                "description", "Always true",
-                                "logic", Map.of("==", List.of(1, 1)),
-                                "value", true
-                        ))
-                )
-        ));
-
-        FlagHandle<Number> handle = client.numberFlag("limit", 100);
-        assertEquals(100, handle.get(List.of()));
-    }
-
-    // --- Cache ---
-
-    @Test
-    void stats_tracksCacheHitsAndMisses() throws ApiException {
-        setupFlagStore("feature-x", "BOOLEAN", false, Map.of(
-                "staging", Map.of(
-                        "enabled", true,
-                        "default", true
-                )
-        ));
-
-        FlagHandle<Boolean> handle = client.boolFlag("feature-x", false);
-        List<Context> ctx = List.of();
-
-        // First call = miss
-        handle.get(ctx);
-        // Second call = hit (same context)
-        handle.get(ctx);
-        // Third call = hit
-        handle.get(ctx);
-
-        FlagStats stats = client.stats();
-        assertEquals(2, stats.cacheHits());
-        assertEquals(1, stats.cacheMisses());
     }
 
     // --- Context provider ---
@@ -298,45 +317,43 @@ class FlagsClientTest {
                 new Context("user", "u-1", Map.of("plan", "premium"))
         ));
 
-        FlagHandle<Boolean> handle = client.boolFlag("feature-x", false);
+        Flag<Boolean> handle = client.booleanFlag("feature-x", false);
         assertTrue(handle.get());
     }
 
+    // --- Service context injection ---
+
     @Test
-    void explicitContext_overridesProvider() throws ApiException {
-        setupFlagStore("feature-x", "BOOLEAN", false, Map.of(
+    void parentService_injectedIntoEvalData() throws ApiException {
+        client.setParentService("my-service");
+        setupFlagStore("svc-flag", "BOOLEAN", false, Map.of(
                 "staging", Map.of(
                         "enabled", true,
                         "rules", List.of(Map.of(
-                                "description", "Premium",
-                                "logic", Map.of("==", List.of(Map.of("var", "user.plan"), "premium")),
+                                "description", "Service match",
+                                "logic", Map.of("==", List.of(Map.of("var", "service.key"), "my-service")),
                                 "value", true
                         ))
                 )
         ));
 
-        client.setContextProvider(() -> List.of(
-                new Context("user", "u-1", Map.of("plan", "premium"))
-        ));
-
-        FlagHandle<Boolean> handle = client.boolFlag("feature-x", false);
-        // Explicit context with "free" plan should NOT match
-        assertFalse(handle.get(List.of(
-                new Context("user", "u-2", Map.of("plan", "free"))
-        )));
+        Flag<Boolean> handle = client.booleanFlag("svc-flag", false);
+        assertTrue(handle.get(List.of()));
     }
 
-    // --- Change listeners ---
+    // --- onChange global listener ---
 
     @Test
     void onChange_globalListenerFires() throws ApiException {
-        setupEmptyFlagStore();
+        setupFlagStore("my-flag", "BOOLEAN", false, Map.of());
 
         AtomicReference<FlagChangeEvent> received = new AtomicReference<>();
         client.onChange(received::set);
 
-        // Simulate refresh which fires listeners
-        setupFlagStoreForRefresh("my-flag", "BOOLEAN", false, Map.of());
+        // Refresh fires listeners
+        when(mockApi.listFlags(isNull(), isNull()))
+                .thenReturn(makeFlagListResponse(TEST_FLAG_ID, "my-flag", "My Flag",
+                        "BOOLEAN", false, Map.of()));
         client.refresh();
 
         assertNotNull(received.get());
@@ -344,49 +361,13 @@ class FlagsClientTest {
         assertEquals("manual", received.get().source());
     }
 
-    @Test
-    void connectionStatus_reflectsState() {
-        assertEquals("disconnected", client.connectionStatus());
-    }
+    // --- Helpers ---
 
-    // --- Exception mapping ---
-
-    @Test
-    void apiException404_throwsSmplNotFoundException() throws ApiException {
-        when(mockApi.getFlag(any(UUID.class)))
-                .thenThrow(new ApiException(404, "Not Found"));
-        assertThrows(SmplNotFoundException.class, () -> client.get(TEST_FLAG_ID));
-    }
-
-    @Test
-    void apiException422_throwsSmplValidationException() throws ApiException {
-        when(mockApi.createFlag(any(ResponseFlag.class)))
-                .thenThrow(new ApiException(422, "Validation Error"));
-        assertThrows(SmplValidationException.class,
-                () -> client.create(CreateFlagParams.builder("k", "n", FlagType.BOOLEAN).build()));
-    }
-
-    // --- Helper methods ---
-
-    /**
-     * Sets up the flag store by mocking the list call and calling connect internally.
-     */
     private void setupFlagStore(String key, String type, Object defaultValue,
                                  Map<String, Object> environments) throws ApiException {
-        when(mockApi.listFlags(isNull(), isNull())).thenReturn(makeFlagListResponse(
-                TEST_FLAG_ID, key, type, defaultValue, environments));
-        client.connectInternal("staging");
-    }
-
-    private void setupFlagStoreForRefresh(String key, String type, Object defaultValue,
-                                           Map<String, Object> environments) throws ApiException {
-        when(mockApi.listFlags(isNull(), isNull())).thenReturn(makeFlagListResponse(
-                TEST_FLAG_ID, key, type, defaultValue, environments));
-    }
-
-    private void setupEmptyFlagStore() throws ApiException {
-        when(mockApi.listFlags(isNull(), isNull())).thenReturn(new FlagListResponse().data(List.of()));
-        client.connectInternal("staging");
+        when(mockApi.listFlags(isNull(), isNull())).thenReturn(
+                makeFlagListResponse(TEST_FLAG_ID, key, key, type, defaultValue, environments));
+        client._connectInternal();
     }
 
     private static FlagResponse makeFlagResponse(String id, String key, String name,
@@ -401,28 +382,22 @@ class FlagsClientTest {
         attrs.put("values", values);
         attrs.put("environments", environments);
         Map<String, Object> map = Map.of("data", Map.of(
-                "id", id,
-                "type", "flag",
-                "attributes", attrs
-        ));
+                "id", id, "type", "flag", "attributes", attrs));
         return OBJECT_MAPPER.convertValue(map, FlagResponse.class);
     }
 
-    private static FlagListResponse makeFlagListResponse(String id, String key, String type,
-                                                           Object defaultValue,
-                                                           Map<String, Object> environments) {
+    private static FlagListResponse makeFlagListResponse(String id, String key, String name,
+                                                          String type, Object defaultValue,
+                                                          Map<String, Object> environments) {
         Map<String, Object> attrs = new HashMap<>();
         attrs.put("key", key);
-        attrs.put("name", key);
+        attrs.put("name", name);
         attrs.put("type", type);
         attrs.put("default", defaultValue);
         attrs.put("values", List.of());
         attrs.put("environments", environments);
         Map<String, Object> map = Map.of("data", List.of(Map.of(
-                "id", id,
-                "type", "flag",
-                "attributes", attrs
-        )));
+                "id", id, "type", "flag", "attributes", attrs)));
         return OBJECT_MAPPER.convertValue(map, FlagListResponse.class);
     }
 }

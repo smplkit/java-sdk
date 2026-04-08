@@ -2,14 +2,10 @@ package com.smplkit.examples;
 
 import com.smplkit.SmplClient;
 import com.smplkit.Context;
-import com.smplkit.flags.CreateFlagParams;
+import com.smplkit.flags.Flag;
 import com.smplkit.flags.FlagChangeEvent;
-import com.smplkit.flags.FlagHandle;
-import com.smplkit.flags.FlagResource;
 import com.smplkit.flags.FlagStats;
-import com.smplkit.flags.FlagType;
 import com.smplkit.Rule;
-import com.smplkit.flags.UpdateFlagParams;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -22,13 +18,13 @@ import java.util.Map;
  * <p>Demonstrates the runtime (prescriptive) tier of the Flags SDK, covering:</p>
  * <ul>
  *   <li>Client initialization and flag creation with targeting rules</li>
- *   <li>Connecting to a runtime environment via {@code connect(environment)}</li>
- *   <li>Typed flag handles: {@code boolFlag}, {@code stringFlag}, {@code numberFlag}, {@code jsonFlag}</li>
+ *   <li>Typed flag handles: {@code booleanFlag}, {@code stringFlag}, {@code numberFlag}, {@code jsonFlag}</li>
  *   <li>Context providers via {@code setContextProvider}</li>
- *   <li>Explicit context override in {@code FlagHandle.get(List)}</li>
+ *   <li>Explicit context override in {@code Flag.get(List)}</li>
+ *   <li>Context registration via {@code register()}</li>
  *   <li>Resolution caching and diagnostic stats</li>
  *   <li>Global and per-flag change listeners via {@code onChange}</li>
- *   <li>Manual refresh and disconnect lifecycle</li>
+ *   <li>Manual refresh lifecycle</li>
  *   <li>Cleanup of all created resources</li>
  * </ul>
  *
@@ -53,21 +49,21 @@ public class FlagsRuntimeShowcase {
 
         // The SmplClient builder resolves three required parameters:
         //
-        //   apiKey       — not passed here; resolved automatically from the
+        //   apiKey       -- not passed here; resolved automatically from the
         //                  SMPLKIT_API_KEY environment variable or the
         //                  ~/.smplkit configuration file.
         //
-        //   environment  — the target environment. Can also be resolved from
+        //   environment  -- the target environment. Can also be resolved from
         //                  SMPLKIT_ENVIRONMENT if not passed.
         //
-        //   service      — identifies this SDK instance. Can also be resolved
+        //   service      -- identifies this SDK instance. Can also be resolved
         //                  from SMPLKIT_SERVICE if not passed.
         //
         // To pass the API key explicitly:
         //
         //   SmplClient client = SmplClient.builder()
         //       .apiKey("sk_api_...")
-        //       .environment("production")
+        //       .environment("staging")
         //       .service("showcase-service")
         //       .build();
         //
@@ -78,8 +74,8 @@ public class FlagsRuntimeShowcase {
 
             step("SmplClient initialized");
 
-            // Track created flags for cleanup
-            List<String> createdFlagIds = new ArrayList<>();
+            // Track created flag keys for cleanup
+            List<String> createdFlagKeys = new ArrayList<>();
 
             // ==================================================================
             // 2. SET UP FLAGS WITH TARGETING RULES
@@ -87,112 +83,100 @@ public class FlagsRuntimeShowcase {
             section("2. Create Flags with Targeting Rules");
 
             // Boolean flag with environment-specific rules.
-            FlagResource maintenance = client.flags().create(
-                    CreateFlagParams.builder("maintenance-mode-rt", "Maintenance Mode", FlagType.BOOLEAN)
-                            .defaultValue(false)
-                            .description("Puts the application into maintenance mode.")
-                            .build());
-            createdFlagIds.add(maintenance.id());
-            step("Created boolean flag: " + maintenance.key());
+            Flag<Boolean> maintenance = client.flags().newBooleanFlag(
+                    "maintenance-mode-rt", false, "Maintenance Mode",
+                    "Puts the application into maintenance mode.");
+            maintenance.save();
+            createdFlagKeys.add(maintenance.getKey());
+            step("Created boolean flag: " + maintenance.getKey());
 
             // Add a rule that enables maintenance mode for staging.
-            maintenance = maintenance.addRule(new Rule("Enable in staging")
+            maintenance.addRule(new Rule("Enable in staging")
                     .environment("staging")
                     .serve(true)
                     .build());
+            maintenance.save();
             step("Added rule: maintenance enabled in staging");
 
             // String flag.
-            FlagResource greeting = client.flags().create(
-                    CreateFlagParams.builder("greeting-rt", "Greeting Message", FlagType.STRING)
-                            .defaultValue("Hello!")
-                            .description("Personalized greeting message for different user segments.")
-                            .values(List.of(
-                                    Map.of("name", "Default", "value", "Hello!"),
-                                    Map.of("name", "Enterprise", "value", "Welcome back, valued partner!"),
-                                    Map.of("name", "Trial", "value", "Welcome! Your trial expires soon.")
-                            ))
-                            .build());
-            createdFlagIds.add(greeting.id());
-            step("Created string flag: " + greeting.key());
+            Flag<String> greeting = client.flags().newStringFlag(
+                    "greeting-rt", "Hello!", "Greeting Message",
+                    "Personalized greeting message for different user segments.",
+                    List.of(
+                            Map.of("name", "Default", "value", "Hello!"),
+                            Map.of("name", "Enterprise", "value", "Welcome back, valued partner!"),
+                            Map.of("name", "Trial", "value", "Welcome! Your trial expires soon.")
+                    ));
+            greeting.save();
+            createdFlagKeys.add(greeting.getKey());
+            step("Created string flag: " + greeting.getKey());
 
-            greeting = greeting.addRule(new Rule("Enterprise greeting")
+            greeting.addRule(new Rule("Enterprise greeting")
                     .environment("staging")
                     .when("user.plan", "==", "enterprise")
                     .serve("Welcome back, valued partner!")
                     .build());
+            greeting.save();
             step("Added rule: enterprise greeting in staging");
 
             // Numeric flag.
-            FlagResource pageSize = client.flags().create(
-                    CreateFlagParams.builder("page-size-rt", "Page Size", FlagType.NUMERIC)
-                            .defaultValue(25)
-                            .description("Number of items per page in list views.")
-                            .build());
-            createdFlagIds.add(pageSize.id());
-            step("Created numeric flag: " + pageSize.key());
+            Flag<Number> pageSize = client.flags().newNumberFlag(
+                    "page-size-rt", 25, "Page Size",
+                    "Number of items per page in list views.");
+            pageSize.save();
+            createdFlagKeys.add(pageSize.getKey());
+            step("Created numeric flag: " + pageSize.getKey());
 
-            pageSize = pageSize.addRule(new Rule("Larger pages for power users")
+            pageSize.addRule(new Rule("Larger pages for power users")
                     .environment("staging")
                     .when("user.role", "==", "admin")
                     .serve(100)
                     .build());
+            pageSize.save();
             step("Added rule: 100 items per page for admins in staging");
 
             // JSON flag.
-            FlagResource layout = client.flags().create(
-                    CreateFlagParams.builder("layout-config-rt", "Layout Config", FlagType.JSON)
-                            .defaultValue(Map.of(
-                                    "columns", 2,
-                                    "showHeader", true,
-                                    "compact", false
-                            ))
-                            .description("Layout configuration controlling the dashboard appearance.")
-                            .build());
-            createdFlagIds.add(layout.id());
-            step("Created JSON flag: " + layout.key());
+            Flag<Object> layout = client.flags().newJsonFlag(
+                    "layout-config-rt",
+                    Map.of("columns", 2, "showHeader", true, "compact", false),
+                    "Layout Config",
+                    "Layout configuration controlling the dashboard appearance.");
+            layout.save();
+            createdFlagKeys.add(layout.getKey());
+            step("Created JSON flag: " + layout.getKey());
 
-            layout = layout.addRule(new Rule("Compact layout for mobile users")
+            layout.addRule(new Rule("Compact layout for mobile users")
                     .environment("staging")
                     .when("user.device", "==", "mobile")
                     .serve(Map.of("columns", 1, "showHeader", false, "compact", true))
                     .build());
+            layout.save();
             step("Added rule: compact layout for mobile in staging");
 
             // ==================================================================
-            // 3. CONNECT TO RUNTIME
+            // 3. TYPED FLAG HANDLES
             // ==================================================================
-            section("3. Connect to Runtime Environment");
+            section("3. Typed Flag Handles");
 
-            // connect() fetches all flag definitions for the given environment
-            // and starts listening for real-time changes via WebSocket.
-            client.connect();
-            step("Connected to 'staging' environment");
-            step("Connection status: " + client.flags().connectionStatus());
-
-            // ==================================================================
-            // 4. TYPED FLAG HANDLES
-            // ==================================================================
-            section("4. Typed Flag Handles");
-
-            // Declare typed handles — these are lightweight wrappers that provide
+            // Declare typed handles -- these are lightweight wrappers that provide
             // type-safe access and a code-level default if the flag is missing.
-            FlagHandle<Boolean> maintenanceHandle = client.flags().boolFlag("maintenance-mode-rt", false);
-            FlagHandle<String> greetingHandle = client.flags().stringFlag("greeting-rt", "Hi there!");
-            FlagHandle<Number> pageSizeHandle = client.flags().numberFlag("page-size-rt", 25);
-            FlagHandle<Object> layoutHandle = client.flags().jsonFlag("layout-config-rt",
+            // The first call to get() lazily initializes the runtime connection.
+            Flag<Boolean> maintenanceHandle = client.flags().booleanFlag("maintenance-mode-rt", false);
+            Flag<String> greetingHandle = client.flags().stringFlag("greeting-rt", "Hi there!");
+            Flag<Number> pageSizeHandle = client.flags().numberFlag("page-size-rt", 25);
+            Flag<Object> layoutHandle = client.flags().jsonFlag("layout-config-rt",
                     Map.of("columns", 2, "showHeader", true, "compact", false));
 
             step("Declared 4 typed handles");
-            step("  boolFlag: " + maintenanceHandle.key() + " (default=" + maintenanceHandle.defaultValue() + ")");
-            step("  stringFlag: " + greetingHandle.key() + " (default=" + greetingHandle.defaultValue() + ")");
-            step("  numberFlag: " + pageSizeHandle.key() + " (default=" + pageSizeHandle.defaultValue() + ")");
-            step("  jsonFlag: " + layoutHandle.key() + " (default=" + layoutHandle.defaultValue() + ")");
+            step("  booleanFlag: " + maintenanceHandle.getKey() + " (default=" + maintenanceHandle.getDefault() + ")");
+            step("  stringFlag: " + greetingHandle.getKey() + " (default=" + greetingHandle.getDefault() + ")");
+            step("  numberFlag: " + pageSizeHandle.getKey() + " (default=" + pageSizeHandle.getDefault() + ")");
+            step("  jsonFlag: " + layoutHandle.getKey() + " (default=" + layoutHandle.getDefault() + ")");
 
             // ==================================================================
-            // 5. CONTEXT PROVIDER
+            // 4. CONTEXT PROVIDER
             // ==================================================================
-            section("5. Context Provider");
+            section("4. Context Provider");
 
             // A context provider supplies the default evaluation context.
             // In a real app this might read from the current request, session, etc.
@@ -224,9 +208,9 @@ public class FlagsRuntimeShowcase {
             // Expected: default (desktop user, mobile rule does not match)
 
             // ==================================================================
-            // 6. EXPLICIT CONTEXT OVERRIDE
+            // 5. EXPLICIT CONTEXT OVERRIDE
             // ==================================================================
-            section("6. Explicit Context Override");
+            section("5. Explicit Context Override");
 
             // Override the provider context by passing explicit contexts to get().
             // This is useful for evaluating flags on behalf of another user.
@@ -252,6 +236,31 @@ public class FlagsRuntimeShowcase {
             // Expected: compact layout (mobile rule matches)
 
             // ==================================================================
+            // 6. CONTEXT REGISTRATION
+            // ==================================================================
+            section("6. Context Registration");
+
+            // register() buffers contexts for bulk reporting to the smplkit
+            // backend. This lets the dashboard show which entities are active.
+            Context aliceCtx = Context.builder("user", "user-42")
+                    .name("Alice")
+                    .attr("plan", "enterprise")
+                    .attr("role", "admin")
+                    .build();
+            Context bobCtx = Context.builder("user", "user-99")
+                    .name("Bob")
+                    .attr("plan", "free")
+                    .attr("role", "viewer")
+                    .build();
+
+            client.flags().register(aliceCtx, bobCtx);
+            step("Registered 2 contexts (Alice, Bob)");
+
+            // Flush any buffered contexts immediately (normally happens on a timer).
+            client.flags().flushContexts();
+            step("Flushed context buffer");
+
+            // ==================================================================
             // 7. RESOLUTION CACHING AND STATS
             // ==================================================================
             section("7. Resolution Caching and Stats");
@@ -260,7 +269,7 @@ public class FlagsRuntimeShowcase {
             step("Stats before repeated reads: hits=" + statsBefore.cacheHits()
                     + ", misses=" + statsBefore.cacheMisses());
 
-            // Perform many reads — all should be served from cache.
+            // Perform many reads -- all should be served from cache.
             for (int i = 0; i < 200; i++) {
                 maintenanceHandle.get();
                 greetingHandle.get();
@@ -278,7 +287,7 @@ public class FlagsRuntimeShowcase {
             // ==================================================================
             section("8. Change Listeners");
 
-            // Global listener — fires for any flag change.
+            // Global listener -- fires for any flag change.
             List<FlagChangeEvent> globalChanges = new ArrayList<>();
             client.flags().onChange(event -> {
                 globalChanges.add(event);
@@ -287,19 +296,18 @@ public class FlagsRuntimeShowcase {
             });
             step("Global change listener registered");
 
-            // Per-flag listener — fires only for the specific flag.
+            // Per-flag listener -- fires only for the specific flag.
             List<FlagChangeEvent> maintenanceChanges = new ArrayList<>();
-            maintenanceHandle.onChange(event -> {
+            client.flags().onChange("maintenance-mode-rt", event -> {
                 maintenanceChanges.add(event);
                 System.out.println("    [MAINTENANCE CHANGE] source=" + event.source());
             });
             step("Per-flag change listener registered for 'maintenance-mode-rt'");
 
             // Trigger a change via the management API and wait for propagation.
-            step("Updating maintenance-mode default via management API...");
-            maintenance = maintenance.update(UpdateFlagParams.builder()
-                    .description("Updated: now with change listener tracking")
-                    .build());
+            step("Updating maintenance-mode description via management API...");
+            maintenance.setDescription("Updated: now with change listener tracking");
+            maintenance.save();
 
             Thread.sleep(2000);
 
@@ -315,34 +323,19 @@ public class FlagsRuntimeShowcase {
             // Useful if you suspect stale data or want to force a sync.
             client.flags().refresh();
             step("Manual refresh completed");
-            step("Connection status after refresh: " + client.flags().connectionStatus());
 
             // Re-evaluate after refresh.
             Boolean maintenanceAfterRefresh = maintenanceHandle.get();
             step("maintenance-mode after refresh = " + maintenanceAfterRefresh);
 
             // ==================================================================
-            // 10. DISCONNECT
+            // 10. CLEANUP
             // ==================================================================
-            section("10. Disconnect");
+            section("10. Cleanup");
 
-            client.flags().disconnect();
-            step("Disconnected from runtime");
-            step("Connection status: " + client.flags().connectionStatus());
-
-            // After disconnect, handles return their code-level defaults.
-            Boolean maintenanceAfterDisconnect = maintenanceHandle.get();
-            step("maintenance-mode after disconnect = " + maintenanceAfterDisconnect);
-            // Expected: false (code-level default, since no longer connected)
-
-            // ==================================================================
-            // 11. CLEANUP
-            // ==================================================================
-            section("11. Cleanup");
-
-            for (String flagId : createdFlagIds) {
-                client.flags().delete(flagId);
-                step("Deleted flag: " + flagId);
+            for (String flagKey : createdFlagKeys) {
+                client.flags().delete(flagKey);
+                step("Deleted flag: " + flagKey);
             }
 
         } // SmplClient.close() called here
@@ -366,6 +359,6 @@ public class FlagsRuntimeShowcase {
     }
 
     private static void step(String description) {
-        System.out.println("  → " + description);
+        System.out.println("  -> " + description);
     }
 }

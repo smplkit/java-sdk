@@ -3,26 +3,18 @@ package com.smplkit.flags;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
-import com.smplkit.errors.ApiExceptionHandler;
-import com.smplkit.errors.SmplConflictException;
-import com.smplkit.errors.SmplException;
 import com.smplkit.Context;
+import com.smplkit.Helpers;
 import com.smplkit.SharedWebSocket;
+import com.smplkit.errors.ApiExceptionHandler;
+import com.smplkit.errors.SmplException;
 import com.smplkit.errors.SmplNotFoundException;
 import com.smplkit.errors.SmplValidationException;
-import com.smplkit.internal.generated.app.api.ContextTypesApi;
 import com.smplkit.internal.generated.app.api.ContextsApi;
 import com.smplkit.internal.generated.app.model.ContextBulkItem;
 import com.smplkit.internal.generated.app.model.ContextBulkRegister;
-import com.smplkit.internal.generated.app.model.ContextType;
-import com.smplkit.internal.generated.app.model.ContextTypeListResponse;
-import com.smplkit.internal.generated.app.model.ContextTypeResource;
-import com.smplkit.internal.generated.app.model.ContextTypeResponse;
-import com.smplkit.internal.generated.app.model.ContextListResponse;
-import com.smplkit.internal.generated.app.model.ContextResource;
 import com.smplkit.internal.generated.flags.ApiException;
 import com.smplkit.internal.generated.flags.api.FlagsApi;
-import com.smplkit.internal.generated.flags.model.Flag;
 import com.smplkit.internal.generated.flags.model.FlagEnvironment;
 import com.smplkit.internal.generated.flags.model.FlagListResponse;
 import com.smplkit.internal.generated.flags.model.FlagResponse;
@@ -31,7 +23,6 @@ import com.smplkit.internal.generated.flags.model.FlagValue;
 import com.smplkit.internal.generated.flags.model.ResourceFlag;
 import com.smplkit.internal.generated.flags.model.ResponseFlag;
 import io.github.jamsesso.jsonlogic.JsonLogic;
-import io.github.jamsesso.jsonlogic.JsonLogicException;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import org.openapitools.jackson.nullable.JsonNullableModule;
 
@@ -62,9 +53,8 @@ import java.util.logging.Logger;
 /**
  * Client for the Smpl Flags service.
  *
- * <p>Provides flag management (CRUD) and the prescriptive runtime tier
- * (typed flag handles, local evaluation, caching, context registration).
- * Obtained via {@link com.smplkit.SmplClient#flags()}.</p>
+ * <p>Provides management CRUD (get, list, delete, newBooleanFlag + save) and
+ * runtime evaluation (booleanFlag, stringFlag, etc. with lazy init).</p>
  */
 public final class FlagsClient {
 
@@ -79,7 +69,6 @@ public final class FlagsClient {
     private static final int CONTEXT_BATCH_FLUSH_SIZE = 100;
 
     private final FlagsApi flagsApi;
-    private final ContextTypesApi contextTypesApi;
     private final ContextsApi contextsApi;
     private final HttpClient httpClient;
     private final String apiKey;
@@ -87,12 +76,11 @@ public final class FlagsClient {
     private final String appBaseUrl;
     private final Duration timeout;
 
-    // --- Prescriptive tier state ---
+    // --- Runtime state ---
     private volatile boolean connected = false;
     private volatile String environment;
-    private volatile String connectionStatus = "disconnected";
     private final Map<String, Map<String, Object>> flagStore = new ConcurrentHashMap<>();
-    private final Map<String, FlagHandle<?>> handles = new ConcurrentHashMap<>();
+    private final Map<String, Flag<?>> handles = new ConcurrentHashMap<>();
 
     // Resolution cache — synchronized LRU
     private final Map<String, Object> resolutionCache = Collections.synchronizedMap(
@@ -105,6 +93,7 @@ public final class FlagsClient {
     );
     private final AtomicLong cacheHits = new AtomicLong();
     private final AtomicLong cacheMisses = new AtomicLong();
+    private static final Object CACHE_NULL_SENTINEL = new Object();
 
     // Context registration buffer
     private final Map<String, Map<String, Object>> contextBuffer = Collections.synchronizedMap(
@@ -133,14 +122,10 @@ public final class FlagsClient {
     private final Consumer<Map<String, Object>> flagChangedHandler;
     private final Consumer<Map<String, Object>> flagDeletedHandler;
 
-    /**
-     * Creates a new FlagsClient.
-     */
-    public FlagsClient(FlagsApi flagsApi, ContextTypesApi contextTypesApi, ContextsApi contextsApi,
+    public FlagsClient(FlagsApi flagsApi, ContextsApi contextsApi,
                        HttpClient httpClient, String apiKey,
                        String flagsBaseUrl, String appBaseUrl, Duration timeout) {
         this.flagsApi = flagsApi;
-        this.contextTypesApi = contextTypesApi;
         this.contextsApi = contextsApi;
         this.httpClient = httpClient;
         this.apiKey = apiKey;
@@ -161,7 +146,6 @@ public final class FlagsClient {
     /** Package-private test constructor. */
     FlagsClient() {
         this.flagsApi = null;
-        this.contextTypesApi = null;
         this.contextsApi = null;
         this.httpClient = null;
         this.apiKey = null;
@@ -177,69 +161,95 @@ public final class FlagsClient {
         this.sharedWs = ws;
     }
 
-    /** Sets the parent service name for automatic context injection. */
     public void setParentService(String service) {
         this.parentService = service;
     }
 
+    public void setEnvironment(String environment) {
+        this.environment = environment;
+    }
+
     // -----------------------------------------------------------------------
-    // Management — Flag CRUD
+    // Management: factory methods (return unsaved Flag with id=null)
     // -----------------------------------------------------------------------
 
-    /**
-     * Creates a new feature flag.
-     */
-    public FlagResource create(CreateFlagParams params) {
+    public Flag<Boolean> newBooleanFlag(String key, boolean defaultValue) {
+        return newBooleanFlag(key, defaultValue, null, null);
+    }
+
+    public Flag<Boolean> newBooleanFlag(String key, boolean defaultValue, String name, String description) {
+        return new Flag<>(this, key,
+                name != null ? name : Helpers.keyToDisplayName(key),
+                "BOOLEAN", defaultValue,
+                List.of(Map.of("name", "True", "value", true), Map.of("name", "False", "value", false)),
+                description, null, null, null, Boolean.class);
+    }
+
+    public Flag<String> newStringFlag(String key, String defaultValue) {
+        return newStringFlag(key, defaultValue, null, null, null);
+    }
+
+    public Flag<String> newStringFlag(String key, String defaultValue, String name, String description) {
+        return newStringFlag(key, defaultValue, name, description, null);
+    }
+
+    public Flag<String> newStringFlag(String key, String defaultValue, String name, String description,
+                                      List<Map<String, Object>> values) {
+        return new Flag<>(this, key,
+                name != null ? name : Helpers.keyToDisplayName(key),
+                "STRING", defaultValue, values, description, null, null, null, String.class);
+    }
+
+    public Flag<Number> newNumberFlag(String key, Number defaultValue) {
+        return newNumberFlag(key, defaultValue, null, null, null);
+    }
+
+    public Flag<Number> newNumberFlag(String key, Number defaultValue, String name, String description) {
+        return newNumberFlag(key, defaultValue, name, description, null);
+    }
+
+    public Flag<Number> newNumberFlag(String key, Number defaultValue, String name, String description,
+                                      List<Map<String, Object>> values) {
+        return new Flag<>(this, key,
+                name != null ? name : Helpers.keyToDisplayName(key),
+                "NUMERIC", defaultValue, values, description, null, null, null, Number.class);
+    }
+
+    public Flag<Object> newJsonFlag(String key, Object defaultValue) {
+        return newJsonFlag(key, defaultValue, null, null, null);
+    }
+
+    public Flag<Object> newJsonFlag(String key, Object defaultValue, String name, String description) {
+        return newJsonFlag(key, defaultValue, name, description, null);
+    }
+
+    public Flag<Object> newJsonFlag(String key, Object defaultValue, String name, String description,
+                                    List<Map<String, Object>> values) {
+        return new Flag<>(this, key,
+                name != null ? name : Helpers.keyToDisplayName(key),
+                "JSON", defaultValue, values, description, null, null, null, Object.class);
+    }
+
+    // -----------------------------------------------------------------------
+    // Management: CRUD
+    // -----------------------------------------------------------------------
+
+    /** Fetch a flag by key. Always HTTP. */
+    public Flag<?> get(String key) {
         try {
-            Flag attrs = new Flag();
-            attrs.setKey(params.key());
-            attrs.setName(params.name());
-            attrs.setType(params.type().name());
-            attrs.setDefault(params.defaultValue());
-            if (params.description() != null) {
-                attrs.setDescription(params.description());
+            FlagListResponse response = flagsApi.listFlags(key, null);
+            List<Flag<?>> flags = parseListResponse(response);
+            if (flags.isEmpty()) {
+                throw new SmplNotFoundException("Flag with key '" + key + "' not found", null);
             }
-            if (params.values() != null) {
-                List<FlagValue> fvs = new ArrayList<>();
-                for (Map<String, Object> v : params.values()) {
-                    FlagValue fv = new FlagValue();
-                    fv.setName((String) v.get("name"));
-                    fv.setValue(v.get("value"));
-                    fvs.add(fv);
-                }
-                attrs.setValues(fvs);
-            } else if (params.type() == FlagType.BOOLEAN) {
-                attrs.setValues(List.of(
-                        new FlagValue().name("True").value(true),
-                        new FlagValue().name("False").value(false)
-                ));
-            }
-
-            ResourceFlag data = new ResourceFlag().type("flag").attributes(attrs);
-            ResponseFlag body = new ResponseFlag().data(data);
-            FlagResponse response = flagsApi.createFlag(body);
-            return parseResponse(response);
+            return flags.get(0);
         } catch (ApiException e) {
             throw mapException(e);
         }
     }
 
-    /**
-     * Fetches a single flag by UUID.
-     */
-    public FlagResource get(String flagId) {
-        try {
-            FlagResponse response = flagsApi.getFlag(UUID.fromString(flagId));
-            return parseResponse(response);
-        } catch (ApiException e) {
-            throw mapException(e);
-        }
-    }
-
-    /**
-     * Lists all flags for the account.
-     */
-    public List<FlagResource> list() {
+    /** List all flags. Always HTTP. */
+    public List<Flag<?>> list() {
         try {
             FlagListResponse response = flagsApi.listFlags(null, null);
             return parseListResponse(response);
@@ -248,47 +258,31 @@ public final class FlagsClient {
         }
     }
 
-    /**
-     * Deletes a flag by UUID.
-     */
-    public void delete(String flagId) {
+    /** Delete a flag by key. Resolves key→id internally. */
+    public void delete(String key) {
+        Flag<?> flag = get(key);
         try {
-            flagsApi.deleteFlag(UUID.fromString(flagId));
+            flagsApi.deleteFlag(UUID.fromString(flag.getId()));
         } catch (ApiException e) {
             throw mapException(e);
         }
     }
 
-    /**
-     * Updates an existing flag.
-     */
-    FlagResource updateFlag(FlagResource flag, UpdateFlagParams params) {
+    /** Internal: POST a new flag. Called by Flag.save() when id is null. */
+    @SuppressWarnings("unchecked")
+    <T> Flag<T> _createFlag(Flag<T> flag) {
         try {
-            // Re-fetch to avoid stale data
-            FlagResource current = get(flag.id());
-
-            Flag attrs = new Flag();
-            attrs.setKey(current.key());
-            attrs.setName(params.name() != null ? params.name() : current.name());
-            attrs.setType(current.type());
-            attrs.setDefault(params.defaultValue() != null ? params.defaultValue() : current.defaultValue());
-            if (params.description() != null) {
-                attrs.setDescription(params.description());
-            } else if (current.description() != null) {
-                attrs.setDescription(current.description());
+            var attrs = new com.smplkit.internal.generated.flags.model.Flag();
+            attrs.setKey(flag.getKey());
+            attrs.setName(flag.getName());
+            attrs.setType(flag.getType());
+            attrs.setDefault(flag.getDefault());
+            if (flag.getDescription() != null) {
+                attrs.setDescription(flag.getDescription());
             }
-            if (params.values() != null) {
+            if (flag.getValues() != null && !flag.getValues().isEmpty()) {
                 List<FlagValue> fvs = new ArrayList<>();
-                for (Map<String, Object> v : params.values()) {
-                    FlagValue fv = new FlagValue();
-                    fv.setName((String) v.get("name"));
-                    fv.setValue(v.get("value"));
-                    fvs.add(fv);
-                }
-                attrs.setValues(fvs);
-            } else {
-                List<FlagValue> fvs = new ArrayList<>();
-                for (Map<String, Object> v : current.values()) {
+                for (Map<String, Object> v : flag.getValues()) {
                     FlagValue fv = new FlagValue();
                     fv.setName((String) v.get("name"));
                     fv.setValue(v.get("value"));
@@ -296,314 +290,153 @@ public final class FlagsClient {
                 }
                 attrs.setValues(fvs);
             }
-            if (params.environments() != null) {
-                attrs.setEnvironments(buildEnvironments(params.environments()));
-            } else {
-                attrs.setEnvironments(buildEnvironments(current.environments()));
+            if (flag.getEnvironments() != null && !flag.getEnvironments().isEmpty()) {
+                attrs.setEnvironments(buildEnvironments(flag.getEnvironments()));
             }
 
-            ResourceFlag data = new ResourceFlag().id(current.id()).type("flag").attributes(attrs);
+            ResourceFlag data = new ResourceFlag().type("flag").attributes(attrs);
             ResponseFlag body = new ResponseFlag().data(data);
-            FlagResponse response = flagsApi.updateFlag(UUID.fromString(current.id()), body);
-            return parseResponse(response);
+            FlagResponse response = flagsApi.createFlag(body);
+            Flag<?> result = parseSingleResponse(response);
+            return (Flag<T>) result;
         } catch (ApiException e) {
             throw mapException(e);
         }
     }
 
-    /**
-     * Adds a rule to a flag for the specified environment.
-     */
+    /** Internal: PUT a full flag update. Called by Flag.save() when id is set. */
     @SuppressWarnings("unchecked")
-    FlagResource addRuleToFlag(FlagResource flag, Map<String, Object> builtRule) {
-        // Re-fetch for freshness
-        FlagResource current = get(flag.id());
-
-        String targetEnv = (String) builtRule.get("environment");
-        if (targetEnv == null) {
-            throw new SmplValidationException("Rule must specify an environment", null);
-        }
-
-        Map<String, Object> envs = new HashMap<>(current.environments());
-        Map<String, Object> envData = envs.containsKey(targetEnv)
-                ? new HashMap<>((Map<String, Object>) envs.get(targetEnv))
-                : new HashMap<>();
-
-        List<Map<String, Object>> rules = envData.containsKey("rules")
-                ? new ArrayList<>((List<Map<String, Object>>) envData.get("rules"))
-                : new ArrayList<>();
-
-        // Strip "environment" key from the rule before storing
-        Map<String, Object> ruleToStore = new HashMap<>(builtRule);
-        ruleToStore.remove("environment");
-        rules.add(ruleToStore);
-        envData.put("rules", rules);
-        envs.put(targetEnv, envData);
-
-        return updateFlag(current, UpdateFlagParams.builder().environments(envs).build());
-    }
-
-    // -----------------------------------------------------------------------
-    // Management — Context Types
-    // -----------------------------------------------------------------------
-
-    /**
-     * Creates a context type.
-     */
-    public Map<String, Object> createContextType(String key, Map<String, Object> options) {
+    <T> Flag<T> _updateFlag(Flag<T> flag) {
         try {
-            ContextType attrs = new ContextType().key(key).name(key);
-            if (options != null) {
-                if (options.containsKey("name")) attrs.name((String) options.get("name"));
-                if (options.containsKey("attributes")) {
-                    @SuppressWarnings("unchecked")
-                    Map<String, Object> attrMap = (Map<String, Object>) options.get("attributes");
-                    attrs.attributes(attrMap);
+            var attrs = new com.smplkit.internal.generated.flags.model.Flag();
+            attrs.setKey(flag.getKey());
+            attrs.setName(flag.getName());
+            attrs.setType(flag.getType());
+            attrs.setDefault(flag.getDefault());
+            if (flag.getDescription() != null) {
+                attrs.setDescription(flag.getDescription());
+            }
+            if (flag.getValues() != null) {
+                List<FlagValue> fvs = new ArrayList<>();
+                for (Map<String, Object> v : flag.getValues()) {
+                    FlagValue fv = new FlagValue();
+                    fv.setName((String) v.get("name"));
+                    fv.setValue(v.get("value"));
+                    fvs.add(fv);
                 }
+                attrs.setValues(fvs);
             }
-            ContextTypeResource resource = new ContextTypeResource()
-                    .type(ContextTypeResource.TypeEnum.CONTEXT_TYPE)
-                    .attributes(attrs);
-            ContextTypeResponse reqBody = new ContextTypeResponse().data(resource);
-            ContextTypeResponse resp = contextTypesApi.createContextType(reqBody);
-            return contextTypeResourceToMap(resp.getData());
-        } catch (com.smplkit.internal.generated.app.ApiException e) {
-            throw mapAppApiException(e);
-        }
-    }
-
-    /**
-     * Updates a context type.
-     */
-    public Map<String, Object> updateContextType(String id, Map<String, Object> options) {
-        try {
-            ContextType attrs = new ContextType();
-            if (options.containsKey("key")) attrs.key((String) options.get("key"));
-            if (options.containsKey("name")) attrs.name((String) options.get("name"));
-            if (options.containsKey("attributes")) {
-                @SuppressWarnings("unchecked")
-                Map<String, Object> attrMap = (Map<String, Object>) options.get("attributes");
-                attrs.attributes(attrMap);
+            if (flag.getEnvironments() != null) {
+                attrs.setEnvironments(buildEnvironments(flag.getEnvironments()));
             }
-            ContextTypeResource resource = new ContextTypeResource()
-                    .id(id)
-                    .type(ContextTypeResource.TypeEnum.CONTEXT_TYPE)
-                    .attributes(attrs);
-            ContextTypeResponse reqBody = new ContextTypeResponse().data(resource);
-            ContextTypeResponse resp = contextTypesApi.updateContextType(UUID.fromString(id), reqBody);
-            return contextTypeResourceToMap(resp.getData());
-        } catch (com.smplkit.internal.generated.app.ApiException e) {
-            throw mapAppApiException(e);
-        }
-    }
 
-    /**
-     * Lists all context types.
-     */
-    public List<Map<String, Object>> listContextTypes() {
-        try {
-            ContextTypeListResponse resp = contextTypesApi.listContextTypes();
-            List<Map<String, Object>> result = new ArrayList<>();
-            if (resp.getData() != null) {
-                for (ContextTypeResource r : resp.getData()) {
-                    result.add(contextTypeResourceToMap(r));
-                }
-            }
-            return result;
-        } catch (com.smplkit.internal.generated.app.ApiException e) {
-            throw mapAppApiException(e);
-        }
-    }
-
-    /**
-     * Deletes a context type.
-     */
-    public void deleteContextType(String id) {
-        try {
-            contextTypesApi.deleteContextType(UUID.fromString(id));
-        } catch (com.smplkit.internal.generated.app.ApiException e) {
-            throw mapAppApiException(e);
-        }
-    }
-
-    /**
-     * Lists contexts for a given context type key.
-     */
-    public List<Map<String, Object>> listContexts(String contextTypeKey) {
-        try {
-            ContextListResponse resp = contextsApi.listContexts(contextTypeKey);
-            List<Map<String, Object>> result = new ArrayList<>();
-            if (resp.getData() != null) {
-                for (ContextResource r : resp.getData()) {
-                    result.add(OBJECT_MAPPER.convertValue(r, new TypeReference<>() {}));
-                }
-            }
-            return result;
-        } catch (com.smplkit.internal.generated.app.ApiException e) {
-            throw mapAppApiException(e);
+            ResourceFlag data = new ResourceFlag().id(flag.getId()).type("flag").attributes(attrs);
+            ResponseFlag body = new ResponseFlag().data(data);
+            FlagResponse response = flagsApi.updateFlag(UUID.fromString(flag.getId()), body);
+            Flag<?> result = parseSingleResponse(response);
+            return (Flag<T>) result;
+        } catch (ApiException e) {
+            throw mapException(e);
         }
     }
 
     // -----------------------------------------------------------------------
-    // Prescriptive tier — Flag handles
+    // Runtime: typed flag handles
     // -----------------------------------------------------------------------
 
-    /**
-     * Declares a boolean flag handle.
-     */
-    public FlagHandle<Boolean> boolFlag(String key, boolean defaultValue) {
-        FlagHandle<Boolean> handle = new FlagHandle<>(key, defaultValue, Boolean.class);
-        handle.setNamespace(this);
+    public Flag<Boolean> booleanFlag(String key, boolean defaultValue) {
+        Flag<Boolean> handle = new Flag<>(this, key, key, "BOOLEAN", defaultValue,
+                null, null, null, null, null, Boolean.class);
         handles.put(key, handle);
         return handle;
     }
 
-    /**
-     * Declares a string flag handle.
-     */
-    public FlagHandle<String> stringFlag(String key, String defaultValue) {
-        FlagHandle<String> handle = new FlagHandle<>(key, defaultValue, String.class);
-        handle.setNamespace(this);
+    public Flag<String> stringFlag(String key, String defaultValue) {
+        Flag<String> handle = new Flag<>(this, key, key, "STRING", defaultValue,
+                null, null, null, null, null, String.class);
         handles.put(key, handle);
         return handle;
     }
 
-    /**
-     * Declares a number flag handle.
-     */
-    public FlagHandle<Number> numberFlag(String key, Number defaultValue) {
-        FlagHandle<Number> handle = new FlagHandle<>(key, defaultValue, Number.class);
-        handle.setNamespace(this);
+    public Flag<Number> numberFlag(String key, Number defaultValue) {
+        Flag<Number> handle = new Flag<>(this, key, key, "NUMERIC", defaultValue,
+                null, null, null, null, null, Number.class);
         handles.put(key, handle);
         return handle;
     }
 
-    /**
-     * Declares a JSON flag handle.
-     */
     @SuppressWarnings("unchecked")
-    public FlagHandle<Object> jsonFlag(String key, Object defaultValue) {
-        FlagHandle<Object> handle = new FlagHandle<>(key, defaultValue, Object.class);
-        handle.setNamespace(this);
+    public Flag<Object> jsonFlag(String key, Object defaultValue) {
+        Flag<Object> handle = new Flag<>(this, key, key, "JSON", defaultValue,
+                null, null, null, null, null, Object.class);
         handles.put(key, handle);
         return handle;
     }
 
-    /**
-     * Sets the context provider. Called on each evaluation to obtain contexts.
-     */
+    // -----------------------------------------------------------------------
+    // Runtime: context provider
+    // -----------------------------------------------------------------------
+
     public void setContextProvider(Supplier<List<Context>> provider) {
         this.contextProvider = provider;
     }
 
     // -----------------------------------------------------------------------
-    // Prescriptive tier — Connect / Disconnect / Lifecycle
+    // Runtime: lazy init
     // -----------------------------------------------------------------------
 
-    /**
-     * Internal connect called by SmplClient.connect(). Fetches all flag definitions
-     * and registers WebSocket listeners.
-     *
-     * @param environment the target environment
-     */
-    /** @hidden Internal — called by SmplClient.connect(). */
-    public void connectInternal(String environment) {
-        this.environment = Objects.requireNonNull(environment);
-        connectionStatus = "connecting";
-
-        // Fetch all flags
+    /** Lazily initialize: fetch flags, register on shared WebSocket. */
+    void _connectInternal() {
+        if (connected) return;
         fetchAllFlags();
-
-        // Clear cache
         resolutionCache.clear();
 
-        // Register on shared WebSocket
         SharedWebSocket ws = this.sharedWs;
         if (ws != null) {
             ws.on("flag_changed", flagChangedHandler);
             ws.on("flag_deleted", flagDeletedHandler);
+            ws.ensureConnected(Duration.ofSeconds(10));
         }
 
         connected = true;
-        connectionStatus = "connected";
 
-        // Start context flush scheduler
         if (contextFlushExecutor != null && contextFlushFuture == null) {
             contextFlushFuture = contextFlushExecutor.scheduleAtFixedRate(
                     this::flushContextsSafe, 30, 30, TimeUnit.SECONDS);
         }
     }
 
-    /**
-     * Disconnects from the flags runtime.
-     */
-    public void disconnect() {
-        connected = false;
-        connectionStatus = "disconnected";
-
-        // Flush remaining contexts
-        flushContextsSafe();
-
-        // Stop flush scheduler
-        if (contextFlushFuture != null) {
-            contextFlushFuture.cancel(false);
-            contextFlushFuture = null;
-        }
-
-        // Unregister from shared WebSocket
-        SharedWebSocket ws = this.sharedWs;
-        if (ws != null) {
-            ws.off("flag_changed", flagChangedHandler);
-            ws.off("flag_deleted", flagDeletedHandler);
-        }
-
-        flagStore.clear();
-        resolutionCache.clear();
-    }
-
-    /**
-     * Forces a refresh of all flag definitions.
-     */
+    /** Forces a refresh of all flag definitions. */
     public void refresh() {
         fetchAllFlags();
         resolutionCache.clear();
         fireAllChangeListeners("manual");
     }
 
-    /**
-     * Returns the current connection status.
-     */
-    public String connectionStatus() {
-        return connectionStatus;
-    }
-
-    /**
-     * Returns diagnostic statistics.
-     */
+    /** Returns diagnostic statistics. */
     public FlagStats stats() {
         return new FlagStats(cacheHits.get(), cacheMisses.get());
     }
 
     // -----------------------------------------------------------------------
-    // Prescriptive tier — Context registration
+    // Runtime: context registration
     // -----------------------------------------------------------------------
 
-    /**
-     * Registers one or more contexts for tracking.
-     */
     public void register(Context... contexts) {
         for (Context ctx : contexts) {
             observeContext(ctx);
         }
     }
 
-    /**
-     * Flushes pending context registrations to the server.
-     */
+    public void register(List<Context> contexts) {
+        for (Context ctx : contexts) {
+            observeContext(ctx);
+        }
+    }
+
     public void flushContexts() {
         List<Map<String, Object>> batch = drainPendingContexts();
         if (batch.isEmpty()) return;
-
         try {
             List<ContextBulkItem> items = new ArrayList<>();
             for (Map<String, Object> entry : batch) {
@@ -625,63 +458,33 @@ public final class FlagsClient {
     }
 
     // -----------------------------------------------------------------------
-    // Prescriptive tier — Change listeners
+    // Runtime: change listeners
     // -----------------------------------------------------------------------
 
-    /**
-     * Registers a global change listener that fires for any flag change.
-     */
+    /** Registers a global change listener. */
     public void onChange(Consumer<FlagChangeEvent> listener) {
         listeners.add(new ListenerEntry(null, listener));
     }
 
-    /**
-     * Registers a flag-specific change listener.
-     */
-    void onFlagChange(String key, Consumer<FlagChangeEvent> listener) {
+    /** Registers a key-scoped change listener. */
+    public void onChange(String key, Consumer<FlagChangeEvent> listener) {
         listeners.add(new ListenerEntry(key, listener));
     }
 
     // -----------------------------------------------------------------------
-    // Prescriptive tier — Tier 1 evaluate (stateless)
+    // Internal: evaluation engine
     // -----------------------------------------------------------------------
 
-    /**
-     * Stateless flag evaluation via HTTP. Does not require connect().
-     */
+    /** Called by Flag.get() to perform local evaluation with lazy init. */
     @SuppressWarnings("unchecked")
-    public Object evaluate(String key, String evaluateEnvironment, List<Context> contexts) {
-        // Build eval data
-        Map<String, Object> evalData = buildEvalData(contexts);
-
-        // Fetch the flag
-        List<FlagResource> allFlags;
-        try {
-            FlagListResponse response = flagsApi.listFlags(key, null);
-            allFlags = parseListResponse(response);
-        } catch (ApiException e) {
-            throw mapException(e);
+    Object _evaluateHandle(String key, Object defaultValue, List<Context> contexts) {
+        if (!connected) {
+            _connectInternal();
         }
-        if (allFlags.isEmpty()) return null;
 
-        FlagResource flag = allFlags.get(0);
-        Map<String, Object> flagData = flagToStoreEntry(flag);
-        return evaluateFlag(key, flagData, evaluateEnvironment, evalData);
-    }
-
-    // -----------------------------------------------------------------------
-    // Internal — Evaluation engine
-    // -----------------------------------------------------------------------
-
-    /**
-     * Called by FlagHandle.get() to perform local evaluation.
-     */
-    @SuppressWarnings("unchecked")
-    Object evaluateHandle(String key, Object defaultValue, List<Context> contexts) {
         Map<String, Object> flagData = flagStore.get(key);
         if (flagData == null) return defaultValue;
 
-        // Get contexts from provider or explicit override
         List<Context> ctxList;
         if (contexts != null) {
             ctxList = contexts;
@@ -691,22 +494,18 @@ public final class FlagsClient {
             ctxList = List.of();
         }
 
-        // Observe contexts for registration
         for (Context ctx : ctxList) {
             observeContext(ctx);
         }
 
-        // Check if buffer needs flushing
         if (pendingContexts.size() >= CONTEXT_BATCH_FLUSH_SIZE) {
             Thread flushThread = new Thread(this::flushContextsSafe, "smplkit-flags-ctx-flush-eager");
             flushThread.setDaemon(true);
             flushThread.start();
         }
 
-        // Build eval data
         Map<String, Object> evalData = buildEvalData(ctxList);
 
-        // Check cache
         String cacheKey = key + ":" + hashContexts(ctxList);
         Object cached = resolutionCache.get(cacheKey);
         if (cached != null) {
@@ -715,7 +514,6 @@ public final class FlagsClient {
         }
         cacheMisses.incrementAndGet();
 
-        // Evaluate
         Object result = evaluateFlag(key, flagData, environment, evalData);
         if (result == null) {
             resolutionCache.put(cacheKey, CACHE_NULL_SENTINEL);
@@ -725,11 +523,6 @@ public final class FlagsClient {
         return result;
     }
 
-    private static final Object CACHE_NULL_SENTINEL = new Object();
-
-    /**
-     * Core evaluation per ADR-022 §2.6.
-     */
     @SuppressWarnings("unchecked")
     private Object evaluateFlag(String key, Map<String, Object> flagData,
                                 String env, Map<String, Object> evalData) {
@@ -740,21 +533,17 @@ public final class FlagsClient {
         }
 
         Map<String, Object> envData = (Map<String, Object>) environments.get(env);
-
-        // Check if environment is disabled
         Boolean enabled = (Boolean) envData.get("enabled");
         if (enabled == null || !enabled) {
             Object envDefault = envData.get("default");
             return envDefault != null ? envDefault : flagDefault;
         }
 
-        // Iterate rules — first match wins
         List<Map<String, Object>> rules = (List<Map<String, Object>>) envData.get("rules");
         if (rules != null) {
             for (Map<String, Object> rule : rules) {
                 Map<String, Object> logic = (Map<String, Object>) rule.get("logic");
                 if (logic == null || logic.isEmpty()) continue;
-
                 try {
                     String logicJson = OBJECT_MAPPER.writeValueAsString(logic);
                     Object result = JSON_LOGIC.apply(logicJson, evalData);
@@ -767,7 +556,6 @@ public final class FlagsClient {
             }
         }
 
-        // No match — return env default or flag default
         Object envDefault = envData.get("default");
         return envDefault != null ? envDefault : flagDefault;
     }
@@ -781,7 +569,7 @@ public final class FlagsClient {
     }
 
     // -----------------------------------------------------------------------
-    // Internal — Data helpers
+    // Internal: data helpers
     // -----------------------------------------------------------------------
 
     private Map<String, Object> buildEvalData(List<Context> contexts) {
@@ -791,7 +579,6 @@ public final class FlagsClient {
                 evalData.put(ctx.type(), ctx.toEvalDict());
             }
         }
-        // Auto-inject service context if configured and not already provided
         if (parentService != null && !evalData.containsKey("service")) {
             evalData.put("service", Map.of("key", parentService));
         }
@@ -802,7 +589,6 @@ public final class FlagsClient {
         if (contexts == null || contexts.isEmpty()) return "empty";
         Map<String, Object> evalData = buildEvalData(contexts);
         StringBuilder sb = new StringBuilder();
-        // Use toString-based hashing to avoid checked exceptions from ObjectMapper/MessageDigest
         for (Map.Entry<String, Object> entry : new java.util.TreeMap<>(evalData).entrySet()) {
             sb.append(entry.getKey()).append('=').append(entry.getValue()).append(';');
         }
@@ -812,7 +598,6 @@ public final class FlagsClient {
     private void observeContext(Context ctx) {
         String compositeKey = ctx.type() + ":" + ctx.key();
         if (contextBuffer.containsKey(compositeKey)) return;
-
         Map<String, Object> entry = new HashMap<>();
         entry.put("type", ctx.type());
         entry.put("key", ctx.key());
@@ -831,33 +616,31 @@ public final class FlagsClient {
     }
 
     private void flushContextsSafe() {
-        // flushContexts() handles its own exceptions internally
         flushContexts();
     }
 
     private void fetchAllFlags() {
-        List<FlagResource> flags = list();
+        List<Flag<?>> flags = list();
         flagStore.clear();
-        for (FlagResource flag : flags) {
-            flagStore.put(flag.key(), flagToStoreEntry(flag));
+        for (Flag<?> flag : flags) {
+            flagStore.put(flag.getKey(), flagToStoreEntry(flag));
         }
     }
 
-    @SuppressWarnings("unchecked")
-    private Map<String, Object> flagToStoreEntry(FlagResource flag) {
+    private Map<String, Object> flagToStoreEntry(Flag<?> flag) {
         Map<String, Object> entry = new HashMap<>();
-        entry.put("key", flag.key());
-        entry.put("name", flag.name());
-        entry.put("type", flag.type());
-        entry.put("default", flag.defaultValue());
-        entry.put("values", flag.values());
-        entry.put("description", flag.description());
-        entry.put("environments", flag.environments());
+        entry.put("key", flag.getKey());
+        entry.put("name", flag.getName());
+        entry.put("type", flag.getType());
+        entry.put("default", flag.getDefault());
+        entry.put("values", flag.getValues());
+        entry.put("description", flag.getDescription());
+        entry.put("environments", flag.getEnvironments());
         return entry;
     }
 
     // -----------------------------------------------------------------------
-    // Internal — WebSocket handlers
+    // Internal: WebSocket handlers
     // -----------------------------------------------------------------------
 
     private void handleFlagChanged(Map<String, Object> data) {
@@ -886,51 +669,25 @@ public final class FlagsClient {
                 }
             }
         }
-        // Also fire for handles that are registered but not in store
-        for (String handleKey : handles.keySet()) {
-            if (!flagStore.containsKey(handleKey)) {
-                FlagChangeEvent event = new FlagChangeEvent(handleKey, source);
-                for (ListenerEntry entry : listeners) {
-                    if (entry.key != null && !entry.key.equals(handleKey)) continue;
-                    try {
-                        entry.listener.accept(event);
-                    } catch (Exception e) {
-                        LOG.log(Level.WARNING, "Exception in onChange listener for flag '" + handleKey + "'", e);
-                    }
-                }
-            }
-        }
     }
 
     // -----------------------------------------------------------------------
-    // Internal — helpers for generated app API
-    // -----------------------------------------------------------------------
-
-    private Map<String, Object> contextTypeResourceToMap(ContextTypeResource resource) {
-        return OBJECT_MAPPER.convertValue(resource, new TypeReference<>() {});
-    }
-
-    private SmplException mapAppApiException(com.smplkit.internal.generated.app.ApiException e) {
-        return ApiExceptionHandler.mapApiException(e.getCode(), e.getResponseBody());
-    }
-
-    // -----------------------------------------------------------------------
-    // Internal — Response parsing
+    // Internal: response parsing
     // -----------------------------------------------------------------------
 
     @SuppressWarnings("unchecked")
-    private FlagResource parseResponse(FlagResponse response) {
+    private Flag<?> parseSingleResponse(FlagResponse response) {
         Map<String, Object> resp = OBJECT_MAPPER.convertValue(response, new TypeReference<Map<String, Object>>() {});
         Map<String, Object> data = (Map<String, Object>) resp.get("data");
         return parseFlagData(data);
     }
 
     @SuppressWarnings("unchecked")
-    private List<FlagResource> parseListResponse(FlagListResponse response) {
+    private List<Flag<?>> parseListResponse(FlagListResponse response) {
         Map<String, Object> resp = OBJECT_MAPPER.convertValue(response, new TypeReference<Map<String, Object>>() {});
         List<Map<String, Object>> items = (List<Map<String, Object>>) resp.get("data");
         if (items == null) return List.of();
-        List<FlagResource> result = new ArrayList<>(items.size());
+        List<Flag<?>> result = new ArrayList<>(items.size());
         for (Map<String, Object> item : items) {
             result.add(parseFlagData(item));
         }
@@ -938,10 +695,10 @@ public final class FlagsClient {
     }
 
     @SuppressWarnings("unchecked")
-    private FlagResource parseFlagData(Map<String, Object> data) {
+    private Flag<?> parseFlagData(Map<String, Object> data) {
         String id = (String) data.get("id");
         Map<String, Object> attrs = (Map<String, Object>) data.get("attributes");
-        if (attrs == null) attrs = data; // Some responses may flatten
+        if (attrs == null) attrs = data;
 
         String key = (String) attrs.get("key");
         String name = (String) attrs.get("name");
@@ -950,16 +707,16 @@ public final class FlagsClient {
         Object defaultValue = attrs.get("default");
         List<Map<String, Object>> values = (List<Map<String, Object>>) attrs.get("values");
         Map<String, Object> environments = (Map<String, Object>) attrs.get("environments");
-
         Instant createdAt = parseInstant(attrs.get("created_at"));
         Instant updatedAt = parseInstant(attrs.get("updated_at"));
 
-        FlagResource resource = new FlagResource(
-                id != null ? id : "", key != null ? key : "", name != null ? name : "",
-                description, type != null ? type : "", defaultValue,
-                values, environments, createdAt, updatedAt);
-        resource.setClient(this);
-        return resource;
+        Flag<Object> flag = new Flag<>(this,
+                key != null ? key : "", name != null ? name : "",
+                type != null ? type : "", defaultValue,
+                values, description,
+                environments, createdAt, updatedAt, Object.class);
+        flag.setId(id != null ? id : "");
+        return flag;
     }
 
     static Instant parseInstant(Object value) {
@@ -1009,19 +766,38 @@ public final class FlagsClient {
         return ApiExceptionHandler.mapApiException(e.getCode(), e.getResponseBody());
     }
 
-    /** Package-private: simulate a WebSocket flag_changed event (testing). */
+    // -----------------------------------------------------------------------
+    // Package-private test helpers
+    // -----------------------------------------------------------------------
+
+    /** Simulate a WebSocket flag_changed event (for testing). */
     void simulateFlagChanged() {
         handleFlagChanged(Map.of());
     }
 
-    /** Package-private: simulate a WebSocket flag_deleted event (testing). */
+    /** Simulate a WebSocket flag_deleted event (for testing). */
     void simulateFlagDeleted() {
         handleFlagDeleted(Map.of());
     }
 
-    /** Package-private: test access to connected state. */
     boolean isConnected() {
         return connected;
+    }
+
+    /** Disconnect (for testing). */
+    void disconnect() {
+        connected = false;
+        if (contextFlushFuture != null) {
+            contextFlushFuture.cancel(false);
+            contextFlushFuture = null;
+        }
+        SharedWebSocket ws = this.sharedWs;
+        if (ws != null) {
+            ws.off("flag_changed", flagChangedHandler);
+            ws.off("flag_deleted", flagDeletedHandler);
+        }
+        flagStore.clear();
+        resolutionCache.clear();
     }
 
     private record ListenerEntry(String key, Consumer<FlagChangeEvent> listener) {}

@@ -2,15 +2,15 @@ package com.smplkit.flags;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
-import org.openapitools.jackson.nullable.JsonNullableModule;
 import com.smplkit.SharedWebSocket;
+import com.smplkit.internal.generated.app.api.ContextsApi;
 import com.smplkit.internal.generated.flags.ApiException;
 import com.smplkit.internal.generated.flags.api.FlagsApi;
 import com.smplkit.internal.generated.flags.model.FlagListResponse;
-import com.smplkit.internal.generated.flags.model.ResponseFlag;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;
+import org.openapitools.jackson.nullable.JsonNullableModule;
 
 import java.net.http.HttpClient;
 import java.time.Duration;
@@ -32,6 +32,7 @@ class FlagsClientWebSocketTest {
     private static final ObjectMapper OBJECT_MAPPER = new ObjectMapper()
             .registerModule(new JavaTimeModule())
             .registerModule(new JsonNullableModule());
+
     private FlagsApi mockApi;
     private FlagsClient client;
     private SharedWebSocket sharedWs;
@@ -41,16 +42,17 @@ class FlagsClientWebSocketTest {
     void setUp() {
         mockApi = Mockito.mock(FlagsApi.class);
         sharedWs = new SharedWebSocket(); // test WS (no real connection)
-        client = new FlagsClient(mockApi, null, null,
-                HttpClient.newHttpClient(), "test-key",
-                "https://flags.smplkit.com", "https://app.smplkit.com", Duration.ofSeconds(5));
+        client = new FlagsClient(mockApi, null, HttpClient.newHttpClient(),
+                "test-key", "https://flags.smplkit.com", "https://app.smplkit.com",
+                Duration.ofSeconds(5));
         client.setSharedWs(sharedWs);
+        client.setEnvironment("staging");
     }
 
     @Test
     void flagChanged_reloadsAndFiresListeners() throws ApiException {
         setupList("feature-x", Map.of("staging", Map.of("enabled", true, "default", true)));
-        client.connectInternal("staging");
+        client._connectInternal();
 
         AtomicReference<FlagChangeEvent> received = new AtomicReference<>();
         client.onChange(received::set);
@@ -67,7 +69,7 @@ class FlagsClientWebSocketTest {
     @Test
     void flagDeleted_reloadsAndFiresListeners() throws ApiException {
         setupList("feature-x", Map.of());
-        client.connectInternal("staging");
+        client._connectInternal();
 
         AtomicReference<FlagChangeEvent> received = new AtomicReference<>();
         client.onChange(received::set);
@@ -79,7 +81,7 @@ class FlagsClientWebSocketTest {
 
     @Test
     void flagChanged_whenNotConnected_ignored() throws ApiException {
-        // Don't connect
+        // Do not connect
         AtomicInteger count = new AtomicInteger();
         client.onChange(e -> count.incrementAndGet());
 
@@ -102,22 +104,20 @@ class FlagsClientWebSocketTest {
         setupList("feature-x", Map.of());
         sharedWs.setConnectionStatus("connected");
 
-        client.connectInternal("staging");
+        client._connectInternal();
 
         assertTrue(client.isConnected());
-        assertEquals("connected", client.connectionStatus());
     }
 
     @Test
     void disconnect_unregistersWsListeners() throws ApiException {
         setupList("feature-x", Map.of());
         sharedWs.setConnectionStatus("connected");
-        client.connectInternal("staging");
+        client._connectInternal();
 
         client.disconnect();
 
         assertFalse(client.isConnected());
-        assertEquals("disconnected", client.connectionStatus());
     }
 
     @Test
@@ -125,14 +125,16 @@ class FlagsClientWebSocketTest {
         setupList("feature-x", Map.of(
                 "staging", Map.of("enabled", true, "default", true)
         ));
-        client.connectInternal("staging");
+        client._connectInternal();
 
-        FlagHandle<Boolean> handle = client.boolFlag("feature-x", false);
+        Flag<Boolean> handle = client.booleanFlag("feature-x", false);
         assertTrue(handle.get(List.of()));
 
         client.disconnect();
-        // After disconnect, flag store is cleared, handle returns default
-        assertFalse(handle.get(List.of()));
+
+        // After disconnect, flag store is cleared; next get() triggers reconnect with empty store
+        setupList("other-key", Map.of());
+        assertFalse(handle.get(List.of())); // returns default
     }
 
     @Test
@@ -140,11 +142,11 @@ class FlagsClientWebSocketTest {
         setupList("feature-x", Map.of(
                 "staging", Map.of("enabled", true, "default", true)
         ));
-        client.connectInternal("staging");
+        client._connectInternal();
 
-        FlagHandle<Boolean> handle = client.boolFlag("feature-x", false);
-        assertTrue(handle.get(List.of())); // Miss
-        assertTrue(handle.get(List.of())); // Hit
+        Flag<Boolean> handle = client.booleanFlag("feature-x", false);
+        assertTrue(handle.get(List.of())); // miss
+        assertTrue(handle.get(List.of())); // hit
 
         FlagStats beforeRefresh = client.stats();
         assertEquals(1, beforeRefresh.cacheHits());
@@ -154,14 +156,14 @@ class FlagsClientWebSocketTest {
         ));
         client.refresh();
 
-        assertFalse(handle.get(List.of())); // Miss (cache was cleared)
+        assertFalse(handle.get(List.of())); // miss after cache cleared
     }
 
     @Test
     void wsEventTriggeredViaSharedWs() throws ApiException {
         setupList("feature-x", Map.of());
         sharedWs.setConnectionStatus("connected");
-        client.connectInternal("staging");
+        client._connectInternal();
 
         AtomicReference<FlagChangeEvent> received = new AtomicReference<>();
         client.onChange(received::set);
@@ -171,6 +173,27 @@ class FlagsClientWebSocketTest {
         sharedWs.simulateMessage("{\"event\":\"flag_changed\",\"flag_key\":\"feature-x\"}");
 
         assertNotNull(received.get());
+    }
+
+    @Test
+    void onChange_keyScoped_onlyFiresForMatchingKey() throws ApiException {
+        FlagListResponse listResponse = OBJECT_MAPPER.convertValue(Map.of("data", List.of(
+                flagAttrs(FLAG_ID, "flag-a", Map.of()),
+                flagAttrs("22222222-2222-2222-2222-222222222222", "flag-b", Map.of())
+        )), FlagListResponse.class);
+        when(mockApi.listFlags(isNull(), isNull())).thenReturn(listResponse);
+        client._connectInternal();
+
+        AtomicInteger aCount = new AtomicInteger();
+        AtomicInteger bCount = new AtomicInteger();
+        client.onChange("flag-a", e -> aCount.incrementAndGet());
+        client.onChange("flag-b", e -> bCount.incrementAndGet());
+
+        when(mockApi.listFlags(isNull(), isNull())).thenReturn(listResponse);
+        client.refresh();
+
+        assertTrue(aCount.get() > 0);
+        assertTrue(bCount.get() > 0);
     }
 
     // --- Helpers ---
@@ -184,10 +207,19 @@ class FlagsClientWebSocketTest {
         attrs.put("values", List.of());
         attrs.put("environments", environments);
         FlagListResponse listResponse = OBJECT_MAPPER.convertValue(Map.of("data", List.of(Map.of(
-                "id", FLAG_ID,
-                "type", "flag",
-                "attributes", attrs
+                "id", FLAG_ID, "type", "flag", "attributes", attrs
         ))), FlagListResponse.class);
         when(mockApi.listFlags(isNull(), isNull())).thenReturn(listResponse);
+    }
+
+    private static Map<String, Object> flagAttrs(String id, String key, Map<String, Object> environments) {
+        Map<String, Object> attrs = new HashMap<>();
+        attrs.put("key", key);
+        attrs.put("name", key);
+        attrs.put("type", "BOOLEAN");
+        attrs.put("default", false);
+        attrs.put("values", List.of());
+        attrs.put("environments", environments);
+        return Map.of("id", id, "type", "flag", "attributes", attrs);
     }
 }

@@ -74,12 +74,9 @@ public class ConfigRuntimeShowcase {
             ConfigRuntimeSetup.DemoConfigs demo = ConfigRuntimeSetup.setupDemoConfigs(client);
 
             // ==================================================================
-            // 2. PRESCRIPTIVE ACCESS — Connect once, read everywhere
+            // 2. PRESCRIPTIVE ACCESS — Lazy-init on first read
             // ==================================================================
             section("2. Prescriptive Access");
-
-            client.connect();
-            step("client.connect() — all configs loaded and resolved");
 
             // --- Typed accessors ---
             String appName = client.config().getString("common", "app_name", "Unknown");

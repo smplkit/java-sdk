@@ -2,7 +2,6 @@ package com.smplkit;
 
 import com.smplkit.config.ConfigClient;
 import com.smplkit.flags.FlagsClient;
-import com.smplkit.internal.generated.app.api.ContextTypesApi;
 import com.smplkit.internal.generated.app.api.ContextsApi;
 import com.smplkit.internal.generated.app.model.ContextBulkItem;
 import com.smplkit.internal.generated.app.model.ContextBulkRegister;
@@ -27,8 +26,8 @@ import java.util.logging.Logger;
  *         .environment("production")
  *         .service("my-service")
  *         .build()) {
- *     client.connect();
- *     boolean enabled = myFlag.get();
+ *     Flag<Boolean> flag = client.flags().booleanFlag("my-flag", false);
+ *     boolean enabled = flag.get();
  * }
  * }</pre>
  *
@@ -50,7 +49,6 @@ public final class SmplClient implements AutoCloseable {
     private final String service;
     private final String apiKey;
     private final Duration timeout;
-    private volatile boolean connected;
 
     /**
      * Creates a new SmplClient. Package-private; use {@link #builder()}.
@@ -66,8 +64,12 @@ public final class SmplClient implements AutoCloseable {
         this.sharedWs = new SharedWebSocket(httpClient, APP_BASE_URL, apiKey);
         this.contextsApi = buildContextsApi(APP_BASE_URL, apiKey, timeout);
         this.config = buildConfigClient(httpClient, apiKey, timeout);
-        this.flags = buildFlagsClient(httpClient, apiKey, timeout, sharedWs);
-        this.flags.setParentService(service);
+        this.flags = buildFlagsClient(httpClient, apiKey, timeout, sharedWs, environment, service);
+
+        // Register service context (fire-and-forget, background thread)
+        Thread bgThread = new Thread(this::registerServiceContext, "smplkit-svc-ctx");
+        bgThread.setDaemon(true);
+        bgThread.start();
     }
 
     /**
@@ -82,8 +84,11 @@ public final class SmplClient implements AutoCloseable {
         this.sharedWs = new SharedWebSocket(httpClient, APP_BASE_URL, apiKey);
         this.contextsApi = buildContextsApi(APP_BASE_URL, apiKey, timeout);
         this.config = buildConfigClient(httpClient, apiKey, timeout);
-        this.flags = buildFlagsClient(httpClient, apiKey, timeout, sharedWs);
-        this.flags.setParentService(service);
+        this.flags = buildFlagsClient(httpClient, apiKey, timeout, sharedWs, environment, service);
+
+        Thread bgThread = new Thread(this::registerServiceContext, "smplkit-svc-ctx");
+        bgThread.setDaemon(true);
+        bgThread.start();
     }
 
     /**
@@ -101,6 +106,7 @@ public final class SmplClient implements AutoCloseable {
         this.config = config;
         this.flags = flags;
         this.flags.setParentService(service);
+        this.flags.setEnvironment(environment);
     }
 
     /**
@@ -118,31 +124,10 @@ public final class SmplClient implements AutoCloseable {
         this.config = config;
         this.flags = flags;
         this.flags.setParentService(service);
-    }
+        this.flags.setEnvironment(environment);
 
-    /**
-     * Connects to the smplkit platform.
-     *
-     * <p>Registers the service context (if configured), fetches flag definitions,
-     * and starts listening for real-time updates via WebSocket. This method is
-     * idempotent — calling it multiple times has no additional effect.</p>
-     */
-    public void connect() {
-        if (connected) return;
-
-        // Register service context (fire-and-forget)
+        // Synchronous registration for testability (contextsApi is injected)
         registerServiceContext();
-
-        // Connect flags runtime
-        flags.connectInternal(environment);
-
-        // Connect config runtime
-        config.connectInternal(environment);
-
-        // Connect shared WebSocket
-        sharedWs.ensureConnected(Duration.ofSeconds(10));
-
-        connected = true;
     }
 
     private void registerServiceContext() {
@@ -170,7 +155,8 @@ public final class SmplClient implements AutoCloseable {
     }
 
     private static FlagsClient buildFlagsClient(HttpClient httpClient, String apiKey,
-                                                 Duration timeout, SharedWebSocket sharedWs) {
+                                                 Duration timeout, SharedWebSocket sharedWs,
+                                                 String environment, String service) {
         com.smplkit.internal.generated.flags.ApiClient flagsApiClient =
                 new com.smplkit.internal.generated.flags.ApiClient();
         flagsApiClient.updateBaseUri(FLAGS_BASE_URL);
@@ -183,12 +169,13 @@ public final class SmplClient implements AutoCloseable {
         appApiClient.updateBaseUri(APP_BASE_URL);
         appApiClient.setRequestInterceptor(authInterceptor(apiKey));
         appApiClient.setReadTimeout(timeout);
-        ContextTypesApi contextTypesApi = new ContextTypesApi(appApiClient);
         ContextsApi contextsApi = new ContextsApi(appApiClient);
 
-        FlagsClient client = new FlagsClient(flagsApi, contextTypesApi, contextsApi,
+        FlagsClient client = new FlagsClient(flagsApi, contextsApi,
                 httpClient, apiKey, FLAGS_BASE_URL, APP_BASE_URL, timeout);
         client.setSharedWs(sharedWs);
+        client.setParentService(service);
+        client.setEnvironment(environment);
         return client;
     }
 
@@ -206,48 +193,28 @@ public final class SmplClient implements AutoCloseable {
         return builder -> builder.header("Authorization", "Bearer " + apiKey);
     }
 
-    /**
-     * Returns the Config service client.
-     */
+    /** Returns the Config service client. */
     public ConfigClient config() {
         return config;
     }
 
-    /**
-     * Returns the Flags service client.
-     */
+    /** Returns the Flags service client. */
     public FlagsClient flags() {
         return flags;
     }
 
-    /**
-     * Returns the configured environment.
-     */
+    /** Returns the configured environment. */
     public String environment() {
         return environment;
     }
 
-    /**
-     * Returns the configured service name.
-     */
+    /** Returns the configured service name. */
     public String service() {
         return service;
     }
 
     /**
-     * Returns whether the client is connected.
-     */
-    public boolean isConnected() {
-        return connected;
-    }
-
-    /**
      * Creates a new {@link SmplClient} with automatic API key resolution.
-     * The API key is resolved from the {@code SMPLKIT_API_KEY} environment
-     * variable or the {@code ~/.smplkit} configuration file.
-     *
-     * @return a new client
-     * @throws com.smplkit.errors.SmplException if no API key can be resolved
      */
     public static SmplClient create() {
         return builder().build();
@@ -255,11 +222,6 @@ public final class SmplClient implements AutoCloseable {
 
     /**
      * Creates a new {@link SmplClient} with the given API key, environment, and service.
-     *
-     * @param apiKey      the API key
-     * @param environment the target environment
-     * @param service     the service name
-     * @return a new client
      */
     public static SmplClient create(String apiKey, String environment, String service) {
         return builder().apiKey(apiKey).environment(environment).service(service).build();
