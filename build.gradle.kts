@@ -28,9 +28,21 @@ dependencies {
     // JSON Logic evaluation for flags runtime
     implementation("io.github.jamsesso:json-logic-java:1.0.7")
 
+    // Logging adapter dependencies — compileOnly so they're not transitive
+    compileOnly("ch.qos.logback:logback-classic:1.4.14")
+    compileOnly("org.slf4j:slf4j-api:2.0.12")
+    compileOnly("org.apache.logging.log4j:log4j-core:2.23.1")
+    compileOnly("org.apache.logging.log4j:log4j-api:2.23.1")
+
     testImplementation("org.junit.jupiter:junit-jupiter:5.10.2")
     testImplementation("org.mockito:mockito-core:5.11.0")
     testRuntimeOnly("org.junit.platform:junit-platform-launcher")
+
+    // Test dependencies for adapter tests
+    testImplementation("ch.qos.logback:logback-classic:1.4.14")
+    testImplementation("org.slf4j:slf4j-api:2.0.12")
+    testImplementation("org.apache.logging.log4j:log4j-core:2.23.1")
+    testImplementation("org.apache.logging.log4j:log4j-api:2.23.1")
 }
 
 tasks.test {

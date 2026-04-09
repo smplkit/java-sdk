@@ -17,13 +17,13 @@ import com.smplkit.internal.generated.logging.model.ResourceLogGroup;
 import com.smplkit.internal.generated.logging.model.ResourceLogger;
 import com.smplkit.internal.generated.logging.model.ResponseLogGroup;
 import com.smplkit.internal.generated.logging.model.ResponseLogger;
+import com.smplkit.logging.adapters.DiscoveredLogger;
+import com.smplkit.logging.adapters.LoggingAdapter;
 
 import java.net.http.HttpClient;
 import java.time.Instant;
 import java.time.OffsetDateTime;
 import java.util.ArrayList;
-import java.util.Collections;
-import java.util.Enumeration;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -40,16 +40,30 @@ import java.util.logging.Level;
  *
  * <p>Provides management CRUD (new_, get, list, delete for loggers and groups)
  * and runtime control ({@link #start()}, {@link #onChange}).</p>
+ *
+ * <p>Runtime logging control delegates framework-specific work to pluggable
+ * {@link LoggingAdapter} instances. By default, adapters are auto-loaded
+ * based on what's on the classpath: JUL (always), Logback, Log4j2.</p>
  */
 public final class LoggingClient {
 
     private static final java.util.logging.Logger LOG = java.util.logging.Logger.getLogger("smplkit.logging");
     private static final String FALLBACK_LEVEL = "INFO";
 
+    private static final String[][] BUILTIN_ADAPTERS = {
+            {"com.smplkit.logging.adapters.JulAdapter", null},
+            {"com.smplkit.logging.adapters.Slf4jLogbackAdapter", "ch.qos.logback.classic.LoggerContext"},
+            {"com.smplkit.logging.adapters.Log4j2Adapter", "org.apache.logging.log4j.core.LoggerContext"},
+    };
+
     private final LoggersApi loggersApi;
     private final LogGroupsApi logGroupsApi;
     private final HttpClient httpClient;
     private final String apiKey;
+
+    // Adapter state
+    private final List<LoggingAdapter> adapters = new ArrayList<>();
+    private boolean explicitAdapters = false;
 
     // Runtime state
     private volatile boolean started = false;
@@ -89,6 +103,26 @@ public final class LoggingClient {
     /** Set the service name. Called by SmplClient. */
     public void setService(String service) {
         this.service = service;
+    }
+
+    // -----------------------------------------------------------------------
+    // Adapter registration
+    // -----------------------------------------------------------------------
+
+    /**
+     * Register a custom logging adapter. Must be called before {@link #start()}.
+     *
+     * <p>Registering at least one adapter disables automatic adapter loading.</p>
+     *
+     * @param adapter the adapter to register
+     * @throws IllegalStateException if called after start()
+     */
+    public void registerAdapter(LoggingAdapter adapter) {
+        if (started) {
+            throw new IllegalStateException("Cannot register adapters after start()");
+        }
+        explicitAdapters = true;
+        adapters.add(adapter);
     }
 
     // -----------------------------------------------------------------------
@@ -311,24 +345,43 @@ public final class LoggingClient {
     /**
      * Explicitly opt in to runtime logging control. Idempotent.
      *
-     * <p>Discovers existing JUL loggers, fetches managed levels from the
-     * server, and applies them to the local JVM.</p>
+     * <p>Auto-loads logging adapters (if none registered explicitly), discovers
+     * existing loggers through each adapter, fetches managed levels from the
+     * server, and applies them via each adapter.</p>
      */
     public void start() {
         if (started) {
             return;
         }
 
-        // 1. Discover existing JUL loggers
-        java.util.logging.LogManager manager = java.util.logging.LogManager.getLogManager();
-        Enumeration<String> loggerNames = manager.getLoggerNames();
-        while (loggerNames.hasMoreElements()) {
-            String name = loggerNames.nextElement();
-            String normalized = normalizeKey(name);
-            nameMap.put(name, normalized);
+        // 1. Load adapters (auto or explicit)
+        if (!explicitAdapters) {
+            autoLoadAdapters();
         }
 
-        // 2. Fetch all loggers and groups, resolve and apply levels
+        // 2. Discover existing loggers from all adapters
+        for (LoggingAdapter adapter : adapters) {
+            try {
+                List<DiscoveredLogger> discovered = adapter.discover();
+                for (DiscoveredLogger dl : discovered) {
+                    String normalized = normalizeKey(dl.name());
+                    nameMap.put(dl.name(), normalized);
+                }
+            } catch (Exception e) {
+                LOG.log(Level.WARNING, "Adapter " + adapter.name() + " discover() failed", e);
+            }
+        }
+
+        // 3. Install hooks for new logger detection
+        for (LoggingAdapter adapter : adapters) {
+            try {
+                adapter.installHook(this::onNewLogger);
+            } catch (Exception e) {
+                LOG.log(Level.FINE, "Adapter " + adapter.name() + " installHook() failed", e);
+            }
+        }
+
+        // 4. Fetch all loggers and groups, resolve and apply levels
         try {
             fetchAndApply("start");
         } catch (Exception e) {
@@ -357,9 +410,14 @@ public final class LoggingClient {
         keyListeners.computeIfAbsent(key, k -> new CopyOnWriteArrayList<>()).add(listener);
     }
 
-    /** Returns whether start() has been called. Package-private for testing. */
-    boolean isStarted() {
+    /** Returns whether start() has been called. */
+    public boolean isStarted() {
         return started;
+    }
+
+    /** Returns the list of loaded adapters. */
+    public List<LoggingAdapter> getAdapters() {
+        return adapters;
     }
 
     // -----------------------------------------------------------------------
@@ -464,24 +522,44 @@ public final class LoggingClient {
     }
 
     // -----------------------------------------------------------------------
-    // JUL level mapping
+    // Adapter auto-loading
     // -----------------------------------------------------------------------
 
-    /** Map a smplkit LogLevel to a java.util.logging.Level. */
-    public static Level smplToJulLevel(LogLevel level) {
-        return switch (level) {
-            case TRACE -> Level.FINEST;
-            case DEBUG -> Level.FINE;
-            case INFO -> Level.INFO;
-            case WARN -> Level.WARNING;
-            case ERROR, FATAL -> Level.SEVERE;
-            case SILENT -> Level.OFF;
-        };
+    private void autoLoadAdapters() {
+        loadAdaptersFromTable(BUILTIN_ADAPTERS);
     }
 
-    /** Map a smplkit level string to a java.util.logging.Level. */
-    static Level smplStringToJulLevel(String level) {
-        return smplToJulLevel(LogLevel.valueOf(level));
+    /** Load adapters from a table of [adapterClass, probeClass] pairs. Package-private for testing. */
+    void loadAdaptersFromTable(String[][] adapterTable) {
+        for (String[] entry : adapterTable) {
+            String adapterClass = entry[0];
+            String probeClass = entry[1];
+            try {
+                if (probeClass != null) {
+                    Class.forName(probeClass);
+                }
+                LoggingAdapter adapter = (LoggingAdapter) Class.forName(adapterClass)
+                        .getDeclaredConstructor().newInstance();
+                adapters.add(adapter);
+                LOG.fine("Loaded logging adapter: " + adapter.name());
+            } catch (ClassNotFoundException e) {
+                LOG.fine("Skipped adapter " + adapterClass + " (dependency not on classpath)");
+            } catch (Exception e) {
+                LOG.warning("Failed to load adapter " + adapterClass + ": " + e.getMessage());
+            }
+        }
+        if (adapters.isEmpty()) {
+            LOG.warning("No logging framework detected. Runtime logging control requires a supported framework.");
+        }
+    }
+
+    // -----------------------------------------------------------------------
+    // New logger callback (for adapter hooks)
+    // -----------------------------------------------------------------------
+
+    private void onNewLogger(String originalName, String level) {
+        String normalized = normalizeKey(originalName);
+        nameMap.put(originalName, normalized);
     }
 
     // -----------------------------------------------------------------------
@@ -552,12 +630,20 @@ public final class LoggingClient {
 
             String resolved = resolveLevel(normalizedKey, environment, loggersCache, groupsCache);
             try {
-                Level julLevel = smplStringToJulLevel(resolved);
-                java.util.logging.Logger julLogger = java.util.logging.Logger.getLogger(originalName);
-                julLogger.setLevel(julLevel);
+                // Validate the level string
+                LogLevel logLevel = LogLevel.valueOf(resolved);
+
+                // Apply through all adapters
+                for (LoggingAdapter adapter : adapters) {
+                    try {
+                        adapter.applyLevel(originalName, resolved);
+                    } catch (Exception e) {
+                        LOG.log(Level.FINE, "Adapter " + adapter.name()
+                                + " applyLevel failed for " + originalName, e);
+                    }
+                }
 
                 // Fire change listeners
-                LogLevel logLevel = LogLevel.valueOf(resolved);
                 LoggerChangeEvent event = new LoggerChangeEvent(normalizedKey, logLevel, source);
                 fireChangeListeners(normalizedKey, event);
             } catch (IllegalArgumentException e) {
@@ -593,6 +679,13 @@ public final class LoggingClient {
 
     /** Called by SmplClient.close() to clean up logging resources. */
     public void close() {
+        for (LoggingAdapter adapter : adapters) {
+            try {
+                adapter.uninstallHook();
+            } catch (Exception e) {
+                LOG.log(Level.FINE, "Adapter " + adapter.name() + " uninstallHook() failed", e);
+            }
+        }
         started = false;
     }
 

@@ -15,6 +15,8 @@ import com.smplkit.internal.generated.logging.model.ResourceLogGroup;
 import com.smplkit.internal.generated.logging.model.ResourceLogger;
 import com.smplkit.internal.generated.logging.model.ResponseLogGroup;
 import com.smplkit.internal.generated.logging.model.ResponseLogger;
+import com.smplkit.logging.adapters.DiscoveredLogger;
+import com.smplkit.logging.adapters.LoggingAdapter;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
@@ -26,6 +28,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 import java.util.concurrent.atomic.AtomicReference;
+import java.util.function.BiConsumer;
 import java.util.function.Consumer;
 
 import static org.junit.jupiter.api.Assertions.*;
@@ -375,14 +378,12 @@ class LoggingClientTest {
 
     @Test
     void start_isIdempotent() throws ApiException {
-        // Set up mocks for fetchAndApply
-        LoggerListResponse loggerResp = new LoggerListResponse();
-        loggerResp.setData(new ArrayList<>());
-        when(mockLoggersApi.listLoggers(null, null)).thenReturn(loggerResp);
+        stubEmptyResponses();
 
-        LogGroupListResponse groupResp = new LogGroupListResponse();
-        groupResp.setData(new ArrayList<>());
-        when(mockLogGroupsApi.listLogGroups()).thenReturn(groupResp);
+        LoggingAdapter mockAdapter = mock(LoggingAdapter.class);
+        when(mockAdapter.name()).thenReturn("test");
+        when(mockAdapter.discover()).thenReturn(List.of());
+        client.registerAdapter(mockAdapter);
 
         assertFalse(client.isStarted());
 
@@ -400,11 +401,13 @@ class LoggingClientTest {
     void start_continuesEvenIfFetchFails() throws ApiException {
         when(mockLoggersApi.listLoggers(null, null)).thenThrow(new ApiException(500, "server error"));
 
+        LoggingAdapter mockAdapter = mock(LoggingAdapter.class);
+        when(mockAdapter.name()).thenReturn("test");
+        when(mockAdapter.discover()).thenReturn(List.of());
+        client.registerAdapter(mockAdapter);
+
         // start should not throw, just log warning
         client.start();
-        // started should still become true (per Python pattern: catch and warn)
-        // Actually the Java impl throws from fetchAndApply which is caught
-        // Let's verify it doesn't crash
         assertTrue(client.isStarted());
     }
 
@@ -418,7 +421,7 @@ class LoggingClientTest {
         client.onChange(received::set);
 
         // Set up a managed logger that will trigger change events
-        setupManagedLoggerForStart("com.acme", "INFO");
+        setupManagedLoggerForStartWithAdapter("com.acme", "INFO");
 
         client.start();
 
@@ -435,7 +438,7 @@ class LoggingClientTest {
         client.onChange("com.acme", received::set);
         client.onChange("com.other", other::set);
 
-        setupManagedLoggerForStart("com.acme", "WARN");
+        setupManagedLoggerForStartWithAdapter("com.acme", "WARN");
 
         client.start();
 
@@ -452,7 +455,7 @@ class LoggingClientTest {
         // Second listener should still fire
         client.onChange(received::set);
 
-        setupManagedLoggerForStart("com.acme", "INFO");
+        setupManagedLoggerForStartWithAdapter("com.acme", "INFO");
 
         client.start();
 
@@ -466,7 +469,7 @@ class LoggingClientTest {
         client.onChange("com.acme", event -> { throw new RuntimeException("key listener error"); });
         client.onChange("com.acme", received::set);
 
-        setupManagedLoggerForStart("com.acme", "DEBUG");
+        setupManagedLoggerForStartWithAdapter("com.acme", "DEBUG");
 
         client.start();
 
@@ -690,24 +693,108 @@ class LoggingClientTest {
     }
 
     // -----------------------------------------------------------------------
-    // JUL level mapping
+    // Adapter delegation
     // -----------------------------------------------------------------------
 
     @Test
-    void smplToJulLevel_mapsAllLevels() {
-        assertEquals(java.util.logging.Level.FINEST, LoggingClient.smplToJulLevel(LogLevel.TRACE));
-        assertEquals(java.util.logging.Level.FINE, LoggingClient.smplToJulLevel(LogLevel.DEBUG));
-        assertEquals(java.util.logging.Level.INFO, LoggingClient.smplToJulLevel(LogLevel.INFO));
-        assertEquals(java.util.logging.Level.WARNING, LoggingClient.smplToJulLevel(LogLevel.WARN));
-        assertEquals(java.util.logging.Level.SEVERE, LoggingClient.smplToJulLevel(LogLevel.ERROR));
-        assertEquals(java.util.logging.Level.SEVERE, LoggingClient.smplToJulLevel(LogLevel.FATAL));
-        assertEquals(java.util.logging.Level.OFF, LoggingClient.smplToJulLevel(LogLevel.SILENT));
+    void start_delegatesDiscoverToAdapters() throws ApiException {
+        stubEmptyResponses();
+
+        LoggingAdapter mockAdapter = mock(LoggingAdapter.class);
+        when(mockAdapter.name()).thenReturn("test");
+        when(mockAdapter.discover()).thenReturn(List.of(
+                new DiscoveredLogger("com.acme.delegated", "INFO")
+        ));
+
+        client.registerAdapter(mockAdapter);
+        client.start();
+
+        verify(mockAdapter).discover();
+        verify(mockAdapter).installHook(any());
     }
 
     @Test
-    void smplStringToJulLevel_mapsCorrectly() {
-        assertEquals(java.util.logging.Level.FINE, LoggingClient.smplStringToJulLevel("DEBUG"));
-        assertEquals(java.util.logging.Level.WARNING, LoggingClient.smplStringToJulLevel("WARN"));
+    void start_delegatesApplyLevelToAdapters() throws ApiException {
+        LoggingAdapter mockAdapter = mock(LoggingAdapter.class);
+        when(mockAdapter.name()).thenReturn("test");
+        when(mockAdapter.discover()).thenReturn(List.of(
+                new DiscoveredLogger("com.acme.applied", "INFO")
+        ));
+
+        client.registerAdapter(mockAdapter);
+        setupManagedLoggerForStartWithAdapter("com.acme.applied", "WARN");
+
+        client.start();
+
+        verify(mockAdapter).applyLevel("com.acme.applied", "WARN");
+    }
+
+    @Test
+    void close_delegatesUninstallHookToAdapters() throws ApiException {
+        stubEmptyResponses();
+
+        LoggingAdapter mockAdapter = mock(LoggingAdapter.class);
+        when(mockAdapter.name()).thenReturn("test");
+        when(mockAdapter.discover()).thenReturn(List.of());
+
+        client.registerAdapter(mockAdapter);
+        client.start();
+        client.close();
+
+        verify(mockAdapter).uninstallHook();
+    }
+
+    // -----------------------------------------------------------------------
+    // Auto-load edge cases
+    // -----------------------------------------------------------------------
+
+    @Test
+    void loadAdaptersFromTable_skipsMissingProbeClass() {
+        String[][] table = {
+                {"com.smplkit.logging.adapters.JulAdapter", "com.nonexistent.ProbeClass"},
+        };
+        client.loadAdaptersFromTable(table);
+        assertTrue(client.getAdapters().isEmpty());
+    }
+
+    @Test
+    void loadAdaptersFromTable_skipsMissingAdapterClass() {
+        String[][] table = {
+                {"com.nonexistent.AdapterClass", null},
+        };
+        client.loadAdaptersFromTable(table);
+        assertTrue(client.getAdapters().isEmpty());
+    }
+
+    @Test
+    void loadAdaptersFromTable_handlesInstantiationFailure() {
+        // Use a class that exists but isn't a valid adapter (e.g., String has no no-arg constructor that returns LoggingAdapter)
+        String[][] table = {
+                {"java.lang.String", null},
+        };
+        client.loadAdaptersFromTable(table);
+        assertTrue(client.getAdapters().isEmpty());
+    }
+
+    @Test
+    void loadAdaptersFromTable_warnsWhenNoAdaptersFound() {
+        String[][] table = {
+                {"com.nonexistent.Adapter1", null},
+                {"com.nonexistent.Adapter2", null},
+        };
+        // Should not throw, just log a warning
+        client.loadAdaptersFromTable(table);
+        assertTrue(client.getAdapters().isEmpty());
+    }
+
+    @Test
+    void loadAdaptersFromTable_loadsValidAdapter() {
+        String[][] table = {
+                {"com.smplkit.logging.adapters.JulAdapter", null},
+        };
+        client.loadAdaptersFromTable(table);
+        assertEquals(1, client.getAdapters().size());
+        assertEquals("jul", client.getAdapters().get(0).name());
     }
 
     // -----------------------------------------------------------------------
@@ -716,18 +803,19 @@ class LoggingClientTest {
 
     @Test
     void close_resetsStarted() throws ApiException {
-        LoggerListResponse loggerResp = new LoggerListResponse();
-        loggerResp.setData(new ArrayList<>());
-        when(mockLoggersApi.listLoggers(null, null)).thenReturn(loggerResp);
-        LogGroupListResponse groupResp = new LogGroupListResponse();
-        groupResp.setData(new ArrayList<>());
-        when(mockLogGroupsApi.listLogGroups()).thenReturn(groupResp);
+        stubEmptyResponses();
+
+        LoggingAdapter mockAdapter = mock(LoggingAdapter.class);
+        when(mockAdapter.name()).thenReturn("test");
+        when(mockAdapter.discover()).thenReturn(List.of());
+        client.registerAdapter(mockAdapter);
 
         client.start();
         assertTrue(client.isStarted());
 
         client.close();
         assertFalse(client.isStarted());
+        verify(mockAdapter).uninstallHook();
     }
 
     // -----------------------------------------------------------------------
@@ -930,9 +1018,15 @@ class LoggingClientTest {
 
     @Test
     void start_fetchesAndCachesGroupData() throws ApiException {
-        // Create a JUL logger so it appears in LogManager
         String key = "com.acme.grptest";
-        java.util.logging.Logger.getLogger(key);
+
+        // Register a mock adapter that discovers the logger
+        LoggingAdapter mockAdapter = mock(LoggingAdapter.class);
+        when(mockAdapter.name()).thenReturn("test");
+        when(mockAdapter.discover()).thenReturn(List.of(
+                new DiscoveredLogger(key, "INFO")
+        ));
+        client.registerAdapter(mockAdapter);
 
         // Set up managed logger pointing to a group
         LoggerResource lr = buildLoggerResource("lg-id", key, key, null);
@@ -969,6 +1063,11 @@ class LoggingClientTest {
         // Group fetch fails
         when(mockLogGroupsApi.listLogGroups()).thenThrow(new ApiException(500, "group fetch failed"));
 
+        LoggingAdapter mockAdapter = mock(LoggingAdapter.class);
+        when(mockAdapter.name()).thenReturn("test");
+        when(mockAdapter.discover()).thenReturn(List.of());
+        client.registerAdapter(mockAdapter);
+
         // start() should not throw, just log warning
         client.start();
         assertTrue(client.isStarted());
@@ -980,9 +1079,15 @@ class LoggingClientTest {
 
     @Test
     void start_handlesUnknownLevelGracefully() throws ApiException {
-        // Create a JUL logger
         String key = "com.acme.badlevel";
-        java.util.logging.Logger.getLogger(key);
+
+        // Register a mock adapter that discovers the logger
+        LoggingAdapter mockAdapter = mock(LoggingAdapter.class);
+        when(mockAdapter.name()).thenReturn("test");
+        when(mockAdapter.discover()).thenReturn(List.of(
+                new DiscoveredLogger(key, "INFO")
+        ));
+        client.registerAdapter(mockAdapter);
 
         // Set up managed logger with a non-standard level string
         LoggerResource lr = buildLoggerResource("lg-id", key, key, "CUSTOM_INVALID");
@@ -1004,9 +1109,24 @@ class LoggingClientTest {
     // Helpers
     // -----------------------------------------------------------------------
 
-    private void setupManagedLoggerForStart(String key, String level) throws ApiException {
-        // Create a JUL logger so it appears in LogManager
-        java.util.logging.Logger.getLogger(key);
+    private void stubEmptyResponses() throws ApiException {
+        LoggerListResponse loggerResp = new LoggerListResponse();
+        loggerResp.setData(new ArrayList<>());
+        when(mockLoggersApi.listLoggers(null, null)).thenReturn(loggerResp);
+
+        LogGroupListResponse groupResp = new LogGroupListResponse();
+        groupResp.setData(new ArrayList<>());
+        when(mockLogGroupsApi.listLogGroups()).thenReturn(groupResp);
+    }
+
+    private void setupManagedLoggerForStartWithAdapter(String key, String level) throws ApiException {
+        // Register a mock adapter that discovers the logger
+        LoggingAdapter mockAdapter = mock(LoggingAdapter.class);
+        when(mockAdapter.name()).thenReturn("test");
+        when(mockAdapter.discover()).thenReturn(List.of(
+                new DiscoveredLogger(key, level)
+        ));
+        client.registerAdapter(mockAdapter);
 
         LoggerResource lr = buildLoggerResource("id-1", key, key, level);
         lr.getAttributes().setManaged(true);

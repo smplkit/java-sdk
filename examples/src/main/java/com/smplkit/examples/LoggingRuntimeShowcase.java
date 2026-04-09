@@ -4,7 +4,7 @@ import com.smplkit.LogLevel;
 import com.smplkit.SmplClient;
 import com.smplkit.errors.SmplNotFoundException;
 import com.smplkit.logging.Logger;
-import com.smplkit.logging.LoggingClient;
+import com.smplkit.logging.adapters.JulAdapter;
 
 import java.util.logging.Level;
 
@@ -120,7 +120,7 @@ public class LoggingRuntimeShowcase {
     }
 
     private static String julLevelName(LogLevel level) {
-        Level julLevel = LoggingClient.smplToJulLevel(level);
+        Level julLevel = JulAdapter.smplToJulLevel(level);
         return julLevel.getName() + " (" + julLevel.intValue() + ")";
     }
 
