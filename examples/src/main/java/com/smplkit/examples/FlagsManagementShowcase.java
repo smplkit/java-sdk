@@ -102,6 +102,9 @@ public class FlagsManagementShowcase {
             // ------------------------------------------------------------------
             // 2b. String flag
             // ------------------------------------------------------------------
+            // The values parameter defines a closed set — this flag can only
+            // serve the declared strings. This makes it a constrained flag.
+            // The Console UI shows dropdowns for value selection.
             Flag<String> banner = client.flags().newStringFlag(
                     "banner-text-mgmt", "Welcome!", "Banner Text",
                     "The promotional banner text shown on the homepage.",
@@ -117,17 +120,17 @@ public class FlagsManagementShowcase {
                     + ", default=" + banner.getDefault());
 
             // ------------------------------------------------------------------
-            // 2c. Numeric flag
+            // 2c. Numeric flag — Unconstrained
             // ------------------------------------------------------------------
+            // Unlike banner-text above, this flag has no predefined values.
+            // Any number is valid as a default or rule serve-value. This is
+            // useful for tunables like thresholds, retry counts, and timeouts
+            // where the value space is open-ended.
+            //
+            // Omitting the values parameter creates an unconstrained flag.
             Flag<Number> rateLimit = client.flags().newNumberFlag(
                     "rate-limit-mgmt", 100, "Rate Limit",
-                    "Maximum API requests per minute per user.",
-                    List.of(
-                            Map.of("name", "Low", "value", 50),
-                            Map.of("name", "Standard", "value", 100),
-                            Map.of("name", "High", "value", 500),
-                            Map.of("name", "Unlimited", "value", 10000)
-                    ));
+                    "Maximum API requests per minute per user.");
             rateLimit.save();
             createdFlagKeys.add(rateLimit.getKey());
             step("Created numeric flag: key=" + rateLimit.getKey()
@@ -137,6 +140,8 @@ public class FlagsManagementShowcase {
             // ------------------------------------------------------------------
             // 2d. JSON flag
             // ------------------------------------------------------------------
+            // Like banner-text, this JSON flag is constrained — only the
+            // declared configuration objects can be served.
             Flag<Object> uiConfig = client.flags().newJsonFlag(
                     "ui-config-mgmt",
                     Map.of("theme", "light", "sidebar", true, "maxTabs", 5),
@@ -190,14 +195,9 @@ public class FlagsManagementShowcase {
                     + ", default=" + banner.getDefault());
 
             // Update the rate limit flag's name and default.
+            // No values to update — this flag is unconstrained, so any
+            // number is valid as a default.
             rateLimit.setName("API Rate Limit (per minute)");
-            rateLimit.setValues(List.of(
-                    Map.of("name", "Low", "value", 50),
-                    Map.of("name", "Standard", "value", 100),
-                    Map.of("name", "Medium", "value", 200),
-                    Map.of("name", "High", "value", 500),
-                    Map.of("name", "Unlimited", "value", 10000)
-            ));
             rateLimit.setDefault(200);
             rateLimit.save();
             step("Updated rate limit: name=" + rateLimit.getName()

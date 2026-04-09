@@ -78,16 +78,10 @@ public class FlagsDemoSetup {
             createdFlagKeys.add(darkMode.getKey());
             step("Created 'dark-mode-demo' (boolean, default=false), id=" + darkMode.getId());
 
-            // --- items-per-page: controls pagination ---
+            // --- items-per-page: controls pagination (unconstrained) ---
             Flag<Number> itemsPerPage = client.flags().newNumberFlag(
                     "items-per-page-demo", 20, "Items Per Page",
-                    "Number of items displayed per page in list views.",
-                    List.of(
-                            Map.of("name", "Small", "value", 10),
-                            Map.of("name", "Medium", "value", 20),
-                            Map.of("name", "Large", "value", 50),
-                            Map.of("name", "Extra Large", "value", 100)
-                    ));
+                    "Number of items displayed per page in list views.");
             itemsPerPage.save();
             createdFlagKeys.add(itemsPerPage.getKey());
             step("Created 'items-per-page-demo' (numeric, default=20), id=" + itemsPerPage.getId());
