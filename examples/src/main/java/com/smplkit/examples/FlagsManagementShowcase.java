@@ -2,6 +2,7 @@ package com.smplkit.examples;
 
 import com.smplkit.SmplClient;
 import com.smplkit.Rule;
+import com.smplkit.errors.SmplNotFoundException;
 import com.smplkit.flags.Flag;
 
 import java.util.ArrayList;
@@ -70,6 +71,16 @@ public class FlagsManagementShowcase {
 
             // Track created resource keys for cleanup
             List<String> createdFlagKeys = new ArrayList<>();
+
+            // Clean up any leftover flags from a previous failed run.
+            for (String key : List.of("dark-mode-mgmt", "banner-text-mgmt", "rate-limit-mgmt", "ui-config-mgmt")) {
+                try {
+                    client.flags().delete(key);
+                    step("Pre-cleanup: deleted leftover flag " + key);
+                } catch (SmplNotFoundException ignored) {
+                    // Not present -- nothing to clean up.
+                }
+            }
 
             // ==================================================================
             // 2. CREATE FLAGS -- one of each type

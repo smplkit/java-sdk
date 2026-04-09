@@ -2,6 +2,7 @@ package com.smplkit.examples;
 
 import com.smplkit.LogLevel;
 import com.smplkit.SmplClient;
+import com.smplkit.errors.SmplNotFoundException;
 import com.smplkit.logging.LogGroup;
 import com.smplkit.logging.Logger;
 
@@ -40,6 +41,21 @@ public class LoggingManagementShowcase {
 
             List<String> createdLoggerKeys = new ArrayList<>();
             List<String> createdGroupKeys = new ArrayList<>();
+
+            // Clean up any leftover resources from a previous failed run.
+            // Loggers first (may reference groups), then child groups, then parent groups.
+            for (String key : List.of("payment-service", "audit-logger")) {
+                try {
+                    client.logging().delete(key);
+                    step("Pre-cleanup: deleted leftover logger " + key);
+                } catch (SmplNotFoundException ignored) { }
+            }
+            for (String key : List.of("infra-db", "infra")) {
+                try {
+                    client.logging().deleteGroup(key);
+                    step("Pre-cleanup: deleted leftover group " + key);
+                } catch (SmplNotFoundException ignored) { }
+            }
 
             // ==================================================================
             // 2. CREATE LOG GROUPS

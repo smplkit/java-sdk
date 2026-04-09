@@ -2,6 +2,7 @@ package com.smplkit.examples;
 
 import com.smplkit.SmplClient;
 import com.smplkit.Context;
+import com.smplkit.errors.SmplNotFoundException;
 import com.smplkit.flags.Flag;
 import com.smplkit.flags.FlagChangeEvent;
 import com.smplkit.flags.FlagStats;
@@ -75,7 +76,18 @@ public class FlagsRuntimeShowcase {
             step("SmplClient initialized");
 
             // Track created flag keys for cleanup
-            List<String> createdFlagKeys = new ArrayList<>();
+            List<String> createdFlagKeys = List.of(
+                    "maintenance-mode-rt", "greeting-rt", "page-size-rt", "layout-config-rt");
+
+            // Clean up any leftover flags from a previous failed run.
+            for (String key : createdFlagKeys) {
+                try {
+                    client.flags().delete(key);
+                    step("Pre-cleanup: deleted leftover flag " + key);
+                } catch (SmplNotFoundException ignored) {
+                    // Not present -- nothing to clean up.
+                }
+            }
 
             // ==================================================================
             // 2. SET UP FLAGS WITH TARGETING RULES
@@ -87,7 +99,7 @@ public class FlagsRuntimeShowcase {
                     "maintenance-mode-rt", false, "Maintenance Mode",
                     "Puts the application into maintenance mode.");
             maintenance.save();
-            createdFlagKeys.add(maintenance.getKey());
+
             step("Created boolean flag: " + maintenance.getKey());
 
             // Add a rule that enables maintenance mode for staging.
@@ -108,7 +120,7 @@ public class FlagsRuntimeShowcase {
                             Map.of("name", "Trial", "value", "Welcome! Your trial expires soon.")
                     ));
             greeting.save();
-            createdFlagKeys.add(greeting.getKey());
+
             step("Created string flag: " + greeting.getKey());
 
             greeting.addRule(new Rule("Enterprise greeting")
@@ -124,7 +136,7 @@ public class FlagsRuntimeShowcase {
                     "page-size-rt", 25, "Page Size",
                     "Number of items per page in list views.");
             pageSize.save();
-            createdFlagKeys.add(pageSize.getKey());
+
             step("Created numeric flag: " + pageSize.getKey());
 
             pageSize.addRule(new Rule("Larger pages for power users")
@@ -142,7 +154,7 @@ public class FlagsRuntimeShowcase {
                     "Layout Config",
                     "Layout configuration controlling the dashboard appearance.");
             layout.save();
-            createdFlagKeys.add(layout.getKey());
+
             step("Created JSON flag: " + layout.getKey());
 
             layout.addRule(new Rule("Compact layout for mobile users")

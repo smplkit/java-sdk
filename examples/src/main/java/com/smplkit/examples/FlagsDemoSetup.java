@@ -2,6 +2,7 @@ package com.smplkit.examples;
 
 import com.smplkit.SmplClient;
 import com.smplkit.Context;
+import com.smplkit.errors.SmplNotFoundException;
 import com.smplkit.flags.Flag;
 import com.smplkit.Rule;
 
@@ -55,6 +56,14 @@ public class FlagsDemoSetup {
             step("SmplClient initialized");
 
             List<String> createdFlagKeys = new ArrayList<>();
+
+            // Clean up any leftover flags from a previous failed run.
+            for (String key : List.of("dark-mode-demo", "items-per-page-demo", "theme-config-demo")) {
+                try {
+                    client.flags().delete(key);
+                    step("Pre-cleanup: deleted leftover flag " + key);
+                } catch (SmplNotFoundException ignored) { }
+            }
 
             // ==================================================================
             // 2. CREATE FLAGS

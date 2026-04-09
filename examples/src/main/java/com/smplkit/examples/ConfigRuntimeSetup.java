@@ -2,6 +2,7 @@ package com.smplkit.examples;
 
 import com.smplkit.SmplClient;
 import com.smplkit.config.Config;
+import com.smplkit.errors.SmplNotFoundException;
 
 import java.util.Map;
 
@@ -47,6 +48,15 @@ public class ConfigRuntimeSetup {
      */
     public static DemoConfigs setupDemoConfigs(SmplClient client) throws Exception {
         section("Setup: Creating Demo Config Hierarchy");
+
+        // Clean up any leftover configs from a previous failed run.
+        // Delete child first (referential integrity).
+        for (String key : new String[]{"auth_module", "user_service"}) {
+            try {
+                client.config().delete(key);
+                step("Pre-cleanup: deleted leftover config " + key);
+            } catch (SmplNotFoundException ignored) { }
+        }
 
         // 1. Update the built-in common config
         Config common = client.config().get("common");

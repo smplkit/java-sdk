@@ -2,6 +2,7 @@ package com.smplkit.examples;
 
 import com.smplkit.SmplClient;
 import com.smplkit.config.Config;
+import com.smplkit.errors.SmplNotFoundException;
 
 import java.util.List;
 import java.util.Map;
@@ -46,6 +47,14 @@ public class ConfigManagementShowcase {
                 .build()) {
 
             step("SmplClient initialized with environment=production");
+
+            // Clean up any leftover configs from a previous failed run.
+            for (String key : new String[]{"auth_module", "user_service"}) {
+                try {
+                    client.config().delete(key);
+                    step("Pre-cleanup: deleted leftover config " + key);
+                } catch (SmplNotFoundException ignored) { }
+            }
 
             // ==================================================================
             // 2a. UPDATE THE COMMON CONFIG

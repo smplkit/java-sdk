@@ -2,6 +2,7 @@ package com.smplkit.examples;
 
 import com.smplkit.LogLevel;
 import com.smplkit.SmplClient;
+import com.smplkit.errors.SmplNotFoundException;
 import com.smplkit.logging.Logger;
 import com.smplkit.logging.LoggingClient;
 
@@ -34,6 +35,11 @@ public class LoggingRuntimeShowcase {
                 .build()) {
 
             step("SmplClient initialized");
+
+            // Clean up any leftover logger from a previous failed run.
+            try {
+                client.logging().delete("com.acme.payments");
+            } catch (SmplNotFoundException ignored) { }
 
             // ==================================================================
             // 2. REGISTER CHANGE LISTENERS
