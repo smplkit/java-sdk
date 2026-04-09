@@ -186,11 +186,12 @@ public final class FlagsClient {
     }
 
     public Flag<String> newStringFlag(String key, String defaultValue) {
-        return newStringFlag(key, defaultValue, null, null, null);
+        return newStringFlag(key, defaultValue, null, null);
     }
 
     public Flag<String> newStringFlag(String key, String defaultValue, String name, String description) {
-        return newStringFlag(key, defaultValue, name, description, null);
+        return newStringFlag(key, defaultValue, name, description,
+                List.of(Map.of("name", "Default", "value", defaultValue)));
     }
 
     public Flag<String> newStringFlag(String key, String defaultValue, String name, String description,
@@ -201,11 +202,12 @@ public final class FlagsClient {
     }
 
     public Flag<Number> newNumberFlag(String key, Number defaultValue) {
-        return newNumberFlag(key, defaultValue, null, null, null);
+        return newNumberFlag(key, defaultValue, null, null);
     }
 
     public Flag<Number> newNumberFlag(String key, Number defaultValue, String name, String description) {
-        return newNumberFlag(key, defaultValue, name, description, null);
+        return newNumberFlag(key, defaultValue, name, description,
+                List.of(Map.of("name", "Default", "value", defaultValue)));
     }
 
     public Flag<Number> newNumberFlag(String key, Number defaultValue, String name, String description,
@@ -216,11 +218,12 @@ public final class FlagsClient {
     }
 
     public Flag<Object> newJsonFlag(String key, Object defaultValue) {
-        return newJsonFlag(key, defaultValue, null, null, null);
+        return newJsonFlag(key, defaultValue, null, null);
     }
 
     public Flag<Object> newJsonFlag(String key, Object defaultValue, String name, String description) {
-        return newJsonFlag(key, defaultValue, name, description, null);
+        return newJsonFlag(key, defaultValue, name, description,
+                List.of(Map.of("name", "Default", "value", defaultValue)));
     }
 
     public Flag<Object> newJsonFlag(String key, Object defaultValue, String name, String description,
