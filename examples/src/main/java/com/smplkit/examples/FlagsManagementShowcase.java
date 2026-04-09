@@ -141,7 +141,11 @@ public class FlagsManagementShowcase {
                     "ui-config-mgmt",
                     Map.of("theme", "light", "sidebar", true, "maxTabs", 5),
                     "UI Configuration",
-                    "Complex UI configuration object controlling layout and theme.");
+                    "Complex UI configuration object controlling layout and theme.",
+                    List.of(
+                            Map.of("name", "Default", "value", Map.of("theme", "light", "sidebar", true, "maxTabs", 5)),
+                            Map.of("name", "Enterprise Beta", "value", Map.of("theme", "dark", "sidebar", true, "maxTabs", 10, "betaFeatures", true))
+                    ));
             uiConfig.save();
             createdFlagKeys.add(uiConfig.getKey());
             step("Created JSON flag: key=" + uiConfig.getKey()

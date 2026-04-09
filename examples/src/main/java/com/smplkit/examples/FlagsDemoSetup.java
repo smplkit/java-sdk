@@ -98,7 +98,13 @@ public class FlagsDemoSetup {
                     Map.of("primaryColor", "#1976d2", "fontFamily", "Inter, sans-serif",
                            "borderRadius", 8, "density", "comfortable"),
                     "Theme Config",
-                    "Theme configuration controlling colors, fonts, and spacing.");
+                    "Theme configuration controlling colors, fonts, and spacing.",
+                    List.of(
+                            Map.of("name", "Default", "value", Map.of("primaryColor", "#1976d2", "fontFamily", "Inter, sans-serif",
+                                    "borderRadius", 8, "density", "comfortable")),
+                            Map.of("name", "Enterprise", "value", Map.of("primaryColor", "#6200ea", "fontFamily", "Roboto, sans-serif",
+                                    "borderRadius", 4, "density", "compact", "brandLogo", true))
+                    ));
             themeConfig.save();
             createdFlagKeys.add(themeConfig.getKey());
             step("Created 'theme-config-demo' (JSON, complex default), id=" + themeConfig.getId());
