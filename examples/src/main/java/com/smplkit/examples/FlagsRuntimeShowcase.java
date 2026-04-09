@@ -134,7 +134,11 @@ public class FlagsRuntimeShowcase {
             // Numeric flag.
             Flag<Number> pageSize = client.flags().newNumberFlag(
                     "page-size-rt", 25, "Page Size",
-                    "Number of items per page in list views.");
+                    "Number of items per page in list views.",
+                    List.of(
+                            Map.of("name", "Default", "value", 25),
+                            Map.of("name", "Power User", "value", 100)
+                    ));
             pageSize.save();
 
             step("Created numeric flag: " + pageSize.getKey());
@@ -152,7 +156,11 @@ public class FlagsRuntimeShowcase {
                     "layout-config-rt",
                     Map.of("columns", 2, "showHeader", true, "compact", false),
                     "Layout Config",
-                    "Layout configuration controlling the dashboard appearance.");
+                    "Layout configuration controlling the dashboard appearance.",
+                    List.of(
+                            Map.of("name", "Default", "value", Map.of("columns", 2, "showHeader", true, "compact", false)),
+                            Map.of("name", "Compact", "value", Map.of("columns", 1, "showHeader", false, "compact", true))
+                    ));
             layout.save();
 
             step("Created JSON flag: " + layout.getKey());
