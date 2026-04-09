@@ -77,8 +77,7 @@ public class Flag {
   private Object _default = null;
 
   public static final String JSON_PROPERTY_VALUES = "values";
-  @jakarta.annotation.Nonnull
-  private List<FlagValue> values = new ArrayList<>();
+  private JsonNullable<List<FlagValue>> values = JsonNullable.<List<FlagValue>>undefined();
 
   public static final String JSON_PROPERTY_ENVIRONMENTS = "environments";
   @jakarta.annotation.Nullable
@@ -205,7 +204,7 @@ public class Flag {
   }
 
   /**
-   * Default value; must reference a value in the values array
+   * Default value; must reference a value in the values array (constrained) or match the flag type (unconstrained)
    * @return _default
    */
   @jakarta.annotation.Nullable
@@ -223,35 +222,47 @@ public class Flag {
   }
 
 
-  public Flag values(@jakarta.annotation.Nonnull List<FlagValue> values) {
-    this.values = values;
+  public Flag values(@jakarta.annotation.Nullable List<FlagValue> values) {
+    this.values = JsonNullable.<List<FlagValue>>of(values);
     return this;
   }
 
   public Flag addValuesItem(FlagValue valuesItem) {
-    if (this.values == null) {
-      this.values = new ArrayList<>();
+    if (this.values == null || !this.values.isPresent()) {
+      this.values = JsonNullable.<List<FlagValue>>of(new ArrayList<>());
     }
-    this.values.add(valuesItem);
+    try {
+      this.values.get().add(valuesItem);
+    } catch (java.util.NoSuchElementException e) {
+      // this can never happen, as we make sure above that the value is present
+    }
     return this;
   }
 
   /**
-   * Closed set of possible values
+   * Ordered set of allowed values (constrained), or null (unconstrained)
    * @return values
    */
-  @jakarta.annotation.Nonnull
-  @JsonProperty(value = JSON_PROPERTY_VALUES, required = true)
-  @JsonInclude(value = JsonInclude.Include.ALWAYS)
+  @jakarta.annotation.Nullable
+  @JsonIgnore
   public List<FlagValue> getValues() {
-    return values;
+        return values.orElse(null);
   }
 
+  @JsonProperty(value = JSON_PROPERTY_VALUES, required = false)
+  @JsonInclude(value = JsonInclude.Include.USE_DEFAULTS)
 
-  @JsonProperty(value = JSON_PROPERTY_VALUES, required = true)
-  @JsonInclude(value = JsonInclude.Include.ALWAYS)
-  public void setValues(@jakarta.annotation.Nonnull List<FlagValue> values) {
+  public JsonNullable<List<FlagValue>> getValues_JsonNullable() {
+    return values;
+  }
+  
+  @JsonProperty(JSON_PROPERTY_VALUES)
+  public void setValues_JsonNullable(JsonNullable<List<FlagValue>> values) {
     this.values = values;
+  }
+
+  public void setValues(@jakarta.annotation.Nullable List<FlagValue> values) {
+    this.values = JsonNullable.<List<FlagValue>>of(values);
   }
 
 
@@ -360,7 +371,7 @@ public class Flag {
         Objects.equals(this.description, flag.description) &&
         Objects.equals(this.type, flag.type) &&
         Objects.equals(this._default, flag._default) &&
-        Objects.equals(this.values, flag.values) &&
+        equalsNullable(this.values, flag.values) &&
         Objects.equals(this.environments, flag.environments) &&
         equalsNullable(this.createdAt, flag.createdAt) &&
         equalsNullable(this.updatedAt, flag.updatedAt);
@@ -372,7 +383,7 @@ public class Flag {
 
   @Override
   public int hashCode() {
-    return Objects.hash(key, name, description, type, _default, values, environments, hashCodeNullable(createdAt), hashCodeNullable(updatedAt));
+    return Objects.hash(key, name, description, type, _default, hashCodeNullable(values), environments, hashCodeNullable(createdAt), hashCodeNullable(updatedAt));
   }
 
   private static <T> int hashCodeNullable(JsonNullable<T> a) {
