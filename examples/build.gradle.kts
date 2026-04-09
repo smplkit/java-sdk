@@ -17,5 +17,5 @@ dependencies {
 }
 
 application {
-    mainClass.set("com.smplkit.examples.ConfigShowcase")
+    mainClass.set(providers.gradleProperty("mainClass").getOrElse("com.smplkit.examples.ConfigRuntimeShowcase"))
 }
