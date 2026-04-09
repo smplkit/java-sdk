@@ -74,12 +74,11 @@ class FlagTest {
     }
 
     @Test
-    void constructor_nullValuesAndEnvironments_becomesEmptyCollections() {
+    void constructor_nullValues_remainsNull() {
         Flag<Boolean> flag = new Flag<>(client, "key", "Name", "BOOLEAN", false,
                 null, null, null, null, null, Boolean.class);
 
-        assertNotNull(flag.getValues());
-        assertTrue(flag.getValues().isEmpty());
+        assertNull(flag.getValues(), "null values should remain null (unconstrained)");
         assertNotNull(flag.getEnvironments());
         assertTrue(flag.getEnvironments().isEmpty());
         assertNull(flag.getCreatedAt());
@@ -118,10 +117,10 @@ class FlagTest {
     }
 
     @Test
-    void setValues_null_becomesEmpty() {
+    void setValues_null_becomesNull() {
         Flag<Boolean> flag = client.newBooleanFlag("my-flag", false);
         flag.setValues(null);
-        assertTrue(flag.getValues().isEmpty());
+        assertNull(flag.getValues(), "setting values to null should result in null (unconstrained)");
     }
 
     @Test
@@ -616,15 +615,14 @@ class FlagTest {
     }
 
     @Test
-    void apply_withNullValuesAndEnvironments_setsEmptyCollections() {
+    void apply_withNullValues_setsNull() {
         Flag<Boolean> source = new Flag<>(client, "key", "Name", "BOOLEAN", false,
                 null, null, null, null, null, Boolean.class);
 
         Flag<Boolean> target = client.newBooleanFlag("target-key", false);
         target._apply(source);
 
-        assertNotNull(target.getValues());
-        assertTrue(target.getValues().isEmpty());
+        assertNull(target.getValues(), "apply with null values should result in null");
         assertNotNull(target.getEnvironments());
         assertTrue(target.getEnvironments().isEmpty());
     }

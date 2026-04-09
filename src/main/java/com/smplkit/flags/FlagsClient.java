@@ -190,8 +190,7 @@ public final class FlagsClient {
     }
 
     public Flag<String> newStringFlag(String key, String defaultValue, String name, String description) {
-        return newStringFlag(key, defaultValue, name, description,
-                List.of(Map.of("name", "Default", "value", defaultValue)));
+        return newStringFlag(key, defaultValue, name, description, null);
     }
 
     public Flag<String> newStringFlag(String key, String defaultValue, String name, String description,
@@ -206,8 +205,7 @@ public final class FlagsClient {
     }
 
     public Flag<Number> newNumberFlag(String key, Number defaultValue, String name, String description) {
-        return newNumberFlag(key, defaultValue, name, description,
-                List.of(Map.of("name", "Default", "value", defaultValue)));
+        return newNumberFlag(key, defaultValue, name, description, null);
     }
 
     public Flag<Number> newNumberFlag(String key, Number defaultValue, String name, String description,
@@ -222,8 +220,7 @@ public final class FlagsClient {
     }
 
     public Flag<Object> newJsonFlag(String key, Object defaultValue, String name, String description) {
-        return newJsonFlag(key, defaultValue, name, description,
-                List.of(Map.of("name", "Default", "value", defaultValue)));
+        return newJsonFlag(key, defaultValue, name, description, null);
     }
 
     public Flag<Object> newJsonFlag(String key, Object defaultValue, String name, String description,
@@ -283,7 +280,7 @@ public final class FlagsClient {
             if (flag.getDescription() != null) {
                 attrs.setDescription(flag.getDescription());
             }
-            if (flag.getValues() != null && !flag.getValues().isEmpty()) {
+            if (flag.getValues() != null) {
                 List<FlagValue> fvs = new ArrayList<>();
                 for (Map<String, Object> v : flag.getValues()) {
                     FlagValue fv = new FlagValue();
@@ -292,6 +289,8 @@ public final class FlagsClient {
                     fvs.add(fv);
                 }
                 attrs.setValues(fvs);
+            } else {
+                attrs.setValues(null);
             }
             if (flag.getEnvironments() != null && !flag.getEnvironments().isEmpty()) {
                 attrs.setEnvironments(buildEnvironments(flag.getEnvironments()));
@@ -328,6 +327,8 @@ public final class FlagsClient {
                     fvs.add(fv);
                 }
                 attrs.setValues(fvs);
+            } else {
+                attrs.setValues(null);
             }
             if (flag.getEnvironments() != null) {
                 attrs.setEnvironments(buildEnvironments(flag.getEnvironments()));

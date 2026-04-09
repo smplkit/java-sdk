@@ -42,7 +42,7 @@ public final class Flag<T> {
         this.name = name;
         this.type = type;
         this.defaultValue = defaultValue;
-        this.values = values != null ? new ArrayList<>(values) : new ArrayList<>();
+        this.values = values != null ? new ArrayList<>(values) : null;
         this.description = description;
         this.environments = environments != null ? new HashMap<>(environments) : new HashMap<>();
         this.createdAt = createdAt;
@@ -69,7 +69,7 @@ public final class Flag<T> {
     public void setDescription(String description) { this.description = description; }
     public void setDefault(T defaultValue) { this.defaultValue = defaultValue; }
     public void setValues(List<Map<String, Object>> values) {
-        this.values = values != null ? new ArrayList<>(values) : new ArrayList<>();
+        this.values = values != null ? new ArrayList<>(values) : null;
     }
     public void setEnvironments(Map<String, Object> environments) {
         this.environments = environments != null ? new HashMap<>(environments) : new HashMap<>();
@@ -219,7 +219,7 @@ public final class Flag<T> {
         this.name = other.name;
         this.type = other.type;
         this.defaultValue = (T) other.defaultValue;
-        this.values = other.values != null ? new ArrayList<>(other.values) : new ArrayList<>();
+        this.values = other.values != null ? new ArrayList<>(other.values) : null;
         this.description = other.description;
         this.environments = other.environments != null ? new HashMap<>(other.environments) : new HashMap<>();
         this.createdAt = other.createdAt;

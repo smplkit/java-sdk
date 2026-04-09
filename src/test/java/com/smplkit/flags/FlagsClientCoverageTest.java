@@ -66,9 +66,7 @@ class FlagsClientCoverageTest {
         assertEquals("Color", flag.getName());
         assertEquals("Pick a color", flag.getDescription());
         assertEquals("red", flag.getDefault());
-        assertEquals(1, flag.getValues().size());
-        assertEquals("Default", flag.getValues().get(0).get("name"));
-        assertEquals("red", flag.getValues().get(0).get("value"));
+        assertNull(flag.getValues(), "unconstrained flag should have null values");
     }
 
     @Test
@@ -95,8 +93,7 @@ class FlagsClientCoverageTest {
         assertNull(flag.getId());
         assertEquals("NUMERIC", flag.getType());
         assertEquals(100, flag.getDefault());
-        assertEquals(1, flag.getValues().size());
-        assertEquals("Default", flag.getValues().get(0).get("name"));
+        assertNull(flag.getValues(), "unconstrained flag should have null values");
     }
 
     @Test
@@ -104,9 +101,7 @@ class FlagsClientCoverageTest {
         Flag<Number> flag = client.newNumberFlag("rate-limit", 100, "Rate Limit", "Max requests");
         assertEquals("Rate Limit", flag.getName());
         assertEquals("Max requests", flag.getDescription());
-        assertEquals(1, flag.getValues().size());
-        assertEquals("Default", flag.getValues().get(0).get("name"));
-        assertEquals(100, flag.getValues().get(0).get("value"));
+        assertNull(flag.getValues(), "unconstrained flag should have null values");
     }
 
     @Test
@@ -128,8 +123,7 @@ class FlagsClientCoverageTest {
         Flag<Object> flag = client.newJsonFlag("config", Map.of("a", 1));
         assertNull(flag.getId());
         assertEquals("JSON", flag.getType());
-        assertEquals(1, flag.getValues().size());
-        assertEquals("Default", flag.getValues().get(0).get("name"));
+        assertNull(flag.getValues(), "unconstrained flag should have null values");
     }
 
     @Test
@@ -137,9 +131,7 @@ class FlagsClientCoverageTest {
         Flag<Object> flag = client.newJsonFlag("config", Map.of(), "Config", "Feature config");
         assertEquals("Config", flag.getName());
         assertEquals("Feature config", flag.getDescription());
-        assertEquals(1, flag.getValues().size());
-        assertEquals("Default", flag.getValues().get(0).get("name"));
-        assertEquals(Map.of(), flag.getValues().get(0).get("value"));
+        assertNull(flag.getValues(), "unconstrained flag should have null values");
     }
 
     @Test

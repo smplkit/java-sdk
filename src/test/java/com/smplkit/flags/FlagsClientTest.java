@@ -221,6 +221,39 @@ class FlagsClientTest {
         verify(mockApi).updateFlag(eq(UUID.fromString(TEST_FLAG_ID)), any(ResponseFlag.class));
     }
 
+    // --- Unconstrained flag (null values) ---
+
+    @Test
+    void createFlag_unconstrained_sendsNullValues() throws ApiException {
+        FlagResponse response = makeFlagResponse(TEST_FLAG_ID, "max-retries", "Max Retries",
+                "NUMERIC", 3, null, Map.of());
+        when(mockApi.createFlag(any(ResponseFlag.class))).thenReturn(response);
+
+        Flag<Number> newFlag = client.newNumberFlag("max-retries", 3, "Max Retries", null);
+        assertNull(newFlag.getValues(), "unconstrained flag should have null values before save");
+        newFlag.save();
+
+        assertNotNull(newFlag.getId());
+        assertNull(newFlag.getValues(), "unconstrained flag should have null values after save");
+        verify(mockApi).createFlag(any(ResponseFlag.class));
+    }
+
+    @Test
+    void updateFlag_unconstrained_sendsNullValues() throws ApiException {
+        FlagResponse response = makeFlagResponse(TEST_FLAG_ID, "max-retries", "Max Retries",
+                "NUMERIC", 5, null, Map.of());
+        when(mockApi.updateFlag(eq(UUID.fromString(TEST_FLAG_ID)), any(ResponseFlag.class)))
+                .thenReturn(response);
+
+        Flag<Number> existingFlag = client.newNumberFlag("max-retries", 3, "Max Retries", null);
+        existingFlag.setId(TEST_FLAG_ID);
+        existingFlag.setDefault(5);
+        existingFlag.save();
+
+        assertNull(existingFlag.getValues(), "unconstrained flag should remain null after update");
+        verify(mockApi).updateFlag(eq(UUID.fromString(TEST_FLAG_ID)), any(ResponseFlag.class));
+    }
+
     // --- Error mapping ---
 
     @Test
