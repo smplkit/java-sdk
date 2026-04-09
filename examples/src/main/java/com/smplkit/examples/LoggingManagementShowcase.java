@@ -90,7 +90,7 @@ public class LoggingManagementShowcase {
             step("Created logger: key=" + paymentLogger.getKey()
                     + ", managed=" + paymentLogger.isManaged());
 
-            Logger auditLogger = client.logging().new_("audit-logger");
+            Logger auditLogger = client.logging().new_("audit-logger", "Audit Logger", true);
             auditLogger.setLevel(LogLevel.DEBUG);
             auditLogger.save();
             createdLoggerKeys.add(auditLogger.getKey());
