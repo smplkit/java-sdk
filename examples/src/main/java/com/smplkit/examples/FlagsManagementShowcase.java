@@ -172,7 +172,14 @@ public class FlagsManagementShowcase {
             section("4. Update a Flag via mutation + save()");
 
             // Update the banner flag's description and default value.
+            // When changing the default, the new value must exist in the values array.
             banner.setDescription("Updated: promotional banner text for the site header.");
+            banner.setValues(List.of(
+                    Map.of("name", "Welcome", "value", "Welcome!"),
+                    Map.of("name", "Acme", "value", "Welcome to Acme!"),
+                    Map.of("name", "Sale", "value", "Big Summer Sale!"),
+                    Map.of("name", "Holiday", "value", "Happy Holidays!")
+            ));
             banner.setDefault("Welcome to Acme!");
             banner.save();
             step("Updated banner flag: description=" + banner.getDescription()
@@ -180,6 +187,13 @@ public class FlagsManagementShowcase {
 
             // Update the rate limit flag's name and default.
             rateLimit.setName("API Rate Limit (per minute)");
+            rateLimit.setValues(List.of(
+                    Map.of("name", "Low", "value", 50),
+                    Map.of("name", "Standard", "value", 100),
+                    Map.of("name", "Medium", "value", 200),
+                    Map.of("name", "High", "value", 500),
+                    Map.of("name", "Unlimited", "value", 10000)
+            ));
             rateLimit.setDefault(200);
             rateLimit.save();
             step("Updated rate limit: name=" + rateLimit.getName()
