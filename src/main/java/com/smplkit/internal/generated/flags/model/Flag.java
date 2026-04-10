@@ -44,7 +44,7 @@ import com.smplkit.internal.generated.flags.ApiClient;
  * Flag
  */
 @JsonPropertyOrder({
-  Flag.JSON_PROPERTY_KEY,
+  Flag.JSON_PROPERTY_ID,
   Flag.JSON_PROPERTY_NAME,
   Flag.JSON_PROPERTY_DESCRIPTION,
   Flag.JSON_PROPERTY_TYPE,
@@ -56,9 +56,8 @@ import com.smplkit.internal.generated.flags.ApiClient;
 })
 @jakarta.annotation.Generated(value = "org.openapitools.codegen.languages.JavaClientCodegen", comments = "Generator version: 7.21.0")
 public class Flag {
-  public static final String JSON_PROPERTY_KEY = "key";
-  @jakarta.annotation.Nonnull
-  private String key;
+  public static final String JSON_PROPERTY_ID = "id";
+  private JsonNullable<String> id = JsonNullable.<String>undefined();
 
   public static final String JSON_PROPERTY_NAME = "name";
   @jakarta.annotation.Nonnull
@@ -102,27 +101,35 @@ public class Flag {
     this.updatedAt = updatedAt == null ? JsonNullable.<OffsetDateTime>undefined() : JsonNullable.of(updatedAt);
   }
 
-  public Flag key(@jakarta.annotation.Nonnull String key) {
-    this.key = key;
+  public Flag id(@jakarta.annotation.Nullable String id) {
+    this.id = JsonNullable.<String>of(id);
     return this;
   }
 
   /**
-   * Unique key within account
-   * @return key
+   * Get id
+   * @return id
    */
-  @jakarta.annotation.Nonnull
-  @JsonProperty(value = JSON_PROPERTY_KEY, required = true)
-  @JsonInclude(value = JsonInclude.Include.ALWAYS)
-  public String getKey() {
-    return key;
+  @jakarta.annotation.Nullable
+  @JsonIgnore
+  public String getId() {
+        return id.orElse(null);
   }
 
+  @JsonProperty(value = JSON_PROPERTY_ID, required = false)
+  @JsonInclude(value = JsonInclude.Include.USE_DEFAULTS)
 
-  @JsonProperty(value = JSON_PROPERTY_KEY, required = true)
-  @JsonInclude(value = JsonInclude.Include.ALWAYS)
-  public void setKey(@jakarta.annotation.Nonnull String key) {
-    this.key = key;
+  public JsonNullable<String> getId_JsonNullable() {
+    return id;
+  }
+  
+  @JsonProperty(JSON_PROPERTY_ID)
+  public void setId_JsonNullable(JsonNullable<String> id) {
+    this.id = id;
+  }
+
+  public void setId(@jakarta.annotation.Nullable String id) {
+    this.id = JsonNullable.<String>of(id);
   }
 
 
@@ -366,7 +373,7 @@ public class Flag {
       return false;
     }
     Flag flag = (Flag) o;
-    return Objects.equals(this.key, flag.key) &&
+    return equalsNullable(this.id, flag.id) &&
         Objects.equals(this.name, flag.name) &&
         Objects.equals(this.description, flag.description) &&
         Objects.equals(this.type, flag.type) &&
@@ -383,7 +390,7 @@ public class Flag {
 
   @Override
   public int hashCode() {
-    return Objects.hash(key, name, description, type, _default, hashCodeNullable(values), environments, hashCodeNullable(createdAt), hashCodeNullable(updatedAt));
+    return Objects.hash(hashCodeNullable(id), name, description, type, _default, hashCodeNullable(values), environments, hashCodeNullable(createdAt), hashCodeNullable(updatedAt));
   }
 
   private static <T> int hashCodeNullable(JsonNullable<T> a) {
@@ -397,7 +404,7 @@ public class Flag {
   public String toString() {
     StringBuilder sb = new StringBuilder();
     sb.append("class Flag {\n");
-    sb.append("    key: ").append(toIndentedString(key)).append("\n");
+    sb.append("    id: ").append(toIndentedString(id)).append("\n");
     sb.append("    name: ").append(toIndentedString(name)).append("\n");
     sb.append("    description: ").append(toIndentedString(description)).append("\n");
     sb.append("    type: ").append(toIndentedString(type)).append("\n");
@@ -450,9 +457,9 @@ public class Flag {
 
     StringJoiner joiner = new StringJoiner("&");
 
-    // add `key` to the URL query string
-    if (getKey() != null) {
-      joiner.add(String.format(java.util.Locale.ROOT, "%skey%s=%s", prefix, suffix, ApiClient.urlEncode(ApiClient.valueToString(getKey()))));
+    // add `id` to the URL query string
+    if (getId() != null) {
+      joiner.add(String.format(java.util.Locale.ROOT, "%sid%s=%s", prefix, suffix, ApiClient.urlEncode(ApiClient.valueToString(getId()))));
     }
 
     // add `name` to the URL query string
