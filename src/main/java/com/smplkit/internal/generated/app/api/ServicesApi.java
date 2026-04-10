@@ -512,48 +512,44 @@ public class ServicesApi {
   /**
    * List Services
    * 
-   * @param filterKey  (optional)
    * @return ServiceListResponse
    * @throws ApiException if fails to make API call
    */
-  public ServiceListResponse listServices(@jakarta.annotation.Nullable String filterKey) throws ApiException {
-    return listServices(filterKey, null);
+  public ServiceListResponse listServices() throws ApiException {
+    return listServices(null);
   }
 
   /**
    * List Services
    * 
-   * @param filterKey  (optional)
    * @param headers Optional headers to include in the request
    * @return ServiceListResponse
    * @throws ApiException if fails to make API call
    */
-  public ServiceListResponse listServices(@jakarta.annotation.Nullable String filterKey, Map<String, String> headers) throws ApiException {
-    ApiResponse<ServiceListResponse> localVarResponse = listServicesWithHttpInfo(filterKey, headers);
+  public ServiceListResponse listServices(Map<String, String> headers) throws ApiException {
+    ApiResponse<ServiceListResponse> localVarResponse = listServicesWithHttpInfo(headers);
     return localVarResponse.getData();
   }
 
   /**
    * List Services
    * 
-   * @param filterKey  (optional)
    * @return ApiResponse&lt;ServiceListResponse&gt;
    * @throws ApiException if fails to make API call
    */
-  public ApiResponse<ServiceListResponse> listServicesWithHttpInfo(@jakarta.annotation.Nullable String filterKey) throws ApiException {
-    return listServicesWithHttpInfo(filterKey, null);
+  public ApiResponse<ServiceListResponse> listServicesWithHttpInfo() throws ApiException {
+    return listServicesWithHttpInfo(null);
   }
 
   /**
    * List Services
    * 
-   * @param filterKey  (optional)
    * @param headers Optional headers to include in the request
    * @return ApiResponse&lt;ServiceListResponse&gt;
    * @throws ApiException if fails to make API call
    */
-  public ApiResponse<ServiceListResponse> listServicesWithHttpInfo(@jakarta.annotation.Nullable String filterKey, Map<String, String> headers) throws ApiException {
-    HttpRequest.Builder localVarRequestBuilder = listServicesRequestBuilder(filterKey, headers);
+  public ApiResponse<ServiceListResponse> listServicesWithHttpInfo(Map<String, String> headers) throws ApiException {
+    HttpRequest.Builder localVarRequestBuilder = listServicesRequestBuilder(headers);
     try {
       HttpResponse<InputStream> localVarResponse = memberVarHttpClient.send(
           localVarRequestBuilder.build(),
@@ -600,28 +596,13 @@ public class ServicesApi {
     }
   }
 
-  private HttpRequest.Builder listServicesRequestBuilder(@jakarta.annotation.Nullable String filterKey, Map<String, String> headers) throws ApiException {
+  private HttpRequest.Builder listServicesRequestBuilder(Map<String, String> headers) throws ApiException {
 
     HttpRequest.Builder localVarRequestBuilder = HttpRequest.newBuilder();
 
     String localVarPath = "/api/v1/services";
 
-    List<Pair> localVarQueryParams = new ArrayList<>();
-    StringJoiner localVarQueryStringJoiner = new StringJoiner("&");
-    String localVarQueryParameterBaseName;
-    localVarQueryParameterBaseName = "filter[key]";
-    localVarQueryParams.addAll(ApiClient.parameterToPairs("filter[key]", filterKey));
-
-    if (!localVarQueryParams.isEmpty() || localVarQueryStringJoiner.length() != 0) {
-      StringJoiner queryJoiner = new StringJoiner("&");
-      localVarQueryParams.forEach(p -> queryJoiner.add(p.getName() + '=' + p.getValue()));
-      if (localVarQueryStringJoiner.length() != 0) {
-        queryJoiner.add(localVarQueryStringJoiner.toString());
-      }
-      localVarRequestBuilder.uri(URI.create(memberVarBaseUri + localVarPath + '?' + queryJoiner.toString()));
-    } else {
-      localVarRequestBuilder.uri(URI.create(memberVarBaseUri + localVarPath));
-    }
+    localVarRequestBuilder.uri(URI.create(memberVarBaseUri + localVarPath));
 
     localVarRequestBuilder.header("Accept", "application/vnd.api+json");
 
