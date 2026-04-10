@@ -18,7 +18,7 @@ public class SmplNotFoundException extends SmplException {
     }
 
     /**
-     * Creates a new SmplNotFoundException with parsed JSON:API errors.
+     * Creates a new SmplNotFoundException with structured error details.
      *
      * @param message      human-readable error description
      * @param responseBody raw response body

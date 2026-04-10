@@ -7,7 +7,7 @@ import com.smplkit.LogLevel;
  *
  * @param key    the logger key that changed
  * @param level  the new effective log level
- * @param source the change source ({@code "start"}, {@code "refresh"}, or {@code "websocket"})
+ * @param source the change source (e.g. {@code "start"}, {@code "refresh"})
  */
 public record LoggerChangeEvent(String key, LogLevel level, String source) {
 }

@@ -38,12 +38,10 @@ import java.util.logging.Level;
 /**
  * Client for the smplkit Logging service.
  *
- * <p>Provides management CRUD (new_, get, list, delete for loggers and groups)
- * and runtime control ({@link #start()}, {@link #onChange}).</p>
+ * <p>Provides logger and group management ({@link #new_}, {@link #get}, {@link #list},
+ * {@link #delete}) and runtime level control ({@link #start()}, {@link #onChange}).</p>
  *
- * <p>Runtime logging control delegates framework-specific work to pluggable
- * {@link LoggingAdapter} instances. By default, adapters are auto-loaded
- * based on what's on the classpath: JUL (always), Logback, Log4j2.</p>
+ * <p>Supports JUL, Logback, and Log4j2 via pluggable {@link LoggingAdapter} instances.</p>
  */
 public final class LoggingClient {
 
@@ -95,12 +93,12 @@ public final class LoggingClient {
     // Configuration (set by SmplClient before use)
     // -----------------------------------------------------------------------
 
-    /** Set the environment for level resolution. Called by SmplClient. */
+    /** Sets the environment for level resolution. */
     public void setEnvironment(String environment) {
         this.environment = environment;
     }
 
-    /** Set the service name. Called by SmplClient. */
+    /** Sets the service name. */
     public void setService(String service) {
         this.service = service;
     }
@@ -110,9 +108,9 @@ public final class LoggingClient {
     // -----------------------------------------------------------------------
 
     /**
-     * Register a custom logging adapter. Must be called before {@link #start()}.
+     * Registers a custom logging adapter. Must be called before {@link #start()}.
      *
-     * <p>Registering at least one adapter disables automatic adapter loading.</p>
+     * <p>Registering an adapter disables automatic adapter detection.</p>
      *
      * @param adapter the adapter to register
      * @throws IllegalStateException if called after start()
@@ -206,7 +204,7 @@ public final class LoggingClient {
         }
     }
 
-    /** Internal: POST a new logger. Called by Logger.save() when id is null. */
+    /** Creates a new logger on the server. Called by {@link Logger#save()}. */
     Logger _createLogger(Logger lg) {
         try {
             ResponseLogger body = buildLoggerBody(null, lg);
@@ -217,7 +215,7 @@ public final class LoggingClient {
         }
     }
 
-    /** Internal: PUT a full logger update. Called by Logger.save() when id is set. */
+    /** Updates an existing logger on the server. Called by {@link Logger#save()}. */
     Logger _updateLogger(Logger lg) {
         try {
             ResponseLogger body = buildLoggerBody(lg.getId(), lg);
@@ -315,7 +313,7 @@ public final class LoggingClient {
         }
     }
 
-    /** Internal: POST a new group. Called by LogGroup.save() when id is null. */
+    /** Creates a new group on the server. Called by {@link LogGroup#save()}. */
     LogGroup _createGroup(LogGroup grp) {
         try {
             ResponseLogGroup body = buildGroupBody(null, grp);
@@ -326,7 +324,7 @@ public final class LoggingClient {
         }
     }
 
-    /** Internal: PUT a full group update. Called by LogGroup.save() when id is set. */
+    /** Updates an existing group on the server. Called by {@link LogGroup#save()}. */
     LogGroup _updateGroup(LogGroup grp) {
         try {
             ResponseLogGroup body = buildGroupBody(grp.getId(), grp);
@@ -343,10 +341,10 @@ public final class LoggingClient {
     // -----------------------------------------------------------------------
 
     /**
-     * Explicitly opt in to runtime logging control. Idempotent.
+     * Starts runtime logging control. Idempotent.
      *
-     * <p>Discovers existing loggers, fetches managed levels from the server,
-     * and applies them to the logging framework(s) in use.</p>
+     * <p>Fetches managed log levels from the server and applies them
+     * to the logging framework(s) in use.</p>
      */
     public void start() {
         if (started) {
@@ -424,16 +422,7 @@ public final class LoggingClient {
     // -----------------------------------------------------------------------
 
     /**
-     * Resolve the effective log level for a logger in the current environment.
-     *
-     * <p>Resolution chain (first non-null wins):</p>
-     * <ol>
-     *   <li>Logger's environment-specific level</li>
-     *   <li>Logger's base level</li>
-     *   <li>Group chain (recursive: group's env level, group's level, parent group...)</li>
-     *   <li>Dot-notation ancestry (walk com.acme.payments, com.acme, com)</li>
-     *   <li>System fallback: "INFO"</li>
-     * </ol>
+     * Resolves the effective log level for a logger in the given environment.
      *
      * <p>Package-private for testing.</p>
      */
@@ -515,7 +504,7 @@ public final class LoggingClient {
     // Key normalization (ADR-034 section 5)
     // -----------------------------------------------------------------------
 
-    /** Normalize a logger name: replace / and : with ., lowercase. */
+    /** Normalizes a logger name to a canonical key form. */
     static String normalizeKey(String name) {
         return name.replace("/", ".").replace(":", ".").toLowerCase();
     }
@@ -528,7 +517,7 @@ public final class LoggingClient {
         loadAdaptersFromTable(BUILTIN_ADAPTERS);
     }
 
-    /** Load adapters from a table of [adapterClass, probeClass] pairs. Package-private for testing. */
+    /** Loads adapters from a configuration table. Package-private for testing. */
     void loadAdaptersFromTable(String[][] adapterTable) {
         for (String[] entry : adapterTable) {
             String adapterClass = entry[0];

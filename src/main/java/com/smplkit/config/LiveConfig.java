@@ -37,9 +37,6 @@ public final class LiveConfig<T> {
     /**
      * Returns the latest resolved values mapped to the model type.
      *
-     * <p>Dot-notation keys are unflattened into a nested structure,
-     * then converted to the model type.</p>
-     *
      * @return the model instance
      * @throws IllegalStateException if no model type was specified
      */
@@ -59,7 +56,7 @@ public final class LiveConfig<T> {
         return key;
     }
 
-    /** Returns the model type, or null if in Map mode. */
+    /** Returns the model type, or null if returning raw maps. */
     public Class<T> getModelType() {
         return modelType;
     }

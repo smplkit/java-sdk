@@ -53,8 +53,9 @@ import java.util.logging.Logger;
 /**
  * Client for the Smpl Flags service.
  *
- * <p>Provides management CRUD (get, list, delete, newBooleanFlag + save) and
- * runtime evaluation (booleanFlag, stringFlag, etc. with lazy init).</p>
+ * <p>Provides flag management ({@link #get}, {@link #list}, {@link #delete},
+ * {@link #newBooleanFlag} + {@link Flag#save}) and runtime evaluation
+ * ({@link #booleanFlag}, {@link #stringFlag}, etc.).</p>
  */
 public final class FlagsClient {
 
@@ -234,7 +235,7 @@ public final class FlagsClient {
     // Management: CRUD
     // -----------------------------------------------------------------------
 
-    /** Fetch a flag by key. */
+    /** Fetches a flag by key. */
     public Flag<?> get(String key) {
         try {
             FlagListResponse response = flagsApi.listFlags(key, null);
@@ -248,7 +249,7 @@ public final class FlagsClient {
         }
     }
 
-    /** List all flags. */
+    /** Lists all flags. */
     public List<Flag<?>> list() {
         try {
             FlagListResponse response = flagsApi.listFlags(null, null);
@@ -258,7 +259,7 @@ public final class FlagsClient {
         }
     }
 
-    /** Delete a flag by key. */
+    /** Deletes a flag by key. */
     public void delete(String key) {
         Flag<?> flag = get(key);
         try {
@@ -268,7 +269,7 @@ public final class FlagsClient {
         }
     }
 
-    /** Internal: POST a new flag. Called by Flag.save() when id is null. */
+    /** Creates a new flag on the server. Called by {@link Flag#save()}. */
     @SuppressWarnings("unchecked")
     <T> Flag<T> _createFlag(Flag<T> flag) {
         try {
@@ -306,7 +307,7 @@ public final class FlagsClient {
         }
     }
 
-    /** Internal: PUT a full flag update. Called by Flag.save() when id is set. */
+    /** Updates an existing flag on the server. Called by {@link Flag#save()}. */
     @SuppressWarnings("unchecked")
     <T> Flag<T> _updateFlag(Flag<T> flag) {
         try {
@@ -389,7 +390,7 @@ public final class FlagsClient {
     // Runtime: lazy init
     // -----------------------------------------------------------------------
 
-    /** Lazily initialize: fetch flags, register on shared WebSocket. */
+    /** Initializes the flags runtime on first use. Idempotent. */
     void _connectInternal() {
         if (connected) return;
         fetchAllFlags();
@@ -410,14 +411,14 @@ public final class FlagsClient {
         }
     }
 
-    /** Forces a refresh of all flag definitions. */
+    /** Refreshes all flag definitions from the server. */
     public void refresh() {
         fetchAllFlags();
         resolutionCache.clear();
         fireAllChangeListeners("manual");
     }
 
-    /** Returns diagnostic statistics. */
+    /** Returns evaluation statistics. */
     public FlagStats stats() {
         return new FlagStats(cacheHits.get(), cacheMisses.get());
     }
@@ -465,12 +466,12 @@ public final class FlagsClient {
     // Runtime: change listeners
     // -----------------------------------------------------------------------
 
-    /** Registers a global change listener. */
+    /** Registers a listener that fires when any flag changes. */
     public void onChange(Consumer<FlagChangeEvent> listener) {
         listeners.add(new ListenerEntry(null, listener));
     }
 
-    /** Registers a key-scoped change listener. */
+    /** Registers a listener that fires when the specified flag changes. */
     public void onChange(String key, Consumer<FlagChangeEvent> listener) {
         listeners.add(new ListenerEntry(key, listener));
     }
@@ -479,7 +480,7 @@ public final class FlagsClient {
     // Internal: evaluation engine
     // -----------------------------------------------------------------------
 
-    /** Called by Flag.get() to perform local evaluation with lazy init. */
+    /** Evaluates a flag by key. Called by {@link Flag#get()}. */
     @SuppressWarnings("unchecked")
     Object _evaluateHandle(String key, Object defaultValue, List<Context> contexts) {
         if (!connected) {
@@ -774,12 +775,12 @@ public final class FlagsClient {
     // Package-private test helpers
     // -----------------------------------------------------------------------
 
-    /** Simulate a WebSocket flag_changed event (for testing). */
+    /** Simulates a flag change event (for testing). */
     void simulateFlagChanged() {
         handleFlagChanged(Map.of());
     }
 
-    /** Simulate a WebSocket flag_deleted event (for testing). */
+    /** Simulates a flag deletion event (for testing). */
     void simulateFlagDeleted() {
         handleFlagDeleted(Map.of());
     }
@@ -788,7 +789,7 @@ public final class FlagsClient {
         return connected;
     }
 
-    /** Disconnect (for testing). */
+    /** Resets runtime state (for testing). */
     void disconnect() {
         connected = false;
         if (contextFlushFuture != null) {

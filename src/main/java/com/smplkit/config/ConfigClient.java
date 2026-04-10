@@ -33,7 +33,7 @@ import java.util.logging.Logger;
 /**
  * Client for the Smpl Config service.
  *
- * <p>Provides management CRUD ({@link #new_(String)}, {@link #get(String)},
+ * <p>Provides config management ({@link #new_(String)}, {@link #get(String)},
  * {@link #list()}, {@link #delete(String)}) and runtime resolution
  * ({@link #resolve(String)}, {@link #subscribe(String)}, {@link #onChange}).</p>
  */
@@ -49,10 +49,6 @@ public final class ConfigClient {
 
     /**
      * Creates a new ConfigClient. Use {@link com.smplkit.SmplClient} to obtain an instance.
-     *
-     * @param configsApi the generated API client
-     * @param httpClient the HTTP client (kept for API compat)
-     * @param apiKey     the API key (kept for API compat)
      */
     public ConfigClient(ConfigsApi configsApi, java.net.http.HttpClient httpClient, String apiKey) {
         this.configsApi = configsApi;
@@ -76,8 +72,7 @@ public final class ConfigClient {
     // -----------------------------------------------------------------------
 
     /**
-     * Returns an unsaved {@link Config} with {@code id=null}.
-     * Call {@link Config#save()} to persist.
+     * Returns a new unsaved {@link Config}. Call {@link Config#save()} to persist.
      *
      * @param key human-readable key
      * @return a new unsaved Config
@@ -87,13 +82,12 @@ public final class ConfigClient {
     }
 
     /**
-     * Returns an unsaved {@link Config} with {@code id=null}.
-     * Call {@link Config#save()} to persist.
+     * Returns a new unsaved {@link Config}. Call {@link Config#save()} to persist.
      *
      * @param key         human-readable key
      * @param name        display name (auto-generated from key if null)
      * @param description optional description
-     * @param parent      parent config UUID, or null
+     * @param parent      parent config identifier, or null
      * @return a new unsaved Config
      */
     public Config new_(String key, String name, String description, String parent) {
@@ -168,9 +162,7 @@ public final class ConfigClient {
     // Internal: create / update (called by Config.save())
     // -----------------------------------------------------------------------
 
-    /**
-     * Internal: POST a new config. Called by {@link Config#save()} when id is null.
-     */
+    /** Creates a new config on the server. Called by {@link Config#save()}. */
     Config _createConfig(Config config) {
         try {
             var attrs = new com.smplkit.internal.generated.config.model.Config();
@@ -203,9 +195,7 @@ public final class ConfigClient {
         }
     }
 
-    /**
-     * Internal: PUT a full config update. Called by {@link Config#save()} when id is set.
-     */
+    /** Updates an existing config on the server. Called by {@link Config#save()}. */
     Config _updateConfig(Config config) {
         try {
             var attrs = new com.smplkit.internal.generated.config.model.Config();
@@ -255,8 +245,8 @@ public final class ConfigClient {
     /**
      * Returns resolved config values mapped to a model type.
      *
-     * <p>Dot-notation keys are unflattened into a nested structure, then
-     * converted to the model type.</p>
+     * <p>Dot-notation keys (e.g. "database.host") are expanded into nested
+     * objects before mapping to the model type.</p>
      *
      * @param key   the config key
      * @param model the target model class
@@ -272,13 +262,10 @@ public final class ConfigClient {
     }
 
     /**
-     * Returns a {@link LiveConfig} proxy for the given key (Map mode).
-     *
-     * <p>The proxy always returns the latest resolved values, so values
-     * update automatically after {@link #refresh()}.</p>
+     * Returns a {@link LiveConfig} for the given key that always reflects the latest values.
      *
      * @param key the config key
-     * @return a LiveConfig proxy
+     * @return a LiveConfig returning {@code Map<String, Object>} values
      */
     @SuppressWarnings("unchecked")
     public LiveConfig<Map<String, Object>> subscribe(String key) {
@@ -287,12 +274,13 @@ public final class ConfigClient {
     }
 
     /**
-     * Returns a {@link LiveConfig} proxy for the given key (model mode).
+     * Returns a {@link LiveConfig} for the given key that always reflects the latest values,
+     * mapped to the given model type.
      *
      * @param key   the config key
      * @param model the target model class
      * @param <T>   the model type
-     * @return a LiveConfig proxy
+     * @return a LiveConfig returning instances of the model type
      */
     public <T> LiveConfig<T> subscribe(String key, Class<T> model) {
         _connectInternal();
@@ -304,8 +292,8 @@ public final class ConfigClient {
     // -----------------------------------------------------------------------
 
     /**
-     * Re-fetches all configs, re-resolves values for the current environment,
-     * and fires change listeners for any values that changed.
+     * Refreshes all config values from the server and fires change listeners
+     * for any values that changed.
      */
     public void refresh() {
         String env = this.environment;
@@ -347,13 +335,8 @@ public final class ConfigClient {
         listeners.add(new ListenerEntry(configKey, itemKey, listener));
     }
 
-    // -----------------------------------------------------------------------
-    // Lazy init
-    // -----------------------------------------------------------------------
-
     /**
-     * Lazy init: fetch all configs, resolve inheritance, cache resolved values.
-     * Idempotent -- returns immediately if already connected.
+     * Initializes the config cache on first use. Idempotent.
      */
     void _connectInternal() {
         if (connected) return;
@@ -396,9 +379,7 @@ public final class ConfigClient {
     // Internal: diff and fire
     // -----------------------------------------------------------------------
 
-    /**
-     * Compares old and new caches, fires change listeners for any differences.
-     */
+    /** Fires change listeners for any values that differ between old and new snapshots. */
     void diffAndFire(
             Map<String, Map<String, Object>> oldCache,
             Map<String, Map<String, Object>> newCache,
@@ -440,9 +421,7 @@ public final class ConfigClient {
     // Package-private: cache access (for LiveConfig)
     // -----------------------------------------------------------------------
 
-    /**
-     * Returns resolved values for a key from the cache. Used by {@link LiveConfig}.
-     */
+    /** Returns resolved values for a key. */
     Map<String, Object> _getResolvedCache(String key) {
         return configCache.getOrDefault(key, Map.of());
     }
@@ -474,11 +453,7 @@ public final class ConfigClient {
                 envMap);
     }
 
-    /**
-     * Parses a generated ConfigResource into the SDK's Config.
-     *
-     * <p>Stores the FULL typed shape from the API in the items field.</p>
-     */
+    /** Converts a server resource into the SDK's Config model. */
     Config parseResource(ConfigResource resource) {
         String id = resource.getId();
         var attrs = resource.getAttributes();
@@ -538,10 +513,7 @@ public final class ConfigClient {
         return config;
     }
 
-    /**
-     * Wraps resolved values as typed items for the API.
-     * Each value is wrapped as a ConfigItemDefinition with inferred type.
-     */
+    /** Wraps plain values as typed items for the server. */
     static Map<String, ConfigItemDefinition> wrapValuesAsItems(Map<String, Object> values) {
         Map<String, ConfigItemDefinition> items = new HashMap<>();
         for (Map.Entry<String, Object> entry : values.entrySet()) {
@@ -553,10 +525,7 @@ public final class ConfigClient {
         return items;
     }
 
-    /**
-     * Wraps environments for the API: converts raw value maps to EnvironmentOverride
-     * with ConfigItemOverride wrappers.
-     */
+    /** Wraps environments for the server. */
     @SuppressWarnings("unchecked")
     static Map<String, EnvironmentOverride> wrapEnvironments(Map<String, Object> environments) {
         Map<String, EnvironmentOverride> result = new HashMap<>();
@@ -581,7 +550,7 @@ public final class ConfigClient {
         return result;
     }
 
-    /** Infers the type string for a value. */
+    /** Returns the type enum for a value. */
     static ConfigItemDefinition.TypeEnum inferType(Object value) {
         if (value instanceof String) return ConfigItemDefinition.TypeEnum.STRING;
         if (value instanceof Number) return ConfigItemDefinition.TypeEnum.NUMBER;

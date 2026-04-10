@@ -9,12 +9,10 @@ import java.util.List;
 import java.util.Map;
 
 /**
- * A feature flag — serves as both a runtime handle ({@link #get()}) and
- * a management model ({@link #save()}, {@link #addRule(Map)}).
+ * A feature flag with a typed value.
  *
- * <p>Runtime handles are obtained via {@link FlagsClient#booleanFlag},
- * {@link FlagsClient#stringFlag}, etc.  Management instances are created
- * via {@link FlagsClient#newBooleanFlag} and persisted with {@code save()}.
+ * <p>Use {@link #get()} to evaluate the flag. Use {@link #save()} to persist
+ * changes to the server.</p>
  *
  * @param <T> the flag value type (Boolean, String, Number, Object)
  */
@@ -91,14 +89,14 @@ public final class Flag<T> {
     // ------------------------------------------------------------------
 
     /**
-     * Evaluate this flag and return its current value.
+     * Returns the current value of this flag.
      */
     public T get() {
         return get((List<Context>) null);
     }
 
     /**
-     * Evaluate with explicit context override.
+     * Returns the current value of this flag, evaluated against the given contexts.
      */
     @SuppressWarnings("unchecked")
     public T get(List<Context> contexts) {
@@ -132,10 +130,10 @@ public final class Flag<T> {
     // ------------------------------------------------------------------
 
     /**
-     * Persist this flag to the server.
-     * Creates a new flag if this instance has not been saved before,
-     * or updates the existing flag otherwise. After a successful save,
-     * this instance is refreshed with the server response.
+     * Persists this flag to the server.
+     *
+     * <p>After a successful save, this instance is refreshed with the
+     * server response.</p>
      */
     public void save() {
         if (client == null) throw new IllegalStateException("Flag not bound to a client");
@@ -153,8 +151,7 @@ public final class Flag<T> {
     // ------------------------------------------------------------------
 
     /**
-     * Append a rule to a specific environment. This is a local mutation only;
-     * call {@link #save()} to persist.
+     * Appends a rule to a specific environment. Call {@link #save()} to persist.
      *
      * <p>The built rule must include an "environment" key.</p>
      *
@@ -180,8 +177,8 @@ public final class Flag<T> {
     }
 
     /**
-     * Set whether the flag is enabled in the given environment.
-     * This is a local mutation only; call {@link #save()} to persist.
+     * Sets whether the flag is enabled in the given environment.
+     * Call {@link #save()} to persist.
      */
     @SuppressWarnings("unchecked")
     public void setEnvironmentEnabled(String envKey, boolean enabled) {
@@ -191,8 +188,8 @@ public final class Flag<T> {
     }
 
     /**
-     * Set the environment-specific default value.
-     * This is a local mutation only; call {@link #save()} to persist.
+     * Sets the environment-specific default value.
+     * Call {@link #save()} to persist.
      */
     @SuppressWarnings("unchecked")
     public void setEnvironmentDefault(String envKey, Object defaultVal) {
@@ -202,8 +199,8 @@ public final class Flag<T> {
     }
 
     /**
-     * Remove all rules from the given environment.
-     * This is a local mutation only; call {@link #save()} to persist.
+     * Removes all rules from the given environment.
+     * Call {@link #save()} to persist.
      */
     @SuppressWarnings("unchecked")
     public void clearRules(String envKey) {

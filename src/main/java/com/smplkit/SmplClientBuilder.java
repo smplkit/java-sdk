@@ -31,7 +31,7 @@ public final class SmplClientBuilder {
     /**
      * Sets the API key for authentication.
      *
-     * @param apiKey the bearer token (API key)
+     * @param apiKey the API key
      * @return this builder
      */
     public SmplClientBuilder apiKey(String apiKey) {
@@ -54,7 +54,7 @@ public final class SmplClientBuilder {
     }
 
     /**
-     * Sets the service name for automatic service context injection.
+     * Sets the service name.
      *
      * <p>If not set, falls back to the {@code SMPLKIT_SERVICE} environment variable.
      * Required — build() will throw if no service can be resolved.</p>

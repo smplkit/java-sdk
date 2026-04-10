@@ -4,36 +4,34 @@ import java.util.List;
 import java.util.function.BiConsumer;
 
 /**
- * Contract for pluggable logging framework integration.
+ * Contract for logging framework integration.
  *
- * <p>Adapters bridge the smplkit logging runtime to a specific logging framework
- * (e.g., JUL, Logback, Log4j2).</p>
+ * <p>Implementations connect the smplkit logging service to a specific
+ * logging framework (e.g., JUL, Logback, Log4j2).</p>
  */
 public interface LoggingAdapter {
     /** Human-readable adapter name for diagnostics (e.g., "jul"). */
     String name();
 
     /**
-     * Scan the runtime for existing loggers.
-     * @return list of discovered loggers with names and smplkit level strings
+     * Returns all loggers currently known to the framework.
+     * @return list of loggers with names and level strings
      */
     List<DiscoveredLogger> discover();
 
     /**
-     * Set the level on a specific logger.
-     * @param loggerName the original (non-normalized) logger name
+     * Sets the level on a specific logger.
+     * @param loggerName the logger name
      * @param level smplkit level string (e.g., "DEBUG", "INFO", "WARN")
      */
     void applyLevel(String loggerName, String level);
 
     /**
-     * Install continuous discovery hook.
-     * The callback receives (original_name, smplkit_level_string) whenever
-     * a new logger is created in the framework.
-     * May be a no-op if the framework doesn't support creation interception.
+     * Installs a hook that is called whenever a new logger is created in the framework.
+     * May be a no-op if the framework does not support this.
      */
     void installHook(BiConsumer<String, String> onNewLogger);
 
-    /** Remove the hook installed by installHook. Called on close(). */
+    /** Removes the hook installed by {@link #installHook}. */
     void uninstallHook();
 }

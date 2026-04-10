@@ -191,7 +191,7 @@ public final class SmplClient implements AutoCloseable {
         return new ContextsApi(appApiClient);
     }
 
-    /** Package-private for testing: builds the auth header interceptor. */
+    /** Builds the auth header interceptor. */
     static java.util.function.Consumer<java.net.http.HttpRequest.Builder> authInterceptor(String apiKey) {
         return builder -> builder.header("Authorization", "Bearer " + apiKey);
     }
@@ -212,19 +212,19 @@ public final class SmplClient implements AutoCloseable {
         return client;
     }
 
-    /** Returns the Config service client. */
+    /** Returns the config client. */
     public ConfigClient config() {
         ensureServiceContextRegistered();
         return config;
     }
 
-    /** Returns the Flags service client. */
+    /** Returns the flags client. */
     public FlagsClient flags() {
         ensureServiceContextRegistered();
         return flags;
     }
 
-    /** Returns the Logging service client. */
+    /** Returns the logging client. */
     public LoggingClient logging() {
         ensureServiceContextRegistered();
         return logging;

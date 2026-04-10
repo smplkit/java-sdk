@@ -78,7 +78,7 @@ public final class Slf4jLogbackAdapter implements LoggingAdapter {
         }
     }
 
-    /** Map a smplkit level string to a Logback Level. */
+    /** Converts a smplkit level string to a Logback Level. */
     static Level smplToLogbackLevel(String level) {
         return switch (level) {
             case "TRACE" -> Level.TRACE;
@@ -91,7 +91,7 @@ public final class Slf4jLogbackAdapter implements LoggingAdapter {
         };
     }
 
-    /** Map a Logback Level to a smplkit level string. */
+    /** Converts a Logback Level to a smplkit level string. */
     static String logbackToSmplLevel(Level level) {
         if (level == null) return "DEBUG";
         if (level.equals(Level.OFF)) return "SILENT";

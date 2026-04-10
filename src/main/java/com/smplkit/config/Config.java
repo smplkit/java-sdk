@@ -9,12 +9,9 @@ import java.util.Objects;
  * A mutable configuration resource from the Smpl Config service.
  *
  * <p>Instances are returned by {@link ConfigClient} methods and provide
- * a {@link #save()} method that creates or updates the resource on
- * the server.</p>
+ * a {@link #save()} method to persist changes to the server.</p>
  *
- * <p>The {@code items} field stores the full typed shape from the API:
- * {@code {key: {value: v, type: t, description: d}}}. Use
- * {@link #getResolvedItems()} to extract plain {@code {key: rawValue}} values.</p>
+ * <p>Use {@link #getResolvedItems()} to get plain {@code {key: value}} entries.</p>
  */
 public final class Config {
 
@@ -42,7 +39,7 @@ public final class Config {
 
     // --- Public getters ---
 
-    /** Returns the unique identifier (UUID), or null for unsaved configs. */
+    /** Returns the unique identifier, or null for unsaved configs. */
     public String getId() { return id; }
 
     /** Returns the human-readable key (e.g. "user_service"). */
@@ -54,14 +51,13 @@ public final class Config {
     /** Returns the optional description (may be null). */
     public String getDescription() { return description; }
 
-    /** Returns the parent config UUID, or null for root configs. */
+    /** Returns the parent config identifier, or null for root configs. */
     public String getParent() { return parent; }
 
     /**
-     * Returns the full typed items map.
+     * Returns the items map with type metadata.
      *
-     * <p>Each entry is {@code key -> {value: v, type: t, description: d}}.
-     * Use {@link #getResolvedItems()} for plain {@code key -> rawValue}.</p>
+     * <p>Use {@link #getResolvedItems()} for plain {@code key -> value} entries.</p>
      */
     public Map<String, Object> getItems() { return items; }
 
@@ -83,10 +79,7 @@ public final class Config {
     public void setDescription(String description) { this.description = description; }
 
     /**
-     * Sets items from a plain {@code {key: rawValue}} map.
-     *
-     * <p>Values are auto-wrapped into the typed shape
-     * {@code {key: {value: rawValue}}}.</p>
+     * Sets items from a plain {@code {key: value}} map.
      */
     public void setItems(Map<String, Object> items) {
         this.items = items != null ? new HashMap<>(items) : new HashMap<>();
@@ -110,10 +103,7 @@ public final class Config {
     // --- Resolved items ---
 
     /**
-     * Returns base values as plain {@code {key: rawValue}}.
-     *
-     * <p>Extracts the "value" field from each item definition. If an item
-     * is already a plain value (not a map with "value" key), it is returned as-is.</p>
+     * Returns item values as a plain {@code {key: value}} map.
      */
     @SuppressWarnings("unchecked")
     public Map<String, Object> getResolvedItems() {
@@ -137,11 +127,10 @@ public final class Config {
     // --- Persistence ---
 
     /**
-     * Persist this config to the server.
+     * Persists this config to the server.
      *
-     * <p>Creates a new config if this instance has not been saved before,
-     * or updates the existing config otherwise. After a successful save,
-     * this instance is refreshed with the server response.</p>
+     * <p>After a successful save, this instance is refreshed with the
+     * server response.</p>
      *
      * @throws IllegalStateException if not bound to a client
      */

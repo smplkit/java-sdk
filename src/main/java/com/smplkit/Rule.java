@@ -79,9 +79,9 @@ public final class Rule {
     }
 
     /**
-     * Builds the rule as a plain map suitable for the flags API.
+     * Builds the rule as a map.
      *
-     * @return a map with "description", "logic", "value", and optionally "environment"
+     * @return the rule definition
      */
     public Map<String, Object> build() {
         Map<String, Object> logic;

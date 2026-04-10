@@ -59,8 +59,7 @@ public final class JulAdapter implements LoggingAdapter {
     }
 
     /**
-     * Poll for new loggers. Called by the client on each refresh cycle.
-     * Fires the hook callback for any loggers not seen during discover() or previous polls.
+     * Checks for newly created loggers and notifies the registered hook.
      */
     public void pollForNewLoggers() {
         BiConsumer<String, String> callback = this.hook;
@@ -78,7 +77,7 @@ public final class JulAdapter implements LoggingAdapter {
         }
     }
 
-    /** Map a smplkit LogLevel enum to a java.util.logging.Level. */
+    /** Converts a smplkit LogLevel to a java.util.logging.Level. */
     public static Level smplToJulLevel(LogLevel level) {
         return switch (level) {
             case TRACE -> Level.FINEST;
@@ -90,12 +89,12 @@ public final class JulAdapter implements LoggingAdapter {
         };
     }
 
-    /** Map a smplkit level string to a java.util.logging.Level. */
+    /** Converts a smplkit level string to a java.util.logging.Level. */
     public static Level smplStringToJulLevel(String level) {
         return smplToJulLevel(LogLevel.valueOf(level));
     }
 
-    /** Map a JUL Level to a smplkit level string. Returns "DEBUG" for null (inherit). */
+    /** Converts a JUL Level to a smplkit level string. Returns "DEBUG" for null. */
     static String julToSmplLevel(Level julLevel) {
         if (julLevel == null) return "DEBUG";
         int value = julLevel.intValue();

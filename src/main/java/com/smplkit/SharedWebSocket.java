@@ -18,11 +18,9 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 
 /**
- * Shared WebSocket connection to the smplkit event gateway.
+ * Real-time event connection to the smplkit platform.
  *
- * <p>Connects to {@code wss://app.smplkit.com/api/ws/v1/events?api_key={key}}
- * and dispatches events to registered listeners. Config, flags, and logging
- * modules share this connection.</p>
+ * <p>Delivers change events to registered listeners. Thread-safe.</p>
  */
 public final class SharedWebSocket {
 
@@ -40,7 +38,7 @@ public final class SharedWebSocket {
     public volatile CountDownLatch connectedLatch;
     private Thread wsThread;
 
-    /** Functional interface for WebSocket creation, injectable for testing. */
+    /** Functional interface for connection creation. */
     @FunctionalInterface
     public interface WsConnector {
         WebSocket connect(URI uri, WebSocket.Listener listener) throws Exception;
@@ -69,7 +67,7 @@ public final class SharedWebSocket {
         this.wsConnector = connector;
     }
 
-    /** Builds the WebSocket URL from an HTTP base URL and API key. */
+    /** Builds the event connection URL from a base URL and API key. */
     public static String buildWsUrl(String baseUrl, String apiKey) {
         String ws;
         if (baseUrl.startsWith("https://")) {
@@ -101,7 +99,7 @@ public final class SharedWebSocket {
     }
 
     /**
-     * Ensures the WebSocket is connected, starting the background thread if needed.
+     * Ensures the event connection is established, blocking up to the given timeout.
      */
     public void ensureConnected(Duration timeout) {
         if (connectionStatus.equals("connected")) return;
@@ -119,7 +117,7 @@ public final class SharedWebSocket {
     }
 
     /**
-     * Starts the WebSocket connection in a background daemon thread.
+     * Starts the event connection.
      */
     public void start() {
         if (closed || wsConnector == null) return;
@@ -130,7 +128,7 @@ public final class SharedWebSocket {
     }
 
     /**
-     * Closes the WebSocket connection.
+     * Closes the event connection and releases resources.
      */
     public void close() {
         closed = true;
@@ -157,7 +155,7 @@ public final class SharedWebSocket {
         return connectionStatus;
     }
 
-    /** Simulates receiving a raw WS message (for testing). */
+    /** Processes a raw event message. */
     public void simulateMessage(String rawMessage) {
         if ("ping".equals(rawMessage)) return;
         try {
@@ -191,7 +189,7 @@ public final class SharedWebSocket {
     // Background thread
     // -----------------------------------------------------------------------
 
-    /** Entry point for the WebSocket background thread. */
+    /** Entry point for the connection thread. */
     public void wsThreadEntry() {
         try {
             connectToServer();
@@ -203,7 +201,7 @@ public final class SharedWebSocket {
         }
     }
 
-    /** Connects to the server and blocks until the connection closes. */
+    /** Establishes the connection. Blocks until the connection closes. */
     public void connectToServer() throws Exception {
         connectionStatus = "connecting";
         LOG.fine("Connecting shared WebSocket");
@@ -218,7 +216,7 @@ public final class SharedWebSocket {
         closedLatch.await();
     }
 
-    /** Reconnects with exponential backoff. */
+    /** Attempts to re-establish the connection after a failure. */
     public void reconnect(int attempt) {
         while (!closed) {
             connectionStatus = "reconnecting";
@@ -242,7 +240,7 @@ public final class SharedWebSocket {
         }
     }
 
-    /** Dispatches an event to all registered listeners. */
+    /** Delivers an event to all registered listeners. */
     public void dispatch(String event, Map<String, Object> data) {
         List<Consumer<Map<String, Object>>> eventListeners = listeners.get(event);
         if (eventListeners == null) return;
@@ -259,7 +257,7 @@ public final class SharedWebSocket {
     // WebSocket listener
     // -----------------------------------------------------------------------
 
-    /** WebSocket.Listener implementation for handling messages. */
+    /** Listener for incoming event messages. */
     public class WsListener implements WebSocket.Listener {
         private final CountDownLatch closedLatch;
         private final StringBuilder textBuffer = new StringBuilder();

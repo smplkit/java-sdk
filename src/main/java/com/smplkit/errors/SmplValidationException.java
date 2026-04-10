@@ -18,7 +18,7 @@ public class SmplValidationException extends SmplException {
     }
 
     /**
-     * Creates a new SmplValidationException with parsed JSON:API errors.
+     * Creates a new SmplValidationException with structured error details.
      *
      * @param message      human-readable error description
      * @param statusCode   HTTP status code (400 or 422)

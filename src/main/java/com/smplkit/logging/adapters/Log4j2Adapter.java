@@ -58,8 +58,7 @@ public final class Log4j2Adapter implements LoggingAdapter {
     }
 
     /**
-     * Poll for new loggers. Called by the client on each refresh cycle.
-     * Fires the hook callback for any loggers not seen during discover() or previous polls.
+     * Checks for newly created loggers and notifies the registered hook.
      */
     public void pollForNewLoggers() {
         BiConsumer<String, String> callback = this.hook;
@@ -75,7 +74,7 @@ public final class Log4j2Adapter implements LoggingAdapter {
         }
     }
 
-    /** Map a smplkit level string to a Log4j2 Level. */
+    /** Converts a smplkit level string to a Log4j2 Level. */
     static Level smplToLog4j2Level(String level) {
         return switch (level) {
             case "TRACE" -> Level.TRACE;
@@ -89,7 +88,7 @@ public final class Log4j2Adapter implements LoggingAdapter {
         };
     }
 
-    /** Map a Log4j2 Level to a smplkit level string. */
+    /** Converts a Log4j2 Level to a smplkit level string. */
     static String log4j2ToSmplLevel(Level level) {
         if (level == null) return "DEBUG";
         if (level.equals(Level.OFF)) return "SILENT";

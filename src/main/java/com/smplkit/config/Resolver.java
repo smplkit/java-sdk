@@ -5,10 +5,7 @@ import java.util.List;
 import java.util.Map;
 
 /**
- * Deep-merge resolution algorithm for config inheritance chains.
- *
- * <p>Chain entries are ordered child-first, root-last. Resolution walks
- * root-to-child so that child values override parent values.</p>
+ * Resolves configuration values through inheritance chains.
  */
 final class Resolver {
 
@@ -30,8 +27,7 @@ final class Resolver {
     }
 
     /**
-     * Resolve the full configuration for an environment from a child-to-root chain.
-     * Walks from root to child so that child values override parent values.
+     * Resolves the full configuration for an environment from an inheritance chain.
      */
     @SuppressWarnings("unchecked")
     static Map<String, Object> resolve(List<ChainEntry> chain, String environment) {
@@ -57,8 +53,7 @@ final class Resolver {
     }
 
     /**
-     * Recursively merge two maps, with {@code override} taking precedence.
-     * Nested maps are merged recursively; non-map values are replaced wholesale.
+     * Merges two maps, with {@code override} taking precedence.
      */
     @SuppressWarnings("unchecked")
     static Map<String, Object> deepMerge(Map<String, Object> base, Map<String, Object> override) {

@@ -7,7 +7,7 @@ package com.smplkit.config;
  * @param itemKey   the item key within the config (e.g. "timeout")
  * @param oldValue  the previous value (may be {@code null} if the item was added)
  * @param newValue  the updated value (may be {@code null} if the item was removed)
- * @param source    how the change was delivered: {@code "websocket"}, {@code "manual"}
+ * @param source    how the change was detected (e.g. {@code "manual"} from {@code refresh()})
  */
 public record ConfigChangeEvent(String configKey, String itemKey, Object oldValue, Object newValue, String source) {
 

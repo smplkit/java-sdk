@@ -7,10 +7,9 @@ import java.util.HashMap;
 import java.util.Map;
 
 /**
- * SDK model for a log group resource.
+ * A mutable log group resource from the Smpl Logging service.
  *
- * <p>Supports GET-mutate-save: modify properties, then call {@link #save()}
- * to PUT the full object back to the server.</p>
+ * <p>Modify properties, then call {@link #save()} to persist changes.</p>
  */
 public final class LogGroup {
 
@@ -83,10 +82,10 @@ public final class LogGroup {
     // --- Active record: save ---
 
     /**
-     * Persist this log group to the server.
-     * Creates a new log group if this instance has not been saved before,
-     * or updates the existing log group otherwise. After a successful save,
-     * this instance is refreshed with the server response.
+     * Persists this log group to the server.
+     *
+     * <p>After a successful save, this instance is refreshed with the
+     * server response.</p>
      */
     public void save() {
         if (client == null) throw new IllegalStateException("LogGroup not bound to a client");

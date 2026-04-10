@@ -8,8 +8,7 @@ import java.util.Collections;
 import java.util.List;
 
 /**
- * Parses JSON:API error responses and maps them to the appropriate
- * SDK exception with full error details.
+ * Maps server error responses to the appropriate SDK exception.
  */
 public final class ApiExceptionHandler {
 
@@ -18,11 +17,11 @@ public final class ApiExceptionHandler {
     private ApiExceptionHandler() {}
 
     /**
-     * Parses a JSON:API error response body and throws the appropriate SDK exception.
+     * Maps an HTTP error response to the appropriate SDK exception.
      *
      * @param statusCode   HTTP status code
      * @param responseBody raw response body (may be null)
-     * @return the appropriate SmplException (never returns normally if errors are present)
+     * @return the appropriate SmplException
      */
     public static SmplException mapApiException(int statusCode, String responseBody) {
         List<SmplException.ApiError> errors = parseErrors(responseBody);
@@ -42,7 +41,7 @@ public final class ApiExceptionHandler {
     }
 
     /**
-     * Attempts to parse JSON:API errors from a response body.
+     * Attempts to parse structured errors from a response body.
      *
      * @param responseBody the raw response body
      * @return list of parsed errors, or empty list if parsing fails

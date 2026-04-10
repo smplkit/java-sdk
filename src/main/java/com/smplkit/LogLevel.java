@@ -2,8 +2,6 @@ package com.smplkit;
 
 /**
  * Log levels for the smplkit logging service.
- *
- * <p>Maps to the canonical level strings used by the server API.</p>
  */
 public enum LogLevel {
     TRACE("TRACE"),
@@ -20,7 +18,7 @@ public enum LogLevel {
         this.value = value;
     }
 
-    /** Returns the canonical string representation used by the server. */
+    /** Returns the string representation of this level. */
     public String getValue() {
         return value;
     }

@@ -9,10 +9,9 @@ import java.util.List;
 import java.util.Map;
 
 /**
- * SDK model for a logger resource.
+ * A mutable logger resource from the Smpl Logging service.
  *
- * <p>Supports GET-mutate-save: modify properties, then call {@link #save()}
- * to PUT the full object back to the server.</p>
+ * <p>Modify properties, then call {@link #save()} to persist changes.</p>
  */
 public final class Logger {
 
@@ -93,10 +92,10 @@ public final class Logger {
     // --- Active record: save ---
 
     /**
-     * Persist this logger to the server.
-     * Creates a new logger if this instance has not been saved before,
-     * or updates the existing logger otherwise. After a successful save,
-     * this instance is refreshed with the server response.
+     * Persists this logger to the server.
+     *
+     * <p>After a successful save, this instance is refreshed with the
+     * server response.</p>
      */
     public void save() {
         if (client == null) throw new IllegalStateException("Logger not bound to a client");

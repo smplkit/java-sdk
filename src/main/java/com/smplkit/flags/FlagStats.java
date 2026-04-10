@@ -1,10 +1,10 @@
 package com.smplkit.flags;
 
 /**
- * Diagnostic statistics for the flags runtime.
+ * Evaluation statistics for the flags runtime.
  *
- * @param cacheHits   number of evaluations served from cache
- * @param cacheMisses number of evaluations that required fresh computation
+ * @param cacheHits   number of evaluations that reused a previous result
+ * @param cacheMisses number of evaluations that required a new computation
  */
 public record FlagStats(long cacheHits, long cacheMisses) {
 }

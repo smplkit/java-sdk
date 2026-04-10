@@ -9,9 +9,8 @@ import java.util.List;
  * <p>All SDK exceptions extend this class, making it easy to catch any
  * SDK error with a single {@code catch (SmplException e)} block.</p>
  *
- * <p>When the server returns a JSON:API error response, the structured error
- * details are available via {@link #getErrors()} and surfaced in the
- * exception message and {@link #toString()} output.</p>
+ * <p>When the server returns structured error details, they are available
+ * via {@link #getErrors()} and included in {@link #toString()} output.</p>
  */
 public class SmplException extends RuntimeException {
 
@@ -20,7 +19,7 @@ public class SmplException extends RuntimeException {
     private final List<ApiError> errors;
 
     /**
-     * A single error entry from a JSON:API error response.
+     * A single error entry from a server error response.
      */
     public static final class ApiError {
         private final String status;
@@ -47,7 +46,7 @@ public class SmplException extends RuntimeException {
         /** Returns the source location of the error, or null. */
         public ApiErrorSource getSource() { return source; }
 
-        /** Returns a compact JSON representation for debugging. */
+        /** Returns a compact JSON representation. */
         public String toJson() {
             StringBuilder sb = new StringBuilder("{");
             boolean first = true;
@@ -75,7 +74,7 @@ public class SmplException extends RuntimeException {
     }
 
     /**
-     * Source location of a JSON:API error (e.g. a JSON pointer).
+     * Source location of an error (e.g. a JSON pointer to the offending field).
      */
     public static final class ApiErrorSource {
         private final String pointer;
@@ -126,7 +125,7 @@ public class SmplException extends RuntimeException {
     }
 
     /**
-     * Creates a new SmplException with parsed JSON:API errors.
+     * Creates a new SmplException with structured error details.
      *
      * @param message      human-readable error description
      * @param statusCode   HTTP status code (0 if not applicable)
@@ -169,7 +168,7 @@ public class SmplException extends RuntimeException {
     }
 
     /**
-     * Returns the parsed JSON:API error details, or an empty list if none were parsed.
+     * Returns the structured error details, or an empty list if none are available.
      *
      * @return unmodifiable list of error details
      */
@@ -198,10 +197,7 @@ public class SmplException extends RuntimeException {
     }
 
     /**
-     * Derives the exception message from a list of JSON:API errors.
-     *
-     * <p>Uses the first error's detail, then title, then status, then a default.
-     * Appends {@code " (and N more errors)"} if there are additional errors.</p>
+     * Derives a human-readable message from a list of error details.
      *
      * @param errors the parsed errors
      * @return a human-readable message

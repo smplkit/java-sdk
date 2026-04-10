@@ -1,7 +1,7 @@
 package com.smplkit;
 
 /**
- * Shared utilities used across SDK modules.
+ * Utility methods for the smplkit SDK.
  */
 public final class Helpers {
 
