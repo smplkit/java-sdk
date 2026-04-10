@@ -92,7 +92,6 @@ public final class Flag<T> {
 
     /**
      * Evaluate this flag and return its current value.
-     * Connects automatically if not already connected.
      */
     public T get() {
         return get((List<Context>) null);

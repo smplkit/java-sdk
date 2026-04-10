@@ -55,7 +55,7 @@ public final class SharedWebSocket {
                 .buildAsync(uri, listener).join();
     }
 
-    /** Test constructor that doesn't auto-connect. */
+    /** Test constructor. */
     public SharedWebSocket() {
         this.httpClient = null;
         this.wsUrl = null;

@@ -36,9 +36,6 @@ import java.util.logging.Logger;
  * <p>Provides management CRUD ({@link #new_(String)}, {@link #get(String)},
  * {@link #list()}, {@link #delete(String)}) and runtime resolution
  * ({@link #resolve(String)}, {@link #subscribe(String)}, {@link #onChange}).</p>
- *
- * <p>Runtime methods ({@code resolve}, {@code subscribe}) connect automatically
- * on first call.</p>
  */
 public final class ConfigClient {
 
@@ -247,8 +244,6 @@ public final class ConfigClient {
     /**
      * Returns resolved config values for the given key as a flat map.
      *
-     * <p>Connects automatically if not already connected.</p>
-     *
      * @param key the config key
      * @return resolved values map, or an empty map if not found
      */
@@ -262,8 +257,6 @@ public final class ConfigClient {
      *
      * <p>Dot-notation keys are unflattened into a nested structure, then
      * converted to the model type.</p>
-     *
-     * <p>Connects automatically if not already connected.</p>
      *
      * @param key   the config key
      * @param model the target model class
@@ -284,8 +277,6 @@ public final class ConfigClient {
      * <p>The proxy always returns the latest resolved values, so values
      * update automatically after {@link #refresh()}.</p>
      *
-     * <p>Connects automatically if not already connected.</p>
-     *
      * @param key the config key
      * @return a LiveConfig proxy
      */
@@ -297,8 +288,6 @@ public final class ConfigClient {
 
     /**
      * Returns a {@link LiveConfig} proxy for the given key (model mode).
-     *
-     * <p>Connects automatically if not already connected.</p>
      *
      * @param key   the config key
      * @param model the target model class
