@@ -37,15 +37,15 @@ import com.smplkit.internal.generated.logging.ApiClient;
  * LoggerBulkItem
  */
 @JsonPropertyOrder({
-  LoggerBulkItem.JSON_PROPERTY_KEY,
+  LoggerBulkItem.JSON_PROPERTY_ID,
   LoggerBulkItem.JSON_PROPERTY_LEVEL,
   LoggerBulkItem.JSON_PROPERTY_SERVICE
 })
 @jakarta.annotation.Generated(value = "org.openapitools.codegen.languages.JavaClientCodegen", comments = "Generator version: 7.21.0")
 public class LoggerBulkItem {
-  public static final String JSON_PROPERTY_KEY = "key";
+  public static final String JSON_PROPERTY_ID = "id";
   @jakarta.annotation.Nonnull
-  private String key;
+  private String id;
 
   public static final String JSON_PROPERTY_LEVEL = "level";
   @jakarta.annotation.Nonnull
@@ -57,27 +57,27 @@ public class LoggerBulkItem {
   public LoggerBulkItem() { 
   }
 
-  public LoggerBulkItem key(@jakarta.annotation.Nonnull String key) {
-    this.key = key;
+  public LoggerBulkItem id(@jakarta.annotation.Nonnull String id) {
+    this.id = id;
     return this;
   }
 
   /**
    * Normalized logger name
-   * @return key
+   * @return id
    */
   @jakarta.annotation.Nonnull
-  @JsonProperty(value = JSON_PROPERTY_KEY, required = true)
+  @JsonProperty(value = JSON_PROPERTY_ID, required = true)
   @JsonInclude(value = JsonInclude.Include.ALWAYS)
-  public String getKey() {
-    return key;
+  public String getId() {
+    return id;
   }
 
 
-  @JsonProperty(value = JSON_PROPERTY_KEY, required = true)
+  @JsonProperty(value = JSON_PROPERTY_ID, required = true)
   @JsonInclude(value = JsonInclude.Include.ALWAYS)
-  public void setKey(@jakarta.annotation.Nonnull String key) {
-    this.key = key;
+  public void setId(@jakarta.annotation.Nonnull String id) {
+    this.id = id;
   }
 
 
@@ -149,7 +149,7 @@ public class LoggerBulkItem {
       return false;
     }
     LoggerBulkItem loggerBulkItem = (LoggerBulkItem) o;
-    return Objects.equals(this.key, loggerBulkItem.key) &&
+    return Objects.equals(this.id, loggerBulkItem.id) &&
         Objects.equals(this.level, loggerBulkItem.level) &&
         equalsNullable(this.service, loggerBulkItem.service);
   }
@@ -160,7 +160,7 @@ public class LoggerBulkItem {
 
   @Override
   public int hashCode() {
-    return Objects.hash(key, level, hashCodeNullable(service));
+    return Objects.hash(id, level, hashCodeNullable(service));
   }
 
   private static <T> int hashCodeNullable(JsonNullable<T> a) {
@@ -174,7 +174,7 @@ public class LoggerBulkItem {
   public String toString() {
     StringBuilder sb = new StringBuilder();
     sb.append("class LoggerBulkItem {\n");
-    sb.append("    key: ").append(toIndentedString(key)).append("\n");
+    sb.append("    id: ").append(toIndentedString(id)).append("\n");
     sb.append("    level: ").append(toIndentedString(level)).append("\n");
     sb.append("    service: ").append(toIndentedString(service)).append("\n");
     sb.append("}");
@@ -221,9 +221,9 @@ public class LoggerBulkItem {
 
     StringJoiner joiner = new StringJoiner("&");
 
-    // add `key` to the URL query string
-    if (getKey() != null) {
-      joiner.add(String.format(java.util.Locale.ROOT, "%skey%s=%s", prefix, suffix, ApiClient.urlEncode(ApiClient.valueToString(getKey()))));
+    // add `id` to the URL query string
+    if (getId() != null) {
+      joiner.add(String.format(java.util.Locale.ROOT, "%sid%s=%s", prefix, suffix, ApiClient.urlEncode(ApiClient.valueToString(getId()))));
     }
 
     // add `level` to the URL query string

@@ -23,7 +23,6 @@ import com.smplkit.internal.generated.logging.model.HTTPValidationError;
 import com.smplkit.internal.generated.logging.model.LogGroupListResponse;
 import com.smplkit.internal.generated.logging.model.LogGroupResponse;
 import com.smplkit.internal.generated.logging.model.ResponseLogGroup;
-import java.util.UUID;
 
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -296,7 +295,7 @@ public class LogGroupsApi {
    * @param id  (required)
    * @throws ApiException if fails to make API call
    */
-  public void deleteLogGroup(@jakarta.annotation.Nonnull UUID id) throws ApiException {
+  public void deleteLogGroup(@jakarta.annotation.Nonnull String id) throws ApiException {
     deleteLogGroup(id, null);
   }
 
@@ -307,7 +306,7 @@ public class LogGroupsApi {
    * @param headers Optional headers to include in the request
    * @throws ApiException if fails to make API call
    */
-  public void deleteLogGroup(@jakarta.annotation.Nonnull UUID id, Map<String, String> headers) throws ApiException {
+  public void deleteLogGroup(@jakarta.annotation.Nonnull String id, Map<String, String> headers) throws ApiException {
     deleteLogGroupWithHttpInfo(id, headers);
   }
 
@@ -318,7 +317,7 @@ public class LogGroupsApi {
    * @return ApiResponse&lt;Void&gt;
    * @throws ApiException if fails to make API call
    */
-  public ApiResponse<Void> deleteLogGroupWithHttpInfo(@jakarta.annotation.Nonnull UUID id) throws ApiException {
+  public ApiResponse<Void> deleteLogGroupWithHttpInfo(@jakarta.annotation.Nonnull String id) throws ApiException {
     return deleteLogGroupWithHttpInfo(id, null);
   }
 
@@ -330,7 +329,7 @@ public class LogGroupsApi {
    * @return ApiResponse&lt;Void&gt;
    * @throws ApiException if fails to make API call
    */
-  public ApiResponse<Void> deleteLogGroupWithHttpInfo(@jakarta.annotation.Nonnull UUID id, Map<String, String> headers) throws ApiException {
+  public ApiResponse<Void> deleteLogGroupWithHttpInfo(@jakarta.annotation.Nonnull String id, Map<String, String> headers) throws ApiException {
     HttpRequest.Builder localVarRequestBuilder = deleteLogGroupRequestBuilder(id, headers);
     try {
       HttpResponse<InputStream> localVarResponse = memberVarHttpClient.send(
@@ -367,7 +366,7 @@ public class LogGroupsApi {
     }
   }
 
-  private HttpRequest.Builder deleteLogGroupRequestBuilder(@jakarta.annotation.Nonnull UUID id, Map<String, String> headers) throws ApiException {
+  private HttpRequest.Builder deleteLogGroupRequestBuilder(@jakarta.annotation.Nonnull String id, Map<String, String> headers) throws ApiException {
     // verify the required parameter 'id' is set
     if (id == null) {
       throw new ApiException(400, "Missing the required parameter 'id' when calling deleteLogGroup");
@@ -401,7 +400,7 @@ public class LogGroupsApi {
    * @return LogGroupResponse
    * @throws ApiException if fails to make API call
    */
-  public LogGroupResponse getLogGroup(@jakarta.annotation.Nonnull UUID id) throws ApiException {
+  public LogGroupResponse getLogGroup(@jakarta.annotation.Nonnull String id) throws ApiException {
     return getLogGroup(id, null);
   }
 
@@ -413,7 +412,7 @@ public class LogGroupsApi {
    * @return LogGroupResponse
    * @throws ApiException if fails to make API call
    */
-  public LogGroupResponse getLogGroup(@jakarta.annotation.Nonnull UUID id, Map<String, String> headers) throws ApiException {
+  public LogGroupResponse getLogGroup(@jakarta.annotation.Nonnull String id, Map<String, String> headers) throws ApiException {
     ApiResponse<LogGroupResponse> localVarResponse = getLogGroupWithHttpInfo(id, headers);
     return localVarResponse.getData();
   }
@@ -425,7 +424,7 @@ public class LogGroupsApi {
    * @return ApiResponse&lt;LogGroupResponse&gt;
    * @throws ApiException if fails to make API call
    */
-  public ApiResponse<LogGroupResponse> getLogGroupWithHttpInfo(@jakarta.annotation.Nonnull UUID id) throws ApiException {
+  public ApiResponse<LogGroupResponse> getLogGroupWithHttpInfo(@jakarta.annotation.Nonnull String id) throws ApiException {
     return getLogGroupWithHttpInfo(id, null);
   }
 
@@ -437,7 +436,7 @@ public class LogGroupsApi {
    * @return ApiResponse&lt;LogGroupResponse&gt;
    * @throws ApiException if fails to make API call
    */
-  public ApiResponse<LogGroupResponse> getLogGroupWithHttpInfo(@jakarta.annotation.Nonnull UUID id, Map<String, String> headers) throws ApiException {
+  public ApiResponse<LogGroupResponse> getLogGroupWithHttpInfo(@jakarta.annotation.Nonnull String id, Map<String, String> headers) throws ApiException {
     HttpRequest.Builder localVarRequestBuilder = getLogGroupRequestBuilder(id, headers);
     try {
       HttpResponse<InputStream> localVarResponse = memberVarHttpClient.send(
@@ -485,7 +484,7 @@ public class LogGroupsApi {
     }
   }
 
-  private HttpRequest.Builder getLogGroupRequestBuilder(@jakarta.annotation.Nonnull UUID id, Map<String, String> headers) throws ApiException {
+  private HttpRequest.Builder getLogGroupRequestBuilder(@jakarta.annotation.Nonnull String id, Map<String, String> headers) throws ApiException {
     // verify the required parameter 'id' is set
     if (id == null) {
       throw new ApiException(400, "Missing the required parameter 'id' when calling getLogGroup");
@@ -629,7 +628,7 @@ public class LogGroupsApi {
    * @return LogGroupResponse
    * @throws ApiException if fails to make API call
    */
-  public LogGroupResponse updateLogGroup(@jakarta.annotation.Nonnull UUID id, @jakarta.annotation.Nonnull ResponseLogGroup responseLogGroup) throws ApiException {
+  public LogGroupResponse updateLogGroup(@jakarta.annotation.Nonnull String id, @jakarta.annotation.Nonnull ResponseLogGroup responseLogGroup) throws ApiException {
     return updateLogGroup(id, responseLogGroup, null);
   }
 
@@ -642,7 +641,7 @@ public class LogGroupsApi {
    * @return LogGroupResponse
    * @throws ApiException if fails to make API call
    */
-  public LogGroupResponse updateLogGroup(@jakarta.annotation.Nonnull UUID id, @jakarta.annotation.Nonnull ResponseLogGroup responseLogGroup, Map<String, String> headers) throws ApiException {
+  public LogGroupResponse updateLogGroup(@jakarta.annotation.Nonnull String id, @jakarta.annotation.Nonnull ResponseLogGroup responseLogGroup, Map<String, String> headers) throws ApiException {
     ApiResponse<LogGroupResponse> localVarResponse = updateLogGroupWithHttpInfo(id, responseLogGroup, headers);
     return localVarResponse.getData();
   }
@@ -655,7 +654,7 @@ public class LogGroupsApi {
    * @return ApiResponse&lt;LogGroupResponse&gt;
    * @throws ApiException if fails to make API call
    */
-  public ApiResponse<LogGroupResponse> updateLogGroupWithHttpInfo(@jakarta.annotation.Nonnull UUID id, @jakarta.annotation.Nonnull ResponseLogGroup responseLogGroup) throws ApiException {
+  public ApiResponse<LogGroupResponse> updateLogGroupWithHttpInfo(@jakarta.annotation.Nonnull String id, @jakarta.annotation.Nonnull ResponseLogGroup responseLogGroup) throws ApiException {
     return updateLogGroupWithHttpInfo(id, responseLogGroup, null);
   }
 
@@ -668,7 +667,7 @@ public class LogGroupsApi {
    * @return ApiResponse&lt;LogGroupResponse&gt;
    * @throws ApiException if fails to make API call
    */
-  public ApiResponse<LogGroupResponse> updateLogGroupWithHttpInfo(@jakarta.annotation.Nonnull UUID id, @jakarta.annotation.Nonnull ResponseLogGroup responseLogGroup, Map<String, String> headers) throws ApiException {
+  public ApiResponse<LogGroupResponse> updateLogGroupWithHttpInfo(@jakarta.annotation.Nonnull String id, @jakarta.annotation.Nonnull ResponseLogGroup responseLogGroup, Map<String, String> headers) throws ApiException {
     HttpRequest.Builder localVarRequestBuilder = updateLogGroupRequestBuilder(id, responseLogGroup, headers);
     try {
       HttpResponse<InputStream> localVarResponse = memberVarHttpClient.send(
@@ -716,7 +715,7 @@ public class LogGroupsApi {
     }
   }
 
-  private HttpRequest.Builder updateLogGroupRequestBuilder(@jakarta.annotation.Nonnull UUID id, @jakarta.annotation.Nonnull ResponseLogGroup responseLogGroup, Map<String, String> headers) throws ApiException {
+  private HttpRequest.Builder updateLogGroupRequestBuilder(@jakarta.annotation.Nonnull String id, @jakarta.annotation.Nonnull ResponseLogGroup responseLogGroup, Map<String, String> headers) throws ApiException {
     // verify the required parameter 'id' is set
     if (id == null) {
       throw new ApiException(400, "Missing the required parameter 'id' when calling updateLogGroup");
