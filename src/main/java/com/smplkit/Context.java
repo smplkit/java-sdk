@@ -66,8 +66,8 @@ public final class Context {
     public Map<String, Object> attributes() { return attributes; }
 
     /**
-     * Converts this context to the evaluation dict format used by JSON Logic.
-     * The result is a map with the context key injected as "key".
+     * Converts this context to a flat map suitable for rule evaluation.
+     * The result is a map of the context attributes with the context key injected as "key".
      */
     public Map<String, Object> toEvalDict() {
         Map<String, Object> dict = new HashMap<>(attributes);

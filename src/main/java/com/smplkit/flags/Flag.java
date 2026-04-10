@@ -91,8 +91,8 @@ public final class Flag<T> {
     // ------------------------------------------------------------------
 
     /**
-     * Evaluate this flag locally. No network call.
-     * On the first call, the client lazily initializes its flag store.
+     * Evaluate this flag and return its current value.
+     * Connects automatically if not already connected.
      */
     public T get() {
         return get((List<Context>) null);
@@ -133,8 +133,10 @@ public final class Flag<T> {
     // ------------------------------------------------------------------
 
     /**
-     * Persist to server. POST if id is null, PUT if id is set.
-     * Applies the server response back into this instance.
+     * Persist this flag to the server.
+     * Creates a new flag if this instance has not been saved before,
+     * or updates the existing flag otherwise. After a successful save,
+     * this instance is refreshed with the server response.
      */
     public void save() {
         if (client == null) throw new IllegalStateException("Flag not bound to a client");
@@ -152,10 +154,10 @@ public final class Flag<T> {
     // ------------------------------------------------------------------
 
     /**
-     * Append a rule to a specific environment (local mutation, no HTTP).
-     * The built rule must include an "environment" key. The rule (without the
-     * environment key) is appended to that environment's rules list.
-     * Call {@link #save()} to persist.
+     * Append a rule to a specific environment. This is a local mutation only;
+     * call {@link #save()} to persist.
+     *
+     * <p>The built rule must include an "environment" key.</p>
      *
      * @return this for chaining
      */
@@ -179,7 +181,8 @@ public final class Flag<T> {
     }
 
     /**
-     * Set whether the flag is enabled in the given environment (local mutation).
+     * Set whether the flag is enabled in the given environment.
+     * This is a local mutation only; call {@link #save()} to persist.
      */
     @SuppressWarnings("unchecked")
     public void setEnvironmentEnabled(String envKey, boolean enabled) {
@@ -189,7 +192,8 @@ public final class Flag<T> {
     }
 
     /**
-     * Set the environment-specific default value (local mutation).
+     * Set the environment-specific default value.
+     * This is a local mutation only; call {@link #save()} to persist.
      */
     @SuppressWarnings("unchecked")
     public void setEnvironmentDefault(String envKey, Object defaultVal) {
@@ -199,7 +203,8 @@ public final class Flag<T> {
     }
 
     /**
-     * Remove all rules from the given environment (local mutation).
+     * Remove all rules from the given environment.
+     * This is a local mutation only; call {@link #save()} to persist.
      */
     @SuppressWarnings("unchecked")
     public void clearRules(String envKey) {

@@ -83,8 +83,10 @@ public final class LogGroup {
     // --- Active record: save ---
 
     /**
-     * Persist to server. POST if id is null, PUT if id is set.
-     * Applies the server response back into this instance.
+     * Persist this log group to the server.
+     * Creates a new log group if this instance has not been saved before,
+     * or updates the existing log group otherwise. After a successful save,
+     * this instance is refreshed with the server response.
      */
     public void save() {
         if (client == null) throw new IllegalStateException("LogGroup not bound to a client");

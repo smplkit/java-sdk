@@ -8,11 +8,8 @@ import java.util.Collections;
 import java.util.List;
 
 /**
- * Shared helper that parses JSON:API error responses and throws the appropriate
+ * Parses JSON:API error responses and maps them to the appropriate
  * SDK exception with full error details.
- *
- * <p>Used by all wrapper clients (ConfigClient, FlagsClient) to replace
- * generic error messages with structured server-provided details.</p>
  */
 public final class ApiExceptionHandler {
 

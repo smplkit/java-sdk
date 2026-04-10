@@ -193,7 +193,7 @@ public final class LoggingClient {
     }
 
     /**
-     * Delete a logger by key (looks up by key, then deletes by id).
+     * Delete a logger by key.
      *
      * @param key the logger key to delete
      */
@@ -302,7 +302,7 @@ public final class LoggingClient {
     }
 
     /**
-     * Delete a log group by key (looks up by key, then deletes by id).
+     * Delete a log group by key.
      *
      * @param key the group key to delete
      */
@@ -345,9 +345,8 @@ public final class LoggingClient {
     /**
      * Explicitly opt in to runtime logging control. Idempotent.
      *
-     * <p>Auto-loads logging adapters (if none registered explicitly), discovers
-     * existing loggers through each adapter, fetches managed levels from the
-     * server, and applies them via each adapter.</p>
+     * <p>Discovers existing loggers, fetches managed levels from the server,
+     * and applies them to the logging framework(s) in use.</p>
      */
     public void start() {
         if (started) {
@@ -677,7 +676,7 @@ public final class LoggingClient {
     // Cleanup
     // -----------------------------------------------------------------------
 
-    /** Called by SmplClient.close() to clean up logging resources. */
+    /** Releases resources and removes logging hooks. */
     public void close() {
         for (LoggingAdapter adapter : adapters) {
             try {

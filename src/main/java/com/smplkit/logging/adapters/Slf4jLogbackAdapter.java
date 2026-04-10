@@ -17,10 +17,7 @@ import java.util.function.BiConsumer;
 /**
  * Logging adapter for SLF4J + Logback.
  *
- * <p>This adapter is loaded only when {@code ch.qos.logback.classic.LoggerContext}
- * is on the classpath. All Logback classes are direct imports; a
- * {@link ClassNotFoundException} / {@link NoClassDefFoundError} at class-load time
- * is the intended gating mechanism.</p>
+ * <p>This adapter is available only when Logback Classic is on the classpath.</p>
  */
 public final class Slf4jLogbackAdapter implements LoggingAdapter {
 

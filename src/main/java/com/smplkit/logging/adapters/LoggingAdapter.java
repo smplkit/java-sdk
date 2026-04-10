@@ -6,11 +6,8 @@ import java.util.function.BiConsumer;
 /**
  * Contract for pluggable logging framework integration.
  *
- * <p>Adapters bridge the smplkit logging runtime to a specific logging framework.
- * The core LoggingClient delegates all framework-specific work through this interface.</p>
- *
- * <p>Adapters are NOT responsible for: key normalization, caching, bulk registration,
- * level resolution, or WebSocket handling. Those remain in the core client.</p>
+ * <p>Adapters bridge the smplkit logging runtime to a specific logging framework
+ * (e.g., JUL, Logback, Log4j2).</p>
  */
 public interface LoggingAdapter {
     /** Human-readable adapter name for diagnostics (e.g., "jul"). */

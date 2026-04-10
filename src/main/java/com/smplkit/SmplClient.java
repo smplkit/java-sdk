@@ -270,7 +270,7 @@ public final class SmplClient implements AutoCloseable {
     }
 
     /**
-     * Closes the underlying resources including the shared WebSocket.
+     * Releases all resources held by this client.
      */
     @Override
     public void close() {

@@ -234,7 +234,7 @@ public final class FlagsClient {
     // Management: CRUD
     // -----------------------------------------------------------------------
 
-    /** Fetch a flag by key. Always HTTP. */
+    /** Fetch a flag by key. */
     public Flag<?> get(String key) {
         try {
             FlagListResponse response = flagsApi.listFlags(key, null);
@@ -248,7 +248,7 @@ public final class FlagsClient {
         }
     }
 
-    /** List all flags. Always HTTP. */
+    /** List all flags. */
     public List<Flag<?>> list() {
         try {
             FlagListResponse response = flagsApi.listFlags(null, null);
@@ -258,7 +258,7 @@ public final class FlagsClient {
         }
     }
 
-    /** Delete a flag by key. Resolves key→id internally. */
+    /** Delete a flag by key. */
     public void delete(String key) {
         Flag<?> flag = get(key);
         try {

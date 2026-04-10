@@ -37,9 +37,8 @@ import java.util.logging.Logger;
  * {@link #list()}, {@link #delete(String)}) and runtime resolution
  * ({@link #resolve(String)}, {@link #subscribe(String)}, {@link #onChange}).</p>
  *
- * <p>Management methods always use HTTP and do NOT trigger lazy init.
- * Runtime methods ({@code resolve}, {@code subscribe}) trigger lazy init
- * on first call, which bulk-fetches all configs and resolves inheritance.</p>
+ * <p>Runtime methods ({@code resolve}, {@code subscribe}) connect automatically
+ * on first call.</p>
  */
 public final class ConfigClient {
 
@@ -112,7 +111,7 @@ public final class ConfigClient {
     // -----------------------------------------------------------------------
 
     /**
-     * Fetches a config by its human-readable key. Always HTTP.
+     * Fetches a config by its human-readable key.
      *
      * @param key the config key
      * @return the matching Config
@@ -132,7 +131,7 @@ public final class ConfigClient {
     }
 
     /**
-     * Lists all configs for the account. Always HTTP.
+     * Lists all configs for the account.
      *
      * @return an unmodifiable list of configs
      */
@@ -154,7 +153,7 @@ public final class ConfigClient {
     }
 
     /**
-     * Deletes a config by key. Resolves key to UUID internally.
+     * Deletes a config by key.
      *
      * @param key the config key
      * @throws SmplNotFoundException if the config does not exist
@@ -248,7 +247,7 @@ public final class ConfigClient {
     /**
      * Returns resolved config values for the given key as a flat map.
      *
-     * <p>Triggers lazy init via {@link #_connectInternal()} on first call.</p>
+     * <p>Connects automatically if not already connected.</p>
      *
      * @param key the config key
      * @return resolved values map, or an empty map if not found
@@ -261,8 +260,10 @@ public final class ConfigClient {
     /**
      * Returns resolved config values mapped to a model type.
      *
-     * <p>Dot-notation keys are unflattened into a nested map, then converted
-     * to the model type via Jackson's {@code ObjectMapper.convertValue}.</p>
+     * <p>Dot-notation keys are unflattened into a nested structure, then
+     * converted to the model type.</p>
+     *
+     * <p>Connects automatically if not already connected.</p>
      *
      * @param key   the config key
      * @param model the target model class
@@ -280,8 +281,10 @@ public final class ConfigClient {
     /**
      * Returns a {@link LiveConfig} proxy for the given key (Map mode).
      *
-     * <p>The proxy delegates to the latest cache state on every access,
-     * so values update automatically after {@link #refresh()}.</p>
+     * <p>The proxy always returns the latest resolved values, so values
+     * update automatically after {@link #refresh()}.</p>
+     *
+     * <p>Connects automatically if not already connected.</p>
      *
      * @param key the config key
      * @return a LiveConfig proxy
@@ -294,6 +297,8 @@ public final class ConfigClient {
 
     /**
      * Returns a {@link LiveConfig} proxy for the given key (model mode).
+     *
+     * <p>Connects automatically if not already connected.</p>
      *
      * @param key   the config key
      * @param model the target model class
@@ -311,7 +316,7 @@ public final class ConfigClient {
 
     /**
      * Re-fetches all configs, re-resolves values for the current environment,
-     * and fires change listeners for any values that differ from the previous cache.
+     * and fires change listeners for any values that changed.
      */
     public void refresh() {
         String env = this.environment;

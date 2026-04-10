@@ -8,8 +8,8 @@ import java.util.Map;
 /**
  * A live-updating config proxy.
  *
- * <p>Delegates to the latest cache state on every access, so values
- * update automatically after {@link ConfigClient#refresh()}.</p>
+ * <p>Always returns the latest resolved values, so values update
+ * automatically after {@link ConfigClient#refresh()}.</p>
  *
  * @param <T> the model type, or {@code Map} for untyped access
  */
@@ -28,7 +28,7 @@ public final class LiveConfig<T> {
     /**
      * Returns the latest resolved values as a plain {@code Map<String, Object>}.
      *
-     * @return resolved values, or an empty map if the config key is not cached
+     * @return resolved values, or an empty map if the config key is not found
      */
     public Map<String, Object> getAsMap() {
         return new HashMap<>(client._getResolvedCache(key));
@@ -37,9 +37,8 @@ public final class LiveConfig<T> {
     /**
      * Returns the latest resolved values mapped to the model type.
      *
-     * <p>Dot-notation keys are unflattened into a nested map structure,
-     * then converted to the model type using Jackson's
-     * {@code ObjectMapper.convertValue}.</p>
+     * <p>Dot-notation keys are unflattened into a nested structure,
+     * then converted to the model type.</p>
      *
      * @return the model instance
      * @throws IllegalStateException if no model type was specified

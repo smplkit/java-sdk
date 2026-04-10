@@ -139,10 +139,9 @@ public final class Config {
     /**
      * Persist this config to the server.
      *
-     * <p>If {@code id} is null, creates a new config via POST.
-     * Otherwise, updates the existing config via PUT.</p>
-     *
-     * <p>The server response is applied back into this instance via {@link #_apply(Config)}.</p>
+     * <p>Creates a new config if this instance has not been saved before,
+     * or updates the existing config otherwise. After a successful save,
+     * this instance is refreshed with the server response.</p>
      *
      * @throws IllegalStateException if not bound to a client
      */

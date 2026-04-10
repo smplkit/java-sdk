@@ -15,10 +15,7 @@ import java.util.function.BiConsumer;
 /**
  * Logging adapter for Apache Log4j2.
  *
- * <p>This adapter is loaded only when {@code org.apache.logging.log4j.core.LoggerContext}
- * is on the classpath. All Log4j2 classes are direct imports; a
- * {@link ClassNotFoundException} / {@link NoClassDefFoundError} at class-load time
- * is the intended gating mechanism.</p>
+ * <p>This adapter is available only when Log4j2 Core is on the classpath.</p>
  */
 public final class Log4j2Adapter implements LoggingAdapter {
 

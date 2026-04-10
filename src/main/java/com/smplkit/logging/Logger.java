@@ -93,8 +93,10 @@ public final class Logger {
     // --- Active record: save ---
 
     /**
-     * Persist to server. POST if id is null, PUT if id is set.
-     * Applies the server response back into this instance.
+     * Persist this logger to the server.
+     * Creates a new logger if this instance has not been saved before,
+     * or updates the existing logger otherwise. After a successful save,
+     * this instance is refreshed with the server response.
      */
     public void save() {
         if (client == null) throw new IllegalStateException("Logger not bound to a client");
