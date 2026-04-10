@@ -21,7 +21,6 @@ import com.smplkit.internal.generated.app.Pair;
 import com.smplkit.internal.generated.app.model.ContextTypeListResponse;
 import com.smplkit.internal.generated.app.model.ContextTypeResponse;
 import com.smplkit.internal.generated.app.model.ErrorResponse;
-import java.util.UUID;
 
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -294,7 +293,7 @@ public class ContextTypesApi {
    * @param id  (required)
    * @throws ApiException if fails to make API call
    */
-  public void deleteContextType(@jakarta.annotation.Nonnull UUID id) throws ApiException {
+  public void deleteContextType(@jakarta.annotation.Nonnull String id) throws ApiException {
     deleteContextType(id, null);
   }
 
@@ -305,7 +304,7 @@ public class ContextTypesApi {
    * @param headers Optional headers to include in the request
    * @throws ApiException if fails to make API call
    */
-  public void deleteContextType(@jakarta.annotation.Nonnull UUID id, Map<String, String> headers) throws ApiException {
+  public void deleteContextType(@jakarta.annotation.Nonnull String id, Map<String, String> headers) throws ApiException {
     deleteContextTypeWithHttpInfo(id, headers);
   }
 
@@ -316,7 +315,7 @@ public class ContextTypesApi {
    * @return ApiResponse&lt;Void&gt;
    * @throws ApiException if fails to make API call
    */
-  public ApiResponse<Void> deleteContextTypeWithHttpInfo(@jakarta.annotation.Nonnull UUID id) throws ApiException {
+  public ApiResponse<Void> deleteContextTypeWithHttpInfo(@jakarta.annotation.Nonnull String id) throws ApiException {
     return deleteContextTypeWithHttpInfo(id, null);
   }
 
@@ -328,7 +327,7 @@ public class ContextTypesApi {
    * @return ApiResponse&lt;Void&gt;
    * @throws ApiException if fails to make API call
    */
-  public ApiResponse<Void> deleteContextTypeWithHttpInfo(@jakarta.annotation.Nonnull UUID id, Map<String, String> headers) throws ApiException {
+  public ApiResponse<Void> deleteContextTypeWithHttpInfo(@jakarta.annotation.Nonnull String id, Map<String, String> headers) throws ApiException {
     HttpRequest.Builder localVarRequestBuilder = deleteContextTypeRequestBuilder(id, headers);
     try {
       HttpResponse<InputStream> localVarResponse = memberVarHttpClient.send(
@@ -365,7 +364,7 @@ public class ContextTypesApi {
     }
   }
 
-  private HttpRequest.Builder deleteContextTypeRequestBuilder(@jakarta.annotation.Nonnull UUID id, Map<String, String> headers) throws ApiException {
+  private HttpRequest.Builder deleteContextTypeRequestBuilder(@jakarta.annotation.Nonnull String id, Map<String, String> headers) throws ApiException {
     // verify the required parameter 'id' is set
     if (id == null) {
       throw new ApiException(400, "Missing the required parameter 'id' when calling deleteContextType");
@@ -399,7 +398,7 @@ public class ContextTypesApi {
    * @return ContextTypeResponse
    * @throws ApiException if fails to make API call
    */
-  public ContextTypeResponse getContextType(@jakarta.annotation.Nonnull UUID id) throws ApiException {
+  public ContextTypeResponse getContextType(@jakarta.annotation.Nonnull String id) throws ApiException {
     return getContextType(id, null);
   }
 
@@ -411,7 +410,7 @@ public class ContextTypesApi {
    * @return ContextTypeResponse
    * @throws ApiException if fails to make API call
    */
-  public ContextTypeResponse getContextType(@jakarta.annotation.Nonnull UUID id, Map<String, String> headers) throws ApiException {
+  public ContextTypeResponse getContextType(@jakarta.annotation.Nonnull String id, Map<String, String> headers) throws ApiException {
     ApiResponse<ContextTypeResponse> localVarResponse = getContextTypeWithHttpInfo(id, headers);
     return localVarResponse.getData();
   }
@@ -423,7 +422,7 @@ public class ContextTypesApi {
    * @return ApiResponse&lt;ContextTypeResponse&gt;
    * @throws ApiException if fails to make API call
    */
-  public ApiResponse<ContextTypeResponse> getContextTypeWithHttpInfo(@jakarta.annotation.Nonnull UUID id) throws ApiException {
+  public ApiResponse<ContextTypeResponse> getContextTypeWithHttpInfo(@jakarta.annotation.Nonnull String id) throws ApiException {
     return getContextTypeWithHttpInfo(id, null);
   }
 
@@ -435,7 +434,7 @@ public class ContextTypesApi {
    * @return ApiResponse&lt;ContextTypeResponse&gt;
    * @throws ApiException if fails to make API call
    */
-  public ApiResponse<ContextTypeResponse> getContextTypeWithHttpInfo(@jakarta.annotation.Nonnull UUID id, Map<String, String> headers) throws ApiException {
+  public ApiResponse<ContextTypeResponse> getContextTypeWithHttpInfo(@jakarta.annotation.Nonnull String id, Map<String, String> headers) throws ApiException {
     HttpRequest.Builder localVarRequestBuilder = getContextTypeRequestBuilder(id, headers);
     try {
       HttpResponse<InputStream> localVarResponse = memberVarHttpClient.send(
@@ -483,7 +482,7 @@ public class ContextTypesApi {
     }
   }
 
-  private HttpRequest.Builder getContextTypeRequestBuilder(@jakarta.annotation.Nonnull UUID id, Map<String, String> headers) throws ApiException {
+  private HttpRequest.Builder getContextTypeRequestBuilder(@jakarta.annotation.Nonnull String id, Map<String, String> headers) throws ApiException {
     // verify the required parameter 'id' is set
     if (id == null) {
       throw new ApiException(400, "Missing the required parameter 'id' when calling getContextType");
@@ -627,7 +626,7 @@ public class ContextTypesApi {
    * @return ContextTypeResponse
    * @throws ApiException if fails to make API call
    */
-  public ContextTypeResponse updateContextType(@jakarta.annotation.Nonnull UUID id, @jakarta.annotation.Nonnull ContextTypeResponse contextTypeResponse) throws ApiException {
+  public ContextTypeResponse updateContextType(@jakarta.annotation.Nonnull String id, @jakarta.annotation.Nonnull ContextTypeResponse contextTypeResponse) throws ApiException {
     return updateContextType(id, contextTypeResponse, null);
   }
 
@@ -640,7 +639,7 @@ public class ContextTypesApi {
    * @return ContextTypeResponse
    * @throws ApiException if fails to make API call
    */
-  public ContextTypeResponse updateContextType(@jakarta.annotation.Nonnull UUID id, @jakarta.annotation.Nonnull ContextTypeResponse contextTypeResponse, Map<String, String> headers) throws ApiException {
+  public ContextTypeResponse updateContextType(@jakarta.annotation.Nonnull String id, @jakarta.annotation.Nonnull ContextTypeResponse contextTypeResponse, Map<String, String> headers) throws ApiException {
     ApiResponse<ContextTypeResponse> localVarResponse = updateContextTypeWithHttpInfo(id, contextTypeResponse, headers);
     return localVarResponse.getData();
   }
@@ -653,7 +652,7 @@ public class ContextTypesApi {
    * @return ApiResponse&lt;ContextTypeResponse&gt;
    * @throws ApiException if fails to make API call
    */
-  public ApiResponse<ContextTypeResponse> updateContextTypeWithHttpInfo(@jakarta.annotation.Nonnull UUID id, @jakarta.annotation.Nonnull ContextTypeResponse contextTypeResponse) throws ApiException {
+  public ApiResponse<ContextTypeResponse> updateContextTypeWithHttpInfo(@jakarta.annotation.Nonnull String id, @jakarta.annotation.Nonnull ContextTypeResponse contextTypeResponse) throws ApiException {
     return updateContextTypeWithHttpInfo(id, contextTypeResponse, null);
   }
 
@@ -666,7 +665,7 @@ public class ContextTypesApi {
    * @return ApiResponse&lt;ContextTypeResponse&gt;
    * @throws ApiException if fails to make API call
    */
-  public ApiResponse<ContextTypeResponse> updateContextTypeWithHttpInfo(@jakarta.annotation.Nonnull UUID id, @jakarta.annotation.Nonnull ContextTypeResponse contextTypeResponse, Map<String, String> headers) throws ApiException {
+  public ApiResponse<ContextTypeResponse> updateContextTypeWithHttpInfo(@jakarta.annotation.Nonnull String id, @jakarta.annotation.Nonnull ContextTypeResponse contextTypeResponse, Map<String, String> headers) throws ApiException {
     HttpRequest.Builder localVarRequestBuilder = updateContextTypeRequestBuilder(id, contextTypeResponse, headers);
     try {
       HttpResponse<InputStream> localVarResponse = memberVarHttpClient.send(
@@ -714,7 +713,7 @@ public class ContextTypesApi {
     }
   }
 
-  private HttpRequest.Builder updateContextTypeRequestBuilder(@jakarta.annotation.Nonnull UUID id, @jakarta.annotation.Nonnull ContextTypeResponse contextTypeResponse, Map<String, String> headers) throws ApiException {
+  private HttpRequest.Builder updateContextTypeRequestBuilder(@jakarta.annotation.Nonnull String id, @jakarta.annotation.Nonnull ContextTypeResponse contextTypeResponse, Map<String, String> headers) throws ApiException {
     // verify the required parameter 'id' is set
     if (id == null) {
       throw new ApiException(400, "Missing the required parameter 'id' when calling updateContextType");

@@ -514,48 +514,48 @@ public class ContextsApi {
   /**
    * List Contexts
    * 
-   * @param filterContextTypeId  (optional)
+   * @param filterContextType  (optional)
    * @return ContextListResponse
    * @throws ApiException if fails to make API call
    */
-  public ContextListResponse listContexts(@jakarta.annotation.Nullable String filterContextTypeId) throws ApiException {
-    return listContexts(filterContextTypeId, null);
+  public ContextListResponse listContexts(@jakarta.annotation.Nullable String filterContextType) throws ApiException {
+    return listContexts(filterContextType, null);
   }
 
   /**
    * List Contexts
    * 
-   * @param filterContextTypeId  (optional)
+   * @param filterContextType  (optional)
    * @param headers Optional headers to include in the request
    * @return ContextListResponse
    * @throws ApiException if fails to make API call
    */
-  public ContextListResponse listContexts(@jakarta.annotation.Nullable String filterContextTypeId, Map<String, String> headers) throws ApiException {
-    ApiResponse<ContextListResponse> localVarResponse = listContextsWithHttpInfo(filterContextTypeId, headers);
+  public ContextListResponse listContexts(@jakarta.annotation.Nullable String filterContextType, Map<String, String> headers) throws ApiException {
+    ApiResponse<ContextListResponse> localVarResponse = listContextsWithHttpInfo(filterContextType, headers);
     return localVarResponse.getData();
   }
 
   /**
    * List Contexts
    * 
-   * @param filterContextTypeId  (optional)
+   * @param filterContextType  (optional)
    * @return ApiResponse&lt;ContextListResponse&gt;
    * @throws ApiException if fails to make API call
    */
-  public ApiResponse<ContextListResponse> listContextsWithHttpInfo(@jakarta.annotation.Nullable String filterContextTypeId) throws ApiException {
-    return listContextsWithHttpInfo(filterContextTypeId, null);
+  public ApiResponse<ContextListResponse> listContextsWithHttpInfo(@jakarta.annotation.Nullable String filterContextType) throws ApiException {
+    return listContextsWithHttpInfo(filterContextType, null);
   }
 
   /**
    * List Contexts
    * 
-   * @param filterContextTypeId  (optional)
+   * @param filterContextType  (optional)
    * @param headers Optional headers to include in the request
    * @return ApiResponse&lt;ContextListResponse&gt;
    * @throws ApiException if fails to make API call
    */
-  public ApiResponse<ContextListResponse> listContextsWithHttpInfo(@jakarta.annotation.Nullable String filterContextTypeId, Map<String, String> headers) throws ApiException {
-    HttpRequest.Builder localVarRequestBuilder = listContextsRequestBuilder(filterContextTypeId, headers);
+  public ApiResponse<ContextListResponse> listContextsWithHttpInfo(@jakarta.annotation.Nullable String filterContextType, Map<String, String> headers) throws ApiException {
+    HttpRequest.Builder localVarRequestBuilder = listContextsRequestBuilder(filterContextType, headers);
     try {
       HttpResponse<InputStream> localVarResponse = memberVarHttpClient.send(
           localVarRequestBuilder.build(),
@@ -602,7 +602,7 @@ public class ContextsApi {
     }
   }
 
-  private HttpRequest.Builder listContextsRequestBuilder(@jakarta.annotation.Nullable String filterContextTypeId, Map<String, String> headers) throws ApiException {
+  private HttpRequest.Builder listContextsRequestBuilder(@jakarta.annotation.Nullable String filterContextType, Map<String, String> headers) throws ApiException {
 
     HttpRequest.Builder localVarRequestBuilder = HttpRequest.newBuilder();
 
@@ -611,8 +611,8 @@ public class ContextsApi {
     List<Pair> localVarQueryParams = new ArrayList<>();
     StringJoiner localVarQueryStringJoiner = new StringJoiner("&");
     String localVarQueryParameterBaseName;
-    localVarQueryParameterBaseName = "filter[context_type_id]";
-    localVarQueryParams.addAll(ApiClient.parameterToPairs("filter[context_type_id]", filterContextTypeId));
+    localVarQueryParameterBaseName = "filter[context_type]";
+    localVarQueryParams.addAll(ApiClient.parameterToPairs("filter[context_type]", filterContextType));
 
     if (!localVarQueryParams.isEmpty() || localVarQueryStringJoiner.length() != 0) {
       StringJoiner queryJoiner = new StringJoiner("&");

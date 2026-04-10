@@ -512,48 +512,44 @@ public class EnvironmentsApi {
   /**
    * List Environments
    * 
-   * @param filterKey  (optional)
    * @return EnvironmentListResponse
    * @throws ApiException if fails to make API call
    */
-  public EnvironmentListResponse listEnvironments(@jakarta.annotation.Nullable String filterKey) throws ApiException {
-    return listEnvironments(filterKey, null);
+  public EnvironmentListResponse listEnvironments() throws ApiException {
+    return listEnvironments(null);
   }
 
   /**
    * List Environments
    * 
-   * @param filterKey  (optional)
    * @param headers Optional headers to include in the request
    * @return EnvironmentListResponse
    * @throws ApiException if fails to make API call
    */
-  public EnvironmentListResponse listEnvironments(@jakarta.annotation.Nullable String filterKey, Map<String, String> headers) throws ApiException {
-    ApiResponse<EnvironmentListResponse> localVarResponse = listEnvironmentsWithHttpInfo(filterKey, headers);
+  public EnvironmentListResponse listEnvironments(Map<String, String> headers) throws ApiException {
+    ApiResponse<EnvironmentListResponse> localVarResponse = listEnvironmentsWithHttpInfo(headers);
     return localVarResponse.getData();
   }
 
   /**
    * List Environments
    * 
-   * @param filterKey  (optional)
    * @return ApiResponse&lt;EnvironmentListResponse&gt;
    * @throws ApiException if fails to make API call
    */
-  public ApiResponse<EnvironmentListResponse> listEnvironmentsWithHttpInfo(@jakarta.annotation.Nullable String filterKey) throws ApiException {
-    return listEnvironmentsWithHttpInfo(filterKey, null);
+  public ApiResponse<EnvironmentListResponse> listEnvironmentsWithHttpInfo() throws ApiException {
+    return listEnvironmentsWithHttpInfo(null);
   }
 
   /**
    * List Environments
    * 
-   * @param filterKey  (optional)
    * @param headers Optional headers to include in the request
    * @return ApiResponse&lt;EnvironmentListResponse&gt;
    * @throws ApiException if fails to make API call
    */
-  public ApiResponse<EnvironmentListResponse> listEnvironmentsWithHttpInfo(@jakarta.annotation.Nullable String filterKey, Map<String, String> headers) throws ApiException {
-    HttpRequest.Builder localVarRequestBuilder = listEnvironmentsRequestBuilder(filterKey, headers);
+  public ApiResponse<EnvironmentListResponse> listEnvironmentsWithHttpInfo(Map<String, String> headers) throws ApiException {
+    HttpRequest.Builder localVarRequestBuilder = listEnvironmentsRequestBuilder(headers);
     try {
       HttpResponse<InputStream> localVarResponse = memberVarHttpClient.send(
           localVarRequestBuilder.build(),
@@ -600,28 +596,13 @@ public class EnvironmentsApi {
     }
   }
 
-  private HttpRequest.Builder listEnvironmentsRequestBuilder(@jakarta.annotation.Nullable String filterKey, Map<String, String> headers) throws ApiException {
+  private HttpRequest.Builder listEnvironmentsRequestBuilder(Map<String, String> headers) throws ApiException {
 
     HttpRequest.Builder localVarRequestBuilder = HttpRequest.newBuilder();
 
     String localVarPath = "/api/v1/environments";
 
-    List<Pair> localVarQueryParams = new ArrayList<>();
-    StringJoiner localVarQueryStringJoiner = new StringJoiner("&");
-    String localVarQueryParameterBaseName;
-    localVarQueryParameterBaseName = "filter[key]";
-    localVarQueryParams.addAll(ApiClient.parameterToPairs("filter[key]", filterKey));
-
-    if (!localVarQueryParams.isEmpty() || localVarQueryStringJoiner.length() != 0) {
-      StringJoiner queryJoiner = new StringJoiner("&");
-      localVarQueryParams.forEach(p -> queryJoiner.add(p.getName() + '=' + p.getValue()));
-      if (localVarQueryStringJoiner.length() != 0) {
-        queryJoiner.add(localVarQueryStringJoiner.toString());
-      }
-      localVarRequestBuilder.uri(URI.create(memberVarBaseUri + localVarPath + '?' + queryJoiner.toString()));
-    } else {
-      localVarRequestBuilder.uri(URI.create(memberVarBaseUri + localVarPath));
-    }
+    localVarRequestBuilder.uri(URI.create(memberVarBaseUri + localVarPath));
 
     localVarRequestBuilder.header("Accept", "application/vnd.api+json");
 
