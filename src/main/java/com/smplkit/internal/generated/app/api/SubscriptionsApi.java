@@ -48,7 +48,7 @@ import java.util.Set;
 import java.util.function.Consumer;
 
 @jakarta.annotation.Generated(value = "org.openapitools.codegen.languages.JavaClientCodegen", comments = "Generator version: 7.21.0")
-public class BillingApi {
+public class SubscriptionsApi {
   /**
    * Utility class for extending HttpRequest.Builder functionality.
    */
@@ -77,11 +77,11 @@ public class BillingApi {
   private final Consumer<HttpResponse<InputStream>> memberVarResponseInterceptor;
   private final Consumer<HttpResponse<InputStream>> memberVarAsyncResponseInterceptor;
 
-  public BillingApi() {
+  public SubscriptionsApi() {
     this(Configuration.getDefaultApiClient());
   }
 
-  public BillingApi(ApiClient apiClient) {
+  public SubscriptionsApi(ApiClient apiClient) {
     memberVarHttpClient = apiClient.getHttpClient();
     memberVarObjectMapper = apiClient.getObjectMapper();
     memberVarBaseUri = apiClient.getBaseUri();
@@ -165,47 +165,47 @@ public class BillingApi {
   }
 
   /**
-   * Cancel Billing Subscription
+   * Cancel Subscription
    * Cancel a subscription at end of the current billing period.
    * @param product  (required)
    * @throws ApiException if fails to make API call
    */
-  public void cancelBillingSubscription(@jakarta.annotation.Nonnull String product) throws ApiException {
-    cancelBillingSubscription(product, null);
+  public void cancelSubscription(@jakarta.annotation.Nonnull String product) throws ApiException {
+    cancelSubscription(product, null);
   }
 
   /**
-   * Cancel Billing Subscription
+   * Cancel Subscription
    * Cancel a subscription at end of the current billing period.
    * @param product  (required)
    * @param headers Optional headers to include in the request
    * @throws ApiException if fails to make API call
    */
-  public void cancelBillingSubscription(@jakarta.annotation.Nonnull String product, Map<String, String> headers) throws ApiException {
-    cancelBillingSubscriptionWithHttpInfo(product, headers);
+  public void cancelSubscription(@jakarta.annotation.Nonnull String product, Map<String, String> headers) throws ApiException {
+    cancelSubscriptionWithHttpInfo(product, headers);
   }
 
   /**
-   * Cancel Billing Subscription
+   * Cancel Subscription
    * Cancel a subscription at end of the current billing period.
    * @param product  (required)
    * @return ApiResponse&lt;Void&gt;
    * @throws ApiException if fails to make API call
    */
-  public ApiResponse<Void> cancelBillingSubscriptionWithHttpInfo(@jakarta.annotation.Nonnull String product) throws ApiException {
-    return cancelBillingSubscriptionWithHttpInfo(product, null);
+  public ApiResponse<Void> cancelSubscriptionWithHttpInfo(@jakarta.annotation.Nonnull String product) throws ApiException {
+    return cancelSubscriptionWithHttpInfo(product, null);
   }
 
   /**
-   * Cancel Billing Subscription
+   * Cancel Subscription
    * Cancel a subscription at end of the current billing period.
    * @param product  (required)
    * @param headers Optional headers to include in the request
    * @return ApiResponse&lt;Void&gt;
    * @throws ApiException if fails to make API call
    */
-  public ApiResponse<Void> cancelBillingSubscriptionWithHttpInfo(@jakarta.annotation.Nonnull String product, Map<String, String> headers) throws ApiException {
-    HttpRequest.Builder localVarRequestBuilder = cancelBillingSubscriptionRequestBuilder(product, headers);
+  public ApiResponse<Void> cancelSubscriptionWithHttpInfo(@jakarta.annotation.Nonnull String product, Map<String, String> headers) throws ApiException {
+    HttpRequest.Builder localVarRequestBuilder = cancelSubscriptionRequestBuilder(product, headers);
     try {
       HttpResponse<InputStream> localVarResponse = memberVarHttpClient.send(
           localVarRequestBuilder.build(),
@@ -216,7 +216,7 @@ public class BillingApi {
       InputStream localVarResponseBody = null;
       try {
         if (localVarResponse.statusCode()/ 100 != 2) {
-          throw getApiException("cancelBillingSubscription", localVarResponse);
+          throw getApiException("cancelSubscription", localVarResponse);
         }
         localVarResponseBody = ApiClient.getResponseBody(localVarResponse);
         if (localVarResponseBody != null) {
@@ -241,15 +241,15 @@ public class BillingApi {
     }
   }
 
-  private HttpRequest.Builder cancelBillingSubscriptionRequestBuilder(@jakarta.annotation.Nonnull String product, Map<String, String> headers) throws ApiException {
+  private HttpRequest.Builder cancelSubscriptionRequestBuilder(@jakarta.annotation.Nonnull String product, Map<String, String> headers) throws ApiException {
     // verify the required parameter 'product' is set
     if (product == null) {
-      throw new ApiException(400, "Missing the required parameter 'product' when calling cancelBillingSubscription");
+      throw new ApiException(400, "Missing the required parameter 'product' when calling cancelSubscription");
     }
 
     HttpRequest.Builder localVarRequestBuilder = HttpRequest.newBuilder();
 
-    String localVarPath = "/api/v1/billing/subscriptions/{product}"
+    String localVarPath = "/api/v1/subscriptions/{product}"
         .replace("{product}", ApiClient.urlEncode(product.toString()));
 
     localVarRequestBuilder.uri(URI.create(memberVarBaseUri + localVarPath));
@@ -269,50 +269,50 @@ public class BillingApi {
   }
 
   /**
-   * Create Billing Subscription
+   * Create Subscription
    * Create a new paid subscription for a product.
    * @param createSubscriptionBody  (required)
    * @return Object
    * @throws ApiException if fails to make API call
    */
-  public Object createBillingSubscription(@jakarta.annotation.Nonnull CreateSubscriptionBody createSubscriptionBody) throws ApiException {
-    return createBillingSubscription(createSubscriptionBody, null);
+  public Object createSubscription(@jakarta.annotation.Nonnull CreateSubscriptionBody createSubscriptionBody) throws ApiException {
+    return createSubscription(createSubscriptionBody, null);
   }
 
   /**
-   * Create Billing Subscription
+   * Create Subscription
    * Create a new paid subscription for a product.
    * @param createSubscriptionBody  (required)
    * @param headers Optional headers to include in the request
    * @return Object
    * @throws ApiException if fails to make API call
    */
-  public Object createBillingSubscription(@jakarta.annotation.Nonnull CreateSubscriptionBody createSubscriptionBody, Map<String, String> headers) throws ApiException {
-    ApiResponse<Object> localVarResponse = createBillingSubscriptionWithHttpInfo(createSubscriptionBody, headers);
+  public Object createSubscription(@jakarta.annotation.Nonnull CreateSubscriptionBody createSubscriptionBody, Map<String, String> headers) throws ApiException {
+    ApiResponse<Object> localVarResponse = createSubscriptionWithHttpInfo(createSubscriptionBody, headers);
     return localVarResponse.getData();
   }
 
   /**
-   * Create Billing Subscription
+   * Create Subscription
    * Create a new paid subscription for a product.
    * @param createSubscriptionBody  (required)
    * @return ApiResponse&lt;Object&gt;
    * @throws ApiException if fails to make API call
    */
-  public ApiResponse<Object> createBillingSubscriptionWithHttpInfo(@jakarta.annotation.Nonnull CreateSubscriptionBody createSubscriptionBody) throws ApiException {
-    return createBillingSubscriptionWithHttpInfo(createSubscriptionBody, null);
+  public ApiResponse<Object> createSubscriptionWithHttpInfo(@jakarta.annotation.Nonnull CreateSubscriptionBody createSubscriptionBody) throws ApiException {
+    return createSubscriptionWithHttpInfo(createSubscriptionBody, null);
   }
 
   /**
-   * Create Billing Subscription
+   * Create Subscription
    * Create a new paid subscription for a product.
    * @param createSubscriptionBody  (required)
    * @param headers Optional headers to include in the request
    * @return ApiResponse&lt;Object&gt;
    * @throws ApiException if fails to make API call
    */
-  public ApiResponse<Object> createBillingSubscriptionWithHttpInfo(@jakarta.annotation.Nonnull CreateSubscriptionBody createSubscriptionBody, Map<String, String> headers) throws ApiException {
-    HttpRequest.Builder localVarRequestBuilder = createBillingSubscriptionRequestBuilder(createSubscriptionBody, headers);
+  public ApiResponse<Object> createSubscriptionWithHttpInfo(@jakarta.annotation.Nonnull CreateSubscriptionBody createSubscriptionBody, Map<String, String> headers) throws ApiException {
+    HttpRequest.Builder localVarRequestBuilder = createSubscriptionRequestBuilder(createSubscriptionBody, headers);
     try {
       HttpResponse<InputStream> localVarResponse = memberVarHttpClient.send(
           localVarRequestBuilder.build(),
@@ -323,7 +323,7 @@ public class BillingApi {
       InputStream localVarResponseBody = null;
       try {
         if (localVarResponse.statusCode()/ 100 != 2) {
-          throw getApiException("createBillingSubscription", localVarResponse);
+          throw getApiException("createSubscription", localVarResponse);
         }
         localVarResponseBody = ApiClient.getResponseBody(localVarResponse);
         if (localVarResponseBody == null) {
@@ -359,15 +359,15 @@ public class BillingApi {
     }
   }
 
-  private HttpRequest.Builder createBillingSubscriptionRequestBuilder(@jakarta.annotation.Nonnull CreateSubscriptionBody createSubscriptionBody, Map<String, String> headers) throws ApiException {
+  private HttpRequest.Builder createSubscriptionRequestBuilder(@jakarta.annotation.Nonnull CreateSubscriptionBody createSubscriptionBody, Map<String, String> headers) throws ApiException {
     // verify the required parameter 'createSubscriptionBody' is set
     if (createSubscriptionBody == null) {
-      throw new ApiException(400, "Missing the required parameter 'createSubscriptionBody' when calling createBillingSubscription");
+      throw new ApiException(400, "Missing the required parameter 'createSubscriptionBody' when calling createSubscription");
     }
 
     HttpRequest.Builder localVarRequestBuilder = HttpRequest.newBuilder();
 
-    String localVarPath = "/api/v1/billing/subscriptions";
+    String localVarPath = "/api/v1/subscriptions";
 
     localVarRequestBuilder.uri(URI.create(memberVarBaseUri + localVarPath));
 
@@ -392,46 +392,46 @@ public class BillingApi {
   }
 
   /**
-   * Create Setup Intent
-   * Create a Stripe SetupIntent for saving a payment method.
+   * List Subscriptions
+   * Return per-product subscription state for the authenticated account.
    * @return Object
    * @throws ApiException if fails to make API call
    */
-  public Object createSetupIntent() throws ApiException {
-    return createSetupIntent(null);
+  public Object listSubscriptions() throws ApiException {
+    return listSubscriptions(null);
   }
 
   /**
-   * Create Setup Intent
-   * Create a Stripe SetupIntent for saving a payment method.
+   * List Subscriptions
+   * Return per-product subscription state for the authenticated account.
    * @param headers Optional headers to include in the request
    * @return Object
    * @throws ApiException if fails to make API call
    */
-  public Object createSetupIntent(Map<String, String> headers) throws ApiException {
-    ApiResponse<Object> localVarResponse = createSetupIntentWithHttpInfo(headers);
+  public Object listSubscriptions(Map<String, String> headers) throws ApiException {
+    ApiResponse<Object> localVarResponse = listSubscriptionsWithHttpInfo(headers);
     return localVarResponse.getData();
   }
 
   /**
-   * Create Setup Intent
-   * Create a Stripe SetupIntent for saving a payment method.
+   * List Subscriptions
+   * Return per-product subscription state for the authenticated account.
    * @return ApiResponse&lt;Object&gt;
    * @throws ApiException if fails to make API call
    */
-  public ApiResponse<Object> createSetupIntentWithHttpInfo() throws ApiException {
-    return createSetupIntentWithHttpInfo(null);
+  public ApiResponse<Object> listSubscriptionsWithHttpInfo() throws ApiException {
+    return listSubscriptionsWithHttpInfo(null);
   }
 
   /**
-   * Create Setup Intent
-   * Create a Stripe SetupIntent for saving a payment method.
+   * List Subscriptions
+   * Return per-product subscription state for the authenticated account.
    * @param headers Optional headers to include in the request
    * @return ApiResponse&lt;Object&gt;
    * @throws ApiException if fails to make API call
    */
-  public ApiResponse<Object> createSetupIntentWithHttpInfo(Map<String, String> headers) throws ApiException {
-    HttpRequest.Builder localVarRequestBuilder = createSetupIntentRequestBuilder(headers);
+  public ApiResponse<Object> listSubscriptionsWithHttpInfo(Map<String, String> headers) throws ApiException {
+    HttpRequest.Builder localVarRequestBuilder = listSubscriptionsRequestBuilder(headers);
     try {
       HttpResponse<InputStream> localVarResponse = memberVarHttpClient.send(
           localVarRequestBuilder.build(),
@@ -442,7 +442,7 @@ public class BillingApi {
       InputStream localVarResponseBody = null;
       try {
         if (localVarResponse.statusCode()/ 100 != 2) {
-          throw getApiException("createSetupIntent", localVarResponse);
+          throw getApiException("listSubscriptions", localVarResponse);
         }
         localVarResponseBody = ApiClient.getResponseBody(localVarResponse);
         if (localVarResponseBody == null) {
@@ -478,120 +478,11 @@ public class BillingApi {
     }
   }
 
-  private HttpRequest.Builder createSetupIntentRequestBuilder(Map<String, String> headers) throws ApiException {
+  private HttpRequest.Builder listSubscriptionsRequestBuilder(Map<String, String> headers) throws ApiException {
 
     HttpRequest.Builder localVarRequestBuilder = HttpRequest.newBuilder();
 
-    String localVarPath = "/api/v1/billing/setup_intent";
-
-    localVarRequestBuilder.uri(URI.create(memberVarBaseUri + localVarPath));
-
-    localVarRequestBuilder.header("Accept", "application/vnd.api+json");
-
-    localVarRequestBuilder.method("POST", HttpRequest.BodyPublishers.noBody());
-    if (memberVarReadTimeout != null) {
-      localVarRequestBuilder.timeout(memberVarReadTimeout);
-    }
-    // Add custom headers if provided
-    localVarRequestBuilder = HttpRequestBuilderExtensions.withAdditionalHeaders(localVarRequestBuilder, headers);
-    if (memberVarInterceptor != null) {
-      memberVarInterceptor.accept(localVarRequestBuilder);
-    }
-    return localVarRequestBuilder;
-  }
-
-  /**
-   * List Billing Subscriptions
-   * Return per-product subscription state for the authenticated account.
-   * @return Object
-   * @throws ApiException if fails to make API call
-   */
-  public Object listBillingSubscriptions() throws ApiException {
-    return listBillingSubscriptions(null);
-  }
-
-  /**
-   * List Billing Subscriptions
-   * Return per-product subscription state for the authenticated account.
-   * @param headers Optional headers to include in the request
-   * @return Object
-   * @throws ApiException if fails to make API call
-   */
-  public Object listBillingSubscriptions(Map<String, String> headers) throws ApiException {
-    ApiResponse<Object> localVarResponse = listBillingSubscriptionsWithHttpInfo(headers);
-    return localVarResponse.getData();
-  }
-
-  /**
-   * List Billing Subscriptions
-   * Return per-product subscription state for the authenticated account.
-   * @return ApiResponse&lt;Object&gt;
-   * @throws ApiException if fails to make API call
-   */
-  public ApiResponse<Object> listBillingSubscriptionsWithHttpInfo() throws ApiException {
-    return listBillingSubscriptionsWithHttpInfo(null);
-  }
-
-  /**
-   * List Billing Subscriptions
-   * Return per-product subscription state for the authenticated account.
-   * @param headers Optional headers to include in the request
-   * @return ApiResponse&lt;Object&gt;
-   * @throws ApiException if fails to make API call
-   */
-  public ApiResponse<Object> listBillingSubscriptionsWithHttpInfo(Map<String, String> headers) throws ApiException {
-    HttpRequest.Builder localVarRequestBuilder = listBillingSubscriptionsRequestBuilder(headers);
-    try {
-      HttpResponse<InputStream> localVarResponse = memberVarHttpClient.send(
-          localVarRequestBuilder.build(),
-          HttpResponse.BodyHandlers.ofInputStream());
-      if (memberVarResponseInterceptor != null) {
-        memberVarResponseInterceptor.accept(localVarResponse);
-      }
-      InputStream localVarResponseBody = null;
-      try {
-        if (localVarResponse.statusCode()/ 100 != 2) {
-          throw getApiException("listBillingSubscriptions", localVarResponse);
-        }
-        localVarResponseBody = ApiClient.getResponseBody(localVarResponse);
-        if (localVarResponseBody == null) {
-          return new ApiResponse<Object>(
-              localVarResponse.statusCode(),
-              localVarResponse.headers().map(),
-              null
-          );
-        }
-
-        
-        
-        String responseBody = new String(localVarResponseBody.readAllBytes());
-        Object responseValue = responseBody.isBlank()? null: memberVarObjectMapper.readValue(responseBody, new TypeReference<Object>() {});
-        
-
-        return new ApiResponse<Object>(
-            localVarResponse.statusCode(),
-            localVarResponse.headers().map(),
-            responseValue
-        );
-      } finally {
-        if (localVarResponseBody != null) {
-          localVarResponseBody.close();
-        }
-      }
-    } catch (IOException e) {
-      throw new ApiException(e);
-    }
-    catch (InterruptedException e) {
-      Thread.currentThread().interrupt();
-      throw new ApiException(e);
-    }
-  }
-
-  private HttpRequest.Builder listBillingSubscriptionsRequestBuilder(Map<String, String> headers) throws ApiException {
-
-    HttpRequest.Builder localVarRequestBuilder = HttpRequest.newBuilder();
-
-    String localVarPath = "/api/v1/billing/subscriptions";
+    String localVarPath = "/api/v1/subscriptions";
 
     localVarRequestBuilder.uri(URI.create(memberVarBaseUri + localVarPath));
 
@@ -610,46 +501,54 @@ public class BillingApi {
   }
 
   /**
-   * List Payment Methods
-   * Return the default payment method for the account&#39;s Stripe Customer.
+   * Update Subscription
+   * Change the plan for an existing paid subscription (upgrade or downgrade).
+   * @param product  (required)
+   * @param updateSubscriptionBody  (required)
    * @return Object
    * @throws ApiException if fails to make API call
    */
-  public Object listPaymentMethods() throws ApiException {
-    return listPaymentMethods(null);
+  public Object updateSubscription(@jakarta.annotation.Nonnull String product, @jakarta.annotation.Nonnull UpdateSubscriptionBody updateSubscriptionBody) throws ApiException {
+    return updateSubscription(product, updateSubscriptionBody, null);
   }
 
   /**
-   * List Payment Methods
-   * Return the default payment method for the account&#39;s Stripe Customer.
+   * Update Subscription
+   * Change the plan for an existing paid subscription (upgrade or downgrade).
+   * @param product  (required)
+   * @param updateSubscriptionBody  (required)
    * @param headers Optional headers to include in the request
    * @return Object
    * @throws ApiException if fails to make API call
    */
-  public Object listPaymentMethods(Map<String, String> headers) throws ApiException {
-    ApiResponse<Object> localVarResponse = listPaymentMethodsWithHttpInfo(headers);
+  public Object updateSubscription(@jakarta.annotation.Nonnull String product, @jakarta.annotation.Nonnull UpdateSubscriptionBody updateSubscriptionBody, Map<String, String> headers) throws ApiException {
+    ApiResponse<Object> localVarResponse = updateSubscriptionWithHttpInfo(product, updateSubscriptionBody, headers);
     return localVarResponse.getData();
   }
 
   /**
-   * List Payment Methods
-   * Return the default payment method for the account&#39;s Stripe Customer.
+   * Update Subscription
+   * Change the plan for an existing paid subscription (upgrade or downgrade).
+   * @param product  (required)
+   * @param updateSubscriptionBody  (required)
    * @return ApiResponse&lt;Object&gt;
    * @throws ApiException if fails to make API call
    */
-  public ApiResponse<Object> listPaymentMethodsWithHttpInfo() throws ApiException {
-    return listPaymentMethodsWithHttpInfo(null);
+  public ApiResponse<Object> updateSubscriptionWithHttpInfo(@jakarta.annotation.Nonnull String product, @jakarta.annotation.Nonnull UpdateSubscriptionBody updateSubscriptionBody) throws ApiException {
+    return updateSubscriptionWithHttpInfo(product, updateSubscriptionBody, null);
   }
 
   /**
-   * List Payment Methods
-   * Return the default payment method for the account&#39;s Stripe Customer.
+   * Update Subscription
+   * Change the plan for an existing paid subscription (upgrade or downgrade).
+   * @param product  (required)
+   * @param updateSubscriptionBody  (required)
    * @param headers Optional headers to include in the request
    * @return ApiResponse&lt;Object&gt;
    * @throws ApiException if fails to make API call
    */
-  public ApiResponse<Object> listPaymentMethodsWithHttpInfo(Map<String, String> headers) throws ApiException {
-    HttpRequest.Builder localVarRequestBuilder = listPaymentMethodsRequestBuilder(headers);
+  public ApiResponse<Object> updateSubscriptionWithHttpInfo(@jakarta.annotation.Nonnull String product, @jakarta.annotation.Nonnull UpdateSubscriptionBody updateSubscriptionBody, Map<String, String> headers) throws ApiException {
+    HttpRequest.Builder localVarRequestBuilder = updateSubscriptionRequestBuilder(product, updateSubscriptionBody, headers);
     try {
       HttpResponse<InputStream> localVarResponse = memberVarHttpClient.send(
           localVarRequestBuilder.build(),
@@ -660,7 +559,7 @@ public class BillingApi {
       InputStream localVarResponseBody = null;
       try {
         if (localVarResponse.statusCode()/ 100 != 2) {
-          throw getApiException("listPaymentMethods", localVarResponse);
+          throw getApiException("updateSubscription", localVarResponse);
         }
         localVarResponseBody = ApiClient.getResponseBody(localVarResponse);
         if (localVarResponseBody == null) {
@@ -696,136 +595,19 @@ public class BillingApi {
     }
   }
 
-  private HttpRequest.Builder listPaymentMethodsRequestBuilder(Map<String, String> headers) throws ApiException {
-
-    HttpRequest.Builder localVarRequestBuilder = HttpRequest.newBuilder();
-
-    String localVarPath = "/api/v1/billing/payment_methods";
-
-    localVarRequestBuilder.uri(URI.create(memberVarBaseUri + localVarPath));
-
-    localVarRequestBuilder.header("Accept", "application/vnd.api+json");
-
-    localVarRequestBuilder.method("GET", HttpRequest.BodyPublishers.noBody());
-    if (memberVarReadTimeout != null) {
-      localVarRequestBuilder.timeout(memberVarReadTimeout);
-    }
-    // Add custom headers if provided
-    localVarRequestBuilder = HttpRequestBuilderExtensions.withAdditionalHeaders(localVarRequestBuilder, headers);
-    if (memberVarInterceptor != null) {
-      memberVarInterceptor.accept(localVarRequestBuilder);
-    }
-    return localVarRequestBuilder;
-  }
-
-  /**
-   * Update Billing Subscription
-   * Change the plan for an existing paid subscription (upgrade or downgrade).
-   * @param product  (required)
-   * @param updateSubscriptionBody  (required)
-   * @return Object
-   * @throws ApiException if fails to make API call
-   */
-  public Object updateBillingSubscription(@jakarta.annotation.Nonnull String product, @jakarta.annotation.Nonnull UpdateSubscriptionBody updateSubscriptionBody) throws ApiException {
-    return updateBillingSubscription(product, updateSubscriptionBody, null);
-  }
-
-  /**
-   * Update Billing Subscription
-   * Change the plan for an existing paid subscription (upgrade or downgrade).
-   * @param product  (required)
-   * @param updateSubscriptionBody  (required)
-   * @param headers Optional headers to include in the request
-   * @return Object
-   * @throws ApiException if fails to make API call
-   */
-  public Object updateBillingSubscription(@jakarta.annotation.Nonnull String product, @jakarta.annotation.Nonnull UpdateSubscriptionBody updateSubscriptionBody, Map<String, String> headers) throws ApiException {
-    ApiResponse<Object> localVarResponse = updateBillingSubscriptionWithHttpInfo(product, updateSubscriptionBody, headers);
-    return localVarResponse.getData();
-  }
-
-  /**
-   * Update Billing Subscription
-   * Change the plan for an existing paid subscription (upgrade or downgrade).
-   * @param product  (required)
-   * @param updateSubscriptionBody  (required)
-   * @return ApiResponse&lt;Object&gt;
-   * @throws ApiException if fails to make API call
-   */
-  public ApiResponse<Object> updateBillingSubscriptionWithHttpInfo(@jakarta.annotation.Nonnull String product, @jakarta.annotation.Nonnull UpdateSubscriptionBody updateSubscriptionBody) throws ApiException {
-    return updateBillingSubscriptionWithHttpInfo(product, updateSubscriptionBody, null);
-  }
-
-  /**
-   * Update Billing Subscription
-   * Change the plan for an existing paid subscription (upgrade or downgrade).
-   * @param product  (required)
-   * @param updateSubscriptionBody  (required)
-   * @param headers Optional headers to include in the request
-   * @return ApiResponse&lt;Object&gt;
-   * @throws ApiException if fails to make API call
-   */
-  public ApiResponse<Object> updateBillingSubscriptionWithHttpInfo(@jakarta.annotation.Nonnull String product, @jakarta.annotation.Nonnull UpdateSubscriptionBody updateSubscriptionBody, Map<String, String> headers) throws ApiException {
-    HttpRequest.Builder localVarRequestBuilder = updateBillingSubscriptionRequestBuilder(product, updateSubscriptionBody, headers);
-    try {
-      HttpResponse<InputStream> localVarResponse = memberVarHttpClient.send(
-          localVarRequestBuilder.build(),
-          HttpResponse.BodyHandlers.ofInputStream());
-      if (memberVarResponseInterceptor != null) {
-        memberVarResponseInterceptor.accept(localVarResponse);
-      }
-      InputStream localVarResponseBody = null;
-      try {
-        if (localVarResponse.statusCode()/ 100 != 2) {
-          throw getApiException("updateBillingSubscription", localVarResponse);
-        }
-        localVarResponseBody = ApiClient.getResponseBody(localVarResponse);
-        if (localVarResponseBody == null) {
-          return new ApiResponse<Object>(
-              localVarResponse.statusCode(),
-              localVarResponse.headers().map(),
-              null
-          );
-        }
-
-        
-        
-        String responseBody = new String(localVarResponseBody.readAllBytes());
-        Object responseValue = responseBody.isBlank()? null: memberVarObjectMapper.readValue(responseBody, new TypeReference<Object>() {});
-        
-
-        return new ApiResponse<Object>(
-            localVarResponse.statusCode(),
-            localVarResponse.headers().map(),
-            responseValue
-        );
-      } finally {
-        if (localVarResponseBody != null) {
-          localVarResponseBody.close();
-        }
-      }
-    } catch (IOException e) {
-      throw new ApiException(e);
-    }
-    catch (InterruptedException e) {
-      Thread.currentThread().interrupt();
-      throw new ApiException(e);
-    }
-  }
-
-  private HttpRequest.Builder updateBillingSubscriptionRequestBuilder(@jakarta.annotation.Nonnull String product, @jakarta.annotation.Nonnull UpdateSubscriptionBody updateSubscriptionBody, Map<String, String> headers) throws ApiException {
+  private HttpRequest.Builder updateSubscriptionRequestBuilder(@jakarta.annotation.Nonnull String product, @jakarta.annotation.Nonnull UpdateSubscriptionBody updateSubscriptionBody, Map<String, String> headers) throws ApiException {
     // verify the required parameter 'product' is set
     if (product == null) {
-      throw new ApiException(400, "Missing the required parameter 'product' when calling updateBillingSubscription");
+      throw new ApiException(400, "Missing the required parameter 'product' when calling updateSubscription");
     }
     // verify the required parameter 'updateSubscriptionBody' is set
     if (updateSubscriptionBody == null) {
-      throw new ApiException(400, "Missing the required parameter 'updateSubscriptionBody' when calling updateBillingSubscription");
+      throw new ApiException(400, "Missing the required parameter 'updateSubscriptionBody' when calling updateSubscription");
     }
 
     HttpRequest.Builder localVarRequestBuilder = HttpRequest.newBuilder();
 
-    String localVarPath = "/api/v1/billing/subscriptions/{product}"
+    String localVarPath = "/api/v1/subscriptions/{product}"
         .replace("{product}", ApiClient.urlEncode(product.toString()));
 
     localVarRequestBuilder.uri(URI.create(memberVarBaseUri + localVarPath));
