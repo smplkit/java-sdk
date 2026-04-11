@@ -39,7 +39,7 @@ class AutoLoadTest {
     private void stubEmptyResponses() throws ApiException {
         LoggerListResponse loggerResp = new LoggerListResponse();
         loggerResp.setData(new ArrayList<>());
-        when(mockLoggersApi.listLoggers(null, null)).thenReturn(loggerResp);
+        when(mockLoggersApi.listLoggers(null)).thenReturn(loggerResp);
 
         LogGroupListResponse groupResp = new LogGroupListResponse();
         groupResp.setData(new ArrayList<>());
@@ -183,15 +183,15 @@ class AutoLoadTest {
         var loggerResp = new LoggerListResponse();
         var lr = new com.smplkit.internal.generated.logging.model.LoggerResource();
         var attrs = new com.smplkit.internal.generated.logging.model.Logger();
-        attrs.setKey("com.acme.multi");
+        attrs.setId("com.acme.multi");
         attrs.setName("Multi");
         attrs.setLevel("DEBUG");
         attrs.setManaged(true);
-        lr.setId("id-1");
+        lr.setId("com.acme.multi");
         lr.setType(com.smplkit.internal.generated.logging.model.LoggerResource.TypeEnum.LOGGER);
         lr.setAttributes(attrs);
         loggerResp.setData(new ArrayList<>(List.of(lr)));
-        when(mockLoggersApi.listLoggers(null, null)).thenReturn(loggerResp);
+        when(mockLoggersApi.listLoggers(null)).thenReturn(loggerResp);
 
         LogGroupListResponse groupResp = new LogGroupListResponse();
         groupResp.setData(new ArrayList<>());

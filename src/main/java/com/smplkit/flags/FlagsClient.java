@@ -37,7 +37,6 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
-import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.ScheduledExecutorService;
@@ -181,60 +180,60 @@ public final class FlagsClient {
     // Management: factory methods (return unsaved Flag with id=null)
     // -----------------------------------------------------------------------
 
-    public Flag<Boolean> newBooleanFlag(String key, boolean defaultValue) {
-        return newBooleanFlag(key, defaultValue, null, null);
+    public Flag<Boolean> newBooleanFlag(String id, boolean defaultValue) {
+        return newBooleanFlag(id, defaultValue, null, null);
     }
 
-    public Flag<Boolean> newBooleanFlag(String key, boolean defaultValue, String name, String description) {
-        return new Flag<>(this, key,
-                name != null ? name : Helpers.keyToDisplayName(key),
+    public Flag<Boolean> newBooleanFlag(String id, boolean defaultValue, String name, String description) {
+        return new Flag<>(this, id,
+                name != null ? name : Helpers.keyToDisplayName(id),
                 "BOOLEAN", defaultValue,
                 List.of(Map.of("name", "True", "value", true), Map.of("name", "False", "value", false)),
                 description, null, null, null, Boolean.class);
     }
 
-    public Flag<String> newStringFlag(String key, String defaultValue) {
-        return newStringFlag(key, defaultValue, null, null);
+    public Flag<String> newStringFlag(String id, String defaultValue) {
+        return newStringFlag(id, defaultValue, null, null);
     }
 
-    public Flag<String> newStringFlag(String key, String defaultValue, String name, String description) {
-        return newStringFlag(key, defaultValue, name, description, null);
+    public Flag<String> newStringFlag(String id, String defaultValue, String name, String description) {
+        return newStringFlag(id, defaultValue, name, description, null);
     }
 
-    public Flag<String> newStringFlag(String key, String defaultValue, String name, String description,
+    public Flag<String> newStringFlag(String id, String defaultValue, String name, String description,
                                       List<Map<String, Object>> values) {
-        return new Flag<>(this, key,
-                name != null ? name : Helpers.keyToDisplayName(key),
+        return new Flag<>(this, id,
+                name != null ? name : Helpers.keyToDisplayName(id),
                 "STRING", defaultValue, values, description, null, null, null, String.class);
     }
 
-    public Flag<Number> newNumberFlag(String key, Number defaultValue) {
-        return newNumberFlag(key, defaultValue, null, null);
+    public Flag<Number> newNumberFlag(String id, Number defaultValue) {
+        return newNumberFlag(id, defaultValue, null, null);
     }
 
-    public Flag<Number> newNumberFlag(String key, Number defaultValue, String name, String description) {
-        return newNumberFlag(key, defaultValue, name, description, null);
+    public Flag<Number> newNumberFlag(String id, Number defaultValue, String name, String description) {
+        return newNumberFlag(id, defaultValue, name, description, null);
     }
 
-    public Flag<Number> newNumberFlag(String key, Number defaultValue, String name, String description,
+    public Flag<Number> newNumberFlag(String id, Number defaultValue, String name, String description,
                                       List<Map<String, Object>> values) {
-        return new Flag<>(this, key,
-                name != null ? name : Helpers.keyToDisplayName(key),
+        return new Flag<>(this, id,
+                name != null ? name : Helpers.keyToDisplayName(id),
                 "NUMERIC", defaultValue, values, description, null, null, null, Number.class);
     }
 
-    public Flag<Object> newJsonFlag(String key, Object defaultValue) {
-        return newJsonFlag(key, defaultValue, null, null);
+    public Flag<Object> newJsonFlag(String id, Object defaultValue) {
+        return newJsonFlag(id, defaultValue, null, null);
     }
 
-    public Flag<Object> newJsonFlag(String key, Object defaultValue, String name, String description) {
-        return newJsonFlag(key, defaultValue, name, description, null);
+    public Flag<Object> newJsonFlag(String id, Object defaultValue, String name, String description) {
+        return newJsonFlag(id, defaultValue, name, description, null);
     }
 
-    public Flag<Object> newJsonFlag(String key, Object defaultValue, String name, String description,
+    public Flag<Object> newJsonFlag(String id, Object defaultValue, String name, String description,
                                     List<Map<String, Object>> values) {
-        return new Flag<>(this, key,
-                name != null ? name : Helpers.keyToDisplayName(key),
+        return new Flag<>(this, id,
+                name != null ? name : Helpers.keyToDisplayName(id),
                 "JSON", defaultValue, values, description, null, null, null, Object.class);
     }
 
@@ -242,15 +241,11 @@ public final class FlagsClient {
     // Management: CRUD
     // -----------------------------------------------------------------------
 
-    /** Fetches a flag by key. */
-    public Flag<?> get(String key) {
+    /** Fetches a flag by id. */
+    public Flag<?> get(String id) {
         try {
-            FlagListResponse response = flagsApi.listFlags(key, null);
-            List<Flag<?>> flags = parseListResponse(response);
-            if (flags.isEmpty()) {
-                throw new SmplNotFoundException("Flag with key '" + key + "' not found", null);
-            }
-            return flags.get(0);
+            FlagResponse response = flagsApi.getFlag(id);
+            return parseSingleResponse(response);
         } catch (ApiException e) {
             throw mapException(e);
         }
@@ -259,18 +254,17 @@ public final class FlagsClient {
     /** Lists all flags. */
     public List<Flag<?>> list() {
         try {
-            FlagListResponse response = flagsApi.listFlags(null, null);
+            FlagListResponse response = flagsApi.listFlags(null);
             return parseListResponse(response);
         } catch (ApiException e) {
             throw mapException(e);
         }
     }
 
-    /** Deletes a flag by key. */
-    public void delete(String key) {
-        Flag<?> flag = get(key);
+    /** Deletes a flag by id. */
+    public void delete(String id) {
         try {
-            flagsApi.deleteFlag(UUID.fromString(flag.getId()));
+            flagsApi.deleteFlag(id);
         } catch (ApiException e) {
             throw mapException(e);
         }
@@ -281,7 +275,7 @@ public final class FlagsClient {
     <T> Flag<T> _createFlag(Flag<T> flag) {
         try {
             var attrs = new com.smplkit.internal.generated.flags.model.Flag();
-            attrs.setKey(flag.getKey());
+            attrs.setId(flag.getId());
             attrs.setName(flag.getName());
             attrs.setType(flag.getType());
             attrs.setDefault(flag.getDefault());
@@ -319,7 +313,7 @@ public final class FlagsClient {
     <T> Flag<T> _updateFlag(Flag<T> flag) {
         try {
             var attrs = new com.smplkit.internal.generated.flags.model.Flag();
-            attrs.setKey(flag.getKey());
+            attrs.setId(flag.getId());
             attrs.setName(flag.getName());
             attrs.setType(flag.getType());
             attrs.setDefault(flag.getDefault());
@@ -344,7 +338,7 @@ public final class FlagsClient {
 
             ResourceFlag data = new ResourceFlag().id(flag.getId()).type("flag").attributes(attrs);
             ResponseFlag body = new ResponseFlag().data(data);
-            FlagResponse response = flagsApi.updateFlag(UUID.fromString(flag.getId()), body);
+            FlagResponse response = flagsApi.updateFlag(flag.getId(), body);
             Flag<?> result = parseSingleResponse(response);
             return (Flag<T>) result;
         } catch (ApiException e) {
@@ -356,32 +350,32 @@ public final class FlagsClient {
     // Runtime: typed flag handles
     // -----------------------------------------------------------------------
 
-    public Flag<Boolean> booleanFlag(String key, boolean defaultValue) {
-        Flag<Boolean> handle = new Flag<>(this, key, key, "BOOLEAN", defaultValue,
+    public Flag<Boolean> booleanFlag(String id, boolean defaultValue) {
+        Flag<Boolean> handle = new Flag<>(this, id, id, "BOOLEAN", defaultValue,
                 null, null, null, null, null, Boolean.class);
-        handles.put(key, handle);
+        handles.put(id, handle);
         return handle;
     }
 
-    public Flag<String> stringFlag(String key, String defaultValue) {
-        Flag<String> handle = new Flag<>(this, key, key, "STRING", defaultValue,
+    public Flag<String> stringFlag(String id, String defaultValue) {
+        Flag<String> handle = new Flag<>(this, id, id, "STRING", defaultValue,
                 null, null, null, null, null, String.class);
-        handles.put(key, handle);
+        handles.put(id, handle);
         return handle;
     }
 
-    public Flag<Number> numberFlag(String key, Number defaultValue) {
-        Flag<Number> handle = new Flag<>(this, key, key, "NUMERIC", defaultValue,
+    public Flag<Number> numberFlag(String id, Number defaultValue) {
+        Flag<Number> handle = new Flag<>(this, id, id, "NUMERIC", defaultValue,
                 null, null, null, null, null, Number.class);
-        handles.put(key, handle);
+        handles.put(id, handle);
         return handle;
     }
 
     @SuppressWarnings("unchecked")
-    public Flag<Object> jsonFlag(String key, Object defaultValue) {
-        Flag<Object> handle = new Flag<>(this, key, key, "JSON", defaultValue,
+    public Flag<Object> jsonFlag(String id, Object defaultValue) {
+        Flag<Object> handle = new Flag<>(this, id, id, "JSON", defaultValue,
                 null, null, null, null, null, Object.class);
-        handles.put(key, handle);
+        handles.put(id, handle);
         return handle;
     }
 
@@ -479,22 +473,22 @@ public final class FlagsClient {
     }
 
     /** Registers a listener that fires when the specified flag changes. */
-    public void onChange(String key, Consumer<FlagChangeEvent> listener) {
-        listeners.add(new ListenerEntry(key, listener));
+    public void onChange(String id, Consumer<FlagChangeEvent> listener) {
+        listeners.add(new ListenerEntry(id, listener));
     }
 
     // -----------------------------------------------------------------------
     // Internal: evaluation engine
     // -----------------------------------------------------------------------
 
-    /** Evaluates a flag by key. Called by {@link Flag#get()}. */
+    /** Evaluates a flag by id. Called by {@link Flag#get()}. */
     @SuppressWarnings("unchecked")
-    Object _evaluateHandle(String key, Object defaultValue, List<Context> contexts) {
+    Object _evaluateHandle(String id, Object defaultValue, List<Context> contexts) {
         if (!connected) {
             _connectInternal();
         }
 
-        Map<String, Object> flagData = flagStore.get(key);
+        Map<String, Object> flagData = flagStore.get(id);
         if (flagData == null) return defaultValue;
 
         List<Context> ctxList;
@@ -518,12 +512,12 @@ public final class FlagsClient {
 
         Map<String, Object> evalData = buildEvalData(ctxList);
 
-        String cacheKey = key + ":" + hashContexts(ctxList);
+        String cacheKey = id + ":" + hashContexts(ctxList);
         Object cached = resolutionCache.get(cacheKey);
         if (cached != null) {
             cacheHits.incrementAndGet();
             if (metrics != null) {
-                Map<String, String> dims = Map.of("flag_id", key);
+                Map<String, String> dims = Map.of("flag_id", id);
                 metrics.record("flags.cache_hits", "hits");
                 metrics.record("flags.evaluations", "evaluations", dims);
             }
@@ -531,12 +525,12 @@ public final class FlagsClient {
         }
         cacheMisses.incrementAndGet();
         if (metrics != null) {
-            Map<String, String> dims = Map.of("flag_id", key);
+            Map<String, String> dims = Map.of("flag_id", id);
             metrics.record("flags.cache_misses", "misses");
             metrics.record("flags.evaluations", "evaluations", dims);
         }
 
-        Object result = evaluateFlag(key, flagData, environment, evalData);
+        Object result = evaluateFlag(id, flagData, environment, evalData);
         if (result == null) {
             resolutionCache.put(cacheKey, CACHE_NULL_SENTINEL);
             return defaultValue;
@@ -645,13 +639,13 @@ public final class FlagsClient {
         List<Flag<?>> flags = list();
         flagStore.clear();
         for (Flag<?> flag : flags) {
-            flagStore.put(flag.getKey(), flagToStoreEntry(flag));
+            flagStore.put(flag.getId(), flagToStoreEntry(flag));
         }
     }
 
     private Map<String, Object> flagToStoreEntry(Flag<?> flag) {
         Map<String, Object> entry = new HashMap<>();
-        entry.put("key", flag.getKey());
+        entry.put("id", flag.getId());
         entry.put("name", flag.getName());
         entry.put("type", flag.getType());
         entry.put("default", flag.getDefault());
@@ -680,14 +674,14 @@ public final class FlagsClient {
     }
 
     private void fireAllChangeListeners(String source) {
-        for (String flagKey : flagStore.keySet()) {
-            FlagChangeEvent event = new FlagChangeEvent(flagKey, source);
+        for (String flagId : flagStore.keySet()) {
+            FlagChangeEvent event = new FlagChangeEvent(flagId, source);
             for (ListenerEntry entry : listeners) {
-                if (entry.key != null && !entry.key.equals(flagKey)) continue;
+                if (entry.id != null && !entry.id.equals(flagId)) continue;
                 try {
                     entry.listener.accept(event);
                 } catch (Exception e) {
-                    LOG.log(Level.WARNING, "Exception in onChange listener for flag '" + flagKey + "'", e);
+                    LOG.log(Level.WARNING, "Exception in onChange listener for flag '" + flagId + "'", e);
                 }
             }
         }
@@ -722,7 +716,6 @@ public final class FlagsClient {
         Map<String, Object> attrs = (Map<String, Object>) data.get("attributes");
         if (attrs == null) attrs = data;
 
-        String key = (String) attrs.get("key");
         String name = (String) attrs.get("name");
         String description = (String) attrs.get("description");
         String type = (String) attrs.get("type");
@@ -733,11 +726,10 @@ public final class FlagsClient {
         Instant updatedAt = parseInstant(attrs.get("updated_at"));
 
         Flag<Object> flag = new Flag<>(this,
-                key != null ? key : "", name != null ? name : "",
+                id != null ? id : "", name != null ? name : "",
                 type != null ? type : "", defaultValue,
                 values, description,
                 environments, createdAt, updatedAt, Object.class);
-        flag.setId(id != null ? id : "");
         return flag;
     }
 
@@ -822,5 +814,5 @@ public final class FlagsClient {
         resolutionCache.clear();
     }
 
-    private record ListenerEntry(String key, Consumer<FlagChangeEvent> listener) {}
+    private record ListenerEntry(String id, Consumer<FlagChangeEvent> listener) {}
 }

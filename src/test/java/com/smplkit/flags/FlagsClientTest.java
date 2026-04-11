@@ -22,7 +22,6 @@ import java.time.Duration;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.UUID;
 import java.util.concurrent.atomic.AtomicReference;
 
 import static org.junit.jupiter.api.Assertions.*;
@@ -38,7 +37,7 @@ class FlagsClientTest {
     private FlagsApi mockApi;
     private ContextsApi mockContextsApi;
     private FlagsClient client;
-    private static final String TEST_FLAG_ID = "11111111-1111-1111-1111-111111111111";
+    private static final String TEST_FLAG_ID = "my-flag";
 
     @BeforeEach
     void setUp() {
@@ -53,10 +52,9 @@ class FlagsClientTest {
     // --- Factory methods return unsaved flags ---
 
     @Test
-    void newBooleanFlag_createsUnsavedFlagWithNullId() {
+    void newBooleanFlag_createsUnsavedFlag() {
         Flag<Boolean> flag = client.newBooleanFlag("my-flag", false);
-        assertNull(flag.getId());
-        assertEquals("my-flag", flag.getKey());
+        assertEquals("my-flag", flag.getId());
         assertEquals("BOOLEAN", flag.getType());
         assertFalse(flag.getDefault());
     }
@@ -64,7 +62,7 @@ class FlagsClientTest {
     @Test
     void newBooleanFlag_withNameAndDescription() {
         Flag<Boolean> flag = client.newBooleanFlag("my-flag", true, "My Flag", "A test flag");
-        assertNull(flag.getId());
+        assertEquals("my-flag", flag.getId());
         assertEquals("My Flag", flag.getName());
         assertEquals("A test flag", flag.getDescription());
     }
@@ -80,7 +78,7 @@ class FlagsClientTest {
     @Test
     void booleanFlag_returnsTypedHandle() {
         Flag<Boolean> handle = client.booleanFlag("feature-x", false);
-        assertEquals("feature-x", handle.getKey());
+        assertEquals("feature-x", handle.getId());
         assertFalse(handle.getDefault());
         assertEquals(Boolean.class, handle.getValueType());
     }
@@ -88,7 +86,7 @@ class FlagsClientTest {
     @Test
     void stringFlag_returnsTypedHandle() {
         Flag<String> handle = client.stringFlag("color", "red");
-        assertEquals("color", handle.getKey());
+        assertEquals("color", handle.getId());
         assertEquals("red", handle.getDefault());
         assertEquals(String.class, handle.getValueType());
     }
@@ -96,7 +94,7 @@ class FlagsClientTest {
     @Test
     void numberFlag_returnsTypedHandle() {
         Flag<Number> handle = client.numberFlag("rate-limit", 100);
-        assertEquals("rate-limit", handle.getKey());
+        assertEquals("rate-limit", handle.getId());
         assertEquals(100, handle.getDefault());
         assertEquals(Number.class, handle.getValueType());
     }
@@ -104,35 +102,34 @@ class FlagsClientTest {
     @Test
     void jsonFlag_returnsTypedHandle() {
         Flag<Object> handle = client.jsonFlag("config", Map.of("a", 1));
-        assertEquals("config", handle.getKey());
+        assertEquals("config", handle.getId());
         assertEquals(Object.class, handle.getValueType());
     }
 
-    // --- get(key) fetches by key via listFlags filter ---
+    // --- get(id) fetches by id via getFlag ---
 
     @Test
-    void get_fetchesByKeyUsingListFilter() throws ApiException {
-        when(mockApi.listFlags(eq("my-flag"), isNull()))
-                .thenReturn(makeFlagListResponse(TEST_FLAG_ID, "my-flag", "My Flag",
-                        "BOOLEAN", false, Map.of()));
+    void get_fetchesById() throws ApiException {
+        when(mockApi.getFlag(eq("my-flag")))
+                .thenReturn(makeFlagResponse(TEST_FLAG_ID, "My Flag",
+                        "BOOLEAN", false, List.of(), Map.of()));
 
         Flag<?> result = client.get("my-flag");
         assertEquals(TEST_FLAG_ID, result.getId());
-        assertEquals("my-flag", result.getKey());
-        verify(mockApi).listFlags(eq("my-flag"), isNull());
+        verify(mockApi).getFlag(eq("my-flag"));
     }
 
     @Test
     void get_notFound_throwsSmplNotFoundException() throws ApiException {
-        when(mockApi.listFlags(eq("unknown"), isNull()))
-                .thenReturn(new FlagListResponse().data(List.of()));
+        when(mockApi.getFlag(eq("unknown")))
+                .thenThrow(new ApiException(404, "Not Found"));
 
         assertThrows(SmplNotFoundException.class, () -> client.get("unknown"));
     }
 
     @Test
     void get_apiError_throwsSmplException() throws ApiException {
-        when(mockApi.listFlags(eq("my-flag"), isNull()))
+        when(mockApi.getFlag(eq("my-flag")))
                 .thenThrow(new ApiException(404, "Not Found"));
 
         assertThrows(SmplNotFoundException.class, () -> client.get("my-flag"));
@@ -143,51 +140,47 @@ class FlagsClientTest {
     @Test
     void list_returnsAllFlags() throws ApiException {
         FlagListResponse listResponse = OBJECT_MAPPER.convertValue(Map.of("data", List.of(
-                Map.of("id", TEST_FLAG_ID, "type", "flag", "attributes", Map.of(
-                        "key", "flag-1", "name", "Flag 1", "type", "BOOLEAN",
+                Map.of("id", "flag-1", "type", "flag", "attributes", Map.of(
+                        "name", "Flag 1", "type", "BOOLEAN",
                         "default", false, "values", List.of(), "environments", Map.of()
                 )),
-                Map.of("id", "22222222-2222-2222-2222-222222222222", "type", "flag", "attributes", Map.of(
-                        "key", "flag-2", "name", "Flag 2", "type", "STRING",
+                Map.of("id", "flag-2", "type", "flag", "attributes", Map.of(
+                        "name", "Flag 2", "type", "STRING",
                         "default", "red", "values", List.of(), "environments", Map.of()
                 ))
         )), FlagListResponse.class);
-        when(mockApi.listFlags(isNull(), isNull())).thenReturn(listResponse);
+        when(mockApi.listFlags(isNull())).thenReturn(listResponse);
 
         List<Flag<?>> result = client.list();
         assertEquals(2, result.size());
-        assertEquals("flag-1", result.get(0).getKey());
-        assertEquals("flag-2", result.get(1).getKey());
+        assertEquals("flag-1", result.get(0).getId());
+        assertEquals("flag-2", result.get(1).getId());
     }
 
     @Test
     void list_emptyResponse() throws ApiException {
-        when(mockApi.listFlags(isNull(), isNull())).thenReturn(new FlagListResponse().data(List.of()));
+        when(mockApi.listFlags(isNull())).thenReturn(new FlagListResponse().data(List.of()));
 
         List<Flag<?>> result = client.list();
         assertTrue(result.isEmpty());
     }
 
-    // --- delete(key) resolves key then deletes ---
+    // --- delete(id) deletes directly ---
 
     @Test
-    void delete_resolvesKeyThenDeletes() throws ApiException {
-        when(mockApi.listFlags(eq("my-flag"), isNull()))
-                .thenReturn(makeFlagListResponse(TEST_FLAG_ID, "my-flag", "My Flag",
-                        "BOOLEAN", false, Map.of()));
-        doNothing().when(mockApi).deleteFlag(UUID.fromString(TEST_FLAG_ID));
+    void delete_deletesDirectly() throws ApiException {
+        doNothing().when(mockApi).deleteFlag("my-flag");
 
         client.delete("my-flag");
 
-        verify(mockApi).listFlags(eq("my-flag"), isNull());
-        verify(mockApi).deleteFlag(UUID.fromString(TEST_FLAG_ID));
+        verify(mockApi).deleteFlag("my-flag");
     }
 
     // --- _createFlag POSTs and returns created flag ---
 
     @Test
     void createFlag_postsAndReturnsCreatedFlag() throws ApiException {
-        FlagResponse response = makeFlagResponse(TEST_FLAG_ID, "my-flag", "My Flag",
+        FlagResponse response = makeFlagResponse(TEST_FLAG_ID, "My Flag",
                 "BOOLEAN", false, List.of(
                         Map.of("name", "True", "value", true),
                         Map.of("name", "False", "value", false)
@@ -198,7 +191,7 @@ class FlagsClientTest {
         newFlag.save();
 
         assertNotNull(newFlag.getId());
-        assertEquals("my-flag", newFlag.getKey());
+        assertEquals("my-flag", newFlag.getId());
         verify(mockApi).createFlag(any(ResponseFlag.class));
     }
 
@@ -206,26 +199,26 @@ class FlagsClientTest {
 
     @Test
     void updateFlag_putsAndReturnsUpdatedFlag() throws ApiException {
-        FlagResponse response = makeFlagResponse(TEST_FLAG_ID, "my-flag", "Updated Flag",
+        FlagResponse response = makeFlagResponse(TEST_FLAG_ID, "Updated Flag",
                 "BOOLEAN", false, List.of(), Map.of());
-        when(mockApi.updateFlag(eq(UUID.fromString(TEST_FLAG_ID)), any(ResponseFlag.class)))
+        when(mockApi.updateFlag(eq(TEST_FLAG_ID), any(ResponseFlag.class)))
                 .thenReturn(response);
 
-        // Create a flag that already has an id (simulating a fetched flag)
+        // Create a flag that already has createdAt (simulating a fetched flag)
         Flag<Boolean> existingFlag = client.newBooleanFlag("my-flag", false, "My Flag", null);
-        existingFlag.setId(TEST_FLAG_ID);
+        existingFlag.setCreatedAt(java.time.Instant.parse("2024-06-01T12:00:00Z"));
         existingFlag.setName("Updated Flag");
         existingFlag.save();
 
         assertEquals("Updated Flag", existingFlag.getName());
-        verify(mockApi).updateFlag(eq(UUID.fromString(TEST_FLAG_ID)), any(ResponseFlag.class));
+        verify(mockApi).updateFlag(eq(TEST_FLAG_ID), any(ResponseFlag.class));
     }
 
     // --- Unconstrained flag (null values) ---
 
     @Test
     void createFlag_unconstrained_sendsNullValues() throws ApiException {
-        FlagResponse response = makeFlagResponse(TEST_FLAG_ID, "max-retries", "Max Retries",
+        FlagResponse response = makeFlagResponse("max-retries", "Max Retries",
                 "NUMERIC", 3, null, Map.of());
         when(mockApi.createFlag(any(ResponseFlag.class))).thenReturn(response);
 
@@ -240,25 +233,25 @@ class FlagsClientTest {
 
     @Test
     void updateFlag_unconstrained_sendsNullValues() throws ApiException {
-        FlagResponse response = makeFlagResponse(TEST_FLAG_ID, "max-retries", "Max Retries",
+        FlagResponse response = makeFlagResponse("max-retries", "Max Retries",
                 "NUMERIC", 5, null, Map.of());
-        when(mockApi.updateFlag(eq(UUID.fromString(TEST_FLAG_ID)), any(ResponseFlag.class)))
+        when(mockApi.updateFlag(eq("max-retries"), any(ResponseFlag.class)))
                 .thenReturn(response);
 
         Flag<Number> existingFlag = client.newNumberFlag("max-retries", 3, "Max Retries", null);
-        existingFlag.setId(TEST_FLAG_ID);
+        existingFlag.setCreatedAt(java.time.Instant.parse("2024-06-01T12:00:00Z"));
         existingFlag.setDefault(5);
         existingFlag.save();
 
         assertNull(existingFlag.getValues(), "unconstrained flag should remain null after update");
-        verify(mockApi).updateFlag(eq(UUID.fromString(TEST_FLAG_ID)), any(ResponseFlag.class));
+        verify(mockApi).updateFlag(eq("max-retries"), any(ResponseFlag.class));
     }
 
     // --- Error mapping ---
 
     @Test
     void apiException404_throwsSmplNotFoundException() throws ApiException {
-        when(mockApi.listFlags(anyString(), isNull()))
+        when(mockApi.getFlag(anyString()))
                 .thenThrow(new ApiException(404, "Not Found"));
         assertThrows(SmplNotFoundException.class, () -> client.get("my-flag"));
     }
@@ -303,14 +296,14 @@ class FlagsClientTest {
 
     @Test
     void handleGet_lazyInit_callsListOnFirstEval() throws ApiException {
-        when(mockApi.listFlags(isNull(), isNull()))
+        when(mockApi.listFlags(isNull()))
                 .thenReturn(new FlagListResponse().data(List.of()));
 
         Flag<Boolean> handle = client.booleanFlag("unknown-flag", false);
         assertFalse(handle.get());
 
         // _connectInternal called listFlags
-        verify(mockApi, atLeastOnce()).listFlags(isNull(), isNull());
+        verify(mockApi, atLeastOnce()).listFlags(isNull());
     }
 
     @Test
@@ -384,31 +377,30 @@ class FlagsClientTest {
         client.onChange(received::set);
 
         // Refresh fires listeners
-        when(mockApi.listFlags(isNull(), isNull()))
-                .thenReturn(makeFlagListResponse(TEST_FLAG_ID, "my-flag", "My Flag",
+        when(mockApi.listFlags(isNull()))
+                .thenReturn(makeFlagListResponse(TEST_FLAG_ID, "My Flag",
                         "BOOLEAN", false, Map.of()));
         client.refresh();
 
         assertNotNull(received.get());
-        assertEquals("my-flag", received.get().key());
+        assertEquals("my-flag", received.get().id());
         assertEquals("manual", received.get().source());
     }
 
     // --- Helpers ---
 
-    private void setupFlagStore(String key, String type, Object defaultValue,
+    private void setupFlagStore(String id, String type, Object defaultValue,
                                  Map<String, Object> environments) throws ApiException {
-        when(mockApi.listFlags(isNull(), isNull())).thenReturn(
-                makeFlagListResponse(TEST_FLAG_ID, key, key, type, defaultValue, environments));
+        when(mockApi.listFlags(isNull())).thenReturn(
+                makeFlagListResponse(id, id, type, defaultValue, environments));
         client._connectInternal();
     }
 
-    private static FlagResponse makeFlagResponse(String id, String key, String name,
+    private static FlagResponse makeFlagResponse(String id, String name,
                                                    String type, Object defaultValue,
                                                    List<Map<String, Object>> values,
                                                    Map<String, Object> environments) {
         Map<String, Object> attrs = new HashMap<>();
-        attrs.put("key", key);
         attrs.put("name", name);
         attrs.put("type", type);
         attrs.put("default", defaultValue);
@@ -419,11 +411,10 @@ class FlagsClientTest {
         return OBJECT_MAPPER.convertValue(map, FlagResponse.class);
     }
 
-    private static FlagListResponse makeFlagListResponse(String id, String key, String name,
+    private static FlagListResponse makeFlagListResponse(String id, String name,
                                                           String type, Object defaultValue,
                                                           Map<String, Object> environments) {
         Map<String, Object> attrs = new HashMap<>();
-        attrs.put("key", key);
         attrs.put("name", name);
         attrs.put("type", type);
         attrs.put("default", defaultValue);

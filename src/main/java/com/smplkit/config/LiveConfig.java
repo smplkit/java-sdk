@@ -16,22 +16,22 @@ import java.util.Map;
 public final class LiveConfig<T> {
 
     private final ConfigClient client;
-    private final String key;
+    private final String id;
     private final Class<T> modelType; // null for Map mode
 
-    LiveConfig(ConfigClient client, String key, Class<T> modelType) {
+    LiveConfig(ConfigClient client, String id, Class<T> modelType) {
         this.client = client;
-        this.key = key;
+        this.id = id;
         this.modelType = modelType;
     }
 
     /**
      * Returns the latest resolved values as a plain {@code Map<String, Object>}.
      *
-     * @return resolved values, or an empty map if the config key is not found
+     * @return resolved values, or an empty map if the config id is not found
      */
     public Map<String, Object> getAsMap() {
-        return new HashMap<>(client._getResolvedCache(key));
+        return new HashMap<>(client._getResolvedCache(id));
     }
 
     /**
@@ -45,15 +45,15 @@ public final class LiveConfig<T> {
             throw new IllegalStateException(
                     "No model type specified. Use getAsMap() or subscribe with a model class.");
         }
-        Map<String, Object> values = client._getResolvedCache(key);
+        Map<String, Object> values = client._getResolvedCache(id);
         Map<String, Object> nested = ConfigClient.unflatten(values);
         ObjectMapper mapper = new ObjectMapper();
         return mapper.convertValue(nested, modelType);
     }
 
-    /** Returns the config key this proxy is subscribed to. */
-    public String getKey() {
-        return key;
+    /** Returns the config id this proxy is subscribed to. */
+    public String getId() {
+        return id;
     }
 
     /** Returns the model type, or null if returning raw maps. */

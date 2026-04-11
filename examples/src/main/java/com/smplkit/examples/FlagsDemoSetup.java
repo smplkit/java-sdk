@@ -75,7 +75,7 @@ public class FlagsDemoSetup {
                     "dark-mode-demo", false, "Dark Mode",
                     "Enables dark mode across the application UI.");
             darkMode.save();
-            createdFlagKeys.add(darkMode.getKey());
+            createdFlagKeys.add(darkMode.getId());
             step("Created 'dark-mode-demo' (boolean, default=false), id=" + darkMode.getId());
 
             // --- items-per-page: controls pagination (unconstrained) ---
@@ -83,7 +83,7 @@ public class FlagsDemoSetup {
                     "items-per-page-demo", 20, "Items Per Page",
                     "Number of items displayed per page in list views.");
             itemsPerPage.save();
-            createdFlagKeys.add(itemsPerPage.getKey());
+            createdFlagKeys.add(itemsPerPage.getId());
             step("Created 'items-per-page-demo' (numeric, default=20), id=" + itemsPerPage.getId());
 
             // --- theme-config: a complex JSON configuration ---
@@ -100,7 +100,7 @@ public class FlagsDemoSetup {
                                     "borderRadius", 4, "density", "compact", "brandLogo", true))
                     ));
             themeConfig.save();
-            createdFlagKeys.add(themeConfig.getKey());
+            createdFlagKeys.add(themeConfig.getId());
             step("Created 'theme-config-demo' (JSON, complex default), id=" + themeConfig.getId());
 
             // ==================================================================

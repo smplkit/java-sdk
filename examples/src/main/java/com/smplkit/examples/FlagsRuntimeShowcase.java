@@ -100,7 +100,7 @@ public class FlagsRuntimeShowcase {
                     "Puts the application into maintenance mode.");
             maintenance.save();
 
-            step("Created boolean flag: " + maintenance.getKey());
+            step("Created boolean flag: " + maintenance.getId());
 
             // Add a rule that enables maintenance mode for staging.
             maintenance.addRule(new Rule("Enable in staging")
@@ -121,7 +121,7 @@ public class FlagsRuntimeShowcase {
                     ));
             greeting.save();
 
-            step("Created string flag: " + greeting.getKey());
+            step("Created string flag: " + greeting.getId());
 
             greeting.addRule(new Rule("Enterprise greeting")
                     .environment("staging")
@@ -141,7 +141,7 @@ public class FlagsRuntimeShowcase {
                     ));
             pageSize.save();
 
-            step("Created numeric flag: " + pageSize.getKey());
+            step("Created numeric flag: " + pageSize.getId());
 
             pageSize.addRule(new Rule("Larger pages for power users")
                     .environment("staging")
@@ -163,7 +163,7 @@ public class FlagsRuntimeShowcase {
                     ));
             layout.save();
 
-            step("Created JSON flag: " + layout.getKey());
+            step("Created JSON flag: " + layout.getId());
 
             layout.addRule(new Rule("Compact layout for mobile users")
                     .environment("staging")
@@ -188,10 +188,10 @@ public class FlagsRuntimeShowcase {
                     Map.of("columns", 2, "showHeader", true, "compact", false));
 
             step("Declared 4 typed handles");
-            step("  booleanFlag: " + maintenanceHandle.getKey() + " (default=" + maintenanceHandle.getDefault() + ")");
-            step("  stringFlag: " + greetingHandle.getKey() + " (default=" + greetingHandle.getDefault() + ")");
-            step("  numberFlag: " + pageSizeHandle.getKey() + " (default=" + pageSizeHandle.getDefault() + ")");
-            step("  jsonFlag: " + layoutHandle.getKey() + " (default=" + layoutHandle.getDefault() + ")");
+            step("  booleanFlag: " + maintenanceHandle.getId() + " (default=" + maintenanceHandle.getDefault() + ")");
+            step("  stringFlag: " + greetingHandle.getId() + " (default=" + greetingHandle.getDefault() + ")");
+            step("  numberFlag: " + pageSizeHandle.getId() + " (default=" + pageSizeHandle.getDefault() + ")");
+            step("  jsonFlag: " + layoutHandle.getId() + " (default=" + layoutHandle.getDefault() + ")");
 
             // ==================================================================
             // 4. CONTEXT PROVIDER
@@ -311,7 +311,7 @@ public class FlagsRuntimeShowcase {
             List<FlagChangeEvent> globalChanges = new ArrayList<>();
             client.flags().onChange(event -> {
                 globalChanges.add(event);
-                System.out.println("    [GLOBAL CHANGE] flag=" + event.key()
+                System.out.println("    [GLOBAL CHANGE] flag=" + event.id()
                         + ", source=" + event.source());
             });
             step("Global change listener registered");

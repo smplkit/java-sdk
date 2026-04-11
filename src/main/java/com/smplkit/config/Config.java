@@ -16,11 +16,10 @@ import java.util.Objects;
 public final class Config {
 
     private ConfigClient client;
-    private String id;          // null for unsaved
-    private String key;
+    private String id;
     private String name;
     private String description;
-    private String parent;      // parent config UUID or null
+    private String parent;      // parent config slug or null
     private Map<String, Object> items;  // {key: {value, type, description}} - the raw typed shape
     private Map<String, Object> environments;
     private Instant createdAt;
@@ -29,9 +28,9 @@ public final class Config {
     /**
      * Package-private constructor. Use {@link ConfigClient#new_(String)} to create instances.
      */
-    Config(ConfigClient client, String key, String name) {
+    Config(ConfigClient client, String id, String name) {
         this.client = client;
-        this.key = Objects.requireNonNull(key, "key must not be null");
+        this.id = Objects.requireNonNull(id, "id must not be null");
         this.name = Objects.requireNonNull(name, "name must not be null");
         this.items = new HashMap<>();
         this.environments = new HashMap<>();
@@ -39,11 +38,8 @@ public final class Config {
 
     // --- Public getters ---
 
-    /** Returns the unique identifier, or null for unsaved configs. */
+    /** Returns the unique identifier (slug), or null for unsaved configs. */
     public String getId() { return id; }
-
-    /** Returns the human-readable key (e.g. "user_service"). */
-    public String getKey() { return key; }
 
     /** Returns the display name. */
     public String getName() { return name; }
@@ -92,8 +88,6 @@ public final class Config {
 
     // --- Package-private setters (used by ConfigClient) ---
 
-    void setId(String id) { this.id = id; }
-    void setKey(String key) { this.key = key; }
     void setParent(String parent) { this.parent = parent; }
     void setCreatedAt(Instant createdAt) { this.createdAt = createdAt; }
     void setUpdatedAt(Instant updatedAt) { this.updatedAt = updatedAt; }
@@ -136,7 +130,7 @@ public final class Config {
      */
     public void save() {
         if (client == null) throw new IllegalStateException("Config not bound to a client");
-        if (id == null) {
+        if (createdAt == null) {
             Config created = client._createConfig(this);
             _apply(created);
         } else {
@@ -150,7 +144,6 @@ public final class Config {
      */
     void _apply(Config other) {
         this.id = other.id;
-        this.key = other.key;
         this.name = other.name;
         this.description = other.description;
         this.parent = other.parent;
@@ -162,6 +155,6 @@ public final class Config {
 
     @Override
     public String toString() {
-        return "Config[id=" + id + ", key=" + key + ", name=" + name + "]";
+        return "Config[id=" + id + ", name=" + name + "]";
     }
 }

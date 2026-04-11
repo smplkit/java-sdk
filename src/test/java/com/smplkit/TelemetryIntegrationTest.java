@@ -38,6 +38,7 @@ import java.util.function.Consumer;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.nullable;
 import static org.mockito.Mockito.*;
 
 /**
@@ -98,7 +99,7 @@ class TelemetryIntegrationTest {
         FlagsApi flagsApi = mock(FlagsApi.class);
         ContextsApi contextsApi = mock(ContextsApi.class);
 
-        when(flagsApi.listFlags(any(), any())).thenReturn(
+        when(flagsApi.listFlags(nullable(String.class))).thenReturn(
                 makeFlagListResponse("test-flag", "production"));
 
         FlagsClient flags = new FlagsClient(flagsApi, contextsApi,
@@ -131,7 +132,7 @@ class TelemetryIntegrationTest {
         FlagsApi flagsApi = mock(FlagsApi.class);
         ContextsApi contextsApi = mock(ContextsApi.class);
 
-        when(flagsApi.listFlags(any(), any())).thenReturn(
+        when(flagsApi.listFlags(nullable(String.class))).thenReturn(
                 makeFlagListResponse("test-flag", "production"));
 
         FlagsClient flags = new FlagsClient(flagsApi, contextsApi,
@@ -165,7 +166,7 @@ class TelemetryIntegrationTest {
         FlagsApi flagsApi = mock(FlagsApi.class);
         ContextsApi contextsApi = mock(ContextsApi.class);
 
-        when(flagsApi.listFlags(any(), any())).thenReturn(
+        when(flagsApi.listFlags(nullable(String.class))).thenReturn(
                 makeFlagListResponse("test-flag", "production"));
 
         FlagsClient flags = new FlagsClient(flagsApi, contextsApi,
@@ -192,7 +193,7 @@ class TelemetryIntegrationTest {
         ConfigsApi configsApi = mock(ConfigsApi.class);
         ConfigListResponse listResp = new ConfigListResponse();
         listResp.setData(List.of());
-        when(configsApi.listConfigs(any(), any())).thenReturn(listResp);
+        when(configsApi.listConfigs(any())).thenReturn(listResp);
 
         ConfigClient config = new ConfigClient(configsApi, mockHttpClient, "key");
         config.setEnvironment("production");
@@ -215,7 +216,7 @@ class TelemetryIntegrationTest {
         ConfigsApi configsApi = mock(ConfigsApi.class);
         ConfigListResponse listResp = new ConfigListResponse();
         listResp.setData(List.of());
-        when(configsApi.listConfigs(any(), any())).thenReturn(listResp);
+        when(configsApi.listConfigs(any())).thenReturn(listResp);
 
         ConfigClient config = new ConfigClient(configsApi, mockHttpClient, "key");
         config.setEnvironment("production");
@@ -239,9 +240,9 @@ class TelemetryIntegrationTest {
         // First call (for _connectInternal): return config with value "old"
         ConfigListResponse firstResp = new ConfigListResponse();
         ConfigResource cr1 = new ConfigResource();
-        cr1.setId("cfg-1");
+        cr1.setId("my-config");
         var attrs1 = new Config();
-        attrs1.setKey("my-config");
+        attrs1.setId("my-config");
         attrs1.setName("My Config");
         var items1 = new HashMap<String, com.smplkit.internal.generated.config.model.ConfigItemDefinition>();
         var item1 = new com.smplkit.internal.generated.config.model.ConfigItemDefinition();
@@ -255,9 +256,9 @@ class TelemetryIntegrationTest {
         // Second call (for refresh): return config with value "new"
         ConfigListResponse secondResp = new ConfigListResponse();
         ConfigResource cr2 = new ConfigResource();
-        cr2.setId("cfg-1");
+        cr2.setId("my-config");
         var attrs2 = new Config();
-        attrs2.setKey("my-config");
+        attrs2.setId("my-config");
         attrs2.setName("My Config");
         var items2 = new HashMap<String, com.smplkit.internal.generated.config.model.ConfigItemDefinition>();
         var item2 = new com.smplkit.internal.generated.config.model.ConfigItemDefinition();
@@ -268,7 +269,7 @@ class TelemetryIntegrationTest {
         cr2.setAttributes(attrs2);
         secondResp.setData(List.of(cr2));
 
-        when(configsApi.listConfigs(any(), any()))
+        when(configsApi.listConfigs(nullable(String.class)))
                 .thenReturn(firstResp)
                 .thenReturn(secondResp);
 
@@ -303,7 +304,7 @@ class TelemetryIntegrationTest {
         // Empty responses for fetch
         LoggerListResponse loggerResp = new LoggerListResponse();
         loggerResp.setData(List.of());
-        when(loggersApi.listLoggers(any(), any())).thenReturn(loggerResp);
+        when(loggersApi.listLoggers(nullable(Boolean.class))).thenReturn(loggerResp);
         LogGroupListResponse groupResp = new LogGroupListResponse();
         groupResp.setData(List.of());
         when(logGroupsApi.listLogGroups()).thenReturn(groupResp);
@@ -356,15 +357,15 @@ class TelemetryIntegrationTest {
         // Return a managed logger
         LoggerListResponse loggerResp = new LoggerListResponse();
         LoggerResource lr = new LoggerResource();
-        lr.setId("lg-1");
+        lr.setId("com.myapp.service");
         var attrs = new Logger();
-        attrs.setKey("com.myapp.service");
+        attrs.setId("com.myapp.service");
         attrs.setName("Service Logger");
         attrs.setLevel("DEBUG");
         attrs.setManaged(true);
         lr.setAttributes(attrs);
         loggerResp.setData(List.of(lr));
-        when(loggersApi.listLoggers(any(), any())).thenReturn(loggerResp);
+        when(loggersApi.listLoggers(nullable(Boolean.class))).thenReturn(loggerResp);
 
         LogGroupListResponse groupResp = new LogGroupListResponse();
         groupResp.setData(List.of());
@@ -585,9 +586,9 @@ class TelemetryIntegrationTest {
 
     private FlagListResponse makeFlagListResponse(String key, String env) {
         FlagResource resource = new FlagResource();
-        resource.setId("uuid-1");
+        resource.setId(key);
         var flagAttrs = new com.smplkit.internal.generated.flags.model.Flag();
-        flagAttrs.setKey(key);
+        flagAttrs.setId(key);
         flagAttrs.setName("Test Flag");
         flagAttrs.setType("BOOLEAN");
         flagAttrs.setDefault(true);

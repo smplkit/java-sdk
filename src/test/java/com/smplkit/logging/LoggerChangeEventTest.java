@@ -13,7 +13,7 @@ class LoggerChangeEventTest {
     @Test
     void record_storesAllFields() {
         LoggerChangeEvent event = new LoggerChangeEvent("com.acme", LogLevel.DEBUG, "start");
-        assertEquals("com.acme", event.key());
+        assertEquals("com.acme", event.id());
         assertEquals(LogLevel.DEBUG, event.level());
         assertEquals("start", event.source());
     }

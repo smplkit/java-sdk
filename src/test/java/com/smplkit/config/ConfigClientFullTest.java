@@ -14,10 +14,10 @@ import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;
 
 import java.net.http.HttpClient;
+import java.time.OffsetDateTime;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.UUID;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
@@ -43,12 +43,19 @@ class ConfigClientFullTest {
         configClient = new ConfigClient(mockApi, HttpClient.newHttpClient(), "test-key");
     }
 
-    private ConfigResource makeResource(String id, String key, String name, String description,
+    private ConfigResource makeResource(String id, String name, String description,
                                         String parent, Map<String, ConfigItemDefinition> items,
                                         Map<String, EnvironmentOverride> environments) {
-        var attrs = new com.smplkit.internal.generated.config.model.Config(null, null);
+        return makeResource(id, name, description, parent, items, environments, null, null);
+    }
+
+    private ConfigResource makeResource(String id, String name, String description,
+                                        String parent, Map<String, ConfigItemDefinition> items,
+                                        Map<String, EnvironmentOverride> environments,
+                                        OffsetDateTime createdAt, OffsetDateTime updatedAt) {
+        var attrs = new com.smplkit.internal.generated.config.model.Config(createdAt, updatedAt);
         if (name != null) attrs.setName(name); else attrs.setName("");
-        if (key != null) attrs.setKey(key);
+        if (id != null) attrs.setId(id);
         if (description != null) attrs.setDescription(description);
         if (parent != null) attrs.setParent(parent);
         if (items != null) attrs.setItems(items);
@@ -100,9 +107,11 @@ class ConfigClientFullTest {
 
     @Test
     void save_fullRoundTrip_createThenUpdate() throws ApiException {
+        OffsetDateTime now = OffsetDateTime.now();
         // 1. Create
-        ConfigResource created = makeResource(CONFIG_ID, "svc", "Svc", "initial desc",
-                null, Map.of("a", itemDef(1, ConfigItemDefinition.TypeEnum.NUMBER)), Map.of());
+        ConfigResource created = makeResource(CONFIG_ID, "Svc", "initial desc",
+                null, Map.of("a", itemDef(1, ConfigItemDefinition.TypeEnum.NUMBER)), Map.of(),
+                now, now);
         when(mockApi.createConfig(any())).thenReturn(singleResponse(created));
 
         Config config = configClient.new_("svc", "Svc", "initial desc", null);
@@ -113,9 +122,10 @@ class ConfigClientFullTest {
         assertEquals("initial desc", config.getDescription());
 
         // 2. Mutate and update
-        ConfigResource updated = makeResource(CONFIG_ID, "svc", "Svc Updated", "new desc",
-                null, Map.of("a", itemDef(99, ConfigItemDefinition.TypeEnum.NUMBER)), Map.of());
-        when(mockApi.updateConfig(eq(UUID.fromString(CONFIG_ID)), any()))
+        ConfigResource updated = makeResource(CONFIG_ID, "Svc Updated", "new desc",
+                null, Map.of("a", itemDef(99, ConfigItemDefinition.TypeEnum.NUMBER)), Map.of(),
+                now, now);
+        when(mockApi.updateConfig(eq(CONFIG_ID), any()))
                 .thenReturn(singleResponse(updated));
 
         config.setName("Svc Updated");
@@ -125,7 +135,7 @@ class ConfigClientFullTest {
 
         assertEquals("Svc Updated", config.getName());
         assertEquals("new desc", config.getDescription());
-        verify(mockApi).updateConfig(eq(UUID.fromString(CONFIG_ID)), any());
+        verify(mockApi).updateConfig(eq(CONFIG_ID), any());
     }
 
     // -----------------------------------------------------------------------
@@ -134,8 +144,9 @@ class ConfigClientFullTest {
 
     @Test
     void save_update_preservesParent() throws ApiException {
-        ConfigResource created = makeResource(CONFIG_ID, "child", "Child", null,
-                PARENT_ID, Map.of(), Map.of());
+        OffsetDateTime now = OffsetDateTime.now();
+        ConfigResource created = makeResource(CONFIG_ID, "Child", null,
+                PARENT_ID, Map.of(), Map.of(), now, now);
         when(mockApi.createConfig(any())).thenReturn(singleResponse(created));
 
         Config config = configClient.new_("child", null, null, PARENT_ID);
@@ -144,8 +155,8 @@ class ConfigClientFullTest {
         assertEquals(PARENT_ID, config.getParent());
 
         // Update should preserve parent
-        ConfigResource updated = makeResource(CONFIG_ID, "child", "Child Updated", null,
-                PARENT_ID, Map.of(), Map.of());
+        ConfigResource updated = makeResource(CONFIG_ID, "Child Updated", null,
+                PARENT_ID, Map.of(), Map.of(), now, now);
         when(mockApi.updateConfig(any(), any())).thenReturn(singleResponse(updated));
 
         config.setName("Child Updated");
@@ -160,9 +171,10 @@ class ConfigClientFullTest {
 
     @Test
     void save_update_apiException_throwsSmplException() throws ApiException {
-        // Setup: create a config first to give it an id
-        ConfigResource created = makeResource(CONFIG_ID, "svc", "Svc", null,
-                null, Map.of(), Map.of());
+        OffsetDateTime now = OffsetDateTime.now();
+        // Setup: create a config first to give it createdAt
+        ConfigResource created = makeResource(CONFIG_ID, "Svc", null,
+                null, Map.of(), Map.of(), now, now);
         when(mockApi.createConfig(any())).thenReturn(singleResponse(created));
 
         Config config = configClient.new_("svc");
@@ -182,15 +194,16 @@ class ConfigClientFullTest {
 
     @Test
     void save_update_withEnvironments() throws ApiException {
-        ConfigResource created = makeResource(CONFIG_ID, "svc", "Name", null, null,
-                Map.of(), Map.of());
+        OffsetDateTime now = OffsetDateTime.now();
+        ConfigResource created = makeResource(CONFIG_ID, "Name", null, null,
+                Map.of(), Map.of(), now, now);
         when(mockApi.createConfig(any())).thenReturn(singleResponse(created));
 
         Config config = configClient.new_("svc");
         config.save();
 
-        ConfigResource updated = makeResource(CONFIG_ID, "svc", "Name", null, null,
-                Map.of(), Map.of("production", envOverride(Map.of("k", "v"))));
+        ConfigResource updated = makeResource(CONFIG_ID, "Name", null, null,
+                Map.of(), Map.of("production", envOverride(Map.of("k", "v"))), now, now);
         when(mockApi.updateConfig(any(), any())).thenReturn(singleResponse(updated));
 
         Map<String, Object> envData = new HashMap<>();

@@ -17,7 +17,7 @@ import java.util.Map;
  * <ul>
  *   <li>Client initialization ({@link SmplClient})</li>
  *   <li>Creating flags of every type: boolean, string, numeric, and JSON</li>
- *   <li>Fetching a flag by key and listing all flags</li>
+ *   <li>Fetching a flag by id and listing all flags</li>
  *   <li>Updating a flag via field mutation and {@link Flag#save()}</li>
  *   <li>Adding targeting rules via {@link Flag#addRule} with the {@link Rule} builder</li>
  *   <li>Cleanup of all created resources</li>
@@ -94,8 +94,8 @@ public class FlagsManagementShowcase {
                     "dark-mode-mgmt", false, "Dark Mode",
                     "Controls whether the dark mode UI is enabled.");
             darkMode.save();
-            createdFlagKeys.add(darkMode.getKey());
-            step("Created boolean flag: key=" + darkMode.getKey()
+            createdFlagKeys.add(darkMode.getId());
+            step("Created boolean flag: id=" + darkMode.getId()
                     + ", id=" + darkMode.getId()
                     + ", default=" + darkMode.getDefault());
 
@@ -114,8 +114,8 @@ public class FlagsManagementShowcase {
                             Map.of("name", "Holiday", "value", "Happy Holidays!")
                     ));
             banner.save();
-            createdFlagKeys.add(banner.getKey());
-            step("Created string flag: key=" + banner.getKey()
+            createdFlagKeys.add(banner.getId());
+            step("Created string flag: id=" + banner.getId()
                     + ", id=" + banner.getId()
                     + ", default=" + banner.getDefault());
 
@@ -132,8 +132,8 @@ public class FlagsManagementShowcase {
                     "rate-limit-mgmt", 100, "Rate Limit",
                     "Maximum API requests per minute per user.");
             rateLimit.save();
-            createdFlagKeys.add(rateLimit.getKey());
-            step("Created numeric flag: key=" + rateLimit.getKey()
+            createdFlagKeys.add(rateLimit.getId());
+            step("Created numeric flag: id=" + rateLimit.getId()
                     + ", id=" + rateLimit.getId()
                     + ", default=" + rateLimit.getDefault());
 
@@ -152,8 +152,8 @@ public class FlagsManagementShowcase {
                             Map.of("name", "Enterprise Beta", "value", Map.of("theme", "dark", "sidebar", true, "maxTabs", 10, "betaFeatures", true))
                     ));
             uiConfig.save();
-            createdFlagKeys.add(uiConfig.getKey());
-            step("Created JSON flag: key=" + uiConfig.getKey()
+            createdFlagKeys.add(uiConfig.getId());
+            step("Created JSON flag: id=" + uiConfig.getId()
                     + ", id=" + uiConfig.getId()
                     + ", default=" + uiConfig.getDefault());
 
@@ -164,7 +164,7 @@ public class FlagsManagementShowcase {
 
             // Fetch a single flag by key.
             Flag<?> fetched = client.flags().get("dark-mode-mgmt");
-            step("Fetched flag by key: key=" + fetched.getKey()
+            step("Fetched flag by id: id=" + fetched.getId()
                     + ", type=" + fetched.getType()
                     + ", description=" + fetched.getDescription());
 
@@ -172,7 +172,7 @@ public class FlagsManagementShowcase {
             List<Flag<?>> allFlags = client.flags().list();
             step("Total flags in account: " + allFlags.size());
             for (Flag<?> f : allFlags) {
-                step("  " + f.getKey() + " (" + f.getType() + ") -- " + f.getName());
+                step("  " + f.getId() + " (" + f.getType() + ") -- " + f.getName());
             }
 
             // ==================================================================

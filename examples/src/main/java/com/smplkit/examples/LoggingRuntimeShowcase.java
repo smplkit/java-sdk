@@ -48,7 +48,7 @@ public class LoggingRuntimeShowcase {
 
             // Global listener: fires for any logger change
             client.logging().onChange(event ->
-                    step("[GLOBAL] Logger '" + event.key() + "' changed to "
+                    step("[GLOBAL] Logger '" + event.id() + "' changed to "
                             + event.level() + " (source: " + event.source() + ")")
             );
             step("Registered global change listener");
@@ -99,7 +99,7 @@ public class LoggingRuntimeShowcase {
             Logger mgr = client.logging().new_("com.acme.payments", "Payments Logger", true);
             mgr.setLevel(LogLevel.DEBUG);
             mgr.save();
-            step("Created managed logger: key=" + mgr.getKey()
+            step("Created managed logger: id=" + mgr.getId()
                     + ", level=" + mgr.getLevel()
                     + ", managed=" + mgr.isManaged());
 
@@ -111,7 +111,7 @@ public class LoggingRuntimeShowcase {
                     + ", environments=" + mgr.getEnvironments());
 
             // Clean up
-            client.logging().delete(mgr.getKey());
+            client.logging().delete(mgr.getId());
             step("Deleted managed logger");
         }
 

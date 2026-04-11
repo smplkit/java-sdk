@@ -29,7 +29,6 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-import java.util.UUID;
 import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.Consumer;
@@ -134,43 +133,40 @@ public final class LoggingClient {
     // -----------------------------------------------------------------------
 
     /**
-     * Create an unsaved Logger with the given key. Call {@link Logger#save()} to persist.
+     * Create an unsaved Logger with the given id. Call {@link Logger#save()} to persist.
      *
-     * @param key the logger key
+     * @param id the logger id
      * @return an unsaved Logger instance
      */
-    public Logger new_(String key) {
-        return new Logger(this, null, key, Helpers.keyToDisplayName(key),
+    public Logger new_(String id) {
+        return new Logger(this, id, Helpers.keyToDisplayName(id),
                 null, null, false, null, null, null, null);
     }
 
     /**
-     * Create an unsaved Logger with the given key, name, and managed flag.
+     * Create an unsaved Logger with the given id, name, and managed flag.
      *
-     * @param key     the logger key
+     * @param id      the logger id
      * @param name    the display name
      * @param managed whether this logger is managed by smplkit
      * @return an unsaved Logger instance
      */
-    public Logger new_(String key, String name, boolean managed) {
-        return new Logger(this, null, key, name,
+    public Logger new_(String id, String name, boolean managed) {
+        return new Logger(this, id, name,
                 null, null, managed, null, null, null, null);
     }
 
     /**
-     * Get a logger by key (always fetches from server via filter).
+     * Get a logger by id.
      *
-     * @param key the logger key
+     * @param id the logger id
      * @return the Logger
-     * @throws SmplNotFoundException if no logger with the given key exists
+     * @throws SmplNotFoundException if no logger with the given id exists
      */
-    public Logger get(String key) {
+    public Logger get(String id) {
         try {
-            LoggerListResponse response = loggersApi.listLoggers(key, null);
-            if (response.getData() == null || response.getData().isEmpty()) {
-                throw new SmplNotFoundException("Logger with key '" + key + "' not found", null);
-            }
-            return loggerResourceToModel(response.getData().get(0));
+            LoggerResponse response = loggersApi.getLogger(id);
+            return loggerResponseToModel(response);
         } catch (ApiException e) {
             throw mapLoggingException(e);
         }
@@ -183,7 +179,7 @@ public final class LoggingClient {
      */
     public List<Logger> list() {
         try {
-            LoggerListResponse response = loggersApi.listLoggers(null, null);
+            LoggerListResponse response = loggersApi.listLoggers(null);
             List<Logger> result = new ArrayList<>();
             if (response.getData() != null) {
                 for (LoggerResource r : response.getData()) {
@@ -197,14 +193,13 @@ public final class LoggingClient {
     }
 
     /**
-     * Delete a logger by key.
+     * Delete a logger by id.
      *
-     * @param key the logger key to delete
+     * @param id the logger id to delete
      */
-    public void delete(String key) {
-        Logger lg = get(key);
+    public void delete(String id) {
         try {
-            loggersApi.deleteLogger(UUID.fromString(lg.getId()));
+            loggersApi.deleteLogger(id);
         } catch (ApiException e) {
             throw mapLoggingException(e);
         }
@@ -225,8 +220,7 @@ public final class LoggingClient {
     Logger _updateLogger(Logger lg) {
         try {
             ResponseLogger body = buildLoggerBody(lg.getId(), lg);
-            LoggerResponse response = loggersApi.updateLogger(
-                    UUID.fromString(lg.getId()), body);
+            LoggerResponse response = loggersApi.updateLogger(lg.getId(), body);
             return loggerResponseToModel(response);
         } catch (ApiException e) {
             throw mapLoggingException(e);
@@ -238,48 +232,40 @@ public final class LoggingClient {
     // -----------------------------------------------------------------------
 
     /**
-     * Create an unsaved LogGroup with the given key. Call {@link LogGroup#save()} to persist.
+     * Create an unsaved LogGroup with the given id. Call {@link LogGroup#save()} to persist.
      *
-     * @param key the group key
+     * @param id the group id
      * @return an unsaved LogGroup instance
      */
-    public LogGroup newGroup(String key) {
-        return new LogGroup(this, null, key, Helpers.keyToDisplayName(key),
+    public LogGroup newGroup(String id) {
+        return new LogGroup(this, id, Helpers.keyToDisplayName(id),
                 null, null, null, null, null);
     }
 
     /**
-     * Create an unsaved LogGroup with the given key, name, and parent group.
+     * Create an unsaved LogGroup with the given id, name, and parent group.
      *
-     * @param key         the group key
+     * @param id          the group id
      * @param name        the display name
-     * @param parentGroup the parent group UUID or null
+     * @param parentGroup the parent group slug or null
      * @return an unsaved LogGroup instance
      */
-    public LogGroup newGroup(String key, String name, String parentGroup) {
-        return new LogGroup(this, null, key, name,
+    public LogGroup newGroup(String id, String name, String parentGroup) {
+        return new LogGroup(this, id, name,
                 null, parentGroup, null, null, null);
     }
 
     /**
-     * Get a log group by key.
+     * Get a log group by id.
      *
-     * @param key the group key
+     * @param id the group id
      * @return the LogGroup
-     * @throws SmplNotFoundException if no group with the given key exists
+     * @throws SmplNotFoundException if no group with the given id exists
      */
-    public LogGroup getGroup(String key) {
+    public LogGroup getGroup(String id) {
         try {
-            LogGroupListResponse response = logGroupsApi.listLogGroups();
-            if (response.getData() != null) {
-                for (LogGroupResource r : response.getData()) {
-                    String rkey = r.getAttributes() != null ? r.getAttributes().getKey() : null;
-                    if (key.equals(rkey)) {
-                        return logGroupResourceToModel(r);
-                    }
-                }
-            }
-            throw new SmplNotFoundException("Log group with key '" + key + "' not found", null);
+            LogGroupResponse response = logGroupsApi.getLogGroup(id);
+            return logGroupResponseToModel(response);
         } catch (ApiException e) {
             throw mapLoggingException(e);
         }
@@ -306,14 +292,13 @@ public final class LoggingClient {
     }
 
     /**
-     * Delete a log group by key.
+     * Delete a log group by id.
      *
-     * @param key the group key to delete
+     * @param id the group id to delete
      */
-    public void deleteGroup(String key) {
-        LogGroup grp = getGroup(key);
+    public void deleteGroup(String id) {
         try {
-            logGroupsApi.deleteLogGroup(UUID.fromString(grp.getId()));
+            logGroupsApi.deleteLogGroup(id);
         } catch (ApiException e) {
             throw mapLoggingException(e);
         }
@@ -334,8 +319,7 @@ public final class LoggingClient {
     LogGroup _updateGroup(LogGroup grp) {
         try {
             ResponseLogGroup body = buildGroupBody(grp.getId(), grp);
-            LogGroupResponse response = logGroupsApi.updateLogGroup(
-                    UUID.fromString(grp.getId()), body);
+            LogGroupResponse response = logGroupsApi.updateLogGroup(grp.getId(), body);
             return logGroupResponseToModel(response);
         } catch (ApiException e) {
             throw mapLoggingException(e);
@@ -409,13 +393,13 @@ public final class LoggingClient {
     }
 
     /**
-     * Register a key-scoped change listener that fires only for the given logger key.
+     * Register an id-scoped change listener that fires only for the given logger id.
      *
-     * @param key      the logger key to watch
+     * @param id       the logger id to watch
      * @param listener the callback
      */
-    public void onChange(String key, Consumer<LoggerChangeEvent> listener) {
-        keyListeners.computeIfAbsent(key, k -> new CopyOnWriteArrayList<>()).add(listener);
+    public void onChange(String id, Consumer<LoggerChangeEvent> listener) {
+        keyListeners.computeIfAbsent(id, k -> new CopyOnWriteArrayList<>()).add(listener);
     }
 
     /** Returns whether start() has been called. */
@@ -570,19 +554,19 @@ public final class LoggingClient {
         // Fetch loggers
         Map<String, Map<String, Object>> loggersData = new HashMap<>();
         try {
-            LoggerListResponse loggerResp = loggersApi.listLoggers(null, null);
+            LoggerListResponse loggerResp = loggersApi.listLoggers(null);
             if (loggerResp.getData() != null) {
                 for (LoggerResource r : loggerResp.getData()) {
                     var attrs = r.getAttributes();
-                    String key = attrs.getKey() != null ? attrs.getKey() : "";
+                    String id = r.getId() != null ? r.getId() : "";
                     Map<String, Object> entry = new HashMap<>();
-                    entry.put("key", key);
+                    entry.put("id", id);
                     entry.put("level", attrs.getLevel());
                     entry.put("group", attrs.getGroup());
                     entry.put("managed", attrs.getManaged());
                     entry.put("environments", attrs.getEnvironments() != null
                             ? new HashMap<>(attrs.getEnvironments()) : new HashMap<>());
-                    loggersData.put(key, entry);
+                    loggersData.put(id, entry);
                 }
             }
         } catch (ApiException e) {
@@ -598,7 +582,7 @@ public final class LoggingClient {
                     var attrs = r.getAttributes();
                     String gid = r.getId() != null ? r.getId() : "";
                     Map<String, Object> entry = new HashMap<>();
-                    entry.put("key", attrs.getKey() != null ? attrs.getKey() : "");
+                    entry.put("id", gid);
                     entry.put("level", attrs.getLevel());
                     entry.put("group", attrs.getGroup());
                     entry.put("environments", attrs.getEnvironments() != null
@@ -706,7 +690,6 @@ public final class LoggingClient {
         return new Logger(
                 this,
                 resource.getId() != null ? resource.getId() : null,
-                attrs.getKey() != null ? attrs.getKey() : "",
                 attrs.getName(),
                 attrs.getLevel(),
                 attrs.getGroup(),
@@ -727,7 +710,6 @@ public final class LoggingClient {
         return new LogGroup(
                 this,
                 resource.getId() != null ? resource.getId() : null,
-                attrs.getKey() != null ? attrs.getKey() : "",
                 attrs.getName(),
                 attrs.getLevel(),
                 attrs.getGroup(),
@@ -744,7 +726,7 @@ public final class LoggingClient {
     private ResponseLogger buildLoggerBody(String loggerId, Logger lg) {
         var attrs = new com.smplkit.internal.generated.logging.model.Logger();
         attrs.setName(lg.getName());
-        if (lg.getKey() != null) attrs.setKey(lg.getKey());
+        if (lg.getId() != null) attrs.setId(lg.getId());
         if (lg.getLevel() != null) attrs.setLevel(lg.getLevel());
         if (lg.getGroup() != null) attrs.setGroup(lg.getGroup());
         attrs.setManaged(lg.isManaged());
@@ -765,7 +747,7 @@ public final class LoggingClient {
     private ResponseLogGroup buildGroupBody(String groupId, LogGroup grp) {
         var attrs = new com.smplkit.internal.generated.logging.model.LogGroup();
         attrs.setName(grp.getName());
-        if (grp.getKey() != null) attrs.setKey(grp.getKey());
+        if (grp.getId() != null) attrs.setId(grp.getId());
         if (grp.getLevel() != null) attrs.setLevel(grp.getLevel());
         if (grp.getGroup() != null) attrs.setGroup(grp.getGroup());
         if (grp.getEnvironments() != null && !grp.getEnvironments().isEmpty()) {

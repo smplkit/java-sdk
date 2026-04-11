@@ -49,7 +49,7 @@ class Phase2CoverageTest {
         ConfigsApi mockApi = mock(ConfigsApi.class);
 
         Map<String, Object> configData = new HashMap<>();
-        configData.put("key", "db-config");
+        configData.put("id", "db-config");
         configData.put("name", "DB Config");
         configData.put("items", Map.of(
                 "host", Map.of("type", "STRING", "value", "localhost"),
@@ -65,11 +65,11 @@ class Phase2CoverageTest {
 
         ConfigListResponse listResponse = OBJECT_MAPPER.convertValue(
                 Map.of("data", List.of(Map.of(
-                        "id", "11111111-1111-1111-1111-111111111111",
+                        "id", "db-config",
                         "attributes", configData
                 ))),
                 ConfigListResponse.class);
-        when(mockApi.listConfigs(isNull(), isNull())).thenReturn(listResponse);
+        when(mockApi.listConfigs(isNull())).thenReturn(listResponse);
 
         // Without setEnvironment, resolve returns empty (no lazy init)
         ConfigClient noEnvClient = new ConfigClient(mockApi, HttpClient.newHttpClient(), "test-key");
@@ -93,9 +93,9 @@ class Phase2CoverageTest {
 
         ConfigListResponse listResponse = OBJECT_MAPPER.convertValue(
                 Map.of("data", List.of(Map.of(
-                        "id", "22222222-2222-2222-2222-222222222222",
+                        "id", "app-config",
                         "attributes", Map.of(
-                                "key", "app-config",
+                                "id", "app-config",
                                 "name", "App Config",
                                 "items", Map.of(
                                         "title", Map.of("type", "STRING", "value", "Default Title")
@@ -103,7 +103,7 @@ class Phase2CoverageTest {
                         )
                 ))),
                 ConfigListResponse.class);
-        when(mockApi.listConfigs(isNull(), isNull())).thenReturn(listResponse);
+        when(mockApi.listConfigs(isNull())).thenReturn(listResponse);
 
         ConfigClient configClient = new ConfigClient(mockApi, HttpClient.newHttpClient(), "test-key");
         configClient.setEnvironment("staging");
@@ -127,7 +127,7 @@ class Phase2CoverageTest {
         flagsClient.setEnvironment("staging");
 
         Map<String, Object> attrs = new HashMap<>();
-        attrs.put("key", "svc-flag");
+        attrs.put("id", "svc-flag");
         attrs.put("name", "Svc Flag");
         attrs.put("type", "BOOLEAN");
         attrs.put("default", false);
@@ -144,11 +144,11 @@ class Phase2CoverageTest {
         ));
         FlagListResponse flagList = OBJECT_MAPPER.convertValue(
                 Map.of("data", List.of(Map.of(
-                        "id", "33333333-3333-3333-3333-333333333333",
+                        "id", "svc-flag",
                         "type", "flag", "attributes", attrs
                 ))),
                 FlagListResponse.class);
-        when(mockApi.listFlags(isNull(), isNull())).thenReturn(flagList);
+        when(mockApi.listFlags(isNull())).thenReturn(flagList);
 
         Flag<Boolean> handle = flagsClient.booleanFlag("svc-flag", false);
         assertTrue(handle.get(List.of()));
@@ -164,7 +164,7 @@ class Phase2CoverageTest {
         flagsClient.setEnvironment("staging");
 
         Map<String, Object> attrs = new HashMap<>();
-        attrs.put("key", "svc-flag");
+        attrs.put("id", "svc-flag");
         attrs.put("name", "Svc Flag");
         attrs.put("type", "BOOLEAN");
         attrs.put("default", false);
@@ -181,11 +181,11 @@ class Phase2CoverageTest {
         ));
         FlagListResponse flagList = OBJECT_MAPPER.convertValue(
                 Map.of("data", List.of(Map.of(
-                        "id", "33333333-3333-3333-3333-333333333333",
+                        "id", "svc-flag",
                         "type", "flag", "attributes", attrs
                 ))),
                 FlagListResponse.class);
-        when(mockApi.listFlags(isNull(), isNull())).thenReturn(flagList);
+        when(mockApi.listFlags(isNull())).thenReturn(flagList);
 
         Flag<Boolean> handle = flagsClient.booleanFlag("svc-flag", false);
         Context explicitService = new Context("service", "other-service", Map.of());
@@ -201,7 +201,7 @@ class Phase2CoverageTest {
         flagsClient.setEnvironment("staging");
 
         Map<String, Object> attrs = new HashMap<>();
-        attrs.put("key", "svc-flag");
+        attrs.put("id", "svc-flag");
         attrs.put("name", "Svc Flag");
         attrs.put("type", "BOOLEAN");
         attrs.put("default", false);
@@ -218,11 +218,11 @@ class Phase2CoverageTest {
         ));
         FlagListResponse flagList = OBJECT_MAPPER.convertValue(
                 Map.of("data", List.of(Map.of(
-                        "id", "33333333-3333-3333-3333-333333333333",
+                        "id", "svc-flag",
                         "type", "flag", "attributes", attrs
                 ))),
                 FlagListResponse.class);
-        when(mockApi.listFlags(isNull(), isNull())).thenReturn(flagList);
+        when(mockApi.listFlags(isNull())).thenReturn(flagList);
 
         Flag<Boolean> handle = flagsClient.booleanFlag("svc-flag", false);
         assertFalse(handle.get(List.of()));
@@ -302,13 +302,13 @@ class Phase2CoverageTest {
                 Duration.ofSeconds(5));
         flagsClient.setEnvironment("staging");
 
-        when(mockApi.listFlags(isNull(), isNull()))
+        when(mockApi.listFlags(isNull()))
                 .thenReturn(new FlagListResponse().data(List.of()));
 
         Flag<Boolean> handle = flagsClient.booleanFlag("unknown-flag", false);
         handle.get(List.of());
         handle.get(List.of());
 
-        verify(mockApi, times(1)).listFlags(isNull(), isNull());
+        verify(mockApi, times(1)).listFlags(isNull());
     }
 }

@@ -28,19 +28,19 @@ public class ConfigRuntimeSetup {
      * Holds references to the demo configs created during setup.
      */
     public static class DemoConfigs {
-        private final String commonKey;
-        private final String userServiceKey;
-        private final String authModuleKey;
+        private final String commonId;
+        private final String userServiceId;
+        private final String authModuleId;
 
-        public DemoConfigs(String commonKey, String userServiceKey, String authModuleKey) {
-            this.commonKey = commonKey;
-            this.userServiceKey = userServiceKey;
-            this.authModuleKey = authModuleKey;
+        public DemoConfigs(String commonId, String userServiceId, String authModuleId) {
+            this.commonId = commonId;
+            this.userServiceId = userServiceId;
+            this.authModuleId = authModuleId;
         }
 
-        public String commonKey() { return commonKey; }
-        public String userServiceKey() { return userServiceKey; }
-        public String authModuleKey() { return authModuleKey; }
+        public String commonId() { return commonId; }
+        public String userServiceId() { return userServiceId; }
+        public String authModuleId() { return authModuleId; }
     }
 
     /**
@@ -60,7 +60,7 @@ public class ConfigRuntimeSetup {
 
         // 1. Update the built-in common config
         Config common = client.config().get("common");
-        step("Fetched common config: id=" + common.getId() + ", key=" + common.getKey());
+        step("Fetched common config: id=" + common.getId());
 
         common.setDescription("Organization-wide shared configuration");
         common.setItems(Map.of(
@@ -129,10 +129,10 @@ public class ConfigRuntimeSetup {
     public static void teardownDemoConfigs(SmplClient client, DemoConfigs demo) throws Exception {
         section("Teardown: Cleaning Up Demo Configs");
 
-        client.config().delete(demo.authModuleKey());
+        client.config().delete(demo.authModuleId());
         step("Deleted auth_module");
 
-        client.config().delete(demo.userServiceKey());
+        client.config().delete(demo.userServiceId());
         step("Deleted user_service");
 
         Config latestCommon = client.config().get("common");

@@ -20,7 +20,6 @@ public final class Flag<T> {
 
     private FlagsClient client;
     private String id;
-    private String key;
     private String name;
     private String type;
     private T defaultValue;
@@ -31,12 +30,12 @@ public final class Flag<T> {
     private Instant updatedAt;
     private final Class<T> valueType;
 
-    Flag(FlagsClient client, String key, String name, String type, T defaultValue,
+    Flag(FlagsClient client, String id, String name, String type, T defaultValue,
          List<Map<String, Object>> values, String description,
          Map<String, Object> environments, Instant createdAt, Instant updatedAt,
          Class<T> valueType) {
         this.client = client;
-        this.key = key;
+        this.id = id;
         this.name = name;
         this.type = type;
         this.defaultValue = defaultValue;
@@ -51,7 +50,6 @@ public final class Flag<T> {
     // --- Getters ---
 
     public String getId() { return id; }
-    public String getKey() { return key; }
     public String getName() { return name; }
     public String getType() { return type; }
     public T getDefault() { return defaultValue; }
@@ -76,7 +74,6 @@ public final class Flag<T> {
     // --- Package-private setters (used by FlagsClient during _apply) ---
 
     void setId(String id) { this.id = id; }
-    void setKey(String key) { this.key = key; }
     void setType(String type) { this.type = type; }
     void setCreatedAt(Instant createdAt) { this.createdAt = createdAt; }
     void setUpdatedAt(Instant updatedAt) { this.updatedAt = updatedAt; }
@@ -103,7 +100,7 @@ public final class Flag<T> {
         if (client == null) {
             return defaultValue;
         }
-        Object raw = client._evaluateHandle(key, defaultValue, contexts);
+        Object raw = client._evaluateHandle(id, defaultValue, contexts);
         if (raw == null) {
             return defaultValue;
         }
@@ -137,7 +134,7 @@ public final class Flag<T> {
      */
     public void save() {
         if (client == null) throw new IllegalStateException("Flag not bound to a client");
-        if (id == null) {
+        if (createdAt == null) {
             Flag<T> created = client._createFlag(this);
             _apply(created);
         } else {
@@ -216,7 +213,6 @@ public final class Flag<T> {
     @SuppressWarnings("unchecked")
     void _apply(Flag<?> other) {
         this.id = other.id;
-        this.key = other.key;
         this.name = other.name;
         this.type = other.type;
         this.defaultValue = (T) other.defaultValue;
@@ -229,6 +225,6 @@ public final class Flag<T> {
 
     @Override
     public String toString() {
-        return "Flag{key='" + key + "', type='" + type + "', default=" + defaultValue + "}";
+        return "Flag{id='" + id + "', type='" + type + "', default=" + defaultValue + "}";
     }
 }

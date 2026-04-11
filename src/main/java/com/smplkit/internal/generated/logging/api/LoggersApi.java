@@ -25,7 +25,6 @@ import com.smplkit.internal.generated.logging.model.LoggerBulkResponse;
 import com.smplkit.internal.generated.logging.model.LoggerListResponse;
 import com.smplkit.internal.generated.logging.model.LoggerResponse;
 import com.smplkit.internal.generated.logging.model.ResponseLogger;
-import java.util.UUID;
 
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -421,7 +420,7 @@ public class LoggersApi {
    * @param id  (required)
    * @throws ApiException if fails to make API call
    */
-  public void deleteLogger(@jakarta.annotation.Nonnull UUID id) throws ApiException {
+  public void deleteLogger(@jakarta.annotation.Nonnull String id) throws ApiException {
     deleteLogger(id, null);
   }
 
@@ -432,7 +431,7 @@ public class LoggersApi {
    * @param headers Optional headers to include in the request
    * @throws ApiException if fails to make API call
    */
-  public void deleteLogger(@jakarta.annotation.Nonnull UUID id, Map<String, String> headers) throws ApiException {
+  public void deleteLogger(@jakarta.annotation.Nonnull String id, Map<String, String> headers) throws ApiException {
     deleteLoggerWithHttpInfo(id, headers);
   }
 
@@ -443,7 +442,7 @@ public class LoggersApi {
    * @return ApiResponse&lt;Void&gt;
    * @throws ApiException if fails to make API call
    */
-  public ApiResponse<Void> deleteLoggerWithHttpInfo(@jakarta.annotation.Nonnull UUID id) throws ApiException {
+  public ApiResponse<Void> deleteLoggerWithHttpInfo(@jakarta.annotation.Nonnull String id) throws ApiException {
     return deleteLoggerWithHttpInfo(id, null);
   }
 
@@ -455,7 +454,7 @@ public class LoggersApi {
    * @return ApiResponse&lt;Void&gt;
    * @throws ApiException if fails to make API call
    */
-  public ApiResponse<Void> deleteLoggerWithHttpInfo(@jakarta.annotation.Nonnull UUID id, Map<String, String> headers) throws ApiException {
+  public ApiResponse<Void> deleteLoggerWithHttpInfo(@jakarta.annotation.Nonnull String id, Map<String, String> headers) throws ApiException {
     HttpRequest.Builder localVarRequestBuilder = deleteLoggerRequestBuilder(id, headers);
     try {
       HttpResponse<InputStream> localVarResponse = memberVarHttpClient.send(
@@ -492,7 +491,7 @@ public class LoggersApi {
     }
   }
 
-  private HttpRequest.Builder deleteLoggerRequestBuilder(@jakarta.annotation.Nonnull UUID id, Map<String, String> headers) throws ApiException {
+  private HttpRequest.Builder deleteLoggerRequestBuilder(@jakarta.annotation.Nonnull String id, Map<String, String> headers) throws ApiException {
     // verify the required parameter 'id' is set
     if (id == null) {
       throw new ApiException(400, "Missing the required parameter 'id' when calling deleteLogger");
@@ -526,7 +525,7 @@ public class LoggersApi {
    * @return LoggerResponse
    * @throws ApiException if fails to make API call
    */
-  public LoggerResponse getLogger(@jakarta.annotation.Nonnull UUID id) throws ApiException {
+  public LoggerResponse getLogger(@jakarta.annotation.Nonnull String id) throws ApiException {
     return getLogger(id, null);
   }
 
@@ -538,7 +537,7 @@ public class LoggersApi {
    * @return LoggerResponse
    * @throws ApiException if fails to make API call
    */
-  public LoggerResponse getLogger(@jakarta.annotation.Nonnull UUID id, Map<String, String> headers) throws ApiException {
+  public LoggerResponse getLogger(@jakarta.annotation.Nonnull String id, Map<String, String> headers) throws ApiException {
     ApiResponse<LoggerResponse> localVarResponse = getLoggerWithHttpInfo(id, headers);
     return localVarResponse.getData();
   }
@@ -550,7 +549,7 @@ public class LoggersApi {
    * @return ApiResponse&lt;LoggerResponse&gt;
    * @throws ApiException if fails to make API call
    */
-  public ApiResponse<LoggerResponse> getLoggerWithHttpInfo(@jakarta.annotation.Nonnull UUID id) throws ApiException {
+  public ApiResponse<LoggerResponse> getLoggerWithHttpInfo(@jakarta.annotation.Nonnull String id) throws ApiException {
     return getLoggerWithHttpInfo(id, null);
   }
 
@@ -562,7 +561,7 @@ public class LoggersApi {
    * @return ApiResponse&lt;LoggerResponse&gt;
    * @throws ApiException if fails to make API call
    */
-  public ApiResponse<LoggerResponse> getLoggerWithHttpInfo(@jakarta.annotation.Nonnull UUID id, Map<String, String> headers) throws ApiException {
+  public ApiResponse<LoggerResponse> getLoggerWithHttpInfo(@jakarta.annotation.Nonnull String id, Map<String, String> headers) throws ApiException {
     HttpRequest.Builder localVarRequestBuilder = getLoggerRequestBuilder(id, headers);
     try {
       HttpResponse<InputStream> localVarResponse = memberVarHttpClient.send(
@@ -610,7 +609,7 @@ public class LoggersApi {
     }
   }
 
-  private HttpRequest.Builder getLoggerRequestBuilder(@jakarta.annotation.Nonnull UUID id, Map<String, String> headers) throws ApiException {
+  private HttpRequest.Builder getLoggerRequestBuilder(@jakarta.annotation.Nonnull String id, Map<String, String> headers) throws ApiException {
     // verify the required parameter 'id' is set
     if (id == null) {
       throw new ApiException(400, "Missing the required parameter 'id' when calling getLogger");
@@ -640,52 +639,48 @@ public class LoggersApi {
   /**
    * List Loggers
    * 
-   * @param filterKey  (optional)
    * @param filterManaged  (optional)
    * @return LoggerListResponse
    * @throws ApiException if fails to make API call
    */
-  public LoggerListResponse listLoggers(@jakarta.annotation.Nullable String filterKey, @jakarta.annotation.Nullable Boolean filterManaged) throws ApiException {
-    return listLoggers(filterKey, filterManaged, null);
+  public LoggerListResponse listLoggers(@jakarta.annotation.Nullable Boolean filterManaged) throws ApiException {
+    return listLoggers(filterManaged, null);
   }
 
   /**
    * List Loggers
    * 
-   * @param filterKey  (optional)
    * @param filterManaged  (optional)
    * @param headers Optional headers to include in the request
    * @return LoggerListResponse
    * @throws ApiException if fails to make API call
    */
-  public LoggerListResponse listLoggers(@jakarta.annotation.Nullable String filterKey, @jakarta.annotation.Nullable Boolean filterManaged, Map<String, String> headers) throws ApiException {
-    ApiResponse<LoggerListResponse> localVarResponse = listLoggersWithHttpInfo(filterKey, filterManaged, headers);
+  public LoggerListResponse listLoggers(@jakarta.annotation.Nullable Boolean filterManaged, Map<String, String> headers) throws ApiException {
+    ApiResponse<LoggerListResponse> localVarResponse = listLoggersWithHttpInfo(filterManaged, headers);
     return localVarResponse.getData();
   }
 
   /**
    * List Loggers
    * 
-   * @param filterKey  (optional)
    * @param filterManaged  (optional)
    * @return ApiResponse&lt;LoggerListResponse&gt;
    * @throws ApiException if fails to make API call
    */
-  public ApiResponse<LoggerListResponse> listLoggersWithHttpInfo(@jakarta.annotation.Nullable String filterKey, @jakarta.annotation.Nullable Boolean filterManaged) throws ApiException {
-    return listLoggersWithHttpInfo(filterKey, filterManaged, null);
+  public ApiResponse<LoggerListResponse> listLoggersWithHttpInfo(@jakarta.annotation.Nullable Boolean filterManaged) throws ApiException {
+    return listLoggersWithHttpInfo(filterManaged, null);
   }
 
   /**
    * List Loggers
    * 
-   * @param filterKey  (optional)
    * @param filterManaged  (optional)
    * @param headers Optional headers to include in the request
    * @return ApiResponse&lt;LoggerListResponse&gt;
    * @throws ApiException if fails to make API call
    */
-  public ApiResponse<LoggerListResponse> listLoggersWithHttpInfo(@jakarta.annotation.Nullable String filterKey, @jakarta.annotation.Nullable Boolean filterManaged, Map<String, String> headers) throws ApiException {
-    HttpRequest.Builder localVarRequestBuilder = listLoggersRequestBuilder(filterKey, filterManaged, headers);
+  public ApiResponse<LoggerListResponse> listLoggersWithHttpInfo(@jakarta.annotation.Nullable Boolean filterManaged, Map<String, String> headers) throws ApiException {
+    HttpRequest.Builder localVarRequestBuilder = listLoggersRequestBuilder(filterManaged, headers);
     try {
       HttpResponse<InputStream> localVarResponse = memberVarHttpClient.send(
           localVarRequestBuilder.build(),
@@ -732,7 +727,7 @@ public class LoggersApi {
     }
   }
 
-  private HttpRequest.Builder listLoggersRequestBuilder(@jakarta.annotation.Nullable String filterKey, @jakarta.annotation.Nullable Boolean filterManaged, Map<String, String> headers) throws ApiException {
+  private HttpRequest.Builder listLoggersRequestBuilder(@jakarta.annotation.Nullable Boolean filterManaged, Map<String, String> headers) throws ApiException {
 
     HttpRequest.Builder localVarRequestBuilder = HttpRequest.newBuilder();
 
@@ -741,8 +736,6 @@ public class LoggersApi {
     List<Pair> localVarQueryParams = new ArrayList<>();
     StringJoiner localVarQueryStringJoiner = new StringJoiner("&");
     String localVarQueryParameterBaseName;
-    localVarQueryParameterBaseName = "filter[key]";
-    localVarQueryParams.addAll(ApiClient.parameterToPairs("filter[key]", filterKey));
     localVarQueryParameterBaseName = "filter[managed]";
     localVarQueryParams.addAll(ApiClient.parameterToPairs("filter[managed]", filterManaged));
 
@@ -779,7 +772,7 @@ public class LoggersApi {
    * @return LoggerResponse
    * @throws ApiException if fails to make API call
    */
-  public LoggerResponse updateLogger(@jakarta.annotation.Nonnull UUID id, @jakarta.annotation.Nonnull ResponseLogger responseLogger) throws ApiException {
+  public LoggerResponse updateLogger(@jakarta.annotation.Nonnull String id, @jakarta.annotation.Nonnull ResponseLogger responseLogger) throws ApiException {
     return updateLogger(id, responseLogger, null);
   }
 
@@ -792,7 +785,7 @@ public class LoggersApi {
    * @return LoggerResponse
    * @throws ApiException if fails to make API call
    */
-  public LoggerResponse updateLogger(@jakarta.annotation.Nonnull UUID id, @jakarta.annotation.Nonnull ResponseLogger responseLogger, Map<String, String> headers) throws ApiException {
+  public LoggerResponse updateLogger(@jakarta.annotation.Nonnull String id, @jakarta.annotation.Nonnull ResponseLogger responseLogger, Map<String, String> headers) throws ApiException {
     ApiResponse<LoggerResponse> localVarResponse = updateLoggerWithHttpInfo(id, responseLogger, headers);
     return localVarResponse.getData();
   }
@@ -805,7 +798,7 @@ public class LoggersApi {
    * @return ApiResponse&lt;LoggerResponse&gt;
    * @throws ApiException if fails to make API call
    */
-  public ApiResponse<LoggerResponse> updateLoggerWithHttpInfo(@jakarta.annotation.Nonnull UUID id, @jakarta.annotation.Nonnull ResponseLogger responseLogger) throws ApiException {
+  public ApiResponse<LoggerResponse> updateLoggerWithHttpInfo(@jakarta.annotation.Nonnull String id, @jakarta.annotation.Nonnull ResponseLogger responseLogger) throws ApiException {
     return updateLoggerWithHttpInfo(id, responseLogger, null);
   }
 
@@ -818,7 +811,7 @@ public class LoggersApi {
    * @return ApiResponse&lt;LoggerResponse&gt;
    * @throws ApiException if fails to make API call
    */
-  public ApiResponse<LoggerResponse> updateLoggerWithHttpInfo(@jakarta.annotation.Nonnull UUID id, @jakarta.annotation.Nonnull ResponseLogger responseLogger, Map<String, String> headers) throws ApiException {
+  public ApiResponse<LoggerResponse> updateLoggerWithHttpInfo(@jakarta.annotation.Nonnull String id, @jakarta.annotation.Nonnull ResponseLogger responseLogger, Map<String, String> headers) throws ApiException {
     HttpRequest.Builder localVarRequestBuilder = updateLoggerRequestBuilder(id, responseLogger, headers);
     try {
       HttpResponse<InputStream> localVarResponse = memberVarHttpClient.send(
@@ -866,7 +859,7 @@ public class LoggersApi {
     }
   }
 
-  private HttpRequest.Builder updateLoggerRequestBuilder(@jakarta.annotation.Nonnull UUID id, @jakarta.annotation.Nonnull ResponseLogger responseLogger, Map<String, String> headers) throws ApiException {
+  private HttpRequest.Builder updateLoggerRequestBuilder(@jakarta.annotation.Nonnull String id, @jakarta.annotation.Nonnull ResponseLogger responseLogger, Map<String, String> headers) throws ApiException {
     // verify the required parameter 'id' is set
     if (id == null) {
       throw new ApiException(400, "Missing the required parameter 'id' when calling updateLogger");

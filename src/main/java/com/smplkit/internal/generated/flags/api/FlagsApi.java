@@ -22,7 +22,6 @@ import com.smplkit.internal.generated.flags.model.FlagListResponse;
 import com.smplkit.internal.generated.flags.model.FlagResponse;
 import com.smplkit.internal.generated.flags.model.HTTPValidationError;
 import com.smplkit.internal.generated.flags.model.ResponseFlag;
-import java.util.UUID;
 
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -295,7 +294,7 @@ public class FlagsApi {
    * @param id  (required)
    * @throws ApiException if fails to make API call
    */
-  public void deleteFlag(@jakarta.annotation.Nonnull UUID id) throws ApiException {
+  public void deleteFlag(@jakarta.annotation.Nonnull String id) throws ApiException {
     deleteFlag(id, null);
   }
 
@@ -306,7 +305,7 @@ public class FlagsApi {
    * @param headers Optional headers to include in the request
    * @throws ApiException if fails to make API call
    */
-  public void deleteFlag(@jakarta.annotation.Nonnull UUID id, Map<String, String> headers) throws ApiException {
+  public void deleteFlag(@jakarta.annotation.Nonnull String id, Map<String, String> headers) throws ApiException {
     deleteFlagWithHttpInfo(id, headers);
   }
 
@@ -317,7 +316,7 @@ public class FlagsApi {
    * @return ApiResponse&lt;Void&gt;
    * @throws ApiException if fails to make API call
    */
-  public ApiResponse<Void> deleteFlagWithHttpInfo(@jakarta.annotation.Nonnull UUID id) throws ApiException {
+  public ApiResponse<Void> deleteFlagWithHttpInfo(@jakarta.annotation.Nonnull String id) throws ApiException {
     return deleteFlagWithHttpInfo(id, null);
   }
 
@@ -329,7 +328,7 @@ public class FlagsApi {
    * @return ApiResponse&lt;Void&gt;
    * @throws ApiException if fails to make API call
    */
-  public ApiResponse<Void> deleteFlagWithHttpInfo(@jakarta.annotation.Nonnull UUID id, Map<String, String> headers) throws ApiException {
+  public ApiResponse<Void> deleteFlagWithHttpInfo(@jakarta.annotation.Nonnull String id, Map<String, String> headers) throws ApiException {
     HttpRequest.Builder localVarRequestBuilder = deleteFlagRequestBuilder(id, headers);
     try {
       HttpResponse<InputStream> localVarResponse = memberVarHttpClient.send(
@@ -366,7 +365,7 @@ public class FlagsApi {
     }
   }
 
-  private HttpRequest.Builder deleteFlagRequestBuilder(@jakarta.annotation.Nonnull UUID id, Map<String, String> headers) throws ApiException {
+  private HttpRequest.Builder deleteFlagRequestBuilder(@jakarta.annotation.Nonnull String id, Map<String, String> headers) throws ApiException {
     // verify the required parameter 'id' is set
     if (id == null) {
       throw new ApiException(400, "Missing the required parameter 'id' when calling deleteFlag");
@@ -400,7 +399,7 @@ public class FlagsApi {
    * @return FlagResponse
    * @throws ApiException if fails to make API call
    */
-  public FlagResponse getFlag(@jakarta.annotation.Nonnull UUID id) throws ApiException {
+  public FlagResponse getFlag(@jakarta.annotation.Nonnull String id) throws ApiException {
     return getFlag(id, null);
   }
 
@@ -412,7 +411,7 @@ public class FlagsApi {
    * @return FlagResponse
    * @throws ApiException if fails to make API call
    */
-  public FlagResponse getFlag(@jakarta.annotation.Nonnull UUID id, Map<String, String> headers) throws ApiException {
+  public FlagResponse getFlag(@jakarta.annotation.Nonnull String id, Map<String, String> headers) throws ApiException {
     ApiResponse<FlagResponse> localVarResponse = getFlagWithHttpInfo(id, headers);
     return localVarResponse.getData();
   }
@@ -424,7 +423,7 @@ public class FlagsApi {
    * @return ApiResponse&lt;FlagResponse&gt;
    * @throws ApiException if fails to make API call
    */
-  public ApiResponse<FlagResponse> getFlagWithHttpInfo(@jakarta.annotation.Nonnull UUID id) throws ApiException {
+  public ApiResponse<FlagResponse> getFlagWithHttpInfo(@jakarta.annotation.Nonnull String id) throws ApiException {
     return getFlagWithHttpInfo(id, null);
   }
 
@@ -436,7 +435,7 @@ public class FlagsApi {
    * @return ApiResponse&lt;FlagResponse&gt;
    * @throws ApiException if fails to make API call
    */
-  public ApiResponse<FlagResponse> getFlagWithHttpInfo(@jakarta.annotation.Nonnull UUID id, Map<String, String> headers) throws ApiException {
+  public ApiResponse<FlagResponse> getFlagWithHttpInfo(@jakarta.annotation.Nonnull String id, Map<String, String> headers) throws ApiException {
     HttpRequest.Builder localVarRequestBuilder = getFlagRequestBuilder(id, headers);
     try {
       HttpResponse<InputStream> localVarResponse = memberVarHttpClient.send(
@@ -484,7 +483,7 @@ public class FlagsApi {
     }
   }
 
-  private HttpRequest.Builder getFlagRequestBuilder(@jakarta.annotation.Nonnull UUID id, Map<String, String> headers) throws ApiException {
+  private HttpRequest.Builder getFlagRequestBuilder(@jakarta.annotation.Nonnull String id, Map<String, String> headers) throws ApiException {
     // verify the required parameter 'id' is set
     if (id == null) {
       throw new ApiException(400, "Missing the required parameter 'id' when calling getFlag");
@@ -514,52 +513,48 @@ public class FlagsApi {
   /**
    * List Flags
    * 
-   * @param filterKey  (optional)
    * @param filterType  (optional)
    * @return FlagListResponse
    * @throws ApiException if fails to make API call
    */
-  public FlagListResponse listFlags(@jakarta.annotation.Nullable String filterKey, @jakarta.annotation.Nullable String filterType) throws ApiException {
-    return listFlags(filterKey, filterType, null);
+  public FlagListResponse listFlags(@jakarta.annotation.Nullable String filterType) throws ApiException {
+    return listFlags(filterType, null);
   }
 
   /**
    * List Flags
    * 
-   * @param filterKey  (optional)
    * @param filterType  (optional)
    * @param headers Optional headers to include in the request
    * @return FlagListResponse
    * @throws ApiException if fails to make API call
    */
-  public FlagListResponse listFlags(@jakarta.annotation.Nullable String filterKey, @jakarta.annotation.Nullable String filterType, Map<String, String> headers) throws ApiException {
-    ApiResponse<FlagListResponse> localVarResponse = listFlagsWithHttpInfo(filterKey, filterType, headers);
+  public FlagListResponse listFlags(@jakarta.annotation.Nullable String filterType, Map<String, String> headers) throws ApiException {
+    ApiResponse<FlagListResponse> localVarResponse = listFlagsWithHttpInfo(filterType, headers);
     return localVarResponse.getData();
   }
 
   /**
    * List Flags
    * 
-   * @param filterKey  (optional)
    * @param filterType  (optional)
    * @return ApiResponse&lt;FlagListResponse&gt;
    * @throws ApiException if fails to make API call
    */
-  public ApiResponse<FlagListResponse> listFlagsWithHttpInfo(@jakarta.annotation.Nullable String filterKey, @jakarta.annotation.Nullable String filterType) throws ApiException {
-    return listFlagsWithHttpInfo(filterKey, filterType, null);
+  public ApiResponse<FlagListResponse> listFlagsWithHttpInfo(@jakarta.annotation.Nullable String filterType) throws ApiException {
+    return listFlagsWithHttpInfo(filterType, null);
   }
 
   /**
    * List Flags
    * 
-   * @param filterKey  (optional)
    * @param filterType  (optional)
    * @param headers Optional headers to include in the request
    * @return ApiResponse&lt;FlagListResponse&gt;
    * @throws ApiException if fails to make API call
    */
-  public ApiResponse<FlagListResponse> listFlagsWithHttpInfo(@jakarta.annotation.Nullable String filterKey, @jakarta.annotation.Nullable String filterType, Map<String, String> headers) throws ApiException {
-    HttpRequest.Builder localVarRequestBuilder = listFlagsRequestBuilder(filterKey, filterType, headers);
+  public ApiResponse<FlagListResponse> listFlagsWithHttpInfo(@jakarta.annotation.Nullable String filterType, Map<String, String> headers) throws ApiException {
+    HttpRequest.Builder localVarRequestBuilder = listFlagsRequestBuilder(filterType, headers);
     try {
       HttpResponse<InputStream> localVarResponse = memberVarHttpClient.send(
           localVarRequestBuilder.build(),
@@ -606,7 +601,7 @@ public class FlagsApi {
     }
   }
 
-  private HttpRequest.Builder listFlagsRequestBuilder(@jakarta.annotation.Nullable String filterKey, @jakarta.annotation.Nullable String filterType, Map<String, String> headers) throws ApiException {
+  private HttpRequest.Builder listFlagsRequestBuilder(@jakarta.annotation.Nullable String filterType, Map<String, String> headers) throws ApiException {
 
     HttpRequest.Builder localVarRequestBuilder = HttpRequest.newBuilder();
 
@@ -615,8 +610,6 @@ public class FlagsApi {
     List<Pair> localVarQueryParams = new ArrayList<>();
     StringJoiner localVarQueryStringJoiner = new StringJoiner("&");
     String localVarQueryParameterBaseName;
-    localVarQueryParameterBaseName = "filter[key]";
-    localVarQueryParams.addAll(ApiClient.parameterToPairs("filter[key]", filterKey));
     localVarQueryParameterBaseName = "filter[type]";
     localVarQueryParams.addAll(ApiClient.parameterToPairs("filter[type]", filterType));
 
@@ -653,7 +646,7 @@ public class FlagsApi {
    * @return FlagResponse
    * @throws ApiException if fails to make API call
    */
-  public FlagResponse updateFlag(@jakarta.annotation.Nonnull UUID id, @jakarta.annotation.Nonnull ResponseFlag responseFlag) throws ApiException {
+  public FlagResponse updateFlag(@jakarta.annotation.Nonnull String id, @jakarta.annotation.Nonnull ResponseFlag responseFlag) throws ApiException {
     return updateFlag(id, responseFlag, null);
   }
 
@@ -666,7 +659,7 @@ public class FlagsApi {
    * @return FlagResponse
    * @throws ApiException if fails to make API call
    */
-  public FlagResponse updateFlag(@jakarta.annotation.Nonnull UUID id, @jakarta.annotation.Nonnull ResponseFlag responseFlag, Map<String, String> headers) throws ApiException {
+  public FlagResponse updateFlag(@jakarta.annotation.Nonnull String id, @jakarta.annotation.Nonnull ResponseFlag responseFlag, Map<String, String> headers) throws ApiException {
     ApiResponse<FlagResponse> localVarResponse = updateFlagWithHttpInfo(id, responseFlag, headers);
     return localVarResponse.getData();
   }
@@ -679,7 +672,7 @@ public class FlagsApi {
    * @return ApiResponse&lt;FlagResponse&gt;
    * @throws ApiException if fails to make API call
    */
-  public ApiResponse<FlagResponse> updateFlagWithHttpInfo(@jakarta.annotation.Nonnull UUID id, @jakarta.annotation.Nonnull ResponseFlag responseFlag) throws ApiException {
+  public ApiResponse<FlagResponse> updateFlagWithHttpInfo(@jakarta.annotation.Nonnull String id, @jakarta.annotation.Nonnull ResponseFlag responseFlag) throws ApiException {
     return updateFlagWithHttpInfo(id, responseFlag, null);
   }
 
@@ -692,7 +685,7 @@ public class FlagsApi {
    * @return ApiResponse&lt;FlagResponse&gt;
    * @throws ApiException if fails to make API call
    */
-  public ApiResponse<FlagResponse> updateFlagWithHttpInfo(@jakarta.annotation.Nonnull UUID id, @jakarta.annotation.Nonnull ResponseFlag responseFlag, Map<String, String> headers) throws ApiException {
+  public ApiResponse<FlagResponse> updateFlagWithHttpInfo(@jakarta.annotation.Nonnull String id, @jakarta.annotation.Nonnull ResponseFlag responseFlag, Map<String, String> headers) throws ApiException {
     HttpRequest.Builder localVarRequestBuilder = updateFlagRequestBuilder(id, responseFlag, headers);
     try {
       HttpResponse<InputStream> localVarResponse = memberVarHttpClient.send(
@@ -740,7 +733,7 @@ public class FlagsApi {
     }
   }
 
-  private HttpRequest.Builder updateFlagRequestBuilder(@jakarta.annotation.Nonnull UUID id, @jakarta.annotation.Nonnull ResponseFlag responseFlag, Map<String, String> headers) throws ApiException {
+  private HttpRequest.Builder updateFlagRequestBuilder(@jakarta.annotation.Nonnull String id, @jakarta.annotation.Nonnull ResponseFlag responseFlag, Map<String, String> headers) throws ApiException {
     // verify the required parameter 'id' is set
     if (id == null) {
       throw new ApiException(400, "Missing the required parameter 'id' when calling updateFlag");

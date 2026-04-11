@@ -16,7 +16,7 @@ import java.util.List;
  * <p>Demonstrates the management-plane API for loggers and log groups:</p>
  * <ul>
  *   <li>Creating loggers and log groups</li>
- *   <li>Fetching a logger/group by key and listing all</li>
+ *   <li>Fetching a logger/group by id and listing all</li>
  *   <li>Updating via field mutation and {@link Logger#save()}</li>
  *   <li>Environment-level overrides</li>
  *   <li>Cleanup of all created resources</li>
@@ -65,16 +65,15 @@ public class LoggingManagementShowcase {
             LogGroup infraGroup = client.logging().newGroup("infra");
             infraGroup.setLevel(LogLevel.WARN);
             infraGroup.save();
-            createdGroupKeys.add(infraGroup.getKey());
-            step("Created group: key=" + infraGroup.getKey()
-                    + ", id=" + infraGroup.getId()
+            createdGroupKeys.add(infraGroup.getId());
+            step("Created group: id=" + infraGroup.getId()
                     + ", level=" + infraGroup.getLevel());
 
             LogGroup dbGroup = client.logging().newGroup("infra-db", "Database", infraGroup.getId());
             dbGroup.setLevel(LogLevel.ERROR);
             dbGroup.save();
-            createdGroupKeys.add(dbGroup.getKey());
-            step("Created child group: key=" + dbGroup.getKey()
+            createdGroupKeys.add(dbGroup.getId());
+            step("Created child group: id=" + dbGroup.getId()
                     + ", parent=" + dbGroup.getGroup());
 
             // ==================================================================
@@ -86,15 +85,15 @@ public class LoggingManagementShowcase {
             paymentLogger.setLevel(LogLevel.INFO);
             paymentLogger.setGroup(infraGroup.getId());
             paymentLogger.save();
-            createdLoggerKeys.add(paymentLogger.getKey());
-            step("Created logger: key=" + paymentLogger.getKey()
+            createdLoggerKeys.add(paymentLogger.getId());
+            step("Created logger: id=" + paymentLogger.getId()
                     + ", managed=" + paymentLogger.isManaged());
 
             Logger auditLogger = client.logging().new_("audit-logger", "Audit Logger", true);
             auditLogger.setLevel(LogLevel.DEBUG);
             auditLogger.save();
-            createdLoggerKeys.add(auditLogger.getKey());
-            step("Created logger: key=" + auditLogger.getKey());
+            createdLoggerKeys.add(auditLogger.getId());
+            step("Created logger: id=" + auditLogger.getId());
 
             // ==================================================================
             // 4. GET AND LIST
@@ -102,7 +101,7 @@ public class LoggingManagementShowcase {
             section("4. Get and List");
 
             Logger fetched = client.logging().get("payment-service");
-            step("Fetched logger: key=" + fetched.getKey()
+            step("Fetched logger: id=" + fetched.getId()
                     + ", name=" + fetched.getName()
                     + ", level=" + fetched.getLevel());
 
@@ -110,7 +109,7 @@ public class LoggingManagementShowcase {
             step("Total loggers: " + allLoggers.size());
 
             LogGroup fetchedGroup = client.logging().getGroup("infra");
-            step("Fetched group: key=" + fetchedGroup.getKey()
+            step("Fetched group: id=" + fetchedGroup.getId()
                     + ", level=" + fetchedGroup.getLevel());
 
             List<LogGroup> allGroups = client.logging().listGroups();

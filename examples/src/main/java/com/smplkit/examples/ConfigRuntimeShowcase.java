@@ -95,7 +95,7 @@ public class ConfigRuntimeShowcase {
             List<ConfigChangeEvent> changes = new ArrayList<>();
             client.config().onChange(evt -> {
                 changes.add(evt);
-                System.out.println("    [CHANGE] " + evt.configKey() + "/" + evt.itemKey()
+                System.out.println("    [CHANGE] " + evt.configId() + "/" + evt.itemKey()
                         + ": " + evt.oldValue() + " -> " + evt.newValue());
             });
             step("Global change listener registered");

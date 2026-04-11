@@ -15,11 +15,11 @@ import java.util.Map;
  * <ul>
  *   <li>Client initialization ({@link SmplClient})</li>
  *   <li>Creating configs with {@code new_()} + {@code save()}</li>
- *   <li>Getting configs by key</li>
+ *   <li>Getting configs by id</li>
  *   <li>Listing all configs</li>
  *   <li>Updating configs via mutation + {@code save()}</li>
  *   <li>Multi-level hierarchy: auth_module &rarr; user_service &rarr; common</li>
- *   <li>Deleting configs by key</li>
+ *   <li>Deleting configs by id</li>
  * </ul>
  *
  * <p>Prerequisites:</p>
@@ -62,7 +62,7 @@ public class ConfigManagementShowcase {
             section("2a. Update the Common Config");
 
             Config common = client.config().get("common");
-            step("Fetched common config: id=" + common.getId() + ", key=" + common.getKey());
+            step("Fetched common config: id=" + common.getId());
 
             common.setDescription("Organization-wide shared configuration");
             common.setItems(Map.of(
@@ -137,20 +137,20 @@ public class ConfigManagementShowcase {
             List<Config> allConfigs = client.config().list();
             step("Total configs in account: " + allConfigs.size());
             for (Config c : allConfigs) {
-                step("  " + c.getKey() + " (id=" + c.getId() + ") - " + c.getName());
+                step("  " + c.getId() + " - " + c.getName());
             }
 
             // ==================================================================
             // 4b. GET CONFIG BY KEY
             // ==================================================================
-            section("4b. Get Config by Key");
+            section("4b. Get Config by ID");
 
             Config fetchedUserService = client.config().get("user_service");
-            step("Fetched by key: key=" + fetchedUserService.getKey()
+            step("Fetched by id: id=" + fetchedUserService.getId()
                     + ", name=" + fetchedUserService.getName());
 
             Config fetchedAuthModule = client.config().get("auth_module");
-            step("Fetched by key: key=" + fetchedAuthModule.getKey()
+            step("Fetched by id: id=" + fetchedAuthModule.getId()
                     + ", name=" + fetchedAuthModule.getName());
 
             // ==================================================================

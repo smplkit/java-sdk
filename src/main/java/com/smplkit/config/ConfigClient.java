@@ -25,7 +25,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
-import java.util.UUID;
 import java.util.function.Consumer;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -80,24 +79,24 @@ public final class ConfigClient {
     /**
      * Returns a new unsaved {@link Config}. Call {@link Config#save()} to persist.
      *
-     * @param key human-readable key
+     * @param id the config id (slug)
      * @return a new unsaved Config
      */
-    public Config new_(String key) {
-        return new_(key, null, null, null);
+    public Config new_(String id) {
+        return new_(id, null, null, null);
     }
 
     /**
      * Returns a new unsaved {@link Config}. Call {@link Config#save()} to persist.
      *
-     * @param key         human-readable key
-     * @param name        display name (auto-generated from key if null)
+     * @param id          the config id (slug)
+     * @param name        display name (auto-generated from id if null)
      * @param description optional description
      * @param parent      parent config identifier, or null
      * @return a new unsaved Config
      */
-    public Config new_(String key, String name, String description, String parent) {
-        Config config = new Config(this, key, name != null ? name : Helpers.keyToDisplayName(key));
+    public Config new_(String id, String name, String description, String parent) {
+        Config config = new Config(this, id, name != null ? name : Helpers.keyToDisplayName(id));
         config.setDescription(description);
         config.setParent(parent);
         return config;
@@ -108,20 +107,16 @@ public final class ConfigClient {
     // -----------------------------------------------------------------------
 
     /**
-     * Fetches a config by its human-readable key.
+     * Fetches a config by its id (slug).
      *
-     * @param key the config key
+     * @param id the config id
      * @return the matching Config
      * @throws SmplNotFoundException if no matching config exists
      */
-    public Config get(String key) {
+    public Config get(String id) {
         try {
-            ConfigListResponse response = configsApi.listConfigs(key, null);
-            List<ConfigResource> data = response.getData();
-            if (data == null || data.isEmpty()) {
-                throw new SmplNotFoundException("Config with key '" + key + "' not found", null);
-            }
-            return parseResource(data.get(0));
+            ConfigResponse response = configsApi.getConfig(id);
+            return parseResource(response.getData());
         } catch (ApiException e) {
             throw mapException(e);
         }
@@ -134,7 +129,7 @@ public final class ConfigClient {
      */
     public List<Config> list() {
         try {
-            ConfigListResponse response = configsApi.listConfigs(null, null);
+            ConfigListResponse response = configsApi.listConfigs(null);
             List<ConfigResource> data = response.getData();
             if (data == null) {
                 return Collections.emptyList();
@@ -150,15 +145,14 @@ public final class ConfigClient {
     }
 
     /**
-     * Deletes a config by key.
+     * Deletes a config by id.
      *
-     * @param key the config key
+     * @param id the config id
      * @throws SmplNotFoundException if the config does not exist
      */
-    public void delete(String key) {
-        Config config = get(key);
+    public void delete(String id) {
         try {
-            configsApi.deleteConfig(UUID.fromString(config.getId()));
+            configsApi.deleteConfig(id);
         } catch (ApiException e) {
             throw mapException(e);
         }
@@ -173,8 +167,8 @@ public final class ConfigClient {
         try {
             var attrs = new com.smplkit.internal.generated.config.model.Config();
             attrs.setName(config.getName());
-            if (config.getKey() != null) {
-                attrs.setKey(config.getKey());
+            if (config.getId() != null) {
+                attrs.setId(config.getId());
             }
             if (config.getDescription() != null) {
                 attrs.setDescription(config.getDescription());
@@ -225,8 +219,7 @@ public final class ConfigClient {
                     .attributes(attrs);
             ResponseConfig body = new ResponseConfig().data(data);
 
-            ConfigResponse response = configsApi.updateConfig(
-                    UUID.fromString(config.getId()), body);
+            ConfigResponse response = configsApi.updateConfig(config.getId(), body);
             return parseResource(response.getData());
         } catch (ApiException e) {
             throw mapException(e);
@@ -238,17 +231,17 @@ public final class ConfigClient {
     // -----------------------------------------------------------------------
 
     /**
-     * Returns resolved config values for the given key as a flat map.
+     * Returns resolved config values for the given id as a flat map.
      *
-     * @param key the config key
+     * @param id the config id
      * @return resolved values map, or an empty map if not found
      */
-    public Map<String, Object> resolve(String key) {
+    public Map<String, Object> resolve(String id) {
         _connectInternal();
         if (metrics != null) {
-            metrics.record("config.resolutions", "resolutions", Map.of("config_id", key));
+            metrics.record("config.resolutions", "resolutions", Map.of("config_id", id));
         }
-        return new HashMap<>(configCache.getOrDefault(key, Map.of()));
+        return new HashMap<>(configCache.getOrDefault(id, Map.of()));
     }
 
     /**
@@ -257,46 +250,46 @@ public final class ConfigClient {
      * <p>Dot-notation keys (e.g. "database.host") are expanded into nested
      * objects before mapping to the model type.</p>
      *
-     * @param key   the config key
+     * @param id    the config id
      * @param model the target model class
      * @param <T>   the model type
      * @return an instance of the model type
      */
-    public <T> T resolve(String key, Class<T> model) {
+    public <T> T resolve(String id, Class<T> model) {
         _connectInternal();
         if (metrics != null) {
-            metrics.record("config.resolutions", "resolutions", Map.of("config_id", key));
+            metrics.record("config.resolutions", "resolutions", Map.of("config_id", id));
         }
-        Map<String, Object> values = new HashMap<>(configCache.getOrDefault(key, Map.of()));
+        Map<String, Object> values = new HashMap<>(configCache.getOrDefault(id, Map.of()));
         Map<String, Object> nested = unflatten(values);
         ObjectMapper mapper = new ObjectMapper();
         return mapper.convertValue(nested, model);
     }
 
     /**
-     * Returns a {@link LiveConfig} for the given key that always reflects the latest values.
+     * Returns a {@link LiveConfig} for the given id that always reflects the latest values.
      *
-     * @param key the config key
+     * @param id the config id
      * @return a LiveConfig returning {@code Map<String, Object>} values
      */
     @SuppressWarnings("unchecked")
-    public LiveConfig<Map<String, Object>> subscribe(String key) {
+    public LiveConfig<Map<String, Object>> subscribe(String id) {
         _connectInternal();
-        return new LiveConfig<>(this, key, null);
+        return new LiveConfig<>(this, id, null);
     }
 
     /**
-     * Returns a {@link LiveConfig} for the given key that always reflects the latest values,
+     * Returns a {@link LiveConfig} for the given id that always reflects the latest values,
      * mapped to the given model type.
      *
-     * @param key   the config key
+     * @param id    the config id
      * @param model the target model class
      * @param <T>   the model type
      * @return a LiveConfig returning instances of the model type
      */
-    public <T> LiveConfig<T> subscribe(String key, Class<T> model) {
+    public <T> LiveConfig<T> subscribe(String id, Class<T> model) {
         _connectInternal();
-        return new LiveConfig<>(this, key, model);
+        return new LiveConfig<>(this, id, model);
     }
 
     // -----------------------------------------------------------------------
@@ -329,22 +322,22 @@ public final class ConfigClient {
     /**
      * Registers a config-scoped change listener.
      *
-     * @param configKey only fire for changes to this config
-     * @param listener  called with a {@link ConfigChangeEvent} on each matching change
+     * @param configId only fire for changes to this config
+     * @param listener called with a {@link ConfigChangeEvent} on each matching change
      */
-    public void onChange(String configKey, Consumer<ConfigChangeEvent> listener) {
-        listeners.add(new ListenerEntry(configKey, null, listener));
+    public void onChange(String configId, Consumer<ConfigChangeEvent> listener) {
+        listeners.add(new ListenerEntry(configId, null, listener));
     }
 
     /**
      * Registers an item-scoped change listener.
      *
-     * @param configKey only fire for changes to this config
-     * @param itemKey   only fire for changes to this item
-     * @param listener  called with a {@link ConfigChangeEvent} on each matching change
+     * @param configId only fire for changes to this config
+     * @param itemKey  only fire for changes to this item
+     * @param listener called with a {@link ConfigChangeEvent} on each matching change
      */
-    public void onChange(String configKey, String itemKey, Consumer<ConfigChangeEvent> listener) {
-        listeners.add(new ListenerEntry(configKey, itemKey, listener));
+    public void onChange(String configId, String itemKey, Consumer<ConfigChangeEvent> listener) {
+        listeners.add(new ListenerEntry(configId, itemKey, listener));
     }
 
     /**
@@ -382,7 +375,7 @@ public final class ConfigClient {
                 chain.add(toChainEntry(parent));
                 current = parent;
             }
-            newCache.put(cfg.getKey(), Resolver.resolve(chain, env));
+            newCache.put(cfg.getId(), Resolver.resolve(chain, env));
         }
         return newCache;
     }
@@ -397,13 +390,13 @@ public final class ConfigClient {
             Map<String, Map<String, Object>> newCache,
             String source
     ) {
-        Set<String> allConfigKeys = new HashSet<>();
-        allConfigKeys.addAll(oldCache.keySet());
-        allConfigKeys.addAll(newCache.keySet());
+        Set<String> allConfigIds = new HashSet<>();
+        allConfigIds.addAll(oldCache.keySet());
+        allConfigIds.addAll(newCache.keySet());
 
-        for (String cfgKey : allConfigKeys) {
-            Map<String, Object> oldItems = oldCache.getOrDefault(cfgKey, Map.of());
-            Map<String, Object> newItems = newCache.getOrDefault(cfgKey, Map.of());
+        for (String cfgId : allConfigIds) {
+            Map<String, Object> oldItems = oldCache.getOrDefault(cfgId, Map.of());
+            Map<String, Object> newItems = newCache.getOrDefault(cfgId, Map.of());
 
             Set<String> allItemKeys = new HashSet<>();
             allItemKeys.addAll(oldItems.keySet());
@@ -415,17 +408,17 @@ public final class ConfigClient {
                 if (Objects.equals(oldVal, newVal)) continue;
 
                 if (metrics != null) {
-                    metrics.record("config.changes", "changes", Map.of("config_id", cfgKey));
+                    metrics.record("config.changes", "changes", Map.of("config_id", cfgId));
                 }
-                ConfigChangeEvent event = new ConfigChangeEvent(cfgKey, itemKey, oldVal, newVal, source);
+                ConfigChangeEvent event = new ConfigChangeEvent(cfgId, itemKey, oldVal, newVal, source);
                 for (ListenerEntry entry : listeners) {
-                    if (entry.configKey != null && !entry.configKey.equals(cfgKey)) continue;
+                    if (entry.configId != null && !entry.configId.equals(cfgId)) continue;
                     if (entry.itemKey != null && !entry.itemKey.equals(itemKey)) continue;
                     try {
                         entry.listener.accept(event);
                     } catch (Exception e) {
                         LOG.log(Level.WARNING,
-                                "Exception in onChange listener for " + cfgKey + "/" + itemKey, e);
+                                "Exception in onChange listener for " + cfgId + "/" + itemKey, e);
                     }
                 }
             }
@@ -436,9 +429,9 @@ public final class ConfigClient {
     // Package-private: cache access (for LiveConfig)
     // -----------------------------------------------------------------------
 
-    /** Returns resolved values for a key. */
-    Map<String, Object> _getResolvedCache(String key) {
-        return configCache.getOrDefault(key, Map.of());
+    /** Returns resolved values for a config id. */
+    Map<String, Object> _getResolvedCache(String id) {
+        return configCache.getOrDefault(id, Map.of());
     }
 
     /** Package-private: check if connected (for testing). */
@@ -473,7 +466,6 @@ public final class ConfigClient {
         String id = resource.getId();
         var attrs = resource.getAttributes();
 
-        String key = attrs.getKey();
         String name = attrs.getName();
         String description = attrs.getDescription();
         String parent = attrs.getParent();
@@ -517,8 +509,7 @@ public final class ConfigClient {
         Instant createdAt = attrs.getCreatedAt() != null ? attrs.getCreatedAt().toInstant() : null;
         Instant updatedAt = attrs.getUpdatedAt() != null ? attrs.getUpdatedAt().toInstant() : null;
 
-        Config config = new Config(this, key != null ? key : "", name != null ? name : "");
-        config.setId(id != null ? id : "");
+        Config config = new Config(this, id != null ? id : "", name != null ? name : "");
         config.setDescription(description);
         config.setParent(parent);
         config.setItems(items);
@@ -598,6 +589,6 @@ public final class ConfigClient {
         return ApiExceptionHandler.mapApiException(e.getCode(), e.getResponseBody());
     }
 
-    private record ListenerEntry(String configKey, String itemKey,
+    private record ListenerEntry(String configId, String itemKey,
                                  Consumer<ConfigChangeEvent> listener) {}
 }

@@ -36,7 +36,7 @@ class FlagsClientWebSocketTest {
     private FlagsApi mockApi;
     private FlagsClient client;
     private SharedWebSocket sharedWs;
-    private static final String FLAG_ID = "11111111-1111-1111-1111-111111111111";
+    private static final String FLAG_ID = "feature-x";
 
     @BeforeEach
     void setUp() {
@@ -62,7 +62,7 @@ class FlagsClientWebSocketTest {
         client.simulateFlagChanged();
 
         assertNotNull(received.get());
-        assertEquals("feature-x", received.get().key());
+        assertEquals("feature-x", received.get().id());
         assertEquals("websocket", received.get().source());
     }
 
@@ -178,10 +178,10 @@ class FlagsClientWebSocketTest {
     @Test
     void onChange_keyScoped_onlyFiresForMatchingKey() throws ApiException {
         FlagListResponse listResponse = OBJECT_MAPPER.convertValue(Map.of("data", List.of(
-                flagAttrs(FLAG_ID, "flag-a", Map.of()),
-                flagAttrs("22222222-2222-2222-2222-222222222222", "flag-b", Map.of())
+                flagAttrs("flag-a", Map.of()),
+                flagAttrs("flag-b", Map.of())
         )), FlagListResponse.class);
-        when(mockApi.listFlags(isNull(), isNull())).thenReturn(listResponse);
+        when(mockApi.listFlags(isNull())).thenReturn(listResponse);
         client._connectInternal();
 
         AtomicInteger aCount = new AtomicInteger();
@@ -189,7 +189,7 @@ class FlagsClientWebSocketTest {
         client.onChange("flag-a", e -> aCount.incrementAndGet());
         client.onChange("flag-b", e -> bCount.incrementAndGet());
 
-        when(mockApi.listFlags(isNull(), isNull())).thenReturn(listResponse);
+        when(mockApi.listFlags(isNull())).thenReturn(listResponse);
         client.refresh();
 
         assertTrue(aCount.get() > 0);
@@ -198,24 +198,22 @@ class FlagsClientWebSocketTest {
 
     // --- Helpers ---
 
-    private void setupList(String key, Map<String, Object> environments) throws ApiException {
+    private void setupList(String id, Map<String, Object> environments) throws ApiException {
         Map<String, Object> attrs = new HashMap<>();
-        attrs.put("key", key);
-        attrs.put("name", key);
+        attrs.put("name", id);
         attrs.put("type", "BOOLEAN");
         attrs.put("default", false);
         attrs.put("values", List.of());
         attrs.put("environments", environments);
         FlagListResponse listResponse = OBJECT_MAPPER.convertValue(Map.of("data", List.of(Map.of(
-                "id", FLAG_ID, "type", "flag", "attributes", attrs
+                "id", id, "type", "flag", "attributes", attrs
         ))), FlagListResponse.class);
-        when(mockApi.listFlags(isNull(), isNull())).thenReturn(listResponse);
+        when(mockApi.listFlags(isNull())).thenReturn(listResponse);
     }
 
-    private static Map<String, Object> flagAttrs(String id, String key, Map<String, Object> environments) {
+    private static Map<String, Object> flagAttrs(String id, Map<String, Object> environments) {
         Map<String, Object> attrs = new HashMap<>();
-        attrs.put("key", key);
-        attrs.put("name", key);
+        attrs.put("name", id);
         attrs.put("type", "BOOLEAN");
         attrs.put("default", false);
         attrs.put("values", List.of());

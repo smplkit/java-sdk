@@ -15,7 +15,6 @@ public final class LogGroup {
 
     private LoggingClient client;
     private String id;
-    private String key;
     private String name;
     private String level;
     private String group;
@@ -23,12 +22,11 @@ public final class LogGroup {
     private Instant createdAt;
     private Instant updatedAt;
 
-    LogGroup(LoggingClient client, String id, String key, String name,
+    LogGroup(LoggingClient client, String id, String name,
              String level, String group, Map<String, Object> environments,
              Instant createdAt, Instant updatedAt) {
         this.client = client;
         this.id = id;
-        this.key = key;
         this.name = name;
         this.level = level;
         this.group = group;
@@ -40,7 +38,6 @@ public final class LogGroup {
     // --- Public getters ---
 
     public String getId() { return id; }
-    public String getKey() { return key; }
     public String getName() { return name; }
     public String getLevel() { return level; }
     public String getGroup() { return group; }
@@ -89,7 +86,7 @@ public final class LogGroup {
      */
     public void save() {
         if (client == null) throw new IllegalStateException("LogGroup not bound to a client");
-        if (id == null) {
+        if (createdAt == null) {
             LogGroup created = client._createGroup(this);
             _apply(created);
         } else {
@@ -101,7 +98,6 @@ public final class LogGroup {
     // --- Package-private setters (used by LoggingClient) ---
 
     void setId(String id) { this.id = id; }
-    void setKey(String key) { this.key = key; }
     void setCreatedAt(Instant createdAt) { this.createdAt = createdAt; }
     void setUpdatedAt(Instant updatedAt) { this.updatedAt = updatedAt; }
     void setClient(LoggingClient client) { this.client = client; }
@@ -112,7 +108,6 @@ public final class LogGroup {
 
     void _apply(LogGroup other) {
         this.id = other.id;
-        this.key = other.key;
         this.name = other.name;
         this.level = other.level;
         this.group = other.group;
@@ -123,6 +118,6 @@ public final class LogGroup {
 
     @Override
     public String toString() {
-        return "LogGroup{id='" + id + "', key='" + key + "', name='" + name + "'}";
+        return "LogGroup{id='" + id + "', name='" + name + "'}";
     }
 }

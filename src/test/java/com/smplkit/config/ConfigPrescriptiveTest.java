@@ -32,8 +32,9 @@ class ConfigPrescriptiveTest {
     private ConfigsApi mockApi;
     private ConfigClient configClient;
 
-    private static final String CONFIG_ID = "550e8400-e29b-41d4-a716-446655440000";
-    private static final String PARENT_ID = "660e8400-e29b-41d4-a716-446655440001";
+    private static final String APP_ID = "app";
+    private static final String SERVICE_ID = "service";
+    private static final String PARENT_ID = "common";
 
     @BeforeEach
     void setUp() {
@@ -42,13 +43,13 @@ class ConfigPrescriptiveTest {
         configClient.setEnvironment("production");
     }
 
-    private ConfigResource makeResource(String id, String key, String name,
+    private ConfigResource makeResource(String id, String name,
                                         String parent,
                                         Map<String, ConfigItemDefinition> items,
                                         Map<String, EnvironmentOverride> environments) {
         var attrs = new com.smplkit.internal.generated.config.model.Config(null, null);
         attrs.setName(name != null ? name : "");
-        if (key != null) attrs.setKey(key);
+        if (id != null) attrs.setId(id);
         if (parent != null) attrs.setParent(parent);
         if (items != null) attrs.setItems(items);
         if (environments != null) attrs.setEnvironments(environments);
@@ -88,7 +89,7 @@ class ConfigPrescriptiveTest {
     }
 
     private void setupListResponse(ConfigResource... resources) throws ApiException {
-        when(mockApi.listConfigs(isNull(), isNull()))
+        when(mockApi.listConfigs(isNull()))
                 .thenReturn(listResponse(List.of(resources)));
     }
 
@@ -98,7 +99,7 @@ class ConfigPrescriptiveTest {
 
     @Test
     void resolve_returnsResolvedValues() throws ApiException {
-        setupListResponse(makeResource(CONFIG_ID, "app", "App", null,
+        setupListResponse(makeResource(APP_ID, "App", null,
                 Map.of("name", itemDef("Acme", ConfigItemDefinition.TypeEnum.STRING),
                         "retries", itemDef(3, ConfigItemDefinition.TypeEnum.NUMBER)),
                 Map.of()));
@@ -111,7 +112,7 @@ class ConfigPrescriptiveTest {
 
     @Test
     void resolve_withEnvironmentOverrides() throws ApiException {
-        setupListResponse(makeResource(CONFIG_ID, "app", "App", null,
+        setupListResponse(makeResource(APP_ID, "App", null,
                 Map.of("retries", itemDef(3, ConfigItemDefinition.TypeEnum.NUMBER)),
                 Map.of("production", envOverride(Map.of("retries", 5)))));
 
@@ -122,7 +123,7 @@ class ConfigPrescriptiveTest {
 
     @Test
     void resolve_unknownKey_returnsEmptyMap() throws ApiException {
-        setupListResponse(makeResource(CONFIG_ID, "app", "App", null, Map.of(), Map.of()));
+        setupListResponse(makeResource(APP_ID, "App", null, Map.of(), Map.of()));
 
         Map<String, Object> values = configClient.resolve("nonexistent");
 
@@ -131,7 +132,7 @@ class ConfigPrescriptiveTest {
 
     @Test
     void resolve_withModelType() throws ApiException {
-        setupListResponse(makeResource(CONFIG_ID, "app", "App", null,
+        setupListResponse(makeResource(APP_ID, "App", null,
                 Map.of("host", itemDef("localhost", ConfigItemDefinition.TypeEnum.STRING),
                         "port", itemDef(5432, ConfigItemDefinition.TypeEnum.NUMBER)),
                 Map.of()));
@@ -144,7 +145,7 @@ class ConfigPrescriptiveTest {
 
     @Test
     void resolve_withModelType_unflattensDotNotation() throws ApiException {
-        setupListResponse(makeResource(CONFIG_ID, "app", "App", null,
+        setupListResponse(makeResource(APP_ID, "App", null,
                 Map.of("database.host", itemDef("localhost", ConfigItemDefinition.TypeEnum.STRING),
                         "database.port", itemDef(5432, ConfigItemDefinition.TypeEnum.NUMBER)),
                 Map.of()));
@@ -161,7 +162,7 @@ class ConfigPrescriptiveTest {
 
     @Test
     void resolve_triggersLazyInit() throws ApiException {
-        setupListResponse(makeResource(CONFIG_ID, "app", "App", null,
+        setupListResponse(makeResource(APP_ID, "App", null,
                 Map.of("x", itemDef(1, ConfigItemDefinition.TypeEnum.NUMBER)),
                 Map.of()));
 
@@ -172,13 +173,13 @@ class ConfigPrescriptiveTest {
 
     @Test
     void resolve_lazyInitIdempotent() throws ApiException {
-        setupListResponse(makeResource(CONFIG_ID, "app", "App", null, Map.of(), Map.of()));
+        setupListResponse(makeResource(APP_ID, "App", null, Map.of(), Map.of()));
 
         configClient.resolve("app");
         configClient.resolve("app");
 
         // Only one list call (lazy init is idempotent)
-        verify(mockApi, times(1)).listConfigs(isNull(), isNull());
+        verify(mockApi, times(1)).listConfigs(isNull());
     }
 
     @Test
@@ -198,11 +199,11 @@ class ConfigPrescriptiveTest {
 
     @Test
     void resolve_parentChain_resolvesInheritance() throws ApiException {
-        ConfigResource parent = makeResource(PARENT_ID, "common", "Common", null,
+        ConfigResource parent = makeResource(PARENT_ID, "Common", null,
                 Map.of("retries", itemDef(3, ConfigItemDefinition.TypeEnum.NUMBER),
                         "timeout", itemDef(1000, ConfigItemDefinition.TypeEnum.NUMBER)),
                 Map.of());
-        ConfigResource child = makeResource(CONFIG_ID, "service", "Service", PARENT_ID,
+        ConfigResource child = makeResource(SERVICE_ID, "Service", PARENT_ID,
                 Map.of("retries", itemDef(5, ConfigItemDefinition.TypeEnum.NUMBER)),
                 Map.of());
 
@@ -221,21 +222,21 @@ class ConfigPrescriptiveTest {
 
     @Test
     void subscribe_returnsLiveConfigMap() throws ApiException {
-        setupListResponse(makeResource(CONFIG_ID, "app", "App", null,
+        setupListResponse(makeResource(APP_ID, "App", null,
                 Map.of("retries", itemDef(3, ConfigItemDefinition.TypeEnum.NUMBER)),
                 Map.of()));
 
         LiveConfig<Map<String, Object>> live = configClient.subscribe("app");
 
         assertNotNull(live);
-        assertEquals("app", live.getKey());
+        assertEquals("app", live.getId());
         assertNull(live.getModelType());
         assertEquals(3, live.getAsMap().get("retries"));
     }
 
     @Test
     void subscribe_withModelType() throws ApiException {
-        setupListResponse(makeResource(CONFIG_ID, "app", "App", null,
+        setupListResponse(makeResource(APP_ID, "App", null,
                 Map.of("host", itemDef("localhost", ConfigItemDefinition.TypeEnum.STRING),
                         "port", itemDef(5432, ConfigItemDefinition.TypeEnum.NUMBER)),
                 Map.of()));
@@ -243,7 +244,7 @@ class ConfigPrescriptiveTest {
         LiveConfig<SimpleConfig> live = configClient.subscribe("app", SimpleConfig.class);
 
         assertNotNull(live);
-        assertEquals("app", live.getKey());
+        assertEquals("app", live.getId());
         assertEquals(SimpleConfig.class, live.getModelType());
 
         SimpleConfig model = live.get();
@@ -253,7 +254,7 @@ class ConfigPrescriptiveTest {
 
     @Test
     void subscribe_triggersLazyInit() throws ApiException {
-        setupListResponse(makeResource(CONFIG_ID, "app", "App", null, Map.of(), Map.of()));
+        setupListResponse(makeResource(APP_ID, "App", null, Map.of(), Map.of()));
 
         assertFalse(configClient.isConnected());
         configClient.subscribe("app");
@@ -262,7 +263,7 @@ class ConfigPrescriptiveTest {
 
     @Test
     void subscribe_liveConfigUpdatesOnRefresh() throws ApiException {
-        setupListResponse(makeResource(CONFIG_ID, "app", "App", null,
+        setupListResponse(makeResource(APP_ID, "App", null,
                 Map.of("retries", itemDef(3, ConfigItemDefinition.TypeEnum.NUMBER)),
                 Map.of()));
 
@@ -270,9 +271,9 @@ class ConfigPrescriptiveTest {
         assertEquals(3, live.getAsMap().get("retries"));
 
         // Update mock for refresh
-        when(mockApi.listConfigs(isNull(), isNull()))
+        when(mockApi.listConfigs(isNull()))
                 .thenReturn(listResponse(List.of(
-                        makeResource(CONFIG_ID, "app", "App", null,
+                        makeResource(APP_ID, "App", null,
                                 Map.of("retries", itemDef(7, ConfigItemDefinition.TypeEnum.NUMBER)),
                                 Map.of()))));
 
@@ -283,7 +284,7 @@ class ConfigPrescriptiveTest {
 
     @Test
     void liveConfig_getWithoutModelType_throws() throws ApiException {
-        setupListResponse(makeResource(CONFIG_ID, "app", "App", null, Map.of(), Map.of()));
+        setupListResponse(makeResource(APP_ID, "App", null, Map.of(), Map.of()));
 
         LiveConfig<Map<String, Object>> live = configClient.subscribe("app");
 
@@ -296,16 +297,16 @@ class ConfigPrescriptiveTest {
 
     @Test
     void refresh_updatesCache() throws ApiException {
-        setupListResponse(makeResource(CONFIG_ID, "app", "App", null,
+        setupListResponse(makeResource(APP_ID, "App", null,
                 Map.of("retries", itemDef(3, ConfigItemDefinition.TypeEnum.NUMBER)),
                 Map.of()));
 
         Map<String, Object> initial = configClient.resolve("app");
         assertEquals(3, initial.get("retries"));
 
-        when(mockApi.listConfigs(isNull(), isNull()))
+        when(mockApi.listConfigs(isNull()))
                 .thenReturn(listResponse(List.of(
-                        makeResource(CONFIG_ID, "app", "App", null,
+                        makeResource(APP_ID, "App", null,
                                 Map.of("retries", itemDef(7, ConfigItemDefinition.TypeEnum.NUMBER)),
                                 Map.of()))));
 
@@ -317,10 +318,10 @@ class ConfigPrescriptiveTest {
 
     @Test
     void refresh_parentChain_resolvesInheritance() throws ApiException {
-        ConfigResource parent = makeResource(PARENT_ID, "common", "Common", null,
+        ConfigResource parent = makeResource(PARENT_ID, "Common", null,
                 Map.of("timeout", itemDef(1000, ConfigItemDefinition.TypeEnum.NUMBER)),
                 Map.of());
-        ConfigResource child = makeResource(CONFIG_ID, "service", "Service", PARENT_ID,
+        ConfigResource child = makeResource(SERVICE_ID, "Service", PARENT_ID,
                 Map.of("retries", itemDef(5, ConfigItemDefinition.TypeEnum.NUMBER)),
                 Map.of());
 
@@ -328,10 +329,10 @@ class ConfigPrescriptiveTest {
         assertEquals(1000, configClient.resolve("service").get("timeout"));
 
         // After refresh, parent timeout changes
-        ConfigResource parentUpdated = makeResource(PARENT_ID, "common", "Common", null,
+        ConfigResource parentUpdated = makeResource(PARENT_ID, "Common", null,
                 Map.of("timeout", itemDef(2000, ConfigItemDefinition.TypeEnum.NUMBER)),
                 Map.of());
-        when(mockApi.listConfigs(isNull(), isNull()))
+        when(mockApi.listConfigs(isNull()))
                 .thenReturn(listResponse(List.of(parentUpdated, child)));
 
         configClient.refresh();
@@ -351,7 +352,7 @@ class ConfigPrescriptiveTest {
 
     @Test
     void onChange_global_firesOnRefresh() throws ApiException {
-        setupListResponse(makeResource(CONFIG_ID, "app", "App", null,
+        setupListResponse(makeResource(APP_ID, "App", null,
                 Map.of("retries", itemDef(3, ConfigItemDefinition.TypeEnum.NUMBER)),
                 Map.of()));
 
@@ -360,16 +361,16 @@ class ConfigPrescriptiveTest {
         List<ConfigChangeEvent> events = new ArrayList<>();
         configClient.onChange(events::add);
 
-        when(mockApi.listConfigs(isNull(), isNull()))
+        when(mockApi.listConfigs(isNull()))
                 .thenReturn(listResponse(List.of(
-                        makeResource(CONFIG_ID, "app", "App", null,
+                        makeResource(APP_ID, "App", null,
                                 Map.of("retries", itemDef(7, ConfigItemDefinition.TypeEnum.NUMBER)),
                                 Map.of()))));
 
         configClient.refresh();
 
         assertEquals(1, events.size());
-        assertEquals("app", events.get(0).configKey());
+        assertEquals("app", events.get(0).configId());
         assertEquals("retries", events.get(0).itemKey());
         assertEquals(3, events.get(0).oldValue());
         assertEquals(7, events.get(0).newValue());
@@ -378,7 +379,7 @@ class ConfigPrescriptiveTest {
 
     @Test
     void onChange_configScoped() throws ApiException {
-        setupListResponse(makeResource(CONFIG_ID, "app", "App", null,
+        setupListResponse(makeResource(APP_ID, "App", null,
                 Map.of("retries", itemDef(3, ConfigItemDefinition.TypeEnum.NUMBER)),
                 Map.of()));
 
@@ -390,9 +391,9 @@ class ConfigPrescriptiveTest {
         List<ConfigChangeEvent> otherEvents = new ArrayList<>();
         configClient.onChange("other_config", otherEvents::add);
 
-        when(mockApi.listConfigs(isNull(), isNull()))
+        when(mockApi.listConfigs(isNull()))
                 .thenReturn(listResponse(List.of(
-                        makeResource(CONFIG_ID, "app", "App", null,
+                        makeResource(APP_ID, "App", null,
                                 Map.of("retries", itemDef(7, ConfigItemDefinition.TypeEnum.NUMBER)),
                                 Map.of()))));
 
@@ -404,7 +405,7 @@ class ConfigPrescriptiveTest {
 
     @Test
     void onChange_itemScoped() throws ApiException {
-        setupListResponse(makeResource(CONFIG_ID, "app", "App", null,
+        setupListResponse(makeResource(APP_ID, "App", null,
                 Map.of("retries", itemDef(3, ConfigItemDefinition.TypeEnum.NUMBER),
                         "timeout", itemDef(1000, ConfigItemDefinition.TypeEnum.NUMBER)),
                 Map.of()));
@@ -414,9 +415,9 @@ class ConfigPrescriptiveTest {
         List<ConfigChangeEvent> retriesEvents = new ArrayList<>();
         configClient.onChange("app", "retries", retriesEvents::add);
 
-        when(mockApi.listConfigs(isNull(), isNull()))
+        when(mockApi.listConfigs(isNull()))
                 .thenReturn(listResponse(List.of(
-                        makeResource(CONFIG_ID, "app", "App", null,
+                        makeResource(APP_ID, "App", null,
                                 Map.of("retries", itemDef(7, ConfigItemDefinition.TypeEnum.NUMBER),
                                         "timeout", itemDef(2000, ConfigItemDefinition.TypeEnum.NUMBER)),
                                 Map.of()))));
@@ -430,7 +431,7 @@ class ConfigPrescriptiveTest {
 
     @Test
     void onChange_listenerExceptionDoesNotPropagate() throws ApiException {
-        setupListResponse(makeResource(CONFIG_ID, "app", "App", null,
+        setupListResponse(makeResource(APP_ID, "App", null,
                 Map.of("retries", itemDef(3, ConfigItemDefinition.TypeEnum.NUMBER)),
                 Map.of()));
 
@@ -440,9 +441,9 @@ class ConfigPrescriptiveTest {
         configClient.onChange(e -> { throw new RuntimeException("bad listener"); });
         configClient.onChange(events::add);
 
-        when(mockApi.listConfigs(isNull(), isNull()))
+        when(mockApi.listConfigs(isNull()))
                 .thenReturn(listResponse(List.of(
-                        makeResource(CONFIG_ID, "app", "App", null,
+                        makeResource(APP_ID, "App", null,
                                 Map.of("retries", itemDef(7, ConfigItemDefinition.TypeEnum.NUMBER)),
                                 Map.of()))));
 
@@ -457,15 +458,15 @@ class ConfigPrescriptiveTest {
 
     @Test
     void diffAndFire_noListeners_doesNotThrow() throws ApiException {
-        setupListResponse(makeResource(CONFIG_ID, "app", "App", null,
+        setupListResponse(makeResource(APP_ID, "App", null,
                 Map.of("retries", itemDef(3, ConfigItemDefinition.TypeEnum.NUMBER)),
                 Map.of()));
 
         configClient.resolve("app");
 
-        when(mockApi.listConfigs(isNull(), isNull()))
+        when(mockApi.listConfigs(isNull()))
                 .thenReturn(listResponse(List.of(
-                        makeResource(CONFIG_ID, "app", "App", null,
+                        makeResource(APP_ID, "App", null,
                                 Map.of("retries", itemDef(7, ConfigItemDefinition.TypeEnum.NUMBER)),
                                 Map.of()))));
 
@@ -474,7 +475,7 @@ class ConfigPrescriptiveTest {
 
     @Test
     void diffAndFire_newConfig() throws ApiException {
-        setupListResponse(makeResource(CONFIG_ID, "app", "App", null,
+        setupListResponse(makeResource(APP_ID, "App", null,
                 Map.of("a", itemDef(1, ConfigItemDefinition.TypeEnum.NUMBER)),
                 Map.of()));
 
@@ -483,27 +484,27 @@ class ConfigPrescriptiveTest {
         List<ConfigChangeEvent> events = new ArrayList<>();
         configClient.onChange(events::add);
 
-        String newConfigId = "770e8400-e29b-41d4-a716-446655440002";
-        when(mockApi.listConfigs(isNull(), isNull()))
+        String newConfigId = "new_config";
+        when(mockApi.listConfigs(isNull()))
                 .thenReturn(listResponse(List.of(
-                        makeResource(CONFIG_ID, "app", "App", null,
+                        makeResource(APP_ID, "App", null,
                                 Map.of("a", itemDef(1, ConfigItemDefinition.TypeEnum.NUMBER)),
                                 Map.of()),
-                        makeResource(newConfigId, "new_config", "New Config", null,
+                        makeResource(newConfigId, "New Config", null,
                                 Map.of("b", itemDef(2, ConfigItemDefinition.TypeEnum.NUMBER)),
                                 Map.of()))));
 
         configClient.refresh();
 
         assertEquals(1, events.size());
-        assertEquals("new_config", events.get(0).configKey());
+        assertEquals("new_config", events.get(0).configId());
         assertEquals("b", events.get(0).itemKey());
         assertNull(events.get(0).oldValue());
     }
 
     @Test
     void diffAndFire_removedKey() throws ApiException {
-        setupListResponse(makeResource(CONFIG_ID, "app", "App", null,
+        setupListResponse(makeResource(APP_ID, "App", null,
                 Map.of("a", itemDef(1, ConfigItemDefinition.TypeEnum.NUMBER),
                         "b", itemDef(2, ConfigItemDefinition.TypeEnum.NUMBER)),
                 Map.of()));
@@ -513,9 +514,9 @@ class ConfigPrescriptiveTest {
         List<ConfigChangeEvent> events = new ArrayList<>();
         configClient.onChange(events::add);
 
-        when(mockApi.listConfigs(isNull(), isNull()))
+        when(mockApi.listConfigs(isNull()))
                 .thenReturn(listResponse(List.of(
-                        makeResource(CONFIG_ID, "app", "App", null,
+                        makeResource(APP_ID, "App", null,
                                 Map.of("a", itemDef(1, ConfigItemDefinition.TypeEnum.NUMBER)),
                                 Map.of()))));
 

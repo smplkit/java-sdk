@@ -24,11 +24,10 @@ class LogGroupTest {
         Instant now = Instant.now();
         Map<String, Object> envs = Map.of("prod", Map.of("level", "WARN"));
 
-        LogGroup grp = new LogGroup(null, "id-1", "my.group", "My Group",
+        LogGroup grp = new LogGroup(null, "my.group", "My Group",
                 "DEBUG", "parent-1", envs, now, now);
 
-        assertEquals("id-1", grp.getId());
-        assertEquals("my.group", grp.getKey());
+        assertEquals("my.group", grp.getId());
         assertEquals("My Group", grp.getName());
         assertEquals("DEBUG", grp.getLevel());
         assertEquals("parent-1", grp.getGroup());
@@ -39,7 +38,7 @@ class LogGroupTest {
 
     @Test
     void constructor_handlesNullEnvironments() {
-        LogGroup grp = new LogGroup(null, null, "key", "name", null, null, null, null, null);
+        LogGroup grp = new LogGroup(null, null, "name", null, null, null, null, null);
         assertNotNull(grp.getEnvironments());
         assertTrue(grp.getEnvironments().isEmpty());
     }
@@ -50,7 +49,7 @@ class LogGroupTest {
 
     @Test
     void publicSetters_work() {
-        LogGroup grp = new LogGroup(null, null, "key", "name", null, null, null, null, null);
+        LogGroup grp = new LogGroup(null, null, "name", null, null, null, null, null);
 
         grp.setName("New Name");
         assertEquals("New Name", grp.getName());
@@ -70,14 +69,11 @@ class LogGroupTest {
 
     @Test
     void packagePrivateSetters_work() {
-        LogGroup grp = new LogGroup(null, null, "key", "name", null, null, null, null, null);
+        LogGroup grp = new LogGroup(null, null, "name", null, null, null, null, null);
         Instant now = Instant.now();
 
         grp.setId("new-id");
         assertEquals("new-id", grp.getId());
-
-        grp.setKey("new-key");
-        assertEquals("new-key", grp.getKey());
 
         grp.setCreatedAt(now);
         assertEquals(now, grp.getCreatedAt());
@@ -99,21 +95,21 @@ class LogGroupTest {
 
     @Test
     void setLevel_setsStringFromEnum() {
-        LogGroup grp = new LogGroup(null, null, "key", "name", null, null, null, null, null);
+        LogGroup grp = new LogGroup(null, null, "name", null, null, null, null, null);
         grp.setLevel(LogLevel.WARN);
         assertEquals("WARN", grp.getLevel());
     }
 
     @Test
     void clearLevel_setsNull() {
-        LogGroup grp = new LogGroup(null, null, "key", "name", "INFO", null, null, null, null);
+        LogGroup grp = new LogGroup(null, null, "name", "INFO", null, null, null, null);
         grp.clearLevel();
         assertNull(grp.getLevel());
     }
 
     @Test
     void setEnvironmentLevel_addsEntry() {
-        LogGroup grp = new LogGroup(null, null, "key", "name", null, null, null, null, null);
+        LogGroup grp = new LogGroup(null, null, "name", null, null, null, null, null);
         grp.setEnvironmentLevel("production", LogLevel.ERROR);
         Map<?, ?> envData = (Map<?, ?>) grp.getEnvironments().get("production");
         assertNotNull(envData);
@@ -125,7 +121,7 @@ class LogGroupTest {
         Map<String, Object> envs = new HashMap<>();
         envs.put("prod", Map.of("level", "WARN"));
         envs.put("staging", Map.of("level", "DEBUG"));
-        LogGroup grp = new LogGroup(null, null, "key", "name", null, null, envs, null, null);
+        LogGroup grp = new LogGroup(null, null, "name", null, null, envs, null, null);
 
         grp.clearEnvironmentLevel("prod");
         assertNull(grp.getEnvironments().get("prod"));
@@ -134,7 +130,7 @@ class LogGroupTest {
 
     @Test
     void clearEnvironmentLevel_noopIfNotPresent() {
-        LogGroup grp = new LogGroup(null, null, "key", "name", null, null, null, null, null);
+        LogGroup grp = new LogGroup(null, null, "name", null, null, null, null, null);
         grp.clearEnvironmentLevel("nonexistent");
         assertTrue(grp.getEnvironments().isEmpty());
     }
@@ -143,7 +139,7 @@ class LogGroupTest {
     void clearAllEnvironmentLevels_emptiesMap() {
         Map<String, Object> envs = new HashMap<>();
         envs.put("prod", Map.of("level", "WARN"));
-        LogGroup grp = new LogGroup(null, null, "key", "name", null, null, envs, null, null);
+        LogGroup grp = new LogGroup(null, null, "name", null, null, envs, null, null);
 
         grp.clearAllEnvironmentLevels();
         assertTrue(grp.getEnvironments().isEmpty());
@@ -155,28 +151,29 @@ class LogGroupTest {
 
     @Test
     void save_throwsIfNoClient() {
-        LogGroup grp = new LogGroup(null, null, "key", "name", null, null, null, null, null);
+        LogGroup grp = new LogGroup(null, null, "name", null, null, null, null, null);
         assertThrows(IllegalStateException.class, grp::save);
     }
 
     @Test
-    void save_callsCreateWhenIdIsNull() {
+    void save_callsCreateWhenCreatedAtIsNull() {
         LoggingClient mockClient = mock(LoggingClient.class);
-        LogGroup grp = new LogGroup(mockClient, null, "key", "name", null, null, null, null, null);
-        LogGroup created = new LogGroup(null, "new-id", "key", "name", null, null, null, Instant.now(), Instant.now());
+        LogGroup grp = new LogGroup(mockClient, "my-group", "name", null, null, null, null, null);
+        LogGroup created = new LogGroup(null, "my-group", "name", null, null, null, Instant.now(), Instant.now());
         when(mockClient._createGroup(grp)).thenReturn(created);
 
         grp.save();
 
         verify(mockClient)._createGroup(grp);
-        assertEquals("new-id", grp.getId());
+        assertEquals("my-group", grp.getId());
     }
 
     @Test
-    void save_callsUpdateWhenIdIsSet() {
+    void save_callsUpdateWhenCreatedAtIsSet() {
         LoggingClient mockClient = mock(LoggingClient.class);
-        LogGroup grp = new LogGroup(mockClient, "existing-id", "key", "name", null, null, null, null, null);
-        LogGroup updated = new LogGroup(null, "existing-id", "key", "Updated", "INFO", null, null, Instant.now(), Instant.now());
+        Instant now = Instant.now();
+        LogGroup grp = new LogGroup(mockClient, "existing-id", "name", null, null, null, now, now);
+        LogGroup updated = new LogGroup(null, "existing-id", "Updated", "INFO", null, null, now, now);
         when(mockClient._updateGroup(grp)).thenReturn(updated);
 
         grp.save();
@@ -192,14 +189,13 @@ class LogGroupTest {
     @Test
     void apply_copiesAllFields() {
         Instant now = Instant.now();
-        LogGroup source = new LogGroup(null, "id-1", "key-1", "Name 1", "DEBUG", "parent",
+        LogGroup source = new LogGroup(null, "id-1", "Name 1", "DEBUG", "parent",
                 Map.of("p", Map.of("level", "WARN")), now, now);
-        LogGroup target = new LogGroup(null, null, "old", "Old", null, null, null, null, null);
+        LogGroup target = new LogGroup(null, null, "Old", null, null, null, null, null);
 
         target._apply(source);
 
         assertEquals("id-1", target.getId());
-        assertEquals("key-1", target.getKey());
         assertEquals("Name 1", target.getName());
         assertEquals("DEBUG", target.getLevel());
         assertEquals("parent", target.getGroup());
@@ -210,8 +206,8 @@ class LogGroupTest {
 
     @Test
     void apply_handlesNullEnvironments() {
-        LogGroup source = new LogGroup(null, "id", "key", "Name", null, null, null, null, null);
-        LogGroup target = new LogGroup(null, null, "old", "Old", null, null, Map.of("x", "y"), null, null);
+        LogGroup source = new LogGroup(null, "id", "Name", null, null, null, null, null);
+        LogGroup target = new LogGroup(null, null, "Old", null, null, Map.of("x", "y"), null, null);
 
         target._apply(source);
         assertNotNull(target.getEnvironments());
@@ -224,10 +220,9 @@ class LogGroupTest {
 
     @Test
     void toString_includesKeyFields() {
-        LogGroup grp = new LogGroup(null, "id-1", "my.group", "My Group", null, null, null, null, null);
+        LogGroup grp = new LogGroup(null, "my.group", "My Group", null, null, null, null, null);
         String str = grp.toString();
         assertTrue(str.contains("my.group"));
         assertTrue(str.contains("My Group"));
-        assertTrue(str.contains("id-1"));
     }
 }

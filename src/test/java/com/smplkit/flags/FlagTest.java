@@ -21,8 +21,6 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.UUID;
-
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.*;
 import static org.mockito.Mockito.*;
@@ -38,7 +36,7 @@ class FlagTest {
 
     private FlagsApi mockApi;
     private FlagsClient client;
-    private static final String FLAG_ID = "11111111-1111-1111-1111-111111111111";
+    private static final String FLAG_ID = "my-flag";
 
     @BeforeEach
     void setUp() {
@@ -60,8 +58,7 @@ class FlagTest {
         Flag<Boolean> flag = new Flag<>(client, "my-flag", "My Flag", "BOOLEAN", false,
                 values, "A test flag", envs, now, now, Boolean.class);
 
-        assertNull(flag.getId()); // id not set by constructor
-        assertEquals("my-flag", flag.getKey());
+        assertEquals("my-flag", flag.getId());
         assertEquals("My Flag", flag.getName());
         assertEquals("BOOLEAN", flag.getType());
         assertFalse(flag.getDefault());
@@ -75,7 +72,7 @@ class FlagTest {
 
     @Test
     void constructor_nullValues_remainsNull() {
-        Flag<Boolean> flag = new Flag<>(client, "key", "Name", "BOOLEAN", false,
+        Flag<Boolean> flag = new Flag<>(client, "my-id", "Name", "BOOLEAN", false,
                 null, null, null, null, null, Boolean.class);
 
         assertNull(flag.getValues(), "null values should remain null (unconstrained)");
@@ -144,8 +141,8 @@ class FlagTest {
     @Test
     void setId_changesId() {
         Flag<Boolean> flag = client.newBooleanFlag("my-flag", false);
-        flag.setId(FLAG_ID);
-        assertEquals(FLAG_ID, flag.getId());
+        flag.setId("new-id");
+        assertEquals("new-id", flag.getId());
     }
 
     @Test
@@ -153,13 +150,6 @@ class FlagTest {
         Flag<Boolean> flag = client.newBooleanFlag("my-flag", false);
         flag.setClient(null);
         assertNull(flag.getClient());
-    }
-
-    @Test
-    void setKey_changesKey() {
-        Flag<Boolean> flag = client.newBooleanFlag("old-key", false);
-        flag.setKey("new-key");
-        assertEquals("new-key", flag.getKey());
     }
 
     @Test
@@ -334,21 +324,22 @@ class FlagTest {
     // --- save() when id is null calls _createFlag ---
 
     @Test
-    void save_withNullId_callsCreate() throws ApiException {
+    void save_whenCreatedAtNull_callsCreate() throws ApiException {
         FlagResponse response = OBJECT_MAPPER.convertValue(Map.of("data", Map.of(
-                "id", FLAG_ID, "type", "flag", "attributes", Map.of(
-                        "key", "new-flag", "name", "New Flag", "type", "BOOLEAN",
-                        "default", false, "values", List.of(), "environments", Map.of()
+                "id", "new-flag", "type", "flag", "attributes", Map.of(
+                        "name", "New Flag", "type", "BOOLEAN",
+                        "default", false, "values", List.of(), "environments", Map.of(),
+                        "created_at", "2024-06-01T12:00:00Z", "updated_at", "2024-06-01T12:00:00Z"
                 )
         )), FlagResponse.class);
         when(mockApi.createFlag(any(ResponseFlag.class))).thenReturn(response);
 
         Flag<Boolean> flag = client.newBooleanFlag("new-flag", false, "New Flag", null);
-        assertNull(flag.getId());
+        assertNull(flag.getCreatedAt());
 
         flag.save();
 
-        assertEquals(FLAG_ID, flag.getId());
+        assertEquals("new-flag", flag.getId());
         verify(mockApi).createFlag(any(ResponseFlag.class));
         verify(mockApi, never()).updateFlag(any(), any());
     }
@@ -356,22 +347,23 @@ class FlagTest {
     // --- save() when id is set calls _updateFlag ---
 
     @Test
-    void save_withIdSet_callsUpdate() throws ApiException {
+    void save_whenCreatedAtSet_callsUpdate() throws ApiException {
         FlagResponse response = OBJECT_MAPPER.convertValue(Map.of("data", Map.of(
                 "id", FLAG_ID, "type", "flag", "attributes", Map.of(
-                        "key", "my-flag", "name", "Updated", "type", "BOOLEAN",
-                        "default", false, "values", List.of(), "environments", Map.of()
+                        "name", "Updated", "type", "BOOLEAN",
+                        "default", false, "values", List.of(), "environments", Map.of(),
+                        "created_at", "2024-06-01T12:00:00Z", "updated_at", "2024-06-01T12:00:00Z"
                 )
         )), FlagResponse.class);
-        when(mockApi.updateFlag(eq(UUID.fromString(FLAG_ID)), any(ResponseFlag.class)))
+        when(mockApi.updateFlag(eq(FLAG_ID), any(ResponseFlag.class)))
                 .thenReturn(response);
 
         Flag<Boolean> flag = client.newBooleanFlag("my-flag", false, "My Flag", null);
-        flag.setId(FLAG_ID);
+        flag.setCreatedAt(java.time.Instant.parse("2024-06-01T12:00:00Z"));
         flag.setName("Updated");
         flag.save();
 
-        verify(mockApi).updateFlag(eq(UUID.fromString(FLAG_ID)), any(ResponseFlag.class));
+        verify(mockApi).updateFlag(eq(FLAG_ID), any(ResponseFlag.class));
         verify(mockApi, never()).createFlag(any());
     }
 
@@ -379,10 +371,9 @@ class FlagTest {
 
     @Test
     void save_create_appliesResponseFieldsBack() throws ApiException {
-        Instant ts = Instant.parse("2024-06-01T12:00:00Z");
         FlagResponse response = OBJECT_MAPPER.convertValue(Map.of("data", Map.of(
-                "id", FLAG_ID, "type", "flag", "attributes", Map.of(
-                        "key", "applied-flag", "name", "Applied Flag", "type", "BOOLEAN",
+                "id", "applied-flag", "type", "flag", "attributes", Map.of(
+                        "name", "Applied Flag", "type", "BOOLEAN",
                         "default", true, "values", List.of(Map.of("name", "On", "value", true)),
                         "description", "from server",
                         "environments", Map.of("staging", Map.of("enabled", true)),
@@ -395,7 +386,7 @@ class FlagTest {
         Flag<Boolean> flag = client.newBooleanFlag("applied-flag", false, "Local Name", null);
         flag.save();
 
-        assertEquals(FLAG_ID, flag.getId());
+        assertEquals("applied-flag", flag.getId());
         assertEquals("Applied Flag", flag.getName());
         assertTrue(flag.getDefault());
         assertEquals("from server", flag.getDescription());
@@ -407,16 +398,17 @@ class FlagTest {
     void save_update_appliesResponseFieldsBack() throws ApiException {
         FlagResponse response = OBJECT_MAPPER.convertValue(Map.of("data", Map.of(
                 "id", FLAG_ID, "type", "flag", "attributes", Map.of(
-                        "key", "my-flag", "name", "Server Name", "type", "BOOLEAN",
+                        "name", "Server Name", "type", "BOOLEAN",
                         "default", true, "values", List.of(), "environments", Map.of(),
-                        "description", "server desc"
+                        "description", "server desc",
+                        "created_at", "2024-06-01T12:00:00Z", "updated_at", "2024-06-01T12:00:00Z"
                 )
         )), FlagResponse.class);
-        when(mockApi.updateFlag(eq(UUID.fromString(FLAG_ID)), any(ResponseFlag.class)))
+        when(mockApi.updateFlag(eq(FLAG_ID), any(ResponseFlag.class)))
                 .thenReturn(response);
 
         Flag<Boolean> flag = client.newBooleanFlag("my-flag", false, "Local Name", null);
-        flag.setId(FLAG_ID);
+        flag.setCreatedAt(java.time.Instant.parse("2024-06-01T12:00:00Z"));
         flag.save();
 
         assertEquals("Server Name", flag.getName());
@@ -592,18 +584,16 @@ class FlagTest {
     @Test
     void apply_copiesAllFieldsFromOther() {
         Instant now = Instant.now();
-        Flag<Boolean> source = new Flag<>(client, "source-key", "Source Name", "BOOLEAN", true,
+        Flag<Boolean> source = new Flag<>(client, "source-id", "Source Name", "BOOLEAN", true,
                 List.of(Map.of("name", "On", "value", true)),
                 "Source desc",
                 Map.of("prod", Map.of("enabled", true)),
                 now, now, Boolean.class);
-        source.setId("source-id");
 
-        Flag<Boolean> target = client.newBooleanFlag("target-key", false);
+        Flag<Boolean> target = client.newBooleanFlag("target-id", false);
         target._apply(source);
 
         assertEquals("source-id", target.getId());
-        assertEquals("source-key", target.getKey());
         assertEquals("Source Name", target.getName());
         assertEquals("BOOLEAN", target.getType());
         assertTrue(target.getDefault());
@@ -616,10 +606,10 @@ class FlagTest {
 
     @Test
     void apply_withNullValues_setsNull() {
-        Flag<Boolean> source = new Flag<>(client, "key", "Name", "BOOLEAN", false,
+        Flag<Boolean> source = new Flag<>(client, "my-id", "Name", "BOOLEAN", false,
                 null, null, null, null, null, Boolean.class);
 
-        Flag<Boolean> target = client.newBooleanFlag("target-key", false);
+        Flag<Boolean> target = client.newBooleanFlag("target-id", false);
         target._apply(source);
 
         assertNull(target.getValues(), "apply with null values should result in null");
@@ -629,10 +619,10 @@ class FlagTest {
 
     @Test
     void apply_doesNotShareMutableState() {
-        Flag<Boolean> source = client.newBooleanFlag("source-key", false);
+        Flag<Boolean> source = client.newBooleanFlag("source-id", false);
         source.setEnvironmentEnabled("staging", true);
 
-        Flag<Boolean> target = client.newBooleanFlag("target-key", false);
+        Flag<Boolean> target = client.newBooleanFlag("target-id", false);
         target._apply(source);
 
         // Modifying target's environments should not affect source
@@ -643,37 +633,36 @@ class FlagTest {
     // --- toString ---
 
     @Test
-    void toString_containsKeyTypeAndDefault() {
+    void toString_containsIdTypeAndDefault() {
         Flag<Boolean> flag = client.newBooleanFlag("my-flag", false);
         String str = flag.toString();
-        assertEquals("Flag{key='my-flag', type='BOOLEAN', default=false}", str);
+        assertEquals("Flag{id='my-flag', type='BOOLEAN', default=false}", str);
     }
 
     @Test
     void toString_stringFlag() {
         Flag<String> flag = client.newStringFlag("color", "red");
-        assertEquals("Flag{key='color', type='STRING', default=red}", flag.toString());
+        assertEquals("Flag{id='color', type='STRING', default=red}", flag.toString());
     }
 
     @Test
     void toString_numberFlag() {
         Flag<Number> flag = client.newNumberFlag("limit", 42);
-        assertEquals("Flag{key='limit', type='NUMERIC', default=42}", flag.toString());
+        assertEquals("Flag{id='limit', type='NUMERIC', default=42}", flag.toString());
     }
 
     // --- Helpers ---
 
-    private void connectWithFlag(String key, String type, Object defaultValue,
+    private void connectWithFlag(String id, String type, Object defaultValue,
                                   Map<String, Object> environments) throws ApiException {
         Map<String, Object> attrs = new HashMap<>();
-        attrs.put("key", key);
-        attrs.put("name", key);
+        attrs.put("name", id);
         attrs.put("type", type);
         attrs.put("default", defaultValue);
         attrs.put("values", List.of());
         attrs.put("environments", environments);
-        when(mockApi.listFlags(isNull(), isNull())).thenReturn(OBJECT_MAPPER.convertValue(
-                Map.of("data", List.of(Map.of("id", FLAG_ID, "type", "flag", "attributes", attrs))),
+        when(mockApi.listFlags(isNull())).thenReturn(OBJECT_MAPPER.convertValue(
+                Map.of("data", List.of(Map.of("id", id, "type", "flag", "attributes", attrs))),
                 FlagListResponse.class));
         client._connectInternal();
     }

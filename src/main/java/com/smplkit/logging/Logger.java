@@ -17,7 +17,6 @@ public final class Logger {
 
     private LoggingClient client;
     private String id;
-    private String key;
     private String name;
     private String level;
     private String group;
@@ -27,13 +26,12 @@ public final class Logger {
     private Instant createdAt;
     private Instant updatedAt;
 
-    Logger(LoggingClient client, String id, String key, String name,
+    Logger(LoggingClient client, String id, String name,
            String level, String group, boolean managed,
            List<Map<String, Object>> sources, Map<String, Object> environments,
            Instant createdAt, Instant updatedAt) {
         this.client = client;
         this.id = id;
-        this.key = key;
         this.name = name;
         this.level = level;
         this.group = group;
@@ -47,7 +45,6 @@ public final class Logger {
     // --- Public getters ---
 
     public String getId() { return id; }
-    public String getKey() { return key; }
     public String getName() { return name; }
     public String getLevel() { return level; }
     public String getGroup() { return group; }
@@ -99,7 +96,7 @@ public final class Logger {
      */
     public void save() {
         if (client == null) throw new IllegalStateException("Logger not bound to a client");
-        if (id == null) {
+        if (createdAt == null) {
             Logger created = client._createLogger(this);
             _apply(created);
         } else {
@@ -111,7 +108,6 @@ public final class Logger {
     // --- Package-private setters (used by LoggingClient) ---
 
     void setId(String id) { this.id = id; }
-    void setKey(String key) { this.key = key; }
     void setSources(List<Map<String, Object>> sources) {
         this.sources = sources != null ? new ArrayList<>(sources) : new ArrayList<>();
     }
@@ -125,7 +121,6 @@ public final class Logger {
 
     void _apply(Logger other) {
         this.id = other.id;
-        this.key = other.key;
         this.name = other.name;
         this.level = other.level;
         this.group = other.group;
@@ -138,6 +133,6 @@ public final class Logger {
 
     @Override
     public String toString() {
-        return "Logger{id='" + id + "', key='" + key + "', name='" + name + "'}";
+        return "Logger{id='" + id + "', name='" + name + "'}";
     }
 }

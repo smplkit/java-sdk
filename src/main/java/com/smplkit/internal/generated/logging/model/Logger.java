@@ -42,7 +42,7 @@ import com.smplkit.internal.generated.logging.ApiClient;
  * Logger
  */
 @JsonPropertyOrder({
-  Logger.JSON_PROPERTY_KEY,
+  Logger.JSON_PROPERTY_ID,
   Logger.JSON_PROPERTY_NAME,
   Logger.JSON_PROPERTY_LEVEL,
   Logger.JSON_PROPERTY_GROUP,
@@ -54,8 +54,8 @@ import com.smplkit.internal.generated.logging.ApiClient;
 })
 @jakarta.annotation.Generated(value = "org.openapitools.codegen.languages.JavaClientCodegen", comments = "Generator version: 7.21.0")
 public class Logger {
-  public static final String JSON_PROPERTY_KEY = "key";
-  private JsonNullable<String> key = JsonNullable.<String>undefined();
+  public static final String JSON_PROPERTY_ID = "id";
+  private JsonNullable<String> id = JsonNullable.<String>undefined();
 
   public static final String JSON_PROPERTY_NAME = "name";
   @jakarta.annotation.Nonnull
@@ -97,35 +97,35 @@ public class Logger {
     this.updatedAt = updatedAt == null ? JsonNullable.<OffsetDateTime>undefined() : JsonNullable.of(updatedAt);
   }
 
-  public Logger key(@jakarta.annotation.Nullable String key) {
-    this.key = JsonNullable.<String>of(key);
+  public Logger id(@jakarta.annotation.Nullable String id) {
+    this.id = JsonNullable.<String>of(id);
     return this;
   }
 
   /**
-   * Get key
-   * @return key
+   * Get id
+   * @return id
    */
   @jakarta.annotation.Nullable
   @JsonIgnore
-  public String getKey() {
-        return key.orElse(null);
+  public String getId() {
+        return id.orElse(null);
   }
 
-  @JsonProperty(value = JSON_PROPERTY_KEY, required = false)
+  @JsonProperty(value = JSON_PROPERTY_ID, required = false)
   @JsonInclude(value = JsonInclude.Include.USE_DEFAULTS)
 
-  public JsonNullable<String> getKey_JsonNullable() {
-    return key;
+  public JsonNullable<String> getId_JsonNullable() {
+    return id;
   }
   
-  @JsonProperty(JSON_PROPERTY_KEY)
-  public void setKey_JsonNullable(JsonNullable<String> key) {
-    this.key = key;
+  @JsonProperty(JSON_PROPERTY_ID)
+  public void setId_JsonNullable(JsonNullable<String> id) {
+    this.id = id;
   }
 
-  public void setKey(@jakarta.annotation.Nullable String key) {
-    this.key = JsonNullable.<String>of(key);
+  public void setId(@jakarta.annotation.Nullable String id) {
+    this.id = JsonNullable.<String>of(id);
   }
 
 
@@ -389,7 +389,7 @@ public class Logger {
       return false;
     }
     Logger logger = (Logger) o;
-    return equalsNullable(this.key, logger.key) &&
+    return equalsNullable(this.id, logger.id) &&
         Objects.equals(this.name, logger.name) &&
         equalsNullable(this.level, logger.level) &&
         equalsNullable(this.group, logger.group) &&
@@ -406,7 +406,7 @@ public class Logger {
 
   @Override
   public int hashCode() {
-    return Objects.hash(hashCodeNullable(key), name, hashCodeNullable(level), hashCodeNullable(group), hashCodeNullable(managed), hashCodeNullable(sources), hashCodeNullable(environments), hashCodeNullable(createdAt), hashCodeNullable(updatedAt));
+    return Objects.hash(hashCodeNullable(id), name, hashCodeNullable(level), hashCodeNullable(group), hashCodeNullable(managed), hashCodeNullable(sources), hashCodeNullable(environments), hashCodeNullable(createdAt), hashCodeNullable(updatedAt));
   }
 
   private static <T> int hashCodeNullable(JsonNullable<T> a) {
@@ -420,7 +420,7 @@ public class Logger {
   public String toString() {
     StringBuilder sb = new StringBuilder();
     sb.append("class Logger {\n");
-    sb.append("    key: ").append(toIndentedString(key)).append("\n");
+    sb.append("    id: ").append(toIndentedString(id)).append("\n");
     sb.append("    name: ").append(toIndentedString(name)).append("\n");
     sb.append("    level: ").append(toIndentedString(level)).append("\n");
     sb.append("    group: ").append(toIndentedString(group)).append("\n");
@@ -473,9 +473,9 @@ public class Logger {
 
     StringJoiner joiner = new StringJoiner("&");
 
-    // add `key` to the URL query string
-    if (getKey() != null) {
-      joiner.add(String.format(java.util.Locale.ROOT, "%skey%s=%s", prefix, suffix, ApiClient.urlEncode(ApiClient.valueToString(getKey()))));
+    // add `id` to the URL query string
+    if (getId() != null) {
+      joiner.add(String.format(java.util.Locale.ROOT, "%sid%s=%s", prefix, suffix, ApiClient.urlEncode(ApiClient.valueToString(getId()))));
     }
 
     // add `name` to the URL query string

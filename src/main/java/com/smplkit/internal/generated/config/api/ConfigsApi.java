@@ -22,7 +22,6 @@ import com.smplkit.internal.generated.config.model.ConfigListResponse;
 import com.smplkit.internal.generated.config.model.ConfigResponse;
 import com.smplkit.internal.generated.config.model.HTTPValidationError;
 import com.smplkit.internal.generated.config.model.ResponseConfig;
-import java.util.UUID;
 
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -295,7 +294,7 @@ public class ConfigsApi {
    * @param id  (required)
    * @throws ApiException if fails to make API call
    */
-  public void deleteConfig(@jakarta.annotation.Nonnull UUID id) throws ApiException {
+  public void deleteConfig(@jakarta.annotation.Nonnull String id) throws ApiException {
     deleteConfig(id, null);
   }
 
@@ -306,7 +305,7 @@ public class ConfigsApi {
    * @param headers Optional headers to include in the request
    * @throws ApiException if fails to make API call
    */
-  public void deleteConfig(@jakarta.annotation.Nonnull UUID id, Map<String, String> headers) throws ApiException {
+  public void deleteConfig(@jakarta.annotation.Nonnull String id, Map<String, String> headers) throws ApiException {
     deleteConfigWithHttpInfo(id, headers);
   }
 
@@ -317,7 +316,7 @@ public class ConfigsApi {
    * @return ApiResponse&lt;Void&gt;
    * @throws ApiException if fails to make API call
    */
-  public ApiResponse<Void> deleteConfigWithHttpInfo(@jakarta.annotation.Nonnull UUID id) throws ApiException {
+  public ApiResponse<Void> deleteConfigWithHttpInfo(@jakarta.annotation.Nonnull String id) throws ApiException {
     return deleteConfigWithHttpInfo(id, null);
   }
 
@@ -329,7 +328,7 @@ public class ConfigsApi {
    * @return ApiResponse&lt;Void&gt;
    * @throws ApiException if fails to make API call
    */
-  public ApiResponse<Void> deleteConfigWithHttpInfo(@jakarta.annotation.Nonnull UUID id, Map<String, String> headers) throws ApiException {
+  public ApiResponse<Void> deleteConfigWithHttpInfo(@jakarta.annotation.Nonnull String id, Map<String, String> headers) throws ApiException {
     HttpRequest.Builder localVarRequestBuilder = deleteConfigRequestBuilder(id, headers);
     try {
       HttpResponse<InputStream> localVarResponse = memberVarHttpClient.send(
@@ -366,7 +365,7 @@ public class ConfigsApi {
     }
   }
 
-  private HttpRequest.Builder deleteConfigRequestBuilder(@jakarta.annotation.Nonnull UUID id, Map<String, String> headers) throws ApiException {
+  private HttpRequest.Builder deleteConfigRequestBuilder(@jakarta.annotation.Nonnull String id, Map<String, String> headers) throws ApiException {
     // verify the required parameter 'id' is set
     if (id == null) {
       throw new ApiException(400, "Missing the required parameter 'id' when calling deleteConfig");
@@ -400,7 +399,7 @@ public class ConfigsApi {
    * @return ConfigResponse
    * @throws ApiException if fails to make API call
    */
-  public ConfigResponse getConfig(@jakarta.annotation.Nonnull UUID id) throws ApiException {
+  public ConfigResponse getConfig(@jakarta.annotation.Nonnull String id) throws ApiException {
     return getConfig(id, null);
   }
 
@@ -412,7 +411,7 @@ public class ConfigsApi {
    * @return ConfigResponse
    * @throws ApiException if fails to make API call
    */
-  public ConfigResponse getConfig(@jakarta.annotation.Nonnull UUID id, Map<String, String> headers) throws ApiException {
+  public ConfigResponse getConfig(@jakarta.annotation.Nonnull String id, Map<String, String> headers) throws ApiException {
     ApiResponse<ConfigResponse> localVarResponse = getConfigWithHttpInfo(id, headers);
     return localVarResponse.getData();
   }
@@ -424,7 +423,7 @@ public class ConfigsApi {
    * @return ApiResponse&lt;ConfigResponse&gt;
    * @throws ApiException if fails to make API call
    */
-  public ApiResponse<ConfigResponse> getConfigWithHttpInfo(@jakarta.annotation.Nonnull UUID id) throws ApiException {
+  public ApiResponse<ConfigResponse> getConfigWithHttpInfo(@jakarta.annotation.Nonnull String id) throws ApiException {
     return getConfigWithHttpInfo(id, null);
   }
 
@@ -436,7 +435,7 @@ public class ConfigsApi {
    * @return ApiResponse&lt;ConfigResponse&gt;
    * @throws ApiException if fails to make API call
    */
-  public ApiResponse<ConfigResponse> getConfigWithHttpInfo(@jakarta.annotation.Nonnull UUID id, Map<String, String> headers) throws ApiException {
+  public ApiResponse<ConfigResponse> getConfigWithHttpInfo(@jakarta.annotation.Nonnull String id, Map<String, String> headers) throws ApiException {
     HttpRequest.Builder localVarRequestBuilder = getConfigRequestBuilder(id, headers);
     try {
       HttpResponse<InputStream> localVarResponse = memberVarHttpClient.send(
@@ -484,7 +483,7 @@ public class ConfigsApi {
     }
   }
 
-  private HttpRequest.Builder getConfigRequestBuilder(@jakarta.annotation.Nonnull UUID id, Map<String, String> headers) throws ApiException {
+  private HttpRequest.Builder getConfigRequestBuilder(@jakarta.annotation.Nonnull String id, Map<String, String> headers) throws ApiException {
     // verify the required parameter 'id' is set
     if (id == null) {
       throw new ApiException(400, "Missing the required parameter 'id' when calling getConfig");
@@ -514,52 +513,48 @@ public class ConfigsApi {
   /**
    * List Configs
    * 
-   * @param filterKey  (optional)
    * @param filterParent  (optional)
    * @return ConfigListResponse
    * @throws ApiException if fails to make API call
    */
-  public ConfigListResponse listConfigs(@jakarta.annotation.Nullable String filterKey, @jakarta.annotation.Nullable String filterParent) throws ApiException {
-    return listConfigs(filterKey, filterParent, null);
+  public ConfigListResponse listConfigs(@jakarta.annotation.Nullable String filterParent) throws ApiException {
+    return listConfigs(filterParent, null);
   }
 
   /**
    * List Configs
    * 
-   * @param filterKey  (optional)
    * @param filterParent  (optional)
    * @param headers Optional headers to include in the request
    * @return ConfigListResponse
    * @throws ApiException if fails to make API call
    */
-  public ConfigListResponse listConfigs(@jakarta.annotation.Nullable String filterKey, @jakarta.annotation.Nullable String filterParent, Map<String, String> headers) throws ApiException {
-    ApiResponse<ConfigListResponse> localVarResponse = listConfigsWithHttpInfo(filterKey, filterParent, headers);
+  public ConfigListResponse listConfigs(@jakarta.annotation.Nullable String filterParent, Map<String, String> headers) throws ApiException {
+    ApiResponse<ConfigListResponse> localVarResponse = listConfigsWithHttpInfo(filterParent, headers);
     return localVarResponse.getData();
   }
 
   /**
    * List Configs
    * 
-   * @param filterKey  (optional)
    * @param filterParent  (optional)
    * @return ApiResponse&lt;ConfigListResponse&gt;
    * @throws ApiException if fails to make API call
    */
-  public ApiResponse<ConfigListResponse> listConfigsWithHttpInfo(@jakarta.annotation.Nullable String filterKey, @jakarta.annotation.Nullable String filterParent) throws ApiException {
-    return listConfigsWithHttpInfo(filterKey, filterParent, null);
+  public ApiResponse<ConfigListResponse> listConfigsWithHttpInfo(@jakarta.annotation.Nullable String filterParent) throws ApiException {
+    return listConfigsWithHttpInfo(filterParent, null);
   }
 
   /**
    * List Configs
    * 
-   * @param filterKey  (optional)
    * @param filterParent  (optional)
    * @param headers Optional headers to include in the request
    * @return ApiResponse&lt;ConfigListResponse&gt;
    * @throws ApiException if fails to make API call
    */
-  public ApiResponse<ConfigListResponse> listConfigsWithHttpInfo(@jakarta.annotation.Nullable String filterKey, @jakarta.annotation.Nullable String filterParent, Map<String, String> headers) throws ApiException {
-    HttpRequest.Builder localVarRequestBuilder = listConfigsRequestBuilder(filterKey, filterParent, headers);
+  public ApiResponse<ConfigListResponse> listConfigsWithHttpInfo(@jakarta.annotation.Nullable String filterParent, Map<String, String> headers) throws ApiException {
+    HttpRequest.Builder localVarRequestBuilder = listConfigsRequestBuilder(filterParent, headers);
     try {
       HttpResponse<InputStream> localVarResponse = memberVarHttpClient.send(
           localVarRequestBuilder.build(),
@@ -606,7 +601,7 @@ public class ConfigsApi {
     }
   }
 
-  private HttpRequest.Builder listConfigsRequestBuilder(@jakarta.annotation.Nullable String filterKey, @jakarta.annotation.Nullable String filterParent, Map<String, String> headers) throws ApiException {
+  private HttpRequest.Builder listConfigsRequestBuilder(@jakarta.annotation.Nullable String filterParent, Map<String, String> headers) throws ApiException {
 
     HttpRequest.Builder localVarRequestBuilder = HttpRequest.newBuilder();
 
@@ -615,8 +610,6 @@ public class ConfigsApi {
     List<Pair> localVarQueryParams = new ArrayList<>();
     StringJoiner localVarQueryStringJoiner = new StringJoiner("&");
     String localVarQueryParameterBaseName;
-    localVarQueryParameterBaseName = "filter[key]";
-    localVarQueryParams.addAll(ApiClient.parameterToPairs("filter[key]", filterKey));
     localVarQueryParameterBaseName = "filter[parent]";
     localVarQueryParams.addAll(ApiClient.parameterToPairs("filter[parent]", filterParent));
 
@@ -653,7 +646,7 @@ public class ConfigsApi {
    * @return ConfigResponse
    * @throws ApiException if fails to make API call
    */
-  public ConfigResponse updateConfig(@jakarta.annotation.Nonnull UUID id, @jakarta.annotation.Nonnull ResponseConfig responseConfig) throws ApiException {
+  public ConfigResponse updateConfig(@jakarta.annotation.Nonnull String id, @jakarta.annotation.Nonnull ResponseConfig responseConfig) throws ApiException {
     return updateConfig(id, responseConfig, null);
   }
 
@@ -666,7 +659,7 @@ public class ConfigsApi {
    * @return ConfigResponse
    * @throws ApiException if fails to make API call
    */
-  public ConfigResponse updateConfig(@jakarta.annotation.Nonnull UUID id, @jakarta.annotation.Nonnull ResponseConfig responseConfig, Map<String, String> headers) throws ApiException {
+  public ConfigResponse updateConfig(@jakarta.annotation.Nonnull String id, @jakarta.annotation.Nonnull ResponseConfig responseConfig, Map<String, String> headers) throws ApiException {
     ApiResponse<ConfigResponse> localVarResponse = updateConfigWithHttpInfo(id, responseConfig, headers);
     return localVarResponse.getData();
   }
@@ -679,7 +672,7 @@ public class ConfigsApi {
    * @return ApiResponse&lt;ConfigResponse&gt;
    * @throws ApiException if fails to make API call
    */
-  public ApiResponse<ConfigResponse> updateConfigWithHttpInfo(@jakarta.annotation.Nonnull UUID id, @jakarta.annotation.Nonnull ResponseConfig responseConfig) throws ApiException {
+  public ApiResponse<ConfigResponse> updateConfigWithHttpInfo(@jakarta.annotation.Nonnull String id, @jakarta.annotation.Nonnull ResponseConfig responseConfig) throws ApiException {
     return updateConfigWithHttpInfo(id, responseConfig, null);
   }
 
@@ -692,7 +685,7 @@ public class ConfigsApi {
    * @return ApiResponse&lt;ConfigResponse&gt;
    * @throws ApiException if fails to make API call
    */
-  public ApiResponse<ConfigResponse> updateConfigWithHttpInfo(@jakarta.annotation.Nonnull UUID id, @jakarta.annotation.Nonnull ResponseConfig responseConfig, Map<String, String> headers) throws ApiException {
+  public ApiResponse<ConfigResponse> updateConfigWithHttpInfo(@jakarta.annotation.Nonnull String id, @jakarta.annotation.Nonnull ResponseConfig responseConfig, Map<String, String> headers) throws ApiException {
     HttpRequest.Builder localVarRequestBuilder = updateConfigRequestBuilder(id, responseConfig, headers);
     try {
       HttpResponse<InputStream> localVarResponse = memberVarHttpClient.send(
@@ -740,7 +733,7 @@ public class ConfigsApi {
     }
   }
 
-  private HttpRequest.Builder updateConfigRequestBuilder(@jakarta.annotation.Nonnull UUID id, @jakarta.annotation.Nonnull ResponseConfig responseConfig, Map<String, String> headers) throws ApiException {
+  private HttpRequest.Builder updateConfigRequestBuilder(@jakarta.annotation.Nonnull String id, @jakarta.annotation.Nonnull ResponseConfig responseConfig, Map<String, String> headers) throws ApiException {
     // verify the required parameter 'id' is set
     if (id == null) {
       throw new ApiException(400, "Missing the required parameter 'id' when calling updateConfig");
