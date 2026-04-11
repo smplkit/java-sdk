@@ -40,7 +40,6 @@ import com.smplkit.internal.generated.logging.ApiClient;
  * LogGroup
  */
 @JsonPropertyOrder({
-  LogGroup.JSON_PROPERTY_ID,
   LogGroup.JSON_PROPERTY_NAME,
   LogGroup.JSON_PROPERTY_LEVEL,
   LogGroup.JSON_PROPERTY_GROUP,
@@ -50,9 +49,6 @@ import com.smplkit.internal.generated.logging.ApiClient;
 })
 @jakarta.annotation.Generated(value = "org.openapitools.codegen.languages.JavaClientCodegen", comments = "Generator version: 7.21.0")
 public class LogGroup {
-  public static final String JSON_PROPERTY_ID = "id";
-  private JsonNullable<String> id = JsonNullable.<String>undefined();
-
   public static final String JSON_PROPERTY_NAME = "name";
   @jakarta.annotation.Nonnull
   private String name;
@@ -84,38 +80,6 @@ public class LogGroup {
     this.createdAt = createdAt == null ? JsonNullable.<OffsetDateTime>undefined() : JsonNullable.of(createdAt);
     this.updatedAt = updatedAt == null ? JsonNullable.<OffsetDateTime>undefined() : JsonNullable.of(updatedAt);
   }
-
-  public LogGroup id(@jakarta.annotation.Nullable String id) {
-    this.id = JsonNullable.<String>of(id);
-    return this;
-  }
-
-  /**
-   * Get id
-   * @return id
-   */
-  @jakarta.annotation.Nullable
-  @JsonIgnore
-  public String getId() {
-        return id.orElse(null);
-  }
-
-  @JsonProperty(value = JSON_PROPERTY_ID, required = false)
-  @JsonInclude(value = JsonInclude.Include.USE_DEFAULTS)
-
-  public JsonNullable<String> getId_JsonNullable() {
-    return id;
-  }
-  
-  @JsonProperty(JSON_PROPERTY_ID)
-  public void setId_JsonNullable(JsonNullable<String> id) {
-    this.id = id;
-  }
-
-  public void setId(@jakarta.annotation.Nullable String id) {
-    this.id = JsonNullable.<String>of(id);
-  }
-
 
   public LogGroup name(@jakarta.annotation.Nonnull String name) {
     this.name = name;
@@ -317,8 +281,7 @@ public class LogGroup {
       return false;
     }
     LogGroup logGroup = (LogGroup) o;
-    return equalsNullable(this.id, logGroup.id) &&
-        Objects.equals(this.name, logGroup.name) &&
+    return Objects.equals(this.name, logGroup.name) &&
         equalsNullable(this.level, logGroup.level) &&
         equalsNullable(this.group, logGroup.group) &&
         equalsNullable(this.environments, logGroup.environments) &&
@@ -332,7 +295,7 @@ public class LogGroup {
 
   @Override
   public int hashCode() {
-    return Objects.hash(hashCodeNullable(id), name, hashCodeNullable(level), hashCodeNullable(group), hashCodeNullable(environments), hashCodeNullable(createdAt), hashCodeNullable(updatedAt));
+    return Objects.hash(name, hashCodeNullable(level), hashCodeNullable(group), hashCodeNullable(environments), hashCodeNullable(createdAt), hashCodeNullable(updatedAt));
   }
 
   private static <T> int hashCodeNullable(JsonNullable<T> a) {
@@ -346,7 +309,6 @@ public class LogGroup {
   public String toString() {
     StringBuilder sb = new StringBuilder();
     sb.append("class LogGroup {\n");
-    sb.append("    id: ").append(toIndentedString(id)).append("\n");
     sb.append("    name: ").append(toIndentedString(name)).append("\n");
     sb.append("    level: ").append(toIndentedString(level)).append("\n");
     sb.append("    group: ").append(toIndentedString(group)).append("\n");
@@ -396,11 +358,6 @@ public class LogGroup {
     }
 
     StringJoiner joiner = new StringJoiner("&");
-
-    // add `id` to the URL query string
-    if (getId() != null) {
-      joiner.add(String.format(java.util.Locale.ROOT, "%sid%s=%s", prefix, suffix, ApiClient.urlEncode(ApiClient.valueToString(getId()))));
-    }
 
     // add `name` to the URL query string
     if (getName() != null) {
