@@ -62,11 +62,9 @@ tasks.jacocoTestReport {
 tasks.jacocoTestCoverageVerification {
     dependsOn(tasks.jacocoTestReport)
     classDirectories.setFrom(
-        files(classDirectories.files.map {
-            fileTree(it) {
-                exclude("com/smplkit/internal/generated/**")
-            }
-        })
+        sourceSets.main.get().output.asFileTree.matching {
+            exclude("com/smplkit/internal/generated/**")
+        }
     )
     violationRules {
         rule {

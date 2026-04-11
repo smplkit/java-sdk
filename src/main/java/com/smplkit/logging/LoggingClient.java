@@ -58,6 +58,7 @@ public final class LoggingClient {
     private final LogGroupsApi logGroupsApi;
     private final HttpClient httpClient;
     private final String apiKey;
+    private volatile com.smplkit.MetricsReporter metrics;
 
     // Adapter state
     private final List<LoggingAdapter> adapters = new ArrayList<>();
@@ -101,6 +102,11 @@ public final class LoggingClient {
     /** Sets the service name. */
     public void setService(String service) {
         this.service = service;
+    }
+
+    /** Sets the metrics reporter. */
+    public void setMetrics(com.smplkit.MetricsReporter metrics) {
+        this.metrics = metrics;
     }
 
     // -----------------------------------------------------------------------
@@ -357,9 +363,11 @@ public final class LoggingClient {
         }
 
         // 2. Discover existing loggers from all adapters
+        int totalDiscovered = 0;
         for (LoggingAdapter adapter : adapters) {
             try {
                 List<DiscoveredLogger> discovered = adapter.discover();
+                totalDiscovered += discovered.size();
                 for (DiscoveredLogger dl : discovered) {
                     String normalized = normalizeKey(dl.name());
                     nameMap.put(dl.name(), normalized);
@@ -367,6 +375,9 @@ public final class LoggingClient {
             } catch (Exception e) {
                 LOG.log(Level.WARNING, "Adapter " + adapter.name() + " discover() failed", e);
             }
+        }
+        if (metrics != null && totalDiscovered > 0) {
+            metrics.record("logging.loggers_discovered", totalDiscovered, "loggers");
         }
 
         // 3. Install hooks for new logger detection
@@ -629,6 +640,11 @@ public final class LoggingClient {
                         LOG.log(Level.FINE, "Adapter " + adapter.name()
                                 + " applyLevel failed for " + originalName, e);
                     }
+                }
+
+                if (metrics != null) {
+                    metrics.record("logging.level_changes", "changes",
+                            java.util.Map.of("logger_id", normalizedKey));
                 }
 
                 // Fire change listeners

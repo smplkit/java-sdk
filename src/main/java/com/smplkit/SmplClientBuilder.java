@@ -23,6 +23,7 @@ public final class SmplClientBuilder {
     private String environment;
     private String service;
     private Duration timeout = Duration.ofSeconds(30);
+    private boolean disableTelemetry = false;
 
     SmplClientBuilder() {
         // Package-private: use SmplClient.builder()
@@ -79,6 +80,17 @@ public final class SmplClientBuilder {
     }
 
     /**
+     * Disables SDK telemetry reporting. When true, no usage metrics are sent.
+     *
+     * @param disable true to disable telemetry
+     * @return this builder
+     */
+    public SmplClientBuilder disableTelemetry(boolean disable) {
+        this.disableTelemetry = disable;
+        return this;
+    }
+
+    /**
      * Builds and returns a new {@link SmplClient}.
      *
      * <p>Resolution order:</p>
@@ -95,7 +107,7 @@ public final class SmplClientBuilder {
         String resolvedEnvironment = resolveEnvironment();
         String resolvedService = resolveService();
         String resolvedKey = ApiKeyResolver.resolve(apiKey, resolvedEnvironment);
-        return new SmplClient(resolvedKey, resolvedEnvironment, resolvedService, timeout);
+        return new SmplClient(resolvedKey, resolvedEnvironment, resolvedService, timeout, disableTelemetry);
     }
 
     private String resolveEnvironment() {

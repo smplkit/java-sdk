@@ -115,6 +115,9 @@ public final class FlagsClient {
     // Context provider
     private volatile Supplier<List<Context>> contextProvider;
 
+    // Metrics reporter (optional)
+    private volatile com.smplkit.MetricsReporter metrics;
+
     // Service name from parent SmplClient (for auto-injection)
     private volatile String parentService;
 
@@ -156,6 +159,10 @@ public final class FlagsClient {
         this.contextFlushExecutor = null;
         this.flagChangedHandler = this::handleFlagChanged;
         this.flagDeletedHandler = this::handleFlagDeleted;
+    }
+
+    public void setMetrics(com.smplkit.MetricsReporter metrics) {
+        this.metrics = metrics;
     }
 
     public void setSharedWs(SharedWebSocket ws) {
@@ -515,9 +522,19 @@ public final class FlagsClient {
         Object cached = resolutionCache.get(cacheKey);
         if (cached != null) {
             cacheHits.incrementAndGet();
+            if (metrics != null) {
+                Map<String, String> dims = Map.of("flag_id", key);
+                metrics.record("flags.cache_hits", "hits");
+                metrics.record("flags.evaluations", "evaluations", dims);
+            }
             return cached == CACHE_NULL_SENTINEL ? defaultValue : cached;
         }
         cacheMisses.incrementAndGet();
+        if (metrics != null) {
+            Map<String, String> dims = Map.of("flag_id", key);
+            metrics.record("flags.cache_misses", "misses");
+            metrics.record("flags.evaluations", "evaluations", dims);
+        }
 
         Object result = evaluateFlag(key, flagData, environment, evalData);
         if (result == null) {

@@ -31,6 +31,7 @@ public final class SharedWebSocket {
     private final HttpClient httpClient;
     private final String wsUrl;
     private final ConcurrentHashMap<String, List<Consumer<Map<String, Object>>>> listeners = new ConcurrentHashMap<>();
+    private final MetricsReporter metrics;
 
     public volatile WebSocket webSocket;
     public volatile boolean closed = false;
@@ -47,8 +48,13 @@ public final class SharedWebSocket {
     private final WsConnector wsConnector;
 
     public SharedWebSocket(HttpClient httpClient, String appBaseUrl, String apiKey) {
+        this(httpClient, appBaseUrl, apiKey, null);
+    }
+
+    public SharedWebSocket(HttpClient httpClient, String appBaseUrl, String apiKey, MetricsReporter metrics) {
         this.httpClient = httpClient;
         this.wsUrl = buildWsUrl(appBaseUrl, apiKey);
+        this.metrics = metrics;
         this.wsConnector = (uri, listener) -> httpClient.newWebSocketBuilder()
                 .buildAsync(uri, listener).join();
     }
@@ -58,13 +64,20 @@ public final class SharedWebSocket {
         this.httpClient = null;
         this.wsUrl = null;
         this.wsConnector = null;
+        this.metrics = null;
     }
 
     /** Test constructor with injectable connector. */
     public SharedWebSocket(WsConnector connector, String wsUrl) {
+        this(connector, wsUrl, null);
+    }
+
+    /** Test constructor with injectable connector and metrics. */
+    public SharedWebSocket(WsConnector connector, String wsUrl, MetricsReporter metrics) {
         this.httpClient = null;
         this.wsUrl = wsUrl;
         this.wsConnector = connector;
+        this.metrics = metrics;
     }
 
     /** Builds the event connection URL from a base URL and API key. */
@@ -133,6 +146,9 @@ public final class SharedWebSocket {
     public void close() {
         closed = true;
         connectionStatus = "disconnected";
+        if (metrics != null) {
+            metrics.recordGauge("platform.websocket_connections", 0, "connections");
+        }
         WebSocket ws = this.webSocket;
         if (ws != null) {
             try {
@@ -164,6 +180,9 @@ public final class SharedWebSocket {
             String type = (String) msg.get("type");
             if ("connected".equals(type)) {
                 connectionStatus = "connected";
+                if (metrics != null) {
+                    metrics.recordGauge("platform.websocket_connections", 1, "connections");
+                }
                 CountDownLatch latch = connectedLatch;
                 if (latch != null) latch.countDown();
                 return;
@@ -294,6 +313,9 @@ public final class SharedWebSocket {
         @Override
         public CompletionStage<?> onClose(WebSocket webSocket, int statusCode, String reason) {
             if (!closed) {
+                if (metrics != null) {
+                    metrics.recordGauge("platform.websocket_connections", 0, "connections");
+                }
                 LOG.warning("SharedWebSocket closed (code=" + statusCode + "), reconnecting...");
                 closedLatch.countDown();
                 Thread reconnectThread = new Thread(
@@ -309,6 +331,9 @@ public final class SharedWebSocket {
         @Override
         public void onError(WebSocket webSocket, Throwable error) {
             if (!closed) {
+                if (metrics != null) {
+                    metrics.recordGauge("platform.websocket_connections", 0, "connections");
+                }
                 LOG.log(Level.WARNING, "SharedWebSocket error, reconnecting...", error);
                 closedLatch.countDown();
                 Thread reconnectThread = new Thread(

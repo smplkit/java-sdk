@@ -54,12 +54,13 @@ public final class SmplClient implements AutoCloseable {
     private final String service;
     private final String apiKey;
     private final Duration timeout;
+    private final MetricsReporter metrics;
     private volatile boolean serviceContextRegistered;
 
     /**
      * Creates a new SmplClient. Package-private; use {@link #builder()}.
      */
-    SmplClient(String apiKey, String environment, String service, Duration timeout) {
+    SmplClient(String apiKey, String environment, String service, Duration timeout, boolean disableTelemetry) {
         this.apiKey = apiKey;
         this.environment = environment;
         this.service = service;
@@ -67,12 +68,17 @@ public final class SmplClient implements AutoCloseable {
         this.httpClient = HttpClient.newBuilder()
                 .connectTimeout(timeout)
                 .build();
-        this.sharedWs = new SharedWebSocket(httpClient, APP_BASE_URL, apiKey);
+        this.metrics = disableTelemetry ? null
+                : new MetricsReporter(httpClient, APP_BASE_URL, apiKey, environment, service);
+        this.sharedWs = new SharedWebSocket(httpClient, APP_BASE_URL, apiKey, metrics);
         this.contextsApi = buildContextsApi(APP_BASE_URL, apiKey, timeout);
         this.config = buildConfigClient(httpClient, apiKey, timeout);
         this.config.setEnvironment(environment);
+        this.config.setMetrics(metrics);
         this.flags = buildFlagsClient(httpClient, apiKey, timeout, sharedWs, environment, service);
+        this.flags.setMetrics(metrics);
         this.logging = buildLoggingClient(httpClient, apiKey, timeout, environment, service);
+        this.logging.setMetrics(metrics);
     }
 
     /**
@@ -84,6 +90,7 @@ public final class SmplClient implements AutoCloseable {
         this.service = service;
         this.timeout = timeout;
         this.httpClient = httpClient;
+        this.metrics = null;
         this.sharedWs = new SharedWebSocket(httpClient, APP_BASE_URL, apiKey);
         this.contextsApi = buildContextsApi(APP_BASE_URL, apiKey, timeout);
         this.config = buildConfigClient(httpClient, apiKey, timeout);
@@ -102,6 +109,7 @@ public final class SmplClient implements AutoCloseable {
         this.service = service;
         this.timeout = timeout;
         this.httpClient = httpClient;
+        this.metrics = null;
         this.sharedWs = new SharedWebSocket(httpClient, APP_BASE_URL, apiKey);
         this.contextsApi = buildContextsApi(APP_BASE_URL, apiKey, timeout);
         this.config = config;
@@ -121,6 +129,7 @@ public final class SmplClient implements AutoCloseable {
         this.service = service;
         this.timeout = timeout;
         this.httpClient = httpClient;
+        this.metrics = null;
         this.sharedWs = new SharedWebSocket(httpClient, APP_BASE_URL, apiKey);
         this.contextsApi = contextsApi;
         this.config = config;
@@ -278,5 +287,8 @@ public final class SmplClient implements AutoCloseable {
             logging.close();
         }
         sharedWs.close();
+        if (metrics != null) {
+            metrics.close();
+        }
     }
 }

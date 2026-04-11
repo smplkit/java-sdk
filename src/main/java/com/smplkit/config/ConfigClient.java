@@ -44,6 +44,7 @@ public final class ConfigClient {
     private final ConfigsApi configsApi;
     private volatile boolean connected;
     private volatile String environment;
+    private volatile com.smplkit.MetricsReporter metrics;
     private Map<String, Map<String, Object>> configCache = new HashMap<>();
     private final List<ListenerEntry> listeners = Collections.synchronizedList(new ArrayList<>());
 
@@ -65,6 +66,11 @@ public final class ConfigClient {
      */
     public void setEnvironment(String environment) {
         this.environment = environment;
+    }
+
+    /** Sets the metrics reporter. Package-private. */
+    public void setMetrics(com.smplkit.MetricsReporter metrics) {
+        this.metrics = metrics;
     }
 
     // -----------------------------------------------------------------------
@@ -239,6 +245,9 @@ public final class ConfigClient {
      */
     public Map<String, Object> resolve(String key) {
         _connectInternal();
+        if (metrics != null) {
+            metrics.record("config.resolutions", "resolutions", Map.of("config_id", key));
+        }
         return new HashMap<>(configCache.getOrDefault(key, Map.of()));
     }
 
@@ -255,6 +264,9 @@ public final class ConfigClient {
      */
     public <T> T resolve(String key, Class<T> model) {
         _connectInternal();
+        if (metrics != null) {
+            metrics.record("config.resolutions", "resolutions", Map.of("config_id", key));
+        }
         Map<String, Object> values = new HashMap<>(configCache.getOrDefault(key, Map.of()));
         Map<String, Object> nested = unflatten(values);
         ObjectMapper mapper = new ObjectMapper();
@@ -402,6 +414,9 @@ public final class ConfigClient {
                 Object newVal = newItems.get(itemKey);
                 if (Objects.equals(oldVal, newVal)) continue;
 
+                if (metrics != null) {
+                    metrics.record("config.changes", "changes", Map.of("config_id", cfgKey));
+                }
                 ConfigChangeEvent event = new ConfigChangeEvent(cfgKey, itemKey, oldVal, newVal, source);
                 for (ListenerEntry entry : listeners) {
                     if (entry.configKey != null && !entry.configKey.equals(cfgKey)) continue;
