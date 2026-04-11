@@ -48,7 +48,7 @@ import java.util.Set;
 import java.util.function.Consumer;
 
 @jakarta.annotation.Generated(value = "org.openapitools.codegen.languages.JavaClientCodegen", comments = "Generator version: 7.21.0")
-public class SubscriptionsApi {
+public class BillingApi {
   /**
    * Utility class for extending HttpRequest.Builder functionality.
    */
@@ -77,11 +77,11 @@ public class SubscriptionsApi {
   private final Consumer<HttpResponse<InputStream>> memberVarResponseInterceptor;
   private final Consumer<HttpResponse<InputStream>> memberVarAsyncResponseInterceptor;
 
-  public SubscriptionsApi() {
+  public BillingApi() {
     this(Configuration.getDefaultApiClient());
   }
 
-  public SubscriptionsApi(ApiClient apiClient) {
+  public BillingApi(ApiClient apiClient) {
     memberVarHttpClient = apiClient.getHttpClient();
     memberVarObjectMapper = apiClient.getObjectMapper();
     memberVarBaseUri = apiClient.getBaseUri();
@@ -380,6 +380,224 @@ public class SubscriptionsApi {
     } catch (IOException e) {
       throw new ApiException(e);
     }
+    if (memberVarReadTimeout != null) {
+      localVarRequestBuilder.timeout(memberVarReadTimeout);
+    }
+    // Add custom headers if provided
+    localVarRequestBuilder = HttpRequestBuilderExtensions.withAdditionalHeaders(localVarRequestBuilder, headers);
+    if (memberVarInterceptor != null) {
+      memberVarInterceptor.accept(localVarRequestBuilder);
+    }
+    return localVarRequestBuilder;
+  }
+
+  /**
+   * Execute Setup Intent
+   * Create a Stripe SetupIntent for saving a payment method.  Returns a &#x60;&#x60;client_secret&#x60;&#x60; that the frontend passes to Stripe&#39;s Payment Element so the customer can securely enter card details without an immediate charge.
+   * @return Object
+   * @throws ApiException if fails to make API call
+   */
+  public Object executeSetupIntent() throws ApiException {
+    return executeSetupIntent(null);
+  }
+
+  /**
+   * Execute Setup Intent
+   * Create a Stripe SetupIntent for saving a payment method.  Returns a &#x60;&#x60;client_secret&#x60;&#x60; that the frontend passes to Stripe&#39;s Payment Element so the customer can securely enter card details without an immediate charge.
+   * @param headers Optional headers to include in the request
+   * @return Object
+   * @throws ApiException if fails to make API call
+   */
+  public Object executeSetupIntent(Map<String, String> headers) throws ApiException {
+    ApiResponse<Object> localVarResponse = executeSetupIntentWithHttpInfo(headers);
+    return localVarResponse.getData();
+  }
+
+  /**
+   * Execute Setup Intent
+   * Create a Stripe SetupIntent for saving a payment method.  Returns a &#x60;&#x60;client_secret&#x60;&#x60; that the frontend passes to Stripe&#39;s Payment Element so the customer can securely enter card details without an immediate charge.
+   * @return ApiResponse&lt;Object&gt;
+   * @throws ApiException if fails to make API call
+   */
+  public ApiResponse<Object> executeSetupIntentWithHttpInfo() throws ApiException {
+    return executeSetupIntentWithHttpInfo(null);
+  }
+
+  /**
+   * Execute Setup Intent
+   * Create a Stripe SetupIntent for saving a payment method.  Returns a &#x60;&#x60;client_secret&#x60;&#x60; that the frontend passes to Stripe&#39;s Payment Element so the customer can securely enter card details without an immediate charge.
+   * @param headers Optional headers to include in the request
+   * @return ApiResponse&lt;Object&gt;
+   * @throws ApiException if fails to make API call
+   */
+  public ApiResponse<Object> executeSetupIntentWithHttpInfo(Map<String, String> headers) throws ApiException {
+    HttpRequest.Builder localVarRequestBuilder = executeSetupIntentRequestBuilder(headers);
+    try {
+      HttpResponse<InputStream> localVarResponse = memberVarHttpClient.send(
+          localVarRequestBuilder.build(),
+          HttpResponse.BodyHandlers.ofInputStream());
+      if (memberVarResponseInterceptor != null) {
+        memberVarResponseInterceptor.accept(localVarResponse);
+      }
+      InputStream localVarResponseBody = null;
+      try {
+        if (localVarResponse.statusCode()/ 100 != 2) {
+          throw getApiException("executeSetupIntent", localVarResponse);
+        }
+        localVarResponseBody = ApiClient.getResponseBody(localVarResponse);
+        if (localVarResponseBody == null) {
+          return new ApiResponse<Object>(
+              localVarResponse.statusCode(),
+              localVarResponse.headers().map(),
+              null
+          );
+        }
+
+        
+        
+        String responseBody = new String(localVarResponseBody.readAllBytes());
+        Object responseValue = responseBody.isBlank()? null: memberVarObjectMapper.readValue(responseBody, new TypeReference<Object>() {});
+        
+
+        return new ApiResponse<Object>(
+            localVarResponse.statusCode(),
+            localVarResponse.headers().map(),
+            responseValue
+        );
+      } finally {
+        if (localVarResponseBody != null) {
+          localVarResponseBody.close();
+        }
+      }
+    } catch (IOException e) {
+      throw new ApiException(e);
+    }
+    catch (InterruptedException e) {
+      Thread.currentThread().interrupt();
+      throw new ApiException(e);
+    }
+  }
+
+  private HttpRequest.Builder executeSetupIntentRequestBuilder(Map<String, String> headers) throws ApiException {
+
+    HttpRequest.Builder localVarRequestBuilder = HttpRequest.newBuilder();
+
+    String localVarPath = "/api/v1/functions/setup_intent/actions/execute";
+
+    localVarRequestBuilder.uri(URI.create(memberVarBaseUri + localVarPath));
+
+    localVarRequestBuilder.header("Accept", "application/vnd.api+json");
+
+    localVarRequestBuilder.method("POST", HttpRequest.BodyPublishers.noBody());
+    if (memberVarReadTimeout != null) {
+      localVarRequestBuilder.timeout(memberVarReadTimeout);
+    }
+    // Add custom headers if provided
+    localVarRequestBuilder = HttpRequestBuilderExtensions.withAdditionalHeaders(localVarRequestBuilder, headers);
+    if (memberVarInterceptor != null) {
+      memberVarInterceptor.accept(localVarRequestBuilder);
+    }
+    return localVarRequestBuilder;
+  }
+
+  /**
+   * List Payment Methods
+   * Return the default payment method for the account&#39;s Stripe Customer.
+   * @return Object
+   * @throws ApiException if fails to make API call
+   */
+  public Object listPaymentMethods() throws ApiException {
+    return listPaymentMethods(null);
+  }
+
+  /**
+   * List Payment Methods
+   * Return the default payment method for the account&#39;s Stripe Customer.
+   * @param headers Optional headers to include in the request
+   * @return Object
+   * @throws ApiException if fails to make API call
+   */
+  public Object listPaymentMethods(Map<String, String> headers) throws ApiException {
+    ApiResponse<Object> localVarResponse = listPaymentMethodsWithHttpInfo(headers);
+    return localVarResponse.getData();
+  }
+
+  /**
+   * List Payment Methods
+   * Return the default payment method for the account&#39;s Stripe Customer.
+   * @return ApiResponse&lt;Object&gt;
+   * @throws ApiException if fails to make API call
+   */
+  public ApiResponse<Object> listPaymentMethodsWithHttpInfo() throws ApiException {
+    return listPaymentMethodsWithHttpInfo(null);
+  }
+
+  /**
+   * List Payment Methods
+   * Return the default payment method for the account&#39;s Stripe Customer.
+   * @param headers Optional headers to include in the request
+   * @return ApiResponse&lt;Object&gt;
+   * @throws ApiException if fails to make API call
+   */
+  public ApiResponse<Object> listPaymentMethodsWithHttpInfo(Map<String, String> headers) throws ApiException {
+    HttpRequest.Builder localVarRequestBuilder = listPaymentMethodsRequestBuilder(headers);
+    try {
+      HttpResponse<InputStream> localVarResponse = memberVarHttpClient.send(
+          localVarRequestBuilder.build(),
+          HttpResponse.BodyHandlers.ofInputStream());
+      if (memberVarResponseInterceptor != null) {
+        memberVarResponseInterceptor.accept(localVarResponse);
+      }
+      InputStream localVarResponseBody = null;
+      try {
+        if (localVarResponse.statusCode()/ 100 != 2) {
+          throw getApiException("listPaymentMethods", localVarResponse);
+        }
+        localVarResponseBody = ApiClient.getResponseBody(localVarResponse);
+        if (localVarResponseBody == null) {
+          return new ApiResponse<Object>(
+              localVarResponse.statusCode(),
+              localVarResponse.headers().map(),
+              null
+          );
+        }
+
+        
+        
+        String responseBody = new String(localVarResponseBody.readAllBytes());
+        Object responseValue = responseBody.isBlank()? null: memberVarObjectMapper.readValue(responseBody, new TypeReference<Object>() {});
+        
+
+        return new ApiResponse<Object>(
+            localVarResponse.statusCode(),
+            localVarResponse.headers().map(),
+            responseValue
+        );
+      } finally {
+        if (localVarResponseBody != null) {
+          localVarResponseBody.close();
+        }
+      }
+    } catch (IOException e) {
+      throw new ApiException(e);
+    }
+    catch (InterruptedException e) {
+      Thread.currentThread().interrupt();
+      throw new ApiException(e);
+    }
+  }
+
+  private HttpRequest.Builder listPaymentMethodsRequestBuilder(Map<String, String> headers) throws ApiException {
+
+    HttpRequest.Builder localVarRequestBuilder = HttpRequest.newBuilder();
+
+    String localVarPath = "/api/v1/payment_methods";
+
+    localVarRequestBuilder.uri(URI.create(memberVarBaseUri + localVarPath));
+
+    localVarRequestBuilder.header("Accept", "application/vnd.api+json");
+
+    localVarRequestBuilder.method("GET", HttpRequest.BodyPublishers.noBody());
     if (memberVarReadTimeout != null) {
       localVarRequestBuilder.timeout(memberVarReadTimeout);
     }
