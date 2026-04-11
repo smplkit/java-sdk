@@ -107,8 +107,8 @@ class MetricsReporterTest {
 
     @Test
     void differentDimensionsCreateSeparateCounters() {
-        reporter.record("flags.evaluations", "evaluations", Map.of("flag_id", "a"));
-        reporter.record("flags.evaluations", "evaluations", Map.of("flag_id", "b"));
+        reporter.record("flags.evaluations", "evaluations", Map.of("flag", "a"));
+        reporter.record("flags.evaluations", "evaluations", Map.of("flag", "b"));
 
         reporter.flush();
 
@@ -120,8 +120,8 @@ class MetricsReporterTest {
 
     @Test
     void sameDimensionsAccumulate() {
-        reporter.record("flags.evaluations", "evaluations", Map.of("flag_id", "a"));
-        reporter.record("flags.evaluations", "evaluations", Map.of("flag_id", "a"));
+        reporter.record("flags.evaluations", "evaluations", Map.of("flag", "a"));
+        reporter.record("flags.evaluations", "evaluations", Map.of("flag", "a"));
 
         reporter.flush();
 
@@ -136,7 +136,7 @@ class MetricsReporterTest {
 
     @Test
     void baseDimensionsAlwaysInjected() {
-        reporter.record("flags.evaluations", "evaluations", Map.of("flag_id", "x"));
+        reporter.record("flags.evaluations", "evaluations", Map.of("flag", "x"));
 
         reporter.flush();
 
@@ -149,7 +149,7 @@ class MetricsReporterTest {
         Map<String, String> dims = (Map<String, String>) attrs.get("dimensions");
         assertEquals("production", dims.get("environment"));
         assertEquals("my-service", dims.get("service"));
-        assertEquals("x", dims.get("flag_id"));
+        assertEquals("x", dims.get("flag"));
     }
 
     @Test
@@ -408,7 +408,7 @@ class MetricsReporterTest {
 
     @Test
     void recordConvenienceWithDimensions() {
-        reporter.record("config.resolutions", "resolutions", Map.of("config_id", "db"));
+        reporter.record("config.resolutions", "resolutions", Map.of("config", "db"));
         reporter.flush();
 
         Map<String, Object> payload = parsePayload(capturedBodies.get(0));
@@ -418,7 +418,7 @@ class MetricsReporterTest {
         Map<String, Object> attrs = (Map<String, Object>) data.get(0).get("attributes");
         @SuppressWarnings("unchecked")
         Map<String, String> dims = (Map<String, String>) attrs.get("dimensions");
-        assertEquals("db", dims.get("config_id"));
+        assertEquals("db", dims.get("config"));
     }
 
     // -----------------------------------------------------------------------

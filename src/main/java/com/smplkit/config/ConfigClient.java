@@ -239,7 +239,7 @@ public final class ConfigClient {
     public Map<String, Object> resolve(String id) {
         _connectInternal();
         if (metrics != null) {
-            metrics.record("config.resolutions", "resolutions", Map.of("config_id", id));
+            metrics.record("config.resolutions", "resolutions", Map.of("config", id));
         }
         return new HashMap<>(configCache.getOrDefault(id, Map.of()));
     }
@@ -258,7 +258,7 @@ public final class ConfigClient {
     public <T> T resolve(String id, Class<T> model) {
         _connectInternal();
         if (metrics != null) {
-            metrics.record("config.resolutions", "resolutions", Map.of("config_id", id));
+            metrics.record("config.resolutions", "resolutions", Map.of("config", id));
         }
         Map<String, Object> values = new HashMap<>(configCache.getOrDefault(id, Map.of()));
         Map<String, Object> nested = unflatten(values);
@@ -408,7 +408,7 @@ public final class ConfigClient {
                 if (Objects.equals(oldVal, newVal)) continue;
 
                 if (metrics != null) {
-                    metrics.record("config.changes", "changes", Map.of("config_id", cfgId));
+                    metrics.record("config.changes", "changes", Map.of("config", cfgId));
                 }
                 ConfigChangeEvent event = new ConfigChangeEvent(cfgId, itemKey, oldVal, newVal, source);
                 for (ListenerEntry entry : listeners) {

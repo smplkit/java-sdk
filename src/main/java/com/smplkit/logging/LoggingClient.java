@@ -628,7 +628,7 @@ public final class LoggingClient {
 
                 if (metrics != null) {
                     metrics.record("logging.level_changes", "changes",
-                            java.util.Map.of("logger_id", normalizedKey));
+                            java.util.Map.of("logger", normalizedKey));
                 }
 
                 // Fire change listeners

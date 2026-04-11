@@ -208,7 +208,7 @@ class TelemetryIntegrationTest {
         @SuppressWarnings("unchecked")
         List<Map<String, Object>> data = (List<Map<String, Object>>) payload.get("data");
         assertTrue(hasMetric(data, "config.resolutions"));
-        assertMetricHasDimension(data, "config.resolutions", "config_id", "my-config");
+        assertMetricHasDimension(data, "config.resolutions", "config", "my-config");
     }
 
     @Test
@@ -289,7 +289,7 @@ class TelemetryIntegrationTest {
         @SuppressWarnings("unchecked")
         List<Map<String, Object>> data = (List<Map<String, Object>>) payload.get("data");
         assertTrue(hasMetric(data, "config.changes"));
-        assertMetricHasDimension(data, "config.changes", "config_id", "my-config");
+        assertMetricHasDimension(data, "config.changes", "config", "my-config");
     }
 
     // -----------------------------------------------------------------------
@@ -396,7 +396,7 @@ class TelemetryIntegrationTest {
         @SuppressWarnings("unchecked")
         List<Map<String, Object>> data = (List<Map<String, Object>>) payload.get("data");
         assertTrue(hasMetric(data, "logging.level_changes"));
-        assertMetricHasDimension(data, "logging.level_changes", "logger_id", "com.myapp.service");
+        assertMetricHasDimension(data, "logging.level_changes", "logger", "com.myapp.service");
 
         logging.close();
     }

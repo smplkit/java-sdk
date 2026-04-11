@@ -517,7 +517,7 @@ public final class FlagsClient {
         if (cached != null) {
             cacheHits.incrementAndGet();
             if (metrics != null) {
-                Map<String, String> dims = Map.of("flag_id", id);
+                Map<String, String> dims = Map.of("flag", id);
                 metrics.record("flags.cache_hits", "hits");
                 metrics.record("flags.evaluations", "evaluations", dims);
             }
@@ -525,7 +525,7 @@ public final class FlagsClient {
         }
         cacheMisses.incrementAndGet();
         if (metrics != null) {
-            Map<String, String> dims = Map.of("flag_id", id);
+            Map<String, String> dims = Map.of("flag", id);
             metrics.record("flags.cache_misses", "misses");
             metrics.record("flags.evaluations", "evaluations", dims);
         }
