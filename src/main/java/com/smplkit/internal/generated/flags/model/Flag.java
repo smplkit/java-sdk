@@ -44,7 +44,6 @@ import com.smplkit.internal.generated.flags.ApiClient;
  * Flag
  */
 @JsonPropertyOrder({
-  Flag.JSON_PROPERTY_ID,
   Flag.JSON_PROPERTY_NAME,
   Flag.JSON_PROPERTY_DESCRIPTION,
   Flag.JSON_PROPERTY_TYPE,
@@ -56,9 +55,6 @@ import com.smplkit.internal.generated.flags.ApiClient;
 })
 @jakarta.annotation.Generated(value = "org.openapitools.codegen.languages.JavaClientCodegen", comments = "Generator version: 7.21.0")
 public class Flag {
-  public static final String JSON_PROPERTY_ID = "id";
-  private JsonNullable<String> id = JsonNullable.<String>undefined();
-
   public static final String JSON_PROPERTY_NAME = "name";
   @jakarta.annotation.Nonnull
   private String name;
@@ -100,38 +96,6 @@ public class Flag {
     this.createdAt = createdAt == null ? JsonNullable.<OffsetDateTime>undefined() : JsonNullable.of(createdAt);
     this.updatedAt = updatedAt == null ? JsonNullable.<OffsetDateTime>undefined() : JsonNullable.of(updatedAt);
   }
-
-  public Flag id(@jakarta.annotation.Nullable String id) {
-    this.id = JsonNullable.<String>of(id);
-    return this;
-  }
-
-  /**
-   * Get id
-   * @return id
-   */
-  @jakarta.annotation.Nullable
-  @JsonIgnore
-  public String getId() {
-        return id.orElse(null);
-  }
-
-  @JsonProperty(value = JSON_PROPERTY_ID, required = false)
-  @JsonInclude(value = JsonInclude.Include.USE_DEFAULTS)
-
-  public JsonNullable<String> getId_JsonNullable() {
-    return id;
-  }
-  
-  @JsonProperty(JSON_PROPERTY_ID)
-  public void setId_JsonNullable(JsonNullable<String> id) {
-    this.id = id;
-  }
-
-  public void setId(@jakarta.annotation.Nullable String id) {
-    this.id = JsonNullable.<String>of(id);
-  }
-
 
   public Flag name(@jakarta.annotation.Nonnull String name) {
     this.name = name;
@@ -373,8 +337,7 @@ public class Flag {
       return false;
     }
     Flag flag = (Flag) o;
-    return equalsNullable(this.id, flag.id) &&
-        Objects.equals(this.name, flag.name) &&
+    return Objects.equals(this.name, flag.name) &&
         Objects.equals(this.description, flag.description) &&
         Objects.equals(this.type, flag.type) &&
         Objects.equals(this._default, flag._default) &&
@@ -390,7 +353,7 @@ public class Flag {
 
   @Override
   public int hashCode() {
-    return Objects.hash(hashCodeNullable(id), name, description, type, _default, hashCodeNullable(values), environments, hashCodeNullable(createdAt), hashCodeNullable(updatedAt));
+    return Objects.hash(name, description, type, _default, hashCodeNullable(values), environments, hashCodeNullable(createdAt), hashCodeNullable(updatedAt));
   }
 
   private static <T> int hashCodeNullable(JsonNullable<T> a) {
@@ -404,7 +367,6 @@ public class Flag {
   public String toString() {
     StringBuilder sb = new StringBuilder();
     sb.append("class Flag {\n");
-    sb.append("    id: ").append(toIndentedString(id)).append("\n");
     sb.append("    name: ").append(toIndentedString(name)).append("\n");
     sb.append("    description: ").append(toIndentedString(description)).append("\n");
     sb.append("    type: ").append(toIndentedString(type)).append("\n");
@@ -456,11 +418,6 @@ public class Flag {
     }
 
     StringJoiner joiner = new StringJoiner("&");
-
-    // add `id` to the URL query string
-    if (getId() != null) {
-      joiner.add(String.format(java.util.Locale.ROOT, "%sid%s=%s", prefix, suffix, ApiClient.urlEncode(ApiClient.valueToString(getId()))));
-    }
 
     // add `name` to the URL query string
     if (getName() != null) {
