@@ -21,6 +21,7 @@ import com.smplkit.internal.generated.app.Pair;
 import com.smplkit.internal.generated.app.model.ErrorResponse;
 import com.smplkit.internal.generated.app.model.MetricBulkRequest;
 import com.smplkit.internal.generated.app.model.MetricListResponse;
+import com.smplkit.internal.generated.app.model.MetricNamesResponse;
 import com.smplkit.internal.generated.app.model.MetricRollupListResponse;
 
 import com.fasterxml.jackson.core.type.TypeReference;
@@ -277,6 +278,115 @@ public class MetricsApi {
     } catch (IOException e) {
       throw new ApiException(e);
     }
+    if (memberVarReadTimeout != null) {
+      localVarRequestBuilder.timeout(memberVarReadTimeout);
+    }
+    // Add custom headers if provided
+    localVarRequestBuilder = HttpRequestBuilderExtensions.withAdditionalHeaders(localVarRequestBuilder, headers);
+    if (memberVarInterceptor != null) {
+      memberVarInterceptor.accept(localVarRequestBuilder);
+    }
+    return localVarRequestBuilder;
+  }
+
+  /**
+   * List Metric Names
+   * Return distinct metric names (with a representative unit) for this account.  Used by the dashboard to discover which product sections to render. Plain JSON response (not JSON:API) — this is metadata, not a metric resource.
+   * @return MetricNamesResponse
+   * @throws ApiException if fails to make API call
+   */
+  public MetricNamesResponse listMetricNames() throws ApiException {
+    return listMetricNames(null);
+  }
+
+  /**
+   * List Metric Names
+   * Return distinct metric names (with a representative unit) for this account.  Used by the dashboard to discover which product sections to render. Plain JSON response (not JSON:API) — this is metadata, not a metric resource.
+   * @param headers Optional headers to include in the request
+   * @return MetricNamesResponse
+   * @throws ApiException if fails to make API call
+   */
+  public MetricNamesResponse listMetricNames(Map<String, String> headers) throws ApiException {
+    ApiResponse<MetricNamesResponse> localVarResponse = listMetricNamesWithHttpInfo(headers);
+    return localVarResponse.getData();
+  }
+
+  /**
+   * List Metric Names
+   * Return distinct metric names (with a representative unit) for this account.  Used by the dashboard to discover which product sections to render. Plain JSON response (not JSON:API) — this is metadata, not a metric resource.
+   * @return ApiResponse&lt;MetricNamesResponse&gt;
+   * @throws ApiException if fails to make API call
+   */
+  public ApiResponse<MetricNamesResponse> listMetricNamesWithHttpInfo() throws ApiException {
+    return listMetricNamesWithHttpInfo(null);
+  }
+
+  /**
+   * List Metric Names
+   * Return distinct metric names (with a representative unit) for this account.  Used by the dashboard to discover which product sections to render. Plain JSON response (not JSON:API) — this is metadata, not a metric resource.
+   * @param headers Optional headers to include in the request
+   * @return ApiResponse&lt;MetricNamesResponse&gt;
+   * @throws ApiException if fails to make API call
+   */
+  public ApiResponse<MetricNamesResponse> listMetricNamesWithHttpInfo(Map<String, String> headers) throws ApiException {
+    HttpRequest.Builder localVarRequestBuilder = listMetricNamesRequestBuilder(headers);
+    try {
+      HttpResponse<InputStream> localVarResponse = memberVarHttpClient.send(
+          localVarRequestBuilder.build(),
+          HttpResponse.BodyHandlers.ofInputStream());
+      if (memberVarResponseInterceptor != null) {
+        memberVarResponseInterceptor.accept(localVarResponse);
+      }
+      InputStream localVarResponseBody = null;
+      try {
+        if (localVarResponse.statusCode()/ 100 != 2) {
+          throw getApiException("listMetricNames", localVarResponse);
+        }
+        localVarResponseBody = ApiClient.getResponseBody(localVarResponse);
+        if (localVarResponseBody == null) {
+          return new ApiResponse<MetricNamesResponse>(
+              localVarResponse.statusCode(),
+              localVarResponse.headers().map(),
+              null
+          );
+        }
+
+        
+        
+        String responseBody = new String(localVarResponseBody.readAllBytes());
+        MetricNamesResponse responseValue = responseBody.isBlank()? null: memberVarObjectMapper.readValue(responseBody, new TypeReference<MetricNamesResponse>() {});
+        
+
+        return new ApiResponse<MetricNamesResponse>(
+            localVarResponse.statusCode(),
+            localVarResponse.headers().map(),
+            responseValue
+        );
+      } finally {
+        if (localVarResponseBody != null) {
+          localVarResponseBody.close();
+        }
+      }
+    } catch (IOException e) {
+      throw new ApiException(e);
+    }
+    catch (InterruptedException e) {
+      Thread.currentThread().interrupt();
+      throw new ApiException(e);
+    }
+  }
+
+  private HttpRequest.Builder listMetricNamesRequestBuilder(Map<String, String> headers) throws ApiException {
+
+    HttpRequest.Builder localVarRequestBuilder = HttpRequest.newBuilder();
+
+    String localVarPath = "/api/v1/metric_names";
+
+    localVarRequestBuilder.uri(URI.create(memberVarBaseUri + localVarPath));
+
+    localVarRequestBuilder.header("Accept", "application/vnd.api+json");
+
+    localVarRequestBuilder.method("GET", HttpRequest.BodyPublishers.noBody());
     if (memberVarReadTimeout != null) {
       localVarRequestBuilder.timeout(memberVarReadTimeout);
     }
