@@ -49,7 +49,6 @@ class ConfigPrescriptiveTest {
                                         Map<String, EnvironmentOverride> environments) {
         var attrs = new com.smplkit.internal.generated.config.model.Config(null, null);
         attrs.setName(name != null ? name : "");
-        if (id != null) attrs.setId(id);
         if (parent != null) attrs.setParent(parent);
         if (items != null) attrs.setItems(items);
         if (environments != null) attrs.setEnvironments(environments);

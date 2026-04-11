@@ -275,7 +275,6 @@ public final class FlagsClient {
     <T> Flag<T> _createFlag(Flag<T> flag) {
         try {
             var attrs = new com.smplkit.internal.generated.flags.model.Flag();
-            attrs.setId(flag.getId());
             attrs.setName(flag.getName());
             attrs.setType(flag.getType());
             attrs.setDefault(flag.getDefault());
@@ -298,7 +297,7 @@ public final class FlagsClient {
                 attrs.setEnvironments(buildEnvironments(flag.getEnvironments()));
             }
 
-            ResourceFlag data = new ResourceFlag().type("flag").attributes(attrs);
+            ResourceFlag data = new ResourceFlag().id(flag.getId()).type("flag").attributes(attrs);
             ResponseFlag body = new ResponseFlag().data(data);
             FlagResponse response = flagsApi.createFlag(body);
             Flag<?> result = parseSingleResponse(response);
@@ -313,7 +312,6 @@ public final class FlagsClient {
     <T> Flag<T> _updateFlag(Flag<T> flag) {
         try {
             var attrs = new com.smplkit.internal.generated.flags.model.Flag();
-            attrs.setId(flag.getId());
             attrs.setName(flag.getName());
             attrs.setType(flag.getType());
             attrs.setDefault(flag.getDefault());

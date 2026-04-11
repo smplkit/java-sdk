@@ -726,7 +726,6 @@ public final class LoggingClient {
     private ResponseLogger buildLoggerBody(String loggerId, Logger lg) {
         var attrs = new com.smplkit.internal.generated.logging.model.Logger();
         attrs.setName(lg.getName());
-        if (lg.getId() != null) attrs.setId(lg.getId());
         if (lg.getLevel() != null) attrs.setLevel(lg.getLevel());
         if (lg.getGroup() != null) attrs.setGroup(lg.getGroup());
         attrs.setManaged(lg.isManaged());
@@ -737,7 +736,7 @@ public final class LoggingClient {
         ResourceLogger data = new ResourceLogger();
         data.setType("logger");
         data.setAttributes(attrs);
-        if (loggerId != null) data.setId(loggerId);
+        data.setId(loggerId != null ? loggerId : lg.getId());
 
         ResponseLogger body = new ResponseLogger();
         body.setData(data);
@@ -747,7 +746,6 @@ public final class LoggingClient {
     private ResponseLogGroup buildGroupBody(String groupId, LogGroup grp) {
         var attrs = new com.smplkit.internal.generated.logging.model.LogGroup();
         attrs.setName(grp.getName());
-        if (grp.getId() != null) attrs.setId(grp.getId());
         if (grp.getLevel() != null) attrs.setLevel(grp.getLevel());
         if (grp.getGroup() != null) attrs.setGroup(grp.getGroup());
         if (grp.getEnvironments() != null && !grp.getEnvironments().isEmpty()) {
@@ -757,7 +755,7 @@ public final class LoggingClient {
         ResourceLogGroup data = new ResourceLogGroup();
         data.setType("log_group");
         data.setAttributes(attrs);
-        if (groupId != null) data.setId(groupId);
+        data.setId(groupId != null ? groupId : grp.getId());
 
         ResponseLogGroup body = new ResponseLogGroup();
         body.setData(data);

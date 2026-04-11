@@ -242,7 +242,6 @@ class TelemetryIntegrationTest {
         ConfigResource cr1 = new ConfigResource();
         cr1.setId("my-config");
         var attrs1 = new Config();
-        attrs1.setId("my-config");
         attrs1.setName("My Config");
         var items1 = new HashMap<String, com.smplkit.internal.generated.config.model.ConfigItemDefinition>();
         var item1 = new com.smplkit.internal.generated.config.model.ConfigItemDefinition();
@@ -258,7 +257,6 @@ class TelemetryIntegrationTest {
         ConfigResource cr2 = new ConfigResource();
         cr2.setId("my-config");
         var attrs2 = new Config();
-        attrs2.setId("my-config");
         attrs2.setName("My Config");
         var items2 = new HashMap<String, com.smplkit.internal.generated.config.model.ConfigItemDefinition>();
         var item2 = new com.smplkit.internal.generated.config.model.ConfigItemDefinition();
@@ -359,7 +357,6 @@ class TelemetryIntegrationTest {
         LoggerResource lr = new LoggerResource();
         lr.setId("com.myapp.service");
         var attrs = new Logger();
-        attrs.setId("com.myapp.service");
         attrs.setName("Service Logger");
         attrs.setLevel("DEBUG");
         attrs.setManaged(true);
@@ -588,7 +585,6 @@ class TelemetryIntegrationTest {
         FlagResource resource = new FlagResource();
         resource.setId(key);
         var flagAttrs = new com.smplkit.internal.generated.flags.model.Flag();
-        flagAttrs.setId(key);
         flagAttrs.setName("Test Flag");
         flagAttrs.setType("BOOLEAN");
         flagAttrs.setDefault(true);

@@ -167,9 +167,6 @@ public final class ConfigClient {
         try {
             var attrs = new com.smplkit.internal.generated.config.model.Config();
             attrs.setName(config.getName());
-            if (config.getId() != null) {
-                attrs.setId(config.getId());
-            }
             if (config.getDescription() != null) {
                 attrs.setDescription(config.getDescription());
             }
@@ -184,6 +181,7 @@ public final class ConfigClient {
             }
 
             ResourceConfig data = new ResourceConfig()
+                    .id(config.getId())
                     .type("config")
                     .attributes(attrs);
             ResponseConfig body = new ResponseConfig().data(data);

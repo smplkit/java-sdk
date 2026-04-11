@@ -55,7 +55,6 @@ class ConfigClientFullTest {
                                         OffsetDateTime createdAt, OffsetDateTime updatedAt) {
         var attrs = new com.smplkit.internal.generated.config.model.Config(createdAt, updatedAt);
         if (name != null) attrs.setName(name); else attrs.setName("");
-        if (id != null) attrs.setId(id);
         if (description != null) attrs.setDescription(description);
         if (parent != null) attrs.setParent(parent);
         if (items != null) attrs.setItems(items);

@@ -49,7 +49,6 @@ class Phase2CoverageTest {
         ConfigsApi mockApi = mock(ConfigsApi.class);
 
         Map<String, Object> configData = new HashMap<>();
-        configData.put("id", "db-config");
         configData.put("name", "DB Config");
         configData.put("items", Map.of(
                 "host", Map.of("type", "STRING", "value", "localhost"),
@@ -95,7 +94,6 @@ class Phase2CoverageTest {
                 Map.of("data", List.of(Map.of(
                         "id", "app-config",
                         "attributes", Map.of(
-                                "id", "app-config",
                                 "name", "App Config",
                                 "items", Map.of(
                                         "title", Map.of("type", "STRING", "value", "Default Title")
@@ -127,7 +125,6 @@ class Phase2CoverageTest {
         flagsClient.setEnvironment("staging");
 
         Map<String, Object> attrs = new HashMap<>();
-        attrs.put("id", "svc-flag");
         attrs.put("name", "Svc Flag");
         attrs.put("type", "BOOLEAN");
         attrs.put("default", false);
@@ -164,7 +161,6 @@ class Phase2CoverageTest {
         flagsClient.setEnvironment("staging");
 
         Map<String, Object> attrs = new HashMap<>();
-        attrs.put("id", "svc-flag");
         attrs.put("name", "Svc Flag");
         attrs.put("type", "BOOLEAN");
         attrs.put("default", false);
@@ -201,7 +197,6 @@ class Phase2CoverageTest {
         flagsClient.setEnvironment("staging");
 
         Map<String, Object> attrs = new HashMap<>();
-        attrs.put("id", "svc-flag");
         attrs.put("name", "Svc Flag");
         attrs.put("type", "BOOLEAN");
         attrs.put("default", false);

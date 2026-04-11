@@ -183,7 +183,6 @@ class AutoLoadTest {
         var loggerResp = new LoggerListResponse();
         var lr = new com.smplkit.internal.generated.logging.model.LoggerResource();
         var attrs = new com.smplkit.internal.generated.logging.model.Logger();
-        attrs.setId("com.acme.multi");
         attrs.setName("Multi");
         attrs.setLevel("DEBUG");
         attrs.setManaged(true);
