@@ -44,7 +44,7 @@ public class ConfigRuntimeSetup {
     }
 
     /**
-     * Creates the full demo configuration hierarchy using the new API.
+     * Creates the full demo configuration hierarchy using the management API.
      */
     public static DemoConfigs setupDemoConfigs(SmplClient client) throws Exception {
         section("Setup: Creating Demo Config Hierarchy");
@@ -53,13 +53,13 @@ public class ConfigRuntimeSetup {
         // Delete child first (referential integrity).
         for (String key : new String[]{"auth_module", "user_service"}) {
             try {
-                client.config().delete(key);
+                client.config().management().delete(key);
                 step("Pre-cleanup: deleted leftover config " + key);
             } catch (SmplNotFoundException ignored) { }
         }
 
         // 1. Update the built-in common config
-        Config common = client.config().get("common");
+        Config common = client.config().management().get("common");
         step("Fetched common config: id=" + common.getId());
 
         common.setDescription("Organization-wide shared configuration");
@@ -82,7 +82,7 @@ public class ConfigRuntimeSetup {
         step("Common config updated with base values + production overrides");
 
         // 2. Create user_service config (inherits from common)
-        Config userService = client.config().new_("user_service", "User Service", null, common.getId());
+        Config userService = client.config().management().new_("user_service", "User Service", null, common.getId());
         userService.setItems(Map.of(
                 "cache_ttl_seconds", Map.of("value", 300),
                 "enable_signup", Map.of("value", true),
@@ -101,7 +101,7 @@ public class ConfigRuntimeSetup {
         step("Created user_service config: id=" + userService.getId());
 
         // 3. Create auth_module config (inherits from user_service)
-        Config authModule = client.config().new_("auth_module", "Auth Module", null, userService.getId());
+        Config authModule = client.config().management().new_("auth_module", "Auth Module", null, userService.getId());
         authModule.setItems(Map.of(
                 "mfa_enabled", Map.of("value", false),
                 "token_expiry_minutes", Map.of("value", 15),
@@ -129,13 +129,13 @@ public class ConfigRuntimeSetup {
     public static void teardownDemoConfigs(SmplClient client, DemoConfigs demo) throws Exception {
         section("Teardown: Cleaning Up Demo Configs");
 
-        client.config().delete(demo.authModuleId());
+        client.config().management().delete(demo.authModuleId());
         step("Deleted auth_module");
 
-        client.config().delete(demo.userServiceId());
+        client.config().management().delete(demo.userServiceId());
         step("Deleted user_service");
 
-        Config latestCommon = client.config().get("common");
+        Config latestCommon = client.config().management().get("common");
         latestCommon.setDescription("");
         latestCommon.setItems(Map.of());
         latestCommon.setEnvironments(Map.of());

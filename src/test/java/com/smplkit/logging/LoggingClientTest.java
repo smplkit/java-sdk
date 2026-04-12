@@ -59,7 +59,7 @@ class LoggingClientTest {
 
     @Test
     void new_createsUnsavedLoggerWithDefaults() {
-        Logger lg = client.new_("my-logger");
+        Logger lg = client.management().new_("my-logger");
         assertEquals("my-logger", lg.getId());
         assertEquals("My Logger", lg.getName()); // keyToDisplayName
         assertFalse(lg.isManaged());
@@ -68,7 +68,7 @@ class LoggingClientTest {
 
     @Test
     void new_withNameAndManaged() {
-        Logger lg = client.new_("my-logger", "Custom Name", true);
+        Logger lg = client.management().new_("my-logger", "Custom Name", true);
         assertEquals("my-logger", lg.getId());
         assertEquals("Custom Name", lg.getName());
         assertTrue(lg.isManaged());
@@ -83,7 +83,7 @@ class LoggingClientTest {
         LoggerResponse resp = buildLoggerResponse("my.key", "my.key", "My Key", "INFO", false);
         when(mockLoggersApi.getLogger("my.key")).thenReturn(resp);
 
-        Logger lg = client.get("my.key");
+        Logger lg = client.management().get("my.key");
 
         assertEquals("my.key", lg.getId());
         assertEquals("My Key", lg.getName());
@@ -95,7 +95,7 @@ class LoggingClientTest {
         when(mockLoggersApi.getLogger("nonexistent"))
                 .thenThrow(new ApiException(404, "not found"));
 
-        assertThrows(RuntimeException.class, () -> client.get("nonexistent"));
+        assertThrows(RuntimeException.class, () -> client.management().get("nonexistent"));
     }
 
     // -----------------------------------------------------------------------
@@ -109,7 +109,7 @@ class LoggingClientTest {
         resp.getData().add(r2);
         when(mockLoggersApi.listLoggers((Boolean) null)).thenReturn(resp);
 
-        List<Logger> loggers = client.list();
+        List<Logger> loggers = client.management().list();
 
         assertEquals(2, loggers.size());
         assertEquals("id-1", loggers.get(0).getId());
@@ -122,7 +122,7 @@ class LoggingClientTest {
         resp.setData(null);
         when(mockLoggersApi.listLoggers((Boolean) null)).thenReturn(resp);
 
-        assertTrue(client.list().isEmpty());
+        assertTrue(client.management().list().isEmpty());
     }
 
     // -----------------------------------------------------------------------
@@ -131,7 +131,7 @@ class LoggingClientTest {
 
     @Test
     void delete_deletesById() throws ApiException {
-        client.delete("del-key");
+        client.management().delete("del-key");
 
         verify(mockLoggersApi).deleteLogger("del-key");
     }
@@ -175,7 +175,7 @@ class LoggingClientTest {
         LoggerResponse createResp = buildLoggerResponse("created-id", "payment-logger", "Payment Logger", null, false);
         when(mockLoggersApi.createLogger(any(ResponseLogger.class))).thenReturn(createResp);
 
-        Logger lg = client.new_("payment-logger");
+        Logger lg = client.management().new_("payment-logger");
         assertEquals("payment-logger", lg.getId());
 
         lg.save();
@@ -188,7 +188,7 @@ class LoggingClientTest {
         LoggerResponse getResp = buildLoggerResponse(id, "edit-logger", "Edit Logger", "INFO", false);
         when(mockLoggersApi.getLogger("edit-logger")).thenReturn(getResp);
 
-        Logger lg = client.get("edit-logger");
+        Logger lg = client.management().get("edit-logger");
         assertEquals("INFO", lg.getLevel());
 
         lg.setLevel(LogLevel.DEBUG);
@@ -208,7 +208,7 @@ class LoggingClientTest {
 
     @Test
     void newGroup_createsUnsavedGroupWithDefaults() {
-        LogGroup grp = client.newGroup("my-group");
+        LogGroup grp = client.management().newGroup("my-group");
         assertEquals("my-group", grp.getId());
         assertEquals("My Group", grp.getName());
         assertNotNull(grp.getClient());
@@ -216,7 +216,7 @@ class LoggingClientTest {
 
     @Test
     void newGroup_withNameAndParent() {
-        LogGroup grp = client.newGroup("my-group", "Custom Group", "parent-uuid");
+        LogGroup grp = client.management().newGroup("my-group", "Custom Group", "parent-uuid");
         assertEquals("Custom Group", grp.getName());
         assertEquals("parent-uuid", grp.getGroup());
     }
@@ -230,7 +230,7 @@ class LoggingClientTest {
         LogGroupResponse resp = buildGroupResponse("my.group", "my.group", "My Group", null);
         when(mockLogGroupsApi.getLogGroup("my.group")).thenReturn(resp);
 
-        LogGroup grp = client.getGroup("my.group");
+        LogGroup grp = client.management().getGroup("my.group");
 
         assertEquals("my.group", grp.getId());
         assertEquals("My Group", grp.getName());
@@ -241,7 +241,7 @@ class LoggingClientTest {
         when(mockLogGroupsApi.getLogGroup("nonexistent"))
                 .thenThrow(new ApiException(404, "not found"));
 
-        assertThrows(RuntimeException.class, () -> client.getGroup("nonexistent"));
+        assertThrows(RuntimeException.class, () -> client.management().getGroup("nonexistent"));
     }
 
     // -----------------------------------------------------------------------
@@ -255,7 +255,7 @@ class LoggingClientTest {
         resp.getData().add(r2);
         when(mockLogGroupsApi.listLogGroups()).thenReturn(resp);
 
-        List<LogGroup> groups = client.listGroups();
+        List<LogGroup> groups = client.management().listGroups();
 
         assertEquals(2, groups.size());
     }
@@ -266,7 +266,7 @@ class LoggingClientTest {
         resp.setData(null);
         when(mockLogGroupsApi.listLogGroups()).thenReturn(resp);
 
-        assertTrue(client.listGroups().isEmpty());
+        assertTrue(client.management().listGroups().isEmpty());
     }
 
     // -----------------------------------------------------------------------
@@ -275,7 +275,7 @@ class LoggingClientTest {
 
     @Test
     void deleteGroup_deletesById() throws ApiException {
-        client.deleteGroup("del-group");
+        client.management().deleteGroup("del-group");
 
         verify(mockLogGroupsApi).deleteLogGroup("del-group");
     }
@@ -316,7 +316,7 @@ class LoggingClientTest {
         LogGroupResponse createResp = buildGroupResponse("created-grp", "infra", "Infra", null);
         when(mockLogGroupsApi.createLogGroup(any(ResponseLogGroup.class))).thenReturn(createResp);
 
-        LogGroup grp = client.newGroup("infra");
+        LogGroup grp = client.management().newGroup("infra");
         assertEquals("infra", grp.getId());
 
         grp.save();
@@ -329,7 +329,7 @@ class LoggingClientTest {
         LogGroupResponse getResp = buildGroupResponse(id, "edit-group", "Edit Group", "INFO");
         when(mockLogGroupsApi.getLogGroup("edit-group")).thenReturn(getResp);
 
-        LogGroup grp = client.getGroup("edit-group");
+        LogGroup grp = client.management().getGroup("edit-group");
         grp.setLevel(LogLevel.DEBUG);
         grp.setName("Debug Group");
 
@@ -795,7 +795,7 @@ class LoggingClientTest {
         when(mockLoggersApi.getLogger("fail"))
                 .thenThrow(new ApiException(500, "server error"));
 
-        assertThrows(RuntimeException.class, () -> client.get("fail"));
+        assertThrows(RuntimeException.class, () -> client.management().get("fail"));
     }
 
     @Test
@@ -803,14 +803,14 @@ class LoggingClientTest {
         when(mockLoggersApi.listLoggers((Boolean) null))
                 .thenThrow(new ApiException(500, "server error"));
 
-        assertThrows(RuntimeException.class, () -> client.list());
+        assertThrows(RuntimeException.class, () -> client.management().list());
     }
 
     @Test
     void delete_mapsApiExceptionOnDelete() throws ApiException {
         doThrow(new ApiException(500, "delete failed")).when(mockLoggersApi).deleteLogger("fail");
 
-        assertThrows(RuntimeException.class, () -> client.delete("fail"));
+        assertThrows(RuntimeException.class, () -> client.management().delete("fail"));
     }
 
     @Test
@@ -834,21 +834,21 @@ class LoggingClientTest {
     void getGroup_mapsApiException() throws ApiException {
         when(mockLogGroupsApi.getLogGroup("fail")).thenThrow(new ApiException(500, "server error"));
 
-        assertThrows(RuntimeException.class, () -> client.getGroup("fail"));
+        assertThrows(RuntimeException.class, () -> client.management().getGroup("fail"));
     }
 
     @Test
     void listGroups_mapsApiException() throws ApiException {
         when(mockLogGroupsApi.listLogGroups()).thenThrow(new ApiException(500, "server error"));
 
-        assertThrows(RuntimeException.class, () -> client.listGroups());
+        assertThrows(RuntimeException.class, () -> client.management().listGroups());
     }
 
     @Test
     void deleteGroup_mapsApiExceptionOnDelete() throws ApiException {
         doThrow(new ApiException(500, "delete failed")).when(mockLogGroupsApi).deleteLogGroup("fail");
 
-        assertThrows(RuntimeException.class, () -> client.deleteGroup("fail"));
+        assertThrows(RuntimeException.class, () -> client.management().deleteGroup("fail"));
     }
 
     @Test
@@ -885,7 +885,7 @@ class LoggingClientTest {
         resp.setData(List.of(resource));
         when(mockLoggersApi.listLoggers((Boolean) null)).thenReturn(resp);
 
-        List<Logger> loggers = client.list();
+        List<Logger> loggers = client.management().list();
         assertEquals(1, loggers.size());
         Logger lg = loggers.get(0);
         assertFalse(lg.isManaged());
@@ -907,7 +907,7 @@ class LoggingClientTest {
         resp.setData(List.of(resource));
         when(mockLoggersApi.listLoggers((Boolean) null)).thenReturn(resp);
 
-        List<Logger> loggers = client.list();
+        List<Logger> loggers = client.management().list();
         Logger lg = loggers.get(0);
         assertNotNull(lg.getCreatedAt());
         assertNotNull(lg.getUpdatedAt());
@@ -925,7 +925,7 @@ class LoggingClientTest {
         resp.setData(List.of(resource));
         when(mockLogGroupsApi.listLogGroups()).thenReturn(resp);
 
-        List<LogGroup> groups = client.listGroups();
+        List<LogGroup> groups = client.management().listGroups();
         assertEquals(1, groups.size());
         assertTrue(groups.get(0).getEnvironments().isEmpty());
     }

@@ -63,7 +63,7 @@ class FlagsClientFullTest {
         FlagResponse response = makeResponse(FLAG_ID, "My Flag", "BOOLEAN", false);
         when(mockApi.createFlag(any(ResponseFlag.class))).thenReturn(response);
 
-        Flag<Boolean> flag = client.newBooleanFlag("my-flag", false, "My Flag", null);
+        Flag<Boolean> flag = client.management().newBooleanFlag("my-flag", false, "My Flag", null);
         assertNull(flag.getCreatedAt());
 
         flag.save();
@@ -87,7 +87,7 @@ class FlagsClientFullTest {
         )), FlagResponse.class);
         when(mockApi.createFlag(any(ResponseFlag.class))).thenReturn(response);
 
-        Flag<String> flag = client.newStringFlag("color", "red", "Color", "Pick a color",
+        Flag<String> flag = client.management().newStringFlag("color", "red", "Color", "Pick a color",
                 List.of(Map.of("name", "Red", "value", "red"), Map.of("name", "Blue", "value", "blue")));
         flag.save();
 
@@ -103,7 +103,7 @@ class FlagsClientFullTest {
         when(mockApi.updateFlag(eq(FLAG_ID), any(ResponseFlag.class)))
                 .thenReturn(response);
 
-        Flag<Boolean> flag = client.newBooleanFlag("my-flag", false, "My Flag", null);
+        Flag<Boolean> flag = client.management().newBooleanFlag("my-flag", false, "My Flag", null);
         flag.setCreatedAt(java.time.Instant.parse("2024-06-01T12:00:00Z"));
         flag.setName("Updated Flag");
         flag.save();
@@ -122,7 +122,7 @@ class FlagsClientFullTest {
         when(mockApi.updateFlag(eq(FLAG_ID), any(ResponseFlag.class)))
                 .thenReturn(response);
 
-        Flag<Boolean> flag = client.newBooleanFlag("my-flag", false);
+        Flag<Boolean> flag = client.management().newBooleanFlag("my-flag", false);
 
         Map<String, Object> rule = new Rule("Enterprise only")
                 .environment("staging")
@@ -145,7 +145,7 @@ class FlagsClientFullTest {
         FlagResponse response = makeResponse(FLAG_ID, "My Flag", "BOOLEAN", false);
         when(mockApi.createFlag(any(ResponseFlag.class))).thenReturn(response);
 
-        Flag<Boolean> flag = client.newBooleanFlag("my-flag", false);
+        Flag<Boolean> flag = client.management().newBooleanFlag("my-flag", false);
         Map<String, Object> rule = new Rule("Enterprise")
                 .environment("staging")
                 .when("user.plan", "==", "enterprise")
@@ -159,7 +159,7 @@ class FlagsClientFullTest {
 
     @Test
     void flagAddRule_withoutEnvironmentKey_throws() {
-        Flag<Boolean> flag = client.newBooleanFlag("my-flag", false);
+        Flag<Boolean> flag = client.management().newBooleanFlag("my-flag", false);
 
         Map<String, Object> ruleWithoutEnv = new Rule("No env")
                 .when("user.plan", "==", "enterprise")
@@ -173,7 +173,7 @@ class FlagsClientFullTest {
 
     @Test
     void flagSetEnvironmentEnabled_mutatesLocally() {
-        Flag<Boolean> flag = client.newBooleanFlag("my-flag", false);
+        Flag<Boolean> flag = client.management().newBooleanFlag("my-flag", false);
         flag.setEnvironmentEnabled("production", true);
 
         @SuppressWarnings("unchecked")
@@ -186,7 +186,7 @@ class FlagsClientFullTest {
 
     @Test
     void flagSetEnvironmentDefault_mutatesLocally() {
-        Flag<Boolean> flag = client.newBooleanFlag("my-flag", false);
+        Flag<Boolean> flag = client.management().newBooleanFlag("my-flag", false);
         flag.setEnvironmentDefault("production", true);
 
         @SuppressWarnings("unchecked")
@@ -199,7 +199,7 @@ class FlagsClientFullTest {
 
     @Test
     void flagClearRules_clearsRulesLocally() throws ApiException {
-        Flag<Boolean> flag = client.newBooleanFlag("my-flag", false);
+        Flag<Boolean> flag = client.management().newBooleanFlag("my-flag", false);
         Map<String, Object> rule = new Rule("Rule")
                 .environment("staging")
                 .when("user.plan", "==", "enterprise")
@@ -360,7 +360,7 @@ class FlagsClientFullTest {
         when(mockApi.createFlag(any(ResponseFlag.class)))
                 .thenThrow(new ApiException(409, "Conflict"));
 
-        Flag<Boolean> flag = client.newBooleanFlag("dup-key", false);
+        Flag<Boolean> flag = client.management().newBooleanFlag("dup-key", false);
         assertThrows(SmplConflictException.class, flag::save);
     }
 
@@ -369,7 +369,7 @@ class FlagsClientFullTest {
         when(mockApi.createFlag(any(ResponseFlag.class)))
                 .thenThrow(new ApiException(500, "Server Error"));
 
-        Flag<Boolean> flag = client.newBooleanFlag("my-flag", false);
+        Flag<Boolean> flag = client.management().newBooleanFlag("my-flag", false);
         assertThrows(SmplException.class, flag::save);
     }
 
@@ -378,7 +378,7 @@ class FlagsClientFullTest {
         when(mockApi.updateFlag(any(), any(ResponseFlag.class)))
                 .thenThrow(new ApiException(422, "Validation Error"));
 
-        Flag<Boolean> flag = client.newBooleanFlag("my-flag", false);
+        Flag<Boolean> flag = client.management().newBooleanFlag("my-flag", false);
         flag.setCreatedAt(java.time.Instant.parse("2024-06-01T12:00:00Z"));
         assertThrows(SmplValidationException.class, flag::save);
     }
@@ -388,7 +388,7 @@ class FlagsClientFullTest {
         doThrow(new ApiException(404, "Not Found"))
                 .when(mockApi).deleteFlag("my-flag");
 
-        assertThrows(SmplNotFoundException.class, () -> client.delete("my-flag"));
+        assertThrows(SmplNotFoundException.class, () -> client.management().delete("my-flag"));
     }
 
     // --- Stats ---

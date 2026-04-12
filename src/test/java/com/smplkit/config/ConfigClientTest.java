@@ -115,7 +115,7 @@ class ConfigClientTest {
 
     @Test
     void new_createsUnsavedConfig() {
-        Config config = configClient.new_("user_service");
+        Config config = configClient.management().new_("user_service");
 
         assertEquals("user_service", config.getId());
         assertEquals("User Service", config.getName()); // auto-generated from id
@@ -126,7 +126,7 @@ class ConfigClientTest {
 
     @Test
     void new_withAllParams() {
-        Config config = configClient.new_("user_service", "My Service", "A description", "parent-uuid");
+        Config config = configClient.management().new_("user_service", "My Service", "A description", "parent-uuid");
 
         assertEquals("user_service", config.getId());
         assertEquals("My Service", config.getName());
@@ -136,7 +136,7 @@ class ConfigClientTest {
 
     @Test
     void new_nullName_autoGeneratesFromId() {
-        Config config = configClient.new_("checkout-v2", null, null, null);
+        Config config = configClient.management().new_("checkout-v2", null, null, null);
 
         assertEquals("Checkout V2", config.getName());
     }
@@ -153,7 +153,7 @@ class ConfigClientTest {
                 Map.of(), null, null);
         when(mockApi.createConfig(any())).thenReturn(singleResponse(resource));
 
-        Config config = configClient.new_("user_service");
+        Config config = configClient.management().new_("user_service");
         config.setDescription("Main user service config");
         config.setItems(Map.of("timeout", Map.of("value", 30)));
         config.save();
@@ -170,7 +170,7 @@ class ConfigClientTest {
                 Map.of(), null, null);
         when(mockApi.createConfig(any())).thenReturn(singleResponse(resource));
 
-        Config config = configClient.new_("flags");
+        Config config = configClient.management().new_("flags");
         config.setItems(Map.of("enabled", Map.of("value", Boolean.TRUE)));
         config.save();
 
@@ -185,7 +185,7 @@ class ConfigClientTest {
                 Map.of(), null, null);
         when(mockApi.createConfig(any())).thenReturn(singleResponse(resource));
 
-        Config config = configClient.new_("complex");
+        Config config = configClient.management().new_("complex");
         config.setItems(Map.of("nested", Map.of("value", Map.of("k", "v"))));
         config.save();
 
@@ -199,7 +199,7 @@ class ConfigClientTest {
                 Map.of(), Map.of(), null, null);
         when(mockApi.createConfig(any())).thenReturn(singleResponse(resource));
 
-        Config config = configClient.new_("child", null, null, CONFIG_ID);
+        Config config = configClient.management().new_("child", null, null, CONFIG_ID);
         config.save();
 
         assertNotNull(config.getId());
@@ -213,7 +213,7 @@ class ConfigClientTest {
                 null, null);
         when(mockApi.createConfig(any())).thenReturn(singleResponse(resource));
 
-        Config config = configClient.new_("svc");
+        Config config = configClient.management().new_("svc");
         Map<String, Object> envData = new HashMap<>();
         envData.put("values", Map.of("timeout", 60));
         config.setEnvironments(Map.of("production", envData));
@@ -227,7 +227,7 @@ class ConfigClientTest {
         when(mockApi.createConfig(any()))
                 .thenThrow(new ApiException(422, "Validation error"));
 
-        Config config = configClient.new_("bad");
+        Config config = configClient.management().new_("bad");
         assertThrows(SmplValidationException.class, config::save);
     }
 
@@ -244,7 +244,7 @@ class ConfigClientTest {
                 Map.of(), now, now);
         when(mockApi.createConfig(any())).thenReturn(singleResponse(resource));
 
-        Config config = configClient.new_("svc");
+        Config config = configClient.management().new_("svc");
         config.setItems(Map.of("a", Map.of("value", 1)));
         config.save(); // create
 
@@ -284,7 +284,7 @@ class ConfigClientTest {
                 Map.of(), now, now);
         when(mockApi.getConfig("user_service")).thenReturn(singleResponse(resource));
 
-        Config config = configClient.get("user_service");
+        Config config = configClient.management().get("user_service");
 
         assertEquals(CONFIG_ID, config.getId());
         assertEquals("User Service", config.getName());
@@ -310,7 +310,7 @@ class ConfigClientTest {
                 .thenThrow(new ApiException(404, "Not Found"));
 
         assertThrows(SmplNotFoundException.class, () ->
-                configClient.get("nonexistent"));
+                configClient.management().get("nonexistent"));
     }
 
     @Test
@@ -319,7 +319,7 @@ class ConfigClientTest {
                 .thenThrow(new ApiException(500, "Internal Server Error"));
 
         SmplException ex = assertThrows(SmplException.class, () ->
-                configClient.get("some-id"));
+                configClient.management().get("some-id"));
         assertEquals(500, ex.statusCode());
     }
 
@@ -328,7 +328,7 @@ class ConfigClientTest {
         ConfigResource resource = makeResource(null, null, null, null, null, null, null, null);
         when(mockApi.getConfig(any())).thenReturn(singleResponse(resource));
 
-        Config config = configClient.get("anything");
+        Config config = configClient.management().get("anything");
 
         assertEquals("", config.getId());
         assertEquals("", config.getName());
@@ -343,7 +343,7 @@ class ConfigClientTest {
                 CONFIG_ID, Map.of(), Map.of(), null, null);
         when(mockApi.getConfig("child")).thenReturn(singleResponse(resource));
 
-        Config config = configClient.get("child");
+        Config config = configClient.management().get("child");
 
         assertEquals(CONFIG_ID, config.getParent());
     }
@@ -354,7 +354,7 @@ class ConfigClientTest {
                 null, Map.of(), Map.of(), null, null);
         when(mockApi.getConfig(any())).thenReturn(singleResponse(resource));
 
-        Config config = configClient.get("svc");
+        Config config = configClient.management().get("svc");
 
         assertEquals("", config.getId());
     }
@@ -368,7 +368,7 @@ class ConfigClientTest {
                         "staging", emptyOverride), null, null);
         when(mockApi.getConfig("svc")).thenReturn(singleResponse(resource));
 
-        Config config = configClient.get("svc");
+        Config config = configClient.management().get("svc");
 
         assertTrue(config.getEnvironments().containsKey("production"));
         assertTrue(config.getEnvironments().containsKey("staging"));
@@ -384,7 +384,7 @@ class ConfigClientTest {
         ConfigResource r2 = makeResource(CONFIG_ID_2, "Svc B", null, CONFIG_ID, Map.of(), Map.of(), null, null);
         when(mockApi.listConfigs(null)).thenReturn(listResponse(List.of(r1, r2)));
 
-        List<Config> configs = configClient.list();
+        List<Config> configs = configClient.management().list();
 
         assertEquals(2, configs.size());
         assertEquals(CONFIG_ID, configs.get(0).getId());
@@ -396,7 +396,7 @@ class ConfigClientTest {
     void list_returnsUnmodifiableList() throws ApiException {
         when(mockApi.listConfigs(null)).thenReturn(listResponse(List.of()));
 
-        List<Config> configs = configClient.list();
+        List<Config> configs = configClient.management().list();
 
         assertThrows(UnsupportedOperationException.class, () ->
                 configs.add(new Config(null, "id", "name")));
@@ -408,7 +408,7 @@ class ConfigClientTest {
         response.setData(null);
         when(mockApi.listConfigs(null)).thenReturn(response);
 
-        List<Config> configs = configClient.list();
+        List<Config> configs = configClient.management().list();
 
         assertTrue(configs.isEmpty());
     }
@@ -419,7 +419,7 @@ class ConfigClientTest {
                 .thenThrow(new ApiException(503, "Service Unavailable"));
 
         SmplException ex = assertThrows(SmplException.class, () ->
-                configClient.list());
+                configClient.management().list());
         assertEquals(503, ex.statusCode());
     }
 
@@ -429,7 +429,7 @@ class ConfigClientTest {
 
     @Test
     void delete_byId_deletesDirectly() throws ApiException {
-        configClient.delete("my_config");
+        configClient.management().delete("my_config");
 
         verify(mockApi).deleteConfig("my_config");
     }
@@ -440,7 +440,7 @@ class ConfigClientTest {
                 .when(mockApi).deleteConfig("parent_config");
 
         SmplConflictException ex = assertThrows(SmplConflictException.class, () ->
-                configClient.delete("parent_config"));
+                configClient.management().delete("parent_config"));
         assertEquals(409, ex.statusCode());
     }
 
@@ -449,7 +449,7 @@ class ConfigClientTest {
         Mockito.doThrow(new ApiException(404, "Not Found"))
                 .when(mockApi).deleteConfig("nonexistent");
 
-        assertThrows(SmplNotFoundException.class, () -> configClient.delete("nonexistent"));
+        assertThrows(SmplNotFoundException.class, () -> configClient.management().delete("nonexistent"));
     }
 
     // -----------------------------------------------------------------------
@@ -462,7 +462,7 @@ class ConfigClientTest {
                 .thenThrow(new ApiException(500, "Internal Server Error"));
 
         SmplException ex = assertThrows(SmplException.class, () ->
-                configClient.get(CONFIG_ID));
+                configClient.management().get(CONFIG_ID));
         assertEquals(500, ex.statusCode());
     }
 
@@ -471,7 +471,7 @@ class ConfigClientTest {
         when(mockApi.getConfig(any()))
                 .thenThrow(new ApiException("network failure"));
 
-        assertThrows(SmplException.class, () -> configClient.get(CONFIG_ID));
+        assertThrows(SmplException.class, () -> configClient.management().get(CONFIG_ID));
     }
 
     @Test
@@ -480,7 +480,7 @@ class ConfigClientTest {
                 .thenThrow(new ApiException(503, (String) null));
 
         SmplException ex = assertThrows(SmplException.class, () ->
-                configClient.get("some-id"));
+                configClient.management().get("some-id"));
         assertTrue(ex.getMessage().contains("503"));
     }
 
@@ -490,13 +490,13 @@ class ConfigClientTest {
 
     @Test
     void config_toString() {
-        Config config = configClient.new_("id1");
+        Config config = configClient.management().new_("id1");
         assertEquals("Config[id=id1, name=Id1]", config.toString());
     }
 
     @Test
     void config_getResolvedItems_extractsValues() {
-        Config config = configClient.new_("test");
+        Config config = configClient.management().new_("test");
         Map<String, Object> items = new HashMap<>();
         items.put("timeout", Map.of("value", 30, "type", "NUMBER"));
         items.put("name", Map.of("value", "hello"));
@@ -511,7 +511,7 @@ class ConfigClientTest {
 
     @Test
     void config_getResolvedItems_mapWithoutValueKey() {
-        Config config = configClient.new_("test");
+        Config config = configClient.management().new_("test");
         Map<String, Object> items = new HashMap<>();
         items.put("nested", Map.of("key", "val")); // map without "value" key
         config.setItems(items);
@@ -522,7 +522,7 @@ class ConfigClientTest {
 
     @Test
     void config_setItems_null_defaultsToEmpty() {
-        Config config = configClient.new_("test");
+        Config config = configClient.management().new_("test");
         config.setItems(null);
         assertNotNull(config.getItems());
         assertTrue(config.getItems().isEmpty());
@@ -530,7 +530,7 @@ class ConfigClientTest {
 
     @Test
     void config_setEnvironments_null_defaultsToEmpty() {
-        Config config = configClient.new_("test");
+        Config config = configClient.management().new_("test");
         config.setEnvironments(null);
         assertNotNull(config.getEnvironments());
         assertTrue(config.getEnvironments().isEmpty());
@@ -538,7 +538,7 @@ class ConfigClientTest {
 
     @Test
     void config_apply_copiesAllFields() {
-        Config source = configClient.new_("src-id");
+        Config source = configClient.management().new_("src-id");
         source.setDescription("src desc");
         source.setParent("src-parent");
         source.setItems(Map.of("k", "v"));
@@ -546,7 +546,7 @@ class ConfigClientTest {
         source.setCreatedAt(java.time.Instant.now());
         source.setUpdatedAt(java.time.Instant.now());
 
-        Config target = configClient.new_("target-id");
+        Config target = configClient.management().new_("target-id");
         target._apply(source);
 
         assertEquals("src-id", target.getId());
@@ -563,7 +563,7 @@ class ConfigClientTest {
         source.setItems(Map.of("k", "v"));
         source.setEnvironments(Map.of("prod", Map.of()));
 
-        Config target = configClient.new_("tgt");
+        Config target = configClient.management().new_("tgt");
         target._apply(source);
 
         assertEquals(Map.of("k", "v"), target.getItems());

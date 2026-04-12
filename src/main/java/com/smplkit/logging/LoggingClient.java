@@ -1,6 +1,5 @@
 package com.smplkit.logging;
 
-import com.smplkit.Helpers;
 import com.smplkit.LogLevel;
 import com.smplkit.errors.ApiExceptionHandler;
 import com.smplkit.errors.SmplNotFoundException;
@@ -37,8 +36,8 @@ import java.util.logging.Level;
 /**
  * Client for the smplkit Logging service.
  *
- * <p>Provides logger and group management ({@link #new_}, {@link #get}, {@link #list},
- * {@link #delete}) and runtime level control ({@link #start()}, {@link #onChange}).</p>
+ * <p>Provides logger and group management via {@link #management()} and runtime
+ * level control ({@link #start()}, {@link #onChange}).</p>
  *
  * <p>Supports JUL, Logback, and Log4j2 via pluggable {@link LoggingAdapter} instances.</p>
  */
@@ -53,8 +52,8 @@ public final class LoggingClient {
             {"com.smplkit.logging.adapters.Log4j2Adapter", "org.apache.logging.log4j.core.LoggerContext"},
     };
 
-    private final LoggersApi loggersApi;
-    private final LogGroupsApi logGroupsApi;
+    final LoggersApi loggersApi;
+    final LogGroupsApi logGroupsApi;
     private final HttpClient httpClient;
     private final String apiKey;
     private volatile com.smplkit.MetricsReporter metrics;
@@ -73,6 +72,9 @@ public final class LoggingClient {
     private final List<Consumer<LoggerChangeEvent>> globalListeners = new CopyOnWriteArrayList<>();
     private final Map<String, List<Consumer<LoggerChangeEvent>>> keyListeners = new ConcurrentHashMap<>();
 
+    // Management accessor
+    private final LoggingManagement management;
+
     /**
      * Creates a new LoggingClient.
      *
@@ -87,6 +89,20 @@ public final class LoggingClient {
         this.logGroupsApi = logGroupsApi;
         this.httpClient = httpClient;
         this.apiKey = apiKey;
+        this.management = new LoggingManagement(this);
+    }
+
+    // -----------------------------------------------------------------------
+    // Management accessor
+    // -----------------------------------------------------------------------
+
+    /**
+     * Returns the management-plane API for logger and log group CRUD operations.
+     *
+     * @return the {@link LoggingManagement} instance
+     */
+    public LoggingManagement management() {
+        return management;
     }
 
     // -----------------------------------------------------------------------
@@ -129,81 +145,8 @@ public final class LoggingClient {
     }
 
     // -----------------------------------------------------------------------
-    // Management API: Loggers
+    // Internal: create / update (called by Logger.save() and LogGroup.save())
     // -----------------------------------------------------------------------
-
-    /**
-     * Create an unsaved Logger with the given id. Call {@link Logger#save()} to persist.
-     *
-     * @param id the logger id
-     * @return an unsaved Logger instance
-     */
-    public Logger new_(String id) {
-        return new Logger(this, id, Helpers.keyToDisplayName(id),
-                null, null, false, null, null, null, null);
-    }
-
-    /**
-     * Create an unsaved Logger with the given id, name, and managed flag.
-     *
-     * @param id      the logger id
-     * @param name    the display name
-     * @param managed whether this logger is managed by smplkit
-     * @return an unsaved Logger instance
-     */
-    public Logger new_(String id, String name, boolean managed) {
-        return new Logger(this, id, name,
-                null, null, managed, null, null, null, null);
-    }
-
-    /**
-     * Get a logger by id.
-     *
-     * @param id the logger id
-     * @return the Logger
-     * @throws SmplNotFoundException if no logger with the given id exists
-     */
-    public Logger get(String id) {
-        try {
-            LoggerResponse response = loggersApi.getLogger(id);
-            return loggerResponseToModel(response);
-        } catch (ApiException e) {
-            throw mapLoggingException(e);
-        }
-    }
-
-    /**
-     * List all loggers.
-     *
-     * @return list of all loggers
-     */
-    public List<Logger> list() {
-        try {
-            LoggerListResponse response = loggersApi.listLoggers(null);
-            List<Logger> result = new ArrayList<>();
-            if (response.getData() != null) {
-                for (LoggerResource r : response.getData()) {
-                    result.add(loggerResourceToModel(r));
-                }
-            }
-            return result;
-        } catch (ApiException e) {
-            throw mapLoggingException(e);
-        }
-    }
-
-    /**
-     * Delete a logger by id.
-     *
-     * @param id the logger id to delete
-     */
-    public void delete(String id) {
-        try {
-            loggersApi.deleteLogger(id);
-        } catch (ApiException e) {
-            throw mapLoggingException(e);
-        }
-    }
 
     /** Creates a new logger on the server. Called by {@link Logger#save()}. */
     Logger _createLogger(Logger lg) {
@@ -222,83 +165,6 @@ public final class LoggingClient {
             ResponseLogger body = buildLoggerBody(lg.getId(), lg);
             LoggerResponse response = loggersApi.updateLogger(lg.getId(), body);
             return loggerResponseToModel(response);
-        } catch (ApiException e) {
-            throw mapLoggingException(e);
-        }
-    }
-
-    // -----------------------------------------------------------------------
-    // Management API: LogGroups
-    // -----------------------------------------------------------------------
-
-    /**
-     * Create an unsaved LogGroup with the given id. Call {@link LogGroup#save()} to persist.
-     *
-     * @param id the group id
-     * @return an unsaved LogGroup instance
-     */
-    public LogGroup newGroup(String id) {
-        return new LogGroup(this, id, Helpers.keyToDisplayName(id),
-                null, null, null, null, null);
-    }
-
-    /**
-     * Create an unsaved LogGroup with the given id, name, and parent group.
-     *
-     * @param id          the group id
-     * @param name        the display name
-     * @param parentGroup the parent group slug or null
-     * @return an unsaved LogGroup instance
-     */
-    public LogGroup newGroup(String id, String name, String parentGroup) {
-        return new LogGroup(this, id, name,
-                null, parentGroup, null, null, null);
-    }
-
-    /**
-     * Get a log group by id.
-     *
-     * @param id the group id
-     * @return the LogGroup
-     * @throws SmplNotFoundException if no group with the given id exists
-     */
-    public LogGroup getGroup(String id) {
-        try {
-            LogGroupResponse response = logGroupsApi.getLogGroup(id);
-            return logGroupResponseToModel(response);
-        } catch (ApiException e) {
-            throw mapLoggingException(e);
-        }
-    }
-
-    /**
-     * List all log groups.
-     *
-     * @return list of all log groups
-     */
-    public List<LogGroup> listGroups() {
-        try {
-            LogGroupListResponse response = logGroupsApi.listLogGroups();
-            List<LogGroup> result = new ArrayList<>();
-            if (response.getData() != null) {
-                for (LogGroupResource r : response.getData()) {
-                    result.add(logGroupResourceToModel(r));
-                }
-            }
-            return result;
-        } catch (ApiException e) {
-            throw mapLoggingException(e);
-        }
-    }
-
-    /**
-     * Delete a log group by id.
-     *
-     * @param id the group id to delete
-     */
-    public void deleteGroup(String id) {
-        try {
-            logGroupsApi.deleteLogGroup(id);
         } catch (ApiException e) {
             throw mapLoggingException(e);
         }
@@ -678,14 +544,14 @@ public final class LoggingClient {
     }
 
     // -----------------------------------------------------------------------
-    // Model conversion
+    // Model conversion (package-private for LoggingManagement)
     // -----------------------------------------------------------------------
 
-    private Logger loggerResponseToModel(LoggerResponse response) {
+    Logger loggerResponseToModel(LoggerResponse response) {
         return loggerResourceToModel(response.getData());
     }
 
-    private Logger loggerResourceToModel(LoggerResource resource) {
+    Logger loggerResourceToModel(LoggerResource resource) {
         var attrs = resource.getAttributes();
         return new Logger(
                 this,
@@ -701,11 +567,11 @@ public final class LoggingClient {
         );
     }
 
-    private LogGroup logGroupResponseToModel(LogGroupResponse response) {
+    LogGroup logGroupResponseToModel(LogGroupResponse response) {
         return logGroupResourceToModel(response.getData());
     }
 
-    private LogGroup logGroupResourceToModel(LogGroupResource resource) {
+    LogGroup logGroupResourceToModel(LogGroupResource resource) {
         var attrs = resource.getAttributes();
         return new LogGroup(
                 this,
@@ -770,7 +636,7 @@ public final class LoggingClient {
         return odt != null ? odt.toInstant() : null;
     }
 
-    private static RuntimeException mapLoggingException(ApiException e) {
+    static RuntimeException mapLoggingException(ApiException e) {
         return ApiExceptionHandler.mapApiException(e.getCode(), e.getResponseBody());
     }
 }

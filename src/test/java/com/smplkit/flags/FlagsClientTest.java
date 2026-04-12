@@ -53,7 +53,7 @@ class FlagsClientTest {
 
     @Test
     void newBooleanFlag_createsUnsavedFlag() {
-        Flag<Boolean> flag = client.newBooleanFlag("my-flag", false);
+        Flag<Boolean> flag = client.management().newBooleanFlag("my-flag", false);
         assertEquals("my-flag", flag.getId());
         assertEquals("BOOLEAN", flag.getType());
         assertFalse(flag.getDefault());
@@ -61,7 +61,7 @@ class FlagsClientTest {
 
     @Test
     void newBooleanFlag_withNameAndDescription() {
-        Flag<Boolean> flag = client.newBooleanFlag("my-flag", true, "My Flag", "A test flag");
+        Flag<Boolean> flag = client.management().newBooleanFlag("my-flag", true, "My Flag", "A test flag");
         assertEquals("my-flag", flag.getId());
         assertEquals("My Flag", flag.getName());
         assertEquals("A test flag", flag.getDescription());
@@ -69,7 +69,7 @@ class FlagsClientTest {
 
     @Test
     void newBooleanFlag_withoutName_usesKeyToDisplayName() {
-        Flag<Boolean> flag = client.newBooleanFlag("checkout-v2", false);
+        Flag<Boolean> flag = client.management().newBooleanFlag("checkout-v2", false);
         assertEquals("Checkout V2", flag.getName());
     }
 
@@ -114,7 +114,7 @@ class FlagsClientTest {
                 .thenReturn(makeFlagResponse(TEST_FLAG_ID, "My Flag",
                         "BOOLEAN", false, List.of(), Map.of()));
 
-        Flag<?> result = client.get("my-flag");
+        Flag<?> result = client.management().get("my-flag");
         assertEquals(TEST_FLAG_ID, result.getId());
         verify(mockApi).getFlag(eq("my-flag"));
     }
@@ -124,7 +124,7 @@ class FlagsClientTest {
         when(mockApi.getFlag(eq("unknown")))
                 .thenThrow(new ApiException(404, "Not Found"));
 
-        assertThrows(SmplNotFoundException.class, () -> client.get("unknown"));
+        assertThrows(SmplNotFoundException.class, () -> client.management().get("unknown"));
     }
 
     @Test
@@ -132,7 +132,7 @@ class FlagsClientTest {
         when(mockApi.getFlag(eq("my-flag")))
                 .thenThrow(new ApiException(404, "Not Found"));
 
-        assertThrows(SmplNotFoundException.class, () -> client.get("my-flag"));
+        assertThrows(SmplNotFoundException.class, () -> client.management().get("my-flag"));
     }
 
     // --- list() returns all flags ---
@@ -151,7 +151,7 @@ class FlagsClientTest {
         )), FlagListResponse.class);
         when(mockApi.listFlags(isNull())).thenReturn(listResponse);
 
-        List<Flag<?>> result = client.list();
+        List<Flag<?>> result = client.management().list();
         assertEquals(2, result.size());
         assertEquals("flag-1", result.get(0).getId());
         assertEquals("flag-2", result.get(1).getId());
@@ -161,7 +161,7 @@ class FlagsClientTest {
     void list_emptyResponse() throws ApiException {
         when(mockApi.listFlags(isNull())).thenReturn(new FlagListResponse().data(List.of()));
 
-        List<Flag<?>> result = client.list();
+        List<Flag<?>> result = client.management().list();
         assertTrue(result.isEmpty());
     }
 
@@ -171,7 +171,7 @@ class FlagsClientTest {
     void delete_deletesDirectly() throws ApiException {
         doNothing().when(mockApi).deleteFlag("my-flag");
 
-        client.delete("my-flag");
+        client.management().delete("my-flag");
 
         verify(mockApi).deleteFlag("my-flag");
     }
@@ -187,7 +187,7 @@ class FlagsClientTest {
                 ), Map.of());
         when(mockApi.createFlag(any(ResponseFlag.class))).thenReturn(response);
 
-        Flag<Boolean> newFlag = client.newBooleanFlag("my-flag", false, "My Flag", null);
+        Flag<Boolean> newFlag = client.management().newBooleanFlag("my-flag", false, "My Flag", null);
         newFlag.save();
 
         assertNotNull(newFlag.getId());
@@ -205,7 +205,7 @@ class FlagsClientTest {
                 .thenReturn(response);
 
         // Create a flag that already has createdAt (simulating a fetched flag)
-        Flag<Boolean> existingFlag = client.newBooleanFlag("my-flag", false, "My Flag", null);
+        Flag<Boolean> existingFlag = client.management().newBooleanFlag("my-flag", false, "My Flag", null);
         existingFlag.setCreatedAt(java.time.Instant.parse("2024-06-01T12:00:00Z"));
         existingFlag.setName("Updated Flag");
         existingFlag.save();
@@ -222,7 +222,7 @@ class FlagsClientTest {
                 "NUMERIC", 3, null, Map.of());
         when(mockApi.createFlag(any(ResponseFlag.class))).thenReturn(response);
 
-        Flag<Number> newFlag = client.newNumberFlag("max-retries", 3, "Max Retries", null);
+        Flag<Number> newFlag = client.management().newNumberFlag("max-retries", 3, "Max Retries", null);
         assertNull(newFlag.getValues(), "unconstrained flag should have null values before save");
         newFlag.save();
 
@@ -238,7 +238,7 @@ class FlagsClientTest {
         when(mockApi.updateFlag(eq("max-retries"), any(ResponseFlag.class)))
                 .thenReturn(response);
 
-        Flag<Number> existingFlag = client.newNumberFlag("max-retries", 3, "Max Retries", null);
+        Flag<Number> existingFlag = client.management().newNumberFlag("max-retries", 3, "Max Retries", null);
         existingFlag.setCreatedAt(java.time.Instant.parse("2024-06-01T12:00:00Z"));
         existingFlag.setDefault(5);
         existingFlag.save();
@@ -253,14 +253,14 @@ class FlagsClientTest {
     void apiException404_throwsSmplNotFoundException() throws ApiException {
         when(mockApi.getFlag(anyString()))
                 .thenThrow(new ApiException(404, "Not Found"));
-        assertThrows(SmplNotFoundException.class, () -> client.get("my-flag"));
+        assertThrows(SmplNotFoundException.class, () -> client.management().get("my-flag"));
     }
 
     @Test
     void apiException409_throwsSmplConflictException() throws ApiException {
         when(mockApi.createFlag(any(ResponseFlag.class)))
                 .thenThrow(new ApiException(409, "Conflict"));
-        Flag<Boolean> flag = client.newBooleanFlag("dup", false);
+        Flag<Boolean> flag = client.management().newBooleanFlag("dup", false);
         assertThrows(com.smplkit.errors.SmplConflictException.class, flag::save);
     }
 
@@ -268,7 +268,7 @@ class FlagsClientTest {
     void apiException422_throwsSmplValidationException() throws ApiException {
         when(mockApi.createFlag(any(ResponseFlag.class)))
                 .thenThrow(new ApiException(422, "Validation Error"));
-        Flag<Boolean> flag = client.newBooleanFlag("bad-flag", false);
+        Flag<Boolean> flag = client.management().newBooleanFlag("bad-flag", false);
         assertThrows(SmplValidationException.class, flag::save);
     }
 

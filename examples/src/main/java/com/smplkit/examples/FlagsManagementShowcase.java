@@ -42,26 +42,6 @@ public class FlagsManagementShowcase {
         // ======================================================================
         section("1. SDK Initialization");
 
-        // The SmplClient builder resolves three required parameters:
-        //
-        //   apiKey       -- not passed here; resolved automatically from the
-        //                  SMPLKIT_API_KEY environment variable or the
-        //                  ~/.smplkit configuration file.
-        //
-        //   environment  -- the target environment. Can also be resolved from
-        //                  SMPLKIT_ENVIRONMENT if not passed.
-        //
-        //   service      -- identifies this SDK instance. Can also be resolved
-        //                  from SMPLKIT_SERVICE if not passed.
-        //
-        // To pass the API key explicitly:
-        //
-        //   SmplClient client = SmplClient.builder()
-        //       .apiKey("sk_api_...")
-        //       .environment("production")
-        //       .service("showcase-service")
-        //       .build();
-        //
         try (SmplClient client = SmplClient.builder()
                 .environment("production")
                 .service("showcase-service")
@@ -75,7 +55,7 @@ public class FlagsManagementShowcase {
             // Clean up any leftover flags from a previous failed run.
             for (String key : List.of("dark-mode-mgmt", "banner-text-mgmt", "rate-limit-mgmt", "ui-config-mgmt")) {
                 try {
-                    client.flags().delete(key);
+                    client.flags().management().delete(key);
                     step("Pre-cleanup: deleted leftover flag " + key);
                 } catch (SmplNotFoundException ignored) {
                     // Not present -- nothing to clean up.
@@ -90,7 +70,7 @@ public class FlagsManagementShowcase {
             // ------------------------------------------------------------------
             // 2a. Boolean flag
             // ------------------------------------------------------------------
-            Flag<Boolean> darkMode = client.flags().newBooleanFlag(
+            Flag<Boolean> darkMode = client.flags().management().newBooleanFlag(
                     "dark-mode-mgmt", false, "Dark Mode",
                     "Controls whether the dark mode UI is enabled.");
             darkMode.save();
@@ -102,10 +82,7 @@ public class FlagsManagementShowcase {
             // ------------------------------------------------------------------
             // 2b. String flag
             // ------------------------------------------------------------------
-            // The values parameter defines a closed set — this flag can only
-            // serve the declared strings. This makes it a constrained flag.
-            // The Console UI shows dropdowns for value selection.
-            Flag<String> banner = client.flags().newStringFlag(
+            Flag<String> banner = client.flags().management().newStringFlag(
                     "banner-text-mgmt", "Welcome!", "Banner Text",
                     "The promotional banner text shown on the homepage.",
                     List.of(
@@ -122,13 +99,7 @@ public class FlagsManagementShowcase {
             // ------------------------------------------------------------------
             // 2c. Numeric flag — Unconstrained
             // ------------------------------------------------------------------
-            // Unlike banner-text above, this flag has no predefined values.
-            // Any number is valid as a default or rule serve-value. This is
-            // useful for tunables like thresholds, retry counts, and timeouts
-            // where the value space is open-ended.
-            //
-            // Omitting the values parameter creates an unconstrained flag.
-            Flag<Number> rateLimit = client.flags().newNumberFlag(
+            Flag<Number> rateLimit = client.flags().management().newNumberFlag(
                     "rate-limit-mgmt", 100, "Rate Limit",
                     "Maximum API requests per minute per user.");
             rateLimit.save();
@@ -140,9 +111,7 @@ public class FlagsManagementShowcase {
             // ------------------------------------------------------------------
             // 2d. JSON flag
             // ------------------------------------------------------------------
-            // Like banner-text, this JSON flag is constrained — only the
-            // declared configuration objects can be served.
-            Flag<Object> uiConfig = client.flags().newJsonFlag(
+            Flag<Object> uiConfig = client.flags().management().newJsonFlag(
                     "ui-config-mgmt",
                     Map.of("theme", "light", "sidebar", true, "maxTabs", 5),
                     "UI Configuration",
@@ -163,13 +132,13 @@ public class FlagsManagementShowcase {
             section("3. Get and List Flags");
 
             // Fetch a single flag by key.
-            Flag<?> fetched = client.flags().get("dark-mode-mgmt");
+            Flag<?> fetched = client.flags().management().get("dark-mode-mgmt");
             step("Fetched flag by id: id=" + fetched.getId()
                     + ", type=" + fetched.getType()
                     + ", description=" + fetched.getDescription());
 
             // List all flags in the account.
-            List<Flag<?>> allFlags = client.flags().list();
+            List<Flag<?>> allFlags = client.flags().management().list();
             step("Total flags in account: " + allFlags.size());
             for (Flag<?> f : allFlags) {
                 step("  " + f.getId() + " (" + f.getType() + ") -- " + f.getName());
@@ -180,8 +149,6 @@ public class FlagsManagementShowcase {
             // ==================================================================
             section("4. Update a Flag via mutation + save()");
 
-            // Update the banner flag's description and default value.
-            // When changing the default, the new value must exist in the values array.
             banner.setDescription("Updated: promotional banner text for the site header.");
             banner.setValues(List.of(
                     Map.of("name", "Welcome", "value", "Welcome!"),
@@ -194,9 +161,6 @@ public class FlagsManagementShowcase {
             step("Updated banner flag: description=" + banner.getDescription()
                     + ", default=" + banner.getDefault());
 
-            // Update the rate limit flag's name and default.
-            // No values to update — this flag is unconstrained, so any
-            // number is valid as a default.
             rateLimit.setName("API Rate Limit (per minute)");
             rateLimit.setDefault(200);
             rateLimit.save();
@@ -208,7 +172,6 @@ public class FlagsManagementShowcase {
             // ==================================================================
             section("5. Add Targeting Rules via Flag.addRule() + save()");
 
-            // Add a rule to enable dark mode for enterprise users in production.
             darkMode.addRule(new Rule("Enable for enterprise users")
                     .environment("production")
                     .when("user.plan", "==", "enterprise")
@@ -218,7 +181,6 @@ public class FlagsManagementShowcase {
             step("Added rule to dark-mode: enable for enterprise in production");
             step("  Flag now has environments: " + darkMode.getEnvironments().keySet());
 
-            // Add a rule to show sale banner for users in the US.
             banner.addRule(new Rule("Sale banner for US users")
                     .environment("production")
                     .when("user.country", "==", "US")
@@ -227,7 +189,6 @@ public class FlagsManagementShowcase {
             banner.save();
             step("Added rule to banner-text: sale for US users in production");
 
-            // Add a rule to increase rate limit for premium accounts.
             rateLimit.addRule(new Rule("Higher rate limit for premium")
                     .environment("production")
                     .when("account.tier", "==", "premium")
@@ -236,7 +197,6 @@ public class FlagsManagementShowcase {
             rateLimit.save();
             step("Added rule to rate-limit: 500 for premium accounts in production");
 
-            // Add a multi-condition rule: enterprise AND in beta program.
             uiConfig.addRule(new Rule("JSON config for enterprise beta")
                     .environment("staging")
                     .when("user.plan", "==", "enterprise")
@@ -251,9 +211,8 @@ public class FlagsManagementShowcase {
             // ==================================================================
             section("6. Cleanup");
 
-            // Delete all flags we created (by key).
             for (String flagKey : createdFlagKeys) {
-                client.flags().delete(flagKey);
+                client.flags().management().delete(flagKey);
                 step("Deleted flag: " + flagKey);
             }
 

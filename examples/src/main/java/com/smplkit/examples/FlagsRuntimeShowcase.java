@@ -82,7 +82,7 @@ public class FlagsRuntimeShowcase {
             // Clean up any leftover flags from a previous failed run.
             for (String key : createdFlagKeys) {
                 try {
-                    client.flags().delete(key);
+                    client.flags().management().delete(key);
                     step("Pre-cleanup: deleted leftover flag " + key);
                 } catch (SmplNotFoundException ignored) {
                     // Not present -- nothing to clean up.
@@ -95,7 +95,7 @@ public class FlagsRuntimeShowcase {
             section("2. Create Flags with Targeting Rules");
 
             // Boolean flag with environment-specific rules.
-            Flag<Boolean> maintenance = client.flags().newBooleanFlag(
+            Flag<Boolean> maintenance = client.flags().management().newBooleanFlag(
                     "maintenance-mode-rt", false, "Maintenance Mode",
                     "Puts the application into maintenance mode.");
             maintenance.save();
@@ -111,7 +111,7 @@ public class FlagsRuntimeShowcase {
             step("Added rule: maintenance enabled in staging");
 
             // String flag.
-            Flag<String> greeting = client.flags().newStringFlag(
+            Flag<String> greeting = client.flags().management().newStringFlag(
                     "greeting-rt", "Hello!", "Greeting Message",
                     "Personalized greeting message for different user segments.",
                     List.of(
@@ -132,7 +132,7 @@ public class FlagsRuntimeShowcase {
             step("Added rule: enterprise greeting in staging");
 
             // Numeric flag.
-            Flag<Number> pageSize = client.flags().newNumberFlag(
+            Flag<Number> pageSize = client.flags().management().newNumberFlag(
                     "page-size-rt", 25, "Page Size",
                     "Number of items per page in list views.",
                     List.of(
@@ -152,7 +152,7 @@ public class FlagsRuntimeShowcase {
             step("Added rule: 100 items per page for admins in staging");
 
             // JSON flag.
-            Flag<Object> layout = client.flags().newJsonFlag(
+            Flag<Object> layout = client.flags().management().newJsonFlag(
                     "layout-config-rt",
                     Map.of("columns", 2, "showHeader", true, "compact", false),
                     "Layout Config",
@@ -354,7 +354,7 @@ public class FlagsRuntimeShowcase {
             section("10. Cleanup");
 
             for (String flagKey : createdFlagKeys) {
-                client.flags().delete(flagKey);
+                client.flags().management().delete(flagKey);
                 step("Deleted flag: " + flagKey);
             }
 

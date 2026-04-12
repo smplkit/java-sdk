@@ -199,7 +199,7 @@ class TelemetryIntegrationTest {
         config.setEnvironment("production");
         config.setMetrics(reporter);
 
-        config.resolve("my-config");
+        config.get("my-config");
 
         reporter.flush();
 
@@ -222,7 +222,7 @@ class TelemetryIntegrationTest {
         config.setEnvironment("production");
         config.setMetrics(reporter);
 
-        config.resolve("my-config", Map.class);
+        config.get("my-config", Map.class);
 
         reporter.flush();
 
@@ -276,7 +276,7 @@ class TelemetryIntegrationTest {
         config.setMetrics(reporter);
 
         // Initial connect
-        config.resolve("my-config");
+        config.get("my-config");
         // Refresh triggers diff
         config.refresh();
 

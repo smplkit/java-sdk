@@ -51,7 +51,7 @@ public class ConfigManagementShowcase {
             // Clean up any leftover configs from a previous failed run.
             for (String key : new String[]{"auth_module", "user_service"}) {
                 try {
-                    client.config().delete(key);
+                    client.config().management().delete(key);
                     step("Pre-cleanup: deleted leftover config " + key);
                 } catch (SmplNotFoundException ignored) { }
             }
@@ -61,7 +61,7 @@ public class ConfigManagementShowcase {
             // ==================================================================
             section("2a. Update the Common Config");
 
-            Config common = client.config().get("common");
+            Config common = client.config().management().get("common");
             step("Fetched common config: id=" + common.getId());
 
             common.setDescription("Organization-wide shared configuration");
@@ -101,7 +101,7 @@ public class ConfigManagementShowcase {
             // ==================================================================
             section("3a. Create User Service Config");
 
-            Config userService = client.config().new_("user_service", "User Service", null, common.getId());
+            Config userService = client.config().management().new_("user_service", "User Service", null, common.getId());
             userService.setItems(Map.of(
                     "cache_ttl_seconds", Map.of("value", 300),
                     "enable_signup", Map.of("value", true),
@@ -117,7 +117,7 @@ public class ConfigManagementShowcase {
             // ==================================================================
             section("3b. Create Auth Module Config (child of user_service)");
 
-            Config authModule = client.config().new_("auth_module", "Auth Module", null, userService.getId());
+            Config authModule = client.config().management().new_("auth_module", "Auth Module", null, userService.getId());
             authModule.setItems(Map.of(
                     "mfa_enabled", Map.of("value", false),
                     "token_expiry_minutes", Map.of("value", 15),
@@ -134,7 +134,7 @@ public class ConfigManagementShowcase {
             // ==================================================================
             section("4a. List All Configs");
 
-            List<Config> allConfigs = client.config().list();
+            List<Config> allConfigs = client.config().management().list();
             step("Total configs in account: " + allConfigs.size());
             for (Config c : allConfigs) {
                 step("  " + c.getId() + " - " + c.getName());
@@ -145,11 +145,11 @@ public class ConfigManagementShowcase {
             // ==================================================================
             section("4b. Get Config by ID");
 
-            Config fetchedUserService = client.config().get("user_service");
+            Config fetchedUserService = client.config().management().get("user_service");
             step("Fetched by id: id=" + fetchedUserService.getId()
                     + ", name=" + fetchedUserService.getName());
 
-            Config fetchedAuthModule = client.config().get("auth_module");
+            Config fetchedAuthModule = client.config().management().get("auth_module");
             step("Fetched by id: id=" + fetchedAuthModule.getId()
                     + ", name=" + fetchedAuthModule.getName());
 
@@ -158,7 +158,7 @@ public class ConfigManagementShowcase {
             // ==================================================================
             section("5. Update a Config");
 
-            userService = client.config().get("user_service");
+            userService = client.config().management().get("user_service");
             userService.setDescription("Updated: User service with new pagination settings");
             userService.save();
             step("Updated user_service description: " + userService.getDescription());
@@ -168,13 +168,13 @@ public class ConfigManagementShowcase {
             // ==================================================================
             section("6. Cleanup");
 
-            client.config().delete("auth_module");
+            client.config().management().delete("auth_module");
             step("Deleted auth_module");
 
-            client.config().delete("user_service");
+            client.config().management().delete("user_service");
             step("Deleted user_service");
 
-            Config latestCommon = client.config().get("common");
+            Config latestCommon = client.config().management().get("common");
             latestCommon.setDescription("");
             latestCommon.setItems(Map.of());
             latestCommon.setEnvironments(Map.of());

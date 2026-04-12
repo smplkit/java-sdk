@@ -86,28 +86,28 @@ class FlagTest {
 
     @Test
     void setName_changesName() {
-        Flag<Boolean> flag = client.newBooleanFlag("my-flag", false);
+        Flag<Boolean> flag = client.management().newBooleanFlag("my-flag", false);
         flag.setName("Updated Name");
         assertEquals("Updated Name", flag.getName());
     }
 
     @Test
     void setDescription_changesDescription() {
-        Flag<Boolean> flag = client.newBooleanFlag("my-flag", false);
+        Flag<Boolean> flag = client.management().newBooleanFlag("my-flag", false);
         flag.setDescription("New description");
         assertEquals("New description", flag.getDescription());
     }
 
     @Test
     void setDefault_changesDefault() {
-        Flag<Boolean> flag = client.newBooleanFlag("my-flag", false);
+        Flag<Boolean> flag = client.management().newBooleanFlag("my-flag", false);
         flag.setDefault(true);
         assertTrue(flag.getDefault());
     }
 
     @Test
     void setValues_replacesValues() {
-        Flag<Boolean> flag = client.newBooleanFlag("my-flag", false);
+        Flag<Boolean> flag = client.management().newBooleanFlag("my-flag", false);
         List<Map<String, Object>> newValues = List.of(Map.of("name", "On", "value", true));
         flag.setValues(newValues);
         assertEquals(1, flag.getValues().size());
@@ -115,14 +115,14 @@ class FlagTest {
 
     @Test
     void setValues_null_becomesNull() {
-        Flag<Boolean> flag = client.newBooleanFlag("my-flag", false);
+        Flag<Boolean> flag = client.management().newBooleanFlag("my-flag", false);
         flag.setValues(null);
         assertNull(flag.getValues(), "setting values to null should result in null (unconstrained)");
     }
 
     @Test
     void setEnvironments_replacesEnvironments() {
-        Flag<Boolean> flag = client.newBooleanFlag("my-flag", false);
+        Flag<Boolean> flag = client.management().newBooleanFlag("my-flag", false);
         Map<String, Object> envs = Map.of("prod", Map.of("enabled", true));
         flag.setEnvironments(envs);
         assertEquals(1, flag.getEnvironments().size());
@@ -131,7 +131,7 @@ class FlagTest {
 
     @Test
     void setEnvironments_null_becomesEmpty() {
-        Flag<Boolean> flag = client.newBooleanFlag("my-flag", false);
+        Flag<Boolean> flag = client.management().newBooleanFlag("my-flag", false);
         flag.setEnvironments(null);
         assertTrue(flag.getEnvironments().isEmpty());
     }
@@ -140,28 +140,28 @@ class FlagTest {
 
     @Test
     void setId_changesId() {
-        Flag<Boolean> flag = client.newBooleanFlag("my-flag", false);
+        Flag<Boolean> flag = client.management().newBooleanFlag("my-flag", false);
         flag.setId("new-id");
         assertEquals("new-id", flag.getId());
     }
 
     @Test
     void setClient_changesClient() {
-        Flag<Boolean> flag = client.newBooleanFlag("my-flag", false);
+        Flag<Boolean> flag = client.management().newBooleanFlag("my-flag", false);
         flag.setClient(null);
         assertNull(flag.getClient());
     }
 
     @Test
     void setType_changesType() {
-        Flag<Boolean> flag = client.newBooleanFlag("my-flag", false);
+        Flag<Boolean> flag = client.management().newBooleanFlag("my-flag", false);
         flag.setType("STRING");
         assertEquals("STRING", flag.getType());
     }
 
     @Test
     void setCreatedAt_changesCreatedAt() {
-        Flag<Boolean> flag = client.newBooleanFlag("my-flag", false);
+        Flag<Boolean> flag = client.management().newBooleanFlag("my-flag", false);
         Instant now = Instant.now();
         flag.setCreatedAt(now);
         assertEquals(now, flag.getCreatedAt());
@@ -169,7 +169,7 @@ class FlagTest {
 
     @Test
     void setUpdatedAt_changesUpdatedAt() {
-        Flag<Boolean> flag = client.newBooleanFlag("my-flag", false);
+        Flag<Boolean> flag = client.management().newBooleanFlag("my-flag", false);
         Instant now = Instant.now();
         flag.setUpdatedAt(now);
         assertEquals(now, flag.getUpdatedAt());
@@ -334,7 +334,7 @@ class FlagTest {
         )), FlagResponse.class);
         when(mockApi.createFlag(any(ResponseFlag.class))).thenReturn(response);
 
-        Flag<Boolean> flag = client.newBooleanFlag("new-flag", false, "New Flag", null);
+        Flag<Boolean> flag = client.management().newBooleanFlag("new-flag", false, "New Flag", null);
         assertNull(flag.getCreatedAt());
 
         flag.save();
@@ -358,7 +358,7 @@ class FlagTest {
         when(mockApi.updateFlag(eq(FLAG_ID), any(ResponseFlag.class)))
                 .thenReturn(response);
 
-        Flag<Boolean> flag = client.newBooleanFlag("my-flag", false, "My Flag", null);
+        Flag<Boolean> flag = client.management().newBooleanFlag("my-flag", false, "My Flag", null);
         flag.setCreatedAt(java.time.Instant.parse("2024-06-01T12:00:00Z"));
         flag.setName("Updated");
         flag.save();
@@ -383,7 +383,7 @@ class FlagTest {
         )), FlagResponse.class);
         when(mockApi.createFlag(any(ResponseFlag.class))).thenReturn(response);
 
-        Flag<Boolean> flag = client.newBooleanFlag("applied-flag", false, "Local Name", null);
+        Flag<Boolean> flag = client.management().newBooleanFlag("applied-flag", false, "Local Name", null);
         flag.save();
 
         assertEquals("applied-flag", flag.getId());
@@ -407,7 +407,7 @@ class FlagTest {
         when(mockApi.updateFlag(eq(FLAG_ID), any(ResponseFlag.class)))
                 .thenReturn(response);
 
-        Flag<Boolean> flag = client.newBooleanFlag("my-flag", false, "Local Name", null);
+        Flag<Boolean> flag = client.management().newBooleanFlag("my-flag", false, "Local Name", null);
         flag.setCreatedAt(java.time.Instant.parse("2024-06-01T12:00:00Z"));
         flag.save();
 
@@ -429,7 +429,7 @@ class FlagTest {
 
     @Test
     void addRule_appendsRuleToEnvironment() {
-        Flag<Boolean> flag = client.newBooleanFlag("my-flag", false);
+        Flag<Boolean> flag = client.management().newBooleanFlag("my-flag", false);
         Map<String, Object> rule = Map.of(
                 "environment", "staging",
                 "description", "Enterprise",
@@ -451,7 +451,7 @@ class FlagTest {
 
     @Test
     void addRule_appendsToExistingRules() {
-        Flag<Boolean> flag = client.newBooleanFlag("my-flag", false);
+        Flag<Boolean> flag = client.management().newBooleanFlag("my-flag", false);
         flag.setEnvironmentEnabled("staging", true);
 
         Map<String, Object> rule1 = Map.of(
@@ -473,7 +473,7 @@ class FlagTest {
 
     @Test
     void addRule_returnsThis_forChaining() {
-        Flag<Boolean> flag = client.newBooleanFlag("my-flag", false);
+        Flag<Boolean> flag = client.management().newBooleanFlag("my-flag", false);
         Map<String, Object> rule = Map.of(
                 "environment", "staging", "description", "R",
                 "logic", Map.of("==", List.of(1, 1)), "value", true);
@@ -484,7 +484,7 @@ class FlagTest {
 
     @Test
     void addRule_withoutEnvironmentKey_throwsIllegalArgument() {
-        Flag<Boolean> flag = client.newBooleanFlag("my-flag", false);
+        Flag<Boolean> flag = client.management().newBooleanFlag("my-flag", false);
         Map<String, Object> ruleWithoutEnv = Map.of(
                 "description", "No env",
                 "logic", Map.of("==", List.of(1, 1)),
@@ -498,7 +498,7 @@ class FlagTest {
 
     @Test
     void setEnvironmentEnabled_setsEnabledTrue() {
-        Flag<Boolean> flag = client.newBooleanFlag("my-flag", false);
+        Flag<Boolean> flag = client.management().newBooleanFlag("my-flag", false);
         flag.setEnvironmentEnabled("production", true);
 
         @SuppressWarnings("unchecked")
@@ -508,7 +508,7 @@ class FlagTest {
 
     @Test
     void setEnvironmentEnabled_setsEnabledFalse() {
-        Flag<Boolean> flag = client.newBooleanFlag("my-flag", false);
+        Flag<Boolean> flag = client.management().newBooleanFlag("my-flag", false);
         flag.setEnvironmentEnabled("staging", false);
 
         @SuppressWarnings("unchecked")
@@ -518,7 +518,7 @@ class FlagTest {
 
     @Test
     void setEnvironmentEnabled_createsEnvIfAbsent() {
-        Flag<Boolean> flag = client.newBooleanFlag("my-flag", false);
+        Flag<Boolean> flag = client.management().newBooleanFlag("my-flag", false);
         assertFalse(flag.getEnvironments().containsKey("new-env"));
 
         flag.setEnvironmentEnabled("new-env", true);
@@ -530,7 +530,7 @@ class FlagTest {
 
     @Test
     void setEnvironmentDefault_setsDefault() {
-        Flag<Boolean> flag = client.newBooleanFlag("my-flag", false);
+        Flag<Boolean> flag = client.management().newBooleanFlag("my-flag", false);
         flag.setEnvironmentDefault("staging", true);
 
         @SuppressWarnings("unchecked")
@@ -540,7 +540,7 @@ class FlagTest {
 
     @Test
     void setEnvironmentDefault_createsEnvIfAbsent() {
-        Flag<Boolean> flag = client.newBooleanFlag("my-flag", false);
+        Flag<Boolean> flag = client.management().newBooleanFlag("my-flag", false);
         flag.setEnvironmentDefault("production", "fallback");
 
         assertTrue(flag.getEnvironments().containsKey("production"));
@@ -550,7 +550,7 @@ class FlagTest {
 
     @Test
     void clearRules_emptiesRulesList() {
-        Flag<Boolean> flag = client.newBooleanFlag("my-flag", false);
+        Flag<Boolean> flag = client.management().newBooleanFlag("my-flag", false);
         Map<String, Object> rule = Map.of(
                 "environment", "staging", "description", "Rule",
                 "logic", Map.of("==", List.of(1, 1)), "value", true);
@@ -567,7 +567,7 @@ class FlagTest {
 
     @Test
     void clearRules_createsEnvWithEmptyRulesIfAbsent() {
-        Flag<Boolean> flag = client.newBooleanFlag("my-flag", false);
+        Flag<Boolean> flag = client.management().newBooleanFlag("my-flag", false);
         flag.clearRules("production");
 
         @SuppressWarnings("unchecked")
@@ -590,7 +590,7 @@ class FlagTest {
                 Map.of("prod", Map.of("enabled", true)),
                 now, now, Boolean.class);
 
-        Flag<Boolean> target = client.newBooleanFlag("target-id", false);
+        Flag<Boolean> target = client.management().newBooleanFlag("target-id", false);
         target._apply(source);
 
         assertEquals("source-id", target.getId());
@@ -609,7 +609,7 @@ class FlagTest {
         Flag<Boolean> source = new Flag<>(client, "my-id", "Name", "BOOLEAN", false,
                 null, null, null, null, null, Boolean.class);
 
-        Flag<Boolean> target = client.newBooleanFlag("target-id", false);
+        Flag<Boolean> target = client.management().newBooleanFlag("target-id", false);
         target._apply(source);
 
         assertNull(target.getValues(), "apply with null values should result in null");
@@ -619,10 +619,10 @@ class FlagTest {
 
     @Test
     void apply_doesNotShareMutableState() {
-        Flag<Boolean> source = client.newBooleanFlag("source-id", false);
+        Flag<Boolean> source = client.management().newBooleanFlag("source-id", false);
         source.setEnvironmentEnabled("staging", true);
 
-        Flag<Boolean> target = client.newBooleanFlag("target-id", false);
+        Flag<Boolean> target = client.management().newBooleanFlag("target-id", false);
         target._apply(source);
 
         // Modifying target's environments should not affect source
@@ -634,20 +634,20 @@ class FlagTest {
 
     @Test
     void toString_containsIdTypeAndDefault() {
-        Flag<Boolean> flag = client.newBooleanFlag("my-flag", false);
+        Flag<Boolean> flag = client.management().newBooleanFlag("my-flag", false);
         String str = flag.toString();
         assertEquals("Flag{id='my-flag', type='BOOLEAN', default=false}", str);
     }
 
     @Test
     void toString_stringFlag() {
-        Flag<String> flag = client.newStringFlag("color", "red");
+        Flag<String> flag = client.management().newStringFlag("color", "red");
         assertEquals("Flag{id='color', type='STRING', default=red}", flag.toString());
     }
 
     @Test
     void toString_numberFlag() {
-        Flag<Number> flag = client.newNumberFlag("limit", 42);
+        Flag<Number> flag = client.management().newNumberFlag("limit", 42);
         assertEquals("Flag{id='limit', type='NUMERIC', default=42}", flag.toString());
     }
 

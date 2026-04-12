@@ -40,7 +40,7 @@ class Phase2CoverageTest {
         ConfigsApi mockApi = mock(ConfigsApi.class);
         ConfigClient configClient = new ConfigClient(mockApi, HttpClient.newHttpClient(), "test-key");
 
-        Map<String, Object> values = configClient.resolve("my-config");
+        Map<String, Object> values = configClient.get("my-config");
         assertTrue(values.isEmpty());
     }
 
@@ -70,20 +70,20 @@ class Phase2CoverageTest {
                 ConfigListResponse.class);
         when(mockApi.listConfigs(isNull())).thenReturn(listResponse);
 
-        // Without setEnvironment, resolve returns empty (no lazy init)
+        // Without setEnvironment, get returns empty (no lazy init)
         ConfigClient noEnvClient = new ConfigClient(mockApi, HttpClient.newHttpClient(), "test-key");
-        assertTrue(noEnvClient.resolve("db-config").isEmpty());
+        assertTrue(noEnvClient.get("db-config").isEmpty());
 
         // With setEnvironment, resolve triggers lazy init and returns data
         ConfigClient configClient = new ConfigClient(mockApi, HttpClient.newHttpClient(), "test-key");
         configClient.setEnvironment("production");
 
-        Map<String, Object> resolved = configClient.resolve("db-config");
+        Map<String, Object> resolved = configClient.get("db-config");
         assertEquals("prod-db.example.com", resolved.get("host"));
         assertEquals(5432, resolved.get("port"));
 
         // Nonexistent config
-        assertTrue(configClient.resolve("nonexistent-config").isEmpty());
+        assertTrue(configClient.get("nonexistent-config").isEmpty());
     }
 
     @Test
@@ -106,11 +106,11 @@ class Phase2CoverageTest {
         ConfigClient configClient = new ConfigClient(mockApi, HttpClient.newHttpClient(), "test-key");
         configClient.setEnvironment("staging");
 
-        Map<String, Object> values = configClient.resolve("app-config");
+        Map<String, Object> values = configClient.get("app-config");
         assertNotNull(values);
         assertEquals("Default Title", values.get("title"));
 
-        assertTrue(configClient.resolve("unknown").isEmpty());
+        assertTrue(configClient.get("unknown").isEmpty());
     }
 
     // --- Service context auto-injection in flag evaluation ---

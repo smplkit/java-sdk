@@ -43,16 +43,15 @@ public class LoggingManagementShowcase {
             List<String> createdGroupKeys = new ArrayList<>();
 
             // Clean up any leftover resources from a previous failed run.
-            // Loggers first (may reference groups), then child groups, then parent groups.
             for (String key : List.of("payment-service", "audit-logger")) {
                 try {
-                    client.logging().delete(key);
+                    client.logging().management().delete(key);
                     step("Pre-cleanup: deleted leftover logger " + key);
                 } catch (SmplNotFoundException ignored) { }
             }
             for (String key : List.of("infra-db", "infra")) {
                 try {
-                    client.logging().deleteGroup(key);
+                    client.logging().management().deleteGroup(key);
                     step("Pre-cleanup: deleted leftover group " + key);
                 } catch (SmplNotFoundException ignored) { }
             }
@@ -62,14 +61,14 @@ public class LoggingManagementShowcase {
             // ==================================================================
             section("2. Create Log Groups");
 
-            LogGroup infraGroup = client.logging().newGroup("infra");
+            LogGroup infraGroup = client.logging().management().newGroup("infra");
             infraGroup.setLevel(LogLevel.WARN);
             infraGroup.save();
             createdGroupKeys.add(infraGroup.getId());
             step("Created group: id=" + infraGroup.getId()
                     + ", level=" + infraGroup.getLevel());
 
-            LogGroup dbGroup = client.logging().newGroup("infra-db", "Database", infraGroup.getId());
+            LogGroup dbGroup = client.logging().management().newGroup("infra-db", "Database", infraGroup.getId());
             dbGroup.setLevel(LogLevel.ERROR);
             dbGroup.save();
             createdGroupKeys.add(dbGroup.getId());
@@ -81,7 +80,7 @@ public class LoggingManagementShowcase {
             // ==================================================================
             section("3. Create Loggers");
 
-            Logger paymentLogger = client.logging().new_("payment-service", "Payment Service", true);
+            Logger paymentLogger = client.logging().management().new_("payment-service", "Payment Service", true);
             paymentLogger.setLevel(LogLevel.INFO);
             paymentLogger.setGroup(infraGroup.getId());
             paymentLogger.save();
@@ -89,7 +88,7 @@ public class LoggingManagementShowcase {
             step("Created logger: id=" + paymentLogger.getId()
                     + ", managed=" + paymentLogger.isManaged());
 
-            Logger auditLogger = client.logging().new_("audit-logger", "Audit Logger", true);
+            Logger auditLogger = client.logging().management().new_("audit-logger", "Audit Logger", true);
             auditLogger.setLevel(LogLevel.DEBUG);
             auditLogger.save();
             createdLoggerKeys.add(auditLogger.getId());
@@ -100,19 +99,19 @@ public class LoggingManagementShowcase {
             // ==================================================================
             section("4. Get and List");
 
-            Logger fetched = client.logging().get("payment-service");
+            Logger fetched = client.logging().management().get("payment-service");
             step("Fetched logger: id=" + fetched.getId()
                     + ", name=" + fetched.getName()
                     + ", level=" + fetched.getLevel());
 
-            List<Logger> allLoggers = client.logging().list();
+            List<Logger> allLoggers = client.logging().management().list();
             step("Total loggers: " + allLoggers.size());
 
-            LogGroup fetchedGroup = client.logging().getGroup("infra");
+            LogGroup fetchedGroup = client.logging().management().getGroup("infra");
             step("Fetched group: id=" + fetchedGroup.getId()
                     + ", level=" + fetchedGroup.getLevel());
 
-            List<LogGroup> allGroups = client.logging().listGroups();
+            List<LogGroup> allGroups = client.logging().management().listGroups();
             step("Total groups: " + allGroups.size());
 
             // ==================================================================
@@ -157,12 +156,12 @@ public class LoggingManagementShowcase {
             section("7. Cleanup");
 
             for (String key : createdLoggerKeys) {
-                client.logging().delete(key);
+                client.logging().management().delete(key);
                 step("Deleted logger: " + key);
             }
             // Delete child group first (referential integrity)
             for (int i = createdGroupKeys.size() - 1; i >= 0; i--) {
-                client.logging().deleteGroup(createdGroupKeys.get(i));
+                client.logging().management().deleteGroup(createdGroupKeys.get(i));
                 step("Deleted group: " + createdGroupKeys.get(i));
             }
         }

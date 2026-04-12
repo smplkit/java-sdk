@@ -103,7 +103,7 @@ class ConfigPrescriptiveTest {
                         "retries", itemDef(3, ConfigItemDefinition.TypeEnum.NUMBER)),
                 Map.of()));
 
-        Map<String, Object> values = configClient.resolve("app");
+        Map<String, Object> values = configClient.get("app");
 
         assertEquals("Acme", values.get("name"));
         assertEquals(3, values.get("retries"));
@@ -115,7 +115,7 @@ class ConfigPrescriptiveTest {
                 Map.of("retries", itemDef(3, ConfigItemDefinition.TypeEnum.NUMBER)),
                 Map.of("production", envOverride(Map.of("retries", 5)))));
 
-        Map<String, Object> values = configClient.resolve("app");
+        Map<String, Object> values = configClient.get("app");
 
         assertEquals(5, values.get("retries"));
     }
@@ -124,7 +124,7 @@ class ConfigPrescriptiveTest {
     void resolve_unknownKey_returnsEmptyMap() throws ApiException {
         setupListResponse(makeResource(APP_ID, "App", null, Map.of(), Map.of()));
 
-        Map<String, Object> values = configClient.resolve("nonexistent");
+        Map<String, Object> values = configClient.get("nonexistent");
 
         assertTrue(values.isEmpty());
     }
@@ -136,7 +136,7 @@ class ConfigPrescriptiveTest {
                         "port", itemDef(5432, ConfigItemDefinition.TypeEnum.NUMBER)),
                 Map.of()));
 
-        SimpleConfig model = configClient.resolve("app", SimpleConfig.class);
+        SimpleConfig model = configClient.get("app", SimpleConfig.class);
 
         assertEquals("localhost", model.host);
         assertEquals(5432, model.port);
@@ -149,7 +149,7 @@ class ConfigPrescriptiveTest {
                         "database.port", itemDef(5432, ConfigItemDefinition.TypeEnum.NUMBER)),
                 Map.of()));
 
-        NestedConfig model = configClient.resolve("app", NestedConfig.class);
+        NestedConfig model = configClient.get("app", NestedConfig.class);
 
         assertEquals("localhost", model.database.get("host"));
         assertEquals(5432, model.database.get("port"));
@@ -166,7 +166,7 @@ class ConfigPrescriptiveTest {
                 Map.of()));
 
         assertFalse(configClient.isConnected());
-        configClient.resolve("app");
+        configClient.get("app");
         assertTrue(configClient.isConnected());
     }
 
@@ -174,8 +174,8 @@ class ConfigPrescriptiveTest {
     void resolve_lazyInitIdempotent() throws ApiException {
         setupListResponse(makeResource(APP_ID, "App", null, Map.of(), Map.of()));
 
-        configClient.resolve("app");
-        configClient.resolve("app");
+        configClient.get("app");
+        configClient.get("app");
 
         // Only one list call (lazy init is idempotent)
         verify(mockApi, times(1)).listConfigs(isNull());
@@ -186,7 +186,7 @@ class ConfigPrescriptiveTest {
         ConfigClient noEnvClient = new ConfigClient(mockApi, HttpClient.newHttpClient(), "test-key");
         // No setEnvironment()
 
-        Map<String, Object> values = noEnvClient.resolve("app");
+        Map<String, Object> values = noEnvClient.get("app");
 
         assertFalse(noEnvClient.isConnected());
         assertTrue(values.isEmpty());
@@ -208,7 +208,7 @@ class ConfigPrescriptiveTest {
 
         setupListResponse(parent, child);
 
-        Map<String, Object> values = configClient.resolve("service");
+        Map<String, Object> values = configClient.get("service");
 
         // Child overrides parent retries, inherits timeout
         assertEquals(5, values.get("retries"));
@@ -300,7 +300,7 @@ class ConfigPrescriptiveTest {
                 Map.of("retries", itemDef(3, ConfigItemDefinition.TypeEnum.NUMBER)),
                 Map.of()));
 
-        Map<String, Object> initial = configClient.resolve("app");
+        Map<String, Object> initial = configClient.get("app");
         assertEquals(3, initial.get("retries"));
 
         when(mockApi.listConfigs(isNull()))
@@ -311,7 +311,7 @@ class ConfigPrescriptiveTest {
 
         configClient.refresh();
 
-        Map<String, Object> refreshed = configClient.resolve("app");
+        Map<String, Object> refreshed = configClient.get("app");
         assertEquals(7, refreshed.get("retries"));
     }
 
@@ -325,7 +325,7 @@ class ConfigPrescriptiveTest {
                 Map.of());
 
         setupListResponse(parent, child);
-        assertEquals(1000, configClient.resolve("service").get("timeout"));
+        assertEquals(1000, configClient.get("service").get("timeout"));
 
         // After refresh, parent timeout changes
         ConfigResource parentUpdated = makeResource(PARENT_ID, "Common", null,
@@ -336,7 +336,7 @@ class ConfigPrescriptiveTest {
 
         configClient.refresh();
 
-        assertEquals(2000, configClient.resolve("service").get("timeout"));
+        assertEquals(2000, configClient.get("service").get("timeout"));
     }
 
     @Test
@@ -355,7 +355,7 @@ class ConfigPrescriptiveTest {
                 Map.of("retries", itemDef(3, ConfigItemDefinition.TypeEnum.NUMBER)),
                 Map.of()));
 
-        configClient.resolve("app"); // trigger lazy init
+        configClient.get("app"); // trigger lazy init
 
         List<ConfigChangeEvent> events = new ArrayList<>();
         configClient.onChange(events::add);
@@ -382,7 +382,7 @@ class ConfigPrescriptiveTest {
                 Map.of("retries", itemDef(3, ConfigItemDefinition.TypeEnum.NUMBER)),
                 Map.of()));
 
-        configClient.resolve("app");
+        configClient.get("app");
 
         List<ConfigChangeEvent> appEvents = new ArrayList<>();
         configClient.onChange("app", appEvents::add);
@@ -409,7 +409,7 @@ class ConfigPrescriptiveTest {
                         "timeout", itemDef(1000, ConfigItemDefinition.TypeEnum.NUMBER)),
                 Map.of()));
 
-        configClient.resolve("app");
+        configClient.get("app");
 
         List<ConfigChangeEvent> retriesEvents = new ArrayList<>();
         configClient.onChange("app", "retries", retriesEvents::add);
@@ -434,7 +434,7 @@ class ConfigPrescriptiveTest {
                 Map.of("retries", itemDef(3, ConfigItemDefinition.TypeEnum.NUMBER)),
                 Map.of()));
 
-        configClient.resolve("app");
+        configClient.get("app");
 
         List<ConfigChangeEvent> events = new ArrayList<>();
         configClient.onChange(e -> { throw new RuntimeException("bad listener"); });
@@ -461,7 +461,7 @@ class ConfigPrescriptiveTest {
                 Map.of("retries", itemDef(3, ConfigItemDefinition.TypeEnum.NUMBER)),
                 Map.of()));
 
-        configClient.resolve("app");
+        configClient.get("app");
 
         when(mockApi.listConfigs(isNull()))
                 .thenReturn(listResponse(List.of(
@@ -478,7 +478,7 @@ class ConfigPrescriptiveTest {
                 Map.of("a", itemDef(1, ConfigItemDefinition.TypeEnum.NUMBER)),
                 Map.of()));
 
-        configClient.resolve("app");
+        configClient.get("app");
 
         List<ConfigChangeEvent> events = new ArrayList<>();
         configClient.onChange(events::add);
@@ -508,7 +508,7 @@ class ConfigPrescriptiveTest {
                         "b", itemDef(2, ConfigItemDefinition.TypeEnum.NUMBER)),
                 Map.of()));
 
-        configClient.resolve("app");
+        configClient.get("app");
 
         List<ConfigChangeEvent> events = new ArrayList<>();
         configClient.onChange(events::add);

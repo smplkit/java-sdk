@@ -113,7 +113,7 @@ class ConfigClientFullTest {
                 now, now);
         when(mockApi.createConfig(any())).thenReturn(singleResponse(created));
 
-        Config config = configClient.new_("svc", "Svc", "initial desc", null);
+        Config config = configClient.management().new_("svc", "Svc", "initial desc", null);
         config.setItems(Map.of("a", Map.of("value", 1)));
         config.save();
 
@@ -148,7 +148,7 @@ class ConfigClientFullTest {
                 PARENT_ID, Map.of(), Map.of(), now, now);
         when(mockApi.createConfig(any())).thenReturn(singleResponse(created));
 
-        Config config = configClient.new_("child", null, null, PARENT_ID);
+        Config config = configClient.management().new_("child", null, null, PARENT_ID);
         config.save();
 
         assertEquals(PARENT_ID, config.getParent());
@@ -176,7 +176,7 @@ class ConfigClientFullTest {
                 null, Map.of(), Map.of(), now, now);
         when(mockApi.createConfig(any())).thenReturn(singleResponse(created));
 
-        Config config = configClient.new_("svc");
+        Config config = configClient.management().new_("svc");
         config.save();
 
         // Now update fails
@@ -198,7 +198,7 @@ class ConfigClientFullTest {
                 Map.of(), Map.of(), now, now);
         when(mockApi.createConfig(any())).thenReturn(singleResponse(created));
 
-        Config config = configClient.new_("svc");
+        Config config = configClient.management().new_("svc");
         config.save();
 
         ConfigResource updated = makeResource(CONFIG_ID, "Name", null, null,
@@ -266,13 +266,13 @@ class ConfigClientFullTest {
 
     @Test
     void config_getClient_returnsClient() {
-        Config config = configClient.new_("test");
+        Config config = configClient.management().new_("test");
         assertSame(configClient, config.getClient());
     }
 
     @Test
     void config_setClient_changesClient() {
-        Config config = configClient.new_("test");
+        Config config = configClient.management().new_("test");
         ConfigsApi otherApi = Mockito.mock(ConfigsApi.class);
         ConfigClient otherClient = new ConfigClient(otherApi, HttpClient.newHttpClient(), "other");
         config.setClient(otherClient);

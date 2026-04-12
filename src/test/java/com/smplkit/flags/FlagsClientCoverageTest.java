@@ -59,7 +59,7 @@ class FlagsClientCoverageTest {
 
     @Test
     void newStringFlag_withNameAndDescription() {
-        Flag<String> flag = client.newStringFlag("color", "red", "Color", "Pick a color");
+        Flag<String> flag = client.management().newStringFlag("color", "red", "Color", "Pick a color");
         assertEquals("color", flag.getId());
         assertEquals("STRING", flag.getType());
         assertEquals("Color", flag.getName());
@@ -74,13 +74,13 @@ class FlagsClientCoverageTest {
                 Map.of("name", "Red", "value", "red"),
                 Map.of("name", "Blue", "value", "blue")
         );
-        Flag<String> flag = client.newStringFlag("color", "red", "Color", null, values);
+        Flag<String> flag = client.management().newStringFlag("color", "red", "Color", null, values);
         assertEquals(2, flag.getValues().size());
     }
 
     @Test
     void newStringFlag_withoutName_usesKeyToDisplayName() {
-        Flag<String> flag = client.newStringFlag("bg-color", "red");
+        Flag<String> flag = client.management().newStringFlag("bg-color", "red");
         assertEquals("Bg Color", flag.getName());
     }
 
@@ -88,7 +88,7 @@ class FlagsClientCoverageTest {
 
     @Test
     void newNumberFlag_minimal() {
-        Flag<Number> flag = client.newNumberFlag("rate-limit", 100);
+        Flag<Number> flag = client.management().newNumberFlag("rate-limit", 100);
         assertEquals("rate-limit", flag.getId());
         assertEquals("NUMERIC", flag.getType());
         assertEquals(100, flag.getDefault());
@@ -97,7 +97,7 @@ class FlagsClientCoverageTest {
 
     @Test
     void newNumberFlag_withNameAndDescription() {
-        Flag<Number> flag = client.newNumberFlag("rate-limit", 100, "Rate Limit", "Max requests");
+        Flag<Number> flag = client.management().newNumberFlag("rate-limit", 100, "Rate Limit", "Max requests");
         assertEquals("Rate Limit", flag.getName());
         assertEquals("Max requests", flag.getDescription());
         assertNull(flag.getValues(), "unconstrained flag should have null values");
@@ -109,7 +109,7 @@ class FlagsClientCoverageTest {
                 Map.of("name", "Low", "value", 100),
                 Map.of("name", "High", "value", 1000)
         );
-        Flag<Number> flag = client.newNumberFlag("rate-limit", 100, null, null, values);
+        Flag<Number> flag = client.management().newNumberFlag("rate-limit", 100, null, null, values);
         assertEquals(2, flag.getValues().size());
         // name from key
         assertEquals("Rate Limit", flag.getName());
@@ -119,7 +119,7 @@ class FlagsClientCoverageTest {
 
     @Test
     void newJsonFlag_minimal() {
-        Flag<Object> flag = client.newJsonFlag("config", Map.of("a", 1));
+        Flag<Object> flag = client.management().newJsonFlag("config", Map.of("a", 1));
         assertEquals("config", flag.getId());
         assertEquals("JSON", flag.getType());
         assertNull(flag.getValues(), "unconstrained flag should have null values");
@@ -127,7 +127,7 @@ class FlagsClientCoverageTest {
 
     @Test
     void newJsonFlag_withNameAndDescription() {
-        Flag<Object> flag = client.newJsonFlag("config", Map.of(), "Config", "Feature config");
+        Flag<Object> flag = client.management().newJsonFlag("config", Map.of(), "Config", "Feature config");
         assertEquals("Config", flag.getName());
         assertEquals("Feature config", flag.getDescription());
         assertNull(flag.getValues(), "unconstrained flag should have null values");
@@ -136,7 +136,7 @@ class FlagsClientCoverageTest {
     @Test
     void newJsonFlag_withValues() {
         List<Map<String, Object>> values = List.of(Map.of("name", "Preset A", "value", Map.of("x", 1)));
-        Flag<Object> flag = client.newJsonFlag("config", Map.of(), null, null, values);
+        Flag<Object> flag = client.management().newJsonFlag("config", Map.of(), null, null, values);
         assertEquals(1, flag.getValues().size());
     }
 
@@ -474,7 +474,7 @@ class FlagsClientCoverageTest {
         FlagListResponse resp = new FlagListResponse();
         resp.setData(null);
         when(mockApi.listFlags(isNull())).thenReturn(resp);
-        List<Flag<?>> result = client.list();
+        List<Flag<?>> result = client.management().list();
         assertTrue(result.isEmpty());
     }
 
@@ -484,7 +484,7 @@ class FlagsClientCoverageTest {
     void list_apiException_throwsSmplException() throws ApiException {
         when(mockApi.listFlags(isNull()))
                 .thenThrow(new ApiException(500, "Server Error"));
-        assertThrows(SmplException.class, () -> client.list());
+        assertThrows(SmplException.class, () -> client.management().list());
     }
 
     // --- _createFlag with environments ---
@@ -502,7 +502,7 @@ class FlagsClientCoverageTest {
         )), FlagResponse.class);
         when(mockApi.createFlag(any(ResponseFlag.class))).thenReturn(response);
 
-        Flag<Boolean> flag = client.newBooleanFlag("my-flag", false, "My Flag", "A test flag");
+        Flag<Boolean> flag = client.management().newBooleanFlag("my-flag", false, "My Flag", "A test flag");
         flag.setEnvironmentEnabled("staging", true);
         flag.save();
 
@@ -571,7 +571,7 @@ class FlagsClientCoverageTest {
         doThrow(new ApiException(500, "Server Error"))
                 .when(mockApi).deleteFlag("my-flag");
 
-        assertThrows(SmplException.class, () -> client.delete("my-flag"));
+        assertThrows(SmplException.class, () -> client.management().delete("my-flag"));
     }
 
     // --- _updateFlag with description ---
@@ -588,7 +588,7 @@ class FlagsClientCoverageTest {
         when(mockApi.updateFlag(eq(FLAG_ID), any(ResponseFlag.class)))
                 .thenReturn(response);
 
-        Flag<Boolean> flag = client.newBooleanFlag("my-flag", false, "My Flag", "Updated desc");
+        Flag<Boolean> flag = client.management().newBooleanFlag("my-flag", false, "My Flag", "Updated desc");
         flag.setCreatedAt(java.time.Instant.parse("2024-06-01T12:00:00Z"));
         flag.save();
 
@@ -623,7 +623,7 @@ class FlagsClientCoverageTest {
         )), FlagResponse.class);
         when(mockApi.createFlag(any(ResponseFlag.class))).thenReturn(response);
 
-        Flag<Boolean> flag = client.newBooleanFlag("my-flag", false);
+        Flag<Boolean> flag = client.management().newBooleanFlag("my-flag", false);
         flag.setEnvironmentEnabled("staging", true);
         flag.setEnvironmentDefault("staging", true);
         flag.save();

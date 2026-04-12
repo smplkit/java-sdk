@@ -60,7 +60,7 @@ public class FlagsDemoSetup {
             // Clean up any leftover flags from a previous failed run.
             for (String key : List.of("dark-mode-demo", "items-per-page-demo", "theme-config-demo")) {
                 try {
-                    client.flags().delete(key);
+                    client.flags().management().delete(key);
                     step("Pre-cleanup: deleted leftover flag " + key);
                 } catch (SmplNotFoundException ignored) { }
             }
@@ -71,7 +71,7 @@ public class FlagsDemoSetup {
             section("2. Create Feature Flags");
 
             // --- dark-mode: a simple boolean toggle ---
-            Flag<Boolean> darkMode = client.flags().newBooleanFlag(
+            Flag<Boolean> darkMode = client.flags().management().newBooleanFlag(
                     "dark-mode-demo", false, "Dark Mode",
                     "Enables dark mode across the application UI.");
             darkMode.save();
@@ -79,7 +79,7 @@ public class FlagsDemoSetup {
             step("Created 'dark-mode-demo' (boolean, default=false), id=" + darkMode.getId());
 
             // --- items-per-page: controls pagination (unconstrained) ---
-            Flag<Number> itemsPerPage = client.flags().newNumberFlag(
+            Flag<Number> itemsPerPage = client.flags().management().newNumberFlag(
                     "items-per-page-demo", 20, "Items Per Page",
                     "Number of items displayed per page in list views.");
             itemsPerPage.save();
@@ -87,7 +87,7 @@ public class FlagsDemoSetup {
             step("Created 'items-per-page-demo' (numeric, default=20), id=" + itemsPerPage.getId());
 
             // --- theme-config: a complex JSON configuration ---
-            Flag<Object> themeConfig = client.flags().newJsonFlag(
+            Flag<Object> themeConfig = client.flags().management().newJsonFlag(
                     "theme-config-demo",
                     Map.of("primaryColor", "#1976d2", "fontFamily", "Inter, sans-serif",
                            "borderRadius", 8, "density", "comfortable"),
@@ -233,7 +233,7 @@ public class FlagsDemoSetup {
             section("6. Cleanup");
 
             for (String flagKey : createdFlagKeys) {
-                client.flags().delete(flagKey);
+                client.flags().management().delete(flagKey);
                 step("Deleted flag: " + flagKey);
             }
 

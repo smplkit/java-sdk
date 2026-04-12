@@ -38,7 +38,7 @@ public class LoggingRuntimeShowcase {
 
             // Clean up any leftover logger from a previous failed run.
             try {
-                client.logging().delete("com.acme.payments");
+                client.logging().management().delete("com.acme.payments");
             } catch (SmplNotFoundException ignored) { }
 
             // ==================================================================
@@ -96,7 +96,7 @@ public class LoggingRuntimeShowcase {
             // ==================================================================
             section("5. Create and Manage a Logger");
 
-            Logger mgr = client.logging().new_("com.acme.payments", "Payments Logger", true);
+            Logger mgr = client.logging().management().new_("com.acme.payments", "Payments Logger", true);
             mgr.setLevel(LogLevel.DEBUG);
             mgr.save();
             step("Created managed logger: id=" + mgr.getId()
@@ -111,7 +111,7 @@ public class LoggingRuntimeShowcase {
                     + ", environments=" + mgr.getEnvironments());
 
             // Clean up
-            client.logging().delete(mgr.getId());
+            client.logging().management().delete(mgr.getId());
             step("Deleted managed logger");
         }
 

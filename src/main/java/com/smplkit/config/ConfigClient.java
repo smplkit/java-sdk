@@ -1,10 +1,8 @@
 package com.smplkit.config;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.smplkit.Helpers;
 import com.smplkit.errors.ApiExceptionHandler;
 import com.smplkit.errors.SmplException;
-import com.smplkit.errors.SmplNotFoundException;
 import com.smplkit.internal.generated.config.ApiException;
 import com.smplkit.internal.generated.config.api.ConfigsApi;
 import com.smplkit.internal.generated.config.model.ConfigItemDefinition;
@@ -32,26 +30,41 @@ import java.util.logging.Logger;
 /**
  * Client for the Smpl Config service.
  *
- * <p>Provides config management ({@link #new_(String)}, {@link #get(String)},
- * {@link #list()}, {@link #delete(String)}) and runtime resolution
- * ({@link #resolve(String)}, {@link #subscribe(String)}, {@link #onChange}).</p>
+ * <p>Provides runtime config access ({@link #get(String)},
+ * {@link #subscribe(String)}, {@link #onChange}) and management operations
+ * via {@link #management()}.</p>
  */
 public final class ConfigClient {
 
     private static final Logger LOG = Logger.getLogger("smplkit.config");
 
-    private final ConfigsApi configsApi;
+    final ConfigsApi configsApi;
     private volatile boolean connected;
     private volatile String environment;
     private volatile com.smplkit.MetricsReporter metrics;
     private Map<String, Map<String, Object>> configCache = new HashMap<>();
     private final List<ListenerEntry> listeners = Collections.synchronizedList(new ArrayList<>());
+    private final ConfigManagement management;
 
     /**
      * Creates a new ConfigClient. Use {@link com.smplkit.SmplClient} to obtain an instance.
      */
     public ConfigClient(ConfigsApi configsApi, java.net.http.HttpClient httpClient, String apiKey) {
         this.configsApi = configsApi;
+        this.management = new ConfigManagement(this);
+    }
+
+    // -----------------------------------------------------------------------
+    // Management accessor
+    // -----------------------------------------------------------------------
+
+    /**
+     * Returns the management-plane API for config CRUD operations.
+     *
+     * @return the {@link ConfigManagement} instance
+     */
+    public ConfigManagement management() {
+        return management;
     }
 
     // -----------------------------------------------------------------------
@@ -70,92 +83,6 @@ public final class ConfigClient {
     /** Sets the metrics reporter. Package-private. */
     public void setMetrics(com.smplkit.MetricsReporter metrics) {
         this.metrics = metrics;
-    }
-
-    // -----------------------------------------------------------------------
-    // Management: factory methods
-    // -----------------------------------------------------------------------
-
-    /**
-     * Returns a new unsaved {@link Config}. Call {@link Config#save()} to persist.
-     *
-     * @param id the config id (slug)
-     * @return a new unsaved Config
-     */
-    public Config new_(String id) {
-        return new_(id, null, null, null);
-    }
-
-    /**
-     * Returns a new unsaved {@link Config}. Call {@link Config#save()} to persist.
-     *
-     * @param id          the config id (slug)
-     * @param name        display name (auto-generated from id if null)
-     * @param description optional description
-     * @param parent      parent config identifier, or null
-     * @return a new unsaved Config
-     */
-    public Config new_(String id, String name, String description, String parent) {
-        Config config = new Config(this, id, name != null ? name : Helpers.keyToDisplayName(id));
-        config.setDescription(description);
-        config.setParent(parent);
-        return config;
-    }
-
-    // -----------------------------------------------------------------------
-    // Management: CRUD
-    // -----------------------------------------------------------------------
-
-    /**
-     * Fetches a config by its id (slug).
-     *
-     * @param id the config id
-     * @return the matching Config
-     * @throws SmplNotFoundException if no matching config exists
-     */
-    public Config get(String id) {
-        try {
-            ConfigResponse response = configsApi.getConfig(id);
-            return parseResource(response.getData());
-        } catch (ApiException e) {
-            throw mapException(e);
-        }
-    }
-
-    /**
-     * Lists all configs for the account.
-     *
-     * @return an unmodifiable list of configs
-     */
-    public List<Config> list() {
-        try {
-            ConfigListResponse response = configsApi.listConfigs(null);
-            List<ConfigResource> data = response.getData();
-            if (data == null) {
-                return Collections.emptyList();
-            }
-            List<Config> result = new ArrayList<>(data.size());
-            for (ConfigResource resource : data) {
-                result.add(parseResource(resource));
-            }
-            return Collections.unmodifiableList(result);
-        } catch (ApiException e) {
-            throw mapException(e);
-        }
-    }
-
-    /**
-     * Deletes a config by id.
-     *
-     * @param id the config id
-     * @throws SmplNotFoundException if the config does not exist
-     */
-    public void delete(String id) {
-        try {
-            configsApi.deleteConfig(id);
-        } catch (ApiException e) {
-            throw mapException(e);
-        }
     }
 
     // -----------------------------------------------------------------------
@@ -225,7 +152,7 @@ public final class ConfigClient {
     }
 
     // -----------------------------------------------------------------------
-    // Runtime: resolve / subscribe
+    // Runtime: get / subscribe
     // -----------------------------------------------------------------------
 
     /**
@@ -234,7 +161,7 @@ public final class ConfigClient {
      * @param id the config id
      * @return resolved values map, or an empty map if not found
      */
-    public Map<String, Object> resolve(String id) {
+    public Map<String, Object> get(String id) {
         _connectInternal();
         if (metrics != null) {
             metrics.record("config.resolutions", "resolutions", Map.of("config", id));
@@ -253,7 +180,7 @@ public final class ConfigClient {
      * @param <T>   the model type
      * @return an instance of the model type
      */
-    public <T> T resolve(String id, Class<T> model) {
+    public <T> T get(String id, Class<T> model) {
         _connectInternal();
         if (metrics != null) {
             metrics.record("config.resolutions", "resolutions", Map.of("config", id));
@@ -355,7 +282,7 @@ public final class ConfigClient {
     // -----------------------------------------------------------------------
 
     private Map<String, Map<String, Object>> buildCache(String env) {
-        List<Config> allConfigs = list();
+        List<Config> allConfigs = management.list();
         Map<String, Config> configById = new HashMap<>();
         for (Config cfg : allConfigs) {
             if (cfg.getId() != null) {
@@ -583,7 +510,7 @@ public final class ConfigClient {
         return result;
     }
 
-    private static SmplException mapException(ApiException e) {
+    static SmplException mapException(ApiException e) {
         return ApiExceptionHandler.mapApiException(e.getCode(), e.getResponseBody());
     }
 
