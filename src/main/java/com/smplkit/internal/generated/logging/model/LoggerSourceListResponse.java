@@ -24,29 +24,39 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonTypeName;
 import com.fasterxml.jackson.annotation.JsonValue;
-import com.smplkit.internal.generated.logging.model.ResourceLogger;
+import com.smplkit.internal.generated.logging.model.LoggerSourceResource;
+import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.List;
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 
 
 import com.smplkit.internal.generated.logging.ApiClient;
 /**
- * ResponseLogger
+ * LoggerSourceListResponse
  */
 @JsonPropertyOrder({
-  ResponseLogger.JSON_PROPERTY_DATA
+  LoggerSourceListResponse.JSON_PROPERTY_DATA
 })
 @jakarta.annotation.Generated(value = "org.openapitools.codegen.languages.JavaClientCodegen", comments = "Generator version: 7.21.0")
-public class ResponseLogger {
+public class LoggerSourceListResponse {
   public static final String JSON_PROPERTY_DATA = "data";
   @jakarta.annotation.Nonnull
-  private ResourceLogger data;
+  private List<LoggerSourceResource> data = new ArrayList<>();
 
-  public ResponseLogger() { 
+  public LoggerSourceListResponse() { 
   }
 
-  public ResponseLogger data(@jakarta.annotation.Nonnull ResourceLogger data) {
+  public LoggerSourceListResponse data(@jakarta.annotation.Nonnull List<LoggerSourceResource> data) {
     this.data = data;
+    return this;
+  }
+
+  public LoggerSourceListResponse addDataItem(LoggerSourceResource dataItem) {
+    if (this.data == null) {
+      this.data = new ArrayList<>();
+    }
+    this.data.add(dataItem);
     return this;
   }
 
@@ -57,20 +67,20 @@ public class ResponseLogger {
   @jakarta.annotation.Nonnull
   @JsonProperty(value = JSON_PROPERTY_DATA, required = true)
   @JsonInclude(value = JsonInclude.Include.ALWAYS)
-  public ResourceLogger getData() {
+  public List<LoggerSourceResource> getData() {
     return data;
   }
 
 
   @JsonProperty(value = JSON_PROPERTY_DATA, required = true)
   @JsonInclude(value = JsonInclude.Include.ALWAYS)
-  public void setData(@jakarta.annotation.Nonnull ResourceLogger data) {
+  public void setData(@jakarta.annotation.Nonnull List<LoggerSourceResource> data) {
     this.data = data;
   }
 
 
   /**
-   * Return true if this Response_Logger_ object is equal to o.
+   * Return true if this LoggerSourceListResponse object is equal to o.
    */
   @Override
   public boolean equals(Object o) {
@@ -80,8 +90,8 @@ public class ResponseLogger {
     if (o == null || getClass() != o.getClass()) {
       return false;
     }
-    ResponseLogger responseLogger = (ResponseLogger) o;
-    return Objects.equals(this.data, responseLogger.data);
+    LoggerSourceListResponse loggerSourceListResponse = (LoggerSourceListResponse) o;
+    return Objects.equals(this.data, loggerSourceListResponse.data);
   }
 
   @Override
@@ -92,7 +102,7 @@ public class ResponseLogger {
   @Override
   public String toString() {
     StringBuilder sb = new StringBuilder();
-    sb.append("class ResponseLogger {\n");
+    sb.append("class LoggerSourceListResponse {\n");
     sb.append("    data: ").append(toIndentedString(data)).append("\n");
     sb.append("}");
     return sb.toString();
@@ -140,7 +150,12 @@ public class ResponseLogger {
 
     // add `data` to the URL query string
     if (getData() != null) {
-      joiner.add(getData().toUrlQueryString(prefix + "data" + suffix));
+      for (int i = 0; i < getData().size(); i++) {
+        if (getData().get(i) != null) {
+          joiner.add(getData().get(i).toUrlQueryString(String.format(java.util.Locale.ROOT, "%sdata%s%s", prefix, suffix,
+          "".equals(suffix) ? "" : String.format(java.util.Locale.ROOT, "%s%d%s", containerPrefix, i, containerSuffix))));
+        }
+      }
     }
 
     return joiner.toString();
