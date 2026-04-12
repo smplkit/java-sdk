@@ -42,6 +42,7 @@ import com.smplkit.internal.generated.app.ApiClient;
   SubscriptionAttributes.JSON_PROPERTY_STATUS,
   SubscriptionAttributes.JSON_PROPERTY_COMPED,
   SubscriptionAttributes.JSON_PROPERTY_STRIPE_MANAGED,
+  SubscriptionAttributes.JSON_PROPERTY_BUNDLE,
   SubscriptionAttributes.JSON_PROPERTY_CURRENT_PERIOD_END,
   SubscriptionAttributes.JSON_PROPERTY_CLIENT_SECRET
 })
@@ -65,6 +66,9 @@ public class SubscriptionAttributes {
   public static final String JSON_PROPERTY_STRIPE_MANAGED = "stripe_managed";
   @jakarta.annotation.Nonnull
   private Boolean stripeManaged;
+
+  public static final String JSON_PROPERTY_BUNDLE = "bundle";
+  private JsonNullable<String> bundle = JsonNullable.<String>undefined();
 
   public static final String JSON_PROPERTY_CURRENT_PERIOD_END = "current_period_end";
   private JsonNullable<String> currentPeriodEnd = JsonNullable.<String>undefined();
@@ -203,6 +207,38 @@ public class SubscriptionAttributes {
   }
 
 
+  public SubscriptionAttributes bundle(@jakarta.annotation.Nullable String bundle) {
+    this.bundle = JsonNullable.<String>of(bundle);
+    return this;
+  }
+
+  /**
+   * Get bundle
+   * @return bundle
+   */
+  @jakarta.annotation.Nullable
+  @JsonIgnore
+  public String getBundle() {
+        return bundle.orElse(null);
+  }
+
+  @JsonProperty(value = JSON_PROPERTY_BUNDLE, required = false)
+  @JsonInclude(value = JsonInclude.Include.USE_DEFAULTS)
+
+  public JsonNullable<String> getBundle_JsonNullable() {
+    return bundle;
+  }
+  
+  @JsonProperty(JSON_PROPERTY_BUNDLE)
+  public void setBundle_JsonNullable(JsonNullable<String> bundle) {
+    this.bundle = bundle;
+  }
+
+  public void setBundle(@jakarta.annotation.Nullable String bundle) {
+    this.bundle = JsonNullable.<String>of(bundle);
+  }
+
+
   public SubscriptionAttributes currentPeriodEnd(@jakarta.annotation.Nullable String currentPeriodEnd) {
     this.currentPeriodEnd = JsonNullable.<String>of(currentPeriodEnd);
     return this;
@@ -284,6 +320,7 @@ public class SubscriptionAttributes {
         equalsNullable(this.status, subscriptionAttributes.status) &&
         Objects.equals(this.comped, subscriptionAttributes.comped) &&
         Objects.equals(this.stripeManaged, subscriptionAttributes.stripeManaged) &&
+        equalsNullable(this.bundle, subscriptionAttributes.bundle) &&
         equalsNullable(this.currentPeriodEnd, subscriptionAttributes.currentPeriodEnd) &&
         equalsNullable(this.clientSecret, subscriptionAttributes.clientSecret);
   }
@@ -294,7 +331,7 @@ public class SubscriptionAttributes {
 
   @Override
   public int hashCode() {
-    return Objects.hash(product, plan, hashCodeNullable(status), comped, stripeManaged, hashCodeNullable(currentPeriodEnd), hashCodeNullable(clientSecret));
+    return Objects.hash(product, plan, hashCodeNullable(status), comped, stripeManaged, hashCodeNullable(bundle), hashCodeNullable(currentPeriodEnd), hashCodeNullable(clientSecret));
   }
 
   private static <T> int hashCodeNullable(JsonNullable<T> a) {
@@ -313,6 +350,7 @@ public class SubscriptionAttributes {
     sb.append("    status: ").append(toIndentedString(status)).append("\n");
     sb.append("    comped: ").append(toIndentedString(comped)).append("\n");
     sb.append("    stripeManaged: ").append(toIndentedString(stripeManaged)).append("\n");
+    sb.append("    bundle: ").append(toIndentedString(bundle)).append("\n");
     sb.append("    currentPeriodEnd: ").append(toIndentedString(currentPeriodEnd)).append("\n");
     sb.append("    clientSecret: ").append(toIndentedString(clientSecret)).append("\n");
     sb.append("}");
@@ -382,6 +420,11 @@ public class SubscriptionAttributes {
     // add `stripe_managed` to the URL query string
     if (getStripeManaged() != null) {
       joiner.add(String.format(java.util.Locale.ROOT, "%sstripe_managed%s=%s", prefix, suffix, ApiClient.urlEncode(ApiClient.valueToString(getStripeManaged()))));
+    }
+
+    // add `bundle` to the URL query string
+    if (getBundle() != null) {
+      joiner.add(String.format(java.util.Locale.ROOT, "%sbundle%s=%s", prefix, suffix, ApiClient.urlEncode(ApiClient.valueToString(getBundle()))));
     }
 
     // add `current_period_end` to the URL query string
