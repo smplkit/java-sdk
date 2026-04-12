@@ -133,6 +133,7 @@ class ApiKeyResolverTest {
                 .apiKey("sk_api_test")
                 .environment("test")
                 .service("test-service")
+                .disableTelemetry(true)
                 .build()) {
             assertNotNull(client);
         }

@@ -21,6 +21,7 @@ class SmplClientTest {
                 .apiKey("test-key")
                 .environment("test")
                 .service("test-service")
+                .disableTelemetry(true)
                 .build()) {
             assertNotNull(client);
             assertNotNull(client.config());
@@ -36,6 +37,7 @@ class SmplClientTest {
                 .environment("staging")
                 .service("test-service")
                 .timeout(Duration.ofSeconds(60))
+                .disableTelemetry(true)
                 .build()) {
             assertNotNull(client);
             assertNotNull(client.config());
@@ -48,6 +50,7 @@ class SmplClientTest {
                 .apiKey("test-key")
                 .environment("production")
                 .service("my-service")
+                .disableTelemetry(true)
                 .build()) {
             assertNotNull(client);
             assertEquals("production", client.environment());
@@ -61,6 +64,7 @@ class SmplClientTest {
                 .apiKey("test-key")
                 .environment("test")
                 .service("test-service")
+                .disableTelemetry(true)
                 .build()) {
             ConfigClient config = client.config();
             assertNotNull(config);
@@ -74,6 +78,7 @@ class SmplClientTest {
                 .apiKey("test-key")
                 .environment("test")
                 .service("test-service")
+                .disableTelemetry(true)
                 .build()) {
             FlagsClient flags = client.flags();
             assertNotNull(flags);
@@ -87,6 +92,7 @@ class SmplClientTest {
                 .apiKey("test-key")
                 .environment("test")
                 .service("test-service")
+                .disableTelemetry(true)
                 .build()) {
             LoggingClient logging = client.logging();
             assertNotNull(logging);
@@ -212,6 +218,7 @@ class SmplClientTest {
                 .apiKey("test-key")
                 .environment("test")
                 .service("test-service")
+                .disableTelemetry(true)
                 .build();
         assertDoesNotThrow(client::close);
         // Should be safe to close twice

@@ -22,6 +22,7 @@ class SmplClientFullTest {
                 .environment("test")
                 .service("test-service")
                 .timeout(Duration.ofMillis(500))
+                .disableTelemetry(true)
                 .build()) {
 
             // This will attempt a real HTTP call which exercises the interceptor
