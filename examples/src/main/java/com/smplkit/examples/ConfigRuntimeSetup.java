@@ -129,11 +129,19 @@ public class ConfigRuntimeSetup {
     public static void teardownDemoConfigs(SmplClient client, DemoConfigs demo) throws Exception {
         section("Teardown: Cleaning Up Demo Configs");
 
-        client.config().management().delete(demo.authModuleId());
-        step("Deleted auth_module");
+        try {
+            client.config().management().delete(demo.authModuleId());
+            step("Deleted auth_module");
+        } catch (SmplNotFoundException e) {
+            step("auth_module already gone, skipping delete");
+        }
 
-        client.config().management().delete(demo.userServiceId());
-        step("Deleted user_service");
+        try {
+            client.config().management().delete(demo.userServiceId());
+            step("Deleted user_service");
+        } catch (SmplNotFoundException e) {
+            step("user_service already gone, skipping delete");
+        }
 
         Config latestCommon = client.config().management().get("common");
         latestCommon.setDescription("");
