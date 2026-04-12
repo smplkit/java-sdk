@@ -26,8 +26,6 @@ import com.fasterxml.jackson.annotation.JsonTypeName;
 import com.fasterxml.jackson.annotation.JsonValue;
 import java.time.OffsetDateTime;
 import java.util.Arrays;
-import java.util.HashMap;
-import java.util.Map;
 import org.openapitools.jackson.nullable.JsonNullable;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import org.openapitools.jackson.nullable.JsonNullable;
@@ -37,34 +35,40 @@ import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 
 import com.smplkit.internal.generated.logging.ApiClient;
 /**
- * Logger
+ * LoggerSource
  */
 @JsonPropertyOrder({
-  Logger.JSON_PROPERTY_NAME,
-  Logger.JSON_PROPERTY_LEVEL,
-  Logger.JSON_PROPERTY_GROUP,
-  Logger.JSON_PROPERTY_MANAGED,
-  Logger.JSON_PROPERTY_ENVIRONMENTS,
-  Logger.JSON_PROPERTY_CREATED_AT,
-  Logger.JSON_PROPERTY_UPDATED_AT
+  LoggerSource.JSON_PROPERTY_SERVICE,
+  LoggerSource.JSON_PROPERTY_ENVIRONMENT,
+  LoggerSource.JSON_PROPERTY_LEVEL,
+  LoggerSource.JSON_PROPERTY_RESOLVED_LEVEL,
+  LoggerSource.JSON_PROPERTY_FIRST_OBSERVED,
+  LoggerSource.JSON_PROPERTY_LAST_SEEN,
+  LoggerSource.JSON_PROPERTY_CREATED_AT,
+  LoggerSource.JSON_PROPERTY_UPDATED_AT
 })
 @jakarta.annotation.Generated(value = "org.openapitools.codegen.languages.JavaClientCodegen", comments = "Generator version: 7.21.0")
-public class Logger {
-  public static final String JSON_PROPERTY_NAME = "name";
-  @jakarta.annotation.Nonnull
-  private String name;
+public class LoggerSource {
+  public static final String JSON_PROPERTY_SERVICE = "service";
+  @jakarta.annotation.Nullable
+  private String service;
+
+  public static final String JSON_PROPERTY_ENVIRONMENT = "environment";
+  @jakarta.annotation.Nullable
+  private String environment;
 
   public static final String JSON_PROPERTY_LEVEL = "level";
   private JsonNullable<String> level = JsonNullable.<String>undefined();
 
-  public static final String JSON_PROPERTY_GROUP = "group";
-  private JsonNullable<String> group = JsonNullable.<String>undefined();
+  public static final String JSON_PROPERTY_RESOLVED_LEVEL = "resolved_level";
+  @jakarta.annotation.Nullable
+  private String resolvedLevel;
 
-  public static final String JSON_PROPERTY_MANAGED = "managed";
-  private JsonNullable<Boolean> managed = JsonNullable.<Boolean>undefined();
+  public static final String JSON_PROPERTY_FIRST_OBSERVED = "first_observed";
+  private JsonNullable<OffsetDateTime> firstObserved = JsonNullable.<OffsetDateTime>undefined();
 
-  public static final String JSON_PROPERTY_ENVIRONMENTS = "environments";
-  private JsonNullable<Map<String, Object>> environments = JsonNullable.<Map<String, Object>>undefined();
+  public static final String JSON_PROPERTY_LAST_SEEN = "last_seen";
+  private JsonNullable<OffsetDateTime> lastSeen = JsonNullable.<OffsetDateTime>undefined();
 
   public static final String JSON_PROPERTY_CREATED_AT = "created_at";
   private JsonNullable<OffsetDateTime> createdAt = JsonNullable.<OffsetDateTime>undefined();
@@ -72,47 +76,58 @@ public class Logger {
   public static final String JSON_PROPERTY_UPDATED_AT = "updated_at";
   private JsonNullable<OffsetDateTime> updatedAt = JsonNullable.<OffsetDateTime>undefined();
 
-  public Logger() { 
+  public LoggerSource() { 
   }
 
   @JsonCreator
-  public Logger(
+  public LoggerSource(
+    @JsonProperty(JSON_PROPERTY_SERVICE) String service, 
+    @JsonProperty(JSON_PROPERTY_ENVIRONMENT) String environment, 
+    @JsonProperty(JSON_PROPERTY_LEVEL) String level, 
+    @JsonProperty(JSON_PROPERTY_RESOLVED_LEVEL) String resolvedLevel, 
+    @JsonProperty(JSON_PROPERTY_FIRST_OBSERVED) OffsetDateTime firstObserved, 
+    @JsonProperty(JSON_PROPERTY_LAST_SEEN) OffsetDateTime lastSeen, 
     @JsonProperty(JSON_PROPERTY_CREATED_AT) OffsetDateTime createdAt, 
     @JsonProperty(JSON_PROPERTY_UPDATED_AT) OffsetDateTime updatedAt
   ) {
   this();
+    this.service = service;
+    this.environment = environment;
+    this.level = level == null ? JsonNullable.<String>undefined() : JsonNullable.of(level);
+    this.resolvedLevel = resolvedLevel;
+    this.firstObserved = firstObserved == null ? JsonNullable.<OffsetDateTime>undefined() : JsonNullable.of(firstObserved);
+    this.lastSeen = lastSeen == null ? JsonNullable.<OffsetDateTime>undefined() : JsonNullable.of(lastSeen);
     this.createdAt = createdAt == null ? JsonNullable.<OffsetDateTime>undefined() : JsonNullable.of(createdAt);
     this.updatedAt = updatedAt == null ? JsonNullable.<OffsetDateTime>undefined() : JsonNullable.of(updatedAt);
   }
 
-  public Logger name(@jakarta.annotation.Nonnull String name) {
-    this.name = name;
-    return this;
+  /**
+   * Get service
+   * @return service
+   */
+  @jakarta.annotation.Nullable
+  @JsonProperty(value = JSON_PROPERTY_SERVICE, required = false)
+  @JsonInclude(value = JsonInclude.Include.USE_DEFAULTS)
+  public String getService() {
+    return service;
   }
+
+
+
 
   /**
-   * Get name
-   * @return name
+   * Get environment
+   * @return environment
    */
-  @jakarta.annotation.Nonnull
-  @JsonProperty(value = JSON_PROPERTY_NAME, required = true)
-  @JsonInclude(value = JsonInclude.Include.ALWAYS)
-  public String getName() {
-    return name;
+  @jakarta.annotation.Nullable
+  @JsonProperty(value = JSON_PROPERTY_ENVIRONMENT, required = false)
+  @JsonInclude(value = JsonInclude.Include.USE_DEFAULTS)
+  public String getEnvironment() {
+    return environment;
   }
 
 
-  @JsonProperty(value = JSON_PROPERTY_NAME, required = true)
-  @JsonInclude(value = JsonInclude.Include.ALWAYS)
-  public void setName(@jakarta.annotation.Nonnull String name) {
-    this.name = name;
-  }
 
-
-  public Logger level(@jakarta.annotation.Nullable String level) {
-    this.level = JsonNullable.<String>of(level);
-    return this;
-  }
 
   /**
    * Get level
@@ -121,7 +136,11 @@ public class Logger {
   @jakarta.annotation.Nullable
   @JsonIgnore
   public String getLevel() {
-        return level.orElse(null);
+    
+    if (level == null) {
+      level = JsonNullable.<String>undefined();
+    }
+    return level.orElse(null);
   }
 
   @JsonProperty(value = JSON_PROPERTY_LEVEL, required = false)
@@ -132,121 +151,80 @@ public class Logger {
   }
   
   @JsonProperty(JSON_PROPERTY_LEVEL)
-  public void setLevel_JsonNullable(JsonNullable<String> level) {
+  private void setLevel_JsonNullable(JsonNullable<String> level) {
     this.level = level;
   }
 
-  public void setLevel(@jakarta.annotation.Nullable String level) {
-    this.level = JsonNullable.<String>of(level);
-  }
 
-
-  public Logger group(@jakarta.annotation.Nullable String group) {
-    this.group = JsonNullable.<String>of(group);
-    return this;
-  }
 
   /**
-   * Get group
-   * @return group
+   * Get resolvedLevel
+   * @return resolvedLevel
+   */
+  @jakarta.annotation.Nullable
+  @JsonProperty(value = JSON_PROPERTY_RESOLVED_LEVEL, required = false)
+  @JsonInclude(value = JsonInclude.Include.USE_DEFAULTS)
+  public String getResolvedLevel() {
+    return resolvedLevel;
+  }
+
+
+
+
+  /**
+   * Get firstObserved
+   * @return firstObserved
    */
   @jakarta.annotation.Nullable
   @JsonIgnore
-  public String getGroup() {
-        return group.orElse(null);
+  public OffsetDateTime getFirstObserved() {
+    
+    if (firstObserved == null) {
+      firstObserved = JsonNullable.<OffsetDateTime>undefined();
+    }
+    return firstObserved.orElse(null);
   }
 
-  @JsonProperty(value = JSON_PROPERTY_GROUP, required = false)
+  @JsonProperty(value = JSON_PROPERTY_FIRST_OBSERVED, required = false)
   @JsonInclude(value = JsonInclude.Include.USE_DEFAULTS)
 
-  public JsonNullable<String> getGroup_JsonNullable() {
-    return group;
+  public JsonNullable<OffsetDateTime> getFirstObserved_JsonNullable() {
+    return firstObserved;
   }
   
-  @JsonProperty(JSON_PROPERTY_GROUP)
-  public void setGroup_JsonNullable(JsonNullable<String> group) {
-    this.group = group;
-  }
-
-  public void setGroup(@jakarta.annotation.Nullable String group) {
-    this.group = JsonNullable.<String>of(group);
+  @JsonProperty(JSON_PROPERTY_FIRST_OBSERVED)
+  private void setFirstObserved_JsonNullable(JsonNullable<OffsetDateTime> firstObserved) {
+    this.firstObserved = firstObserved;
   }
 
 
-  public Logger managed(@jakarta.annotation.Nullable Boolean managed) {
-    this.managed = JsonNullable.<Boolean>of(managed);
-    return this;
-  }
 
   /**
-   * Get managed
-   * @return managed
+   * Get lastSeen
+   * @return lastSeen
    */
   @jakarta.annotation.Nullable
   @JsonIgnore
-  public Boolean getManaged() {
-        return managed.orElse(null);
+  public OffsetDateTime getLastSeen() {
+    
+    if (lastSeen == null) {
+      lastSeen = JsonNullable.<OffsetDateTime>undefined();
+    }
+    return lastSeen.orElse(null);
   }
 
-  @JsonProperty(value = JSON_PROPERTY_MANAGED, required = false)
+  @JsonProperty(value = JSON_PROPERTY_LAST_SEEN, required = false)
   @JsonInclude(value = JsonInclude.Include.USE_DEFAULTS)
 
-  public JsonNullable<Boolean> getManaged_JsonNullable() {
-    return managed;
+  public JsonNullable<OffsetDateTime> getLastSeen_JsonNullable() {
+    return lastSeen;
   }
   
-  @JsonProperty(JSON_PROPERTY_MANAGED)
-  public void setManaged_JsonNullable(JsonNullable<Boolean> managed) {
-    this.managed = managed;
+  @JsonProperty(JSON_PROPERTY_LAST_SEEN)
+  private void setLastSeen_JsonNullable(JsonNullable<OffsetDateTime> lastSeen) {
+    this.lastSeen = lastSeen;
   }
 
-  public void setManaged(@jakarta.annotation.Nullable Boolean managed) {
-    this.managed = JsonNullable.<Boolean>of(managed);
-  }
-
-
-  public Logger environments(@jakarta.annotation.Nullable Map<String, Object> environments) {
-    this.environments = JsonNullable.<Map<String, Object>>of(environments);
-    return this;
-  }
-
-  public Logger putEnvironmentsItem(String key, Object environmentsItem) {
-    if (this.environments == null || !this.environments.isPresent()) {
-      this.environments = JsonNullable.<Map<String, Object>>of(new HashMap<>());
-    }
-    try {
-      this.environments.get().put(key, environmentsItem);
-    } catch (java.util.NoSuchElementException e) {
-      // this can never happen, as we make sure above that the value is present
-    }
-    return this;
-  }
-
-  /**
-   * Get environments
-   * @return environments
-   */
-  @jakarta.annotation.Nullable
-  @JsonIgnore
-  public Map<String, Object> getEnvironments() {
-        return environments.orElse(null);
-  }
-
-  @JsonProperty(value = JSON_PROPERTY_ENVIRONMENTS, required = false)
-  @JsonInclude(content = JsonInclude.Include.ALWAYS, value = JsonInclude.Include.USE_DEFAULTS)
-
-  public JsonNullable<Map<String, Object>> getEnvironments_JsonNullable() {
-    return environments;
-  }
-  
-  @JsonProperty(JSON_PROPERTY_ENVIRONMENTS)
-  public void setEnvironments_JsonNullable(JsonNullable<Map<String, Object>> environments) {
-    this.environments = environments;
-  }
-
-  public void setEnvironments(@jakarta.annotation.Nullable Map<String, Object> environments) {
-    this.environments = JsonNullable.<Map<String, Object>>of(environments);
-  }
 
 
   /**
@@ -306,7 +284,7 @@ public class Logger {
 
 
   /**
-   * Return true if this Logger object is equal to o.
+   * Return true if this LoggerSource object is equal to o.
    */
   @Override
   public boolean equals(Object o) {
@@ -316,14 +294,15 @@ public class Logger {
     if (o == null || getClass() != o.getClass()) {
       return false;
     }
-    Logger logger = (Logger) o;
-    return Objects.equals(this.name, logger.name) &&
-        equalsNullable(this.level, logger.level) &&
-        equalsNullable(this.group, logger.group) &&
-        equalsNullable(this.managed, logger.managed) &&
-        equalsNullable(this.environments, logger.environments) &&
-        equalsNullable(this.createdAt, logger.createdAt) &&
-        equalsNullable(this.updatedAt, logger.updatedAt);
+    LoggerSource loggerSource = (LoggerSource) o;
+    return Objects.equals(this.service, loggerSource.service) &&
+        Objects.equals(this.environment, loggerSource.environment) &&
+        equalsNullable(this.level, loggerSource.level) &&
+        Objects.equals(this.resolvedLevel, loggerSource.resolvedLevel) &&
+        equalsNullable(this.firstObserved, loggerSource.firstObserved) &&
+        equalsNullable(this.lastSeen, loggerSource.lastSeen) &&
+        equalsNullable(this.createdAt, loggerSource.createdAt) &&
+        equalsNullable(this.updatedAt, loggerSource.updatedAt);
   }
 
   private static <T> boolean equalsNullable(JsonNullable<T> a, JsonNullable<T> b) {
@@ -332,7 +311,7 @@ public class Logger {
 
   @Override
   public int hashCode() {
-    return Objects.hash(name, hashCodeNullable(level), hashCodeNullable(group), hashCodeNullable(managed), hashCodeNullable(environments), hashCodeNullable(createdAt), hashCodeNullable(updatedAt));
+    return Objects.hash(service, environment, hashCodeNullable(level), resolvedLevel, hashCodeNullable(firstObserved), hashCodeNullable(lastSeen), hashCodeNullable(createdAt), hashCodeNullable(updatedAt));
   }
 
   private static <T> int hashCodeNullable(JsonNullable<T> a) {
@@ -345,12 +324,13 @@ public class Logger {
   @Override
   public String toString() {
     StringBuilder sb = new StringBuilder();
-    sb.append("class Logger {\n");
-    sb.append("    name: ").append(toIndentedString(name)).append("\n");
+    sb.append("class LoggerSource {\n");
+    sb.append("    service: ").append(toIndentedString(service)).append("\n");
+    sb.append("    environment: ").append(toIndentedString(environment)).append("\n");
     sb.append("    level: ").append(toIndentedString(level)).append("\n");
-    sb.append("    group: ").append(toIndentedString(group)).append("\n");
-    sb.append("    managed: ").append(toIndentedString(managed)).append("\n");
-    sb.append("    environments: ").append(toIndentedString(environments)).append("\n");
+    sb.append("    resolvedLevel: ").append(toIndentedString(resolvedLevel)).append("\n");
+    sb.append("    firstObserved: ").append(toIndentedString(firstObserved)).append("\n");
+    sb.append("    lastSeen: ").append(toIndentedString(lastSeen)).append("\n");
     sb.append("    createdAt: ").append(toIndentedString(createdAt)).append("\n");
     sb.append("    updatedAt: ").append(toIndentedString(updatedAt)).append("\n");
     sb.append("}");
@@ -397,9 +377,14 @@ public class Logger {
 
     StringJoiner joiner = new StringJoiner("&");
 
-    // add `name` to the URL query string
-    if (getName() != null) {
-      joiner.add(String.format(java.util.Locale.ROOT, "%sname%s=%s", prefix, suffix, ApiClient.urlEncode(ApiClient.valueToString(getName()))));
+    // add `service` to the URL query string
+    if (getService() != null) {
+      joiner.add(String.format(java.util.Locale.ROOT, "%sservice%s=%s", prefix, suffix, ApiClient.urlEncode(ApiClient.valueToString(getService()))));
+    }
+
+    // add `environment` to the URL query string
+    if (getEnvironment() != null) {
+      joiner.add(String.format(java.util.Locale.ROOT, "%senvironment%s=%s", prefix, suffix, ApiClient.urlEncode(ApiClient.valueToString(getEnvironment()))));
     }
 
     // add `level` to the URL query string
@@ -407,23 +392,19 @@ public class Logger {
       joiner.add(String.format(java.util.Locale.ROOT, "%slevel%s=%s", prefix, suffix, ApiClient.urlEncode(ApiClient.valueToString(getLevel()))));
     }
 
-    // add `group` to the URL query string
-    if (getGroup() != null) {
-      joiner.add(String.format(java.util.Locale.ROOT, "%sgroup%s=%s", prefix, suffix, ApiClient.urlEncode(ApiClient.valueToString(getGroup()))));
+    // add `resolved_level` to the URL query string
+    if (getResolvedLevel() != null) {
+      joiner.add(String.format(java.util.Locale.ROOT, "%sresolved_level%s=%s", prefix, suffix, ApiClient.urlEncode(ApiClient.valueToString(getResolvedLevel()))));
     }
 
-    // add `managed` to the URL query string
-    if (getManaged() != null) {
-      joiner.add(String.format(java.util.Locale.ROOT, "%smanaged%s=%s", prefix, suffix, ApiClient.urlEncode(ApiClient.valueToString(getManaged()))));
+    // add `first_observed` to the URL query string
+    if (getFirstObserved() != null) {
+      joiner.add(String.format(java.util.Locale.ROOT, "%sfirst_observed%s=%s", prefix, suffix, ApiClient.urlEncode(ApiClient.valueToString(getFirstObserved()))));
     }
 
-    // add `environments` to the URL query string
-    if (getEnvironments() != null) {
-      for (String _key : getEnvironments().keySet()) {
-        joiner.add(String.format(java.util.Locale.ROOT, "%senvironments%s%s=%s", prefix, suffix,
-            "".equals(suffix) ? "" : String.format(java.util.Locale.ROOT, "%s%d%s", containerPrefix, _key, containerSuffix),
-            getEnvironments().get(_key), ApiClient.urlEncode(ApiClient.valueToString(getEnvironments().get(_key)))));
-      }
+    // add `last_seen` to the URL query string
+    if (getLastSeen() != null) {
+      joiner.add(String.format(java.util.Locale.ROOT, "%slast_seen%s=%s", prefix, suffix, ApiClient.urlEncode(ApiClient.valueToString(getLastSeen()))));
     }
 
     // add `created_at` to the URL query string

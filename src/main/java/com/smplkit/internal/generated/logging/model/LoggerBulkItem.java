@@ -39,7 +39,8 @@ import com.smplkit.internal.generated.logging.ApiClient;
 @JsonPropertyOrder({
   LoggerBulkItem.JSON_PROPERTY_ID,
   LoggerBulkItem.JSON_PROPERTY_LEVEL,
-  LoggerBulkItem.JSON_PROPERTY_SERVICE
+  LoggerBulkItem.JSON_PROPERTY_SERVICE,
+  LoggerBulkItem.JSON_PROPERTY_ENVIRONMENT
 })
 @jakarta.annotation.Generated(value = "org.openapitools.codegen.languages.JavaClientCodegen", comments = "Generator version: 7.21.0")
 public class LoggerBulkItem {
@@ -53,6 +54,9 @@ public class LoggerBulkItem {
 
   public static final String JSON_PROPERTY_SERVICE = "service";
   private JsonNullable<String> service = JsonNullable.<String>undefined();
+
+  public static final String JSON_PROPERTY_ENVIRONMENT = "environment";
+  private JsonNullable<String> environment = JsonNullable.<String>undefined();
 
   public LoggerBulkItem() { 
   }
@@ -137,6 +141,38 @@ public class LoggerBulkItem {
   }
 
 
+  public LoggerBulkItem environment(@jakarta.annotation.Nullable String environment) {
+    this.environment = JsonNullable.<String>of(environment);
+    return this;
+  }
+
+  /**
+   * Environment where this logger was observed
+   * @return environment
+   */
+  @jakarta.annotation.Nullable
+  @JsonIgnore
+  public String getEnvironment() {
+        return environment.orElse(null);
+  }
+
+  @JsonProperty(value = JSON_PROPERTY_ENVIRONMENT, required = false)
+  @JsonInclude(value = JsonInclude.Include.USE_DEFAULTS)
+
+  public JsonNullable<String> getEnvironment_JsonNullable() {
+    return environment;
+  }
+  
+  @JsonProperty(JSON_PROPERTY_ENVIRONMENT)
+  public void setEnvironment_JsonNullable(JsonNullable<String> environment) {
+    this.environment = environment;
+  }
+
+  public void setEnvironment(@jakarta.annotation.Nullable String environment) {
+    this.environment = JsonNullable.<String>of(environment);
+  }
+
+
   /**
    * Return true if this LoggerBulkItem object is equal to o.
    */
@@ -151,7 +187,8 @@ public class LoggerBulkItem {
     LoggerBulkItem loggerBulkItem = (LoggerBulkItem) o;
     return Objects.equals(this.id, loggerBulkItem.id) &&
         Objects.equals(this.level, loggerBulkItem.level) &&
-        equalsNullable(this.service, loggerBulkItem.service);
+        equalsNullable(this.service, loggerBulkItem.service) &&
+        equalsNullable(this.environment, loggerBulkItem.environment);
   }
 
   private static <T> boolean equalsNullable(JsonNullable<T> a, JsonNullable<T> b) {
@@ -160,7 +197,7 @@ public class LoggerBulkItem {
 
   @Override
   public int hashCode() {
-    return Objects.hash(id, level, hashCodeNullable(service));
+    return Objects.hash(id, level, hashCodeNullable(service), hashCodeNullable(environment));
   }
 
   private static <T> int hashCodeNullable(JsonNullable<T> a) {
@@ -177,6 +214,7 @@ public class LoggerBulkItem {
     sb.append("    id: ").append(toIndentedString(id)).append("\n");
     sb.append("    level: ").append(toIndentedString(level)).append("\n");
     sb.append("    service: ").append(toIndentedString(service)).append("\n");
+    sb.append("    environment: ").append(toIndentedString(environment)).append("\n");
     sb.append("}");
     return sb.toString();
   }
@@ -234,6 +272,11 @@ public class LoggerBulkItem {
     // add `service` to the URL query string
     if (getService() != null) {
       joiner.add(String.format(java.util.Locale.ROOT, "%sservice%s=%s", prefix, suffix, ApiClient.urlEncode(ApiClient.valueToString(getService()))));
+    }
+
+    // add `environment` to the URL query string
+    if (getEnvironment() != null) {
+      joiner.add(String.format(java.util.Locale.ROOT, "%senvironment%s=%s", prefix, suffix, ApiClient.urlEncode(ApiClient.valueToString(getEnvironment()))));
     }
 
     return joiner.toString();
