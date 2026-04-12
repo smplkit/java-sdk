@@ -12,10 +12,6 @@ import com.smplkit.internal.generated.logging.model.LogGroupResponse;
 import com.smplkit.internal.generated.logging.model.LoggerListResponse;
 import com.smplkit.internal.generated.logging.model.LoggerResource;
 import com.smplkit.internal.generated.logging.model.LoggerResponse;
-import com.smplkit.internal.generated.logging.model.ResourceLogGroup;
-import com.smplkit.internal.generated.logging.model.ResourceLogger;
-import com.smplkit.internal.generated.logging.model.ResponseLogGroup;
-import com.smplkit.internal.generated.logging.model.ResponseLogger;
 import com.smplkit.logging.adapters.DiscoveredLogger;
 import com.smplkit.logging.adapters.LoggingAdapter;
 
@@ -151,7 +147,7 @@ public final class LoggingClient {
     /** Creates a new logger on the server. Called by {@link Logger#save()}. */
     Logger _createLogger(Logger lg) {
         try {
-            ResponseLogger body = buildLoggerBody(null, lg);
+            LoggerResponse body = buildLoggerBody(null, lg);
             LoggerResponse response = loggersApi.createLogger(body);
             return loggerResponseToModel(response);
         } catch (ApiException e) {
@@ -162,7 +158,7 @@ public final class LoggingClient {
     /** Updates an existing logger on the server. Called by {@link Logger#save()}. */
     Logger _updateLogger(Logger lg) {
         try {
-            ResponseLogger body = buildLoggerBody(lg.getId(), lg);
+            LoggerResponse body = buildLoggerBody(lg.getId(), lg);
             LoggerResponse response = loggersApi.updateLogger(lg.getId(), body);
             return loggerResponseToModel(response);
         } catch (ApiException e) {
@@ -173,7 +169,7 @@ public final class LoggingClient {
     /** Creates a new group on the server. Called by {@link LogGroup#save()}. */
     LogGroup _createGroup(LogGroup grp) {
         try {
-            ResponseLogGroup body = buildGroupBody(null, grp);
+            LogGroupResponse body = buildGroupBody(null, grp);
             LogGroupResponse response = logGroupsApi.createLogGroup(body);
             return logGroupResponseToModel(response);
         } catch (ApiException e) {
@@ -184,7 +180,7 @@ public final class LoggingClient {
     /** Updates an existing group on the server. Called by {@link LogGroup#save()}. */
     LogGroup _updateGroup(LogGroup grp) {
         try {
-            ResponseLogGroup body = buildGroupBody(grp.getId(), grp);
+            LogGroupResponse body = buildGroupBody(grp.getId(), grp);
             LogGroupResponse response = logGroupsApi.updateLogGroup(grp.getId(), body);
             return logGroupResponseToModel(response);
         } catch (ApiException e) {
@@ -589,7 +585,7 @@ public final class LoggingClient {
     // Request body building
     // -----------------------------------------------------------------------
 
-    private ResponseLogger buildLoggerBody(String loggerId, Logger lg) {
+    private LoggerResponse buildLoggerBody(String loggerId, Logger lg) {
         var attrs = new com.smplkit.internal.generated.logging.model.Logger();
         attrs.setName(lg.getName());
         if (lg.getLevel() != null) attrs.setLevel(lg.getLevel());
@@ -599,17 +595,17 @@ public final class LoggingClient {
             attrs.setEnvironments(new HashMap<>(lg.getEnvironments()));
         }
 
-        ResourceLogger data = new ResourceLogger();
-        data.setType("logger");
+        LoggerResource data = new LoggerResource();
+        data.setType(LoggerResource.TypeEnum.LOGGER);
         data.setAttributes(attrs);
         data.setId(loggerId != null ? loggerId : lg.getId());
 
-        ResponseLogger body = new ResponseLogger();
+        LoggerResponse body = new LoggerResponse();
         body.setData(data);
         return body;
     }
 
-    private ResponseLogGroup buildGroupBody(String groupId, LogGroup grp) {
+    private LogGroupResponse buildGroupBody(String groupId, LogGroup grp) {
         var attrs = new com.smplkit.internal.generated.logging.model.LogGroup();
         attrs.setName(grp.getName());
         if (grp.getLevel() != null) attrs.setLevel(grp.getLevel());
@@ -618,12 +614,12 @@ public final class LoggingClient {
             attrs.setEnvironments(new HashMap<>(grp.getEnvironments()));
         }
 
-        ResourceLogGroup data = new ResourceLogGroup();
-        data.setType("log_group");
+        LogGroupResource data = new LogGroupResource();
+        data.setType(LogGroupResource.TypeEnum.LOG_GROUP);
         data.setAttributes(attrs);
         data.setId(groupId != null ? groupId : grp.getId());
 
-        ResponseLogGroup body = new ResponseLogGroup();
+        LogGroupResponse body = new LogGroupResponse();
         body.setData(data);
         return body;
     }
