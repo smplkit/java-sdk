@@ -18,7 +18,7 @@ import com.smplkit.internal.generated.flags.ApiResponse;
 import com.smplkit.internal.generated.flags.Configuration;
 import com.smplkit.internal.generated.flags.Pair;
 
-import com.smplkit.internal.generated.flags.model.HTTPValidationError;
+import com.smplkit.internal.generated.flags.model.UsageListResponse;
 
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -166,10 +166,10 @@ public class UsageApi {
    * List Flags Usage
    * Return current resource usage counts for the authenticated account.
    * @param filterPeriod  (optional)
-   * @return Object
+   * @return UsageListResponse
    * @throws ApiException if fails to make API call
    */
-  public Object listFlagsUsage(@jakarta.annotation.Nullable String filterPeriod) throws ApiException {
+  public UsageListResponse listFlagsUsage(@jakarta.annotation.Nullable String filterPeriod) throws ApiException {
     return listFlagsUsage(filterPeriod, null);
   }
 
@@ -178,11 +178,11 @@ public class UsageApi {
    * Return current resource usage counts for the authenticated account.
    * @param filterPeriod  (optional)
    * @param headers Optional headers to include in the request
-   * @return Object
+   * @return UsageListResponse
    * @throws ApiException if fails to make API call
    */
-  public Object listFlagsUsage(@jakarta.annotation.Nullable String filterPeriod, Map<String, String> headers) throws ApiException {
-    ApiResponse<Object> localVarResponse = listFlagsUsageWithHttpInfo(filterPeriod, headers);
+  public UsageListResponse listFlagsUsage(@jakarta.annotation.Nullable String filterPeriod, Map<String, String> headers) throws ApiException {
+    ApiResponse<UsageListResponse> localVarResponse = listFlagsUsageWithHttpInfo(filterPeriod, headers);
     return localVarResponse.getData();
   }
 
@@ -190,10 +190,10 @@ public class UsageApi {
    * List Flags Usage
    * Return current resource usage counts for the authenticated account.
    * @param filterPeriod  (optional)
-   * @return ApiResponse&lt;Object&gt;
+   * @return ApiResponse&lt;UsageListResponse&gt;
    * @throws ApiException if fails to make API call
    */
-  public ApiResponse<Object> listFlagsUsageWithHttpInfo(@jakarta.annotation.Nullable String filterPeriod) throws ApiException {
+  public ApiResponse<UsageListResponse> listFlagsUsageWithHttpInfo(@jakarta.annotation.Nullable String filterPeriod) throws ApiException {
     return listFlagsUsageWithHttpInfo(filterPeriod, null);
   }
 
@@ -202,10 +202,10 @@ public class UsageApi {
    * Return current resource usage counts for the authenticated account.
    * @param filterPeriod  (optional)
    * @param headers Optional headers to include in the request
-   * @return ApiResponse&lt;Object&gt;
+   * @return ApiResponse&lt;UsageListResponse&gt;
    * @throws ApiException if fails to make API call
    */
-  public ApiResponse<Object> listFlagsUsageWithHttpInfo(@jakarta.annotation.Nullable String filterPeriod, Map<String, String> headers) throws ApiException {
+  public ApiResponse<UsageListResponse> listFlagsUsageWithHttpInfo(@jakarta.annotation.Nullable String filterPeriod, Map<String, String> headers) throws ApiException {
     HttpRequest.Builder localVarRequestBuilder = listFlagsUsageRequestBuilder(filterPeriod, headers);
     try {
       HttpResponse<InputStream> localVarResponse = memberVarHttpClient.send(
@@ -221,7 +221,7 @@ public class UsageApi {
         }
         localVarResponseBody = ApiClient.getResponseBody(localVarResponse);
         if (localVarResponseBody == null) {
-          return new ApiResponse<Object>(
+          return new ApiResponse<UsageListResponse>(
               localVarResponse.statusCode(),
               localVarResponse.headers().map(),
               null
@@ -231,10 +231,10 @@ public class UsageApi {
         
         
         String responseBody = new String(localVarResponseBody.readAllBytes());
-        Object responseValue = responseBody.isBlank()? null: memberVarObjectMapper.readValue(responseBody, new TypeReference<Object>() {});
+        UsageListResponse responseValue = responseBody.isBlank()? null: memberVarObjectMapper.readValue(responseBody, new TypeReference<UsageListResponse>() {});
         
 
-        return new ApiResponse<Object>(
+        return new ApiResponse<UsageListResponse>(
             localVarResponse.statusCode(),
             localVarResponse.headers().map(),
             responseValue
