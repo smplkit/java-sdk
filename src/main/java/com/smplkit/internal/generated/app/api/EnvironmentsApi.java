@@ -166,7 +166,7 @@ public class EnvironmentsApi {
 
   /**
    * Create Environment
-   * 
+   * Create a new environment. The caller provides the id (key) in the request body.
    * @param environmentResponse  (required)
    * @return EnvironmentResponse
    * @throws ApiException if fails to make API call
@@ -177,7 +177,7 @@ public class EnvironmentsApi {
 
   /**
    * Create Environment
-   * 
+   * Create a new environment. The caller provides the id (key) in the request body.
    * @param environmentResponse  (required)
    * @param headers Optional headers to include in the request
    * @return EnvironmentResponse
@@ -190,7 +190,7 @@ public class EnvironmentsApi {
 
   /**
    * Create Environment
-   * 
+   * Create a new environment. The caller provides the id (key) in the request body.
    * @param environmentResponse  (required)
    * @return ApiResponse&lt;EnvironmentResponse&gt;
    * @throws ApiException if fails to make API call
@@ -201,7 +201,7 @@ public class EnvironmentsApi {
 
   /**
    * Create Environment
-   * 
+   * Create a new environment. The caller provides the id (key) in the request body.
    * @param environmentResponse  (required)
    * @param headers Optional headers to include in the request
    * @return ApiResponse&lt;EnvironmentResponse&gt;
@@ -289,7 +289,7 @@ public class EnvironmentsApi {
 
   /**
    * Delete Environment
-   * 
+   * Delete an environment by id.
    * @param id  (required)
    * @throws ApiException if fails to make API call
    */
@@ -299,7 +299,7 @@ public class EnvironmentsApi {
 
   /**
    * Delete Environment
-   * 
+   * Delete an environment by id.
    * @param id  (required)
    * @param headers Optional headers to include in the request
    * @throws ApiException if fails to make API call
@@ -310,7 +310,7 @@ public class EnvironmentsApi {
 
   /**
    * Delete Environment
-   * 
+   * Delete an environment by id.
    * @param id  (required)
    * @return ApiResponse&lt;Void&gt;
    * @throws ApiException if fails to make API call
@@ -321,7 +321,7 @@ public class EnvironmentsApi {
 
   /**
    * Delete Environment
-   * 
+   * Delete an environment by id.
    * @param id  (required)
    * @param headers Optional headers to include in the request
    * @return ApiResponse&lt;Void&gt;
@@ -393,7 +393,7 @@ public class EnvironmentsApi {
 
   /**
    * Get Environment
-   * 
+   * Return an environment by id.
    * @param id  (required)
    * @return EnvironmentResponse
    * @throws ApiException if fails to make API call
@@ -404,7 +404,7 @@ public class EnvironmentsApi {
 
   /**
    * Get Environment
-   * 
+   * Return an environment by id.
    * @param id  (required)
    * @param headers Optional headers to include in the request
    * @return EnvironmentResponse
@@ -417,7 +417,7 @@ public class EnvironmentsApi {
 
   /**
    * Get Environment
-   * 
+   * Return an environment by id.
    * @param id  (required)
    * @return ApiResponse&lt;EnvironmentResponse&gt;
    * @throws ApiException if fails to make API call
@@ -428,7 +428,7 @@ public class EnvironmentsApi {
 
   /**
    * Get Environment
-   * 
+   * Return an environment by id.
    * @param id  (required)
    * @param headers Optional headers to include in the request
    * @return ApiResponse&lt;EnvironmentResponse&gt;
@@ -511,7 +511,7 @@ public class EnvironmentsApi {
 
   /**
    * List Environments
-   * 
+   * List all environments for the authenticated account.
    * @return EnvironmentListResponse
    * @throws ApiException if fails to make API call
    */
@@ -521,7 +521,7 @@ public class EnvironmentsApi {
 
   /**
    * List Environments
-   * 
+   * List all environments for the authenticated account.
    * @param headers Optional headers to include in the request
    * @return EnvironmentListResponse
    * @throws ApiException if fails to make API call
@@ -533,7 +533,7 @@ public class EnvironmentsApi {
 
   /**
    * List Environments
-   * 
+   * List all environments for the authenticated account.
    * @return ApiResponse&lt;EnvironmentListResponse&gt;
    * @throws ApiException if fails to make API call
    */
@@ -543,7 +543,7 @@ public class EnvironmentsApi {
 
   /**
    * List Environments
-   * 
+   * List all environments for the authenticated account.
    * @param headers Optional headers to include in the request
    * @return ApiResponse&lt;EnvironmentListResponse&gt;
    * @throws ApiException if fails to make API call
@@ -620,7 +620,7 @@ public class EnvironmentsApi {
 
   /**
    * Update Environment
-   * 
+   * Update an environment by id.
    * @param id  (required)
    * @param environmentResponse  (required)
    * @return EnvironmentResponse
@@ -632,7 +632,7 @@ public class EnvironmentsApi {
 
   /**
    * Update Environment
-   * 
+   * Update an environment by id.
    * @param id  (required)
    * @param environmentResponse  (required)
    * @param headers Optional headers to include in the request
@@ -646,7 +646,7 @@ public class EnvironmentsApi {
 
   /**
    * Update Environment
-   * 
+   * Update an environment by id.
    * @param id  (required)
    * @param environmentResponse  (required)
    * @return ApiResponse&lt;EnvironmentResponse&gt;
@@ -658,7 +658,7 @@ public class EnvironmentsApi {
 
   /**
    * Update Environment
-   * 
+   * Update an environment by id.
    * @param id  (required)
    * @param environmentResponse  (required)
    * @param headers Optional headers to include in the request

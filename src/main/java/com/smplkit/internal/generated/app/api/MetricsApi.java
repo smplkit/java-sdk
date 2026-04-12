@@ -168,48 +168,45 @@ public class MetricsApi {
 
   /**
    * Bulk Ingest Metrics
-   * 
+   * Ingest pre-aggregated metric data points. Returns 202 Accepted with no response body.
    * @param metricBulkRequest  (required)
-   * @return Object
    * @throws ApiException if fails to make API call
    */
-  public Object bulkIngestMetrics(@jakarta.annotation.Nonnull MetricBulkRequest metricBulkRequest) throws ApiException {
-    return bulkIngestMetrics(metricBulkRequest, null);
+  public void bulkIngestMetrics(@jakarta.annotation.Nonnull MetricBulkRequest metricBulkRequest) throws ApiException {
+    bulkIngestMetrics(metricBulkRequest, null);
   }
 
   /**
    * Bulk Ingest Metrics
-   * 
+   * Ingest pre-aggregated metric data points. Returns 202 Accepted with no response body.
    * @param metricBulkRequest  (required)
    * @param headers Optional headers to include in the request
-   * @return Object
    * @throws ApiException if fails to make API call
    */
-  public Object bulkIngestMetrics(@jakarta.annotation.Nonnull MetricBulkRequest metricBulkRequest, Map<String, String> headers) throws ApiException {
-    ApiResponse<Object> localVarResponse = bulkIngestMetricsWithHttpInfo(metricBulkRequest, headers);
-    return localVarResponse.getData();
+  public void bulkIngestMetrics(@jakarta.annotation.Nonnull MetricBulkRequest metricBulkRequest, Map<String, String> headers) throws ApiException {
+    bulkIngestMetricsWithHttpInfo(metricBulkRequest, headers);
   }
 
   /**
    * Bulk Ingest Metrics
-   * 
+   * Ingest pre-aggregated metric data points. Returns 202 Accepted with no response body.
    * @param metricBulkRequest  (required)
-   * @return ApiResponse&lt;Object&gt;
+   * @return ApiResponse&lt;Void&gt;
    * @throws ApiException if fails to make API call
    */
-  public ApiResponse<Object> bulkIngestMetricsWithHttpInfo(@jakarta.annotation.Nonnull MetricBulkRequest metricBulkRequest) throws ApiException {
+  public ApiResponse<Void> bulkIngestMetricsWithHttpInfo(@jakarta.annotation.Nonnull MetricBulkRequest metricBulkRequest) throws ApiException {
     return bulkIngestMetricsWithHttpInfo(metricBulkRequest, null);
   }
 
   /**
    * Bulk Ingest Metrics
-   * 
+   * Ingest pre-aggregated metric data points. Returns 202 Accepted with no response body.
    * @param metricBulkRequest  (required)
    * @param headers Optional headers to include in the request
-   * @return ApiResponse&lt;Object&gt;
+   * @return ApiResponse&lt;Void&gt;
    * @throws ApiException if fails to make API call
    */
-  public ApiResponse<Object> bulkIngestMetricsWithHttpInfo(@jakarta.annotation.Nonnull MetricBulkRequest metricBulkRequest, Map<String, String> headers) throws ApiException {
+  public ApiResponse<Void> bulkIngestMetricsWithHttpInfo(@jakarta.annotation.Nonnull MetricBulkRequest metricBulkRequest, Map<String, String> headers) throws ApiException {
     HttpRequest.Builder localVarRequestBuilder = bulkIngestMetricsRequestBuilder(metricBulkRequest, headers);
     try {
       HttpResponse<InputStream> localVarResponse = memberVarHttpClient.send(
@@ -224,24 +221,13 @@ public class MetricsApi {
           throw getApiException("bulkIngestMetrics", localVarResponse);
         }
         localVarResponseBody = ApiClient.getResponseBody(localVarResponse);
-        if (localVarResponseBody == null) {
-          return new ApiResponse<Object>(
-              localVarResponse.statusCode(),
-              localVarResponse.headers().map(),
-              null
-          );
+        if (localVarResponseBody != null) {
+          localVarResponseBody.readAllBytes();
         }
-
-        
-        
-        String responseBody = new String(localVarResponseBody.readAllBytes());
-        Object responseValue = responseBody.isBlank()? null: memberVarObjectMapper.readValue(responseBody, new TypeReference<Object>() {});
-        
-
-        return new ApiResponse<Object>(
+        return new ApiResponse<>(
             localVarResponse.statusCode(),
             localVarResponse.headers().map(),
-            responseValue
+            null
         );
       } finally {
         if (localVarResponseBody != null) {
@@ -400,7 +386,7 @@ public class MetricsApi {
 
   /**
    * List Metric Rollups
-   * 
+   * Query aggregated metric rollups. Requires filter[rollup] for the aggregation interval.
    * @param filterName  (required)
    * @param filterRollup  (required)
    * @param filterRecordedAt  (optional)
@@ -413,7 +399,7 @@ public class MetricsApi {
 
   /**
    * List Metric Rollups
-   * 
+   * Query aggregated metric rollups. Requires filter[rollup] for the aggregation interval.
    * @param filterName  (required)
    * @param filterRollup  (required)
    * @param filterRecordedAt  (optional)
@@ -428,7 +414,7 @@ public class MetricsApi {
 
   /**
    * List Metric Rollups
-   * 
+   * Query aggregated metric rollups. Requires filter[rollup] for the aggregation interval.
    * @param filterName  (required)
    * @param filterRollup  (required)
    * @param filterRecordedAt  (optional)
@@ -441,7 +427,7 @@ public class MetricsApi {
 
   /**
    * List Metric Rollups
-   * 
+   * Query aggregated metric rollups. Requires filter[rollup] for the aggregation interval.
    * @param filterName  (required)
    * @param filterRollup  (required)
    * @param filterRecordedAt  (optional)
@@ -548,7 +534,7 @@ public class MetricsApi {
 
   /**
    * List Metrics
-   * 
+   * Query raw metric rows with filtering by name, time range, and dimensions.
    * @param filterName  (required)
    * @param filterRecordedAt  (optional)
    * @return MetricListResponse
@@ -560,7 +546,7 @@ public class MetricsApi {
 
   /**
    * List Metrics
-   * 
+   * Query raw metric rows with filtering by name, time range, and dimensions.
    * @param filterName  (required)
    * @param filterRecordedAt  (optional)
    * @param headers Optional headers to include in the request
@@ -574,7 +560,7 @@ public class MetricsApi {
 
   /**
    * List Metrics
-   * 
+   * Query raw metric rows with filtering by name, time range, and dimensions.
    * @param filterName  (required)
    * @param filterRecordedAt  (optional)
    * @return ApiResponse&lt;MetricListResponse&gt;
@@ -586,7 +572,7 @@ public class MetricsApi {
 
   /**
    * List Metrics
-   * 
+   * Query raw metric rows with filtering by name, time range, and dimensions.
    * @param filterName  (required)
    * @param filterRecordedAt  (optional)
    * @param headers Optional headers to include in the request

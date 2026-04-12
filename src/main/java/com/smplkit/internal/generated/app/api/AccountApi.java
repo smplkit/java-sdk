@@ -165,7 +165,7 @@ public class AccountApi {
 
   /**
    * Delete Current Account
-   * 
+   * Permanently delete the current account and all associated data.
    * @throws ApiException if fails to make API call
    */
   public void deleteAccount() throws ApiException {
@@ -174,7 +174,7 @@ public class AccountApi {
 
   /**
    * Delete Current Account
-   * 
+   * Permanently delete the current account and all associated data.
    * @param headers Optional headers to include in the request
    * @throws ApiException if fails to make API call
    */
@@ -184,7 +184,7 @@ public class AccountApi {
 
   /**
    * Delete Current Account
-   * 
+   * Permanently delete the current account and all associated data.
    * @return ApiResponse&lt;Void&gt;
    * @throws ApiException if fails to make API call
    */
@@ -194,7 +194,7 @@ public class AccountApi {
 
   /**
    * Delete Current Account
-   * 
+   * Permanently delete the current account and all associated data.
    * @param headers Optional headers to include in the request
    * @return ApiResponse&lt;Void&gt;
    * @throws ApiException if fails to make API call
@@ -260,7 +260,7 @@ public class AccountApi {
 
   /**
    * Get Current Account
-   * 
+   * Return the account for the currently authenticated user.
    * @return AccountResponse
    * @throws ApiException if fails to make API call
    */
@@ -270,7 +270,7 @@ public class AccountApi {
 
   /**
    * Get Current Account
-   * 
+   * Return the account for the currently authenticated user.
    * @param headers Optional headers to include in the request
    * @return AccountResponse
    * @throws ApiException if fails to make API call
@@ -282,7 +282,7 @@ public class AccountApi {
 
   /**
    * Get Current Account
-   * 
+   * Return the account for the currently authenticated user.
    * @return ApiResponse&lt;AccountResponse&gt;
    * @throws ApiException if fails to make API call
    */
@@ -292,7 +292,7 @@ public class AccountApi {
 
   /**
    * Get Current Account
-   * 
+   * Return the account for the currently authenticated user.
    * @param headers Optional headers to include in the request
    * @return ApiResponse&lt;AccountResponse&gt;
    * @throws ApiException if fails to make API call
@@ -369,7 +369,7 @@ public class AccountApi {
 
   /**
    * Update Current Account
-   * 
+   * Update the current account&#39;s settings.
    * @param accountResponse  (required)
    * @return AccountResponse
    * @throws ApiException if fails to make API call
@@ -380,7 +380,7 @@ public class AccountApi {
 
   /**
    * Update Current Account
-   * 
+   * Update the current account&#39;s settings.
    * @param accountResponse  (required)
    * @param headers Optional headers to include in the request
    * @return AccountResponse
@@ -393,7 +393,7 @@ public class AccountApi {
 
   /**
    * Update Current Account
-   * 
+   * Update the current account&#39;s settings.
    * @param accountResponse  (required)
    * @return ApiResponse&lt;AccountResponse&gt;
    * @throws ApiException if fails to make API call
@@ -404,7 +404,7 @@ public class AccountApi {
 
   /**
    * Update Current Account
-   * 
+   * Update the current account&#39;s settings.
    * @param accountResponse  (required)
    * @param headers Optional headers to include in the request
    * @return ApiResponse&lt;AccountResponse&gt;

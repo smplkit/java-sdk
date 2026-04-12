@@ -49,8 +49,7 @@ import com.smplkit.internal.generated.app.ApiClient;
 @jakarta.annotation.Generated(value = "org.openapitools.codegen.languages.JavaClientCodegen", comments = "Generator version: 7.21.0")
 public class Context {
   public static final String JSON_PROPERTY_NAME = "name";
-  @jakarta.annotation.Nullable
-  private String name = "";
+  private JsonNullable<String> name = JsonNullable.<String>undefined();
 
   public static final String JSON_PROPERTY_CONTEXT_TYPE = "context_type";
   @jakarta.annotation.Nonnull
@@ -80,7 +79,7 @@ public class Context {
   }
 
   public Context name(@jakarta.annotation.Nullable String name) {
-    this.name = name;
+    this.name = JsonNullable.<String>of(name);
     return this;
   }
 
@@ -89,17 +88,25 @@ public class Context {
    * @return name
    */
   @jakarta.annotation.Nullable
-  @JsonProperty(value = JSON_PROPERTY_NAME, required = false)
-  @JsonInclude(value = JsonInclude.Include.USE_DEFAULTS)
+  @JsonIgnore
   public String getName() {
-    return name;
+        return name.orElse(null);
   }
 
-
   @JsonProperty(value = JSON_PROPERTY_NAME, required = false)
   @JsonInclude(value = JsonInclude.Include.USE_DEFAULTS)
-  public void setName(@jakarta.annotation.Nullable String name) {
+
+  public JsonNullable<String> getName_JsonNullable() {
+    return name;
+  }
+  
+  @JsonProperty(JSON_PROPERTY_NAME)
+  public void setName_JsonNullable(JsonNullable<String> name) {
     this.name = name;
+  }
+
+  public void setName(@jakarta.annotation.Nullable String name) {
+    this.name = JsonNullable.<String>of(name);
   }
 
 
@@ -227,7 +234,7 @@ public class Context {
       return false;
     }
     Context context = (Context) o;
-    return Objects.equals(this.name, context.name) &&
+    return equalsNullable(this.name, context.name) &&
         Objects.equals(this.contextType, context.contextType) &&
         Objects.equals(this.attributes, context.attributes) &&
         equalsNullable(this.createdAt, context.createdAt) &&
@@ -240,7 +247,7 @@ public class Context {
 
   @Override
   public int hashCode() {
-    return Objects.hash(name, contextType, attributes, hashCodeNullable(createdAt), hashCodeNullable(updatedAt));
+    return Objects.hash(hashCodeNullable(name), contextType, attributes, hashCodeNullable(createdAt), hashCodeNullable(updatedAt));
   }
 
   private static <T> int hashCodeNullable(JsonNullable<T> a) {

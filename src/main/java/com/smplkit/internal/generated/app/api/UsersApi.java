@@ -167,7 +167,7 @@ public class UsersApi {
 
   /**
    * Get Current User
-   * 
+   * Return the currently authenticated user.
    * @return UserResponse
    * @throws ApiException if fails to make API call
    */
@@ -177,7 +177,7 @@ public class UsersApi {
 
   /**
    * Get Current User
-   * 
+   * Return the currently authenticated user.
    * @param headers Optional headers to include in the request
    * @return UserResponse
    * @throws ApiException if fails to make API call
@@ -189,7 +189,7 @@ public class UsersApi {
 
   /**
    * Get Current User
-   * 
+   * Return the currently authenticated user.
    * @return ApiResponse&lt;UserResponse&gt;
    * @throws ApiException if fails to make API call
    */
@@ -199,7 +199,7 @@ public class UsersApi {
 
   /**
    * Get Current User
-   * 
+   * Return the currently authenticated user.
    * @param headers Optional headers to include in the request
    * @return ApiResponse&lt;UserResponse&gt;
    * @throws ApiException if fails to make API call
@@ -276,7 +276,7 @@ public class UsersApi {
 
   /**
    * Get User
-   * 
+   * Return a user by id.
    * @param id  (required)
    * @return UserResponse
    * @throws ApiException if fails to make API call
@@ -287,7 +287,7 @@ public class UsersApi {
 
   /**
    * Get User
-   * 
+   * Return a user by id.
    * @param id  (required)
    * @param headers Optional headers to include in the request
    * @return UserResponse
@@ -300,7 +300,7 @@ public class UsersApi {
 
   /**
    * Get User
-   * 
+   * Return a user by id.
    * @param id  (required)
    * @return ApiResponse&lt;UserResponse&gt;
    * @throws ApiException if fails to make API call
@@ -311,7 +311,7 @@ public class UsersApi {
 
   /**
    * Get User
-   * 
+   * Return a user by id.
    * @param id  (required)
    * @param headers Optional headers to include in the request
    * @return ApiResponse&lt;UserResponse&gt;
@@ -394,7 +394,7 @@ public class UsersApi {
 
   /**
    * List Users
-   * 
+   * List users in the authenticated account.
    * @param filterAccount  (optional)
    * @param filterEmail  (optional)
    * @return UserListResponse
@@ -406,7 +406,7 @@ public class UsersApi {
 
   /**
    * List Users
-   * 
+   * List users in the authenticated account.
    * @param filterAccount  (optional)
    * @param filterEmail  (optional)
    * @param headers Optional headers to include in the request
@@ -420,7 +420,7 @@ public class UsersApi {
 
   /**
    * List Users
-   * 
+   * List users in the authenticated account.
    * @param filterAccount  (optional)
    * @param filterEmail  (optional)
    * @return ApiResponse&lt;UserListResponse&gt;
@@ -432,7 +432,7 @@ public class UsersApi {
 
   /**
    * List Users
-   * 
+   * List users in the authenticated account.
    * @param filterAccount  (optional)
    * @param filterEmail  (optional)
    * @param headers Optional headers to include in the request
@@ -528,7 +528,7 @@ public class UsersApi {
 
   /**
    * Remove User
-   * 
+   * Remove a user from the account.
    * @param id  (required)
    * @throws ApiException if fails to make API call
    */
@@ -538,7 +538,7 @@ public class UsersApi {
 
   /**
    * Remove User
-   * 
+   * Remove a user from the account.
    * @param id  (required)
    * @param headers Optional headers to include in the request
    * @throws ApiException if fails to make API call
@@ -549,7 +549,7 @@ public class UsersApi {
 
   /**
    * Remove User
-   * 
+   * Remove a user from the account.
    * @param id  (required)
    * @return ApiResponse&lt;Void&gt;
    * @throws ApiException if fails to make API call
@@ -560,7 +560,7 @@ public class UsersApi {
 
   /**
    * Remove User
-   * 
+   * Remove a user from the account.
    * @param id  (required)
    * @param headers Optional headers to include in the request
    * @return ApiResponse&lt;Void&gt;
@@ -632,7 +632,7 @@ public class UsersApi {
 
   /**
    * Update Current User
-   * 
+   * Update the currently authenticated user&#39;s profile.
    * @param userResponse  (required)
    * @return UserResponse
    * @throws ApiException if fails to make API call
@@ -643,7 +643,7 @@ public class UsersApi {
 
   /**
    * Update Current User
-   * 
+   * Update the currently authenticated user&#39;s profile.
    * @param userResponse  (required)
    * @param headers Optional headers to include in the request
    * @return UserResponse
@@ -656,7 +656,7 @@ public class UsersApi {
 
   /**
    * Update Current User
-   * 
+   * Update the currently authenticated user&#39;s profile.
    * @param userResponse  (required)
    * @return ApiResponse&lt;UserResponse&gt;
    * @throws ApiException if fails to make API call
@@ -667,7 +667,7 @@ public class UsersApi {
 
   /**
    * Update Current User
-   * 
+   * Update the currently authenticated user&#39;s profile.
    * @param userResponse  (required)
    * @param headers Optional headers to include in the request
    * @return ApiResponse&lt;UserResponse&gt;
@@ -755,7 +755,7 @@ public class UsersApi {
 
   /**
    * Update User Role
-   * 
+   * Update a user&#39;s role in the account.
    * @param id  (required)
    * @param userResponse  (required)
    * @return UserResponse
@@ -767,7 +767,7 @@ public class UsersApi {
 
   /**
    * Update User Role
-   * 
+   * Update a user&#39;s role in the account.
    * @param id  (required)
    * @param userResponse  (required)
    * @param headers Optional headers to include in the request
@@ -781,7 +781,7 @@ public class UsersApi {
 
   /**
    * Update User Role
-   * 
+   * Update a user&#39;s role in the account.
    * @param id  (required)
    * @param userResponse  (required)
    * @return ApiResponse&lt;UserResponse&gt;
@@ -793,7 +793,7 @@ public class UsersApi {
 
   /**
    * Update User Role
-   * 
+   * Update a user&#39;s role in the account.
    * @param id  (required)
    * @param userResponse  (required)
    * @param headers Optional headers to include in the request
