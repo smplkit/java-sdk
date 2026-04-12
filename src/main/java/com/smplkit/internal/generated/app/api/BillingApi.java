@@ -18,6 +18,7 @@ import com.smplkit.internal.generated.app.ApiResponse;
 import com.smplkit.internal.generated.app.Configuration;
 import com.smplkit.internal.generated.app.Pair;
 
+import com.smplkit.internal.generated.app.model.BundleListResponse;
 import com.smplkit.internal.generated.app.model.BundleResponse;
 import com.smplkit.internal.generated.app.model.CreateBundleBody;
 import com.smplkit.internal.generated.app.model.CreateSubscriptionBody;
@@ -767,6 +768,115 @@ public class BillingApi {
     localVarRequestBuilder.header("Accept", "application/vnd.api+json");
 
     localVarRequestBuilder.method("POST", HttpRequest.BodyPublishers.noBody());
+    if (memberVarReadTimeout != null) {
+      localVarRequestBuilder.timeout(memberVarReadTimeout);
+    }
+    // Add custom headers if provided
+    localVarRequestBuilder = HttpRequestBuilderExtensions.withAdditionalHeaders(localVarRequestBuilder, headers);
+    if (memberVarInterceptor != null) {
+      memberVarInterceptor.accept(localVarRequestBuilder);
+    }
+    return localVarRequestBuilder;
+  }
+
+  /**
+   * List Bundles
+   * Return all bundle definitions as JSON:API resources. Public, unauthenticated.
+   * @return BundleListResponse
+   * @throws ApiException if fails to make API call
+   */
+  public BundleListResponse listBundles() throws ApiException {
+    return listBundles(null);
+  }
+
+  /**
+   * List Bundles
+   * Return all bundle definitions as JSON:API resources. Public, unauthenticated.
+   * @param headers Optional headers to include in the request
+   * @return BundleListResponse
+   * @throws ApiException if fails to make API call
+   */
+  public BundleListResponse listBundles(Map<String, String> headers) throws ApiException {
+    ApiResponse<BundleListResponse> localVarResponse = listBundlesWithHttpInfo(headers);
+    return localVarResponse.getData();
+  }
+
+  /**
+   * List Bundles
+   * Return all bundle definitions as JSON:API resources. Public, unauthenticated.
+   * @return ApiResponse&lt;BundleListResponse&gt;
+   * @throws ApiException if fails to make API call
+   */
+  public ApiResponse<BundleListResponse> listBundlesWithHttpInfo() throws ApiException {
+    return listBundlesWithHttpInfo(null);
+  }
+
+  /**
+   * List Bundles
+   * Return all bundle definitions as JSON:API resources. Public, unauthenticated.
+   * @param headers Optional headers to include in the request
+   * @return ApiResponse&lt;BundleListResponse&gt;
+   * @throws ApiException if fails to make API call
+   */
+  public ApiResponse<BundleListResponse> listBundlesWithHttpInfo(Map<String, String> headers) throws ApiException {
+    HttpRequest.Builder localVarRequestBuilder = listBundlesRequestBuilder(headers);
+    try {
+      HttpResponse<InputStream> localVarResponse = memberVarHttpClient.send(
+          localVarRequestBuilder.build(),
+          HttpResponse.BodyHandlers.ofInputStream());
+      if (memberVarResponseInterceptor != null) {
+        memberVarResponseInterceptor.accept(localVarResponse);
+      }
+      InputStream localVarResponseBody = null;
+      try {
+        if (localVarResponse.statusCode()/ 100 != 2) {
+          throw getApiException("listBundles", localVarResponse);
+        }
+        localVarResponseBody = ApiClient.getResponseBody(localVarResponse);
+        if (localVarResponseBody == null) {
+          return new ApiResponse<BundleListResponse>(
+              localVarResponse.statusCode(),
+              localVarResponse.headers().map(),
+              null
+          );
+        }
+
+        
+        
+        String responseBody = new String(localVarResponseBody.readAllBytes());
+        BundleListResponse responseValue = responseBody.isBlank()? null: memberVarObjectMapper.readValue(responseBody, new TypeReference<BundleListResponse>() {});
+        
+
+        return new ApiResponse<BundleListResponse>(
+            localVarResponse.statusCode(),
+            localVarResponse.headers().map(),
+            responseValue
+        );
+      } finally {
+        if (localVarResponseBody != null) {
+          localVarResponseBody.close();
+        }
+      }
+    } catch (IOException e) {
+      throw new ApiException(e);
+    }
+    catch (InterruptedException e) {
+      Thread.currentThread().interrupt();
+      throw new ApiException(e);
+    }
+  }
+
+  private HttpRequest.Builder listBundlesRequestBuilder(Map<String, String> headers) throws ApiException {
+
+    HttpRequest.Builder localVarRequestBuilder = HttpRequest.newBuilder();
+
+    String localVarPath = "/api/v1/bundles";
+
+    localVarRequestBuilder.uri(URI.create(memberVarBaseUri + localVarPath));
+
+    localVarRequestBuilder.header("Accept", "application/vnd.api+json");
+
+    localVarRequestBuilder.method("GET", HttpRequest.BodyPublishers.noBody());
     if (memberVarReadTimeout != null) {
       localVarRequestBuilder.timeout(memberVarReadTimeout);
     }
