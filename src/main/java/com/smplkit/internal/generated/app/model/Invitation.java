@@ -49,20 +49,16 @@ import com.smplkit.internal.generated.app.ApiClient;
 @jakarta.annotation.Generated(value = "org.openapitools.codegen.languages.JavaClientCodegen", comments = "Generator version: 7.21.0")
 public class Invitation {
   public static final String JSON_PROPERTY_EMAIL = "email";
-  @jakarta.annotation.Nullable
-  private String email = "";
+  private JsonNullable<String> email = JsonNullable.<String>undefined();
 
   public static final String JSON_PROPERTY_ROLE = "role";
-  @jakarta.annotation.Nullable
-  private String role = "";
+  private JsonNullable<String> role = JsonNullable.<String>undefined();
 
   public static final String JSON_PROPERTY_STATUS = "status";
-  @jakarta.annotation.Nullable
-  private String status = "";
+  private JsonNullable<String> status = JsonNullable.<String>undefined();
 
   public static final String JSON_PROPERTY_INVITED_BY = "invited_by";
-  @jakarta.annotation.Nullable
-  private String invitedBy = "";
+  private JsonNullable<String> invitedBy = JsonNullable.<String>undefined();
 
   public static final String JSON_PROPERTY_EXPIRES_AT = "expires_at";
   private JsonNullable<OffsetDateTime> expiresAt = JsonNullable.<OffsetDateTime>undefined();
@@ -87,10 +83,10 @@ public class Invitation {
     @JsonProperty(JSON_PROPERTY_UPDATED_AT) OffsetDateTime updatedAt
   ) {
   this();
-    this.email = email;
-    this.role = role;
-    this.status = status;
-    this.invitedBy = invitedBy;
+    this.email = email == null ? JsonNullable.<String>undefined() : JsonNullable.of(email);
+    this.role = role == null ? JsonNullable.<String>undefined() : JsonNullable.of(role);
+    this.status = status == null ? JsonNullable.<String>undefined() : JsonNullable.of(status);
+    this.invitedBy = invitedBy == null ? JsonNullable.<String>undefined() : JsonNullable.of(invitedBy);
     this.expiresAt = expiresAt == null ? JsonNullable.<OffsetDateTime>undefined() : JsonNullable.of(expiresAt);
     this.createdAt = createdAt == null ? JsonNullable.<OffsetDateTime>undefined() : JsonNullable.of(createdAt);
     this.updatedAt = updatedAt == null ? JsonNullable.<OffsetDateTime>undefined() : JsonNullable.of(updatedAt);
@@ -101,12 +97,26 @@ public class Invitation {
    * @return email
    */
   @jakarta.annotation.Nullable
-  @JsonProperty(value = JSON_PROPERTY_EMAIL, required = false)
-  @JsonInclude(value = JsonInclude.Include.USE_DEFAULTS)
+  @JsonIgnore
   public String getEmail() {
-    return email;
+    
+    if (email == null) {
+      email = JsonNullable.<String>undefined();
+    }
+    return email.orElse(null);
   }
 
+  @JsonProperty(value = JSON_PROPERTY_EMAIL, required = false)
+  @JsonInclude(value = JsonInclude.Include.USE_DEFAULTS)
+
+  public JsonNullable<String> getEmail_JsonNullable() {
+    return email;
+  }
+  
+  @JsonProperty(JSON_PROPERTY_EMAIL)
+  private void setEmail_JsonNullable(JsonNullable<String> email) {
+    this.email = email;
+  }
 
 
 
@@ -115,12 +125,26 @@ public class Invitation {
    * @return role
    */
   @jakarta.annotation.Nullable
-  @JsonProperty(value = JSON_PROPERTY_ROLE, required = false)
-  @JsonInclude(value = JsonInclude.Include.USE_DEFAULTS)
+  @JsonIgnore
   public String getRole() {
-    return role;
+    
+    if (role == null) {
+      role = JsonNullable.<String>undefined();
+    }
+    return role.orElse(null);
   }
 
+  @JsonProperty(value = JSON_PROPERTY_ROLE, required = false)
+  @JsonInclude(value = JsonInclude.Include.USE_DEFAULTS)
+
+  public JsonNullable<String> getRole_JsonNullable() {
+    return role;
+  }
+  
+  @JsonProperty(JSON_PROPERTY_ROLE)
+  private void setRole_JsonNullable(JsonNullable<String> role) {
+    this.role = role;
+  }
 
 
 
@@ -129,12 +153,26 @@ public class Invitation {
    * @return status
    */
   @jakarta.annotation.Nullable
-  @JsonProperty(value = JSON_PROPERTY_STATUS, required = false)
-  @JsonInclude(value = JsonInclude.Include.USE_DEFAULTS)
+  @JsonIgnore
   public String getStatus() {
-    return status;
+    
+    if (status == null) {
+      status = JsonNullable.<String>undefined();
+    }
+    return status.orElse(null);
   }
 
+  @JsonProperty(value = JSON_PROPERTY_STATUS, required = false)
+  @JsonInclude(value = JsonInclude.Include.USE_DEFAULTS)
+
+  public JsonNullable<String> getStatus_JsonNullable() {
+    return status;
+  }
+  
+  @JsonProperty(JSON_PROPERTY_STATUS)
+  private void setStatus_JsonNullable(JsonNullable<String> status) {
+    this.status = status;
+  }
 
 
 
@@ -143,12 +181,26 @@ public class Invitation {
    * @return invitedBy
    */
   @jakarta.annotation.Nullable
-  @JsonProperty(value = JSON_PROPERTY_INVITED_BY, required = false)
-  @JsonInclude(value = JsonInclude.Include.USE_DEFAULTS)
+  @JsonIgnore
   public String getInvitedBy() {
-    return invitedBy;
+    
+    if (invitedBy == null) {
+      invitedBy = JsonNullable.<String>undefined();
+    }
+    return invitedBy.orElse(null);
   }
 
+  @JsonProperty(value = JSON_PROPERTY_INVITED_BY, required = false)
+  @JsonInclude(value = JsonInclude.Include.USE_DEFAULTS)
+
+  public JsonNullable<String> getInvitedBy_JsonNullable() {
+    return invitedBy;
+  }
+  
+  @JsonProperty(JSON_PROPERTY_INVITED_BY)
+  private void setInvitedBy_JsonNullable(JsonNullable<String> invitedBy) {
+    this.invitedBy = invitedBy;
+  }
 
 
 
@@ -248,10 +300,10 @@ public class Invitation {
       return false;
     }
     Invitation invitation = (Invitation) o;
-    return Objects.equals(this.email, invitation.email) &&
-        Objects.equals(this.role, invitation.role) &&
-        Objects.equals(this.status, invitation.status) &&
-        Objects.equals(this.invitedBy, invitation.invitedBy) &&
+    return equalsNullable(this.email, invitation.email) &&
+        equalsNullable(this.role, invitation.role) &&
+        equalsNullable(this.status, invitation.status) &&
+        equalsNullable(this.invitedBy, invitation.invitedBy) &&
         equalsNullable(this.expiresAt, invitation.expiresAt) &&
         equalsNullable(this.createdAt, invitation.createdAt) &&
         equalsNullable(this.updatedAt, invitation.updatedAt);
@@ -263,7 +315,7 @@ public class Invitation {
 
   @Override
   public int hashCode() {
-    return Objects.hash(email, role, status, invitedBy, hashCodeNullable(expiresAt), hashCodeNullable(createdAt), hashCodeNullable(updatedAt));
+    return Objects.hash(hashCodeNullable(email), hashCodeNullable(role), hashCodeNullable(status), hashCodeNullable(invitedBy), hashCodeNullable(expiresAt), hashCodeNullable(createdAt), hashCodeNullable(updatedAt));
   }
 
   private static <T> int hashCodeNullable(JsonNullable<T> a) {

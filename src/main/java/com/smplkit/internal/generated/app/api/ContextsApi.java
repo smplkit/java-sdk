@@ -168,7 +168,7 @@ public class ContextsApi {
 
   /**
    * Bulk Register Contexts
-   * 
+   * Register context instances in bulk. Creates context types automatically if they don&#39;t exist.
    * @param contextBulkRegister  (required)
    * @return ContextBatchResponse
    * @throws ApiException if fails to make API call
@@ -179,7 +179,7 @@ public class ContextsApi {
 
   /**
    * Bulk Register Contexts
-   * 
+   * Register context instances in bulk. Creates context types automatically if they don&#39;t exist.
    * @param contextBulkRegister  (required)
    * @param headers Optional headers to include in the request
    * @return ContextBatchResponse
@@ -192,7 +192,7 @@ public class ContextsApi {
 
   /**
    * Bulk Register Contexts
-   * 
+   * Register context instances in bulk. Creates context types automatically if they don&#39;t exist.
    * @param contextBulkRegister  (required)
    * @return ApiResponse&lt;ContextBatchResponse&gt;
    * @throws ApiException if fails to make API call
@@ -203,7 +203,7 @@ public class ContextsApi {
 
   /**
    * Bulk Register Contexts
-   * 
+   * Register context instances in bulk. Creates context types automatically if they don&#39;t exist.
    * @param contextBulkRegister  (required)
    * @param headers Optional headers to include in the request
    * @return ApiResponse&lt;ContextBatchResponse&gt;
@@ -291,7 +291,7 @@ public class ContextsApi {
 
   /**
    * Delete Context
-   * 
+   * Delete a context instance by composite id (type:key).
    * @param id  (required)
    * @throws ApiException if fails to make API call
    */
@@ -301,7 +301,7 @@ public class ContextsApi {
 
   /**
    * Delete Context
-   * 
+   * Delete a context instance by composite id (type:key).
    * @param id  (required)
    * @param headers Optional headers to include in the request
    * @throws ApiException if fails to make API call
@@ -312,7 +312,7 @@ public class ContextsApi {
 
   /**
    * Delete Context
-   * 
+   * Delete a context instance by composite id (type:key).
    * @param id  (required)
    * @return ApiResponse&lt;Void&gt;
    * @throws ApiException if fails to make API call
@@ -323,7 +323,7 @@ public class ContextsApi {
 
   /**
    * Delete Context
-   * 
+   * Delete a context instance by composite id (type:key).
    * @param id  (required)
    * @param headers Optional headers to include in the request
    * @return ApiResponse&lt;Void&gt;
@@ -395,7 +395,7 @@ public class ContextsApi {
 
   /**
    * Get Context
-   * 
+   * Return a context instance by composite id (type:key).
    * @param id  (required)
    * @return ContextResponse
    * @throws ApiException if fails to make API call
@@ -406,7 +406,7 @@ public class ContextsApi {
 
   /**
    * Get Context
-   * 
+   * Return a context instance by composite id (type:key).
    * @param id  (required)
    * @param headers Optional headers to include in the request
    * @return ContextResponse
@@ -419,7 +419,7 @@ public class ContextsApi {
 
   /**
    * Get Context
-   * 
+   * Return a context instance by composite id (type:key).
    * @param id  (required)
    * @return ApiResponse&lt;ContextResponse&gt;
    * @throws ApiException if fails to make API call
@@ -430,7 +430,7 @@ public class ContextsApi {
 
   /**
    * Get Context
-   * 
+   * Return a context instance by composite id (type:key).
    * @param id  (required)
    * @param headers Optional headers to include in the request
    * @return ApiResponse&lt;ContextResponse&gt;
@@ -513,7 +513,7 @@ public class ContextsApi {
 
   /**
    * List Contexts
-   * 
+   * List all context instances for the authenticated account.
    * @param filterContextType  (optional)
    * @return ContextListResponse
    * @throws ApiException if fails to make API call
@@ -524,7 +524,7 @@ public class ContextsApi {
 
   /**
    * List Contexts
-   * 
+   * List all context instances for the authenticated account.
    * @param filterContextType  (optional)
    * @param headers Optional headers to include in the request
    * @return ContextListResponse
@@ -537,7 +537,7 @@ public class ContextsApi {
 
   /**
    * List Contexts
-   * 
+   * List all context instances for the authenticated account.
    * @param filterContextType  (optional)
    * @return ApiResponse&lt;ContextListResponse&gt;
    * @throws ApiException if fails to make API call
@@ -548,7 +548,7 @@ public class ContextsApi {
 
   /**
    * List Contexts
-   * 
+   * List all context instances for the authenticated account.
    * @param filterContextType  (optional)
    * @param headers Optional headers to include in the request
    * @return ApiResponse&lt;ContextListResponse&gt;

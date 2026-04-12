@@ -61,8 +61,7 @@ public class User {
   private JsonNullable<String> profilePic = JsonNullable.<String>undefined();
 
   public static final String JSON_PROPERTY_AUTH_PROVIDER = "auth_provider";
-  @jakarta.annotation.Nullable
-  private String authProvider = "";
+  private JsonNullable<String> authProvider = JsonNullable.<String>undefined();
 
   public static final String JSON_PROPERTY_EMAIL_VERIFIED = "email_verified";
   @jakarta.annotation.Nullable
@@ -72,8 +71,7 @@ public class User {
   private JsonNullable<String> role = JsonNullable.<String>undefined();
 
   public static final String JSON_PROPERTY_ACCOUNT = "account";
-  @jakarta.annotation.Nullable
-  private String account = "";
+  private JsonNullable<String> account = JsonNullable.<String>undefined();
 
   public static final String JSON_PROPERTY_CREATED_AT = "created_at";
   private JsonNullable<OffsetDateTime> createdAt = JsonNullable.<OffsetDateTime>undefined();
@@ -89,9 +87,9 @@ public class User {
     @JsonProperty(JSON_PROPERTY_CREATED_AT) OffsetDateTime createdAt
   ) {
   this();
-    this.authProvider = authProvider;
+    this.authProvider = authProvider == null ? JsonNullable.<String>undefined() : JsonNullable.of(authProvider);
     this.emailVerified = emailVerified;
-    this.account = account;
+    this.account = account == null ? JsonNullable.<String>undefined() : JsonNullable.of(account);
     this.createdAt = createdAt == null ? JsonNullable.<OffsetDateTime>undefined() : JsonNullable.of(createdAt);
   }
 
@@ -180,12 +178,26 @@ public class User {
    * @return authProvider
    */
   @jakarta.annotation.Nullable
-  @JsonProperty(value = JSON_PROPERTY_AUTH_PROVIDER, required = false)
-  @JsonInclude(value = JsonInclude.Include.USE_DEFAULTS)
+  @JsonIgnore
   public String getAuthProvider() {
-    return authProvider;
+    
+    if (authProvider == null) {
+      authProvider = JsonNullable.<String>undefined();
+    }
+    return authProvider.orElse(null);
   }
 
+  @JsonProperty(value = JSON_PROPERTY_AUTH_PROVIDER, required = false)
+  @JsonInclude(value = JsonInclude.Include.USE_DEFAULTS)
+
+  public JsonNullable<String> getAuthProvider_JsonNullable() {
+    return authProvider;
+  }
+  
+  @JsonProperty(JSON_PROPERTY_AUTH_PROVIDER)
+  private void setAuthProvider_JsonNullable(JsonNullable<String> authProvider) {
+    this.authProvider = authProvider;
+  }
 
 
 
@@ -240,12 +252,26 @@ public class User {
    * @return account
    */
   @jakarta.annotation.Nullable
-  @JsonProperty(value = JSON_PROPERTY_ACCOUNT, required = false)
-  @JsonInclude(value = JsonInclude.Include.USE_DEFAULTS)
+  @JsonIgnore
   public String getAccount() {
-    return account;
+    
+    if (account == null) {
+      account = JsonNullable.<String>undefined();
+    }
+    return account.orElse(null);
   }
 
+  @JsonProperty(value = JSON_PROPERTY_ACCOUNT, required = false)
+  @JsonInclude(value = JsonInclude.Include.USE_DEFAULTS)
+
+  public JsonNullable<String> getAccount_JsonNullable() {
+    return account;
+  }
+  
+  @JsonProperty(JSON_PROPERTY_ACCOUNT)
+  private void setAccount_JsonNullable(JsonNullable<String> account) {
+    this.account = account;
+  }
 
 
 
@@ -292,10 +318,10 @@ public class User {
     return Objects.equals(this.email, user.email) &&
         Objects.equals(this.displayName, user.displayName) &&
         equalsNullable(this.profilePic, user.profilePic) &&
-        Objects.equals(this.authProvider, user.authProvider) &&
+        equalsNullable(this.authProvider, user.authProvider) &&
         Objects.equals(this.emailVerified, user.emailVerified) &&
         equalsNullable(this.role, user.role) &&
-        Objects.equals(this.account, user.account) &&
+        equalsNullable(this.account, user.account) &&
         equalsNullable(this.createdAt, user.createdAt);
   }
 
@@ -305,7 +331,7 @@ public class User {
 
   @Override
   public int hashCode() {
-    return Objects.hash(email, displayName, hashCodeNullable(profilePic), authProvider, emailVerified, hashCodeNullable(role), account, hashCodeNullable(createdAt));
+    return Objects.hash(email, displayName, hashCodeNullable(profilePic), hashCodeNullable(authProvider), emailVerified, hashCodeNullable(role), hashCodeNullable(account), hashCodeNullable(createdAt));
   }
 
   private static <T> int hashCodeNullable(JsonNullable<T> a) {

@@ -166,7 +166,7 @@ public class ServicesApi {
 
   /**
    * Create Service
-   * 
+   * Create a new service. The caller provides the id (key) in the request body.
    * @param serviceResponse  (required)
    * @return ServiceResponse
    * @throws ApiException if fails to make API call
@@ -177,7 +177,7 @@ public class ServicesApi {
 
   /**
    * Create Service
-   * 
+   * Create a new service. The caller provides the id (key) in the request body.
    * @param serviceResponse  (required)
    * @param headers Optional headers to include in the request
    * @return ServiceResponse
@@ -190,7 +190,7 @@ public class ServicesApi {
 
   /**
    * Create Service
-   * 
+   * Create a new service. The caller provides the id (key) in the request body.
    * @param serviceResponse  (required)
    * @return ApiResponse&lt;ServiceResponse&gt;
    * @throws ApiException if fails to make API call
@@ -201,7 +201,7 @@ public class ServicesApi {
 
   /**
    * Create Service
-   * 
+   * Create a new service. The caller provides the id (key) in the request body.
    * @param serviceResponse  (required)
    * @param headers Optional headers to include in the request
    * @return ApiResponse&lt;ServiceResponse&gt;
@@ -289,7 +289,7 @@ public class ServicesApi {
 
   /**
    * Delete Service
-   * 
+   * Delete a service by id.
    * @param id  (required)
    * @throws ApiException if fails to make API call
    */
@@ -299,7 +299,7 @@ public class ServicesApi {
 
   /**
    * Delete Service
-   * 
+   * Delete a service by id.
    * @param id  (required)
    * @param headers Optional headers to include in the request
    * @throws ApiException if fails to make API call
@@ -310,7 +310,7 @@ public class ServicesApi {
 
   /**
    * Delete Service
-   * 
+   * Delete a service by id.
    * @param id  (required)
    * @return ApiResponse&lt;Void&gt;
    * @throws ApiException if fails to make API call
@@ -321,7 +321,7 @@ public class ServicesApi {
 
   /**
    * Delete Service
-   * 
+   * Delete a service by id.
    * @param id  (required)
    * @param headers Optional headers to include in the request
    * @return ApiResponse&lt;Void&gt;
@@ -393,7 +393,7 @@ public class ServicesApi {
 
   /**
    * Get Service
-   * 
+   * Return a service by id.
    * @param id  (required)
    * @return ServiceResponse
    * @throws ApiException if fails to make API call
@@ -404,7 +404,7 @@ public class ServicesApi {
 
   /**
    * Get Service
-   * 
+   * Return a service by id.
    * @param id  (required)
    * @param headers Optional headers to include in the request
    * @return ServiceResponse
@@ -417,7 +417,7 @@ public class ServicesApi {
 
   /**
    * Get Service
-   * 
+   * Return a service by id.
    * @param id  (required)
    * @return ApiResponse&lt;ServiceResponse&gt;
    * @throws ApiException if fails to make API call
@@ -428,7 +428,7 @@ public class ServicesApi {
 
   /**
    * Get Service
-   * 
+   * Return a service by id.
    * @param id  (required)
    * @param headers Optional headers to include in the request
    * @return ApiResponse&lt;ServiceResponse&gt;
@@ -511,7 +511,7 @@ public class ServicesApi {
 
   /**
    * List Services
-   * 
+   * List all services for the authenticated account.
    * @return ServiceListResponse
    * @throws ApiException if fails to make API call
    */
@@ -521,7 +521,7 @@ public class ServicesApi {
 
   /**
    * List Services
-   * 
+   * List all services for the authenticated account.
    * @param headers Optional headers to include in the request
    * @return ServiceListResponse
    * @throws ApiException if fails to make API call
@@ -533,7 +533,7 @@ public class ServicesApi {
 
   /**
    * List Services
-   * 
+   * List all services for the authenticated account.
    * @return ApiResponse&lt;ServiceListResponse&gt;
    * @throws ApiException if fails to make API call
    */
@@ -543,7 +543,7 @@ public class ServicesApi {
 
   /**
    * List Services
-   * 
+   * List all services for the authenticated account.
    * @param headers Optional headers to include in the request
    * @return ApiResponse&lt;ServiceListResponse&gt;
    * @throws ApiException if fails to make API call
@@ -620,7 +620,7 @@ public class ServicesApi {
 
   /**
    * Update Service
-   * 
+   * Update a service by id.
    * @param id  (required)
    * @param serviceResponse  (required)
    * @return ServiceResponse
@@ -632,7 +632,7 @@ public class ServicesApi {
 
   /**
    * Update Service
-   * 
+   * Update a service by id.
    * @param id  (required)
    * @param serviceResponse  (required)
    * @param headers Optional headers to include in the request
@@ -646,7 +646,7 @@ public class ServicesApi {
 
   /**
    * Update Service
-   * 
+   * Update a service by id.
    * @param id  (required)
    * @param serviceResponse  (required)
    * @return ApiResponse&lt;ServiceResponse&gt;
@@ -658,7 +658,7 @@ public class ServicesApi {
 
   /**
    * Update Service
-   * 
+   * Update a service by id.
    * @param id  (required)
    * @param serviceResponse  (required)
    * @param headers Optional headers to include in the request

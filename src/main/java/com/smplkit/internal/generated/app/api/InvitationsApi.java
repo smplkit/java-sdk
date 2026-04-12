@@ -169,7 +169,7 @@ public class InvitationsApi {
 
   /**
    * Accept Invitation
-   * 
+   * Accept an invitation using a token from the invitation email.
    * @param invitationAcceptRequest  (required)
    * @return InvitationResponse
    * @throws ApiException if fails to make API call
@@ -180,7 +180,7 @@ public class InvitationsApi {
 
   /**
    * Accept Invitation
-   * 
+   * Accept an invitation using a token from the invitation email.
    * @param invitationAcceptRequest  (required)
    * @param headers Optional headers to include in the request
    * @return InvitationResponse
@@ -193,7 +193,7 @@ public class InvitationsApi {
 
   /**
    * Accept Invitation
-   * 
+   * Accept an invitation using a token from the invitation email.
    * @param invitationAcceptRequest  (required)
    * @return ApiResponse&lt;InvitationResponse&gt;
    * @throws ApiException if fails to make API call
@@ -204,7 +204,7 @@ public class InvitationsApi {
 
   /**
    * Accept Invitation
-   * 
+   * Accept an invitation using a token from the invitation email.
    * @param invitationAcceptRequest  (required)
    * @param headers Optional headers to include in the request
    * @return ApiResponse&lt;InvitationResponse&gt;
@@ -292,7 +292,7 @@ public class InvitationsApi {
 
   /**
    * Bulk Create Invitations
-   * 
+   * Send one or more invitations to join the account.
    * @param invitationBulkCreateRequest  (required)
    * @return InvitationListResponse
    * @throws ApiException if fails to make API call
@@ -303,7 +303,7 @@ public class InvitationsApi {
 
   /**
    * Bulk Create Invitations
-   * 
+   * Send one or more invitations to join the account.
    * @param invitationBulkCreateRequest  (required)
    * @param headers Optional headers to include in the request
    * @return InvitationListResponse
@@ -316,7 +316,7 @@ public class InvitationsApi {
 
   /**
    * Bulk Create Invitations
-   * 
+   * Send one or more invitations to join the account.
    * @param invitationBulkCreateRequest  (required)
    * @return ApiResponse&lt;InvitationListResponse&gt;
    * @throws ApiException if fails to make API call
@@ -327,7 +327,7 @@ public class InvitationsApi {
 
   /**
    * Bulk Create Invitations
-   * 
+   * Send one or more invitations to join the account.
    * @param invitationBulkCreateRequest  (required)
    * @param headers Optional headers to include in the request
    * @return ApiResponse&lt;InvitationListResponse&gt;
@@ -415,7 +415,7 @@ public class InvitationsApi {
 
   /**
    * List Invitations
-   * 
+   * List all invitations for the authenticated account.
    * @param filterStatus  (optional)
    * @return InvitationListResponse
    * @throws ApiException if fails to make API call
@@ -426,7 +426,7 @@ public class InvitationsApi {
 
   /**
    * List Invitations
-   * 
+   * List all invitations for the authenticated account.
    * @param filterStatus  (optional)
    * @param headers Optional headers to include in the request
    * @return InvitationListResponse
@@ -439,7 +439,7 @@ public class InvitationsApi {
 
   /**
    * List Invitations
-   * 
+   * List all invitations for the authenticated account.
    * @param filterStatus  (optional)
    * @return ApiResponse&lt;InvitationListResponse&gt;
    * @throws ApiException if fails to make API call
@@ -450,7 +450,7 @@ public class InvitationsApi {
 
   /**
    * List Invitations
-   * 
+   * List all invitations for the authenticated account.
    * @param filterStatus  (optional)
    * @param headers Optional headers to include in the request
    * @return ApiResponse&lt;InvitationListResponse&gt;
@@ -543,7 +543,7 @@ public class InvitationsApi {
 
   /**
    * Resend Invitation
-   * 
+   * Resend a pending invitation email by id.
    * @param id  (required)
    * @return InvitationResponse
    * @throws ApiException if fails to make API call
@@ -554,7 +554,7 @@ public class InvitationsApi {
 
   /**
    * Resend Invitation
-   * 
+   * Resend a pending invitation email by id.
    * @param id  (required)
    * @param headers Optional headers to include in the request
    * @return InvitationResponse
@@ -567,7 +567,7 @@ public class InvitationsApi {
 
   /**
    * Resend Invitation
-   * 
+   * Resend a pending invitation email by id.
    * @param id  (required)
    * @return ApiResponse&lt;InvitationResponse&gt;
    * @throws ApiException if fails to make API call
@@ -578,7 +578,7 @@ public class InvitationsApi {
 
   /**
    * Resend Invitation
-   * 
+   * Resend a pending invitation email by id.
    * @param id  (required)
    * @param headers Optional headers to include in the request
    * @return ApiResponse&lt;InvitationResponse&gt;
@@ -661,7 +661,7 @@ public class InvitationsApi {
 
   /**
    * Revoke Invitation
-   * 
+   * Revoke a pending invitation by id.
    * @param id  (required)
    * @return InvitationResponse
    * @throws ApiException if fails to make API call
@@ -672,7 +672,7 @@ public class InvitationsApi {
 
   /**
    * Revoke Invitation
-   * 
+   * Revoke a pending invitation by id.
    * @param id  (required)
    * @param headers Optional headers to include in the request
    * @return InvitationResponse
@@ -685,7 +685,7 @@ public class InvitationsApi {
 
   /**
    * Revoke Invitation
-   * 
+   * Revoke a pending invitation by id.
    * @param id  (required)
    * @return ApiResponse&lt;InvitationResponse&gt;
    * @throws ApiException if fails to make API call
@@ -696,7 +696,7 @@ public class InvitationsApi {
 
   /**
    * Revoke Invitation
-   * 
+   * Revoke a pending invitation by id.
    * @param id  (required)
    * @param headers Optional headers to include in the request
    * @return ApiResponse&lt;InvitationResponse&gt;

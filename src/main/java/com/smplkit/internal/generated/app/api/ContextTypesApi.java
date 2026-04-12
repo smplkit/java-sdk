@@ -166,7 +166,7 @@ public class ContextTypesApi {
 
   /**
    * Create Context Type
-   * 
+   * Create a new context type. The caller provides the id (key) in the request body.
    * @param contextTypeResponse  (required)
    * @return ContextTypeResponse
    * @throws ApiException if fails to make API call
@@ -177,7 +177,7 @@ public class ContextTypesApi {
 
   /**
    * Create Context Type
-   * 
+   * Create a new context type. The caller provides the id (key) in the request body.
    * @param contextTypeResponse  (required)
    * @param headers Optional headers to include in the request
    * @return ContextTypeResponse
@@ -190,7 +190,7 @@ public class ContextTypesApi {
 
   /**
    * Create Context Type
-   * 
+   * Create a new context type. The caller provides the id (key) in the request body.
    * @param contextTypeResponse  (required)
    * @return ApiResponse&lt;ContextTypeResponse&gt;
    * @throws ApiException if fails to make API call
@@ -201,7 +201,7 @@ public class ContextTypesApi {
 
   /**
    * Create Context Type
-   * 
+   * Create a new context type. The caller provides the id (key) in the request body.
    * @param contextTypeResponse  (required)
    * @param headers Optional headers to include in the request
    * @return ApiResponse&lt;ContextTypeResponse&gt;
@@ -289,7 +289,7 @@ public class ContextTypesApi {
 
   /**
    * Delete Context Type
-   * 
+   * Delete a context type and all its associated context instances by id.
    * @param id  (required)
    * @throws ApiException if fails to make API call
    */
@@ -299,7 +299,7 @@ public class ContextTypesApi {
 
   /**
    * Delete Context Type
-   * 
+   * Delete a context type and all its associated context instances by id.
    * @param id  (required)
    * @param headers Optional headers to include in the request
    * @throws ApiException if fails to make API call
@@ -310,7 +310,7 @@ public class ContextTypesApi {
 
   /**
    * Delete Context Type
-   * 
+   * Delete a context type and all its associated context instances by id.
    * @param id  (required)
    * @return ApiResponse&lt;Void&gt;
    * @throws ApiException if fails to make API call
@@ -321,7 +321,7 @@ public class ContextTypesApi {
 
   /**
    * Delete Context Type
-   * 
+   * Delete a context type and all its associated context instances by id.
    * @param id  (required)
    * @param headers Optional headers to include in the request
    * @return ApiResponse&lt;Void&gt;
@@ -393,7 +393,7 @@ public class ContextTypesApi {
 
   /**
    * Get Context Type
-   * 
+   * Return a context type by id.
    * @param id  (required)
    * @return ContextTypeResponse
    * @throws ApiException if fails to make API call
@@ -404,7 +404,7 @@ public class ContextTypesApi {
 
   /**
    * Get Context Type
-   * 
+   * Return a context type by id.
    * @param id  (required)
    * @param headers Optional headers to include in the request
    * @return ContextTypeResponse
@@ -417,7 +417,7 @@ public class ContextTypesApi {
 
   /**
    * Get Context Type
-   * 
+   * Return a context type by id.
    * @param id  (required)
    * @return ApiResponse&lt;ContextTypeResponse&gt;
    * @throws ApiException if fails to make API call
@@ -428,7 +428,7 @@ public class ContextTypesApi {
 
   /**
    * Get Context Type
-   * 
+   * Return a context type by id.
    * @param id  (required)
    * @param headers Optional headers to include in the request
    * @return ApiResponse&lt;ContextTypeResponse&gt;
@@ -511,7 +511,7 @@ public class ContextTypesApi {
 
   /**
    * List Context Types
-   * 
+   * List all context types for the authenticated account.
    * @return ContextTypeListResponse
    * @throws ApiException if fails to make API call
    */
@@ -521,7 +521,7 @@ public class ContextTypesApi {
 
   /**
    * List Context Types
-   * 
+   * List all context types for the authenticated account.
    * @param headers Optional headers to include in the request
    * @return ContextTypeListResponse
    * @throws ApiException if fails to make API call
@@ -533,7 +533,7 @@ public class ContextTypesApi {
 
   /**
    * List Context Types
-   * 
+   * List all context types for the authenticated account.
    * @return ApiResponse&lt;ContextTypeListResponse&gt;
    * @throws ApiException if fails to make API call
    */
@@ -543,7 +543,7 @@ public class ContextTypesApi {
 
   /**
    * List Context Types
-   * 
+   * List all context types for the authenticated account.
    * @param headers Optional headers to include in the request
    * @return ApiResponse&lt;ContextTypeListResponse&gt;
    * @throws ApiException if fails to make API call
@@ -620,7 +620,7 @@ public class ContextTypesApi {
 
   /**
    * Update Context Type
-   * 
+   * Update a context type by id.
    * @param id  (required)
    * @param contextTypeResponse  (required)
    * @return ContextTypeResponse
@@ -632,7 +632,7 @@ public class ContextTypesApi {
 
   /**
    * Update Context Type
-   * 
+   * Update a context type by id.
    * @param id  (required)
    * @param contextTypeResponse  (required)
    * @param headers Optional headers to include in the request
@@ -646,7 +646,7 @@ public class ContextTypesApi {
 
   /**
    * Update Context Type
-   * 
+   * Update a context type by id.
    * @param id  (required)
    * @param contextTypeResponse  (required)
    * @return ApiResponse&lt;ContextTypeResponse&gt;
@@ -658,7 +658,7 @@ public class ContextTypesApi {
 
   /**
    * Update Context Type
-   * 
+   * Update a context type by id.
    * @param id  (required)
    * @param contextTypeResponse  (required)
    * @param headers Optional headers to include in the request

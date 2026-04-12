@@ -172,12 +172,11 @@ public class AuthApi {
    * Initiates the OIDC authorization flow by redirecting the user to the provider&#39;s login page.
    * @param provider  (required)
    * @param mode  (optional, default to signin)
-   * @param source  (optional, default to )
-   * @return Object
+   * @param source  (optional)
    * @throws ApiException if fails to make API call
    */
-  public Object beginOidcLogin(@jakarta.annotation.Nonnull OidcProvider provider, @jakarta.annotation.Nullable String mode, @jakarta.annotation.Nullable String source) throws ApiException {
-    return beginOidcLogin(provider, mode, source, null);
+  public void beginOidcLogin(@jakarta.annotation.Nonnull OidcProvider provider, @jakarta.annotation.Nullable String mode, @jakarta.annotation.Nullable String source) throws ApiException {
+    beginOidcLogin(provider, mode, source, null);
   }
 
   /**
@@ -185,14 +184,12 @@ public class AuthApi {
    * Initiates the OIDC authorization flow by redirecting the user to the provider&#39;s login page.
    * @param provider  (required)
    * @param mode  (optional, default to signin)
-   * @param source  (optional, default to )
+   * @param source  (optional)
    * @param headers Optional headers to include in the request
-   * @return Object
    * @throws ApiException if fails to make API call
    */
-  public Object beginOidcLogin(@jakarta.annotation.Nonnull OidcProvider provider, @jakarta.annotation.Nullable String mode, @jakarta.annotation.Nullable String source, Map<String, String> headers) throws ApiException {
-    ApiResponse<Object> localVarResponse = beginOidcLoginWithHttpInfo(provider, mode, source, headers);
-    return localVarResponse.getData();
+  public void beginOidcLogin(@jakarta.annotation.Nonnull OidcProvider provider, @jakarta.annotation.Nullable String mode, @jakarta.annotation.Nullable String source, Map<String, String> headers) throws ApiException {
+    beginOidcLoginWithHttpInfo(provider, mode, source, headers);
   }
 
   /**
@@ -200,11 +197,11 @@ public class AuthApi {
    * Initiates the OIDC authorization flow by redirecting the user to the provider&#39;s login page.
    * @param provider  (required)
    * @param mode  (optional, default to signin)
-   * @param source  (optional, default to )
-   * @return ApiResponse&lt;Object&gt;
+   * @param source  (optional)
+   * @return ApiResponse&lt;Void&gt;
    * @throws ApiException if fails to make API call
    */
-  public ApiResponse<Object> beginOidcLoginWithHttpInfo(@jakarta.annotation.Nonnull OidcProvider provider, @jakarta.annotation.Nullable String mode, @jakarta.annotation.Nullable String source) throws ApiException {
+  public ApiResponse<Void> beginOidcLoginWithHttpInfo(@jakarta.annotation.Nonnull OidcProvider provider, @jakarta.annotation.Nullable String mode, @jakarta.annotation.Nullable String source) throws ApiException {
     return beginOidcLoginWithHttpInfo(provider, mode, source, null);
   }
 
@@ -213,12 +210,12 @@ public class AuthApi {
    * Initiates the OIDC authorization flow by redirecting the user to the provider&#39;s login page.
    * @param provider  (required)
    * @param mode  (optional, default to signin)
-   * @param source  (optional, default to )
+   * @param source  (optional)
    * @param headers Optional headers to include in the request
-   * @return ApiResponse&lt;Object&gt;
+   * @return ApiResponse&lt;Void&gt;
    * @throws ApiException if fails to make API call
    */
-  public ApiResponse<Object> beginOidcLoginWithHttpInfo(@jakarta.annotation.Nonnull OidcProvider provider, @jakarta.annotation.Nullable String mode, @jakarta.annotation.Nullable String source, Map<String, String> headers) throws ApiException {
+  public ApiResponse<Void> beginOidcLoginWithHttpInfo(@jakarta.annotation.Nonnull OidcProvider provider, @jakarta.annotation.Nullable String mode, @jakarta.annotation.Nullable String source, Map<String, String> headers) throws ApiException {
     HttpRequest.Builder localVarRequestBuilder = beginOidcLoginRequestBuilder(provider, mode, source, headers);
     try {
       HttpResponse<InputStream> localVarResponse = memberVarHttpClient.send(
@@ -233,24 +230,13 @@ public class AuthApi {
           throw getApiException("beginOidcLogin", localVarResponse);
         }
         localVarResponseBody = ApiClient.getResponseBody(localVarResponse);
-        if (localVarResponseBody == null) {
-          return new ApiResponse<Object>(
-              localVarResponse.statusCode(),
-              localVarResponse.headers().map(),
-              null
-          );
+        if (localVarResponseBody != null) {
+          localVarResponseBody.readAllBytes();
         }
-
-        
-        
-        String responseBody = new String(localVarResponseBody.readAllBytes());
-        Object responseValue = responseBody.isBlank()? null: memberVarObjectMapper.readValue(responseBody, new TypeReference<Object>() {});
-        
-
-        return new ApiResponse<Object>(
+        return new ApiResponse<>(
             localVarResponse.statusCode(),
             localVarResponse.headers().map(),
-            responseValue
+            null
         );
       } finally {
         if (localVarResponseBody != null) {
@@ -318,11 +304,10 @@ public class AuthApi {
    * @param state  (optional)
    * @param error  (optional)
    * @param errorDescription  (optional)
-   * @return Object
    * @throws ApiException if fails to make API call
    */
-  public Object handleOidcCallback(@jakarta.annotation.Nonnull OidcProvider provider, @jakarta.annotation.Nullable String code, @jakarta.annotation.Nullable String state, @jakarta.annotation.Nullable String error, @jakarta.annotation.Nullable String errorDescription) throws ApiException {
-    return handleOidcCallback(provider, code, state, error, errorDescription, null);
+  public void handleOidcCallback(@jakarta.annotation.Nonnull OidcProvider provider, @jakarta.annotation.Nullable String code, @jakarta.annotation.Nullable String state, @jakarta.annotation.Nullable String error, @jakarta.annotation.Nullable String errorDescription) throws ApiException {
+    handleOidcCallback(provider, code, state, error, errorDescription, null);
   }
 
   /**
@@ -334,12 +319,10 @@ public class AuthApi {
    * @param error  (optional)
    * @param errorDescription  (optional)
    * @param headers Optional headers to include in the request
-   * @return Object
    * @throws ApiException if fails to make API call
    */
-  public Object handleOidcCallback(@jakarta.annotation.Nonnull OidcProvider provider, @jakarta.annotation.Nullable String code, @jakarta.annotation.Nullable String state, @jakarta.annotation.Nullable String error, @jakarta.annotation.Nullable String errorDescription, Map<String, String> headers) throws ApiException {
-    ApiResponse<Object> localVarResponse = handleOidcCallbackWithHttpInfo(provider, code, state, error, errorDescription, headers);
-    return localVarResponse.getData();
+  public void handleOidcCallback(@jakarta.annotation.Nonnull OidcProvider provider, @jakarta.annotation.Nullable String code, @jakarta.annotation.Nullable String state, @jakarta.annotation.Nullable String error, @jakarta.annotation.Nullable String errorDescription, Map<String, String> headers) throws ApiException {
+    handleOidcCallbackWithHttpInfo(provider, code, state, error, errorDescription, headers);
   }
 
   /**
@@ -350,10 +333,10 @@ public class AuthApi {
    * @param state  (optional)
    * @param error  (optional)
    * @param errorDescription  (optional)
-   * @return ApiResponse&lt;Object&gt;
+   * @return ApiResponse&lt;Void&gt;
    * @throws ApiException if fails to make API call
    */
-  public ApiResponse<Object> handleOidcCallbackWithHttpInfo(@jakarta.annotation.Nonnull OidcProvider provider, @jakarta.annotation.Nullable String code, @jakarta.annotation.Nullable String state, @jakarta.annotation.Nullable String error, @jakarta.annotation.Nullable String errorDescription) throws ApiException {
+  public ApiResponse<Void> handleOidcCallbackWithHttpInfo(@jakarta.annotation.Nonnull OidcProvider provider, @jakarta.annotation.Nullable String code, @jakarta.annotation.Nullable String state, @jakarta.annotation.Nullable String error, @jakarta.annotation.Nullable String errorDescription) throws ApiException {
     return handleOidcCallbackWithHttpInfo(provider, code, state, error, errorDescription, null);
   }
 
@@ -366,10 +349,10 @@ public class AuthApi {
    * @param error  (optional)
    * @param errorDescription  (optional)
    * @param headers Optional headers to include in the request
-   * @return ApiResponse&lt;Object&gt;
+   * @return ApiResponse&lt;Void&gt;
    * @throws ApiException if fails to make API call
    */
-  public ApiResponse<Object> handleOidcCallbackWithHttpInfo(@jakarta.annotation.Nonnull OidcProvider provider, @jakarta.annotation.Nullable String code, @jakarta.annotation.Nullable String state, @jakarta.annotation.Nullable String error, @jakarta.annotation.Nullable String errorDescription, Map<String, String> headers) throws ApiException {
+  public ApiResponse<Void> handleOidcCallbackWithHttpInfo(@jakarta.annotation.Nonnull OidcProvider provider, @jakarta.annotation.Nullable String code, @jakarta.annotation.Nullable String state, @jakarta.annotation.Nullable String error, @jakarta.annotation.Nullable String errorDescription, Map<String, String> headers) throws ApiException {
     HttpRequest.Builder localVarRequestBuilder = handleOidcCallbackRequestBuilder(provider, code, state, error, errorDescription, headers);
     try {
       HttpResponse<InputStream> localVarResponse = memberVarHttpClient.send(
@@ -384,24 +367,13 @@ public class AuthApi {
           throw getApiException("handleOidcCallback", localVarResponse);
         }
         localVarResponseBody = ApiClient.getResponseBody(localVarResponse);
-        if (localVarResponseBody == null) {
-          return new ApiResponse<Object>(
-              localVarResponse.statusCode(),
-              localVarResponse.headers().map(),
-              null
-          );
+        if (localVarResponseBody != null) {
+          localVarResponseBody.readAllBytes();
         }
-
-        
-        
-        String responseBody = new String(localVarResponseBody.readAllBytes());
-        Object responseValue = responseBody.isBlank()? null: memberVarObjectMapper.readValue(responseBody, new TypeReference<Object>() {});
-        
-
-        return new ApiResponse<Object>(
+        return new ApiResponse<>(
             localVarResponse.statusCode(),
             localVarResponse.headers().map(),
-            responseValue
+            null
         );
       } finally {
         if (localVarResponseBody != null) {

@@ -21,6 +21,10 @@ import com.smplkit.internal.generated.app.Pair;
 import com.smplkit.internal.generated.app.model.CreateSubscriptionBody;
 import com.smplkit.internal.generated.app.model.ErrorResponse;
 import com.smplkit.internal.generated.app.model.InvoiceListResponse;
+import com.smplkit.internal.generated.app.model.PaymentMethodListResponse;
+import com.smplkit.internal.generated.app.model.SetupIntentResponse;
+import com.smplkit.internal.generated.app.model.SubscriptionListResponse;
+import com.smplkit.internal.generated.app.model.SubscriptionResponse;
 import com.smplkit.internal.generated.app.model.UpdateSubscriptionBody;
 
 import com.fasterxml.jackson.core.type.TypeReference;
@@ -273,10 +277,10 @@ public class BillingApi {
    * Create Subscription
    * Create a new paid subscription for a product.
    * @param createSubscriptionBody  (required)
-   * @return Object
+   * @return SubscriptionResponse
    * @throws ApiException if fails to make API call
    */
-  public Object createSubscription(@jakarta.annotation.Nonnull CreateSubscriptionBody createSubscriptionBody) throws ApiException {
+  public SubscriptionResponse createSubscription(@jakarta.annotation.Nonnull CreateSubscriptionBody createSubscriptionBody) throws ApiException {
     return createSubscription(createSubscriptionBody, null);
   }
 
@@ -285,11 +289,11 @@ public class BillingApi {
    * Create a new paid subscription for a product.
    * @param createSubscriptionBody  (required)
    * @param headers Optional headers to include in the request
-   * @return Object
+   * @return SubscriptionResponse
    * @throws ApiException if fails to make API call
    */
-  public Object createSubscription(@jakarta.annotation.Nonnull CreateSubscriptionBody createSubscriptionBody, Map<String, String> headers) throws ApiException {
-    ApiResponse<Object> localVarResponse = createSubscriptionWithHttpInfo(createSubscriptionBody, headers);
+  public SubscriptionResponse createSubscription(@jakarta.annotation.Nonnull CreateSubscriptionBody createSubscriptionBody, Map<String, String> headers) throws ApiException {
+    ApiResponse<SubscriptionResponse> localVarResponse = createSubscriptionWithHttpInfo(createSubscriptionBody, headers);
     return localVarResponse.getData();
   }
 
@@ -297,10 +301,10 @@ public class BillingApi {
    * Create Subscription
    * Create a new paid subscription for a product.
    * @param createSubscriptionBody  (required)
-   * @return ApiResponse&lt;Object&gt;
+   * @return ApiResponse&lt;SubscriptionResponse&gt;
    * @throws ApiException if fails to make API call
    */
-  public ApiResponse<Object> createSubscriptionWithHttpInfo(@jakarta.annotation.Nonnull CreateSubscriptionBody createSubscriptionBody) throws ApiException {
+  public ApiResponse<SubscriptionResponse> createSubscriptionWithHttpInfo(@jakarta.annotation.Nonnull CreateSubscriptionBody createSubscriptionBody) throws ApiException {
     return createSubscriptionWithHttpInfo(createSubscriptionBody, null);
   }
 
@@ -309,10 +313,10 @@ public class BillingApi {
    * Create a new paid subscription for a product.
    * @param createSubscriptionBody  (required)
    * @param headers Optional headers to include in the request
-   * @return ApiResponse&lt;Object&gt;
+   * @return ApiResponse&lt;SubscriptionResponse&gt;
    * @throws ApiException if fails to make API call
    */
-  public ApiResponse<Object> createSubscriptionWithHttpInfo(@jakarta.annotation.Nonnull CreateSubscriptionBody createSubscriptionBody, Map<String, String> headers) throws ApiException {
+  public ApiResponse<SubscriptionResponse> createSubscriptionWithHttpInfo(@jakarta.annotation.Nonnull CreateSubscriptionBody createSubscriptionBody, Map<String, String> headers) throws ApiException {
     HttpRequest.Builder localVarRequestBuilder = createSubscriptionRequestBuilder(createSubscriptionBody, headers);
     try {
       HttpResponse<InputStream> localVarResponse = memberVarHttpClient.send(
@@ -328,7 +332,7 @@ public class BillingApi {
         }
         localVarResponseBody = ApiClient.getResponseBody(localVarResponse);
         if (localVarResponseBody == null) {
-          return new ApiResponse<Object>(
+          return new ApiResponse<SubscriptionResponse>(
               localVarResponse.statusCode(),
               localVarResponse.headers().map(),
               null
@@ -338,10 +342,10 @@ public class BillingApi {
         
         
         String responseBody = new String(localVarResponseBody.readAllBytes());
-        Object responseValue = responseBody.isBlank()? null: memberVarObjectMapper.readValue(responseBody, new TypeReference<Object>() {});
+        SubscriptionResponse responseValue = responseBody.isBlank()? null: memberVarObjectMapper.readValue(responseBody, new TypeReference<SubscriptionResponse>() {});
         
 
-        return new ApiResponse<Object>(
+        return new ApiResponse<SubscriptionResponse>(
             localVarResponse.statusCode(),
             localVarResponse.headers().map(),
             responseValue
@@ -395,10 +399,10 @@ public class BillingApi {
   /**
    * Execute Setup Intent
    * Create a Stripe SetupIntent for saving a payment method.  Returns a &#x60;&#x60;client_secret&#x60;&#x60; that the frontend passes to Stripe&#39;s Payment Element so the customer can securely enter card details without an immediate charge.
-   * @return Object
+   * @return SetupIntentResponse
    * @throws ApiException if fails to make API call
    */
-  public Object executeSetupIntent() throws ApiException {
+  public SetupIntentResponse executeSetupIntent() throws ApiException {
     return executeSetupIntent(null);
   }
 
@@ -406,21 +410,21 @@ public class BillingApi {
    * Execute Setup Intent
    * Create a Stripe SetupIntent for saving a payment method.  Returns a &#x60;&#x60;client_secret&#x60;&#x60; that the frontend passes to Stripe&#39;s Payment Element so the customer can securely enter card details without an immediate charge.
    * @param headers Optional headers to include in the request
-   * @return Object
+   * @return SetupIntentResponse
    * @throws ApiException if fails to make API call
    */
-  public Object executeSetupIntent(Map<String, String> headers) throws ApiException {
-    ApiResponse<Object> localVarResponse = executeSetupIntentWithHttpInfo(headers);
+  public SetupIntentResponse executeSetupIntent(Map<String, String> headers) throws ApiException {
+    ApiResponse<SetupIntentResponse> localVarResponse = executeSetupIntentWithHttpInfo(headers);
     return localVarResponse.getData();
   }
 
   /**
    * Execute Setup Intent
    * Create a Stripe SetupIntent for saving a payment method.  Returns a &#x60;&#x60;client_secret&#x60;&#x60; that the frontend passes to Stripe&#39;s Payment Element so the customer can securely enter card details without an immediate charge.
-   * @return ApiResponse&lt;Object&gt;
+   * @return ApiResponse&lt;SetupIntentResponse&gt;
    * @throws ApiException if fails to make API call
    */
-  public ApiResponse<Object> executeSetupIntentWithHttpInfo() throws ApiException {
+  public ApiResponse<SetupIntentResponse> executeSetupIntentWithHttpInfo() throws ApiException {
     return executeSetupIntentWithHttpInfo(null);
   }
 
@@ -428,10 +432,10 @@ public class BillingApi {
    * Execute Setup Intent
    * Create a Stripe SetupIntent for saving a payment method.  Returns a &#x60;&#x60;client_secret&#x60;&#x60; that the frontend passes to Stripe&#39;s Payment Element so the customer can securely enter card details without an immediate charge.
    * @param headers Optional headers to include in the request
-   * @return ApiResponse&lt;Object&gt;
+   * @return ApiResponse&lt;SetupIntentResponse&gt;
    * @throws ApiException if fails to make API call
    */
-  public ApiResponse<Object> executeSetupIntentWithHttpInfo(Map<String, String> headers) throws ApiException {
+  public ApiResponse<SetupIntentResponse> executeSetupIntentWithHttpInfo(Map<String, String> headers) throws ApiException {
     HttpRequest.Builder localVarRequestBuilder = executeSetupIntentRequestBuilder(headers);
     try {
       HttpResponse<InputStream> localVarResponse = memberVarHttpClient.send(
@@ -447,7 +451,7 @@ public class BillingApi {
         }
         localVarResponseBody = ApiClient.getResponseBody(localVarResponse);
         if (localVarResponseBody == null) {
-          return new ApiResponse<Object>(
+          return new ApiResponse<SetupIntentResponse>(
               localVarResponse.statusCode(),
               localVarResponse.headers().map(),
               null
@@ -457,10 +461,10 @@ public class BillingApi {
         
         
         String responseBody = new String(localVarResponseBody.readAllBytes());
-        Object responseValue = responseBody.isBlank()? null: memberVarObjectMapper.readValue(responseBody, new TypeReference<Object>() {});
+        SetupIntentResponse responseValue = responseBody.isBlank()? null: memberVarObjectMapper.readValue(responseBody, new TypeReference<SetupIntentResponse>() {});
         
 
-        return new ApiResponse<Object>(
+        return new ApiResponse<SetupIntentResponse>(
             localVarResponse.statusCode(),
             localVarResponse.headers().map(),
             responseValue
@@ -613,10 +617,10 @@ public class BillingApi {
   /**
    * List Payment Methods
    * Return the default payment method for the account&#39;s Stripe Customer.
-   * @return Object
+   * @return PaymentMethodListResponse
    * @throws ApiException if fails to make API call
    */
-  public Object listPaymentMethods() throws ApiException {
+  public PaymentMethodListResponse listPaymentMethods() throws ApiException {
     return listPaymentMethods(null);
   }
 
@@ -624,21 +628,21 @@ public class BillingApi {
    * List Payment Methods
    * Return the default payment method for the account&#39;s Stripe Customer.
    * @param headers Optional headers to include in the request
-   * @return Object
+   * @return PaymentMethodListResponse
    * @throws ApiException if fails to make API call
    */
-  public Object listPaymentMethods(Map<String, String> headers) throws ApiException {
-    ApiResponse<Object> localVarResponse = listPaymentMethodsWithHttpInfo(headers);
+  public PaymentMethodListResponse listPaymentMethods(Map<String, String> headers) throws ApiException {
+    ApiResponse<PaymentMethodListResponse> localVarResponse = listPaymentMethodsWithHttpInfo(headers);
     return localVarResponse.getData();
   }
 
   /**
    * List Payment Methods
    * Return the default payment method for the account&#39;s Stripe Customer.
-   * @return ApiResponse&lt;Object&gt;
+   * @return ApiResponse&lt;PaymentMethodListResponse&gt;
    * @throws ApiException if fails to make API call
    */
-  public ApiResponse<Object> listPaymentMethodsWithHttpInfo() throws ApiException {
+  public ApiResponse<PaymentMethodListResponse> listPaymentMethodsWithHttpInfo() throws ApiException {
     return listPaymentMethodsWithHttpInfo(null);
   }
 
@@ -646,10 +650,10 @@ public class BillingApi {
    * List Payment Methods
    * Return the default payment method for the account&#39;s Stripe Customer.
    * @param headers Optional headers to include in the request
-   * @return ApiResponse&lt;Object&gt;
+   * @return ApiResponse&lt;PaymentMethodListResponse&gt;
    * @throws ApiException if fails to make API call
    */
-  public ApiResponse<Object> listPaymentMethodsWithHttpInfo(Map<String, String> headers) throws ApiException {
+  public ApiResponse<PaymentMethodListResponse> listPaymentMethodsWithHttpInfo(Map<String, String> headers) throws ApiException {
     HttpRequest.Builder localVarRequestBuilder = listPaymentMethodsRequestBuilder(headers);
     try {
       HttpResponse<InputStream> localVarResponse = memberVarHttpClient.send(
@@ -665,7 +669,7 @@ public class BillingApi {
         }
         localVarResponseBody = ApiClient.getResponseBody(localVarResponse);
         if (localVarResponseBody == null) {
-          return new ApiResponse<Object>(
+          return new ApiResponse<PaymentMethodListResponse>(
               localVarResponse.statusCode(),
               localVarResponse.headers().map(),
               null
@@ -675,10 +679,10 @@ public class BillingApi {
         
         
         String responseBody = new String(localVarResponseBody.readAllBytes());
-        Object responseValue = responseBody.isBlank()? null: memberVarObjectMapper.readValue(responseBody, new TypeReference<Object>() {});
+        PaymentMethodListResponse responseValue = responseBody.isBlank()? null: memberVarObjectMapper.readValue(responseBody, new TypeReference<PaymentMethodListResponse>() {});
         
 
-        return new ApiResponse<Object>(
+        return new ApiResponse<PaymentMethodListResponse>(
             localVarResponse.statusCode(),
             localVarResponse.headers().map(),
             responseValue
@@ -722,10 +726,10 @@ public class BillingApi {
   /**
    * List Subscriptions
    * Return per-product subscription state for the authenticated account.
-   * @return Object
+   * @return SubscriptionListResponse
    * @throws ApiException if fails to make API call
    */
-  public Object listSubscriptions() throws ApiException {
+  public SubscriptionListResponse listSubscriptions() throws ApiException {
     return listSubscriptions(null);
   }
 
@@ -733,21 +737,21 @@ public class BillingApi {
    * List Subscriptions
    * Return per-product subscription state for the authenticated account.
    * @param headers Optional headers to include in the request
-   * @return Object
+   * @return SubscriptionListResponse
    * @throws ApiException if fails to make API call
    */
-  public Object listSubscriptions(Map<String, String> headers) throws ApiException {
-    ApiResponse<Object> localVarResponse = listSubscriptionsWithHttpInfo(headers);
+  public SubscriptionListResponse listSubscriptions(Map<String, String> headers) throws ApiException {
+    ApiResponse<SubscriptionListResponse> localVarResponse = listSubscriptionsWithHttpInfo(headers);
     return localVarResponse.getData();
   }
 
   /**
    * List Subscriptions
    * Return per-product subscription state for the authenticated account.
-   * @return ApiResponse&lt;Object&gt;
+   * @return ApiResponse&lt;SubscriptionListResponse&gt;
    * @throws ApiException if fails to make API call
    */
-  public ApiResponse<Object> listSubscriptionsWithHttpInfo() throws ApiException {
+  public ApiResponse<SubscriptionListResponse> listSubscriptionsWithHttpInfo() throws ApiException {
     return listSubscriptionsWithHttpInfo(null);
   }
 
@@ -755,10 +759,10 @@ public class BillingApi {
    * List Subscriptions
    * Return per-product subscription state for the authenticated account.
    * @param headers Optional headers to include in the request
-   * @return ApiResponse&lt;Object&gt;
+   * @return ApiResponse&lt;SubscriptionListResponse&gt;
    * @throws ApiException if fails to make API call
    */
-  public ApiResponse<Object> listSubscriptionsWithHttpInfo(Map<String, String> headers) throws ApiException {
+  public ApiResponse<SubscriptionListResponse> listSubscriptionsWithHttpInfo(Map<String, String> headers) throws ApiException {
     HttpRequest.Builder localVarRequestBuilder = listSubscriptionsRequestBuilder(headers);
     try {
       HttpResponse<InputStream> localVarResponse = memberVarHttpClient.send(
@@ -774,7 +778,7 @@ public class BillingApi {
         }
         localVarResponseBody = ApiClient.getResponseBody(localVarResponse);
         if (localVarResponseBody == null) {
-          return new ApiResponse<Object>(
+          return new ApiResponse<SubscriptionListResponse>(
               localVarResponse.statusCode(),
               localVarResponse.headers().map(),
               null
@@ -784,10 +788,10 @@ public class BillingApi {
         
         
         String responseBody = new String(localVarResponseBody.readAllBytes());
-        Object responseValue = responseBody.isBlank()? null: memberVarObjectMapper.readValue(responseBody, new TypeReference<Object>() {});
+        SubscriptionListResponse responseValue = responseBody.isBlank()? null: memberVarObjectMapper.readValue(responseBody, new TypeReference<SubscriptionListResponse>() {});
         
 
-        return new ApiResponse<Object>(
+        return new ApiResponse<SubscriptionListResponse>(
             localVarResponse.statusCode(),
             localVarResponse.headers().map(),
             responseValue
@@ -833,10 +837,10 @@ public class BillingApi {
    * Change the plan for an existing paid subscription (upgrade or downgrade).
    * @param product  (required)
    * @param updateSubscriptionBody  (required)
-   * @return Object
+   * @return SubscriptionResponse
    * @throws ApiException if fails to make API call
    */
-  public Object updateSubscription(@jakarta.annotation.Nonnull String product, @jakarta.annotation.Nonnull UpdateSubscriptionBody updateSubscriptionBody) throws ApiException {
+  public SubscriptionResponse updateSubscription(@jakarta.annotation.Nonnull String product, @jakarta.annotation.Nonnull UpdateSubscriptionBody updateSubscriptionBody) throws ApiException {
     return updateSubscription(product, updateSubscriptionBody, null);
   }
 
@@ -846,11 +850,11 @@ public class BillingApi {
    * @param product  (required)
    * @param updateSubscriptionBody  (required)
    * @param headers Optional headers to include in the request
-   * @return Object
+   * @return SubscriptionResponse
    * @throws ApiException if fails to make API call
    */
-  public Object updateSubscription(@jakarta.annotation.Nonnull String product, @jakarta.annotation.Nonnull UpdateSubscriptionBody updateSubscriptionBody, Map<String, String> headers) throws ApiException {
-    ApiResponse<Object> localVarResponse = updateSubscriptionWithHttpInfo(product, updateSubscriptionBody, headers);
+  public SubscriptionResponse updateSubscription(@jakarta.annotation.Nonnull String product, @jakarta.annotation.Nonnull UpdateSubscriptionBody updateSubscriptionBody, Map<String, String> headers) throws ApiException {
+    ApiResponse<SubscriptionResponse> localVarResponse = updateSubscriptionWithHttpInfo(product, updateSubscriptionBody, headers);
     return localVarResponse.getData();
   }
 
@@ -859,10 +863,10 @@ public class BillingApi {
    * Change the plan for an existing paid subscription (upgrade or downgrade).
    * @param product  (required)
    * @param updateSubscriptionBody  (required)
-   * @return ApiResponse&lt;Object&gt;
+   * @return ApiResponse&lt;SubscriptionResponse&gt;
    * @throws ApiException if fails to make API call
    */
-  public ApiResponse<Object> updateSubscriptionWithHttpInfo(@jakarta.annotation.Nonnull String product, @jakarta.annotation.Nonnull UpdateSubscriptionBody updateSubscriptionBody) throws ApiException {
+  public ApiResponse<SubscriptionResponse> updateSubscriptionWithHttpInfo(@jakarta.annotation.Nonnull String product, @jakarta.annotation.Nonnull UpdateSubscriptionBody updateSubscriptionBody) throws ApiException {
     return updateSubscriptionWithHttpInfo(product, updateSubscriptionBody, null);
   }
 
@@ -872,10 +876,10 @@ public class BillingApi {
    * @param product  (required)
    * @param updateSubscriptionBody  (required)
    * @param headers Optional headers to include in the request
-   * @return ApiResponse&lt;Object&gt;
+   * @return ApiResponse&lt;SubscriptionResponse&gt;
    * @throws ApiException if fails to make API call
    */
-  public ApiResponse<Object> updateSubscriptionWithHttpInfo(@jakarta.annotation.Nonnull String product, @jakarta.annotation.Nonnull UpdateSubscriptionBody updateSubscriptionBody, Map<String, String> headers) throws ApiException {
+  public ApiResponse<SubscriptionResponse> updateSubscriptionWithHttpInfo(@jakarta.annotation.Nonnull String product, @jakarta.annotation.Nonnull UpdateSubscriptionBody updateSubscriptionBody, Map<String, String> headers) throws ApiException {
     HttpRequest.Builder localVarRequestBuilder = updateSubscriptionRequestBuilder(product, updateSubscriptionBody, headers);
     try {
       HttpResponse<InputStream> localVarResponse = memberVarHttpClient.send(
@@ -891,7 +895,7 @@ public class BillingApi {
         }
         localVarResponseBody = ApiClient.getResponseBody(localVarResponse);
         if (localVarResponseBody == null) {
-          return new ApiResponse<Object>(
+          return new ApiResponse<SubscriptionResponse>(
               localVarResponse.statusCode(),
               localVarResponse.headers().map(),
               null
@@ -901,10 +905,10 @@ public class BillingApi {
         
         
         String responseBody = new String(localVarResponseBody.readAllBytes());
-        Object responseValue = responseBody.isBlank()? null: memberVarObjectMapper.readValue(responseBody, new TypeReference<Object>() {});
+        SubscriptionResponse responseValue = responseBody.isBlank()? null: memberVarObjectMapper.readValue(responseBody, new TypeReference<SubscriptionResponse>() {});
         
 
-        return new ApiResponse<Object>(
+        return new ApiResponse<SubscriptionResponse>(
             localVarResponse.statusCode(),
             localVarResponse.headers().map(),
             responseValue

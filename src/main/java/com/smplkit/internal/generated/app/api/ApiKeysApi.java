@@ -167,7 +167,7 @@ public class ApiKeysApi {
 
   /**
    * Create API Key
-   * 
+   * Create a new API key. The id and key value are server-generated.
    * @param apiKeyResponse  (required)
    * @return ApiKeyResponse
    * @throws ApiException if fails to make API call
@@ -178,7 +178,7 @@ public class ApiKeysApi {
 
   /**
    * Create API Key
-   * 
+   * Create a new API key. The id and key value are server-generated.
    * @param apiKeyResponse  (required)
    * @param headers Optional headers to include in the request
    * @return ApiKeyResponse
@@ -191,7 +191,7 @@ public class ApiKeysApi {
 
   /**
    * Create API Key
-   * 
+   * Create a new API key. The id and key value are server-generated.
    * @param apiKeyResponse  (required)
    * @return ApiResponse&lt;ApiKeyResponse&gt;
    * @throws ApiException if fails to make API call
@@ -202,7 +202,7 @@ public class ApiKeysApi {
 
   /**
    * Create API Key
-   * 
+   * Create a new API key. The id and key value are server-generated.
    * @param apiKeyResponse  (required)
    * @param headers Optional headers to include in the request
    * @return ApiResponse&lt;ApiKeyResponse&gt;
@@ -290,7 +290,7 @@ public class ApiKeysApi {
 
   /**
    * Delete API Key
-   * 
+   * Delete an API key by id.
    * @param id  (required)
    * @throws ApiException if fails to make API call
    */
@@ -300,7 +300,7 @@ public class ApiKeysApi {
 
   /**
    * Delete API Key
-   * 
+   * Delete an API key by id.
    * @param id  (required)
    * @param headers Optional headers to include in the request
    * @throws ApiException if fails to make API call
@@ -311,7 +311,7 @@ public class ApiKeysApi {
 
   /**
    * Delete API Key
-   * 
+   * Delete an API key by id.
    * @param id  (required)
    * @return ApiResponse&lt;Void&gt;
    * @throws ApiException if fails to make API call
@@ -322,7 +322,7 @@ public class ApiKeysApi {
 
   /**
    * Delete API Key
-   * 
+   * Delete an API key by id.
    * @param id  (required)
    * @param headers Optional headers to include in the request
    * @return ApiResponse&lt;Void&gt;
@@ -394,7 +394,7 @@ public class ApiKeysApi {
 
   /**
    * Get API Key
-   * 
+   * Return an API key by id.
    * @param id  (required)
    * @return ApiKeyResponse
    * @throws ApiException if fails to make API call
@@ -405,7 +405,7 @@ public class ApiKeysApi {
 
   /**
    * Get API Key
-   * 
+   * Return an API key by id.
    * @param id  (required)
    * @param headers Optional headers to include in the request
    * @return ApiKeyResponse
@@ -418,7 +418,7 @@ public class ApiKeysApi {
 
   /**
    * Get API Key
-   * 
+   * Return an API key by id.
    * @param id  (required)
    * @return ApiResponse&lt;ApiKeyResponse&gt;
    * @throws ApiException if fails to make API call
@@ -429,7 +429,7 @@ public class ApiKeysApi {
 
   /**
    * Get API Key
-   * 
+   * Return an API key by id.
    * @param id  (required)
    * @param headers Optional headers to include in the request
    * @return ApiResponse&lt;ApiKeyResponse&gt;
@@ -512,7 +512,7 @@ public class ApiKeysApi {
 
   /**
    * List API Keys
-   * 
+   * List all API keys for the authenticated account.
    * @param filterStatus  (optional)
    * @return ApiKeyListResponse
    * @throws ApiException if fails to make API call
@@ -523,7 +523,7 @@ public class ApiKeysApi {
 
   /**
    * List API Keys
-   * 
+   * List all API keys for the authenticated account.
    * @param filterStatus  (optional)
    * @param headers Optional headers to include in the request
    * @return ApiKeyListResponse
@@ -536,7 +536,7 @@ public class ApiKeysApi {
 
   /**
    * List API Keys
-   * 
+   * List all API keys for the authenticated account.
    * @param filterStatus  (optional)
    * @return ApiResponse&lt;ApiKeyListResponse&gt;
    * @throws ApiException if fails to make API call
@@ -547,7 +547,7 @@ public class ApiKeysApi {
 
   /**
    * List API Keys
-   * 
+   * List all API keys for the authenticated account.
    * @param filterStatus  (optional)
    * @param headers Optional headers to include in the request
    * @return ApiResponse&lt;ApiKeyListResponse&gt;
@@ -640,7 +640,7 @@ public class ApiKeysApi {
 
   /**
    * Revoke API Key
-   * 
+   * Permanently revoke an API key.
    * @param id  (required)
    * @return ApiKeyResponse
    * @throws ApiException if fails to make API call
@@ -651,7 +651,7 @@ public class ApiKeysApi {
 
   /**
    * Revoke API Key
-   * 
+   * Permanently revoke an API key.
    * @param id  (required)
    * @param headers Optional headers to include in the request
    * @return ApiKeyResponse
@@ -664,7 +664,7 @@ public class ApiKeysApi {
 
   /**
    * Revoke API Key
-   * 
+   * Permanently revoke an API key.
    * @param id  (required)
    * @return ApiResponse&lt;ApiKeyResponse&gt;
    * @throws ApiException if fails to make API call
@@ -675,7 +675,7 @@ public class ApiKeysApi {
 
   /**
    * Revoke API Key
-   * 
+   * Permanently revoke an API key.
    * @param id  (required)
    * @param headers Optional headers to include in the request
    * @return ApiResponse&lt;ApiKeyResponse&gt;
@@ -758,7 +758,7 @@ public class ApiKeysApi {
 
   /**
    * Update API Key
-   * 
+   * Update an API key by id.
    * @param id  (required)
    * @param apiKeyResponse  (required)
    * @return ApiKeyResponse
@@ -770,7 +770,7 @@ public class ApiKeysApi {
 
   /**
    * Update API Key
-   * 
+   * Update an API key by id.
    * @param id  (required)
    * @param apiKeyResponse  (required)
    * @param headers Optional headers to include in the request
@@ -784,7 +784,7 @@ public class ApiKeysApi {
 
   /**
    * Update API Key
-   * 
+   * Update an API key by id.
    * @param id  (required)
    * @param apiKeyResponse  (required)
    * @return ApiResponse&lt;ApiKeyResponse&gt;
@@ -796,7 +796,7 @@ public class ApiKeysApi {
 
   /**
    * Update API Key
-   * 
+   * Update an API key by id.
    * @param id  (required)
    * @param apiKeyResponse  (required)
    * @param headers Optional headers to include in the request

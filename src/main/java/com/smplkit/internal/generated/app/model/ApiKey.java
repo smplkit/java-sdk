@@ -58,20 +58,17 @@ public class ApiKey {
   private String name;
 
   public static final String JSON_PROPERTY_STATUS = "status";
-  @jakarta.annotation.Nullable
-  private String status = "";
+  private JsonNullable<String> status = JsonNullable.<String>undefined();
 
   public static final String JSON_PROPERTY_KEY = "key";
-  @jakarta.annotation.Nullable
-  private String key = "";
+  private JsonNullable<String> key = JsonNullable.<String>undefined();
 
   public static final String JSON_PROPERTY_SCOPES = "scopes";
   @jakarta.annotation.Nullable
   private Map<String, Object> scopes = new HashMap<>();
 
   public static final String JSON_PROPERTY_CREATED_BY = "created_by";
-  @jakarta.annotation.Nullable
-  private String createdBy = "";
+  private JsonNullable<String> createdBy = JsonNullable.<String>undefined();
 
   public static final String JSON_PROPERTY_EXPIRES_AT = "expires_at";
   private JsonNullable<OffsetDateTime> expiresAt = JsonNullable.<OffsetDateTime>undefined();
@@ -103,9 +100,9 @@ public class ApiKey {
     @JsonProperty(JSON_PROPERTY_DATA) Map<String, Object> data
   ) {
   this();
-    this.status = status;
-    this.key = key;
-    this.createdBy = createdBy;
+    this.status = status == null ? JsonNullable.<String>undefined() : JsonNullable.of(status);
+    this.key = key == null ? JsonNullable.<String>undefined() : JsonNullable.of(key);
+    this.createdBy = createdBy == null ? JsonNullable.<String>undefined() : JsonNullable.of(createdBy);
     this.lastUsedAt = lastUsedAt == null ? JsonNullable.<OffsetDateTime>undefined() : JsonNullable.of(lastUsedAt);
     this.createdAt = createdAt == null ? JsonNullable.<OffsetDateTime>undefined() : JsonNullable.of(createdAt);
     this.updatedAt = updatedAt == null ? JsonNullable.<OffsetDateTime>undefined() : JsonNullable.of(updatedAt);
@@ -141,12 +138,26 @@ public class ApiKey {
    * @return status
    */
   @jakarta.annotation.Nullable
-  @JsonProperty(value = JSON_PROPERTY_STATUS, required = false)
-  @JsonInclude(value = JsonInclude.Include.USE_DEFAULTS)
+  @JsonIgnore
   public String getStatus() {
-    return status;
+    
+    if (status == null) {
+      status = JsonNullable.<String>undefined();
+    }
+    return status.orElse(null);
   }
 
+  @JsonProperty(value = JSON_PROPERTY_STATUS, required = false)
+  @JsonInclude(value = JsonInclude.Include.USE_DEFAULTS)
+
+  public JsonNullable<String> getStatus_JsonNullable() {
+    return status;
+  }
+  
+  @JsonProperty(JSON_PROPERTY_STATUS)
+  private void setStatus_JsonNullable(JsonNullable<String> status) {
+    this.status = status;
+  }
 
 
 
@@ -155,12 +166,26 @@ public class ApiKey {
    * @return key
    */
   @jakarta.annotation.Nullable
-  @JsonProperty(value = JSON_PROPERTY_KEY, required = false)
-  @JsonInclude(value = JsonInclude.Include.USE_DEFAULTS)
+  @JsonIgnore
   public String getKey() {
-    return key;
+    
+    if (key == null) {
+      key = JsonNullable.<String>undefined();
+    }
+    return key.orElse(null);
   }
 
+  @JsonProperty(value = JSON_PROPERTY_KEY, required = false)
+  @JsonInclude(value = JsonInclude.Include.USE_DEFAULTS)
+
+  public JsonNullable<String> getKey_JsonNullable() {
+    return key;
+  }
+  
+  @JsonProperty(JSON_PROPERTY_KEY)
+  private void setKey_JsonNullable(JsonNullable<String> key) {
+    this.key = key;
+  }
 
 
 
@@ -201,12 +226,26 @@ public class ApiKey {
    * @return createdBy
    */
   @jakarta.annotation.Nullable
-  @JsonProperty(value = JSON_PROPERTY_CREATED_BY, required = false)
-  @JsonInclude(value = JsonInclude.Include.USE_DEFAULTS)
+  @JsonIgnore
   public String getCreatedBy() {
-    return createdBy;
+    
+    if (createdBy == null) {
+      createdBy = JsonNullable.<String>undefined();
+    }
+    return createdBy.orElse(null);
   }
 
+  @JsonProperty(value = JSON_PROPERTY_CREATED_BY, required = false)
+  @JsonInclude(value = JsonInclude.Include.USE_DEFAULTS)
+
+  public JsonNullable<String> getCreatedBy_JsonNullable() {
+    return createdBy;
+  }
+  
+  @JsonProperty(JSON_PROPERTY_CREATED_BY)
+  private void setCreatedBy_JsonNullable(JsonNullable<String> createdBy) {
+    this.createdBy = createdBy;
+  }
 
 
 
@@ -353,10 +392,10 @@ public class ApiKey {
     }
     ApiKey apiKey = (ApiKey) o;
     return Objects.equals(this.name, apiKey.name) &&
-        Objects.equals(this.status, apiKey.status) &&
-        Objects.equals(this.key, apiKey.key) &&
+        equalsNullable(this.status, apiKey.status) &&
+        equalsNullable(this.key, apiKey.key) &&
         Objects.equals(this.scopes, apiKey.scopes) &&
-        Objects.equals(this.createdBy, apiKey.createdBy) &&
+        equalsNullable(this.createdBy, apiKey.createdBy) &&
         equalsNullable(this.expiresAt, apiKey.expiresAt) &&
         equalsNullable(this.lastUsedAt, apiKey.lastUsedAt) &&
         equalsNullable(this.createdAt, apiKey.createdAt) &&
@@ -370,7 +409,7 @@ public class ApiKey {
 
   @Override
   public int hashCode() {
-    return Objects.hash(name, status, key, scopes, createdBy, hashCodeNullable(expiresAt), hashCodeNullable(lastUsedAt), hashCodeNullable(createdAt), hashCodeNullable(updatedAt), data);
+    return Objects.hash(name, hashCodeNullable(status), hashCodeNullable(key), scopes, hashCodeNullable(createdBy), hashCodeNullable(expiresAt), hashCodeNullable(lastUsedAt), hashCodeNullable(createdAt), hashCodeNullable(updatedAt), data);
   }
 
   private static <T> int hashCodeNullable(JsonNullable<T> a) {
