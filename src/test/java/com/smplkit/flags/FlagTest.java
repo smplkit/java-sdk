@@ -8,7 +8,6 @@ import com.smplkit.internal.generated.flags.ApiException;
 import com.smplkit.internal.generated.flags.api.FlagsApi;
 import com.smplkit.internal.generated.flags.model.FlagListResponse;
 import com.smplkit.internal.generated.flags.model.FlagResponse;
-import com.smplkit.internal.generated.flags.model.ResponseFlag;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;
@@ -332,7 +331,7 @@ class FlagTest {
                         "created_at", "2024-06-01T12:00:00Z", "updated_at", "2024-06-01T12:00:00Z"
                 )
         )), FlagResponse.class);
-        when(mockApi.createFlag(any(ResponseFlag.class))).thenReturn(response);
+        when(mockApi.createFlag(any(FlagResponse.class))).thenReturn(response);
 
         Flag<Boolean> flag = client.management().newBooleanFlag("new-flag", false, "New Flag", null);
         assertNull(flag.getCreatedAt());
@@ -340,7 +339,7 @@ class FlagTest {
         flag.save();
 
         assertEquals("new-flag", flag.getId());
-        verify(mockApi).createFlag(any(ResponseFlag.class));
+        verify(mockApi).createFlag(any(FlagResponse.class));
         verify(mockApi, never()).updateFlag(any(), any());
     }
 
@@ -355,7 +354,7 @@ class FlagTest {
                         "created_at", "2024-06-01T12:00:00Z", "updated_at", "2024-06-01T12:00:00Z"
                 )
         )), FlagResponse.class);
-        when(mockApi.updateFlag(eq(FLAG_ID), any(ResponseFlag.class)))
+        when(mockApi.updateFlag(eq(FLAG_ID), any(FlagResponse.class)))
                 .thenReturn(response);
 
         Flag<Boolean> flag = client.management().newBooleanFlag("my-flag", false, "My Flag", null);
@@ -363,7 +362,7 @@ class FlagTest {
         flag.setName("Updated");
         flag.save();
 
-        verify(mockApi).updateFlag(eq(FLAG_ID), any(ResponseFlag.class));
+        verify(mockApi).updateFlag(eq(FLAG_ID), any(FlagResponse.class));
         verify(mockApi, never()).createFlag(any());
     }
 
@@ -381,7 +380,7 @@ class FlagTest {
                         "updated_at", "2024-06-01T12:00:00Z"
                 )
         )), FlagResponse.class);
-        when(mockApi.createFlag(any(ResponseFlag.class))).thenReturn(response);
+        when(mockApi.createFlag(any(FlagResponse.class))).thenReturn(response);
 
         Flag<Boolean> flag = client.management().newBooleanFlag("applied-flag", false, "Local Name", null);
         flag.save();
@@ -404,7 +403,7 @@ class FlagTest {
                         "created_at", "2024-06-01T12:00:00Z", "updated_at", "2024-06-01T12:00:00Z"
                 )
         )), FlagResponse.class);
-        when(mockApi.updateFlag(eq(FLAG_ID), any(ResponseFlag.class)))
+        when(mockApi.updateFlag(eq(FLAG_ID), any(FlagResponse.class)))
                 .thenReturn(response);
 
         Flag<Boolean> flag = client.management().newBooleanFlag("my-flag", false, "Local Name", null);
