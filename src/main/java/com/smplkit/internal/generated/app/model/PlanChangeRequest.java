@@ -24,53 +24,52 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonTypeName;
 import com.fasterxml.jackson.annotation.JsonValue;
-import com.smplkit.internal.generated.app.model.UpdateSubscriptionData;
 import java.util.Arrays;
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 
 
 import com.smplkit.internal.generated.app.ApiClient;
 /**
- * UpdateSubscriptionBody
+ * PlanChangeRequest
  */
 @JsonPropertyOrder({
-  UpdateSubscriptionBody.JSON_PROPERTY_DATA
+  PlanChangeRequest.JSON_PROPERTY_PLAN
 })
 @jakarta.annotation.Generated(value = "org.openapitools.codegen.languages.JavaClientCodegen", comments = "Generator version: 7.21.0")
-public class UpdateSubscriptionBody {
-  public static final String JSON_PROPERTY_DATA = "data";
+public class PlanChangeRequest {
+  public static final String JSON_PROPERTY_PLAN = "plan";
   @jakarta.annotation.Nonnull
-  private UpdateSubscriptionData data;
+  private String plan;
 
-  public UpdateSubscriptionBody() { 
+  public PlanChangeRequest() { 
   }
 
-  public UpdateSubscriptionBody data(@jakarta.annotation.Nonnull UpdateSubscriptionData data) {
-    this.data = data;
+  public PlanChangeRequest plan(@jakarta.annotation.Nonnull String plan) {
+    this.plan = plan;
     return this;
   }
 
   /**
-   * Get data
-   * @return data
+   * Get plan
+   * @return plan
    */
   @jakarta.annotation.Nonnull
-  @JsonProperty(value = JSON_PROPERTY_DATA, required = true)
+  @JsonProperty(value = JSON_PROPERTY_PLAN, required = true)
   @JsonInclude(value = JsonInclude.Include.ALWAYS)
-  public UpdateSubscriptionData getData() {
-    return data;
+  public String getPlan() {
+    return plan;
   }
 
 
-  @JsonProperty(value = JSON_PROPERTY_DATA, required = true)
+  @JsonProperty(value = JSON_PROPERTY_PLAN, required = true)
   @JsonInclude(value = JsonInclude.Include.ALWAYS)
-  public void setData(@jakarta.annotation.Nonnull UpdateSubscriptionData data) {
-    this.data = data;
+  public void setPlan(@jakarta.annotation.Nonnull String plan) {
+    this.plan = plan;
   }
 
 
   /**
-   * Return true if this UpdateSubscriptionBody object is equal to o.
+   * Return true if this PlanChangeRequest object is equal to o.
    */
   @Override
   public boolean equals(Object o) {
@@ -80,20 +79,20 @@ public class UpdateSubscriptionBody {
     if (o == null || getClass() != o.getClass()) {
       return false;
     }
-    UpdateSubscriptionBody updateSubscriptionBody = (UpdateSubscriptionBody) o;
-    return Objects.equals(this.data, updateSubscriptionBody.data);
+    PlanChangeRequest planChangeRequest = (PlanChangeRequest) o;
+    return Objects.equals(this.plan, planChangeRequest.plan);
   }
 
   @Override
   public int hashCode() {
-    return Objects.hash(data);
+    return Objects.hash(plan);
   }
 
   @Override
   public String toString() {
     StringBuilder sb = new StringBuilder();
-    sb.append("class UpdateSubscriptionBody {\n");
-    sb.append("    data: ").append(toIndentedString(data)).append("\n");
+    sb.append("class PlanChangeRequest {\n");
+    sb.append("    plan: ").append(toIndentedString(plan)).append("\n");
     sb.append("}");
     return sb.toString();
   }
@@ -138,9 +137,9 @@ public class UpdateSubscriptionBody {
 
     StringJoiner joiner = new StringJoiner("&");
 
-    // add `data` to the URL query string
-    if (getData() != null) {
-      joiner.add(getData().toUrlQueryString(prefix + "data" + suffix));
+    // add `plan` to the URL query string
+    if (getPlan() != null) {
+      joiner.add(String.format(java.util.Locale.ROOT, "%splan%s=%s", prefix, suffix, ApiClient.urlEncode(ApiClient.valueToString(getPlan()))));
     }
 
     return joiner.toString();

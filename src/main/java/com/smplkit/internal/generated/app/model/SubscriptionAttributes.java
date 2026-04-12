@@ -40,6 +40,7 @@ import com.smplkit.internal.generated.app.ApiClient;
   SubscriptionAttributes.JSON_PROPERTY_PRODUCT,
   SubscriptionAttributes.JSON_PROPERTY_PLAN,
   SubscriptionAttributes.JSON_PROPERTY_STATUS,
+  SubscriptionAttributes.JSON_PROPERTY_COMPED,
   SubscriptionAttributes.JSON_PROPERTY_STRIPE_MANAGED,
   SubscriptionAttributes.JSON_PROPERTY_CURRENT_PERIOD_END,
   SubscriptionAttributes.JSON_PROPERTY_CLIENT_SECRET
@@ -55,8 +56,11 @@ public class SubscriptionAttributes {
   private String plan;
 
   public static final String JSON_PROPERTY_STATUS = "status";
+  private JsonNullable<String> status = JsonNullable.<String>undefined();
+
+  public static final String JSON_PROPERTY_COMPED = "comped";
   @jakarta.annotation.Nonnull
-  private String status;
+  private Boolean comped;
 
   public static final String JSON_PROPERTY_STRIPE_MANAGED = "stripe_managed";
   @jakarta.annotation.Nonnull
@@ -119,8 +123,8 @@ public class SubscriptionAttributes {
   }
 
 
-  public SubscriptionAttributes status(@jakarta.annotation.Nonnull String status) {
-    this.status = status;
+  public SubscriptionAttributes status(@jakarta.annotation.Nullable String status) {
+    this.status = JsonNullable.<String>of(status);
     return this;
   }
 
@@ -128,18 +132,50 @@ public class SubscriptionAttributes {
    * Get status
    * @return status
    */
-  @jakarta.annotation.Nonnull
-  @JsonProperty(value = JSON_PROPERTY_STATUS, required = true)
-  @JsonInclude(value = JsonInclude.Include.ALWAYS)
+  @jakarta.annotation.Nullable
+  @JsonIgnore
   public String getStatus() {
+        return status.orElse(null);
+  }
+
+  @JsonProperty(value = JSON_PROPERTY_STATUS, required = false)
+  @JsonInclude(value = JsonInclude.Include.USE_DEFAULTS)
+
+  public JsonNullable<String> getStatus_JsonNullable() {
     return status;
+  }
+  
+  @JsonProperty(JSON_PROPERTY_STATUS)
+  public void setStatus_JsonNullable(JsonNullable<String> status) {
+    this.status = status;
+  }
+
+  public void setStatus(@jakarta.annotation.Nullable String status) {
+    this.status = JsonNullable.<String>of(status);
   }
 
 
-  @JsonProperty(value = JSON_PROPERTY_STATUS, required = true)
+  public SubscriptionAttributes comped(@jakarta.annotation.Nonnull Boolean comped) {
+    this.comped = comped;
+    return this;
+  }
+
+  /**
+   * Get comped
+   * @return comped
+   */
+  @jakarta.annotation.Nonnull
+  @JsonProperty(value = JSON_PROPERTY_COMPED, required = true)
   @JsonInclude(value = JsonInclude.Include.ALWAYS)
-  public void setStatus(@jakarta.annotation.Nonnull String status) {
-    this.status = status;
+  public Boolean getComped() {
+    return comped;
+  }
+
+
+  @JsonProperty(value = JSON_PROPERTY_COMPED, required = true)
+  @JsonInclude(value = JsonInclude.Include.ALWAYS)
+  public void setComped(@jakarta.annotation.Nonnull Boolean comped) {
+    this.comped = comped;
   }
 
 
@@ -245,7 +281,8 @@ public class SubscriptionAttributes {
     SubscriptionAttributes subscriptionAttributes = (SubscriptionAttributes) o;
     return Objects.equals(this.product, subscriptionAttributes.product) &&
         Objects.equals(this.plan, subscriptionAttributes.plan) &&
-        Objects.equals(this.status, subscriptionAttributes.status) &&
+        equalsNullable(this.status, subscriptionAttributes.status) &&
+        Objects.equals(this.comped, subscriptionAttributes.comped) &&
         Objects.equals(this.stripeManaged, subscriptionAttributes.stripeManaged) &&
         equalsNullable(this.currentPeriodEnd, subscriptionAttributes.currentPeriodEnd) &&
         equalsNullable(this.clientSecret, subscriptionAttributes.clientSecret);
@@ -257,7 +294,7 @@ public class SubscriptionAttributes {
 
   @Override
   public int hashCode() {
-    return Objects.hash(product, plan, status, stripeManaged, hashCodeNullable(currentPeriodEnd), hashCodeNullable(clientSecret));
+    return Objects.hash(product, plan, hashCodeNullable(status), comped, stripeManaged, hashCodeNullable(currentPeriodEnd), hashCodeNullable(clientSecret));
   }
 
   private static <T> int hashCodeNullable(JsonNullable<T> a) {
@@ -274,6 +311,7 @@ public class SubscriptionAttributes {
     sb.append("    product: ").append(toIndentedString(product)).append("\n");
     sb.append("    plan: ").append(toIndentedString(plan)).append("\n");
     sb.append("    status: ").append(toIndentedString(status)).append("\n");
+    sb.append("    comped: ").append(toIndentedString(comped)).append("\n");
     sb.append("    stripeManaged: ").append(toIndentedString(stripeManaged)).append("\n");
     sb.append("    currentPeriodEnd: ").append(toIndentedString(currentPeriodEnd)).append("\n");
     sb.append("    clientSecret: ").append(toIndentedString(clientSecret)).append("\n");
@@ -334,6 +372,11 @@ public class SubscriptionAttributes {
     // add `status` to the URL query string
     if (getStatus() != null) {
       joiner.add(String.format(java.util.Locale.ROOT, "%sstatus%s=%s", prefix, suffix, ApiClient.urlEncode(ApiClient.valueToString(getStatus()))));
+    }
+
+    // add `comped` to the URL query string
+    if (getComped() != null) {
+      joiner.add(String.format(java.util.Locale.ROOT, "%scomped%s=%s", prefix, suffix, ApiClient.urlEncode(ApiClient.valueToString(getComped()))));
     }
 
     // add `stripe_managed` to the URL query string
