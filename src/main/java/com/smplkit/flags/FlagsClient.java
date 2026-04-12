@@ -14,11 +14,10 @@ import com.smplkit.internal.generated.flags.ApiException;
 import com.smplkit.internal.generated.flags.api.FlagsApi;
 import com.smplkit.internal.generated.flags.model.FlagEnvironment;
 import com.smplkit.internal.generated.flags.model.FlagListResponse;
+import com.smplkit.internal.generated.flags.model.FlagResource;
 import com.smplkit.internal.generated.flags.model.FlagResponse;
 import com.smplkit.internal.generated.flags.model.FlagRule;
 import com.smplkit.internal.generated.flags.model.FlagValue;
-import com.smplkit.internal.generated.flags.model.ResourceFlag;
-import com.smplkit.internal.generated.flags.model.ResponseFlag;
 import io.github.jamsesso.jsonlogic.JsonLogic;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import org.openapitools.jackson.nullable.JsonNullableModule;
@@ -655,8 +654,8 @@ public final class FlagsClient {
                 attrs.setEnvironments(buildEnvironments(flag.getEnvironments()));
             }
 
-            ResourceFlag data = new ResourceFlag().id(flag.getId()).type("flag").attributes(attrs);
-            ResponseFlag body = new ResponseFlag().data(data);
+            FlagResource data = new FlagResource().id(flag.getId()).type(FlagResource.TypeEnum.FLAG).attributes(attrs);
+            FlagResponse body = new FlagResponse().data(data);
             FlagResponse response = flagsApi.createFlag(body);
             Flag<?> result = parseSingleResponse(response);
             return (Flag<T>) result;
@@ -692,8 +691,8 @@ public final class FlagsClient {
                 attrs.setEnvironments(buildEnvironments(flag.getEnvironments()));
             }
 
-            ResourceFlag data = new ResourceFlag().id(flag.getId()).type("flag").attributes(attrs);
-            ResponseFlag body = new ResponseFlag().data(data);
+            FlagResource data = new FlagResource().id(flag.getId()).type(FlagResource.TypeEnum.FLAG).attributes(attrs);
+            FlagResponse body = new FlagResponse().data(data);
             FlagResponse response = flagsApi.updateFlag(flag.getId(), body);
             Flag<?> result = parseSingleResponse(response);
             return (Flag<T>) result;

@@ -60,8 +60,7 @@ public class Flag {
   private String name;
 
   public static final String JSON_PROPERTY_DESCRIPTION = "description";
-  @jakarta.annotation.Nullable
-  private String description = "";
+  private JsonNullable<String> description = JsonNullable.<String>undefined();
 
   public static final String JSON_PROPERTY_TYPE = "type";
   @jakarta.annotation.Nonnull
@@ -122,7 +121,7 @@ public class Flag {
 
 
   public Flag description(@jakarta.annotation.Nullable String description) {
-    this.description = description;
+    this.description = JsonNullable.<String>of(description);
     return this;
   }
 
@@ -131,17 +130,25 @@ public class Flag {
    * @return description
    */
   @jakarta.annotation.Nullable
-  @JsonProperty(value = JSON_PROPERTY_DESCRIPTION, required = false)
-  @JsonInclude(value = JsonInclude.Include.USE_DEFAULTS)
+  @JsonIgnore
   public String getDescription() {
-    return description;
+        return description.orElse(null);
   }
 
-
   @JsonProperty(value = JSON_PROPERTY_DESCRIPTION, required = false)
   @JsonInclude(value = JsonInclude.Include.USE_DEFAULTS)
-  public void setDescription(@jakarta.annotation.Nullable String description) {
+
+  public JsonNullable<String> getDescription_JsonNullable() {
+    return description;
+  }
+  
+  @JsonProperty(JSON_PROPERTY_DESCRIPTION)
+  public void setDescription_JsonNullable(JsonNullable<String> description) {
     this.description = description;
+  }
+
+  public void setDescription(@jakarta.annotation.Nullable String description) {
+    this.description = JsonNullable.<String>of(description);
   }
 
 
@@ -338,7 +345,7 @@ public class Flag {
     }
     Flag flag = (Flag) o;
     return Objects.equals(this.name, flag.name) &&
-        Objects.equals(this.description, flag.description) &&
+        equalsNullable(this.description, flag.description) &&
         Objects.equals(this.type, flag.type) &&
         Objects.equals(this._default, flag._default) &&
         equalsNullable(this.values, flag.values) &&
@@ -353,7 +360,7 @@ public class Flag {
 
   @Override
   public int hashCode() {
-    return Objects.hash(name, description, type, _default, hashCodeNullable(values), environments, hashCodeNullable(createdAt), hashCodeNullable(updatedAt));
+    return Objects.hash(name, hashCodeNullable(description), type, _default, hashCodeNullable(values), environments, hashCodeNullable(createdAt), hashCodeNullable(updatedAt));
   }
 
   private static <T> int hashCodeNullable(JsonNullable<T> a) {

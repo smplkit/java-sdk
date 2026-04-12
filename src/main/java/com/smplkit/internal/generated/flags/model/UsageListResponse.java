@@ -24,29 +24,39 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonTypeName;
 import com.fasterxml.jackson.annotation.JsonValue;
-import com.smplkit.internal.generated.flags.model.ResourceFlag;
+import com.smplkit.internal.generated.flags.model.UsageResource;
+import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.List;
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 
 
 import com.smplkit.internal.generated.flags.ApiClient;
 /**
- * ResponseFlag
+ * UsageListResponse
  */
 @JsonPropertyOrder({
-  ResponseFlag.JSON_PROPERTY_DATA
+  UsageListResponse.JSON_PROPERTY_DATA
 })
 @jakarta.annotation.Generated(value = "org.openapitools.codegen.languages.JavaClientCodegen", comments = "Generator version: 7.21.0")
-public class ResponseFlag {
+public class UsageListResponse {
   public static final String JSON_PROPERTY_DATA = "data";
   @jakarta.annotation.Nonnull
-  private ResourceFlag data;
+  private List<UsageResource> data = new ArrayList<>();
 
-  public ResponseFlag() { 
+  public UsageListResponse() { 
   }
 
-  public ResponseFlag data(@jakarta.annotation.Nonnull ResourceFlag data) {
+  public UsageListResponse data(@jakarta.annotation.Nonnull List<UsageResource> data) {
     this.data = data;
+    return this;
+  }
+
+  public UsageListResponse addDataItem(UsageResource dataItem) {
+    if (this.data == null) {
+      this.data = new ArrayList<>();
+    }
+    this.data.add(dataItem);
     return this;
   }
 
@@ -57,20 +67,20 @@ public class ResponseFlag {
   @jakarta.annotation.Nonnull
   @JsonProperty(value = JSON_PROPERTY_DATA, required = true)
   @JsonInclude(value = JsonInclude.Include.ALWAYS)
-  public ResourceFlag getData() {
+  public List<UsageResource> getData() {
     return data;
   }
 
 
   @JsonProperty(value = JSON_PROPERTY_DATA, required = true)
   @JsonInclude(value = JsonInclude.Include.ALWAYS)
-  public void setData(@jakarta.annotation.Nonnull ResourceFlag data) {
+  public void setData(@jakarta.annotation.Nonnull List<UsageResource> data) {
     this.data = data;
   }
 
 
   /**
-   * Return true if this Response_Flag_ object is equal to o.
+   * Return true if this UsageListResponse object is equal to o.
    */
   @Override
   public boolean equals(Object o) {
@@ -80,8 +90,8 @@ public class ResponseFlag {
     if (o == null || getClass() != o.getClass()) {
       return false;
     }
-    ResponseFlag responseFlag = (ResponseFlag) o;
-    return Objects.equals(this.data, responseFlag.data);
+    UsageListResponse usageListResponse = (UsageListResponse) o;
+    return Objects.equals(this.data, usageListResponse.data);
   }
 
   @Override
@@ -92,7 +102,7 @@ public class ResponseFlag {
   @Override
   public String toString() {
     StringBuilder sb = new StringBuilder();
-    sb.append("class ResponseFlag {\n");
+    sb.append("class UsageListResponse {\n");
     sb.append("    data: ").append(toIndentedString(data)).append("\n");
     sb.append("}");
     return sb.toString();
@@ -140,7 +150,12 @@ public class ResponseFlag {
 
     // add `data` to the URL query string
     if (getData() != null) {
-      joiner.add(getData().toUrlQueryString(prefix + "data" + suffix));
+      for (int i = 0; i < getData().size(); i++) {
+        if (getData().get(i) != null) {
+          joiner.add(getData().get(i).toUrlQueryString(String.format(java.util.Locale.ROOT, "%sdata%s%s", prefix, suffix,
+          "".equals(suffix) ? "" : String.format(java.util.Locale.ROOT, "%s%d%s", containerPrefix, i, containerSuffix))));
+        }
+      }
     }
 
     return joiner.toString();

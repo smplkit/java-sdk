@@ -24,42 +24,72 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonTypeName;
 import com.fasterxml.jackson.annotation.JsonValue;
-import com.smplkit.internal.generated.flags.model.Flag;
+import com.smplkit.internal.generated.flags.model.UsageAttributes;
 import java.util.Arrays;
-import org.openapitools.jackson.nullable.JsonNullable;
-import com.fasterxml.jackson.annotation.JsonIgnore;
-import org.openapitools.jackson.nullable.JsonNullable;
-import java.util.NoSuchElementException;
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 
 
 import com.smplkit.internal.generated.flags.ApiClient;
 /**
- * ResourceFlag
+ * UsageResource
  */
 @JsonPropertyOrder({
-  ResourceFlag.JSON_PROPERTY_ID,
-  ResourceFlag.JSON_PROPERTY_TYPE,
-  ResourceFlag.JSON_PROPERTY_ATTRIBUTES
+  UsageResource.JSON_PROPERTY_ID,
+  UsageResource.JSON_PROPERTY_TYPE,
+  UsageResource.JSON_PROPERTY_ATTRIBUTES
 })
 @jakarta.annotation.Generated(value = "org.openapitools.codegen.languages.JavaClientCodegen", comments = "Generator version: 7.21.0")
-public class ResourceFlag {
+public class UsageResource {
   public static final String JSON_PROPERTY_ID = "id";
-  private JsonNullable<String> id = JsonNullable.<String>undefined();
+  @jakarta.annotation.Nonnull
+  private String id;
+
+  /**
+   * Gets or Sets type
+   */
+  public enum TypeEnum {
+    USAGE(String.valueOf("usage"));
+
+    private String value;
+
+    TypeEnum(String value) {
+      this.value = value;
+    }
+
+    @JsonValue
+    public String getValue() {
+      return value;
+    }
+
+    @Override
+    public String toString() {
+      return String.valueOf(value);
+    }
+
+    @JsonCreator
+    public static TypeEnum fromValue(String value) {
+      for (TypeEnum b : TypeEnum.values()) {
+        if (b.value.equals(value)) {
+          return b;
+        }
+      }
+      throw new IllegalArgumentException("Unexpected value '" + value + "'");
+    }
+  }
 
   public static final String JSON_PROPERTY_TYPE = "type";
-  @jakarta.annotation.Nullable
-  private String type = "";
+  @jakarta.annotation.Nonnull
+  private TypeEnum type;
 
   public static final String JSON_PROPERTY_ATTRIBUTES = "attributes";
   @jakarta.annotation.Nonnull
-  private Flag attributes;
+  private UsageAttributes attributes;
 
-  public ResourceFlag() { 
+  public UsageResource() { 
   }
 
-  public ResourceFlag id(@jakarta.annotation.Nullable String id) {
-    this.id = JsonNullable.<String>of(id);
+  public UsageResource id(@jakarta.annotation.Nonnull String id) {
+    this.id = id;
     return this;
   }
 
@@ -67,30 +97,22 @@ public class ResourceFlag {
    * Get id
    * @return id
    */
-  @jakarta.annotation.Nullable
-  @JsonIgnore
+  @jakarta.annotation.Nonnull
+  @JsonProperty(value = JSON_PROPERTY_ID, required = true)
+  @JsonInclude(value = JsonInclude.Include.ALWAYS)
   public String getId() {
-        return id.orElse(null);
-  }
-
-  @JsonProperty(value = JSON_PROPERTY_ID, required = false)
-  @JsonInclude(value = JsonInclude.Include.USE_DEFAULTS)
-
-  public JsonNullable<String> getId_JsonNullable() {
     return id;
   }
-  
-  @JsonProperty(JSON_PROPERTY_ID)
-  public void setId_JsonNullable(JsonNullable<String> id) {
+
+
+  @JsonProperty(value = JSON_PROPERTY_ID, required = true)
+  @JsonInclude(value = JsonInclude.Include.ALWAYS)
+  public void setId(@jakarta.annotation.Nonnull String id) {
     this.id = id;
   }
 
-  public void setId(@jakarta.annotation.Nullable String id) {
-    this.id = JsonNullable.<String>of(id);
-  }
 
-
-  public ResourceFlag type(@jakarta.annotation.Nullable String type) {
+  public UsageResource type(@jakarta.annotation.Nonnull TypeEnum type) {
     this.type = type;
     return this;
   }
@@ -99,22 +121,22 @@ public class ResourceFlag {
    * Get type
    * @return type
    */
-  @jakarta.annotation.Nullable
-  @JsonProperty(value = JSON_PROPERTY_TYPE, required = false)
-  @JsonInclude(value = JsonInclude.Include.USE_DEFAULTS)
-  public String getType() {
+  @jakarta.annotation.Nonnull
+  @JsonProperty(value = JSON_PROPERTY_TYPE, required = true)
+  @JsonInclude(value = JsonInclude.Include.ALWAYS)
+  public TypeEnum getType() {
     return type;
   }
 
 
-  @JsonProperty(value = JSON_PROPERTY_TYPE, required = false)
-  @JsonInclude(value = JsonInclude.Include.USE_DEFAULTS)
-  public void setType(@jakarta.annotation.Nullable String type) {
+  @JsonProperty(value = JSON_PROPERTY_TYPE, required = true)
+  @JsonInclude(value = JsonInclude.Include.ALWAYS)
+  public void setType(@jakarta.annotation.Nonnull TypeEnum type) {
     this.type = type;
   }
 
 
-  public ResourceFlag attributes(@jakarta.annotation.Nonnull Flag attributes) {
+  public UsageResource attributes(@jakarta.annotation.Nonnull UsageAttributes attributes) {
     this.attributes = attributes;
     return this;
   }
@@ -126,20 +148,20 @@ public class ResourceFlag {
   @jakarta.annotation.Nonnull
   @JsonProperty(value = JSON_PROPERTY_ATTRIBUTES, required = true)
   @JsonInclude(value = JsonInclude.Include.ALWAYS)
-  public Flag getAttributes() {
+  public UsageAttributes getAttributes() {
     return attributes;
   }
 
 
   @JsonProperty(value = JSON_PROPERTY_ATTRIBUTES, required = true)
   @JsonInclude(value = JsonInclude.Include.ALWAYS)
-  public void setAttributes(@jakarta.annotation.Nonnull Flag attributes) {
+  public void setAttributes(@jakarta.annotation.Nonnull UsageAttributes attributes) {
     this.attributes = attributes;
   }
 
 
   /**
-   * Return true if this Resource_Flag_ object is equal to o.
+   * Return true if this UsageResource object is equal to o.
    */
   @Override
   public boolean equals(Object o) {
@@ -149,32 +171,21 @@ public class ResourceFlag {
     if (o == null || getClass() != o.getClass()) {
       return false;
     }
-    ResourceFlag resourceFlag = (ResourceFlag) o;
-    return equalsNullable(this.id, resourceFlag.id) &&
-        Objects.equals(this.type, resourceFlag.type) &&
-        Objects.equals(this.attributes, resourceFlag.attributes);
-  }
-
-  private static <T> boolean equalsNullable(JsonNullable<T> a, JsonNullable<T> b) {
-    return a == b || (a != null && b != null && a.isPresent() && b.isPresent() && Objects.deepEquals(a.get(), b.get()));
+    UsageResource usageResource = (UsageResource) o;
+    return Objects.equals(this.id, usageResource.id) &&
+        Objects.equals(this.type, usageResource.type) &&
+        Objects.equals(this.attributes, usageResource.attributes);
   }
 
   @Override
   public int hashCode() {
-    return Objects.hash(hashCodeNullable(id), type, attributes);
-  }
-
-  private static <T> int hashCodeNullable(JsonNullable<T> a) {
-    if (a == null) {
-      return 1;
-    }
-    return a.isPresent() ? Arrays.deepHashCode(new Object[]{a.get()}) : 31;
+    return Objects.hash(id, type, attributes);
   }
 
   @Override
   public String toString() {
     StringBuilder sb = new StringBuilder();
-    sb.append("class ResourceFlag {\n");
+    sb.append("class UsageResource {\n");
     sb.append("    id: ").append(toIndentedString(id)).append("\n");
     sb.append("    type: ").append(toIndentedString(type)).append("\n");
     sb.append("    attributes: ").append(toIndentedString(attributes)).append("\n");
