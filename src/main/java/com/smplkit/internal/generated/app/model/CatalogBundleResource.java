@@ -24,17 +24,18 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonTypeName;
 import com.fasterxml.jackson.annotation.JsonValue;
+<<<<<<<< HEAD:src/main/java/com/smplkit/internal/generated/app/model/CatalogBundleResource.java
 import com.smplkit.internal.generated.app.model.CatalogBundleAttributes;
+========
+import com.smplkit.internal.generated.logging.model.UsageAttributes;
+>>>>>>>> fe2d99e (fix: regenerate logging client from updated spec):src/main/java/com/smplkit/internal/generated/logging/model/UsageResource.java
 import java.util.Arrays;
-import org.openapitools.jackson.nullable.JsonNullable;
-import com.fasterxml.jackson.annotation.JsonIgnore;
-import org.openapitools.jackson.nullable.JsonNullable;
-import java.util.NoSuchElementException;
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 
 
 import com.smplkit.internal.generated.app.ApiClient;
 /**
+<<<<<<<< HEAD:src/main/java/com/smplkit/internal/generated/app/model/CatalogBundleResource.java
  * CatalogBundleResource
  */
 @JsonPropertyOrder({
@@ -44,8 +45,53 @@ import com.smplkit.internal.generated.app.ApiClient;
 })
 @jakarta.annotation.Generated(value = "org.openapitools.codegen.languages.JavaClientCodegen", comments = "Generator version: 7.21.0")
 public class CatalogBundleResource {
+========
+ * UsageResource
+ */
+@JsonPropertyOrder({
+  UsageResource.JSON_PROPERTY_ID,
+  UsageResource.JSON_PROPERTY_TYPE,
+  UsageResource.JSON_PROPERTY_ATTRIBUTES
+})
+@jakarta.annotation.Generated(value = "org.openapitools.codegen.languages.JavaClientCodegen", comments = "Generator version: 7.21.0")
+public class UsageResource {
+>>>>>>>> fe2d99e (fix: regenerate logging client from updated spec):src/main/java/com/smplkit/internal/generated/logging/model/UsageResource.java
   public static final String JSON_PROPERTY_ID = "id";
-  private JsonNullable<String> id = JsonNullable.<String>undefined();
+  @jakarta.annotation.Nonnull
+  private String id;
+
+  /**
+   * Gets or Sets type
+   */
+  public enum TypeEnum {
+    USAGE(String.valueOf("usage"));
+
+    private String value;
+
+    TypeEnum(String value) {
+      this.value = value;
+    }
+
+    @JsonValue
+    public String getValue() {
+      return value;
+    }
+
+    @Override
+    public String toString() {
+      return String.valueOf(value);
+    }
+
+    @JsonCreator
+    public static TypeEnum fromValue(String value) {
+      for (TypeEnum b : TypeEnum.values()) {
+        if (b.value.equals(value)) {
+          return b;
+        }
+      }
+      throw new IllegalArgumentException("Unexpected value '" + value + "'");
+    }
+  }
 
   /**
    * Gets or Sets type
@@ -86,6 +132,7 @@ public class CatalogBundleResource {
 
   public static final String JSON_PROPERTY_ATTRIBUTES = "attributes";
   @jakarta.annotation.Nonnull
+<<<<<<<< HEAD:src/main/java/com/smplkit/internal/generated/app/model/CatalogBundleResource.java
   private CatalogBundleAttributes attributes;
 
   public CatalogBundleResource() { 
@@ -93,6 +140,15 @@ public class CatalogBundleResource {
 
   public CatalogBundleResource id(@jakarta.annotation.Nullable String id) {
     this.id = JsonNullable.<String>of(id);
+========
+  private UsageAttributes attributes;
+
+  public UsageResource() { 
+  }
+
+  public UsageResource id(@jakarta.annotation.Nonnull String id) {
+    this.id = id;
+>>>>>>>> fe2d99e (fix: regenerate logging client from updated spec):src/main/java/com/smplkit/internal/generated/logging/model/UsageResource.java
     return this;
   }
 
@@ -100,30 +156,27 @@ public class CatalogBundleResource {
    * Get id
    * @return id
    */
-  @jakarta.annotation.Nullable
-  @JsonIgnore
+  @jakarta.annotation.Nonnull
+  @JsonProperty(value = JSON_PROPERTY_ID, required = true)
+  @JsonInclude(value = JsonInclude.Include.ALWAYS)
   public String getId() {
-        return id.orElse(null);
-  }
-
-  @JsonProperty(value = JSON_PROPERTY_ID, required = false)
-  @JsonInclude(value = JsonInclude.Include.USE_DEFAULTS)
-
-  public JsonNullable<String> getId_JsonNullable() {
     return id;
   }
-  
-  @JsonProperty(JSON_PROPERTY_ID)
-  public void setId_JsonNullable(JsonNullable<String> id) {
+
+
+  @JsonProperty(value = JSON_PROPERTY_ID, required = true)
+  @JsonInclude(value = JsonInclude.Include.ALWAYS)
+  public void setId(@jakarta.annotation.Nonnull String id) {
     this.id = id;
   }
 
-  public void setId(@jakarta.annotation.Nullable String id) {
-    this.id = JsonNullable.<String>of(id);
-  }
 
+<<<<<<<< HEAD:src/main/java/com/smplkit/internal/generated/app/model/CatalogBundleResource.java
 
   public CatalogBundleResource type(@jakarta.annotation.Nonnull TypeEnum type) {
+========
+  public UsageResource type(@jakarta.annotation.Nonnull TypeEnum type) {
+>>>>>>>> fe2d99e (fix: regenerate logging client from updated spec):src/main/java/com/smplkit/internal/generated/logging/model/UsageResource.java
     this.type = type;
     return this;
   }
@@ -147,7 +200,11 @@ public class CatalogBundleResource {
   }
 
 
+<<<<<<<< HEAD:src/main/java/com/smplkit/internal/generated/app/model/CatalogBundleResource.java
   public CatalogBundleResource attributes(@jakarta.annotation.Nonnull CatalogBundleAttributes attributes) {
+========
+  public UsageResource attributes(@jakarta.annotation.Nonnull UsageAttributes attributes) {
+>>>>>>>> fe2d99e (fix: regenerate logging client from updated spec):src/main/java/com/smplkit/internal/generated/logging/model/UsageResource.java
     this.attributes = attributes;
     return this;
   }
@@ -159,20 +216,32 @@ public class CatalogBundleResource {
   @jakarta.annotation.Nonnull
   @JsonProperty(value = JSON_PROPERTY_ATTRIBUTES, required = true)
   @JsonInclude(value = JsonInclude.Include.ALWAYS)
+<<<<<<<< HEAD:src/main/java/com/smplkit/internal/generated/app/model/CatalogBundleResource.java
   public CatalogBundleAttributes getAttributes() {
+========
+  public UsageAttributes getAttributes() {
+>>>>>>>> fe2d99e (fix: regenerate logging client from updated spec):src/main/java/com/smplkit/internal/generated/logging/model/UsageResource.java
     return attributes;
   }
 
 
   @JsonProperty(value = JSON_PROPERTY_ATTRIBUTES, required = true)
   @JsonInclude(value = JsonInclude.Include.ALWAYS)
+<<<<<<<< HEAD:src/main/java/com/smplkit/internal/generated/app/model/CatalogBundleResource.java
   public void setAttributes(@jakarta.annotation.Nonnull CatalogBundleAttributes attributes) {
+========
+  public void setAttributes(@jakarta.annotation.Nonnull UsageAttributes attributes) {
+>>>>>>>> fe2d99e (fix: regenerate logging client from updated spec):src/main/java/com/smplkit/internal/generated/logging/model/UsageResource.java
     this.attributes = attributes;
   }
 
 
   /**
+<<<<<<<< HEAD:src/main/java/com/smplkit/internal/generated/app/model/CatalogBundleResource.java
    * Return true if this CatalogBundleResource object is equal to o.
+========
+   * Return true if this UsageResource object is equal to o.
+>>>>>>>> fe2d99e (fix: regenerate logging client from updated spec):src/main/java/com/smplkit/internal/generated/logging/model/UsageResource.java
    */
   @Override
   public boolean equals(Object o) {
@@ -182,6 +251,7 @@ public class CatalogBundleResource {
     if (o == null || getClass() != o.getClass()) {
       return false;
     }
+<<<<<<<< HEAD:src/main/java/com/smplkit/internal/generated/app/model/CatalogBundleResource.java
     CatalogBundleResource catalogBundleResource = (CatalogBundleResource) o;
     return equalsNullable(this.id, catalogBundleResource.id) &&
         Objects.equals(this.type, catalogBundleResource.type) &&
@@ -190,24 +260,27 @@ public class CatalogBundleResource {
 
   private static <T> boolean equalsNullable(JsonNullable<T> a, JsonNullable<T> b) {
     return a == b || (a != null && b != null && a.isPresent() && b.isPresent() && Objects.deepEquals(a.get(), b.get()));
+========
+    UsageResource usageResource = (UsageResource) o;
+    return Objects.equals(this.id, usageResource.id) &&
+        Objects.equals(this.type, usageResource.type) &&
+        Objects.equals(this.attributes, usageResource.attributes);
+>>>>>>>> fe2d99e (fix: regenerate logging client from updated spec):src/main/java/com/smplkit/internal/generated/logging/model/UsageResource.java
   }
 
   @Override
   public int hashCode() {
-    return Objects.hash(hashCodeNullable(id), type, attributes);
-  }
-
-  private static <T> int hashCodeNullable(JsonNullable<T> a) {
-    if (a == null) {
-      return 1;
-    }
-    return a.isPresent() ? Arrays.deepHashCode(new Object[]{a.get()}) : 31;
+    return Objects.hash(id, type, attributes);
   }
 
   @Override
   public String toString() {
     StringBuilder sb = new StringBuilder();
+<<<<<<<< HEAD:src/main/java/com/smplkit/internal/generated/app/model/CatalogBundleResource.java
     sb.append("class CatalogBundleResource {\n");
+========
+    sb.append("class UsageResource {\n");
+>>>>>>>> fe2d99e (fix: regenerate logging client from updated spec):src/main/java/com/smplkit/internal/generated/logging/model/UsageResource.java
     sb.append("    id: ").append(toIndentedString(id)).append("\n");
     sb.append("    type: ").append(toIndentedString(type)).append("\n");
     sb.append("    attributes: ").append(toIndentedString(attributes)).append("\n");
