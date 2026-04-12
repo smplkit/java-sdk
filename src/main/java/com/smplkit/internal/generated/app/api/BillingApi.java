@@ -20,6 +20,7 @@ import com.smplkit.internal.generated.app.Pair;
 
 import com.smplkit.internal.generated.app.model.CreateSubscriptionBody;
 import com.smplkit.internal.generated.app.model.ErrorResponse;
+import com.smplkit.internal.generated.app.model.InvoiceListResponse;
 import com.smplkit.internal.generated.app.model.UpdateSubscriptionBody;
 
 import com.fasterxml.jackson.core.type.TypeReference;
@@ -489,6 +490,115 @@ public class BillingApi {
     localVarRequestBuilder.header("Accept", "application/vnd.api+json");
 
     localVarRequestBuilder.method("POST", HttpRequest.BodyPublishers.noBody());
+    if (memberVarReadTimeout != null) {
+      localVarRequestBuilder.timeout(memberVarReadTimeout);
+    }
+    // Add custom headers if provided
+    localVarRequestBuilder = HttpRequestBuilderExtensions.withAdditionalHeaders(localVarRequestBuilder, headers);
+    if (memberVarInterceptor != null) {
+      memberVarInterceptor.accept(localVarRequestBuilder);
+    }
+    return localVarRequestBuilder;
+  }
+
+  /**
+   * List Invoices
+   * Return invoice history for the account from Stripe.
+   * @return InvoiceListResponse
+   * @throws ApiException if fails to make API call
+   */
+  public InvoiceListResponse listInvoices() throws ApiException {
+    return listInvoices(null);
+  }
+
+  /**
+   * List Invoices
+   * Return invoice history for the account from Stripe.
+   * @param headers Optional headers to include in the request
+   * @return InvoiceListResponse
+   * @throws ApiException if fails to make API call
+   */
+  public InvoiceListResponse listInvoices(Map<String, String> headers) throws ApiException {
+    ApiResponse<InvoiceListResponse> localVarResponse = listInvoicesWithHttpInfo(headers);
+    return localVarResponse.getData();
+  }
+
+  /**
+   * List Invoices
+   * Return invoice history for the account from Stripe.
+   * @return ApiResponse&lt;InvoiceListResponse&gt;
+   * @throws ApiException if fails to make API call
+   */
+  public ApiResponse<InvoiceListResponse> listInvoicesWithHttpInfo() throws ApiException {
+    return listInvoicesWithHttpInfo(null);
+  }
+
+  /**
+   * List Invoices
+   * Return invoice history for the account from Stripe.
+   * @param headers Optional headers to include in the request
+   * @return ApiResponse&lt;InvoiceListResponse&gt;
+   * @throws ApiException if fails to make API call
+   */
+  public ApiResponse<InvoiceListResponse> listInvoicesWithHttpInfo(Map<String, String> headers) throws ApiException {
+    HttpRequest.Builder localVarRequestBuilder = listInvoicesRequestBuilder(headers);
+    try {
+      HttpResponse<InputStream> localVarResponse = memberVarHttpClient.send(
+          localVarRequestBuilder.build(),
+          HttpResponse.BodyHandlers.ofInputStream());
+      if (memberVarResponseInterceptor != null) {
+        memberVarResponseInterceptor.accept(localVarResponse);
+      }
+      InputStream localVarResponseBody = null;
+      try {
+        if (localVarResponse.statusCode()/ 100 != 2) {
+          throw getApiException("listInvoices", localVarResponse);
+        }
+        localVarResponseBody = ApiClient.getResponseBody(localVarResponse);
+        if (localVarResponseBody == null) {
+          return new ApiResponse<InvoiceListResponse>(
+              localVarResponse.statusCode(),
+              localVarResponse.headers().map(),
+              null
+          );
+        }
+
+        
+        
+        String responseBody = new String(localVarResponseBody.readAllBytes());
+        InvoiceListResponse responseValue = responseBody.isBlank()? null: memberVarObjectMapper.readValue(responseBody, new TypeReference<InvoiceListResponse>() {});
+        
+
+        return new ApiResponse<InvoiceListResponse>(
+            localVarResponse.statusCode(),
+            localVarResponse.headers().map(),
+            responseValue
+        );
+      } finally {
+        if (localVarResponseBody != null) {
+          localVarResponseBody.close();
+        }
+      }
+    } catch (IOException e) {
+      throw new ApiException(e);
+    }
+    catch (InterruptedException e) {
+      Thread.currentThread().interrupt();
+      throw new ApiException(e);
+    }
+  }
+
+  private HttpRequest.Builder listInvoicesRequestBuilder(Map<String, String> headers) throws ApiException {
+
+    HttpRequest.Builder localVarRequestBuilder = HttpRequest.newBuilder();
+
+    String localVarPath = "/api/v1/invoices";
+
+    localVarRequestBuilder.uri(URI.create(memberVarBaseUri + localVarPath));
+
+    localVarRequestBuilder.header("Accept", "application/vnd.api+json");
+
+    localVarRequestBuilder.method("GET", HttpRequest.BodyPublishers.noBody());
     if (memberVarReadTimeout != null) {
       localVarRequestBuilder.timeout(memberVarReadTimeout);
     }
