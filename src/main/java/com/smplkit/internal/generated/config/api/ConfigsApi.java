@@ -20,8 +20,6 @@ import com.smplkit.internal.generated.config.Pair;
 
 import com.smplkit.internal.generated.config.model.ConfigListResponse;
 import com.smplkit.internal.generated.config.model.ConfigResponse;
-import com.smplkit.internal.generated.config.model.HTTPValidationError;
-import com.smplkit.internal.generated.config.model.ResponseConfig;
 
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -167,49 +165,49 @@ public class ConfigsApi {
 
   /**
    * Create Config
-   * 
-   * @param responseConfig  (required)
+   * Create a new configuration. The caller provides the id (key) in the request body.
+   * @param configResponse  (required)
    * @return ConfigResponse
    * @throws ApiException if fails to make API call
    */
-  public ConfigResponse createConfig(@jakarta.annotation.Nonnull ResponseConfig responseConfig) throws ApiException {
-    return createConfig(responseConfig, null);
+  public ConfigResponse createConfig(@jakarta.annotation.Nonnull ConfigResponse configResponse) throws ApiException {
+    return createConfig(configResponse, null);
   }
 
   /**
    * Create Config
-   * 
-   * @param responseConfig  (required)
+   * Create a new configuration. The caller provides the id (key) in the request body.
+   * @param configResponse  (required)
    * @param headers Optional headers to include in the request
    * @return ConfigResponse
    * @throws ApiException if fails to make API call
    */
-  public ConfigResponse createConfig(@jakarta.annotation.Nonnull ResponseConfig responseConfig, Map<String, String> headers) throws ApiException {
-    ApiResponse<ConfigResponse> localVarResponse = createConfigWithHttpInfo(responseConfig, headers);
+  public ConfigResponse createConfig(@jakarta.annotation.Nonnull ConfigResponse configResponse, Map<String, String> headers) throws ApiException {
+    ApiResponse<ConfigResponse> localVarResponse = createConfigWithHttpInfo(configResponse, headers);
     return localVarResponse.getData();
   }
 
   /**
    * Create Config
-   * 
-   * @param responseConfig  (required)
+   * Create a new configuration. The caller provides the id (key) in the request body.
+   * @param configResponse  (required)
    * @return ApiResponse&lt;ConfigResponse&gt;
    * @throws ApiException if fails to make API call
    */
-  public ApiResponse<ConfigResponse> createConfigWithHttpInfo(@jakarta.annotation.Nonnull ResponseConfig responseConfig) throws ApiException {
-    return createConfigWithHttpInfo(responseConfig, null);
+  public ApiResponse<ConfigResponse> createConfigWithHttpInfo(@jakarta.annotation.Nonnull ConfigResponse configResponse) throws ApiException {
+    return createConfigWithHttpInfo(configResponse, null);
   }
 
   /**
    * Create Config
-   * 
-   * @param responseConfig  (required)
+   * Create a new configuration. The caller provides the id (key) in the request body.
+   * @param configResponse  (required)
    * @param headers Optional headers to include in the request
    * @return ApiResponse&lt;ConfigResponse&gt;
    * @throws ApiException if fails to make API call
    */
-  public ApiResponse<ConfigResponse> createConfigWithHttpInfo(@jakarta.annotation.Nonnull ResponseConfig responseConfig, Map<String, String> headers) throws ApiException {
-    HttpRequest.Builder localVarRequestBuilder = createConfigRequestBuilder(responseConfig, headers);
+  public ApiResponse<ConfigResponse> createConfigWithHttpInfo(@jakarta.annotation.Nonnull ConfigResponse configResponse, Map<String, String> headers) throws ApiException {
+    HttpRequest.Builder localVarRequestBuilder = createConfigRequestBuilder(configResponse, headers);
     try {
       HttpResponse<InputStream> localVarResponse = memberVarHttpClient.send(
           localVarRequestBuilder.build(),
@@ -256,10 +254,10 @@ public class ConfigsApi {
     }
   }
 
-  private HttpRequest.Builder createConfigRequestBuilder(@jakarta.annotation.Nonnull ResponseConfig responseConfig, Map<String, String> headers) throws ApiException {
-    // verify the required parameter 'responseConfig' is set
-    if (responseConfig == null) {
-      throw new ApiException(400, "Missing the required parameter 'responseConfig' when calling createConfig");
+  private HttpRequest.Builder createConfigRequestBuilder(@jakarta.annotation.Nonnull ConfigResponse configResponse, Map<String, String> headers) throws ApiException {
+    // verify the required parameter 'configResponse' is set
+    if (configResponse == null) {
+      throw new ApiException(400, "Missing the required parameter 'configResponse' when calling createConfig");
     }
 
     HttpRequest.Builder localVarRequestBuilder = HttpRequest.newBuilder();
@@ -268,11 +266,11 @@ public class ConfigsApi {
 
     localVarRequestBuilder.uri(URI.create(memberVarBaseUri + localVarPath));
 
-    localVarRequestBuilder.header("Content-Type", "application/json");
+    localVarRequestBuilder.header("Content-Type", "application/vnd.api+json");
     localVarRequestBuilder.header("Accept", "application/vnd.api+json");
 
     try {
-      byte[] localVarPostBody = memberVarObjectMapper.writeValueAsBytes(responseConfig);
+      byte[] localVarPostBody = memberVarObjectMapper.writeValueAsBytes(configResponse);
       localVarRequestBuilder.method("POST", HttpRequest.BodyPublishers.ofByteArray(localVarPostBody));
     } catch (IOException e) {
       throw new ApiException(e);
@@ -290,7 +288,7 @@ public class ConfigsApi {
 
   /**
    * Delete Config
-   * 
+   * Delete a configuration by its key.
    * @param id  (required)
    * @throws ApiException if fails to make API call
    */
@@ -300,7 +298,7 @@ public class ConfigsApi {
 
   /**
    * Delete Config
-   * 
+   * Delete a configuration by its key.
    * @param id  (required)
    * @param headers Optional headers to include in the request
    * @throws ApiException if fails to make API call
@@ -311,7 +309,7 @@ public class ConfigsApi {
 
   /**
    * Delete Config
-   * 
+   * Delete a configuration by its key.
    * @param id  (required)
    * @return ApiResponse&lt;Void&gt;
    * @throws ApiException if fails to make API call
@@ -322,7 +320,7 @@ public class ConfigsApi {
 
   /**
    * Delete Config
-   * 
+   * Delete a configuration by its key.
    * @param id  (required)
    * @param headers Optional headers to include in the request
    * @return ApiResponse&lt;Void&gt;
@@ -378,7 +376,7 @@ public class ConfigsApi {
 
     localVarRequestBuilder.uri(URI.create(memberVarBaseUri + localVarPath));
 
-    localVarRequestBuilder.header("Accept", "application/vnd.api+json");
+    localVarRequestBuilder.header("Accept", "application/json");
 
     localVarRequestBuilder.method("DELETE", HttpRequest.BodyPublishers.noBody());
     if (memberVarReadTimeout != null) {
@@ -394,7 +392,7 @@ public class ConfigsApi {
 
   /**
    * Get Config
-   * 
+   * Return a configuration by its key.
    * @param id  (required)
    * @return ConfigResponse
    * @throws ApiException if fails to make API call
@@ -405,7 +403,7 @@ public class ConfigsApi {
 
   /**
    * Get Config
-   * 
+   * Return a configuration by its key.
    * @param id  (required)
    * @param headers Optional headers to include in the request
    * @return ConfigResponse
@@ -418,7 +416,7 @@ public class ConfigsApi {
 
   /**
    * Get Config
-   * 
+   * Return a configuration by its key.
    * @param id  (required)
    * @return ApiResponse&lt;ConfigResponse&gt;
    * @throws ApiException if fails to make API call
@@ -429,7 +427,7 @@ public class ConfigsApi {
 
   /**
    * Get Config
-   * 
+   * Return a configuration by its key.
    * @param id  (required)
    * @param headers Optional headers to include in the request
    * @return ApiResponse&lt;ConfigResponse&gt;
@@ -512,7 +510,7 @@ public class ConfigsApi {
 
   /**
    * List Configs
-   * 
+   * List all configurations for the authenticated account.
    * @param filterParent  (optional)
    * @return ConfigListResponse
    * @throws ApiException if fails to make API call
@@ -523,7 +521,7 @@ public class ConfigsApi {
 
   /**
    * List Configs
-   * 
+   * List all configurations for the authenticated account.
    * @param filterParent  (optional)
    * @param headers Optional headers to include in the request
    * @return ConfigListResponse
@@ -536,7 +534,7 @@ public class ConfigsApi {
 
   /**
    * List Configs
-   * 
+   * List all configurations for the authenticated account.
    * @param filterParent  (optional)
    * @return ApiResponse&lt;ConfigListResponse&gt;
    * @throws ApiException if fails to make API call
@@ -547,7 +545,7 @@ public class ConfigsApi {
 
   /**
    * List Configs
-   * 
+   * List all configurations for the authenticated account.
    * @param filterParent  (optional)
    * @param headers Optional headers to include in the request
    * @return ApiResponse&lt;ConfigListResponse&gt;
@@ -640,53 +638,53 @@ public class ConfigsApi {
 
   /**
    * Update Config
-   * 
+   * Replace a configuration entirely.
    * @param id  (required)
-   * @param responseConfig  (required)
+   * @param configResponse  (required)
    * @return ConfigResponse
    * @throws ApiException if fails to make API call
    */
-  public ConfigResponse updateConfig(@jakarta.annotation.Nonnull String id, @jakarta.annotation.Nonnull ResponseConfig responseConfig) throws ApiException {
-    return updateConfig(id, responseConfig, null);
+  public ConfigResponse updateConfig(@jakarta.annotation.Nonnull String id, @jakarta.annotation.Nonnull ConfigResponse configResponse) throws ApiException {
+    return updateConfig(id, configResponse, null);
   }
 
   /**
    * Update Config
-   * 
+   * Replace a configuration entirely.
    * @param id  (required)
-   * @param responseConfig  (required)
+   * @param configResponse  (required)
    * @param headers Optional headers to include in the request
    * @return ConfigResponse
    * @throws ApiException if fails to make API call
    */
-  public ConfigResponse updateConfig(@jakarta.annotation.Nonnull String id, @jakarta.annotation.Nonnull ResponseConfig responseConfig, Map<String, String> headers) throws ApiException {
-    ApiResponse<ConfigResponse> localVarResponse = updateConfigWithHttpInfo(id, responseConfig, headers);
+  public ConfigResponse updateConfig(@jakarta.annotation.Nonnull String id, @jakarta.annotation.Nonnull ConfigResponse configResponse, Map<String, String> headers) throws ApiException {
+    ApiResponse<ConfigResponse> localVarResponse = updateConfigWithHttpInfo(id, configResponse, headers);
     return localVarResponse.getData();
   }
 
   /**
    * Update Config
-   * 
+   * Replace a configuration entirely.
    * @param id  (required)
-   * @param responseConfig  (required)
+   * @param configResponse  (required)
    * @return ApiResponse&lt;ConfigResponse&gt;
    * @throws ApiException if fails to make API call
    */
-  public ApiResponse<ConfigResponse> updateConfigWithHttpInfo(@jakarta.annotation.Nonnull String id, @jakarta.annotation.Nonnull ResponseConfig responseConfig) throws ApiException {
-    return updateConfigWithHttpInfo(id, responseConfig, null);
+  public ApiResponse<ConfigResponse> updateConfigWithHttpInfo(@jakarta.annotation.Nonnull String id, @jakarta.annotation.Nonnull ConfigResponse configResponse) throws ApiException {
+    return updateConfigWithHttpInfo(id, configResponse, null);
   }
 
   /**
    * Update Config
-   * 
+   * Replace a configuration entirely.
    * @param id  (required)
-   * @param responseConfig  (required)
+   * @param configResponse  (required)
    * @param headers Optional headers to include in the request
    * @return ApiResponse&lt;ConfigResponse&gt;
    * @throws ApiException if fails to make API call
    */
-  public ApiResponse<ConfigResponse> updateConfigWithHttpInfo(@jakarta.annotation.Nonnull String id, @jakarta.annotation.Nonnull ResponseConfig responseConfig, Map<String, String> headers) throws ApiException {
-    HttpRequest.Builder localVarRequestBuilder = updateConfigRequestBuilder(id, responseConfig, headers);
+  public ApiResponse<ConfigResponse> updateConfigWithHttpInfo(@jakarta.annotation.Nonnull String id, @jakarta.annotation.Nonnull ConfigResponse configResponse, Map<String, String> headers) throws ApiException {
+    HttpRequest.Builder localVarRequestBuilder = updateConfigRequestBuilder(id, configResponse, headers);
     try {
       HttpResponse<InputStream> localVarResponse = memberVarHttpClient.send(
           localVarRequestBuilder.build(),
@@ -733,14 +731,14 @@ public class ConfigsApi {
     }
   }
 
-  private HttpRequest.Builder updateConfigRequestBuilder(@jakarta.annotation.Nonnull String id, @jakarta.annotation.Nonnull ResponseConfig responseConfig, Map<String, String> headers) throws ApiException {
+  private HttpRequest.Builder updateConfigRequestBuilder(@jakarta.annotation.Nonnull String id, @jakarta.annotation.Nonnull ConfigResponse configResponse, Map<String, String> headers) throws ApiException {
     // verify the required parameter 'id' is set
     if (id == null) {
       throw new ApiException(400, "Missing the required parameter 'id' when calling updateConfig");
     }
-    // verify the required parameter 'responseConfig' is set
-    if (responseConfig == null) {
-      throw new ApiException(400, "Missing the required parameter 'responseConfig' when calling updateConfig");
+    // verify the required parameter 'configResponse' is set
+    if (configResponse == null) {
+      throw new ApiException(400, "Missing the required parameter 'configResponse' when calling updateConfig");
     }
 
     HttpRequest.Builder localVarRequestBuilder = HttpRequest.newBuilder();
@@ -750,11 +748,11 @@ public class ConfigsApi {
 
     localVarRequestBuilder.uri(URI.create(memberVarBaseUri + localVarPath));
 
-    localVarRequestBuilder.header("Content-Type", "application/json");
+    localVarRequestBuilder.header("Content-Type", "application/vnd.api+json");
     localVarRequestBuilder.header("Accept", "application/vnd.api+json");
 
     try {
-      byte[] localVarPostBody = memberVarObjectMapper.writeValueAsBytes(responseConfig);
+      byte[] localVarPostBody = memberVarObjectMapper.writeValueAsBytes(configResponse);
       localVarRequestBuilder.method("PUT", HttpRequest.BodyPublishers.ofByteArray(localVarPostBody));
     } catch (IOException e) {
       throw new ApiException(e);

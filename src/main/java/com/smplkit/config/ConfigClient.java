@@ -11,8 +11,6 @@ import com.smplkit.internal.generated.config.model.ConfigListResponse;
 import com.smplkit.internal.generated.config.model.ConfigResource;
 import com.smplkit.internal.generated.config.model.ConfigResponse;
 import com.smplkit.internal.generated.config.model.EnvironmentOverride;
-import com.smplkit.internal.generated.config.model.ResourceConfig;
-import com.smplkit.internal.generated.config.model.ResponseConfig;
 
 import java.time.Instant;
 import java.util.ArrayList;
@@ -107,11 +105,11 @@ public final class ConfigClient {
                 attrs.setEnvironments(wrapEnvironments(config.getEnvironments()));
             }
 
-            ResourceConfig data = new ResourceConfig()
+            ConfigResource data = new ConfigResource()
                     .id(config.getId())
-                    .type("config")
+                    .type(ConfigResource.TypeEnum.CONFIG)
                     .attributes(attrs);
-            ResponseConfig body = new ResponseConfig().data(data);
+            ConfigResponse body = new ConfigResponse().data(data);
 
             ConfigResponse response = configsApi.createConfig(body);
             return parseResource(response.getData());
@@ -138,11 +136,11 @@ public final class ConfigClient {
                 attrs.setEnvironments(wrapEnvironments(config.getEnvironments()));
             }
 
-            ResourceConfig data = new ResourceConfig()
+            ConfigResource data = new ConfigResource()
                     .id(config.getId())
-                    .type("config")
+                    .type(ConfigResource.TypeEnum.CONFIG)
                     .attributes(attrs);
-            ResponseConfig body = new ResponseConfig().data(data);
+            ConfigResponse body = new ConfigResponse().data(data);
 
             ConfigResponse response = configsApi.updateConfig(config.getId(), body);
             return parseResource(response.getData());
