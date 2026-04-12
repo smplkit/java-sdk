@@ -18,6 +18,8 @@ import com.smplkit.internal.generated.app.ApiResponse;
 import com.smplkit.internal.generated.app.Configuration;
 import com.smplkit.internal.generated.app.Pair;
 
+import com.smplkit.internal.generated.app.model.BundleResponse;
+import com.smplkit.internal.generated.app.model.CreateBundleBody;
 import com.smplkit.internal.generated.app.model.CreateSubscriptionBody;
 import com.smplkit.internal.generated.app.model.ErrorResponse;
 import com.smplkit.internal.generated.app.model.InvoiceListResponse;
@@ -277,6 +279,129 @@ public class BillingApi {
     localVarRequestBuilder.header("Accept", "application/vnd.api+json");
 
     localVarRequestBuilder.method("POST", HttpRequest.BodyPublishers.noBody());
+    if (memberVarReadTimeout != null) {
+      localVarRequestBuilder.timeout(memberVarReadTimeout);
+    }
+    // Add custom headers if provided
+    localVarRequestBuilder = HttpRequestBuilderExtensions.withAdditionalHeaders(localVarRequestBuilder, headers);
+    if (memberVarInterceptor != null) {
+      memberVarInterceptor.accept(localVarRequestBuilder);
+    }
+    return localVarRequestBuilder;
+  }
+
+  /**
+   * Create Bundle Subscription
+   * Create a bundle subscription covering all three products at a shared plan tier.
+   * @param createBundleBody  (required)
+   * @return BundleResponse
+   * @throws ApiException if fails to make API call
+   */
+  public BundleResponse createBundle(@jakarta.annotation.Nonnull CreateBundleBody createBundleBody) throws ApiException {
+    return createBundle(createBundleBody, null);
+  }
+
+  /**
+   * Create Bundle Subscription
+   * Create a bundle subscription covering all three products at a shared plan tier.
+   * @param createBundleBody  (required)
+   * @param headers Optional headers to include in the request
+   * @return BundleResponse
+   * @throws ApiException if fails to make API call
+   */
+  public BundleResponse createBundle(@jakarta.annotation.Nonnull CreateBundleBody createBundleBody, Map<String, String> headers) throws ApiException {
+    ApiResponse<BundleResponse> localVarResponse = createBundleWithHttpInfo(createBundleBody, headers);
+    return localVarResponse.getData();
+  }
+
+  /**
+   * Create Bundle Subscription
+   * Create a bundle subscription covering all three products at a shared plan tier.
+   * @param createBundleBody  (required)
+   * @return ApiResponse&lt;BundleResponse&gt;
+   * @throws ApiException if fails to make API call
+   */
+  public ApiResponse<BundleResponse> createBundleWithHttpInfo(@jakarta.annotation.Nonnull CreateBundleBody createBundleBody) throws ApiException {
+    return createBundleWithHttpInfo(createBundleBody, null);
+  }
+
+  /**
+   * Create Bundle Subscription
+   * Create a bundle subscription covering all three products at a shared plan tier.
+   * @param createBundleBody  (required)
+   * @param headers Optional headers to include in the request
+   * @return ApiResponse&lt;BundleResponse&gt;
+   * @throws ApiException if fails to make API call
+   */
+  public ApiResponse<BundleResponse> createBundleWithHttpInfo(@jakarta.annotation.Nonnull CreateBundleBody createBundleBody, Map<String, String> headers) throws ApiException {
+    HttpRequest.Builder localVarRequestBuilder = createBundleRequestBuilder(createBundleBody, headers);
+    try {
+      HttpResponse<InputStream> localVarResponse = memberVarHttpClient.send(
+          localVarRequestBuilder.build(),
+          HttpResponse.BodyHandlers.ofInputStream());
+      if (memberVarResponseInterceptor != null) {
+        memberVarResponseInterceptor.accept(localVarResponse);
+      }
+      InputStream localVarResponseBody = null;
+      try {
+        if (localVarResponse.statusCode()/ 100 != 2) {
+          throw getApiException("createBundle", localVarResponse);
+        }
+        localVarResponseBody = ApiClient.getResponseBody(localVarResponse);
+        if (localVarResponseBody == null) {
+          return new ApiResponse<BundleResponse>(
+              localVarResponse.statusCode(),
+              localVarResponse.headers().map(),
+              null
+          );
+        }
+
+        
+        
+        String responseBody = new String(localVarResponseBody.readAllBytes());
+        BundleResponse responseValue = responseBody.isBlank()? null: memberVarObjectMapper.readValue(responseBody, new TypeReference<BundleResponse>() {});
+        
+
+        return new ApiResponse<BundleResponse>(
+            localVarResponse.statusCode(),
+            localVarResponse.headers().map(),
+            responseValue
+        );
+      } finally {
+        if (localVarResponseBody != null) {
+          localVarResponseBody.close();
+        }
+      }
+    } catch (IOException e) {
+      throw new ApiException(e);
+    }
+    catch (InterruptedException e) {
+      Thread.currentThread().interrupt();
+      throw new ApiException(e);
+    }
+  }
+
+  private HttpRequest.Builder createBundleRequestBuilder(@jakarta.annotation.Nonnull CreateBundleBody createBundleBody, Map<String, String> headers) throws ApiException {
+    // verify the required parameter 'createBundleBody' is set
+    if (createBundleBody == null) {
+      throw new ApiException(400, "Missing the required parameter 'createBundleBody' when calling createBundle");
+    }
+
+    HttpRequest.Builder localVarRequestBuilder = HttpRequest.newBuilder();
+
+    String localVarPath = "/api/v1/bundles";
+
+    localVarRequestBuilder.uri(URI.create(memberVarBaseUri + localVarPath));
+
+    localVarRequestBuilder.header("Content-Type", "application/vnd.api+json");
+    localVarRequestBuilder.header("Accept", "application/vnd.api+json");
+
+    try {
+      byte[] localVarPostBody = memberVarObjectMapper.writeValueAsBytes(createBundleBody);
+      localVarRequestBuilder.method("POST", HttpRequest.BodyPublishers.ofByteArray(localVarPostBody));
+    } catch (IOException e) {
+      throw new ApiException(e);
+    }
     if (memberVarReadTimeout != null) {
       localVarRequestBuilder.timeout(memberVarReadTimeout);
     }
