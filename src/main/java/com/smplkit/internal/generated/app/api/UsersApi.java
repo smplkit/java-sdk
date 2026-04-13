@@ -18,6 +18,9 @@ import com.smplkit.internal.generated.app.ApiResponse;
 import com.smplkit.internal.generated.app.Configuration;
 import com.smplkit.internal.generated.app.Pair;
 
+import com.smplkit.internal.generated.app.model.EnvironmentAddBody;
+import com.smplkit.internal.generated.app.model.EnvironmentColumnsResponse;
+import com.smplkit.internal.generated.app.model.EnvironmentOrderBody;
 import com.smplkit.internal.generated.app.model.ErrorResponse;
 import java.util.UUID;
 import com.smplkit.internal.generated.app.model.UserListResponse;
@@ -166,6 +169,238 @@ public class UsersApi {
   }
 
   /**
+   * Add Environment Column
+   * Append an environment to the current user&#39;s personal column list.
+   * @param environmentAddBody  (required)
+   * @return EnvironmentColumnsResponse
+   * @throws ApiException if fails to make API call
+   */
+  public EnvironmentColumnsResponse addEnvironmentColumn(@jakarta.annotation.Nonnull EnvironmentAddBody environmentAddBody) throws ApiException {
+    return addEnvironmentColumn(environmentAddBody, null);
+  }
+
+  /**
+   * Add Environment Column
+   * Append an environment to the current user&#39;s personal column list.
+   * @param environmentAddBody  (required)
+   * @param headers Optional headers to include in the request
+   * @return EnvironmentColumnsResponse
+   * @throws ApiException if fails to make API call
+   */
+  public EnvironmentColumnsResponse addEnvironmentColumn(@jakarta.annotation.Nonnull EnvironmentAddBody environmentAddBody, Map<String, String> headers) throws ApiException {
+    ApiResponse<EnvironmentColumnsResponse> localVarResponse = addEnvironmentColumnWithHttpInfo(environmentAddBody, headers);
+    return localVarResponse.getData();
+  }
+
+  /**
+   * Add Environment Column
+   * Append an environment to the current user&#39;s personal column list.
+   * @param environmentAddBody  (required)
+   * @return ApiResponse&lt;EnvironmentColumnsResponse&gt;
+   * @throws ApiException if fails to make API call
+   */
+  public ApiResponse<EnvironmentColumnsResponse> addEnvironmentColumnWithHttpInfo(@jakarta.annotation.Nonnull EnvironmentAddBody environmentAddBody) throws ApiException {
+    return addEnvironmentColumnWithHttpInfo(environmentAddBody, null);
+  }
+
+  /**
+   * Add Environment Column
+   * Append an environment to the current user&#39;s personal column list.
+   * @param environmentAddBody  (required)
+   * @param headers Optional headers to include in the request
+   * @return ApiResponse&lt;EnvironmentColumnsResponse&gt;
+   * @throws ApiException if fails to make API call
+   */
+  public ApiResponse<EnvironmentColumnsResponse> addEnvironmentColumnWithHttpInfo(@jakarta.annotation.Nonnull EnvironmentAddBody environmentAddBody, Map<String, String> headers) throws ApiException {
+    HttpRequest.Builder localVarRequestBuilder = addEnvironmentColumnRequestBuilder(environmentAddBody, headers);
+    try {
+      HttpResponse<InputStream> localVarResponse = memberVarHttpClient.send(
+          localVarRequestBuilder.build(),
+          HttpResponse.BodyHandlers.ofInputStream());
+      if (memberVarResponseInterceptor != null) {
+        memberVarResponseInterceptor.accept(localVarResponse);
+      }
+      InputStream localVarResponseBody = null;
+      try {
+        if (localVarResponse.statusCode()/ 100 != 2) {
+          throw getApiException("addEnvironmentColumn", localVarResponse);
+        }
+        localVarResponseBody = ApiClient.getResponseBody(localVarResponse);
+        if (localVarResponseBody == null) {
+          return new ApiResponse<EnvironmentColumnsResponse>(
+              localVarResponse.statusCode(),
+              localVarResponse.headers().map(),
+              null
+          );
+        }
+
+        
+        
+        String responseBody = new String(localVarResponseBody.readAllBytes());
+        EnvironmentColumnsResponse responseValue = responseBody.isBlank()? null: memberVarObjectMapper.readValue(responseBody, new TypeReference<EnvironmentColumnsResponse>() {});
+        
+
+        return new ApiResponse<EnvironmentColumnsResponse>(
+            localVarResponse.statusCode(),
+            localVarResponse.headers().map(),
+            responseValue
+        );
+      } finally {
+        if (localVarResponseBody != null) {
+          localVarResponseBody.close();
+        }
+      }
+    } catch (IOException e) {
+      throw new ApiException(e);
+    }
+    catch (InterruptedException e) {
+      Thread.currentThread().interrupt();
+      throw new ApiException(e);
+    }
+  }
+
+  private HttpRequest.Builder addEnvironmentColumnRequestBuilder(@jakarta.annotation.Nonnull EnvironmentAddBody environmentAddBody, Map<String, String> headers) throws ApiException {
+    // verify the required parameter 'environmentAddBody' is set
+    if (environmentAddBody == null) {
+      throw new ApiException(400, "Missing the required parameter 'environmentAddBody' when calling addEnvironmentColumn");
+    }
+
+    HttpRequest.Builder localVarRequestBuilder = HttpRequest.newBuilder();
+
+    String localVarPath = "/api/v1/me/environment-order/add";
+
+    localVarRequestBuilder.uri(URI.create(memberVarBaseUri + localVarPath));
+
+    localVarRequestBuilder.header("Content-Type", "application/vnd.api+json");
+    localVarRequestBuilder.header("Accept", "application/vnd.api+json");
+
+    try {
+      byte[] localVarPostBody = memberVarObjectMapper.writeValueAsBytes(environmentAddBody);
+      localVarRequestBuilder.method("POST", HttpRequest.BodyPublishers.ofByteArray(localVarPostBody));
+    } catch (IOException e) {
+      throw new ApiException(e);
+    }
+    if (memberVarReadTimeout != null) {
+      localVarRequestBuilder.timeout(memberVarReadTimeout);
+    }
+    // Add custom headers if provided
+    localVarRequestBuilder = HttpRequestBuilderExtensions.withAdditionalHeaders(localVarRequestBuilder, headers);
+    if (memberVarInterceptor != null) {
+      memberVarInterceptor.accept(localVarRequestBuilder);
+    }
+    return localVarRequestBuilder;
+  }
+
+  /**
+   * Reset Personal Environment Order
+   * Reset the current user&#39;s personal environment order to the account default.
+   * @return EnvironmentColumnsResponse
+   * @throws ApiException if fails to make API call
+   */
+  public EnvironmentColumnsResponse deleteEnvironmentOrder() throws ApiException {
+    return deleteEnvironmentOrder(null);
+  }
+
+  /**
+   * Reset Personal Environment Order
+   * Reset the current user&#39;s personal environment order to the account default.
+   * @param headers Optional headers to include in the request
+   * @return EnvironmentColumnsResponse
+   * @throws ApiException if fails to make API call
+   */
+  public EnvironmentColumnsResponse deleteEnvironmentOrder(Map<String, String> headers) throws ApiException {
+    ApiResponse<EnvironmentColumnsResponse> localVarResponse = deleteEnvironmentOrderWithHttpInfo(headers);
+    return localVarResponse.getData();
+  }
+
+  /**
+   * Reset Personal Environment Order
+   * Reset the current user&#39;s personal environment order to the account default.
+   * @return ApiResponse&lt;EnvironmentColumnsResponse&gt;
+   * @throws ApiException if fails to make API call
+   */
+  public ApiResponse<EnvironmentColumnsResponse> deleteEnvironmentOrderWithHttpInfo() throws ApiException {
+    return deleteEnvironmentOrderWithHttpInfo(null);
+  }
+
+  /**
+   * Reset Personal Environment Order
+   * Reset the current user&#39;s personal environment order to the account default.
+   * @param headers Optional headers to include in the request
+   * @return ApiResponse&lt;EnvironmentColumnsResponse&gt;
+   * @throws ApiException if fails to make API call
+   */
+  public ApiResponse<EnvironmentColumnsResponse> deleteEnvironmentOrderWithHttpInfo(Map<String, String> headers) throws ApiException {
+    HttpRequest.Builder localVarRequestBuilder = deleteEnvironmentOrderRequestBuilder(headers);
+    try {
+      HttpResponse<InputStream> localVarResponse = memberVarHttpClient.send(
+          localVarRequestBuilder.build(),
+          HttpResponse.BodyHandlers.ofInputStream());
+      if (memberVarResponseInterceptor != null) {
+        memberVarResponseInterceptor.accept(localVarResponse);
+      }
+      InputStream localVarResponseBody = null;
+      try {
+        if (localVarResponse.statusCode()/ 100 != 2) {
+          throw getApiException("deleteEnvironmentOrder", localVarResponse);
+        }
+        localVarResponseBody = ApiClient.getResponseBody(localVarResponse);
+        if (localVarResponseBody == null) {
+          return new ApiResponse<EnvironmentColumnsResponse>(
+              localVarResponse.statusCode(),
+              localVarResponse.headers().map(),
+              null
+          );
+        }
+
+        
+        
+        String responseBody = new String(localVarResponseBody.readAllBytes());
+        EnvironmentColumnsResponse responseValue = responseBody.isBlank()? null: memberVarObjectMapper.readValue(responseBody, new TypeReference<EnvironmentColumnsResponse>() {});
+        
+
+        return new ApiResponse<EnvironmentColumnsResponse>(
+            localVarResponse.statusCode(),
+            localVarResponse.headers().map(),
+            responseValue
+        );
+      } finally {
+        if (localVarResponseBody != null) {
+          localVarResponseBody.close();
+        }
+      }
+    } catch (IOException e) {
+      throw new ApiException(e);
+    }
+    catch (InterruptedException e) {
+      Thread.currentThread().interrupt();
+      throw new ApiException(e);
+    }
+  }
+
+  private HttpRequest.Builder deleteEnvironmentOrderRequestBuilder(Map<String, String> headers) throws ApiException {
+
+    HttpRequest.Builder localVarRequestBuilder = HttpRequest.newBuilder();
+
+    String localVarPath = "/api/v1/me/environment-order";
+
+    localVarRequestBuilder.uri(URI.create(memberVarBaseUri + localVarPath));
+
+    localVarRequestBuilder.header("Accept", "application/vnd.api+json");
+
+    localVarRequestBuilder.method("DELETE", HttpRequest.BodyPublishers.noBody());
+    if (memberVarReadTimeout != null) {
+      localVarRequestBuilder.timeout(memberVarReadTimeout);
+    }
+    // Add custom headers if provided
+    localVarRequestBuilder = HttpRequestBuilderExtensions.withAdditionalHeaders(localVarRequestBuilder, headers);
+    if (memberVarInterceptor != null) {
+      memberVarInterceptor.accept(localVarRequestBuilder);
+    }
+    return localVarRequestBuilder;
+  }
+
+  /**
    * Get Current User
    * Return the currently authenticated user.
    * @return UserResponse
@@ -257,6 +492,115 @@ public class UsersApi {
     HttpRequest.Builder localVarRequestBuilder = HttpRequest.newBuilder();
 
     String localVarPath = "/api/v1/users/me";
+
+    localVarRequestBuilder.uri(URI.create(memberVarBaseUri + localVarPath));
+
+    localVarRequestBuilder.header("Accept", "application/vnd.api+json");
+
+    localVarRequestBuilder.method("GET", HttpRequest.BodyPublishers.noBody());
+    if (memberVarReadTimeout != null) {
+      localVarRequestBuilder.timeout(memberVarReadTimeout);
+    }
+    // Add custom headers if provided
+    localVarRequestBuilder = HttpRequestBuilderExtensions.withAdditionalHeaders(localVarRequestBuilder, headers);
+    if (memberVarInterceptor != null) {
+      memberVarInterceptor.accept(localVarRequestBuilder);
+    }
+    return localVarRequestBuilder;
+  }
+
+  /**
+   * Get Environment Columns
+   * Return the resolved ordered list of environment columns for the current user.
+   * @return EnvironmentColumnsResponse
+   * @throws ApiException if fails to make API call
+   */
+  public EnvironmentColumnsResponse getEnvironmentColumns() throws ApiException {
+    return getEnvironmentColumns(null);
+  }
+
+  /**
+   * Get Environment Columns
+   * Return the resolved ordered list of environment columns for the current user.
+   * @param headers Optional headers to include in the request
+   * @return EnvironmentColumnsResponse
+   * @throws ApiException if fails to make API call
+   */
+  public EnvironmentColumnsResponse getEnvironmentColumns(Map<String, String> headers) throws ApiException {
+    ApiResponse<EnvironmentColumnsResponse> localVarResponse = getEnvironmentColumnsWithHttpInfo(headers);
+    return localVarResponse.getData();
+  }
+
+  /**
+   * Get Environment Columns
+   * Return the resolved ordered list of environment columns for the current user.
+   * @return ApiResponse&lt;EnvironmentColumnsResponse&gt;
+   * @throws ApiException if fails to make API call
+   */
+  public ApiResponse<EnvironmentColumnsResponse> getEnvironmentColumnsWithHttpInfo() throws ApiException {
+    return getEnvironmentColumnsWithHttpInfo(null);
+  }
+
+  /**
+   * Get Environment Columns
+   * Return the resolved ordered list of environment columns for the current user.
+   * @param headers Optional headers to include in the request
+   * @return ApiResponse&lt;EnvironmentColumnsResponse&gt;
+   * @throws ApiException if fails to make API call
+   */
+  public ApiResponse<EnvironmentColumnsResponse> getEnvironmentColumnsWithHttpInfo(Map<String, String> headers) throws ApiException {
+    HttpRequest.Builder localVarRequestBuilder = getEnvironmentColumnsRequestBuilder(headers);
+    try {
+      HttpResponse<InputStream> localVarResponse = memberVarHttpClient.send(
+          localVarRequestBuilder.build(),
+          HttpResponse.BodyHandlers.ofInputStream());
+      if (memberVarResponseInterceptor != null) {
+        memberVarResponseInterceptor.accept(localVarResponse);
+      }
+      InputStream localVarResponseBody = null;
+      try {
+        if (localVarResponse.statusCode()/ 100 != 2) {
+          throw getApiException("getEnvironmentColumns", localVarResponse);
+        }
+        localVarResponseBody = ApiClient.getResponseBody(localVarResponse);
+        if (localVarResponseBody == null) {
+          return new ApiResponse<EnvironmentColumnsResponse>(
+              localVarResponse.statusCode(),
+              localVarResponse.headers().map(),
+              null
+          );
+        }
+
+        
+        
+        String responseBody = new String(localVarResponseBody.readAllBytes());
+        EnvironmentColumnsResponse responseValue = responseBody.isBlank()? null: memberVarObjectMapper.readValue(responseBody, new TypeReference<EnvironmentColumnsResponse>() {});
+        
+
+        return new ApiResponse<EnvironmentColumnsResponse>(
+            localVarResponse.statusCode(),
+            localVarResponse.headers().map(),
+            responseValue
+        );
+      } finally {
+        if (localVarResponseBody != null) {
+          localVarResponseBody.close();
+        }
+      }
+    } catch (IOException e) {
+      throw new ApiException(e);
+    }
+    catch (InterruptedException e) {
+      Thread.currentThread().interrupt();
+      throw new ApiException(e);
+    }
+  }
+
+  private HttpRequest.Builder getEnvironmentColumnsRequestBuilder(Map<String, String> headers) throws ApiException {
+
+    HttpRequest.Builder localVarRequestBuilder = HttpRequest.newBuilder();
+
+    String localVarPath = "/api/v1/me/environment-columns";
 
     localVarRequestBuilder.uri(URI.create(memberVarBaseUri + localVarPath));
 
@@ -515,6 +859,129 @@ public class UsersApi {
     localVarRequestBuilder.header("Accept", "application/vnd.api+json");
 
     localVarRequestBuilder.method("GET", HttpRequest.BodyPublishers.noBody());
+    if (memberVarReadTimeout != null) {
+      localVarRequestBuilder.timeout(memberVarReadTimeout);
+    }
+    // Add custom headers if provided
+    localVarRequestBuilder = HttpRequestBuilderExtensions.withAdditionalHeaders(localVarRequestBuilder, headers);
+    if (memberVarInterceptor != null) {
+      memberVarInterceptor.accept(localVarRequestBuilder);
+    }
+    return localVarRequestBuilder;
+  }
+
+  /**
+   * Set Personal Environment Order
+   * Set the current user&#39;s personal environment column order and visibility.
+   * @param environmentOrderBody  (required)
+   * @return EnvironmentColumnsResponse
+   * @throws ApiException if fails to make API call
+   */
+  public EnvironmentColumnsResponse putEnvironmentOrder(@jakarta.annotation.Nonnull EnvironmentOrderBody environmentOrderBody) throws ApiException {
+    return putEnvironmentOrder(environmentOrderBody, null);
+  }
+
+  /**
+   * Set Personal Environment Order
+   * Set the current user&#39;s personal environment column order and visibility.
+   * @param environmentOrderBody  (required)
+   * @param headers Optional headers to include in the request
+   * @return EnvironmentColumnsResponse
+   * @throws ApiException if fails to make API call
+   */
+  public EnvironmentColumnsResponse putEnvironmentOrder(@jakarta.annotation.Nonnull EnvironmentOrderBody environmentOrderBody, Map<String, String> headers) throws ApiException {
+    ApiResponse<EnvironmentColumnsResponse> localVarResponse = putEnvironmentOrderWithHttpInfo(environmentOrderBody, headers);
+    return localVarResponse.getData();
+  }
+
+  /**
+   * Set Personal Environment Order
+   * Set the current user&#39;s personal environment column order and visibility.
+   * @param environmentOrderBody  (required)
+   * @return ApiResponse&lt;EnvironmentColumnsResponse&gt;
+   * @throws ApiException if fails to make API call
+   */
+  public ApiResponse<EnvironmentColumnsResponse> putEnvironmentOrderWithHttpInfo(@jakarta.annotation.Nonnull EnvironmentOrderBody environmentOrderBody) throws ApiException {
+    return putEnvironmentOrderWithHttpInfo(environmentOrderBody, null);
+  }
+
+  /**
+   * Set Personal Environment Order
+   * Set the current user&#39;s personal environment column order and visibility.
+   * @param environmentOrderBody  (required)
+   * @param headers Optional headers to include in the request
+   * @return ApiResponse&lt;EnvironmentColumnsResponse&gt;
+   * @throws ApiException if fails to make API call
+   */
+  public ApiResponse<EnvironmentColumnsResponse> putEnvironmentOrderWithHttpInfo(@jakarta.annotation.Nonnull EnvironmentOrderBody environmentOrderBody, Map<String, String> headers) throws ApiException {
+    HttpRequest.Builder localVarRequestBuilder = putEnvironmentOrderRequestBuilder(environmentOrderBody, headers);
+    try {
+      HttpResponse<InputStream> localVarResponse = memberVarHttpClient.send(
+          localVarRequestBuilder.build(),
+          HttpResponse.BodyHandlers.ofInputStream());
+      if (memberVarResponseInterceptor != null) {
+        memberVarResponseInterceptor.accept(localVarResponse);
+      }
+      InputStream localVarResponseBody = null;
+      try {
+        if (localVarResponse.statusCode()/ 100 != 2) {
+          throw getApiException("putEnvironmentOrder", localVarResponse);
+        }
+        localVarResponseBody = ApiClient.getResponseBody(localVarResponse);
+        if (localVarResponseBody == null) {
+          return new ApiResponse<EnvironmentColumnsResponse>(
+              localVarResponse.statusCode(),
+              localVarResponse.headers().map(),
+              null
+          );
+        }
+
+        
+        
+        String responseBody = new String(localVarResponseBody.readAllBytes());
+        EnvironmentColumnsResponse responseValue = responseBody.isBlank()? null: memberVarObjectMapper.readValue(responseBody, new TypeReference<EnvironmentColumnsResponse>() {});
+        
+
+        return new ApiResponse<EnvironmentColumnsResponse>(
+            localVarResponse.statusCode(),
+            localVarResponse.headers().map(),
+            responseValue
+        );
+      } finally {
+        if (localVarResponseBody != null) {
+          localVarResponseBody.close();
+        }
+      }
+    } catch (IOException e) {
+      throw new ApiException(e);
+    }
+    catch (InterruptedException e) {
+      Thread.currentThread().interrupt();
+      throw new ApiException(e);
+    }
+  }
+
+  private HttpRequest.Builder putEnvironmentOrderRequestBuilder(@jakarta.annotation.Nonnull EnvironmentOrderBody environmentOrderBody, Map<String, String> headers) throws ApiException {
+    // verify the required parameter 'environmentOrderBody' is set
+    if (environmentOrderBody == null) {
+      throw new ApiException(400, "Missing the required parameter 'environmentOrderBody' when calling putEnvironmentOrder");
+    }
+
+    HttpRequest.Builder localVarRequestBuilder = HttpRequest.newBuilder();
+
+    String localVarPath = "/api/v1/me/environment-order";
+
+    localVarRequestBuilder.uri(URI.create(memberVarBaseUri + localVarPath));
+
+    localVarRequestBuilder.header("Content-Type", "application/vnd.api+json");
+    localVarRequestBuilder.header("Accept", "application/vnd.api+json");
+
+    try {
+      byte[] localVarPostBody = memberVarObjectMapper.writeValueAsBytes(environmentOrderBody);
+      localVarRequestBuilder.method("PUT", HttpRequest.BodyPublishers.ofByteArray(localVarPostBody));
+    } catch (IOException e) {
+      throw new ApiException(e);
+    }
     if (memberVarReadTimeout != null) {
       localVarRequestBuilder.timeout(memberVarReadTimeout);
     }
