@@ -92,6 +92,17 @@ class Log4j2AdapterTest {
         // Parent has explicit level
         assertEquals("WARN", foundParent.level());
         assertEquals("WARN", foundParent.resolvedLevel());
+
+        // Child has no explicitly set level — getExplicitLevel() returns null for it.
+        DiscoveredLogger foundChild = discovered.stream()
+                .filter(dl -> dl.name().equals(child))
+                .findFirst()
+                .orElseThrow();
+
+        assertNull(foundChild.level(),
+                "Child level should be null — no explicit level configured on child logger");
+        assertEquals("WARN", foundChild.resolvedLevel(),
+                "Child resolvedLevel should inherit WARN from parent");
     }
 
     @Test
