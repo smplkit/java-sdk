@@ -9,9 +9,12 @@ import com.smplkit.internal.generated.logging.api.LoggersApi;
 import com.smplkit.internal.generated.logging.model.LogGroupListResponse;
 import com.smplkit.internal.generated.logging.model.LogGroupResource;
 import com.smplkit.internal.generated.logging.model.LogGroupResponse;
+import com.smplkit.internal.generated.logging.model.LoggerBulkItem;
+import com.smplkit.internal.generated.logging.model.LoggerBulkRequest;
 import com.smplkit.internal.generated.logging.model.LoggerListResponse;
 import com.smplkit.internal.generated.logging.model.LoggerResource;
 import com.smplkit.internal.generated.logging.model.LoggerResponse;
+import org.openapitools.jackson.nullable.JsonNullable;
 import com.smplkit.logging.adapters.DiscoveredLogger;
 import com.smplkit.logging.adapters.LoggingAdapter;
 
@@ -147,8 +150,8 @@ public final class LoggingClient {
     /** Creates a new logger on the server. Called by {@link Logger#save()}. */
     Logger _createLogger(Logger lg) {
         try {
-            LoggerResponse body = buildLoggerBody(null, lg);
-            LoggerResponse response = loggersApi.createLogger(body);
+            LoggerResponse body = buildLoggerBody(lg.getId(), lg);
+            LoggerResponse response = loggersApi.updateLogger(lg.getId(), body);
             return loggerResponseToModel(response);
         } catch (ApiException e) {
             throw mapLoggingException(e);
@@ -209,11 +212,11 @@ public final class LoggingClient {
         }
 
         // 2. Discover existing loggers from all adapters
-        int totalDiscovered = 0;
+        List<DiscoveredLogger> allDiscovered = new ArrayList<>();
         for (LoggingAdapter adapter : adapters) {
             try {
                 List<DiscoveredLogger> discovered = adapter.discover();
-                totalDiscovered += discovered.size();
+                allDiscovered.addAll(discovered);
                 for (DiscoveredLogger dl : discovered) {
                     String normalized = normalizeKey(dl.name());
                     nameMap.put(dl.name(), normalized);
@@ -222,8 +225,8 @@ public final class LoggingClient {
                 LOG.log(Level.WARNING, "Adapter " + adapter.name() + " discover() failed", e);
             }
         }
-        if (metrics != null && totalDiscovered > 0) {
-            metrics.record("logging.loggers_discovered", totalDiscovered, "loggers");
+        if (metrics != null && !allDiscovered.isEmpty()) {
+            metrics.record("logging.loggers_discovered", allDiscovered.size(), "loggers");
         }
 
         // 3. Install hooks for new logger detection
@@ -235,7 +238,16 @@ public final class LoggingClient {
             }
         }
 
-        // 4. Fetch all loggers and groups, resolve and apply levels
+        // 4. Bulk-register discovered loggers with the server so it learns their levels
+        if (!allDiscovered.isEmpty()) {
+            try {
+                bulkRegister(allDiscovered);
+            } catch (Exception e) {
+                LOG.log(Level.WARNING, "Failed to bulk-register loggers with server", e);
+            }
+        }
+
+        // 5. Fetch all loggers and groups, resolve and apply levels
         try {
             fetchAndApply("start");
         } catch (Exception e) {
@@ -411,12 +423,45 @@ public final class LoggingClient {
     // Internal: fetch, resolve, apply
     // -----------------------------------------------------------------------
 
+    /**
+     * Sends discovered logger metadata to the server via the bulk-register endpoint.
+     *
+     * <p>Each item carries:</p>
+     * <ul>
+     *   <li>{@code level} — the explicitly-configured level, or {@code undefined} (absent from
+     *       JSON) if the logger inherits its level from a parent.</li>
+     *   <li>{@code resolved_level} — the effective level after framework inheritance; always
+     *       present and non-null.</li>
+     * </ul>
+     */
+    private void bulkRegister(List<DiscoveredLogger> discovered) throws ApiException {
+        LoggerBulkRequest req = new LoggerBulkRequest();
+        for (DiscoveredLogger dl : discovered) {
+            String normalized = normalizeKey(dl.name());
+            LoggerBulkItem item = new LoggerBulkItem();
+            item.setId(normalized);
+
+            // level: only set when explicitly configured on the logger
+            if (dl.level() != null) {
+                item.setLevel_JsonNullable(JsonNullable.of(dl.level()));
+            }
+            // resolved_level: always set — this is the effective level after inheritance
+            item.setResolvedLevel(dl.resolvedLevel());
+
+            if (service != null) item.setService(service);
+            if (environment != null) item.setEnvironment(environment);
+
+            req.addLoggersItem(item);
+        }
+        loggersApi.bulkRegisterLoggers(req);
+    }
+
     @SuppressWarnings("unchecked")
     private void fetchAndApply(String source) {
         // Fetch loggers
         Map<String, Map<String, Object>> loggersData = new HashMap<>();
         try {
-            LoggerListResponse loggerResp = loggersApi.listLoggers(null);
+            LoggerListResponse loggerResp = loggersApi.listLoggers(null, null, null);
             if (loggerResp.getData() != null) {
                 for (LoggerResource r : loggerResp.getData()) {
                     var attrs = r.getAttributes();
@@ -446,7 +491,7 @@ public final class LoggingClient {
                     Map<String, Object> entry = new HashMap<>();
                     entry.put("id", gid);
                     entry.put("level", attrs.getLevel());
-                    entry.put("group", attrs.getGroup());
+                    entry.put("group", attrs.getParentId());
                     entry.put("environments", attrs.getEnvironments() != null
                             ? new HashMap<>(attrs.getEnvironments()) : new HashMap<>());
                     groupsData.put(gid, entry);
@@ -574,7 +619,7 @@ public final class LoggingClient {
                 resource.getId() != null ? resource.getId() : null,
                 attrs.getName(),
                 attrs.getLevel(),
-                attrs.getGroup(),
+                attrs.getParentId(),
                 attrs.getEnvironments() != null ? new HashMap<>(attrs.getEnvironments()) : new HashMap<>(),
                 toInstant(attrs.getCreatedAt()),
                 toInstant(attrs.getUpdatedAt())
@@ -609,7 +654,7 @@ public final class LoggingClient {
         var attrs = new com.smplkit.internal.generated.logging.model.LogGroup();
         attrs.setName(grp.getName());
         if (grp.getLevel() != null) attrs.setLevel(grp.getLevel());
-        if (grp.getGroup() != null) attrs.setGroup(grp.getGroup());
+        if (grp.getGroup() != null) attrs.setParentId(grp.getGroup());
         if (grp.getEnvironments() != null && !grp.getEnvironments().isEmpty()) {
             attrs.setEnvironments(new HashMap<>(grp.getEnvironments()));
         }

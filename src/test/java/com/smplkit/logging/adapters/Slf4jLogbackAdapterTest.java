@@ -65,6 +65,54 @@ class Slf4jLogbackAdapterTest {
     }
 
     @Test
+    void discover_populatesBothLevelAndResolvedLevel() {
+        LoggerContext context = (LoggerContext) LoggerFactory.getILoggerFactory();
+        String name = "com.smplkit.logback.explicit." + System.nanoTime();
+        Logger logger = context.getLogger(name);
+        logger.setLevel(Level.ERROR);
+
+        List<DiscoveredLogger> discovered = adapter.discover();
+        DiscoveredLogger found = discovered.stream()
+                .filter(dl -> dl.name().equals(name))
+                .findFirst()
+                .orElseThrow();
+
+        // level is the explicitly-set value (getLevel())
+        assertEquals("ERROR", found.level());
+        // resolvedLevel is also ERROR since it was explicitly set
+        assertEquals("ERROR", found.resolvedLevel());
+    }
+
+    @Test
+    void discover_levelIsNullWhenInherited_resolvedLevelIsEffective() {
+        LoggerContext context = (LoggerContext) LoggerFactory.getILoggerFactory();
+        // Create a child logger that has no explicit level set
+        String name = "com.smplkit.logback.inherited." + System.nanoTime();
+        Logger child = context.getLogger(name);
+        child.setLevel(null); // explicitly clear — inherits from parent chain
+
+        // Ensure the root logger has a known level so resolved is deterministic
+        Logger root = context.getLogger(org.slf4j.Logger.ROOT_LOGGER_NAME);
+        Level originalRootLevel = root.getLevel();
+        root.setLevel(Level.INFO);
+
+        try {
+            List<DiscoveredLogger> discovered = adapter.discover();
+            DiscoveredLogger found = discovered.stream()
+                    .filter(dl -> dl.name().equals(name))
+                    .findFirst()
+                    .orElseThrow();
+
+            // level: null is converted to null by logbackToSmplLevel(null)
+            assertNull(found.level());
+            // resolvedLevel: walks parent chain via getEffectiveLevel(), returns root level
+            assertEquals("INFO", found.resolvedLevel());
+        } finally {
+            root.setLevel(originalRootLevel);
+        }
+    }
+
+    @Test
     void applyLevel_setsLogbackLevel() {
         LoggerContext context = (LoggerContext) LoggerFactory.getILoggerFactory();
         Logger logger = context.getLogger("com.smplkit.logback.apply");
@@ -126,7 +174,8 @@ class Slf4jLogbackAdapterTest {
         assertEquals("WARN", Slf4jLogbackAdapter.logbackToSmplLevel(Level.WARN));
         assertEquals("ERROR", Slf4jLogbackAdapter.logbackToSmplLevel(Level.ERROR));
         assertEquals("SILENT", Slf4jLogbackAdapter.logbackToSmplLevel(Level.OFF));
-        assertEquals("DEBUG", Slf4jLogbackAdapter.logbackToSmplLevel(null));
+        // null means the level is inherited — not explicitly configured on this logger
+        assertNull(Slf4jLogbackAdapter.logbackToSmplLevel(null));
     }
 
     // -----------------------------------------------------------------------

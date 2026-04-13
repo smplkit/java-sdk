@@ -80,7 +80,7 @@ public final class LoggingManagement {
      */
     public List<Logger> list() {
         try {
-            LoggerListResponse response = client.loggersApi.listLoggers(null);
+            LoggerListResponse response = client.loggersApi.listLoggers(null, null, null);
             List<Logger> result = new ArrayList<>();
             if (response.getData() != null) {
                 for (LoggerResource r : response.getData()) {

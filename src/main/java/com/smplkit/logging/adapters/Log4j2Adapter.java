@@ -36,7 +36,8 @@ public final class Log4j2Adapter implements LoggingAdapter {
             String loggerName = logger.getName();
             knownNames.add(loggerName);
             String level = log4j2ToSmplLevel(logger.getLevel());
-            result.add(new DiscoveredLogger(loggerName, level));
+            String resolvedLevel = resolveLog4j2Level(logger, context);
+            result.add(new DiscoveredLogger(loggerName, level, resolvedLevel));
         }
         return result;
     }
@@ -68,8 +69,8 @@ public final class Log4j2Adapter implements LoggingAdapter {
         for (org.apache.logging.log4j.core.Logger logger : context.getLoggers()) {
             String loggerName = logger.getName();
             if (knownNames.add(loggerName)) {
-                String level = log4j2ToSmplLevel(logger.getLevel());
-                callback.accept(loggerName, level);
+                String resolvedLevel = resolveLog4j2Level(logger, context);
+                callback.accept(loggerName, resolvedLevel);
             }
         }
     }
@@ -88,9 +89,14 @@ public final class Log4j2Adapter implements LoggingAdapter {
         };
     }
 
-    /** Converts a Log4j2 Level to a smplkit level string. */
+    /**
+     * Converts a Log4j2 Level to a smplkit level string.
+     *
+     * <p>Returns {@code null} when {@code level} is {@code null}, which means the level is
+     * inherited and was not explicitly set on this logger.</p>
+     */
     static String log4j2ToSmplLevel(Level level) {
-        if (level == null) return "DEBUG";
+        if (level == null) return null;
         if (level.equals(Level.OFF)) return "SILENT";
         if (level.equals(Level.FATAL)) return "FATAL";
         if (level.isMoreSpecificThan(Level.ERROR)) return "ERROR";
@@ -98,5 +104,26 @@ public final class Log4j2Adapter implements LoggingAdapter {
         if (level.isMoreSpecificThan(Level.INFO)) return "INFO";
         if (level.isMoreSpecificThan(Level.DEBUG)) return "DEBUG";
         return "TRACE";
+    }
+
+    /**
+     * Walks the Log4j2 logger hierarchy to determine the effective (resolved) level.
+     *
+     * <p>Mirrors Python's {@code logging.Logger.getEffectiveLevel()}: ascends the parent chain
+     * until it finds a logger with an explicitly-configured level.  Falls back to {@code "INFO"}
+     * if no ancestor has a level set.</p>
+     */
+    static String resolveLog4j2Level(org.apache.logging.log4j.core.Logger logger,
+                                     LoggerContext context) {
+        org.apache.logging.log4j.core.Logger current = logger;
+        while (current != null) {
+            String mapped = log4j2ToSmplLevel(current.getLevel());
+            if (mapped != null) return mapped;
+            // Walk up: Log4j2 core Logger exposes getParent()
+            org.apache.logging.log4j.core.Logger parent = current.getParent();
+            if (parent == null || parent == current) break;
+            current = parent;
+        }
+        return "INFO";
     }
 }

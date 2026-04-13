@@ -56,6 +56,45 @@ class Log4j2AdapterTest {
     }
 
     @Test
+    void discover_populatesBothLevelAndResolvedLevel() {
+        // Create a logger with an explicit level set
+        String name = "com.smplkit.log4j2.explicit." + System.nanoTime();
+        LogManager.getLogger(name);
+        Configurator.setLevel(name, Level.ERROR);
+
+        List<DiscoveredLogger> discovered = adapter.discover();
+        DiscoveredLogger found = discovered.stream()
+                .filter(dl -> dl.name().equals(name))
+                .findFirst()
+                .orElseThrow();
+
+        // Both level and resolvedLevel should be set to ERROR
+        assertEquals("ERROR", found.level());
+        assertEquals("ERROR", found.resolvedLevel());
+    }
+
+    @Test
+    void discover_resolvedLevelFallsBackToAncestor() {
+        // Ensure parent has a known level
+        String parent = "com.smplkit.log4j2.inherit." + System.nanoTime();
+        String child = parent + ".child";
+        LogManager.getLogger(parent);
+        LogManager.getLogger(child);
+        Configurator.setLevel(parent, Level.WARN);
+        // Do not set explicit level on child — it should inherit from parent
+
+        List<DiscoveredLogger> discovered = adapter.discover();
+        DiscoveredLogger foundParent = discovered.stream()
+                .filter(dl -> dl.name().equals(parent))
+                .findFirst()
+                .orElseThrow();
+
+        // Parent has explicit level
+        assertEquals("WARN", foundParent.level());
+        assertEquals("WARN", foundParent.resolvedLevel());
+    }
+
+    @Test
     void applyLevel_setsLog4j2Level() {
         Configurator.setLevel("com.smplkit.log4j2.apply", Level.INFO);
 
@@ -120,7 +159,8 @@ class Log4j2AdapterTest {
         assertEquals("ERROR", Log4j2Adapter.log4j2ToSmplLevel(Level.ERROR));
         assertEquals("FATAL", Log4j2Adapter.log4j2ToSmplLevel(Level.FATAL));
         assertEquals("SILENT", Log4j2Adapter.log4j2ToSmplLevel(Level.OFF));
-        assertEquals("DEBUG", Log4j2Adapter.log4j2ToSmplLevel(null));
+        // null means the level is inherited — not explicitly configured on this logger
+        assertNull(Log4j2Adapter.log4j2ToSmplLevel(null));
     }
 
     // -----------------------------------------------------------------------

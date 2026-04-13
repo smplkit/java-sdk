@@ -7,9 +7,12 @@ import com.smplkit.internal.generated.logging.api.LoggersApi;
 import com.smplkit.internal.generated.logging.model.LogGroupListResponse;
 import com.smplkit.internal.generated.logging.model.LogGroupResource;
 import com.smplkit.internal.generated.logging.model.LogGroupResponse;
+import com.smplkit.internal.generated.logging.model.LoggerBulkItem;
+import com.smplkit.internal.generated.logging.model.LoggerBulkRequest;
 import com.smplkit.internal.generated.logging.model.LoggerListResponse;
 import com.smplkit.internal.generated.logging.model.LoggerResource;
 import com.smplkit.internal.generated.logging.model.LoggerResponse;
+import org.mockito.ArgumentCaptor;
 import com.smplkit.logging.adapters.DiscoveredLogger;
 import com.smplkit.logging.adapters.LoggingAdapter;
 import org.junit.jupiter.api.BeforeEach;
@@ -103,7 +106,7 @@ class LoggingClientTest {
         LoggerListResponse resp = buildLoggerListResponse("id-1", "key1", "Key1", null);
         LoggerResource r2 = buildLoggerResource("id-2", "key2", "Key2", "DEBUG");
         resp.getData().add(r2);
-        when(mockLoggersApi.listLoggers((Boolean) null)).thenReturn(resp);
+        when(mockLoggersApi.listLoggers((Boolean) null, null, null)).thenReturn(resp);
 
         List<Logger> loggers = client.management().list();
 
@@ -116,7 +119,7 @@ class LoggingClientTest {
     void list_returnsEmptyWhenNoData() throws ApiException {
         LoggerListResponse resp = new LoggerListResponse();
         resp.setData(null);
-        when(mockLoggersApi.listLoggers((Boolean) null)).thenReturn(resp);
+        when(mockLoggersApi.listLoggers((Boolean) null, null, null)).thenReturn(resp);
 
         assertTrue(client.management().list().isEmpty());
     }
@@ -139,13 +142,13 @@ class LoggingClientTest {
     @Test
     void createLogger_postsAndReturnsModel() throws ApiException {
         LoggerResponse resp = buildLoggerResponse("new-id", "key", "Name", null, false);
-        when(mockLoggersApi.createLogger(any(LoggerResponse.class))).thenReturn(resp);
+        when(mockLoggersApi.updateLogger(any(), any(LoggerResponse.class))).thenReturn(resp);
 
         Logger lg = new Logger(client, null, "Name", null, null, false, null, null, null, null);
         Logger result = client._createLogger(lg);
 
         assertEquals("new-id", result.getId());
-        verify(mockLoggersApi).createLogger(any(LoggerResponse.class));
+        verify(mockLoggersApi).updateLogger(any(), any(LoggerResponse.class));
     }
 
     @Test
@@ -169,7 +172,7 @@ class LoggingClientTest {
     @Test
     void loggerActiveRecord_createFlow() throws ApiException {
         LoggerResponse createResp = buildLoggerResponse("created-id", "payment-logger", "Payment Logger", null, false);
-        when(mockLoggersApi.createLogger(any(LoggerResponse.class))).thenReturn(createResp);
+        when(mockLoggersApi.updateLogger(any(), any(LoggerResponse.class))).thenReturn(createResp);
 
         Logger lg = client.management().new_("payment-logger");
         assertEquals("payment-logger", lg.getId());
@@ -358,12 +361,12 @@ class LoggingClientTest {
         assertTrue(client.isStarted());
 
         // listLoggers should only be called once (the second start() is a no-op)
-        verify(mockLoggersApi, times(1)).listLoggers((Boolean) null);
+        verify(mockLoggersApi, times(1)).listLoggers((Boolean) null, null, null);
     }
 
     @Test
     void start_continuesEvenIfFetchFails() throws ApiException {
-        when(mockLoggersApi.listLoggers((Boolean) null)).thenThrow(new ApiException(500, "server error"));
+        when(mockLoggersApi.listLoggers((Boolean) null, null, null)).thenThrow(new ApiException(500, "server error"));
 
         LoggingAdapter mockAdapter = mock(LoggingAdapter.class);
         when(mockAdapter.name()).thenReturn("test");
@@ -709,6 +712,94 @@ class LoggingClientTest {
     }
 
     // -----------------------------------------------------------------------
+    // Bulk registration payload
+    // -----------------------------------------------------------------------
+
+    @Test
+    void start_sendsBulkPayloadWithBothLevelFields() throws ApiException {
+        stubEmptyResponses();
+
+        // Adapter discovers a logger with explicit level set
+        LoggingAdapter mockAdapter = mock(LoggingAdapter.class);
+        when(mockAdapter.name()).thenReturn("test");
+        when(mockAdapter.discover()).thenReturn(List.of(
+                new DiscoveredLogger("com.acme.Service", "WARN", "WARN")
+        ));
+        client.registerAdapter(mockAdapter);
+        client.start();
+
+        ArgumentCaptor<LoggerBulkRequest> captor = ArgumentCaptor.forClass(LoggerBulkRequest.class);
+        verify(mockLoggersApi).bulkRegisterLoggers(captor.capture());
+        LoggerBulkRequest req = captor.getValue();
+
+        assertEquals(1, req.getLoggers().size());
+        LoggerBulkItem item = req.getLoggers().get(0);
+        // id should be normalized
+        assertEquals("com.acme.service", item.getId());
+        // level: explicitly set
+        assertEquals("WARN", item.getLevel());
+        // resolvedLevel: always present
+        assertEquals("WARN", item.getResolvedLevel());
+        // service and environment from client config
+        assertEquals("test-service", item.getService());
+        assertEquals("production", item.getEnvironment());
+    }
+
+    @Test
+    void start_bulkPayload_levelAbsentWhenInherited() throws ApiException {
+        stubEmptyResponses();
+
+        // Adapter discovers a logger with no explicit level (null) but resolved via parent
+        LoggingAdapter mockAdapter = mock(LoggingAdapter.class);
+        when(mockAdapter.name()).thenReturn("test");
+        when(mockAdapter.discover()).thenReturn(List.of(
+                new DiscoveredLogger("com.acme.inherited", null, "INFO")
+        ));
+        client.registerAdapter(mockAdapter);
+        client.start();
+
+        ArgumentCaptor<LoggerBulkRequest> captor = ArgumentCaptor.forClass(LoggerBulkRequest.class);
+        verify(mockLoggersApi).bulkRegisterLoggers(captor.capture());
+        LoggerBulkItem item = captor.getValue().getLoggers().get(0);
+
+        // level: null means inherited — JsonNullable should be undefined (absent from JSON)
+        assertNull(item.getLevel());
+        // resolvedLevel: always set to effective level
+        assertEquals("INFO", item.getResolvedLevel());
+    }
+
+    @Test
+    void start_doesNotCallBulkWhenNothingDiscovered() throws ApiException {
+        stubEmptyResponses();
+
+        LoggingAdapter mockAdapter = mock(LoggingAdapter.class);
+        when(mockAdapter.name()).thenReturn("test");
+        when(mockAdapter.discover()).thenReturn(List.of());
+        client.registerAdapter(mockAdapter);
+        client.start();
+
+        verify(mockLoggersApi, never()).bulkRegisterLoggers(any());
+    }
+
+    @Test
+    void start_continuesWhenBulkRegisterFails() throws ApiException {
+        stubEmptyResponses();
+
+        LoggingAdapter mockAdapter = mock(LoggingAdapter.class);
+        when(mockAdapter.name()).thenReturn("test");
+        when(mockAdapter.discover()).thenReturn(List.of(
+                new DiscoveredLogger("com.acme.bulkfail", "INFO", "INFO")
+        ));
+        client.registerAdapter(mockAdapter);
+
+        when(mockLoggersApi.bulkRegisterLoggers(any())).thenThrow(new ApiException(500, "bulk error"));
+
+        // start() should not throw when bulkRegister fails
+        client.start();
+        assertTrue(client.isStarted());
+    }
+
+    // -----------------------------------------------------------------------
     // Auto-load edge cases
     // -----------------------------------------------------------------------
 
@@ -796,7 +887,7 @@ class LoggingClientTest {
 
     @Test
     void list_mapsApiException() throws ApiException {
-        when(mockLoggersApi.listLoggers((Boolean) null))
+        when(mockLoggersApi.listLoggers((Boolean) null, null, null))
                 .thenThrow(new ApiException(500, "server error"));
 
         assertThrows(RuntimeException.class, () -> client.management().list());
@@ -811,7 +902,7 @@ class LoggingClientTest {
 
     @Test
     void createLogger_mapsApiException() throws ApiException {
-        when(mockLoggersApi.createLogger(any())).thenThrow(new ApiException(422, "validation"));
+        when(mockLoggersApi.updateLogger(any(), any())).thenThrow(new ApiException(422, "validation"));
 
         Logger lg = new Logger(client, null, "Name", null, null, false, null, null, null, null);
         assertThrows(RuntimeException.class, () -> client._createLogger(lg));
@@ -879,7 +970,7 @@ class LoggingClientTest {
 
         LoggerListResponse resp = new LoggerListResponse();
         resp.setData(List.of(resource));
-        when(mockLoggersApi.listLoggers((Boolean) null)).thenReturn(resp);
+        when(mockLoggersApi.listLoggers((Boolean) null, null, null)).thenReturn(resp);
 
         List<Logger> loggers = client.management().list();
         assertEquals(1, loggers.size());
@@ -893,7 +984,7 @@ class LoggingClientTest {
     void loggerConversion_handlesTimestamps() throws ApiException {
         OffsetDateTime now = OffsetDateTime.now();
         LoggerResource resource = new LoggerResource();
-        var attrs = new com.smplkit.internal.generated.logging.model.Logger(null, now, now);
+        var attrs = new com.smplkit.internal.generated.logging.model.Logger(null, null, now, now);
         attrs.setName("Test");
         resource.setAttributes(attrs);
         resource.setId("test-id");
@@ -901,7 +992,7 @@ class LoggingClientTest {
 
         LoggerListResponse resp = new LoggerListResponse();
         resp.setData(List.of(resource));
-        when(mockLoggersApi.listLoggers((Boolean) null)).thenReturn(resp);
+        when(mockLoggersApi.listLoggers((Boolean) null, null, null)).thenReturn(resp);
 
         List<Logger> loggers = client.management().list();
         Logger lg = loggers.get(0);
@@ -933,13 +1024,13 @@ class LoggingClientTest {
     @Test
     void createLogger_includesEnvironmentsInBody() throws ApiException {
         LoggerResponse resp = buildLoggerResponse("new-id", "key", "Name", null, false);
-        when(mockLoggersApi.createLogger(any(LoggerResponse.class))).thenReturn(resp);
+        when(mockLoggersApi.updateLogger(any(), any(LoggerResponse.class))).thenReturn(resp);
 
         Logger lg = new Logger(client, null, "Name", null, null, false, null,
                 Map.of("prod", Map.of("level", "WARN")), null, null);
         client._createLogger(lg);
 
-        verify(mockLoggersApi).createLogger(any(LoggerResponse.class));
+        verify(mockLoggersApi).updateLogger(any(), any(LoggerResponse.class));
     }
 
     @Test
@@ -976,7 +1067,7 @@ class LoggingClientTest {
         lr.getAttributes().setGroup("grp-id");
         LoggerListResponse loggerResp = new LoggerListResponse();
         loggerResp.setData(new ArrayList<>(List.of(lr)));
-        when(mockLoggersApi.listLoggers((Boolean) null)).thenReturn(loggerResp);
+        when(mockLoggersApi.listLoggers((Boolean) null, null, null)).thenReturn(loggerResp);
 
         // Set up group with a level
         LogGroupResource gr = buildGroupResource("grp-id", "infra", "Infra", "WARN");
@@ -1000,7 +1091,7 @@ class LoggingClientTest {
         // Logger fetch succeeds
         LoggerListResponse loggerResp = new LoggerListResponse();
         loggerResp.setData(new ArrayList<>());
-        when(mockLoggersApi.listLoggers((Boolean) null)).thenReturn(loggerResp);
+        when(mockLoggersApi.listLoggers((Boolean) null, null, null)).thenReturn(loggerResp);
 
         // Group fetch fails
         when(mockLogGroupsApi.listLogGroups()).thenThrow(new ApiException(500, "group fetch failed"));
@@ -1036,7 +1127,7 @@ class LoggingClientTest {
         lr.getAttributes().setManaged(true);
         LoggerListResponse loggerResp = new LoggerListResponse();
         loggerResp.setData(new ArrayList<>(List.of(lr)));
-        when(mockLoggersApi.listLoggers((Boolean) null)).thenReturn(loggerResp);
+        when(mockLoggersApi.listLoggers((Boolean) null, null, null)).thenReturn(loggerResp);
 
         LogGroupListResponse groupResp = new LogGroupListResponse();
         groupResp.setData(new ArrayList<>());
@@ -1054,7 +1145,7 @@ class LoggingClientTest {
     private void stubEmptyResponses() throws ApiException {
         LoggerListResponse loggerResp = new LoggerListResponse();
         loggerResp.setData(new ArrayList<>());
-        when(mockLoggersApi.listLoggers((Boolean) null)).thenReturn(loggerResp);
+        when(mockLoggersApi.listLoggers((Boolean) null, null, null)).thenReturn(loggerResp);
 
         LogGroupListResponse groupResp = new LogGroupListResponse();
         groupResp.setData(new ArrayList<>());
@@ -1074,7 +1165,7 @@ class LoggingClientTest {
         lr.getAttributes().setManaged(true);
         LoggerListResponse loggerResp = new LoggerListResponse();
         loggerResp.setData(new ArrayList<>(List.of(lr)));
-        when(mockLoggersApi.listLoggers((Boolean) null)).thenReturn(loggerResp);
+        when(mockLoggersApi.listLoggers((Boolean) null, null, null)).thenReturn(loggerResp);
 
         LogGroupListResponse groupResp = new LogGroupListResponse();
         groupResp.setData(new ArrayList<>());
@@ -1083,7 +1174,7 @@ class LoggingClientTest {
 
     private LoggerResource buildLoggerResource(String id, String key, String name, String level) {
         OffsetDateTime now = OffsetDateTime.now();
-        var attrs = new com.smplkit.internal.generated.logging.model.Logger(null, now, now);
+        var attrs = new com.smplkit.internal.generated.logging.model.Logger(null, null, now, now);
         attrs.setName(name);
         if (level != null) attrs.setLevel(level);
         attrs.setManaged(false);
@@ -1104,7 +1195,7 @@ class LoggingClientTest {
 
     private LoggerResponse buildLoggerResponse(String id, String key, String name, String level, boolean managed) {
         OffsetDateTime now = OffsetDateTime.now();
-        var attrs = new com.smplkit.internal.generated.logging.model.Logger(null, now, now);
+        var attrs = new com.smplkit.internal.generated.logging.model.Logger(null, null, now, now);
         attrs.setName(name);
         if (level != null) attrs.setLevel(level);
         attrs.setManaged(managed);
