@@ -298,6 +298,115 @@ public class LoggerSourcesApi {
   }
 
   /**
+   * List Logger Source Services
+   * Return the distinct service names observed across all logger sources for the account.
+   * @return Object
+   * @throws ApiException if fails to make API call
+   */
+  public Object listLoggerSourceServices() throws ApiException {
+    return listLoggerSourceServices(null);
+  }
+
+  /**
+   * List Logger Source Services
+   * Return the distinct service names observed across all logger sources for the account.
+   * @param headers Optional headers to include in the request
+   * @return Object
+   * @throws ApiException if fails to make API call
+   */
+  public Object listLoggerSourceServices(Map<String, String> headers) throws ApiException {
+    ApiResponse<Object> localVarResponse = listLoggerSourceServicesWithHttpInfo(headers);
+    return localVarResponse.getData();
+  }
+
+  /**
+   * List Logger Source Services
+   * Return the distinct service names observed across all logger sources for the account.
+   * @return ApiResponse&lt;Object&gt;
+   * @throws ApiException if fails to make API call
+   */
+  public ApiResponse<Object> listLoggerSourceServicesWithHttpInfo() throws ApiException {
+    return listLoggerSourceServicesWithHttpInfo(null);
+  }
+
+  /**
+   * List Logger Source Services
+   * Return the distinct service names observed across all logger sources for the account.
+   * @param headers Optional headers to include in the request
+   * @return ApiResponse&lt;Object&gt;
+   * @throws ApiException if fails to make API call
+   */
+  public ApiResponse<Object> listLoggerSourceServicesWithHttpInfo(Map<String, String> headers) throws ApiException {
+    HttpRequest.Builder localVarRequestBuilder = listLoggerSourceServicesRequestBuilder(headers);
+    try {
+      HttpResponse<InputStream> localVarResponse = memberVarHttpClient.send(
+          localVarRequestBuilder.build(),
+          HttpResponse.BodyHandlers.ofInputStream());
+      if (memberVarResponseInterceptor != null) {
+        memberVarResponseInterceptor.accept(localVarResponse);
+      }
+      InputStream localVarResponseBody = null;
+      try {
+        if (localVarResponse.statusCode()/ 100 != 2) {
+          throw getApiException("listLoggerSourceServices", localVarResponse);
+        }
+        localVarResponseBody = ApiClient.getResponseBody(localVarResponse);
+        if (localVarResponseBody == null) {
+          return new ApiResponse<Object>(
+              localVarResponse.statusCode(),
+              localVarResponse.headers().map(),
+              null
+          );
+        }
+
+        
+        
+        String responseBody = new String(localVarResponseBody.readAllBytes());
+        Object responseValue = responseBody.isBlank()? null: memberVarObjectMapper.readValue(responseBody, new TypeReference<Object>() {});
+        
+
+        return new ApiResponse<Object>(
+            localVarResponse.statusCode(),
+            localVarResponse.headers().map(),
+            responseValue
+        );
+      } finally {
+        if (localVarResponseBody != null) {
+          localVarResponseBody.close();
+        }
+      }
+    } catch (IOException e) {
+      throw new ApiException(e);
+    }
+    catch (InterruptedException e) {
+      Thread.currentThread().interrupt();
+      throw new ApiException(e);
+    }
+  }
+
+  private HttpRequest.Builder listLoggerSourceServicesRequestBuilder(Map<String, String> headers) throws ApiException {
+
+    HttpRequest.Builder localVarRequestBuilder = HttpRequest.newBuilder();
+
+    String localVarPath = "/api/v1/logger_sources/services";
+
+    localVarRequestBuilder.uri(URI.create(memberVarBaseUri + localVarPath));
+
+    localVarRequestBuilder.header("Accept", "application/vnd.api+json");
+
+    localVarRequestBuilder.method("GET", HttpRequest.BodyPublishers.noBody());
+    if (memberVarReadTimeout != null) {
+      localVarRequestBuilder.timeout(memberVarReadTimeout);
+    }
+    // Add custom headers if provided
+    localVarRequestBuilder = HttpRequestBuilderExtensions.withAdditionalHeaders(localVarRequestBuilder, headers);
+    if (memberVarInterceptor != null) {
+      memberVarInterceptor.accept(localVarRequestBuilder);
+    }
+    return localVarRequestBuilder;
+  }
+
+  /**
    * List Logger Sources
    * List all sources (service/environment observations) for a specific logger.
    * @param id  (required)

@@ -36,8 +36,11 @@ public final class Slf4jLogbackAdapter implements LoggingAdapter {
         for (Logger logger : context.getLoggerList()) {
             String loggerName = logger.getName();
             knownNames.add(loggerName);
-            String level = logbackToSmplLevel(logger.getEffectiveLevel());
-            result.add(new DiscoveredLogger(loggerName, level));
+            // getLevel() returns null when no level is explicitly set on this logger.
+            String level = logbackToSmplLevel(logger.getLevel());
+            // getEffectiveLevel() walks the parent chain and is always non-null.
+            String resolvedLevel = logbackToSmplLevel(logger.getEffectiveLevel());
+            result.add(new DiscoveredLogger(loggerName, level, resolvedLevel));
         }
         return result;
     }
@@ -91,9 +94,14 @@ public final class Slf4jLogbackAdapter implements LoggingAdapter {
         };
     }
 
-    /** Converts a Logback Level to a smplkit level string. */
+    /**
+     * Converts a Logback Level to a smplkit level string.
+     *
+     * <p>Returns {@code null} when {@code level} is {@code null}, which means the level is
+     * inherited and was not explicitly set on this logger.</p>
+     */
     static String logbackToSmplLevel(Level level) {
-        if (level == null) return "DEBUG";
+        if (level == null) return null;
         if (level.equals(Level.OFF)) return "SILENT";
         if (level.isGreaterOrEqual(Level.ERROR)) return "ERROR";
         if (level.isGreaterOrEqual(Level.WARN)) return "WARN";

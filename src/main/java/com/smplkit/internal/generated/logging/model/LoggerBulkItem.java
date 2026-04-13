@@ -39,6 +39,7 @@ import com.smplkit.internal.generated.logging.ApiClient;
 @JsonPropertyOrder({
   LoggerBulkItem.JSON_PROPERTY_ID,
   LoggerBulkItem.JSON_PROPERTY_LEVEL,
+  LoggerBulkItem.JSON_PROPERTY_RESOLVED_LEVEL,
   LoggerBulkItem.JSON_PROPERTY_SERVICE,
   LoggerBulkItem.JSON_PROPERTY_ENVIRONMENT
 })
@@ -49,8 +50,10 @@ public class LoggerBulkItem {
   private String id;
 
   public static final String JSON_PROPERTY_LEVEL = "level";
-  @jakarta.annotation.Nonnull
-  private String level;
+  private JsonNullable<String> level = JsonNullable.<String>undefined();
+
+  public static final String JSON_PROPERTY_RESOLVED_LEVEL = "resolved_level";
+  private JsonNullable<String> resolvedLevel = JsonNullable.<String>undefined();
 
   public static final String JSON_PROPERTY_SERVICE = "service";
   private JsonNullable<String> service = JsonNullable.<String>undefined();
@@ -85,27 +88,67 @@ public class LoggerBulkItem {
   }
 
 
-  public LoggerBulkItem level(@jakarta.annotation.Nonnull String level) {
-    this.level = level;
+  public LoggerBulkItem level(@jakarta.annotation.Nullable String level) {
+    this.level = JsonNullable.<String>of(level);
     return this;
   }
 
   /**
-   * Observed log level in smplkit canonical format
+   * The explicitly-set level on this logger. Null if inherited.
    * @return level
    */
-  @jakarta.annotation.Nonnull
-  @JsonProperty(value = JSON_PROPERTY_LEVEL, required = true)
-  @JsonInclude(value = JsonInclude.Include.ALWAYS)
+  @jakarta.annotation.Nullable
+  @JsonIgnore
   public String getLevel() {
+        return level.orElse(null);
+  }
+
+  @JsonProperty(value = JSON_PROPERTY_LEVEL, required = false)
+  @JsonInclude(value = JsonInclude.Include.USE_DEFAULTS)
+
+  public JsonNullable<String> getLevel_JsonNullable() {
     return level;
+  }
+  
+  @JsonProperty(JSON_PROPERTY_LEVEL)
+  public void setLevel_JsonNullable(JsonNullable<String> level) {
+    this.level = level;
+  }
+
+  public void setLevel(@jakarta.annotation.Nullable String level) {
+    this.level = JsonNullable.<String>of(level);
   }
 
 
-  @JsonProperty(value = JSON_PROPERTY_LEVEL, required = true)
-  @JsonInclude(value = JsonInclude.Include.ALWAYS)
-  public void setLevel(@jakarta.annotation.Nonnull String level) {
-    this.level = level;
+  public LoggerBulkItem resolvedLevel(@jakarta.annotation.Nullable String resolvedLevel) {
+    this.resolvedLevel = JsonNullable.<String>of(resolvedLevel);
+    return this;
+  }
+
+  /**
+   * The effective level after framework inheritance. Never null in compliant SDKs.
+   * @return resolvedLevel
+   */
+  @jakarta.annotation.Nullable
+  @JsonIgnore
+  public String getResolvedLevel() {
+        return resolvedLevel.orElse(null);
+  }
+
+  @JsonProperty(value = JSON_PROPERTY_RESOLVED_LEVEL, required = false)
+  @JsonInclude(value = JsonInclude.Include.USE_DEFAULTS)
+
+  public JsonNullable<String> getResolvedLevel_JsonNullable() {
+    return resolvedLevel;
+  }
+  
+  @JsonProperty(JSON_PROPERTY_RESOLVED_LEVEL)
+  public void setResolvedLevel_JsonNullable(JsonNullable<String> resolvedLevel) {
+    this.resolvedLevel = resolvedLevel;
+  }
+
+  public void setResolvedLevel(@jakarta.annotation.Nullable String resolvedLevel) {
+    this.resolvedLevel = JsonNullable.<String>of(resolvedLevel);
   }
 
 
@@ -186,7 +229,8 @@ public class LoggerBulkItem {
     }
     LoggerBulkItem loggerBulkItem = (LoggerBulkItem) o;
     return Objects.equals(this.id, loggerBulkItem.id) &&
-        Objects.equals(this.level, loggerBulkItem.level) &&
+        equalsNullable(this.level, loggerBulkItem.level) &&
+        equalsNullable(this.resolvedLevel, loggerBulkItem.resolvedLevel) &&
         equalsNullable(this.service, loggerBulkItem.service) &&
         equalsNullable(this.environment, loggerBulkItem.environment);
   }
@@ -197,7 +241,7 @@ public class LoggerBulkItem {
 
   @Override
   public int hashCode() {
-    return Objects.hash(id, level, hashCodeNullable(service), hashCodeNullable(environment));
+    return Objects.hash(id, hashCodeNullable(level), hashCodeNullable(resolvedLevel), hashCodeNullable(service), hashCodeNullable(environment));
   }
 
   private static <T> int hashCodeNullable(JsonNullable<T> a) {
@@ -213,6 +257,7 @@ public class LoggerBulkItem {
     sb.append("class LoggerBulkItem {\n");
     sb.append("    id: ").append(toIndentedString(id)).append("\n");
     sb.append("    level: ").append(toIndentedString(level)).append("\n");
+    sb.append("    resolvedLevel: ").append(toIndentedString(resolvedLevel)).append("\n");
     sb.append("    service: ").append(toIndentedString(service)).append("\n");
     sb.append("    environment: ").append(toIndentedString(environment)).append("\n");
     sb.append("}");
@@ -267,6 +312,11 @@ public class LoggerBulkItem {
     // add `level` to the URL query string
     if (getLevel() != null) {
       joiner.add(String.format(java.util.Locale.ROOT, "%slevel%s=%s", prefix, suffix, ApiClient.urlEncode(ApiClient.valueToString(getLevel()))));
+    }
+
+    // add `resolved_level` to the URL query string
+    if (getResolvedLevel() != null) {
+      joiner.add(String.format(java.util.Locale.ROOT, "%sresolved_level%s=%s", prefix, suffix, ApiClient.urlEncode(ApiClient.valueToString(getResolvedLevel()))));
     }
 
     // add `service` to the URL query string
