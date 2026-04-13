@@ -41,8 +41,9 @@ import com.smplkit.internal.generated.logging.ApiClient;
  */
 @JsonPropertyOrder({
   LogGroup.JSON_PROPERTY_NAME,
+  LogGroup.JSON_PROPERTY_KEY,
   LogGroup.JSON_PROPERTY_LEVEL,
-  LogGroup.JSON_PROPERTY_GROUP,
+  LogGroup.JSON_PROPERTY_PARENT_ID,
   LogGroup.JSON_PROPERTY_ENVIRONMENTS,
   LogGroup.JSON_PROPERTY_CREATED_AT,
   LogGroup.JSON_PROPERTY_UPDATED_AT
@@ -53,11 +54,14 @@ public class LogGroup {
   @jakarta.annotation.Nonnull
   private String name;
 
+  public static final String JSON_PROPERTY_KEY = "key";
+  private JsonNullable<String> key = JsonNullable.<String>undefined();
+
   public static final String JSON_PROPERTY_LEVEL = "level";
   private JsonNullable<String> level = JsonNullable.<String>undefined();
 
-  public static final String JSON_PROPERTY_GROUP = "group";
-  private JsonNullable<String> group = JsonNullable.<String>undefined();
+  public static final String JSON_PROPERTY_PARENT_ID = "parent_id";
+  private JsonNullable<String> parentId = JsonNullable.<String>undefined();
 
   public static final String JSON_PROPERTY_ENVIRONMENTS = "environments";
   private JsonNullable<Map<String, Object>> environments = JsonNullable.<Map<String, Object>>undefined();
@@ -105,6 +109,38 @@ public class LogGroup {
   }
 
 
+  public LogGroup key(@jakarta.annotation.Nullable String key) {
+    this.key = JsonNullable.<String>of(key);
+    return this;
+  }
+
+  /**
+   * Get key
+   * @return key
+   */
+  @jakarta.annotation.Nullable
+  @JsonIgnore
+  public String getKey() {
+        return key.orElse(null);
+  }
+
+  @JsonProperty(value = JSON_PROPERTY_KEY, required = false)
+  @JsonInclude(value = JsonInclude.Include.USE_DEFAULTS)
+
+  public JsonNullable<String> getKey_JsonNullable() {
+    return key;
+  }
+  
+  @JsonProperty(JSON_PROPERTY_KEY)
+  public void setKey_JsonNullable(JsonNullable<String> key) {
+    this.key = key;
+  }
+
+  public void setKey(@jakarta.annotation.Nullable String key) {
+    this.key = JsonNullable.<String>of(key);
+  }
+
+
   public LogGroup level(@jakarta.annotation.Nullable String level) {
     this.level = JsonNullable.<String>of(level);
     return this;
@@ -137,35 +173,35 @@ public class LogGroup {
   }
 
 
-  public LogGroup group(@jakarta.annotation.Nullable String group) {
-    this.group = JsonNullable.<String>of(group);
+  public LogGroup parentId(@jakarta.annotation.Nullable String parentId) {
+    this.parentId = JsonNullable.<String>of(parentId);
     return this;
   }
 
   /**
-   * Get group
-   * @return group
+   * Get parentId
+   * @return parentId
    */
   @jakarta.annotation.Nullable
   @JsonIgnore
-  public String getGroup() {
-        return group.orElse(null);
+  public String getParentId() {
+        return parentId.orElse(null);
   }
 
-  @JsonProperty(value = JSON_PROPERTY_GROUP, required = false)
+  @JsonProperty(value = JSON_PROPERTY_PARENT_ID, required = false)
   @JsonInclude(value = JsonInclude.Include.USE_DEFAULTS)
 
-  public JsonNullable<String> getGroup_JsonNullable() {
-    return group;
+  public JsonNullable<String> getParentId_JsonNullable() {
+    return parentId;
   }
   
-  @JsonProperty(JSON_PROPERTY_GROUP)
-  public void setGroup_JsonNullable(JsonNullable<String> group) {
-    this.group = group;
+  @JsonProperty(JSON_PROPERTY_PARENT_ID)
+  public void setParentId_JsonNullable(JsonNullable<String> parentId) {
+    this.parentId = parentId;
   }
 
-  public void setGroup(@jakarta.annotation.Nullable String group) {
-    this.group = JsonNullable.<String>of(group);
+  public void setParentId(@jakarta.annotation.Nullable String parentId) {
+    this.parentId = JsonNullable.<String>of(parentId);
   }
 
 
@@ -282,8 +318,9 @@ public class LogGroup {
     }
     LogGroup logGroup = (LogGroup) o;
     return Objects.equals(this.name, logGroup.name) &&
+        equalsNullable(this.key, logGroup.key) &&
         equalsNullable(this.level, logGroup.level) &&
-        equalsNullable(this.group, logGroup.group) &&
+        equalsNullable(this.parentId, logGroup.parentId) &&
         equalsNullable(this.environments, logGroup.environments) &&
         equalsNullable(this.createdAt, logGroup.createdAt) &&
         equalsNullable(this.updatedAt, logGroup.updatedAt);
@@ -295,7 +332,7 @@ public class LogGroup {
 
   @Override
   public int hashCode() {
-    return Objects.hash(name, hashCodeNullable(level), hashCodeNullable(group), hashCodeNullable(environments), hashCodeNullable(createdAt), hashCodeNullable(updatedAt));
+    return Objects.hash(name, hashCodeNullable(key), hashCodeNullable(level), hashCodeNullable(parentId), hashCodeNullable(environments), hashCodeNullable(createdAt), hashCodeNullable(updatedAt));
   }
 
   private static <T> int hashCodeNullable(JsonNullable<T> a) {
@@ -310,8 +347,9 @@ public class LogGroup {
     StringBuilder sb = new StringBuilder();
     sb.append("class LogGroup {\n");
     sb.append("    name: ").append(toIndentedString(name)).append("\n");
+    sb.append("    key: ").append(toIndentedString(key)).append("\n");
     sb.append("    level: ").append(toIndentedString(level)).append("\n");
-    sb.append("    group: ").append(toIndentedString(group)).append("\n");
+    sb.append("    parentId: ").append(toIndentedString(parentId)).append("\n");
     sb.append("    environments: ").append(toIndentedString(environments)).append("\n");
     sb.append("    createdAt: ").append(toIndentedString(createdAt)).append("\n");
     sb.append("    updatedAt: ").append(toIndentedString(updatedAt)).append("\n");
@@ -364,14 +402,19 @@ public class LogGroup {
       joiner.add(String.format(java.util.Locale.ROOT, "%sname%s=%s", prefix, suffix, ApiClient.urlEncode(ApiClient.valueToString(getName()))));
     }
 
+    // add `key` to the URL query string
+    if (getKey() != null) {
+      joiner.add(String.format(java.util.Locale.ROOT, "%skey%s=%s", prefix, suffix, ApiClient.urlEncode(ApiClient.valueToString(getKey()))));
+    }
+
     // add `level` to the URL query string
     if (getLevel() != null) {
       joiner.add(String.format(java.util.Locale.ROOT, "%slevel%s=%s", prefix, suffix, ApiClient.urlEncode(ApiClient.valueToString(getLevel()))));
     }
 
-    // add `group` to the URL query string
-    if (getGroup() != null) {
-      joiner.add(String.format(java.util.Locale.ROOT, "%sgroup%s=%s", prefix, suffix, ApiClient.urlEncode(ApiClient.valueToString(getGroup()))));
+    // add `parent_id` to the URL query string
+    if (getParentId() != null) {
+      joiner.add(String.format(java.util.Locale.ROOT, "%sparent_id%s=%s", prefix, suffix, ApiClient.urlEncode(ApiClient.valueToString(getParentId()))));
     }
 
     // add `environments` to the URL query string
