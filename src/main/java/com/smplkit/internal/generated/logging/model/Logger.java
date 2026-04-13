@@ -48,6 +48,7 @@ import com.smplkit.internal.generated.logging.ApiClient;
   Logger.JSON_PROPERTY_MANAGED,
   Logger.JSON_PROPERTY_SOURCES,
   Logger.JSON_PROPERTY_ENVIRONMENTS,
+  Logger.JSON_PROPERTY_EFFECTIVE_LEVELS,
   Logger.JSON_PROPERTY_CREATED_AT,
   Logger.JSON_PROPERTY_UPDATED_AT
 })
@@ -72,6 +73,9 @@ public class Logger {
   public static final String JSON_PROPERTY_ENVIRONMENTS = "environments";
   private JsonNullable<Map<String, Object>> environments = JsonNullable.<Map<String, Object>>undefined();
 
+  public static final String JSON_PROPERTY_EFFECTIVE_LEVELS = "effective_levels";
+  private JsonNullable<Map<String, Object>> effectiveLevels = JsonNullable.<Map<String, Object>>undefined();
+
   public static final String JSON_PROPERTY_CREATED_AT = "created_at";
   private JsonNullable<OffsetDateTime> createdAt = JsonNullable.<OffsetDateTime>undefined();
 
@@ -84,11 +88,13 @@ public class Logger {
   @JsonCreator
   public Logger(
     @JsonProperty(JSON_PROPERTY_SOURCES) List<Map<String, Object>> sources, 
+    @JsonProperty(JSON_PROPERTY_EFFECTIVE_LEVELS) Map<String, Object> effectiveLevels, 
     @JsonProperty(JSON_PROPERTY_CREATED_AT) OffsetDateTime createdAt, 
     @JsonProperty(JSON_PROPERTY_UPDATED_AT) OffsetDateTime updatedAt
   ) {
   this();
     this.sources = sources == null ? JsonNullable.<List<Map<String, Object>>>undefined() : JsonNullable.of(sources);
+    this.effectiveLevels = effectiveLevels == null ? JsonNullable.<Map<String, Object>>undefined() : JsonNullable.of(effectiveLevels);
     this.createdAt = createdAt == null ? JsonNullable.<OffsetDateTime>undefined() : JsonNullable.of(createdAt);
     this.updatedAt = updatedAt == null ? JsonNullable.<OffsetDateTime>undefined() : JsonNullable.of(updatedAt);
   }
@@ -286,6 +292,34 @@ public class Logger {
 
 
   /**
+   * Get effectiveLevels
+   * @return effectiveLevels
+   */
+  @jakarta.annotation.Nullable
+  @JsonIgnore
+  public Map<String, Object> getEffectiveLevels() {
+    
+    if (effectiveLevels == null) {
+      effectiveLevels = JsonNullable.<Map<String, Object>>undefined();
+    }
+    return effectiveLevels.orElse(null);
+  }
+
+  @JsonProperty(value = JSON_PROPERTY_EFFECTIVE_LEVELS, required = false)
+  @JsonInclude(content = JsonInclude.Include.ALWAYS, value = JsonInclude.Include.USE_DEFAULTS)
+
+  public JsonNullable<Map<String, Object>> getEffectiveLevels_JsonNullable() {
+    return effectiveLevels;
+  }
+  
+  @JsonProperty(JSON_PROPERTY_EFFECTIVE_LEVELS)
+  private void setEffectiveLevels_JsonNullable(JsonNullable<Map<String, Object>> effectiveLevels) {
+    this.effectiveLevels = effectiveLevels;
+  }
+
+
+
+  /**
    * Get createdAt
    * @return createdAt
    */
@@ -359,6 +393,7 @@ public class Logger {
         equalsNullable(this.managed, logger.managed) &&
         equalsNullable(this.sources, logger.sources) &&
         equalsNullable(this.environments, logger.environments) &&
+        equalsNullable(this.effectiveLevels, logger.effectiveLevels) &&
         equalsNullable(this.createdAt, logger.createdAt) &&
         equalsNullable(this.updatedAt, logger.updatedAt);
   }
@@ -369,7 +404,7 @@ public class Logger {
 
   @Override
   public int hashCode() {
-    return Objects.hash(name, hashCodeNullable(level), hashCodeNullable(group), hashCodeNullable(managed), hashCodeNullable(sources), hashCodeNullable(environments), hashCodeNullable(createdAt), hashCodeNullable(updatedAt));
+    return Objects.hash(name, hashCodeNullable(level), hashCodeNullable(group), hashCodeNullable(managed), hashCodeNullable(sources), hashCodeNullable(environments), hashCodeNullable(effectiveLevels), hashCodeNullable(createdAt), hashCodeNullable(updatedAt));
   }
 
   private static <T> int hashCodeNullable(JsonNullable<T> a) {
@@ -389,6 +424,7 @@ public class Logger {
     sb.append("    managed: ").append(toIndentedString(managed)).append("\n");
     sb.append("    sources: ").append(toIndentedString(sources)).append("\n");
     sb.append("    environments: ").append(toIndentedString(environments)).append("\n");
+    sb.append("    effectiveLevels: ").append(toIndentedString(effectiveLevels)).append("\n");
     sb.append("    createdAt: ").append(toIndentedString(createdAt)).append("\n");
     sb.append("    updatedAt: ").append(toIndentedString(updatedAt)).append("\n");
     sb.append("}");
@@ -470,6 +506,15 @@ public class Logger {
         joiner.add(String.format(java.util.Locale.ROOT, "%senvironments%s%s=%s", prefix, suffix,
             "".equals(suffix) ? "" : String.format(java.util.Locale.ROOT, "%s%d%s", containerPrefix, _key, containerSuffix),
             getEnvironments().get(_key), ApiClient.urlEncode(ApiClient.valueToString(getEnvironments().get(_key)))));
+      }
+    }
+
+    // add `effective_levels` to the URL query string
+    if (getEffectiveLevels() != null) {
+      for (String _key : getEffectiveLevels().keySet()) {
+        joiner.add(String.format(java.util.Locale.ROOT, "%seffective_levels%s%s=%s", prefix, suffix,
+            "".equals(suffix) ? "" : String.format(java.util.Locale.ROOT, "%s%d%s", containerPrefix, _key, containerSuffix),
+            getEffectiveLevels().get(_key), ApiClient.urlEncode(ApiClient.valueToString(getEffectiveLevels().get(_key)))));
       }
     }
 
