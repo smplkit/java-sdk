@@ -368,6 +368,224 @@ public class AccountApi {
   }
 
   /**
+   * Get Account Settings
+   * Return the current account&#39;s settings as plain JSON.
+   * @return Map&lt;String, Object&gt;
+   * @throws ApiException if fails to make API call
+   */
+  public Map<String, Object> getAccountSettings() throws ApiException {
+    return getAccountSettings(null);
+  }
+
+  /**
+   * Get Account Settings
+   * Return the current account&#39;s settings as plain JSON.
+   * @param headers Optional headers to include in the request
+   * @return Map&lt;String, Object&gt;
+   * @throws ApiException if fails to make API call
+   */
+  public Map<String, Object> getAccountSettings(Map<String, String> headers) throws ApiException {
+    ApiResponse<Map<String, Object>> localVarResponse = getAccountSettingsWithHttpInfo(headers);
+    return localVarResponse.getData();
+  }
+
+  /**
+   * Get Account Settings
+   * Return the current account&#39;s settings as plain JSON.
+   * @return ApiResponse&lt;Map&lt;String, Object&gt;&gt;
+   * @throws ApiException if fails to make API call
+   */
+  public ApiResponse<Map<String, Object>> getAccountSettingsWithHttpInfo() throws ApiException {
+    return getAccountSettingsWithHttpInfo(null);
+  }
+
+  /**
+   * Get Account Settings
+   * Return the current account&#39;s settings as plain JSON.
+   * @param headers Optional headers to include in the request
+   * @return ApiResponse&lt;Map&lt;String, Object&gt;&gt;
+   * @throws ApiException if fails to make API call
+   */
+  public ApiResponse<Map<String, Object>> getAccountSettingsWithHttpInfo(Map<String, String> headers) throws ApiException {
+    HttpRequest.Builder localVarRequestBuilder = getAccountSettingsRequestBuilder(headers);
+    try {
+      HttpResponse<InputStream> localVarResponse = memberVarHttpClient.send(
+          localVarRequestBuilder.build(),
+          HttpResponse.BodyHandlers.ofInputStream());
+      if (memberVarResponseInterceptor != null) {
+        memberVarResponseInterceptor.accept(localVarResponse);
+      }
+      InputStream localVarResponseBody = null;
+      try {
+        if (localVarResponse.statusCode()/ 100 != 2) {
+          throw getApiException("getAccountSettings", localVarResponse);
+        }
+        localVarResponseBody = ApiClient.getResponseBody(localVarResponse);
+        if (localVarResponseBody == null) {
+          return new ApiResponse<Map<String, Object>>(
+              localVarResponse.statusCode(),
+              localVarResponse.headers().map(),
+              null
+          );
+        }
+
+        
+        
+        String responseBody = new String(localVarResponseBody.readAllBytes());
+        Map<String, Object> responseValue = responseBody.isBlank()? null: memberVarObjectMapper.readValue(responseBody, new TypeReference<Map<String, Object>>() {});
+        
+
+        return new ApiResponse<Map<String, Object>>(
+            localVarResponse.statusCode(),
+            localVarResponse.headers().map(),
+            responseValue
+        );
+      } finally {
+        if (localVarResponseBody != null) {
+          localVarResponseBody.close();
+        }
+      }
+    } catch (IOException e) {
+      throw new ApiException(e);
+    }
+    catch (InterruptedException e) {
+      Thread.currentThread().interrupt();
+      throw new ApiException(e);
+    }
+  }
+
+  private HttpRequest.Builder getAccountSettingsRequestBuilder(Map<String, String> headers) throws ApiException {
+
+    HttpRequest.Builder localVarRequestBuilder = HttpRequest.newBuilder();
+
+    String localVarPath = "/api/v1/accounts/current/settings";
+
+    localVarRequestBuilder.uri(URI.create(memberVarBaseUri + localVarPath));
+
+    localVarRequestBuilder.header("Accept", "application/vnd.api+json");
+
+    localVarRequestBuilder.method("GET", HttpRequest.BodyPublishers.noBody());
+    if (memberVarReadTimeout != null) {
+      localVarRequestBuilder.timeout(memberVarReadTimeout);
+    }
+    // Add custom headers if provided
+    localVarRequestBuilder = HttpRequestBuilderExtensions.withAdditionalHeaders(localVarRequestBuilder, headers);
+    if (memberVarInterceptor != null) {
+      memberVarInterceptor.accept(localVarRequestBuilder);
+    }
+    return localVarRequestBuilder;
+  }
+
+  /**
+   * Update Account Settings
+   * Replace the current account&#39;s settings with the provided JSON object. Requires admin role.
+   * @return Map&lt;String, Object&gt;
+   * @throws ApiException if fails to make API call
+   */
+  public Map<String, Object> putAccountSettings() throws ApiException {
+    return putAccountSettings(null);
+  }
+
+  /**
+   * Update Account Settings
+   * Replace the current account&#39;s settings with the provided JSON object. Requires admin role.
+   * @param headers Optional headers to include in the request
+   * @return Map&lt;String, Object&gt;
+   * @throws ApiException if fails to make API call
+   */
+  public Map<String, Object> putAccountSettings(Map<String, String> headers) throws ApiException {
+    ApiResponse<Map<String, Object>> localVarResponse = putAccountSettingsWithHttpInfo(headers);
+    return localVarResponse.getData();
+  }
+
+  /**
+   * Update Account Settings
+   * Replace the current account&#39;s settings with the provided JSON object. Requires admin role.
+   * @return ApiResponse&lt;Map&lt;String, Object&gt;&gt;
+   * @throws ApiException if fails to make API call
+   */
+  public ApiResponse<Map<String, Object>> putAccountSettingsWithHttpInfo() throws ApiException {
+    return putAccountSettingsWithHttpInfo(null);
+  }
+
+  /**
+   * Update Account Settings
+   * Replace the current account&#39;s settings with the provided JSON object. Requires admin role.
+   * @param headers Optional headers to include in the request
+   * @return ApiResponse&lt;Map&lt;String, Object&gt;&gt;
+   * @throws ApiException if fails to make API call
+   */
+  public ApiResponse<Map<String, Object>> putAccountSettingsWithHttpInfo(Map<String, String> headers) throws ApiException {
+    HttpRequest.Builder localVarRequestBuilder = putAccountSettingsRequestBuilder(headers);
+    try {
+      HttpResponse<InputStream> localVarResponse = memberVarHttpClient.send(
+          localVarRequestBuilder.build(),
+          HttpResponse.BodyHandlers.ofInputStream());
+      if (memberVarResponseInterceptor != null) {
+        memberVarResponseInterceptor.accept(localVarResponse);
+      }
+      InputStream localVarResponseBody = null;
+      try {
+        if (localVarResponse.statusCode()/ 100 != 2) {
+          throw getApiException("putAccountSettings", localVarResponse);
+        }
+        localVarResponseBody = ApiClient.getResponseBody(localVarResponse);
+        if (localVarResponseBody == null) {
+          return new ApiResponse<Map<String, Object>>(
+              localVarResponse.statusCode(),
+              localVarResponse.headers().map(),
+              null
+          );
+        }
+
+        
+        
+        String responseBody = new String(localVarResponseBody.readAllBytes());
+        Map<String, Object> responseValue = responseBody.isBlank()? null: memberVarObjectMapper.readValue(responseBody, new TypeReference<Map<String, Object>>() {});
+        
+
+        return new ApiResponse<Map<String, Object>>(
+            localVarResponse.statusCode(),
+            localVarResponse.headers().map(),
+            responseValue
+        );
+      } finally {
+        if (localVarResponseBody != null) {
+          localVarResponseBody.close();
+        }
+      }
+    } catch (IOException e) {
+      throw new ApiException(e);
+    }
+    catch (InterruptedException e) {
+      Thread.currentThread().interrupt();
+      throw new ApiException(e);
+    }
+  }
+
+  private HttpRequest.Builder putAccountSettingsRequestBuilder(Map<String, String> headers) throws ApiException {
+
+    HttpRequest.Builder localVarRequestBuilder = HttpRequest.newBuilder();
+
+    String localVarPath = "/api/v1/accounts/current/settings";
+
+    localVarRequestBuilder.uri(URI.create(memberVarBaseUri + localVarPath));
+
+    localVarRequestBuilder.header("Accept", "application/vnd.api+json");
+
+    localVarRequestBuilder.method("PUT", HttpRequest.BodyPublishers.noBody());
+    if (memberVarReadTimeout != null) {
+      localVarRequestBuilder.timeout(memberVarReadTimeout);
+    }
+    // Add custom headers if provided
+    localVarRequestBuilder = HttpRequestBuilderExtensions.withAdditionalHeaders(localVarRequestBuilder, headers);
+    if (memberVarInterceptor != null) {
+      memberVarInterceptor.accept(localVarRequestBuilder);
+    }
+    return localVarRequestBuilder;
+  }
+
+  /**
    * Update Current Account
    * Update the current account&#39;s settings.
    * @param accountResponse  (required)
