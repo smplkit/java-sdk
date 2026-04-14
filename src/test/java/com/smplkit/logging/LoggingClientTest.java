@@ -140,15 +140,31 @@ class LoggingClientTest {
     // -----------------------------------------------------------------------
 
     @Test
-    void createLogger_postsAndReturnsModel() throws ApiException {
+    void createLogger_bulkRegistersAndPuts() throws ApiException {
         LoggerResponse resp = buildLoggerResponse("new-id", "key", "Name", null, false);
         when(mockLoggersApi.updateLogger(any(), any(LoggerResponse.class))).thenReturn(resp);
 
-        Logger lg = new Logger(client, null, "Name", null, null, false, null, null, null, null);
+        Logger lg = new Logger(client, "new-id", "Name", null, null, false, null, null, null, null);
         Logger result = client._createLogger(lg);
 
         assertEquals("new-id", result.getId());
+        verify(mockLoggersApi).bulkRegisterLoggers(any(LoggerBulkRequest.class));
         verify(mockLoggersApi).updateLogger(any(), any(LoggerResponse.class));
+    }
+
+    @Test
+    void createLogger_includesLevelInBulkPayload() throws ApiException {
+        LoggerResponse resp = buildLoggerResponse("my-logger", "my-logger", "My Logger", "INFO", true);
+        when(mockLoggersApi.updateLogger(any(), any(LoggerResponse.class))).thenReturn(resp);
+        ArgumentCaptor<LoggerBulkRequest> bulkCaptor = ArgumentCaptor.forClass(LoggerBulkRequest.class);
+
+        Logger lg = new Logger(client, "my-logger", "My Logger", "INFO", null, true, null, null, null, null);
+        client._createLogger(lg);
+
+        verify(mockLoggersApi).bulkRegisterLoggers(bulkCaptor.capture());
+        LoggerBulkItem item = bulkCaptor.getValue().getLoggers().get(0);
+        assertEquals("my-logger", item.getId());
+        assertEquals("INFO", item.getLevel());
     }
 
     @Test
@@ -179,6 +195,7 @@ class LoggingClientTest {
 
         lg.save();
         assertEquals("created-id", lg.getId());
+        verify(mockLoggersApi).bulkRegisterLoggers(any(LoggerBulkRequest.class));
     }
 
     @Test

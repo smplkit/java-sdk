@@ -150,6 +150,17 @@ public final class LoggingClient {
     /** Creates a new logger on the server. Called by {@link Logger#save()}. */
     Logger _createLogger(Logger lg) {
         try {
+            // Bulk-register first to create the record.
+            LoggerBulkRequest req = new LoggerBulkRequest();
+            LoggerBulkItem item = new LoggerBulkItem();
+            item.setId(lg.getId());
+            if (lg.getLevel() != null) {
+                item.setLevel_JsonNullable(JsonNullable.of(lg.getLevel()));
+                item.setResolvedLevel_JsonNullable(JsonNullable.of(lg.getLevel()));
+            }
+            req.addLoggersItem(item);
+            loggersApi.bulkRegisterLoggers(req);
+            // Now PUT to set name, level, managed, group, and environments.
             LoggerResponse body = buildLoggerBody(lg.getId(), lg);
             LoggerResponse response = loggersApi.updateLogger(lg.getId(), body);
             return loggerResponseToModel(response);
