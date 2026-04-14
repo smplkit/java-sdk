@@ -144,12 +144,15 @@ public final class SmplClient implements AutoCloseable {
 
     private void registerServiceContext() {
         try {
-            ContextBulkItem item = new ContextBulkItem()
+            ContextBulkItem envItem = new ContextBulkItem()
+                    .type("environment")
+                    .key(environment);
+            ContextBulkItem svcItem = new ContextBulkItem()
                     .type("service")
                     .key(service)
                     .attributes(Map.of("name", service));
             ContextBulkRegister reqBody = new ContextBulkRegister()
-                    .contexts(List.of(item));
+                    .contexts(List.of(envItem, svcItem));
             contextsApi.bulkRegisterContexts(reqBody);
         } catch (Exception e) {
             LOG.log(Level.WARNING, "Failed to register service context", e);
