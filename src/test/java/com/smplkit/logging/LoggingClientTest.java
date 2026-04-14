@@ -136,35 +136,33 @@ class LoggingClientTest {
     }
 
     // -----------------------------------------------------------------------
-    // _createLogger / _updateLogger (called by Logger.save())
+    // _saveLogger / _updateLogger (called by Logger.save())
     // -----------------------------------------------------------------------
 
     @Test
-    void createLogger_bulkRegistersAndPuts() throws ApiException {
+    void saveLogger_putsAndReturnsModel() throws ApiException {
         LoggerResponse resp = buildLoggerResponse("new-id", "key", "Name", null, false);
         when(mockLoggersApi.updateLogger(any(), any(LoggerResponse.class))).thenReturn(resp);
 
         Logger lg = new Logger(client, "new-id", "Name", null, null, false, null, null, null, null);
-        Logger result = client._createLogger(lg);
+        Logger result = client._saveLogger(lg);
 
         assertEquals("new-id", result.getId());
-        verify(mockLoggersApi).bulkRegisterLoggers(any(LoggerBulkRequest.class));
+        verify(mockLoggersApi, never()).bulkRegisterLoggers(any(LoggerBulkRequest.class));
         verify(mockLoggersApi).updateLogger(any(), any(LoggerResponse.class));
     }
 
     @Test
-    void createLogger_includesLevelInBulkPayload() throws ApiException {
-        LoggerResponse resp = buildLoggerResponse("my-logger", "my-logger", "My Logger", "INFO", true);
+    void saveLogger_putsNullLevelWhenNotSet() throws ApiException {
+        LoggerResponse resp = buildLoggerResponse("my-logger", "my-logger", "My Logger", null, false);
         when(mockLoggersApi.updateLogger(any(), any(LoggerResponse.class))).thenReturn(resp);
-        ArgumentCaptor<LoggerBulkRequest> bulkCaptor = ArgumentCaptor.forClass(LoggerBulkRequest.class);
+        ArgumentCaptor<LoggerResponse> bodyCaptor = ArgumentCaptor.forClass(LoggerResponse.class);
 
-        Logger lg = new Logger(client, "my-logger", "My Logger", "INFO", null, true, null, null, null, null);
-        client._createLogger(lg);
+        Logger lg = new Logger(client, "my-logger", "My Logger", null, null, false, null, null, null, null);
+        client._saveLogger(lg);
 
-        verify(mockLoggersApi).bulkRegisterLoggers(bulkCaptor.capture());
-        LoggerBulkItem item = bulkCaptor.getValue().getLoggers().get(0);
-        assertEquals("my-logger", item.getId());
-        assertEquals("INFO", item.getLevel());
+        verify(mockLoggersApi).updateLogger(eq("my-logger"), bodyCaptor.capture());
+        assertNull(bodyCaptor.getValue().getData().getAttributes().getLevel());
     }
 
     @Test
@@ -195,7 +193,9 @@ class LoggingClientTest {
 
         lg.save();
         assertEquals("created-id", lg.getId());
-        verify(mockLoggersApi).bulkRegisterLoggers(any(LoggerBulkRequest.class));
+        // Single PUT — no bulk pre-step
+        verify(mockLoggersApi, never()).bulkRegisterLoggers(any(LoggerBulkRequest.class));
+        verify(mockLoggersApi).updateLogger(any(), any(LoggerResponse.class));
     }
 
     @Test
@@ -918,11 +918,11 @@ class LoggingClientTest {
     }
 
     @Test
-    void createLogger_mapsApiException() throws ApiException {
+    void saveLogger_mapsApiException() throws ApiException {
         when(mockLoggersApi.updateLogger(any(), any())).thenThrow(new ApiException(422, "validation"));
 
         Logger lg = new Logger(client, null, "Name", null, null, false, null, null, null, null);
-        assertThrows(RuntimeException.class, () -> client._createLogger(lg));
+        assertThrows(RuntimeException.class, () -> client._saveLogger(lg));
     }
 
     @Test
@@ -1039,13 +1039,13 @@ class LoggingClientTest {
     // -----------------------------------------------------------------------
 
     @Test
-    void createLogger_includesEnvironmentsInBody() throws ApiException {
+    void saveLogger_includesEnvironmentsInBody() throws ApiException {
         LoggerResponse resp = buildLoggerResponse("new-id", "key", "Name", null, false);
         when(mockLoggersApi.updateLogger(any(), any(LoggerResponse.class))).thenReturn(resp);
 
         Logger lg = new Logger(client, null, "Name", null, null, false, null,
                 Map.of("prod", Map.of("level", "WARN")), null, null);
-        client._createLogger(lg);
+        client._saveLogger(lg);
 
         verify(mockLoggersApi).updateLogger(any(), any(LoggerResponse.class));
     }

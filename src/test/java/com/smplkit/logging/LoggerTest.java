@@ -182,29 +182,29 @@ class LoggerTest {
     }
 
     @Test
-    void save_callsCreateWhenCreatedAtIsNull() {
+    void save_callsSaveLoggerForNewLogger() {
         LoggingClient mockClient = mock(LoggingClient.class);
         Logger lg = new Logger(mockClient, "my-logger", "name", null, null, false, null, null, null, null);
         Logger created = new Logger(null, "my-logger", "name", null, null, false, null, null, Instant.now(), Instant.now());
-        when(mockClient._createLogger(lg)).thenReturn(created);
+        when(mockClient._saveLogger(lg)).thenReturn(created);
 
         lg.save();
 
-        verify(mockClient)._createLogger(lg);
+        verify(mockClient)._saveLogger(lg);
         assertEquals("my-logger", lg.getId());
     }
 
     @Test
-    void save_callsUpdateWhenCreatedAtIsSet() {
+    void save_callsSaveLoggerForExistingLogger() {
         LoggingClient mockClient = mock(LoggingClient.class);
         Instant now = Instant.now();
         Logger lg = new Logger(mockClient, "existing-id", "name", null, null, false, null, null, now, now);
         Logger updated = new Logger(null, "existing-id", "Updated Name", "INFO", null, false, null, null, now, now);
-        when(mockClient._updateLogger(lg)).thenReturn(updated);
+        when(mockClient._saveLogger(lg)).thenReturn(updated);
 
         lg.save();
 
-        verify(mockClient)._updateLogger(lg);
+        verify(mockClient)._saveLogger(lg);
         assertEquals("Updated Name", lg.getName());
     }
 

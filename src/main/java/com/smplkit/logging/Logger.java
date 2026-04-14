@@ -96,13 +96,8 @@ public final class Logger {
      */
     public void save() {
         if (client == null) throw new IllegalStateException("Logger not bound to a client");
-        if (createdAt == null) {
-            Logger created = client._createLogger(this);
-            _apply(created);
-        } else {
-            Logger updated = client._updateLogger(this);
-            _apply(updated);
-        }
+        Logger saved = client._saveLogger(this);
+        _apply(saved);
     }
 
     // --- Package-private setters (used by LoggingClient) ---
