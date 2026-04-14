@@ -652,8 +652,8 @@ public class LoggersApi {
   }
 
   /**
-   * Update Logger
-   * Update a logger. Fields absent from the body are preserved; explicit null clears them.
+   * Update or Create Logger
+   * Create or update a logger (upsert). If the logger does not exist it is created. Fields absent from the body are preserved on update; explicit null clears them.
    * @param id  (required)
    * @param loggerResponse  (required)
    * @return LoggerResponse
@@ -664,8 +664,8 @@ public class LoggersApi {
   }
 
   /**
-   * Update Logger
-   * Update a logger. Fields absent from the body are preserved; explicit null clears them.
+   * Update or Create Logger
+   * Create or update a logger (upsert). If the logger does not exist it is created. Fields absent from the body are preserved on update; explicit null clears them.
    * @param id  (required)
    * @param loggerResponse  (required)
    * @param headers Optional headers to include in the request
@@ -678,8 +678,8 @@ public class LoggersApi {
   }
 
   /**
-   * Update Logger
-   * Update a logger. Fields absent from the body are preserved; explicit null clears them.
+   * Update or Create Logger
+   * Create or update a logger (upsert). If the logger does not exist it is created. Fields absent from the body are preserved on update; explicit null clears them.
    * @param id  (required)
    * @param loggerResponse  (required)
    * @return ApiResponse&lt;LoggerResponse&gt;
@@ -690,8 +690,8 @@ public class LoggersApi {
   }
 
   /**
-   * Update Logger
-   * Update a logger. Fields absent from the body are preserved; explicit null clears them.
+   * Update or Create Logger
+   * Create or update a logger (upsert). If the logger does not exist it is created. Fields absent from the body are preserved on update; explicit null clears them.
    * @param id  (required)
    * @param loggerResponse  (required)
    * @param headers Optional headers to include in the request
