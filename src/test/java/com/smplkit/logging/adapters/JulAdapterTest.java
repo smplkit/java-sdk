@@ -29,6 +29,29 @@ class JulAdapterTest {
     }
 
     @Test
+    void discover_normalizesRootLoggerNameToRoot() {
+        List<DiscoveredLogger> discovered = adapter.discover();
+        // JUL root logger has an empty-string name; it must be reported as "root"
+        assertTrue(discovered.stream().anyMatch(dl -> dl.name().equals("root")),
+                "Expected 'root' entry in discover() output");
+        assertFalse(discovered.stream().anyMatch(dl -> dl.name().isEmpty()),
+                "Empty-string logger name must not appear in discover() output");
+    }
+
+    @Test
+    void pollForNewLoggers_normalizesRootLoggerNameToRoot() {
+        // Fresh adapter — discover() has not been called, so root is unknown.
+        // pollForNewLoggers should detect the JUL root logger and report it as "root".
+        List<String> reportedNames = new CopyOnWriteArrayList<>();
+        adapter.installHook((name, level) -> reportedNames.add(name));
+        adapter.pollForNewLoggers();
+        assertFalse(reportedNames.contains(""),
+                "Empty-string logger name must not be reported by pollForNewLoggers()");
+        assertTrue(reportedNames.contains("root"),
+                "Root logger must be reported as 'root' by pollForNewLoggers()");
+    }
+
+    @Test
     void discover_findsExistingLoggers() {
         // Create some JUL loggers
         java.util.logging.Logger.getLogger("com.smplkit.jul.test1");

@@ -34,10 +34,13 @@ public final class JulAdapter implements LoggingAdapter {
         Enumeration<String> names = manager.getLoggerNames();
         while (names.hasMoreElements()) {
             String loggerName = names.nextElement();
+            // JUL identifies the root logger with an empty string; normalize to "root"
+            // to match the smplkit convention used by other SDK adapters.
+            String normalizedName = loggerName.isEmpty() ? "root" : loggerName;
             knownNames.add(loggerName);
             java.util.logging.Logger julLogger = manager.getLogger(loggerName);
             String level = julToSmplLevel(julLogger != null ? julLogger.getLevel() : null);
-            result.add(new DiscoveredLogger(loggerName, level));
+            result.add(new DiscoveredLogger(normalizedName, level));
         }
         return result;
     }
@@ -70,9 +73,11 @@ public final class JulAdapter implements LoggingAdapter {
         while (names.hasMoreElements()) {
             String loggerName = names.nextElement();
             if (knownNames.add(loggerName)) {
+                // JUL identifies the root logger with an empty string; normalize to "root".
+                String normalizedName = loggerName.isEmpty() ? "root" : loggerName;
                 java.util.logging.Logger julLogger = manager.getLogger(loggerName);
                 String level = julToSmplLevel(julLogger != null ? julLogger.getLevel() : null);
-                callback.accept(loggerName, level);
+                callback.accept(normalizedName, level);
             }
         }
     }
