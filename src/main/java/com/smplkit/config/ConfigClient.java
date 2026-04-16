@@ -1,8 +1,10 @@
 package com.smplkit.config;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.smplkit.SharedWebSocket;
 import com.smplkit.errors.ApiExceptionHandler;
 import com.smplkit.errors.SmplException;
+import com.smplkit.internal.Debug;
 import com.smplkit.internal.generated.config.ApiException;
 import com.smplkit.internal.generated.config.api.ConfigsApi;
 import com.smplkit.internal.generated.config.model.ConfigItemDefinition;
@@ -43,6 +45,9 @@ public final class ConfigClient {
     private Map<String, Map<String, Object>> configCache = new HashMap<>();
     private final List<ListenerEntry> listeners = Collections.synchronizedList(new ArrayList<>());
     private final ConfigManagement management;
+    private volatile SharedWebSocket wsManager;
+    private final Consumer<Map<String, Object>> configChangedHandler;
+    private final Consumer<Map<String, Object>> configDeletedHandler;
 
     /**
      * Creates a new ConfigClient. Use {@link com.smplkit.SmplClient} to obtain an instance.
@@ -50,6 +55,8 @@ public final class ConfigClient {
     public ConfigClient(ConfigsApi configsApi, java.net.http.HttpClient httpClient, String apiKey) {
         this.configsApi = configsApi;
         this.management = new ConfigManagement(this);
+        this.configChangedHandler = this::handleConfigChanged;
+        this.configDeletedHandler = this::handleConfigDeleted;
     }
 
     // -----------------------------------------------------------------------
@@ -81,6 +88,11 @@ public final class ConfigClient {
     /** Sets the metrics reporter. Package-private. */
     public void setMetrics(com.smplkit.MetricsReporter metrics) {
         this.metrics = metrics;
+    }
+
+    /** Sets the shared WebSocket for real-time config updates. */
+    public void setSharedWs(SharedWebSocket ws) {
+        this.wsManager = ws;
     }
 
     // -----------------------------------------------------------------------
@@ -271,8 +283,33 @@ public final class ConfigClient {
         String env = this.environment;
         if (env == null) return;
 
+        Debug.log("websocket", "config runtime initializing");
         configCache = buildCache(env);
+
+        SharedWebSocket ws = this.wsManager;
+        if (ws != null) {
+            Debug.log("registration", "registering config_changed and config_deleted handlers");
+            ws.on("config_changed", configChangedHandler);
+            ws.on("config_deleted", configDeletedHandler);
+            ws.ensureConnected(java.time.Duration.ofSeconds(10));
+        }
+
         connected = true;
+        Debug.log("websocket", "config runtime connected");
+    }
+
+    private void handleConfigChanged(Map<String, Object> data) {
+        if (!connected) return;
+        String configId = data.get("id") instanceof String s ? s : "<unknown>";
+        Debug.log("websocket", "config_changed event received, id=" + configId);
+        refresh();
+    }
+
+    private void handleConfigDeleted(Map<String, Object> data) {
+        if (!connected) return;
+        String configId = data.get("id") instanceof String s ? s : "<unknown>";
+        Debug.log("websocket", "config_deleted event received, id=" + configId);
+        refresh();
     }
 
     // -----------------------------------------------------------------------
@@ -510,6 +547,16 @@ public final class ConfigClient {
 
     static SmplException mapException(ApiException e) {
         return ApiExceptionHandler.mapApiException(e.getCode(), e.getResponseBody());
+    }
+
+    /** Simulates a config_changed WebSocket event (for testing). */
+    void simulateConfigChanged(Map<String, Object> data) {
+        handleConfigChanged(data);
+    }
+
+    /** Simulates a config_deleted WebSocket event (for testing). */
+    void simulateConfigDeleted(Map<String, Object> data) {
+        handleConfigDeleted(data);
     }
 
     private record ListenerEntry(String configId, String itemKey,

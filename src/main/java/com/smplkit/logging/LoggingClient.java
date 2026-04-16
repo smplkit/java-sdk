@@ -1,8 +1,10 @@
 package com.smplkit.logging;
 
 import com.smplkit.LogLevel;
+import com.smplkit.SharedWebSocket;
 import com.smplkit.errors.ApiExceptionHandler;
 import com.smplkit.errors.SmplNotFoundException;
+import com.smplkit.internal.Debug;
 import com.smplkit.internal.generated.logging.ApiException;
 import com.smplkit.internal.generated.logging.api.LogGroupsApi;
 import com.smplkit.internal.generated.logging.api.LoggersApi;
@@ -70,6 +72,13 @@ public final class LoggingClient {
     private Map<String, Map<String, Object>> groupsCache = new ConcurrentHashMap<>();
     private final List<Consumer<LoggerChangeEvent>> globalListeners = new CopyOnWriteArrayList<>();
     private final Map<String, List<Consumer<LoggerChangeEvent>>> keyListeners = new ConcurrentHashMap<>();
+    private volatile SharedWebSocket wsManager;
+
+    // WS event handlers (stored as fields so they can be unregistered)
+    private final java.util.function.Consumer<java.util.Map<String, Object>> loggerChangedHandler =
+            this::handleLoggerChanged;
+    private final java.util.function.Consumer<java.util.Map<String, Object>> groupChangedHandler =
+            this::handleGroupChanged;
 
     // Management accessor
     private final LoggingManagement management;
@@ -121,6 +130,11 @@ public final class LoggingClient {
     /** Sets the metrics reporter. */
     public void setMetrics(com.smplkit.MetricsReporter metrics) {
         this.metrics = metrics;
+    }
+
+    /** Sets the shared WebSocket manager. Called by SmplClient before start(). */
+    public void setSharedWs(SharedWebSocket ws) {
+        this.wsManager = ws;
     }
 
     // -----------------------------------------------------------------------
@@ -214,11 +228,13 @@ public final class LoggingClient {
                 for (DiscoveredLogger dl : discovered) {
                     String normalized = normalizeKey(dl.name());
                     nameMap.put(dl.name(), normalized);
+                    Debug.log("discovery", "discovered logger: " + normalized + " (level=" + dl.level() + ")");
                 }
             } catch (Exception e) {
                 LOG.log(Level.WARNING, "Adapter " + adapter.name() + " discover() failed", e);
             }
         }
+        Debug.log("lifecycle", "discovered " + allDiscovered.size() + " loggers from adapters");
         if (metrics != null && !allDiscovered.isEmpty()) {
             metrics.record("logging.loggers_discovered", allDiscovered.size(), "loggers");
         }
@@ -231,6 +247,7 @@ public final class LoggingClient {
                 LOG.log(Level.FINE, "Adapter " + adapter.name() + " installHook() failed", e);
             }
         }
+        Debug.log("registration", "installed hooks on " + adapters.size() + " adapters");
 
         // 4. Bulk-register discovered loggers with the server so it learns their levels
         if (!allDiscovered.isEmpty()) {
@@ -240,12 +257,23 @@ public final class LoggingClient {
                 LOG.log(Level.WARNING, "Failed to bulk-register loggers with server", e);
             }
         }
+        Debug.log("registration", "initial registration flush complete");
 
         // 5. Fetch all loggers and groups, resolve and apply levels
+        Debug.log("api", "fetching logger and group definitions");
         try {
             fetchAndApply("start");
         } catch (Exception e) {
             LOG.log(Level.WARNING, "Failed to fetch/apply logging levels during start", e);
+        }
+        Debug.log("api", "fetched " + loggersCache.size() + " loggers and " + groupsCache.size() + " groups");
+
+        // 6. Register WebSocket listeners for real-time updates
+        if (wsManager != null) {
+            wsManager.on("logger_changed", loggerChangedHandler);
+            wsManager.on("logger_deleted", loggerChangedHandler);
+            wsManager.on("group_changed", groupChangedHandler);
+            wsManager.on("group_deleted", groupChangedHandler);
         }
 
         started = true;
@@ -410,7 +438,30 @@ public final class LoggingClient {
 
     private void onNewLogger(String originalName, String level) {
         String normalized = normalizeKey(originalName);
+        Debug.log("discovery", "new logger from hook: " + normalized + " (level=" + level + ")");
         nameMap.put(originalName, normalized);
+    }
+
+    private void handleLoggerChanged(Map<String, Object> data) {
+        if (!started) return;
+        String id = (String) data.get("id");
+        Debug.log("websocket", "logger event received, id=" + id);
+        try {
+            fetchAndApply("websocket");
+        } catch (Exception e) {
+            LOG.log(Level.WARNING, "Failed to re-apply levels after logger WS event", e);
+        }
+    }
+
+    private void handleGroupChanged(Map<String, Object> data) {
+        if (!started) return;
+        String id = (String) data.get("id");
+        Debug.log("websocket", "group event received, id=" + id);
+        try {
+            fetchAndApply("websocket");
+        } catch (Exception e) {
+            LOG.log(Level.WARNING, "Failed to re-apply levels after group WS event", e);
+        }
     }
 
     // -----------------------------------------------------------------------
@@ -513,6 +564,7 @@ public final class LoggingClient {
             if (managed == null || !managed) continue;
 
             String resolved = resolveLevel(normalizedKey, environment, loggersCache, groupsCache);
+            Debug.log("resolution", "resolved " + normalizedKey + " → " + resolved);
             try {
                 // Validate the level string
                 LogLevel logLevel = LogLevel.valueOf(resolved);
@@ -521,6 +573,7 @@ public final class LoggingClient {
                 for (LoggingAdapter adapter : adapters) {
                     try {
                         adapter.applyLevel(originalName, resolved);
+                        Debug.log("adapter", "applied level " + resolved + " to logger " + originalName);
                     } catch (Exception e) {
                         LOG.log(Level.FINE, "Adapter " + adapter.name()
                                 + " applyLevel failed for " + originalName, e);
@@ -568,6 +621,13 @@ public final class LoggingClient {
 
     /** Releases resources and removes logging hooks. */
     public void close() {
+        Debug.log("lifecycle", "LoggingClient.close() called");
+        if (wsManager != null) {
+            wsManager.off("logger_changed", loggerChangedHandler);
+            wsManager.off("logger_deleted", loggerChangedHandler);
+            wsManager.off("group_changed", groupChangedHandler);
+            wsManager.off("group_deleted", groupChangedHandler);
+        }
         for (LoggingAdapter adapter : adapters) {
             try {
                 adapter.uninstallHook();
@@ -673,5 +733,19 @@ public final class LoggingClient {
 
     static RuntimeException mapLoggingException(ApiException e) {
         return ApiExceptionHandler.mapApiException(e.getCode(), e.getResponseBody());
+    }
+
+    // -----------------------------------------------------------------------
+    // Package-private test helpers
+    // -----------------------------------------------------------------------
+
+    /** Simulates a logger_changed WebSocket event (for testing). */
+    void simulateLoggerChanged(Map<String, Object> data) {
+        handleLoggerChanged(data);
+    }
+
+    /** Simulates a group_changed WebSocket event (for testing). */
+    void simulateGroupChanged(Map<String, Object> data) {
+        handleGroupChanged(data);
     }
 }

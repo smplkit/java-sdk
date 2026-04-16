@@ -22,6 +22,8 @@ import io.github.jamsesso.jsonlogic.JsonLogic;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import org.openapitools.jackson.nullable.JsonNullableModule;
 
+import com.smplkit.internal.Debug;
+
 import java.net.http.HttpClient;
 import java.time.Duration;
 import java.time.Instant;
@@ -237,17 +239,20 @@ public final class FlagsClient {
     /** Initializes the flags runtime on first use. Idempotent. */
     void _connectInternal() {
         if (connected) return;
+        Debug.log("websocket", "flags runtime initializing");
         fetchAllFlags();
         resolutionCache.clear();
 
         SharedWebSocket ws = this.sharedWs;
         if (ws != null) {
+            Debug.log("registration", "registering flag_changed and flag_deleted handlers");
             ws.on("flag_changed", flagChangedHandler);
             ws.on("flag_deleted", flagDeletedHandler);
             ws.ensureConnected(Duration.ofSeconds(10));
         }
 
         connected = true;
+        Debug.log("websocket", "flags runtime connected");
 
         if (contextFlushExecutor != null && contextFlushFuture == null) {
             contextFlushFuture = contextFlushExecutor.scheduleAtFixedRate(
@@ -504,6 +509,8 @@ public final class FlagsClient {
 
     private void handleFlagChanged(Map<String, Object> data) {
         if (!connected) return;
+        String flagId = data.get("id") instanceof String s ? s : "<unknown>";
+        Debug.log("websocket", "flag_changed event received, id=" + flagId);
         fetchAllFlags();
         resolutionCache.clear();
         fireAllChangeListeners("websocket");
@@ -511,6 +518,8 @@ public final class FlagsClient {
 
     private void handleFlagDeleted(Map<String, Object> data) {
         if (!connected) return;
+        String flagId = data.get("id") instanceof String s ? s : "<unknown>";
+        Debug.log("websocket", "flag_deleted event received, id=" + flagId);
         fetchAllFlags();
         resolutionCache.clear();
         fireAllChangeListeners("websocket");

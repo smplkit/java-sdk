@@ -12,6 +12,8 @@ import com.smplkit.internal.generated.flags.api.FlagsApi;
 import com.smplkit.internal.generated.logging.api.LogGroupsApi;
 import com.smplkit.internal.generated.logging.api.LoggersApi;
 
+import com.smplkit.internal.Debug;
+
 import java.net.http.HttpClient;
 import java.time.Duration;
 import java.util.List;
@@ -75,10 +77,14 @@ public final class SmplClient implements AutoCloseable {
         this.config = buildConfigClient(httpClient, apiKey, timeout);
         this.config.setEnvironment(environment);
         this.config.setMetrics(metrics);
+        this.config.setSharedWs(this.sharedWs);
         this.flags = buildFlagsClient(httpClient, apiKey, timeout, sharedWs, environment, service);
         this.flags.setMetrics(metrics);
         this.logging = buildLoggingClient(httpClient, apiKey, timeout, environment, service);
         this.logging.setMetrics(metrics);
+        this.logging.setSharedWs(this.sharedWs);
+        String maskedKey = apiKey.length() > 10 ? apiKey.substring(0, 10) + "..." : apiKey + "...";
+        Debug.log("lifecycle", "SmplClient created (api_key=" + maskedKey + ", environment=" + environment + ", service=" + service + ")");
     }
 
     /**
@@ -286,6 +292,7 @@ public final class SmplClient implements AutoCloseable {
      */
     @Override
     public void close() {
+        Debug.log("lifecycle", "SmplClient.close() called");
         if (logging != null) {
             logging.close();
         }

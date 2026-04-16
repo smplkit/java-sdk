@@ -1,5 +1,6 @@
 package com.smplkit.config;
 
+import com.smplkit.SharedWebSocket;
 import com.smplkit.errors.SmplConflictException;
 import com.smplkit.errors.SmplNotFoundException;
 import com.smplkit.errors.SmplValidationException;
@@ -25,6 +26,9 @@ import java.util.Map;
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
@@ -666,5 +670,65 @@ class ConfigClientTest {
     @Test
     void isConnected_falseByDefault() {
         assertFalse(configClient.isConnected());
+    }
+
+    // -----------------------------------------------------------------------
+    // WebSocket handler coverage
+    // -----------------------------------------------------------------------
+
+    @Test
+    void connectInternal_registersWsHandlersWhenManagerSet() throws ApiException {
+        when(mockApi.listConfigs(null)).thenReturn(emptyListResponse());
+        SharedWebSocket mockWs = mock(SharedWebSocket.class);
+        configClient.setSharedWs(mockWs);
+        configClient.setEnvironment("production");
+
+        configClient._connectInternal();
+
+        verify(mockWs).on(eq("config_changed"), any());
+        verify(mockWs).on(eq("config_deleted"), any());
+    }
+
+    @Test
+    void simulateConfigChanged_triggersRefresh() throws ApiException {
+        when(mockApi.listConfigs(null)).thenReturn(emptyListResponse());
+        configClient.setEnvironment("production");
+        configClient._connectInternal();
+
+        configClient.simulateConfigChanged(Map.of("id", "some-config-id"));
+
+        // listConfigs should have been called twice: once for init, once for refresh
+        verify(mockApi, times(2)).listConfigs(null);
+    }
+
+    @Test
+    void simulateConfigDeleted_triggersRefresh() throws ApiException {
+        when(mockApi.listConfigs(null)).thenReturn(emptyListResponse());
+        configClient.setEnvironment("production");
+        configClient._connectInternal();
+
+        configClient.simulateConfigDeleted(Map.of("id", "some-config-id"));
+
+        verify(mockApi, times(2)).listConfigs(null);
+    }
+
+    @Test
+    void simulateConfigChanged_beforeConnect_isNoOp() throws ApiException {
+        // handleConfigChanged when not connected should not throw and not call API
+        configClient.simulateConfigChanged(Map.of("id", "some-config-id"));
+        verify(mockApi, never()).listConfigs(any());
+    }
+
+    @Test
+    void simulateConfigDeleted_beforeConnect_isNoOp() throws ApiException {
+        configClient.simulateConfigDeleted(Map.of("id", "some-config-id"));
+        verify(mockApi, never()).listConfigs(any());
+    }
+
+    private com.smplkit.internal.generated.config.model.ConfigListResponse emptyListResponse() {
+        com.smplkit.internal.generated.config.model.ConfigListResponse resp =
+                new com.smplkit.internal.generated.config.model.ConfigListResponse();
+        resp.setData(List.of());
+        return resp;
     }
 }

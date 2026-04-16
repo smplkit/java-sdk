@@ -1,6 +1,7 @@
 package com.smplkit;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.smplkit.internal.Debug;
 
 import java.net.URI;
 import java.net.http.HttpClient;
@@ -134,6 +135,7 @@ public final class SharedWebSocket {
      */
     public void start() {
         if (closed || wsConnector == null) return;
+        Debug.log("websocket", "starting WebSocket connection");
         connectedLatch = new CountDownLatch(1);
         wsThread = new Thread(this::wsThreadEntry, "smplkit-shared-ws");
         wsThread.setDaemon(true);
@@ -222,6 +224,9 @@ public final class SharedWebSocket {
 
     /** Establishes the connection. Blocks until the connection closes. */
     public void connectToServer() throws Exception {
+        // Log a sanitized URL (strip api_key query param).
+        String sanitizedUrl = wsUrl != null && wsUrl.contains("?") ? wsUrl.substring(0, wsUrl.indexOf('?')) : wsUrl;
+        Debug.log("websocket", "connecting to " + sanitizedUrl);
         connectionStatus = "connecting";
         LOG.fine("Connecting shared WebSocket");
 
@@ -240,6 +245,7 @@ public final class SharedWebSocket {
         while (!closed) {
             connectionStatus = "reconnecting";
             int delay = BACKOFF_SECONDS[Math.min(attempt, BACKOFF_SECONDS.length - 1)];
+            Debug.log("websocket", "reconnecting in " + delay + "s (attempt " + (attempt + 1) + ")");
             LOG.info("SharedWebSocket reconnecting in " + delay + "s (attempt " + (attempt + 1) + ")");
             try {
                 Thread.sleep(delay * 1000L);
@@ -262,7 +268,11 @@ public final class SharedWebSocket {
     /** Delivers an event to all registered listeners. */
     public void dispatch(String event, Map<String, Object> data) {
         List<Consumer<Map<String, Object>>> eventListeners = listeners.get(event);
-        if (eventListeners == null) return;
+        if (eventListeners == null || eventListeners.isEmpty()) {
+            Debug.log("websocket", "no handler registered for event: \"" + event + "\"");
+            return;
+        }
+        Debug.log("websocket", "routing \"" + event + "\" to " + eventListeners.size() + " handler(s)");
         for (Consumer<Map<String, Object>> callback : eventListeners) {
             try {
                 callback.accept(data);

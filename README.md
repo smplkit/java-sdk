@@ -305,6 +305,26 @@ try {
 | `SmplConnectionException` | Network connectivity issue    |
 | `SmplException`           | Any other SDK error           |
 
+## Debug Logging
+
+Set the `SMPLKIT_DEBUG` environment variable to enable verbose diagnostic output to stderr:
+
+```bash
+export SMPLKIT_DEBUG=1
+```
+
+Accepted truthy values: `1`, `true`, `yes` (case-insensitive). All other values (including unset) disable output.
+
+Each line follows the format:
+
+```
+[smplkit:{subsystem}] {ISO-8601 timestamp} {message}
+```
+
+Subsystems: `lifecycle`, `websocket`, `api`, `discovery`, `resolution`, `adapter`, `registration`.
+
+Output bypasses the Java logging framework and writes directly to stderr to avoid interference with level management.
+
 ## Documentation
 
 - [Getting Started](https://docs.smplkit.com/getting-started)

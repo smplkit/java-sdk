@@ -1,6 +1,7 @@
 package com.smplkit.logging;
 
 import com.smplkit.LogLevel;
+import com.smplkit.SharedWebSocket;
 import com.smplkit.internal.generated.logging.ApiException;
 import com.smplkit.internal.generated.logging.api.LogGroupsApi;
 import com.smplkit.internal.generated.logging.api.LoggersApi;
@@ -1153,6 +1154,106 @@ class LoggingClientTest {
         // Should not throw -- the invalid level is caught and logged
         client.start();
         assertTrue(client.isStarted());
+    }
+
+    // -----------------------------------------------------------------------
+    // WebSocket event handler coverage
+    // -----------------------------------------------------------------------
+
+    @Test
+    void start_registersWsHandlersWhenManagerSet() throws ApiException {
+        stubEmptyResponses();
+        LoggingAdapter mockAdapter = mock(LoggingAdapter.class);
+        when(mockAdapter.name()).thenReturn("test");
+        when(mockAdapter.discover()).thenReturn(List.of());
+        client.registerAdapter(mockAdapter);
+
+        SharedWebSocket mockWs = mock(SharedWebSocket.class);
+        client.setSharedWs(mockWs);
+
+        client.start();
+
+        verify(mockWs).on(eq("logger_changed"), any());
+        verify(mockWs).on(eq("logger_deleted"), any());
+        verify(mockWs).on(eq("group_changed"), any());
+        verify(mockWs).on(eq("group_deleted"), any());
+    }
+
+    @Test
+    void simulateLoggerChanged_triggersRefetch() throws ApiException {
+        stubEmptyResponses();
+        LoggingAdapter mockAdapter = mock(LoggingAdapter.class);
+        when(mockAdapter.name()).thenReturn("test");
+        when(mockAdapter.discover()).thenReturn(List.of());
+        client.registerAdapter(mockAdapter);
+        client.start();
+
+        // Simulate a logger_changed WS event
+        client.simulateLoggerChanged(Map.of("id", "com.acme.SomeLogger"));
+
+        // listLoggers should have been called once for start() and once for the WS event
+        verify(mockLoggersApi, times(2)).listLoggers((Boolean) null, null, null);
+    }
+
+    @Test
+    void simulateGroupChanged_triggersRefetch() throws ApiException {
+        stubEmptyResponses();
+        LoggingAdapter mockAdapter = mock(LoggingAdapter.class);
+        when(mockAdapter.name()).thenReturn("test");
+        when(mockAdapter.discover()).thenReturn(List.of());
+        client.registerAdapter(mockAdapter);
+        client.start();
+
+        // Simulate a group_changed WS event
+        client.simulateGroupChanged(Map.of("id", "some-group-id"));
+
+        // listLoggers should have been called once for start() and once for the WS event
+        verify(mockLoggersApi, times(2)).listLoggers((Boolean) null, null, null);
+    }
+
+    @Test
+    void simulateLoggerChanged_beforeStart_isNoOp() throws ApiException {
+        // handleLoggerChanged when not started should not throw and not call API
+        client.simulateLoggerChanged(Map.of("id", "com.acme.Logger"));
+        verify(mockLoggersApi, never()).listLoggers(any(), any(), any());
+    }
+
+    @Test
+    void simulateGroupChanged_beforeStart_isNoOp() throws ApiException {
+        client.simulateGroupChanged(Map.of("id", "some-group"));
+        verify(mockLoggersApi, never()).listLoggers(any(), any(), any());
+    }
+
+    @Test
+    void simulateLoggerChanged_fetchFailure_doesNotThrow() throws ApiException {
+        stubEmptyResponses();
+        LoggingAdapter mockAdapter = mock(LoggingAdapter.class);
+        when(mockAdapter.name()).thenReturn("test");
+        when(mockAdapter.discover()).thenReturn(List.of());
+        client.registerAdapter(mockAdapter);
+        client.start();
+
+        // Make the next listLoggers call fail
+        when(mockLoggersApi.listLoggers((Boolean) null, null, null))
+                .thenThrow(new ApiException(500, "server error"));
+
+        // Should not throw — the exception is caught and logged
+        assertDoesNotThrow(() -> client.simulateLoggerChanged(Map.of("id", "com.acme.Logger")));
+    }
+
+    @Test
+    void simulateGroupChanged_fetchFailure_doesNotThrow() throws ApiException {
+        stubEmptyResponses();
+        LoggingAdapter mockAdapter = mock(LoggingAdapter.class);
+        when(mockAdapter.name()).thenReturn("test");
+        when(mockAdapter.discover()).thenReturn(List.of());
+        client.registerAdapter(mockAdapter);
+        client.start();
+
+        when(mockLoggersApi.listLoggers((Boolean) null, null, null))
+                .thenThrow(new ApiException(500, "server error"));
+
+        assertDoesNotThrow(() -> client.simulateGroupChanged(Map.of("id", "some-group")));
     }
 
     // -----------------------------------------------------------------------
