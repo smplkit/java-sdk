@@ -68,12 +68,13 @@ public class LoggingManagementShowcase {
             step("Created group: id=" + infraGroup.getId()
                     + ", level=" + infraGroup.getLevel());
 
-            LogGroup dbGroup = client.logging().management().newGroup("infra-db", "Database", infraGroup.getId());
+            LogGroup dbGroup = client.logging().management().newGroup("infra-db");
+            dbGroup.setName("Database");
             dbGroup.setLevel(LogLevel.ERROR);
             dbGroup.save();
             createdGroupKeys.add(dbGroup.getId());
-            step("Created child group: id=" + dbGroup.getId()
-                    + ", parent=" + dbGroup.getGroup());
+            step("Created group: id=" + dbGroup.getId()
+                    + ", level=" + dbGroup.getLevel());
 
             // ==================================================================
             // 3. CREATE LOGGERS
