@@ -181,7 +181,7 @@ class FlagsClientWebSocketTest {
                 flagAttrs("flag-a", Map.of()),
                 flagAttrs("flag-b", Map.of())
         )), FlagListResponse.class);
-        when(mockApi.listFlags(isNull())).thenReturn(listResponse);
+        when(mockApi.listFlags(isNull(), isNull())).thenReturn(listResponse);
         client._connectInternal();
 
         AtomicInteger aCount = new AtomicInteger();
@@ -189,7 +189,7 @@ class FlagsClientWebSocketTest {
         client.onChange("flag-a", e -> aCount.incrementAndGet());
         client.onChange("flag-b", e -> bCount.incrementAndGet());
 
-        when(mockApi.listFlags(isNull())).thenReturn(listResponse);
+        when(mockApi.listFlags(isNull(), isNull())).thenReturn(listResponse);
         client.refresh();
 
         assertTrue(aCount.get() > 0);
@@ -208,7 +208,7 @@ class FlagsClientWebSocketTest {
         FlagListResponse listResponse = OBJECT_MAPPER.convertValue(Map.of("data", List.of(Map.of(
                 "id", id, "type", "flag", "attributes", attrs
         ))), FlagListResponse.class);
-        when(mockApi.listFlags(isNull())).thenReturn(listResponse);
+        when(mockApi.listFlags(isNull(), isNull())).thenReturn(listResponse);
     }
 
     private static Map<String, Object> flagAttrs(String id, Map<String, Object> environments) {

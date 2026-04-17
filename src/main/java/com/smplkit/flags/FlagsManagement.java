@@ -100,7 +100,7 @@ public final class FlagsManagement {
     /** Lists all flags. */
     public List<Flag<?>> list() {
         try {
-            FlagListResponse response = client.flagsApi.listFlags(null);
+            FlagListResponse response = client.flagsApi.listFlags(null, null);
             return client.parseListResponse(response);
         } catch (ApiException e) {
             throw FlagsClient.mapException(e);

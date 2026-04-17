@@ -660,7 +660,7 @@ class FlagTest {
         attrs.put("default", defaultValue);
         attrs.put("values", List.of());
         attrs.put("environments", environments);
-        when(mockApi.listFlags(isNull())).thenReturn(OBJECT_MAPPER.convertValue(
+        when(mockApi.listFlags(isNull(), isNull())).thenReturn(OBJECT_MAPPER.convertValue(
                 Map.of("data", List.of(Map.of("id", id, "type", "flag", "attributes", attrs))),
                 FlagListResponse.class));
         client._connectInternal();

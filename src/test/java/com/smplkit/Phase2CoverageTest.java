@@ -145,7 +145,7 @@ class Phase2CoverageTest {
                         "type", "flag", "attributes", attrs
                 ))),
                 FlagListResponse.class);
-        when(mockApi.listFlags(isNull())).thenReturn(flagList);
+        when(mockApi.listFlags(isNull(), isNull())).thenReturn(flagList);
 
         Flag<Boolean> handle = flagsClient.booleanFlag("svc-flag", false);
         assertTrue(handle.get(List.of()));
@@ -181,7 +181,7 @@ class Phase2CoverageTest {
                         "type", "flag", "attributes", attrs
                 ))),
                 FlagListResponse.class);
-        when(mockApi.listFlags(isNull())).thenReturn(flagList);
+        when(mockApi.listFlags(isNull(), isNull())).thenReturn(flagList);
 
         Flag<Boolean> handle = flagsClient.booleanFlag("svc-flag", false);
         Context explicitService = new Context("service", "other-service", Map.of());
@@ -217,7 +217,7 @@ class Phase2CoverageTest {
                         "type", "flag", "attributes", attrs
                 ))),
                 FlagListResponse.class);
-        when(mockApi.listFlags(isNull())).thenReturn(flagList);
+        when(mockApi.listFlags(isNull(), isNull())).thenReturn(flagList);
 
         Flag<Boolean> handle = flagsClient.booleanFlag("svc-flag", false);
         assertFalse(handle.get(List.of()));
@@ -297,13 +297,13 @@ class Phase2CoverageTest {
                 Duration.ofSeconds(5));
         flagsClient.setEnvironment("staging");
 
-        when(mockApi.listFlags(isNull()))
+        when(mockApi.listFlags(isNull(), isNull()))
                 .thenReturn(new FlagListResponse().data(List.of()));
 
         Flag<Boolean> handle = flagsClient.booleanFlag("unknown-flag", false);
         handle.get(List.of());
         handle.get(List.of());
 
-        verify(mockApi, times(1)).listFlags(isNull());
+        verify(mockApi, times(1)).listFlags(isNull(), isNull());
     }
 }
