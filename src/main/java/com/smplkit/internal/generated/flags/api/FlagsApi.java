@@ -18,6 +18,8 @@ import com.smplkit.internal.generated.flags.ApiResponse;
 import com.smplkit.internal.generated.flags.Configuration;
 import com.smplkit.internal.generated.flags.Pair;
 
+import com.smplkit.internal.generated.flags.model.FlagBulkRequest;
+import com.smplkit.internal.generated.flags.model.FlagBulkResponse;
 import com.smplkit.internal.generated.flags.model.FlagListResponse;
 import com.smplkit.internal.generated.flags.model.FlagResponse;
 
@@ -161,6 +163,129 @@ public class FlagsApi {
       file.deleteOnExit(); // best effort cleanup
     }
     return file;
+  }
+
+  /**
+   * Bulk Register Flags
+   * Register flags discovered by an SDK. Creates new flags or updates source observations on existing ones.
+   * @param flagBulkRequest  (required)
+   * @return FlagBulkResponse
+   * @throws ApiException if fails to make API call
+   */
+  public FlagBulkResponse bulkRegisterFlags(@jakarta.annotation.Nonnull FlagBulkRequest flagBulkRequest) throws ApiException {
+    return bulkRegisterFlags(flagBulkRequest, null);
+  }
+
+  /**
+   * Bulk Register Flags
+   * Register flags discovered by an SDK. Creates new flags or updates source observations on existing ones.
+   * @param flagBulkRequest  (required)
+   * @param headers Optional headers to include in the request
+   * @return FlagBulkResponse
+   * @throws ApiException if fails to make API call
+   */
+  public FlagBulkResponse bulkRegisterFlags(@jakarta.annotation.Nonnull FlagBulkRequest flagBulkRequest, Map<String, String> headers) throws ApiException {
+    ApiResponse<FlagBulkResponse> localVarResponse = bulkRegisterFlagsWithHttpInfo(flagBulkRequest, headers);
+    return localVarResponse.getData();
+  }
+
+  /**
+   * Bulk Register Flags
+   * Register flags discovered by an SDK. Creates new flags or updates source observations on existing ones.
+   * @param flagBulkRequest  (required)
+   * @return ApiResponse&lt;FlagBulkResponse&gt;
+   * @throws ApiException if fails to make API call
+   */
+  public ApiResponse<FlagBulkResponse> bulkRegisterFlagsWithHttpInfo(@jakarta.annotation.Nonnull FlagBulkRequest flagBulkRequest) throws ApiException {
+    return bulkRegisterFlagsWithHttpInfo(flagBulkRequest, null);
+  }
+
+  /**
+   * Bulk Register Flags
+   * Register flags discovered by an SDK. Creates new flags or updates source observations on existing ones.
+   * @param flagBulkRequest  (required)
+   * @param headers Optional headers to include in the request
+   * @return ApiResponse&lt;FlagBulkResponse&gt;
+   * @throws ApiException if fails to make API call
+   */
+  public ApiResponse<FlagBulkResponse> bulkRegisterFlagsWithHttpInfo(@jakarta.annotation.Nonnull FlagBulkRequest flagBulkRequest, Map<String, String> headers) throws ApiException {
+    HttpRequest.Builder localVarRequestBuilder = bulkRegisterFlagsRequestBuilder(flagBulkRequest, headers);
+    try {
+      HttpResponse<InputStream> localVarResponse = memberVarHttpClient.send(
+          localVarRequestBuilder.build(),
+          HttpResponse.BodyHandlers.ofInputStream());
+      if (memberVarResponseInterceptor != null) {
+        memberVarResponseInterceptor.accept(localVarResponse);
+      }
+      InputStream localVarResponseBody = null;
+      try {
+        if (localVarResponse.statusCode()/ 100 != 2) {
+          throw getApiException("bulkRegisterFlags", localVarResponse);
+        }
+        localVarResponseBody = ApiClient.getResponseBody(localVarResponse);
+        if (localVarResponseBody == null) {
+          return new ApiResponse<FlagBulkResponse>(
+              localVarResponse.statusCode(),
+              localVarResponse.headers().map(),
+              null
+          );
+        }
+
+        
+        
+        String responseBody = new String(localVarResponseBody.readAllBytes());
+        FlagBulkResponse responseValue = responseBody.isBlank()? null: memberVarObjectMapper.readValue(responseBody, new TypeReference<FlagBulkResponse>() {});
+        
+
+        return new ApiResponse<FlagBulkResponse>(
+            localVarResponse.statusCode(),
+            localVarResponse.headers().map(),
+            responseValue
+        );
+      } finally {
+        if (localVarResponseBody != null) {
+          localVarResponseBody.close();
+        }
+      }
+    } catch (IOException e) {
+      throw new ApiException(e);
+    }
+    catch (InterruptedException e) {
+      Thread.currentThread().interrupt();
+      throw new ApiException(e);
+    }
+  }
+
+  private HttpRequest.Builder bulkRegisterFlagsRequestBuilder(@jakarta.annotation.Nonnull FlagBulkRequest flagBulkRequest, Map<String, String> headers) throws ApiException {
+    // verify the required parameter 'flagBulkRequest' is set
+    if (flagBulkRequest == null) {
+      throw new ApiException(400, "Missing the required parameter 'flagBulkRequest' when calling bulkRegisterFlags");
+    }
+
+    HttpRequest.Builder localVarRequestBuilder = HttpRequest.newBuilder();
+
+    String localVarPath = "/api/v1/flags/bulk";
+
+    localVarRequestBuilder.uri(URI.create(memberVarBaseUri + localVarPath));
+
+    localVarRequestBuilder.header("Content-Type", "application/vnd.api+json");
+    localVarRequestBuilder.header("Accept", "application/vnd.api+json");
+
+    try {
+      byte[] localVarPostBody = memberVarObjectMapper.writeValueAsBytes(flagBulkRequest);
+      localVarRequestBuilder.method("POST", HttpRequest.BodyPublishers.ofByteArray(localVarPostBody));
+    } catch (IOException e) {
+      throw new ApiException(e);
+    }
+    if (memberVarReadTimeout != null) {
+      localVarRequestBuilder.timeout(memberVarReadTimeout);
+    }
+    // Add custom headers if provided
+    localVarRequestBuilder = HttpRequestBuilderExtensions.withAdditionalHeaders(localVarRequestBuilder, headers);
+    if (memberVarInterceptor != null) {
+      memberVarInterceptor.accept(localVarRequestBuilder);
+    }
+    return localVarRequestBuilder;
   }
 
   /**
@@ -512,23 +637,25 @@ public class FlagsApi {
    * List Flags
    * List all feature flags for the authenticated account.
    * @param filterType  (optional)
+   * @param filterManaged  (optional)
    * @return FlagListResponse
    * @throws ApiException if fails to make API call
    */
-  public FlagListResponse listFlags(@jakarta.annotation.Nullable String filterType) throws ApiException {
-    return listFlags(filterType, null);
+  public FlagListResponse listFlags(@jakarta.annotation.Nullable String filterType, @jakarta.annotation.Nullable Boolean filterManaged) throws ApiException {
+    return listFlags(filterType, filterManaged, null);
   }
 
   /**
    * List Flags
    * List all feature flags for the authenticated account.
    * @param filterType  (optional)
+   * @param filterManaged  (optional)
    * @param headers Optional headers to include in the request
    * @return FlagListResponse
    * @throws ApiException if fails to make API call
    */
-  public FlagListResponse listFlags(@jakarta.annotation.Nullable String filterType, Map<String, String> headers) throws ApiException {
-    ApiResponse<FlagListResponse> localVarResponse = listFlagsWithHttpInfo(filterType, headers);
+  public FlagListResponse listFlags(@jakarta.annotation.Nullable String filterType, @jakarta.annotation.Nullable Boolean filterManaged, Map<String, String> headers) throws ApiException {
+    ApiResponse<FlagListResponse> localVarResponse = listFlagsWithHttpInfo(filterType, filterManaged, headers);
     return localVarResponse.getData();
   }
 
@@ -536,23 +663,25 @@ public class FlagsApi {
    * List Flags
    * List all feature flags for the authenticated account.
    * @param filterType  (optional)
+   * @param filterManaged  (optional)
    * @return ApiResponse&lt;FlagListResponse&gt;
    * @throws ApiException if fails to make API call
    */
-  public ApiResponse<FlagListResponse> listFlagsWithHttpInfo(@jakarta.annotation.Nullable String filterType) throws ApiException {
-    return listFlagsWithHttpInfo(filterType, null);
+  public ApiResponse<FlagListResponse> listFlagsWithHttpInfo(@jakarta.annotation.Nullable String filterType, @jakarta.annotation.Nullable Boolean filterManaged) throws ApiException {
+    return listFlagsWithHttpInfo(filterType, filterManaged, null);
   }
 
   /**
    * List Flags
    * List all feature flags for the authenticated account.
    * @param filterType  (optional)
+   * @param filterManaged  (optional)
    * @param headers Optional headers to include in the request
    * @return ApiResponse&lt;FlagListResponse&gt;
    * @throws ApiException if fails to make API call
    */
-  public ApiResponse<FlagListResponse> listFlagsWithHttpInfo(@jakarta.annotation.Nullable String filterType, Map<String, String> headers) throws ApiException {
-    HttpRequest.Builder localVarRequestBuilder = listFlagsRequestBuilder(filterType, headers);
+  public ApiResponse<FlagListResponse> listFlagsWithHttpInfo(@jakarta.annotation.Nullable String filterType, @jakarta.annotation.Nullable Boolean filterManaged, Map<String, String> headers) throws ApiException {
+    HttpRequest.Builder localVarRequestBuilder = listFlagsRequestBuilder(filterType, filterManaged, headers);
     try {
       HttpResponse<InputStream> localVarResponse = memberVarHttpClient.send(
           localVarRequestBuilder.build(),
@@ -599,7 +728,7 @@ public class FlagsApi {
     }
   }
 
-  private HttpRequest.Builder listFlagsRequestBuilder(@jakarta.annotation.Nullable String filterType, Map<String, String> headers) throws ApiException {
+  private HttpRequest.Builder listFlagsRequestBuilder(@jakarta.annotation.Nullable String filterType, @jakarta.annotation.Nullable Boolean filterManaged, Map<String, String> headers) throws ApiException {
 
     HttpRequest.Builder localVarRequestBuilder = HttpRequest.newBuilder();
 
@@ -610,6 +739,8 @@ public class FlagsApi {
     String localVarQueryParameterBaseName;
     localVarQueryParameterBaseName = "filter[type]";
     localVarQueryParams.addAll(ApiClient.parameterToPairs("filter[type]", filterType));
+    localVarQueryParameterBaseName = "filter[managed]";
+    localVarQueryParams.addAll(ApiClient.parameterToPairs("filter[managed]", filterManaged));
 
     if (!localVarQueryParams.isEmpty() || localVarQueryStringJoiner.length() != 0) {
       StringJoiner queryJoiner = new StringJoiner("&");

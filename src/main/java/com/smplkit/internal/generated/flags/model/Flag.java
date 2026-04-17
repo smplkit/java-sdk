@@ -50,6 +50,8 @@ import com.smplkit.internal.generated.flags.ApiClient;
   Flag.JSON_PROPERTY_DEFAULT,
   Flag.JSON_PROPERTY_VALUES,
   Flag.JSON_PROPERTY_ENVIRONMENTS,
+  Flag.JSON_PROPERTY_MANAGED,
+  Flag.JSON_PROPERTY_SOURCES,
   Flag.JSON_PROPERTY_CREATED_AT,
   Flag.JSON_PROPERTY_UPDATED_AT
 })
@@ -77,6 +79,12 @@ public class Flag {
   @jakarta.annotation.Nullable
   private Map<String, FlagEnvironment> environments = new HashMap<>();
 
+  public static final String JSON_PROPERTY_MANAGED = "managed";
+  private JsonNullable<Boolean> managed = JsonNullable.<Boolean>undefined();
+
+  public static final String JSON_PROPERTY_SOURCES = "sources";
+  private JsonNullable<List<Map<String, Object>>> sources = JsonNullable.<List<Map<String, Object>>>undefined();
+
   public static final String JSON_PROPERTY_CREATED_AT = "created_at";
   private JsonNullable<OffsetDateTime> createdAt = JsonNullable.<OffsetDateTime>undefined();
 
@@ -88,10 +96,12 @@ public class Flag {
 
   @JsonCreator
   public Flag(
+    @JsonProperty(JSON_PROPERTY_SOURCES) List<Map<String, Object>> sources, 
     @JsonProperty(JSON_PROPERTY_CREATED_AT) OffsetDateTime createdAt, 
     @JsonProperty(JSON_PROPERTY_UPDATED_AT) OffsetDateTime updatedAt
   ) {
   this();
+    this.sources = sources == null ? JsonNullable.<List<Map<String, Object>>>undefined() : JsonNullable.of(sources);
     this.createdAt = createdAt == null ? JsonNullable.<OffsetDateTime>undefined() : JsonNullable.of(createdAt);
     this.updatedAt = updatedAt == null ? JsonNullable.<OffsetDateTime>undefined() : JsonNullable.of(updatedAt);
   }
@@ -276,6 +286,66 @@ public class Flag {
   }
 
 
+  public Flag managed(@jakarta.annotation.Nullable Boolean managed) {
+    this.managed = JsonNullable.<Boolean>of(managed);
+    return this;
+  }
+
+  /**
+   * True if admin-managed, false if auto-discovered
+   * @return managed
+   */
+  @jakarta.annotation.Nullable
+  @JsonIgnore
+  public Boolean getManaged() {
+        return managed.orElse(null);
+  }
+
+  @JsonProperty(value = JSON_PROPERTY_MANAGED, required = false)
+  @JsonInclude(value = JsonInclude.Include.USE_DEFAULTS)
+
+  public JsonNullable<Boolean> getManaged_JsonNullable() {
+    return managed;
+  }
+  
+  @JsonProperty(JSON_PROPERTY_MANAGED)
+  public void setManaged_JsonNullable(JsonNullable<Boolean> managed) {
+    this.managed = managed;
+  }
+
+  public void setManaged(@jakarta.annotation.Nullable Boolean managed) {
+    this.managed = JsonNullable.<Boolean>of(managed);
+  }
+
+
+  /**
+   * Get sources
+   * @return sources
+   */
+  @jakarta.annotation.Nullable
+  @JsonIgnore
+  public List<Map<String, Object>> getSources() {
+    
+    if (sources == null) {
+      sources = JsonNullable.<List<Map<String, Object>>>undefined();
+    }
+    return sources.orElse(null);
+  }
+
+  @JsonProperty(value = JSON_PROPERTY_SOURCES, required = false)
+  @JsonInclude(value = JsonInclude.Include.USE_DEFAULTS)
+
+  public JsonNullable<List<Map<String, Object>>> getSources_JsonNullable() {
+    return sources;
+  }
+  
+  @JsonProperty(JSON_PROPERTY_SOURCES)
+  private void setSources_JsonNullable(JsonNullable<List<Map<String, Object>>> sources) {
+    this.sources = sources;
+  }
+
+
+
   /**
    * Get createdAt
    * @return createdAt
@@ -350,6 +420,8 @@ public class Flag {
         Objects.equals(this._default, flag._default) &&
         equalsNullable(this.values, flag.values) &&
         Objects.equals(this.environments, flag.environments) &&
+        equalsNullable(this.managed, flag.managed) &&
+        equalsNullable(this.sources, flag.sources) &&
         equalsNullable(this.createdAt, flag.createdAt) &&
         equalsNullable(this.updatedAt, flag.updatedAt);
   }
@@ -360,7 +432,7 @@ public class Flag {
 
   @Override
   public int hashCode() {
-    return Objects.hash(name, hashCodeNullable(description), type, _default, hashCodeNullable(values), environments, hashCodeNullable(createdAt), hashCodeNullable(updatedAt));
+    return Objects.hash(name, hashCodeNullable(description), type, _default, hashCodeNullable(values), environments, hashCodeNullable(managed), hashCodeNullable(sources), hashCodeNullable(createdAt), hashCodeNullable(updatedAt));
   }
 
   private static <T> int hashCodeNullable(JsonNullable<T> a) {
@@ -380,6 +452,8 @@ public class Flag {
     sb.append("    _default: ").append(toIndentedString(_default)).append("\n");
     sb.append("    values: ").append(toIndentedString(values)).append("\n");
     sb.append("    environments: ").append(toIndentedString(environments)).append("\n");
+    sb.append("    managed: ").append(toIndentedString(managed)).append("\n");
+    sb.append("    sources: ").append(toIndentedString(sources)).append("\n");
     sb.append("    createdAt: ").append(toIndentedString(createdAt)).append("\n");
     sb.append("    updatedAt: ").append(toIndentedString(updatedAt)).append("\n");
     sb.append("}");
@@ -463,6 +537,20 @@ public class Flag {
           joiner.add(getEnvironments().get(_key).toUrlQueryString(String.format(java.util.Locale.ROOT, "%senvironments%s%s", prefix, suffix,
               "".equals(suffix) ? "" : String.format(java.util.Locale.ROOT, "%s%d%s", containerPrefix, _key, containerSuffix))));
         }
+      }
+    }
+
+    // add `managed` to the URL query string
+    if (getManaged() != null) {
+      joiner.add(String.format(java.util.Locale.ROOT, "%smanaged%s=%s", prefix, suffix, ApiClient.urlEncode(ApiClient.valueToString(getManaged()))));
+    }
+
+    // add `sources` to the URL query string
+    if (getSources() != null) {
+      for (int i = 0; i < getSources().size(); i++) {
+        joiner.add(String.format(java.util.Locale.ROOT, "%ssources%s%s=%s", prefix, suffix,
+            "".equals(suffix) ? "" : String.format(java.util.Locale.ROOT, "%s%d%s", containerPrefix, i, containerSuffix),
+            ApiClient.urlEncode(ApiClient.valueToString(getSources().get(i)))));
       }
     }
 
