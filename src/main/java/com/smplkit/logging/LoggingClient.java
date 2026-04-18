@@ -31,6 +31,10 @@ import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.Executors;
+import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.ScheduledFuture;
+import java.util.concurrent.TimeUnit;
 import java.util.function.Consumer;
 import java.util.logging.Level;
 
@@ -74,6 +78,11 @@ public final class LoggingClient {
     private final Map<String, List<Consumer<LoggerChangeEvent>>> keyListeners = new ConcurrentHashMap<>();
     private volatile SharedWebSocket wsManager;
 
+    // Post-startup registration buffer
+    private final LoggerRegistrationBuffer loggerBuffer = new LoggerRegistrationBuffer();
+    private final ScheduledExecutorService loggerFlushExecutor;
+    private volatile ScheduledFuture<?> loggerFlushFuture;
+
     // WS event handlers (stored as fields so they can be unregistered)
     private final java.util.function.Consumer<java.util.Map<String, Object>> loggerChangedHandler =
             this::handleLoggerChanged;
@@ -98,6 +107,11 @@ public final class LoggingClient {
         this.httpClient = httpClient;
         this.apiKey = apiKey;
         this.management = new LoggingManagement(this);
+        this.loggerFlushExecutor = Executors.newSingleThreadScheduledExecutor(r -> {
+            Thread t = new Thread(r, "smplkit-logger-flush");
+            t.setDaemon(true);
+            return t;
+        });
     }
 
     // -----------------------------------------------------------------------
@@ -219,24 +233,25 @@ public final class LoggingClient {
             autoLoadAdapters();
         }
 
-        // 2. Discover existing loggers from all adapters
-        List<DiscoveredLogger> allDiscovered = new ArrayList<>();
+        // 2. Discover existing loggers — add each to the registration buffer
+        int discoveredCount = 0;
         for (LoggingAdapter adapter : adapters) {
             try {
                 List<DiscoveredLogger> discovered = adapter.discover();
-                allDiscovered.addAll(discovered);
                 for (DiscoveredLogger dl : discovered) {
                     String normalized = normalizeKey(dl.name());
                     nameMap.put(dl.name(), normalized);
+                    loggerBuffer.add(normalized, dl.level(), dl.resolvedLevel(), service, environment);
                     Debug.log("discovery", "discovered logger: " + normalized + " (level=" + dl.level() + ")");
+                    discoveredCount++;
                 }
             } catch (Exception e) {
                 LOG.log(Level.WARNING, "Adapter " + adapter.name() + " discover() failed", e);
             }
         }
-        Debug.log("lifecycle", "discovered " + allDiscovered.size() + " loggers from adapters");
-        if (metrics != null && !allDiscovered.isEmpty()) {
-            metrics.record("logging.loggers_discovered", allDiscovered.size(), "loggers");
+        Debug.log("lifecycle", "discovered " + discoveredCount + " loggers from adapters");
+        if (metrics != null && discoveredCount > 0) {
+            metrics.record("logging.loggers_discovered", discoveredCount, "loggers");
         }
 
         // 3. Install hooks for new logger detection
@@ -249,13 +264,11 @@ public final class LoggingClient {
         }
         Debug.log("registration", "installed hooks on " + adapters.size() + " adapters");
 
-        // 4. Bulk-register discovered loggers with the server so it learns their levels
-        if (!allDiscovered.isEmpty()) {
-            try {
-                bulkRegister(allDiscovered);
-            } catch (Exception e) {
-                LOG.log(Level.WARNING, "Failed to bulk-register loggers with server", e);
-            }
+        // 4. Flush buffer — bulk-registers all discovered loggers with the server
+        try {
+            flushLoggerBuffer();
+        } catch (Exception e) {
+            LOG.log(Level.WARNING, "Failed to bulk-register loggers with server", e);
         }
         Debug.log("registration", "initial registration flush complete");
 
@@ -275,6 +288,10 @@ public final class LoggingClient {
             wsManager.on("group_changed", groupChangedHandler);
             wsManager.on("group_deleted", groupChangedHandler);
         }
+
+        // 7. Start periodic flush for loggers discovered after start()
+        loggerFlushFuture = loggerFlushExecutor.scheduleAtFixedRate(
+                this::flushLoggerBufferSafe, 30, 30, TimeUnit.SECONDS);
 
         started = true;
     }
@@ -440,6 +457,28 @@ public final class LoggingClient {
         String normalized = normalizeKey(originalName);
         Debug.log("discovery", "new logger from hook: " + normalized + " (level=" + level + ")");
         nameMap.put(originalName, normalized);
+        loggerBuffer.add(normalized, level, level, service, environment);
+
+        if (loggerBuffer.pendingCount() >= 50) {
+            Thread t = new Thread(this::flushLoggerBufferSafe, "smplkit-logger-flush-eager");
+            t.setDaemon(true);
+            t.start();
+        }
+
+        // If already started, apply managed level from cache immediately
+        if (started) {
+            Map<String, Object> entry = loggersCache.get(normalized);
+            if (entry != null && Boolean.TRUE.equals(entry.get("managed"))) {
+                String resolved = resolveLevel(normalized, environment, loggersCache, groupsCache);
+                for (LoggingAdapter adapter : adapters) {
+                    try {
+                        adapter.applyLevel(originalName, resolved);
+                    } catch (Exception e) {
+                        // ignore adapter errors
+                    }
+                }
+            }
+        }
     }
 
     private void handleLoggerChanged(Map<String, Object> data) {
@@ -469,36 +508,45 @@ public final class LoggingClient {
     // -----------------------------------------------------------------------
 
     /**
-     * Sends discovered logger metadata to the server via the bulk-register endpoint.
-     *
-     * <p>Each item carries:</p>
-     * <ul>
-     *   <li>{@code level} — the explicitly-configured level, or {@code undefined} (absent from
-     *       JSON) if the logger inherits its level from a parent.</li>
-     *   <li>{@code resolved_level} — the effective level after framework inheritance; always
-     *       present and non-null.</li>
-     * </ul>
+     * Drains the registration buffer and sends all pending loggers to the server via
+     * the bulk-register endpoint. No-op if the buffer is empty.
      */
-    private void bulkRegister(List<DiscoveredLogger> discovered) throws ApiException {
+    private void flushLoggerBuffer() {
+        List<LoggerRegistrationEntry> batch = loggerBuffer.drain();
+        if (batch.isEmpty()) return;
+
         LoggerBulkRequest req = new LoggerBulkRequest();
-        for (DiscoveredLogger dl : discovered) {
-            String normalized = normalizeKey(dl.name());
+        for (LoggerRegistrationEntry entry : batch) {
             LoggerBulkItem item = new LoggerBulkItem();
-            item.setId(normalized);
+            item.setId(entry.id());
 
             // level: only set when explicitly configured on the logger
-            if (dl.level() != null) {
-                item.setLevel_JsonNullable(JsonNullable.of(dl.level()));
+            if (entry.level() != null) {
+                item.setLevel_JsonNullable(JsonNullable.of(entry.level()));
             }
-            // resolved_level: always set — this is the effective level after inheritance
-            item.setResolvedLevel(dl.resolvedLevel());
+            // resolved_level: always set — effective level after framework inheritance
+            item.setResolvedLevel(entry.resolvedLevel());
 
-            if (service != null) item.setService(service);
-            if (environment != null) item.setEnvironment(environment);
+            if (entry.service() != null) item.setService(entry.service());
+            if (entry.environment() != null) item.setEnvironment(entry.environment());
 
             req.addLoggersItem(item);
         }
-        loggersApi.bulkRegisterLoggers(req);
+
+        try {
+            loggersApi.bulkRegisterLoggers(req);
+            Debug.log("registration", "bulk-registered " + batch.size() + " logger(s)");
+        } catch (Exception e) {
+            LOG.log(Level.WARNING, "Bulk logger registration failed", e);
+        }
+    }
+
+    private void flushLoggerBufferSafe() {
+        try {
+            flushLoggerBuffer();
+        } catch (Exception e) {
+            LOG.log(Level.FINE, "Logger buffer flush failed", e);
+        }
     }
 
     @SuppressWarnings("unchecked")
@@ -622,6 +670,11 @@ public final class LoggingClient {
     /** Releases resources and removes logging hooks. */
     public void close() {
         Debug.log("lifecycle", "LoggingClient.close() called");
+        if (loggerFlushFuture != null) {
+            loggerFlushFuture.cancel(false);
+            loggerFlushFuture = null;
+        }
+        loggerFlushExecutor.shutdownNow();
         if (wsManager != null) {
             wsManager.off("logger_changed", loggerChangedHandler);
             wsManager.off("logger_deleted", loggerChangedHandler);
@@ -747,5 +800,55 @@ public final class LoggingClient {
     /** Simulates a group_changed WebSocket event (for testing). */
     void simulateGroupChanged(Map<String, Object> data) {
         handleGroupChanged(data);
+    }
+
+    /** Simulates a new logger detected by adapter hook (for testing). */
+    void simulateNewLogger(String name, String level) {
+        onNewLogger(name, level);
+    }
+
+    /** Returns the number of loggers pending registration in the buffer (for testing). */
+    int getLoggerBufferPendingCount() {
+        return loggerBuffer.pendingCount();
+    }
+
+    /** Returns true if the periodic flush future is active (for testing). */
+    boolean isFlushScheduled() {
+        ScheduledFuture<?> f = loggerFlushFuture;
+        return f != null && !f.isDone();
+    }
+
+    // -----------------------------------------------------------------------
+    // Inner types
+    // -----------------------------------------------------------------------
+
+    private record LoggerRegistrationEntry(
+            String id, String level, String resolvedLevel, String service, String environment) {}
+
+    private static final class LoggerRegistrationBuffer {
+        private final Set<String> seen = new HashSet<>();
+        private final List<LoggerRegistrationEntry> pending = new ArrayList<>();
+        private final Object lock = new Object();
+
+        void add(String id, String level, String resolvedLevel, String service, String environment) {
+            synchronized (lock) {
+                if (seen.add(id)) {
+                    pending.add(new LoggerRegistrationEntry(id, level, resolvedLevel, service, environment));
+                }
+            }
+        }
+
+        List<LoggerRegistrationEntry> drain() {
+            synchronized (lock) {
+                if (pending.isEmpty()) return List.of();
+                List<LoggerRegistrationEntry> batch = new ArrayList<>(pending);
+                pending.clear();
+                return batch;
+            }
+        }
+
+        int pendingCount() {
+            synchronized (lock) { return pending.size(); }
+        }
     }
 }
