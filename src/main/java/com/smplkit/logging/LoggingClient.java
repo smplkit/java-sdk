@@ -265,11 +265,8 @@ public final class LoggingClient {
         Debug.log("registration", "installed hooks on " + adapters.size() + " adapters");
 
         // 4. Flush buffer — bulk-registers all discovered loggers with the server
-        try {
-            flushLoggerBuffer();
-        } catch (Exception e) {
-            LOG.log(Level.WARNING, "Failed to bulk-register loggers with server", e);
-        }
+        // (flushLoggerBuffer catches all exceptions internally)
+        flushLoggerBuffer();
         Debug.log("registration", "initial registration flush complete");
 
         // 5. Fetch all loggers and groups, resolve and apply levels
@@ -542,11 +539,7 @@ public final class LoggingClient {
     }
 
     private void flushLoggerBufferSafe() {
-        try {
-            flushLoggerBuffer();
-        } catch (Exception e) {
-            LOG.log(Level.FINE, "Logger buffer flush failed", e);
-        }
+        flushLoggerBuffer(); // all exceptions handled internally
     }
 
     @SuppressWarnings("unchecked")

@@ -1358,6 +1358,32 @@ class LoggingClientTest {
     }
 
     @Test
+    void onNewLogger_silencesAdapterApplyLevelException() throws ApiException {
+        // Adapter throws during applyLevel — should be silently swallowed
+        LoggingAdapter mockAdapter = mock(LoggingAdapter.class);
+        when(mockAdapter.name()).thenReturn("test");
+        when(mockAdapter.discover()).thenReturn(List.of());
+        doThrow(new RuntimeException("adapter blow-up")).when(mockAdapter).applyLevel(any(), any());
+        client.registerAdapter(mockAdapter);
+
+        String key = "com.acme.throwing";
+        LoggerResource lr = buildLoggerResource(key, key, key, "WARN");
+        lr.getAttributes().setManaged(true);
+        LoggerListResponse loggerResp = new LoggerListResponse();
+        loggerResp.setData(new ArrayList<>(List.of(lr)));
+        when(mockLoggersApi.listLoggers((Boolean) null, null, null)).thenReturn(loggerResp);
+
+        LogGroupListResponse groupResp = new LogGroupListResponse();
+        groupResp.setData(new ArrayList<>());
+        when(mockLogGroupsApi.listLogGroups()).thenReturn(groupResp);
+
+        client.start();
+
+        // Should not throw even though applyLevel throws
+        assertDoesNotThrow(() -> client.simulateNewLogger(key, "INFO"));
+    }
+
+    @Test
     void onNewLogger_triggersEagerFlushAtThreshold() throws ApiException, InterruptedException {
         stubEmptyResponses();
         LoggingAdapter mockAdapter = mock(LoggingAdapter.class);
