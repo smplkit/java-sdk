@@ -12,6 +12,8 @@ import com.smplkit.internal.generated.app.model.ContextBulkItem;
 import com.smplkit.internal.generated.app.model.ContextBulkRegister;
 import com.smplkit.internal.generated.flags.ApiException;
 import com.smplkit.internal.generated.flags.api.FlagsApi;
+import com.smplkit.internal.generated.flags.model.FlagBulkItem;
+import com.smplkit.internal.generated.flags.model.FlagBulkRequest;
 import com.smplkit.internal.generated.flags.model.FlagEnvironment;
 import com.smplkit.internal.generated.flags.model.FlagListResponse;
 import com.smplkit.internal.generated.flags.model.FlagResource;
@@ -31,10 +33,12 @@ import java.time.OffsetDateTime;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.ScheduledExecutorService;
@@ -104,6 +108,10 @@ public final class FlagsClient {
     private final ConcurrentLinkedQueue<Map<String, Object>> pendingContexts = new ConcurrentLinkedQueue<>();
     private final ScheduledExecutorService contextFlushExecutor;
     private ScheduledFuture<?> contextFlushFuture;
+
+    // Flag registration buffer
+    private final FlagRegistrationBuffer flagBuffer = new FlagRegistrationBuffer();
+    private ScheduledFuture<?> flagFlushFuture;
 
     // Change listeners
     private final List<ListenerEntry> listeners = Collections.synchronizedList(new ArrayList<>());
@@ -199,6 +207,12 @@ public final class FlagsClient {
         Flag<Boolean> handle = new Flag<>(this, id, id, "BOOLEAN", defaultValue,
                 null, null, null, null, null, Boolean.class);
         handles.put(id, handle);
+        flagBuffer.add(id, "BOOLEAN", defaultValue, parentService, environment);
+        if (flagBuffer.pendingCount() >= 50) {
+            Thread t = new Thread(this::flushFlagsSafe, "smplkit-flag-flush-eager");
+            t.setDaemon(true);
+            t.start();
+        }
         return handle;
     }
 
@@ -206,6 +220,12 @@ public final class FlagsClient {
         Flag<String> handle = new Flag<>(this, id, id, "STRING", defaultValue,
                 null, null, null, null, null, String.class);
         handles.put(id, handle);
+        flagBuffer.add(id, "STRING", defaultValue, parentService, environment);
+        if (flagBuffer.pendingCount() >= 50) {
+            Thread t = new Thread(this::flushFlagsSafe, "smplkit-flag-flush-eager");
+            t.setDaemon(true);
+            t.start();
+        }
         return handle;
     }
 
@@ -213,6 +233,12 @@ public final class FlagsClient {
         Flag<Number> handle = new Flag<>(this, id, id, "NUMERIC", defaultValue,
                 null, null, null, null, null, Number.class);
         handles.put(id, handle);
+        flagBuffer.add(id, "NUMERIC", defaultValue, parentService, environment);
+        if (flagBuffer.pendingCount() >= 50) {
+            Thread t = new Thread(this::flushFlagsSafe, "smplkit-flag-flush-eager");
+            t.setDaemon(true);
+            t.start();
+        }
         return handle;
     }
 
@@ -221,6 +247,12 @@ public final class FlagsClient {
         Flag<Object> handle = new Flag<>(this, id, id, "JSON", defaultValue,
                 null, null, null, null, null, Object.class);
         handles.put(id, handle);
+        flagBuffer.add(id, "JSON", defaultValue, parentService, environment);
+        if (flagBuffer.pendingCount() >= 50) {
+            Thread t = new Thread(this::flushFlagsSafe, "smplkit-flag-flush-eager");
+            t.setDaemon(true);
+            t.start();
+        }
         return handle;
     }
 
@@ -240,6 +272,10 @@ public final class FlagsClient {
     void _connectInternal() {
         if (connected) return;
         Debug.log("websocket", "flags runtime initializing");
+
+        // Flush discovered flags before fetching definitions
+        flushFlagsSafe();
+
         fetchAllFlags();
         resolutionCache.clear();
 
@@ -253,6 +289,11 @@ public final class FlagsClient {
 
         connected = true;
         Debug.log("websocket", "flags runtime connected");
+
+        if (contextFlushExecutor != null && flagFlushFuture == null) {
+            flagFlushFuture = contextFlushExecutor.scheduleAtFixedRate(
+                    this::flushFlagsSafe, 30, 30, TimeUnit.SECONDS);
+        }
 
         if (contextFlushExecutor != null && contextFlushFuture == null) {
             contextFlushFuture = contextFlushExecutor.scheduleAtFixedRate(
@@ -481,6 +522,34 @@ public final class FlagsClient {
 
     private void flushContextsSafe() {
         flushContexts();
+    }
+
+    void flushFlags() {
+        List<FlagRegistrationEntry> batch = flagBuffer.drain();
+        if (batch.isEmpty()) return;
+        try {
+            FlagBulkRequest req = new FlagBulkRequest();
+            for (FlagRegistrationEntry entry : batch) {
+                FlagBulkItem item = new FlagBulkItem();
+                item.setId(entry.id());
+                item.setType(entry.type());
+                item.setDefault(entry.defaultValue());
+                if (entry.service() != null) item.setService(entry.service());
+                if (entry.environment() != null) item.setEnvironment(entry.environment());
+                req.addFlagsItem(item);
+            }
+            flagsApi.bulkRegisterFlags(req);
+        } catch (Exception e) {
+            LOG.log(Level.WARNING, "Flag registration flush failed", e);
+        }
+    }
+
+    private void flushFlagsSafe() {
+        try {
+            flushFlags();
+        } catch (Exception e) {
+            LOG.log(Level.WARNING, "Flag registration flush failed unexpectedly", e);
+        }
     }
 
     private void fetchAllFlags() {
@@ -731,6 +800,10 @@ public final class FlagsClient {
     /** Resets runtime state (for testing). */
     void disconnect() {
         connected = false;
+        if (flagFlushFuture != null) {
+            flagFlushFuture.cancel(false);
+            flagFlushFuture = null;
+        }
         if (contextFlushFuture != null) {
             contextFlushFuture.cancel(false);
             contextFlushFuture = null;
@@ -745,4 +818,39 @@ public final class FlagsClient {
     }
 
     private record ListenerEntry(String id, Consumer<FlagChangeEvent> listener) {}
+
+    // -----------------------------------------------------------------------
+    // Inner: flag registration buffer
+    // -----------------------------------------------------------------------
+
+    record FlagRegistrationEntry(String id, String type, Object defaultValue,
+                                         String service, String environment) {}
+
+    static final class FlagRegistrationBuffer {
+        private final Set<String> seen = new HashSet<>();
+        private final List<FlagRegistrationEntry> pending = new ArrayList<>();
+        private final Object lock = new Object();
+
+        void add(String id, String type, Object defaultValue, String service, String environment) {
+            synchronized (lock) {
+                if (seen.add(id)) {
+                    pending.add(new FlagRegistrationEntry(id, type, defaultValue, service, environment));
+                }
+            }
+        }
+
+        List<FlagRegistrationEntry> drain() {
+            synchronized (lock) {
+                List<FlagRegistrationEntry> batch = new ArrayList<>(pending);
+                pending.clear();
+                return batch;
+            }
+        }
+
+        int pendingCount() {
+            synchronized (lock) {
+                return pending.size();
+            }
+        }
+    }
 }
