@@ -256,20 +256,50 @@ try (SmplClient client = SmplClient.builder()
 }
 ```
 
-## API Key Resolution
+## Configuration
 
-The API key is resolved using the following priority:
+All settings are resolved from three sources, in order of precedence:
 
-1. **Explicit argument:** `.apiKey(...)` on the builder.
-2. **Environment variable:** `SMPLKIT_API_KEY`.
-3. **Configuration file:** `api_key` under `[default]` in `~/.smplkit`:
+1. **Builder methods** — highest priority, always wins.
+2. **Environment variables** — e.g. `SMPLKIT_API_KEY`, `SMPLKIT_ENVIRONMENT`.
+3. **Configuration file** (`~/.smplkit`) — INI-format with profile support.
+4. **Defaults** — built-in SDK defaults.
+
+### Configuration File
+
+The `~/.smplkit` file supports a `[common]` section (applied to all profiles) and named profiles:
 
 ```ini
+[common]
+environment = production
+service = my-app
+
 [default]
-api_key = sk_api_your_key_here
+api_key = sk_api_abc123
+
+[local]
+base_domain = localhost
+scheme = http
+api_key = sk_api_local_xyz
+environment = development
+debug = true
 ```
 
-If none are set, the SDK throws `SmplException` listing all three methods.
+### Constructor Examples
+
+```java
+// Use a named profile
+SmplClient client = SmplClient.builder().profile("local").build();
+
+// Or configure explicitly
+SmplClient client = SmplClient.builder()
+    .apiKey("sk_api_...")
+    .environment("production")
+    .service("my-service")
+    .build();
+```
+
+For the complete configuration reference, see the [Configuration Guide](https://docs.smplkit.com/getting-started/configuration).
 
 ## Error Handling
 
