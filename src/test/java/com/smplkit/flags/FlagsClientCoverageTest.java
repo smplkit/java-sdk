@@ -486,6 +486,13 @@ class FlagsClientCoverageTest {
         assertThrows(SmplException.class, () -> client.management().list());
     }
 
+    @Test
+    void list_apiException_code0_mapsToSmplConnectionException() throws ApiException {
+        when(mockApi.listFlags(isNull(), isNull()))
+                .thenThrow(new ApiException("network failure"));
+        assertThrows(SmplException.class, () -> client.management().list());
+    }
+
     // --- _createFlag with environments ---
 
     @Test

@@ -2,6 +2,8 @@ package com.smplkit.errors;
 
 import org.junit.jupiter.api.Test;
 
+import java.net.UnknownHostException;
+import java.net.http.HttpConnectTimeoutException;
 import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.*;
@@ -391,5 +393,57 @@ class ApiExceptionHandlerTest {
     void toString_noErrors_showsClassAndMessage() {
         SmplException ex = new SmplException("test message", 500, null);
         assertEquals("SmplException: test message", ex.toString());
+    }
+
+    // -----------------------------------------------------------------------
+    // mapApiException(Exception) — network-error overload
+    // -----------------------------------------------------------------------
+
+    @Test
+    void networkException_unknownHost_throwsConnectionException_withHostname() throws Exception {
+        var unknownHost = new UnknownHostException("config.localhost");
+        var ioEx = new java.io.IOException("connection failed", unknownHost);
+        var wrapper = new RuntimeException(ioEx);
+
+        SmplException ex = ApiExceptionHandler.mapApiException(wrapper);
+
+        assertInstanceOf(SmplConnectionException.class, ex);
+        assertTrue(ex.getMessage().contains("config.localhost"),
+                "Expected hostname in message but got: " + ex.getMessage());
+    }
+
+    @Test
+    void networkException_connectTimeout_throwsTimeoutException() throws Exception {
+        var timeout = new HttpConnectTimeoutException("timed out");
+        var wrapper = new RuntimeException(timeout);
+
+        SmplException ex = ApiExceptionHandler.mapApiException(wrapper);
+
+        assertInstanceOf(SmplTimeoutException.class, ex);
+        assertTrue(ex.getMessage().contains("timed out"),
+                "Expected timeout message but got: " + ex.getMessage());
+    }
+
+    @Test
+    void networkException_genericIoError_throwsConnectionException() {
+        var ioEx = new java.io.IOException("connection refused");
+        var wrapper = new RuntimeException(ioEx);
+
+        SmplException ex = ApiExceptionHandler.mapApiException(wrapper);
+
+        assertInstanceOf(SmplConnectionException.class, ex);
+        assertTrue(ex.getMessage().contains("connection refused"),
+                "Expected cause message but got: " + ex.getMessage());
+    }
+
+    @Test
+    void networkException_noCause_throwsConnectionExceptionWithMessage() {
+        var wrapper = new RuntimeException("some error");
+
+        SmplException ex = ApiExceptionHandler.mapApiException(wrapper);
+
+        assertInstanceOf(SmplConnectionException.class, ex);
+        assertTrue(ex.getMessage().contains("some error"),
+                "Expected exception message but got: " + ex.getMessage());
     }
 }

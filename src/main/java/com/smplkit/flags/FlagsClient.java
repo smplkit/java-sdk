@@ -694,6 +694,9 @@ public final class FlagsClient {
     }
 
     static SmplException mapException(ApiException e) {
+        if (e.getCode() == 0) {
+            return ApiExceptionHandler.mapApiException(e);
+        }
         return ApiExceptionHandler.mapApiException(e.getCode(), e.getResponseBody());
     }
 

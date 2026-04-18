@@ -914,6 +914,14 @@ class LoggingClientTest {
     }
 
     @Test
+    void list_apiException_code0_mapsToSmplConnectionException() throws ApiException {
+        when(mockLoggersApi.listLoggers((Boolean) null, null, null))
+                .thenThrow(new ApiException("network failure"));
+
+        assertThrows(RuntimeException.class, () -> client.management().list());
+    }
+
+    @Test
     void delete_mapsApiExceptionOnDelete() throws ApiException {
         doThrow(new ApiException(500, "delete failed")).when(mockLoggersApi).deleteLogger("fail");
 

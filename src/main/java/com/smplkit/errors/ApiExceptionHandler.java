@@ -3,6 +3,7 @@ package com.smplkit.errors;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
+import java.net.http.HttpConnectTimeoutException;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
@@ -15,6 +16,37 @@ public final class ApiExceptionHandler {
     private static final ObjectMapper MAPPER = new ObjectMapper();
 
     private ApiExceptionHandler() {}
+
+    /**
+     * Maps an ApiException (from the generated client) to the appropriate SDK exception.
+     * Handles code=0 cases (network errors like DNS failures) by inspecting the cause chain.
+     *
+     * @param e the ApiException from the generated client
+     * @return the appropriate SmplException
+     */
+    public static SmplException mapApiException(Exception e) {
+        Throwable cause = e.getCause();
+        if (cause != null) {
+            // Walk the cause chain looking for a timeout or DNS failure.
+            Throwable c = cause;
+            while (c != null) {
+                if (c instanceof HttpConnectTimeoutException) {
+                    return new SmplTimeoutException("Request timed out: " + c.getMessage(), cause);
+                }
+                if (c instanceof java.net.UnknownHostException) {
+                    return new SmplConnectionException(
+                            "Cannot connect: hostname not found: " + c.getMessage(), cause);
+                }
+                c = c.getCause();
+            }
+            // Generic network error — use the immediate cause message.
+            String msg = cause.getMessage() != null ? cause.getMessage() : cause.toString();
+            return new SmplConnectionException("Cannot connect: " + msg, cause);
+        }
+        // No cause: fall back to generic message.
+        String msg = e.getMessage() != null ? e.getMessage() : e.toString();
+        return new SmplConnectionException("Cannot connect: " + msg, e);
+    }
 
     /**
      * Maps an HTTP error response to the appropriate SDK exception.

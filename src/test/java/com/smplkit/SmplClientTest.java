@@ -5,7 +5,9 @@ import com.smplkit.errors.SmplException;
 import com.smplkit.flags.FlagsClient;
 import com.smplkit.logging.LoggingClient;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.io.TempDir;
 
+import java.nio.file.Path;
 import java.time.Duration;
 
 import static org.junit.jupiter.api.Assertions.*;
@@ -101,9 +103,15 @@ class SmplClientTest {
     }
 
     @Test
-    void builderWithoutEnvironment_throwsSmplException() {
-        SmplClientBuilder builder = SmplClient.builder().apiKey("test-key").service("test-service");
-        assertThrows(SmplException.class, builder::build);
+    void builderWithoutEnvironment_throwsSmplException(@TempDir Path tempDir) {
+        String origHome = System.getProperty("user.home");
+        try {
+            System.setProperty("user.home", tempDir.toString());
+            SmplClientBuilder builder = SmplClient.builder().apiKey("test-key").service("test-service");
+            assertThrows(SmplException.class, builder::build);
+        } finally {
+            System.setProperty("user.home", origHome);
+        }
     }
 
     @Test
