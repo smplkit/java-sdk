@@ -200,11 +200,12 @@ class FlagAutoRegistrationTest {
     }
 
     @Test
-    void flushFlagsSafe_neverPropagatesException() throws ApiException {
+    void connectInternal_flushFailure_doesNotPreventConnect() throws ApiException {
         when(mockApi.bulkRegisterFlags(any())).thenThrow(new ApiException(500, "Internal Error"));
         client.booleanFlag("flag-x", false);
-        // Access via _connectInternal which calls flushFlagsSafe internally
+        // flushFlagsSafe -> flushFlags catches the exception; connect should proceed
         assertDoesNotThrow(() -> client._connectInternal());
+        assertTrue(client.isConnected());
     }
 
     // -----------------------------------------------------------------------
@@ -255,7 +256,7 @@ class FlagAutoRegistrationTest {
     // -----------------------------------------------------------------------
 
     @Test
-    void threshold50_triggersEagerFlushThread() throws Exception {
+    void threshold50_booleanFlag_triggersEagerFlushThread() throws Exception {
         CountDownLatch latch = new CountDownLatch(1);
         when(mockApi.bulkRegisterFlags(any())).thenAnswer(inv -> {
             latch.countDown();
@@ -264,7 +265,52 @@ class FlagAutoRegistrationTest {
 
         // Declare 50 flags — last one crosses threshold
         for (int i = 0; i < 50; i++) {
-            client.booleanFlag("flag-" + i, false);
+            client.booleanFlag("bool-flag-" + i, false);
+        }
+
+        assertTrue(latch.await(5, TimeUnit.SECONDS), "eager flush should have fired within 5s");
+    }
+
+    @Test
+    void threshold50_stringFlag_triggersEagerFlushThread() throws Exception {
+        CountDownLatch latch = new CountDownLatch(1);
+        when(mockApi.bulkRegisterFlags(any())).thenAnswer(inv -> {
+            latch.countDown();
+            return new FlagBulkResponse();
+        });
+
+        for (int i = 0; i < 50; i++) {
+            client.stringFlag("str-flag-" + i, "v" + i);
+        }
+
+        assertTrue(latch.await(5, TimeUnit.SECONDS), "eager flush should have fired within 5s");
+    }
+
+    @Test
+    void threshold50_numberFlag_triggersEagerFlushThread() throws Exception {
+        CountDownLatch latch = new CountDownLatch(1);
+        when(mockApi.bulkRegisterFlags(any())).thenAnswer(inv -> {
+            latch.countDown();
+            return new FlagBulkResponse();
+        });
+
+        for (int i = 0; i < 50; i++) {
+            client.numberFlag("num-flag-" + i, i);
+        }
+
+        assertTrue(latch.await(5, TimeUnit.SECONDS), "eager flush should have fired within 5s");
+    }
+
+    @Test
+    void threshold50_jsonFlag_triggersEagerFlushThread() throws Exception {
+        CountDownLatch latch = new CountDownLatch(1);
+        when(mockApi.bulkRegisterFlags(any())).thenAnswer(inv -> {
+            latch.countDown();
+            return new FlagBulkResponse();
+        });
+
+        for (int i = 0; i < 50; i++) {
+            client.jsonFlag("json-flag-" + i, Map.of("v", i));
         }
 
         assertTrue(latch.await(5, TimeUnit.SECONDS), "eager flush should have fired within 5s");

@@ -545,11 +545,7 @@ public final class FlagsClient {
     }
 
     private void flushFlagsSafe() {
-        try {
-            flushFlags();
-        } catch (Exception e) {
-            LOG.log(Level.WARNING, "Flag registration flush failed unexpectedly", e);
-        }
+        flushFlags();
     }
 
     private void fetchAllFlags() {
