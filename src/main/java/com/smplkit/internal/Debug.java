@@ -42,6 +42,11 @@ public final class Debug {
         return ENABLED;
     }
 
+    /** Programmatically enables debug output. */
+    public static void enable() {
+        ENABLED = true;
+    }
+
     /**
      * Writes a single diagnostic line to stderr when debug is enabled.
      *

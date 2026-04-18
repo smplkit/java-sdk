@@ -49,7 +49,7 @@ public final class SmplClient implements AutoCloseable {
 
     /** Computes a service base URL from scheme, subdomain, and base domain. */
     static String serviceUrl(String scheme, String subdomain, String baseDomain) {
-        return scheme + "://" + subdomain + "." + baseDomain;
+        return ConfigResolver.serviceUrl(scheme, subdomain, baseDomain);
     }
 
     private ConfigClient config;
@@ -66,22 +66,27 @@ public final class SmplClient implements AutoCloseable {
     private volatile boolean serviceContextRegistered;
 
     /**
-     * Creates a new SmplClient. Package-private; use {@link #builder()}.
+     * Creates a new SmplClient from resolved config. Package-private; use {@link #builder()}.
      */
-    SmplClient(String apiKey, String environment, String service, Duration timeout,
-               boolean disableTelemetry, String baseDomain, String scheme) {
-        this.apiKey = apiKey;
-        this.environment = environment;
-        this.service = service;
+    SmplClient(ConfigResolver.ResolvedConfig resolvedConfig, Duration timeout) {
+        this.apiKey = resolvedConfig.apiKey;
+        this.environment = resolvedConfig.environment;
+        this.service = resolvedConfig.service;
         this.timeout = timeout;
-        String appBaseUrl = serviceUrl(scheme, "app", baseDomain);
-        String configBaseUrl = serviceUrl(scheme, "config", baseDomain);
-        String flagsBaseUrl = serviceUrl(scheme, "flags", baseDomain);
-        String loggingBaseUrl = serviceUrl(scheme, "logging", baseDomain);
+
+        String configBaseUrl = ConfigResolver.serviceUrl(resolvedConfig.scheme, "config", resolvedConfig.baseDomain);
+        String flagsBaseUrl = ConfigResolver.serviceUrl(resolvedConfig.scheme, "flags", resolvedConfig.baseDomain);
+        String appBaseUrl = ConfigResolver.serviceUrl(resolvedConfig.scheme, "app", resolvedConfig.baseDomain);
+        String loggingBaseUrl = ConfigResolver.serviceUrl(resolvedConfig.scheme, "logging", resolvedConfig.baseDomain);
+
+        if (resolvedConfig.debug) {
+            Debug.enable();
+        }
+
         this.httpClient = HttpClient.newBuilder()
                 .connectTimeout(timeout)
                 .build();
-        this.metrics = disableTelemetry ? null
+        this.metrics = resolvedConfig.disableTelemetry ? null
                 : new MetricsReporter(httpClient, appBaseUrl, apiKey, environment, service);
         this.sharedWs = new SharedWebSocket(httpClient, appBaseUrl, apiKey, metrics);
         this.contextsApi = buildContextsApi(appBaseUrl, apiKey, timeout);
@@ -290,7 +295,7 @@ public final class SmplClient implements AutoCloseable {
     }
 
     /**
-     * Creates a new {@link SmplClient} with automatic API key resolution.
+     * Creates a new {@link SmplClient} with automatic resolution.
      */
     public static SmplClient create() {
         return builder().build();

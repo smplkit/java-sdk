@@ -1,7 +1,5 @@
 package com.smplkit;
 
-import com.smplkit.errors.SmplException;
-
 import java.time.Duration;
 import java.util.Objects;
 
@@ -19,16 +17,32 @@ import java.util.Objects;
  */
 public final class SmplClientBuilder {
 
+    private String profile;
     private String apiKey;
+    private String baseDomain;
+    private String scheme;
     private String environment;
     private String service;
     private Duration timeout = Duration.ofSeconds(30);
-    private boolean disableTelemetry = false;
-    private String baseDomain = SmplClient.DEFAULT_BASE_DOMAIN;
-    private String scheme = SmplClient.DEFAULT_SCHEME;
+    private Boolean debug;
+    private Boolean disableTelemetry;
 
     SmplClientBuilder() {
         // Package-private: use SmplClient.builder()
+    }
+
+    /**
+     * Sets the configuration profile to use from {@code ~/.smplkit}.
+     *
+     * <p>If not set, falls back to the {@code SMPLKIT_PROFILE} environment variable,
+     * then to {@code "default"}.</p>
+     *
+     * @param profile the profile name
+     * @return this builder
+     */
+    public SmplClientBuilder profile(String profile) {
+        this.profile = Objects.requireNonNull(profile, "profile must not be null");
+        return this;
     }
 
     /**
@@ -39,56 +53,6 @@ public final class SmplClientBuilder {
      */
     public SmplClientBuilder apiKey(String apiKey) {
         this.apiKey = Objects.requireNonNull(apiKey, "apiKey must not be null");
-        return this;
-    }
-
-    /**
-     * Sets the target environment (e.g. "production", "staging").
-     *
-     * <p>If not set, falls back to the {@code SMPLKIT_ENVIRONMENT} environment variable.
-     * Required — build() will throw if no environment can be resolved.</p>
-     *
-     * @param environment the environment name
-     * @return this builder
-     */
-    public SmplClientBuilder environment(String environment) {
-        this.environment = Objects.requireNonNull(environment, "environment must not be null");
-        return this;
-    }
-
-    /**
-     * Sets the service name.
-     *
-     * <p>If not set, falls back to the {@code SMPLKIT_SERVICE} environment variable.
-     * Required — build() will throw if no service can be resolved.</p>
-     *
-     * @param service the service name
-     * @return this builder
-     */
-    public SmplClientBuilder service(String service) {
-        this.service = Objects.requireNonNull(service, "service must not be null");
-        return this;
-    }
-
-    /**
-     * Sets the request timeout. Defaults to 30 seconds.
-     *
-     * @param timeout the timeout duration
-     * @return this builder
-     */
-    public SmplClientBuilder timeout(Duration timeout) {
-        this.timeout = Objects.requireNonNull(timeout, "timeout must not be null");
-        return this;
-    }
-
-    /**
-     * Disables SDK telemetry reporting. When true, no usage metrics are sent.
-     *
-     * @param disable true to disable telemetry
-     * @return this builder
-     */
-    public SmplClientBuilder disableTelemetry(boolean disable) {
-        this.disableTelemetry = disable;
         return this;
     }
 
@@ -118,60 +82,84 @@ public final class SmplClientBuilder {
     }
 
     /**
+     * Sets the target environment (e.g. "production", "staging").
+     *
+     * <p>If not set, falls back to the {@code SMPLKIT_ENVIRONMENT} environment variable,
+     * then to the config file. Required — build() will throw if no environment can be resolved.</p>
+     *
+     * @param environment the environment name
+     * @return this builder
+     */
+    public SmplClientBuilder environment(String environment) {
+        this.environment = Objects.requireNonNull(environment, "environment must not be null");
+        return this;
+    }
+
+    /**
+     * Sets the service name.
+     *
+     * <p>If not set, falls back to the {@code SMPLKIT_SERVICE} environment variable,
+     * then to the config file. Required — build() will throw if no service can be resolved.</p>
+     *
+     * @param service the service name
+     * @return this builder
+     */
+    public SmplClientBuilder service(String service) {
+        this.service = Objects.requireNonNull(service, "service must not be null");
+        return this;
+    }
+
+    /**
+     * Sets the request timeout. Defaults to 30 seconds.
+     *
+     * @param timeout the timeout duration
+     * @return this builder
+     */
+    public SmplClientBuilder timeout(Duration timeout) {
+        this.timeout = Objects.requireNonNull(timeout, "timeout must not be null");
+        return this;
+    }
+
+    /**
+     * Enables SDK debug output. When true, verbose diagnostics are written to stderr.
+     *
+     * @param debug true to enable debug output
+     * @return this builder
+     */
+    public SmplClientBuilder debug(boolean debug) {
+        this.debug = debug;
+        return this;
+    }
+
+    /**
+     * Disables SDK telemetry reporting. When true, no usage metrics are sent.
+     *
+     * @param disable true to disable telemetry
+     * @return this builder
+     */
+    public SmplClientBuilder disableTelemetry(boolean disable) {
+        this.disableTelemetry = disable;
+        return this;
+    }
+
+    /**
      * Builds and returns a new {@link SmplClient}.
      *
-     * <p>Resolution order:</p>
+     * <p>Resolution order (4-step):</p>
      * <ol>
-     *   <li>Environment: {@link #environment(String)} or {@code SMPLKIT_ENVIRONMENT} env var</li>
-     *   <li>Service: {@link #service(String)} or {@code SMPLKIT_SERVICE} env var</li>
-     *   <li>API key: {@link #apiKey(String)} or {@code SMPLKIT_API_KEY} env var or {@code ~/.smplkit} file</li>
+     *   <li>SDK hardcoded defaults</li>
+     *   <li>Configuration file ({@code ~/.smplkit}): [common] + selected profile</li>
+     *   <li>Environment variables ({@code SMPLKIT_*})</li>
+     *   <li>Builder arguments ({@link #apiKey}, {@link #environment}, etc.)</li>
      * </ol>
      *
      * @return the configured client
-     * @throws SmplException if environment, service, or API key cannot be resolved
+     * @throws com.smplkit.errors.SmplException if environment, service, or API key cannot be resolved
      */
     public SmplClient build() {
-        String resolvedEnvironment = resolveEnvironment();
-        String resolvedService = resolveService();
-        String resolvedKey = ApiKeyResolver.resolve(apiKey, resolvedEnvironment);
-        return new SmplClient(resolvedKey, resolvedEnvironment, resolvedService, timeout, disableTelemetry, baseDomain, scheme);
-    }
-
-    private String resolveEnvironment() {
-        return resolveEnvironment(System.getenv("SMPLKIT_ENVIRONMENT"));
-    }
-
-    /** Package-private for testing. */
-    String resolveEnvironment(String envVar) {
-        if (environment != null && !environment.isEmpty()) {
-            return environment;
-        }
-        if (envVar != null && !envVar.isEmpty()) {
-            return envVar;
-        }
-        throw new SmplException(
-                "No environment provided. Set one of:\n" +
-                "  1. Call .environment() on the builder\n" +
-                "  2. Set the SMPLKIT_ENVIRONMENT environment variable",
-                0, null);
-    }
-
-    private String resolveService() {
-        return resolveService(System.getenv("SMPLKIT_SERVICE"));
-    }
-
-    /** Package-private for testing. */
-    String resolveService(String envVar) {
-        if (service != null && !service.isEmpty()) {
-            return service;
-        }
-        if (envVar != null && !envVar.isEmpty()) {
-            return envVar;
-        }
-        throw new SmplException(
-                "No service provided. Set one of:\n" +
-                "  1. Call .service() on the builder\n" +
-                "  2. Set the SMPLKIT_SERVICE environment variable",
-                0, null);
+        ConfigResolver.ResolvedConfig config = ConfigResolver.resolve(
+                profile, apiKey, baseDomain, scheme, environment, service,
+                debug, disableTelemetry);
+        return new SmplClient(config, timeout);
     }
 }

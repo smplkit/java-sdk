@@ -103,39 +103,13 @@ class SmplClientTest {
     @Test
     void builderWithoutEnvironment_throwsSmplException() {
         SmplClientBuilder builder = SmplClient.builder().apiKey("test-key").service("test-service");
-        assertThrows(SmplException.class, () -> builder.resolveEnvironment(null));
-    }
-
-    @Test
-    void builderWithEnvironmentEnvVar_resolvesFromEnvVar() {
-        SmplClientBuilder builder = SmplClient.builder().apiKey("test-key").service("test-service");
-        assertEquals("from-env", builder.resolveEnvironment("from-env"));
-    }
-
-    @Test
-    void builderWithExplicitEnvironment_overridesEnvVar() {
-        SmplClientBuilder builder = SmplClient.builder()
-                .apiKey("test-key")
-                .environment("explicit");
-        assertEquals("explicit", builder.resolveEnvironment("from-env"));
-    }
-
-    @Test
-    void builderWithServiceEnvVar_resolvesFromEnvVar() {
-        SmplClientBuilder builder = SmplClient.builder();
-        assertEquals("svc-from-env", builder.resolveService("svc-from-env"));
-    }
-
-    @Test
-    void builderWithExplicitService_overridesEnvVar() {
-        SmplClientBuilder builder = SmplClient.builder().service("explicit-svc");
-        assertEquals("explicit-svc", builder.resolveService("from-env"));
+        assertThrows(SmplException.class, builder::build);
     }
 
     @Test
     void builderWithNoService_throwsSmplException() {
-        SmplClientBuilder builder = SmplClient.builder();
-        SmplException ex = assertThrows(SmplException.class, () -> builder.resolveService(null));
+        SmplClientBuilder builder = SmplClient.builder().apiKey("test-key").environment("test");
+        SmplException ex = assertThrows(SmplException.class, builder::build);
         assertTrue(ex.getMessage().contains("No service provided"));
         assertTrue(ex.getMessage().contains(".service()"));
         assertTrue(ex.getMessage().contains("SMPLKIT_SERVICE"));
@@ -319,7 +293,6 @@ class SmplClientTest {
 
     @Test
     void builderDefaultsToSmplkitDotCom() {
-        // Defaults: baseDomain=smplkit.com, scheme=https — just verify the builder accepts them
         try (SmplClient client = SmplClient.builder()
                 .apiKey("test-key")
                 .environment("test")
