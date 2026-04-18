@@ -41,10 +41,16 @@ import java.util.logging.Logger;
 public final class SmplClient implements AutoCloseable {
 
     private static final Logger LOG = Logger.getLogger("smplkit");
-    private static final String CONFIG_BASE_URL = "https://config.smplkit.com";
-    private static final String FLAGS_BASE_URL = "https://flags.smplkit.com";
-    private static final String APP_BASE_URL = "https://app.smplkit.com";
-    private static final String LOGGING_BASE_URL = "https://logging.smplkit.com";
+
+    /** Default base domain used when none is specified via the builder. */
+    static final String DEFAULT_BASE_DOMAIN = "smplkit.com";
+    /** Default URL scheme used when none is specified via the builder. */
+    static final String DEFAULT_SCHEME = "https";
+
+    /** Computes a service base URL from scheme, subdomain, and base domain. */
+    static String serviceUrl(String scheme, String subdomain, String baseDomain) {
+        return scheme + "://" + subdomain + "." + baseDomain;
+    }
 
     private ConfigClient config;
     private FlagsClient flags;
@@ -62,25 +68,32 @@ public final class SmplClient implements AutoCloseable {
     /**
      * Creates a new SmplClient. Package-private; use {@link #builder()}.
      */
-    SmplClient(String apiKey, String environment, String service, Duration timeout, boolean disableTelemetry) {
+    SmplClient(String apiKey, String environment, String service, Duration timeout,
+               boolean disableTelemetry, String baseDomain, String scheme) {
         this.apiKey = apiKey;
         this.environment = environment;
         this.service = service;
         this.timeout = timeout;
+        String appBaseUrl = serviceUrl(scheme, "app", baseDomain);
+        String configBaseUrl = serviceUrl(scheme, "config", baseDomain);
+        String flagsBaseUrl = serviceUrl(scheme, "flags", baseDomain);
+        String loggingBaseUrl = serviceUrl(scheme, "logging", baseDomain);
         this.httpClient = HttpClient.newBuilder()
                 .connectTimeout(timeout)
                 .build();
         this.metrics = disableTelemetry ? null
-                : new MetricsReporter(httpClient, APP_BASE_URL, apiKey, environment, service);
-        this.sharedWs = new SharedWebSocket(httpClient, APP_BASE_URL, apiKey, metrics);
-        this.contextsApi = buildContextsApi(APP_BASE_URL, apiKey, timeout);
-        this.config = buildConfigClient(httpClient, apiKey, timeout);
+                : new MetricsReporter(httpClient, appBaseUrl, apiKey, environment, service);
+        this.sharedWs = new SharedWebSocket(httpClient, appBaseUrl, apiKey, metrics);
+        this.contextsApi = buildContextsApi(appBaseUrl, apiKey, timeout);
+        this.config = buildConfigClient(httpClient, apiKey, timeout, configBaseUrl);
         this.config.setEnvironment(environment);
         this.config.setMetrics(metrics);
         this.config.setSharedWs(this.sharedWs);
-        this.flags = buildFlagsClient(httpClient, apiKey, timeout, sharedWs, environment, service);
+        this.flags = buildFlagsClient(httpClient, apiKey, timeout, sharedWs, environment, service,
+                flagsBaseUrl, appBaseUrl);
         this.flags.setMetrics(metrics);
-        this.logging = buildLoggingClient(httpClient, apiKey, timeout, environment, service);
+        this.logging = buildLoggingClient(httpClient, apiKey, timeout, environment, service,
+                loggingBaseUrl);
         this.logging.setMetrics(metrics);
         this.logging.setSharedWs(this.sharedWs);
         String maskedKey = apiKey.length() > 10 ? apiKey.substring(0, 10) + "..." : apiKey + "...";
@@ -97,12 +110,16 @@ public final class SmplClient implements AutoCloseable {
         this.timeout = timeout;
         this.httpClient = httpClient;
         this.metrics = null;
-        this.sharedWs = new SharedWebSocket(httpClient, APP_BASE_URL, apiKey);
-        this.contextsApi = buildContextsApi(APP_BASE_URL, apiKey, timeout);
-        this.config = buildConfigClient(httpClient, apiKey, timeout);
+        String appBaseUrl = serviceUrl(DEFAULT_SCHEME, "app", DEFAULT_BASE_DOMAIN);
+        this.sharedWs = new SharedWebSocket(httpClient, appBaseUrl, apiKey);
+        this.contextsApi = buildContextsApi(appBaseUrl, apiKey, timeout);
+        this.config = buildConfigClient(httpClient, apiKey, timeout,
+                serviceUrl(DEFAULT_SCHEME, "config", DEFAULT_BASE_DOMAIN));
         this.config.setEnvironment(environment);
-        this.flags = buildFlagsClient(httpClient, apiKey, timeout, sharedWs, environment, service);
-        this.logging = buildLoggingClient(httpClient, apiKey, timeout, environment, service);
+        this.flags = buildFlagsClient(httpClient, apiKey, timeout, sharedWs, environment, service,
+                serviceUrl(DEFAULT_SCHEME, "flags", DEFAULT_BASE_DOMAIN), appBaseUrl);
+        this.logging = buildLoggingClient(httpClient, apiKey, timeout, environment, service,
+                serviceUrl(DEFAULT_SCHEME, "logging", DEFAULT_BASE_DOMAIN));
     }
 
     /**
@@ -116,13 +133,15 @@ public final class SmplClient implements AutoCloseable {
         this.timeout = timeout;
         this.httpClient = httpClient;
         this.metrics = null;
-        this.sharedWs = new SharedWebSocket(httpClient, APP_BASE_URL, apiKey);
-        this.contextsApi = buildContextsApi(APP_BASE_URL, apiKey, timeout);
+        String appBaseUrl = serviceUrl(DEFAULT_SCHEME, "app", DEFAULT_BASE_DOMAIN);
+        this.sharedWs = new SharedWebSocket(httpClient, appBaseUrl, apiKey);
+        this.contextsApi = buildContextsApi(appBaseUrl, apiKey, timeout);
         this.config = config;
         this.flags = flags;
         this.flags.setParentService(service);
         this.flags.setEnvironment(environment);
-        this.logging = buildLoggingClient(httpClient, apiKey, timeout, environment, service);
+        this.logging = buildLoggingClient(httpClient, apiKey, timeout, environment, service,
+                serviceUrl(DEFAULT_SCHEME, "logging", DEFAULT_BASE_DOMAIN));
     }
 
     /**
@@ -136,13 +155,15 @@ public final class SmplClient implements AutoCloseable {
         this.timeout = timeout;
         this.httpClient = httpClient;
         this.metrics = null;
-        this.sharedWs = new SharedWebSocket(httpClient, APP_BASE_URL, apiKey);
+        String appBaseUrl = serviceUrl(DEFAULT_SCHEME, "app", DEFAULT_BASE_DOMAIN);
+        this.sharedWs = new SharedWebSocket(httpClient, appBaseUrl, apiKey);
         this.contextsApi = contextsApi;
         this.config = config;
         this.flags = flags;
         this.flags.setParentService(service);
         this.flags.setEnvironment(environment);
-        this.logging = buildLoggingClient(httpClient, apiKey, timeout, environment, service);
+        this.logging = buildLoggingClient(httpClient, apiKey, timeout, environment, service,
+                serviceUrl(DEFAULT_SCHEME, "logging", DEFAULT_BASE_DOMAIN));
 
         // Synchronous registration for testability (contextsApi is injected)
         registerServiceContext();
@@ -165,9 +186,10 @@ public final class SmplClient implements AutoCloseable {
         }
     }
 
-    private static ConfigClient buildConfigClient(HttpClient httpClient, String apiKey, Duration timeout) {
+    private static ConfigClient buildConfigClient(HttpClient httpClient, String apiKey,
+                                                   Duration timeout, String configBaseUrl) {
         ApiClient apiClient = new ApiClient();
-        apiClient.updateBaseUri(CONFIG_BASE_URL);
+        apiClient.updateBaseUri(configBaseUrl);
         apiClient.setRequestInterceptor(
                 builder -> builder.header("Authorization", "Bearer " + apiKey));
         apiClient.setReadTimeout(timeout);
@@ -177,23 +199,24 @@ public final class SmplClient implements AutoCloseable {
 
     private static FlagsClient buildFlagsClient(HttpClient httpClient, String apiKey,
                                                  Duration timeout, SharedWebSocket sharedWs,
-                                                 String environment, String service) {
+                                                 String environment, String service,
+                                                 String flagsBaseUrl, String appBaseUrl) {
         com.smplkit.internal.generated.flags.ApiClient flagsApiClient =
                 new com.smplkit.internal.generated.flags.ApiClient();
-        flagsApiClient.updateBaseUri(FLAGS_BASE_URL);
+        flagsApiClient.updateBaseUri(flagsBaseUrl);
         flagsApiClient.setRequestInterceptor(authInterceptor(apiKey));
         flagsApiClient.setReadTimeout(timeout);
         FlagsApi flagsApi = new FlagsApi(flagsApiClient);
 
         com.smplkit.internal.generated.app.ApiClient appApiClient =
                 new com.smplkit.internal.generated.app.ApiClient();
-        appApiClient.updateBaseUri(APP_BASE_URL);
+        appApiClient.updateBaseUri(appBaseUrl);
         appApiClient.setRequestInterceptor(authInterceptor(apiKey));
         appApiClient.setReadTimeout(timeout);
         ContextsApi contextsApi = new ContextsApi(appApiClient);
 
         FlagsClient client = new FlagsClient(flagsApi, contextsApi,
-                httpClient, apiKey, FLAGS_BASE_URL, APP_BASE_URL, timeout);
+                httpClient, apiKey, flagsBaseUrl, appBaseUrl, timeout);
         client.setSharedWs(sharedWs);
         client.setParentService(service);
         client.setEnvironment(environment);
@@ -216,10 +239,10 @@ public final class SmplClient implements AutoCloseable {
 
     private static LoggingClient buildLoggingClient(HttpClient httpClient, String apiKey,
                                                     Duration timeout, String environment,
-                                                    String service) {
+                                                    String service, String loggingBaseUrl) {
         com.smplkit.internal.generated.logging.ApiClient loggingApiClient =
                 new com.smplkit.internal.generated.logging.ApiClient();
-        loggingApiClient.updateBaseUri(LOGGING_BASE_URL);
+        loggingApiClient.updateBaseUri(loggingBaseUrl);
         loggingApiClient.setRequestInterceptor(authInterceptor(apiKey));
         loggingApiClient.setReadTimeout(timeout);
         LoggersApi loggersApi = new LoggersApi(loggingApiClient);

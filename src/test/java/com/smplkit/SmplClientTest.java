@@ -296,4 +296,81 @@ class SmplClientTest {
             assertEquals("test-service", client.service());
         }
     }
+
+    // ---- baseDomain / scheme tests ----
+
+    @Test
+    void serviceUrl_defaultDomain() {
+        assertEquals("https://config.smplkit.com",
+                SmplClient.serviceUrl("https", "config", "smplkit.com"));
+        assertEquals("https://flags.smplkit.com",
+                SmplClient.serviceUrl("https", "flags", "smplkit.com"));
+        assertEquals("https://app.smplkit.com",
+                SmplClient.serviceUrl("https", "app", "smplkit.com"));
+        assertEquals("https://logging.smplkit.com",
+                SmplClient.serviceUrl("https", "logging", "smplkit.com"));
+    }
+
+    @Test
+    void serviceUrl_customDomainAndScheme() {
+        assertEquals("http://config.internal.example.com",
+                SmplClient.serviceUrl("http", "config", "internal.example.com"));
+    }
+
+    @Test
+    void builderDefaultsToSmplkitDotCom() {
+        // Defaults: baseDomain=smplkit.com, scheme=https — just verify the builder accepts them
+        try (SmplClient client = SmplClient.builder()
+                .apiKey("test-key")
+                .environment("test")
+                .service("test-service")
+                .disableTelemetry(true)
+                .build()) {
+            assertNotNull(client);
+        }
+    }
+
+    @Test
+    void builderAcceptsCustomBaseDomain() {
+        try (SmplClient client = SmplClient.builder()
+                .apiKey("test-key")
+                .environment("test")
+                .service("test-service")
+                .baseDomain("internal.example.com")
+                .disableTelemetry(true)
+                .build()) {
+            assertNotNull(client);
+        }
+    }
+
+    @Test
+    void builderAcceptsCustomScheme() {
+        try (SmplClient client = SmplClient.builder()
+                .apiKey("test-key")
+                .environment("test")
+                .service("test-service")
+                .scheme("http")
+                .disableTelemetry(true)
+                .build()) {
+            assertNotNull(client);
+        }
+    }
+
+    @Test
+    void builderRejectsNullBaseDomain() {
+        assertThrows(NullPointerException.class, () ->
+                SmplClient.builder().baseDomain(null));
+    }
+
+    @Test
+    void builderRejectsNullScheme() {
+        assertThrows(NullPointerException.class, () ->
+                SmplClient.builder().scheme(null));
+    }
+
+    @Test
+    void defaultConstantsMatchExpectedValues() {
+        assertEquals("smplkit.com", SmplClient.DEFAULT_BASE_DOMAIN);
+        assertEquals("https", SmplClient.DEFAULT_SCHEME);
+    }
 }

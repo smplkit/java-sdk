@@ -24,6 +24,8 @@ public final class SmplClientBuilder {
     private String service;
     private Duration timeout = Duration.ofSeconds(30);
     private boolean disableTelemetry = false;
+    private String baseDomain = SmplClient.DEFAULT_BASE_DOMAIN;
+    private String scheme = SmplClient.DEFAULT_SCHEME;
 
     SmplClientBuilder() {
         // Package-private: use SmplClient.builder()
@@ -91,6 +93,31 @@ public final class SmplClientBuilder {
     }
 
     /**
+     * Overrides the base domain for all service URLs. Defaults to {@code "smplkit.com"}.
+     *
+     * <p>Service URLs are computed as {@code {scheme}://{service}.{baseDomain}}.
+     * Use this to point the SDK at a self-hosted or staging deployment.</p>
+     *
+     * @param baseDomain the base domain (e.g. {@code "smplkit.com"})
+     * @return this builder
+     */
+    public SmplClientBuilder baseDomain(String baseDomain) {
+        this.baseDomain = Objects.requireNonNull(baseDomain, "baseDomain must not be null");
+        return this;
+    }
+
+    /**
+     * Overrides the URL scheme for all service URLs. Defaults to {@code "https"}.
+     *
+     * @param scheme the URL scheme (e.g. {@code "http"} or {@code "https"})
+     * @return this builder
+     */
+    public SmplClientBuilder scheme(String scheme) {
+        this.scheme = Objects.requireNonNull(scheme, "scheme must not be null");
+        return this;
+    }
+
+    /**
      * Builds and returns a new {@link SmplClient}.
      *
      * <p>Resolution order:</p>
@@ -107,7 +134,7 @@ public final class SmplClientBuilder {
         String resolvedEnvironment = resolveEnvironment();
         String resolvedService = resolveService();
         String resolvedKey = ApiKeyResolver.resolve(apiKey, resolvedEnvironment);
-        return new SmplClient(resolvedKey, resolvedEnvironment, resolvedService, timeout, disableTelemetry);
+        return new SmplClient(resolvedKey, resolvedEnvironment, resolvedService, timeout, disableTelemetry, baseDomain, scheme);
     }
 
     private String resolveEnvironment() {
