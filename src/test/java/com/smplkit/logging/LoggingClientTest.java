@@ -26,6 +26,8 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
+import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.BiConsumer;
 import java.util.function.Consumer;
@@ -1254,6 +1256,222 @@ class LoggingClientTest {
                 .thenThrow(new ApiException(500, "server error"));
 
         assertDoesNotThrow(() -> client.simulateGroupChanged(Map.of("id", "some-group")));
+    }
+
+    // -----------------------------------------------------------------------
+    // LoggerRegistrationBuffer behavior (via simulateNewLogger test helpers)
+    // -----------------------------------------------------------------------
+
+    @Test
+    void onNewLogger_addsToBuffer() {
+        assertEquals(0, client.getLoggerBufferPendingCount());
+        client.simulateNewLogger("com.acme.Foo", "INFO");
+        assertEquals(1, client.getLoggerBufferPendingCount());
+    }
+
+    @Test
+    void onNewLogger_deduplicatesByNormalizedKey() {
+        client.simulateNewLogger("com.acme.Foo", "INFO");
+        client.simulateNewLogger("com.acme.foo", "DEBUG"); // same normalized key
+        client.simulateNewLogger("COM.ACME.FOO", "WARN");  // same after lowercasing
+        assertEquals(1, client.getLoggerBufferPendingCount());
+    }
+
+    @Test
+    void onNewLogger_drainedByStartFlush() throws ApiException {
+        stubEmptyResponses();
+        LoggingAdapter mockAdapter = mock(LoggingAdapter.class);
+        when(mockAdapter.name()).thenReturn("test");
+        when(mockAdapter.discover()).thenReturn(List.of(
+                new DiscoveredLogger("com.acme.startup", "INFO")
+        ));
+        client.registerAdapter(mockAdapter);
+
+        assertEquals(0, client.getLoggerBufferPendingCount()); // empty before start
+        client.start();
+
+        // After start() flush, initial discovery is registered and buffer is drained
+        assertEquals(0, client.getLoggerBufferPendingCount());
+    }
+
+    @Test
+    void onNewLogger_appliesCachedLevelWhenStartedAndManaged() throws ApiException {
+        // Set up a managed logger in the server response
+        LoggingAdapter mockAdapter = mock(LoggingAdapter.class);
+        when(mockAdapter.name()).thenReturn("test");
+        when(mockAdapter.discover()).thenReturn(List.of());
+        client.registerAdapter(mockAdapter);
+
+        String key = "com.acme.managed";
+        LoggerResource lr = buildLoggerResource(key, key, key, "WARN");
+        lr.getAttributes().setManaged(true);
+        LoggerListResponse loggerResp = new LoggerListResponse();
+        loggerResp.setData(new ArrayList<>(List.of(lr)));
+        when(mockLoggersApi.listLoggers((Boolean) null, null, null)).thenReturn(loggerResp);
+
+        LogGroupListResponse groupResp = new LogGroupListResponse();
+        groupResp.setData(new ArrayList<>());
+        when(mockLogGroupsApi.listLogGroups()).thenReturn(groupResp);
+
+        client.start(); // fetches and caches the managed logger
+
+        // Simulate post-startup logger discovery
+        client.simulateNewLogger(key, "INFO");
+
+        // applyLevel should have been called with the resolved level "WARN" from cache
+        verify(mockAdapter).applyLevel(key, "WARN");
+    }
+
+    @Test
+    void onNewLogger_doesNotApplyLevelWhenNotManaged() throws ApiException {
+        LoggingAdapter mockAdapter = mock(LoggingAdapter.class);
+        when(mockAdapter.name()).thenReturn("test");
+        when(mockAdapter.discover()).thenReturn(List.of());
+        client.registerAdapter(mockAdapter);
+
+        String key = "com.acme.unmanaged";
+        LoggerResource lr = buildLoggerResource(key, key, key, "DEBUG");
+        lr.getAttributes().setManaged(false);
+        LoggerListResponse loggerResp = new LoggerListResponse();
+        loggerResp.setData(new ArrayList<>(List.of(lr)));
+        when(mockLoggersApi.listLoggers((Boolean) null, null, null)).thenReturn(loggerResp);
+
+        LogGroupListResponse groupResp = new LogGroupListResponse();
+        groupResp.setData(new ArrayList<>());
+        when(mockLogGroupsApi.listLogGroups()).thenReturn(groupResp);
+
+        client.start();
+        client.simulateNewLogger(key, "DEBUG");
+
+        verify(mockAdapter, never()).applyLevel(any(), any());
+    }
+
+    @Test
+    void onNewLogger_doesNotApplyLevelBeforeStart() throws ApiException {
+        LoggingAdapter mockAdapter = mock(LoggingAdapter.class);
+        when(mockAdapter.name()).thenReturn("test");
+        client.registerAdapter(mockAdapter);
+
+        client.simulateNewLogger("com.acme.early", "INFO");
+
+        verify(mockAdapter, never()).applyLevel(any(), any());
+    }
+
+    @Test
+    void onNewLogger_triggersEagerFlushAtThreshold() throws ApiException, InterruptedException {
+        stubEmptyResponses();
+        LoggingAdapter mockAdapter = mock(LoggingAdapter.class);
+        when(mockAdapter.name()).thenReturn("test");
+        when(mockAdapter.discover()).thenReturn(List.of());
+        client.registerAdapter(mockAdapter);
+        client.start(); // drains any buffered loggers
+
+        // Add 50 distinct post-startup loggers to trigger eager flush
+        for (int i = 0; i < 50; i++) {
+            client.simulateNewLogger("com.acme.dynamic" + i, "INFO");
+        }
+
+        // Eager flush spawns a daemon thread — verify bulk registration fires
+        verify(mockLoggersApi, timeout(2000).atLeastOnce()).bulkRegisterLoggers(any());
+    }
+
+    // -----------------------------------------------------------------------
+    // flushLoggerBuffer payload correctness
+    // -----------------------------------------------------------------------
+
+    @Test
+    void flushLoggerBuffer_sendsCorrectPayloadForPostStartupLogger() throws ApiException {
+        stubEmptyResponses();
+        LoggingAdapter mockAdapter = mock(LoggingAdapter.class);
+        when(mockAdapter.name()).thenReturn("test");
+        when(mockAdapter.discover()).thenReturn(List.of());
+        client.registerAdapter(mockAdapter);
+        client.start(); // drains initial buffer (empty)
+
+        // Simulate a post-startup logger with explicit level
+        client.simulateNewLogger("com.acme.Dynamic", "WARN");
+
+        // Force flush by adding 49 more to hit threshold
+        for (int i = 0; i < 49; i++) {
+            client.simulateNewLogger("com.acme.extra" + i, "INFO");
+        }
+
+        ArgumentCaptor<LoggerBulkRequest> captor = ArgumentCaptor.forClass(LoggerBulkRequest.class);
+        verify(mockLoggersApi, timeout(2000).atLeastOnce()).bulkRegisterLoggers(captor.capture());
+
+        // Find the item for com.acme.dynamic (normalized)
+        LoggerBulkItem dynamicItem = captor.getAllValues().stream()
+                .flatMap(r -> r.getLoggers().stream())
+                .filter(i -> "com.acme.dynamic".equals(i.getId()))
+                .findFirst()
+                .orElse(null);
+
+        assertNotNull(dynamicItem);
+        assertEquals("WARN", dynamicItem.getLevel());
+        assertEquals("WARN", dynamicItem.getResolvedLevel());
+        assertEquals("test-service", dynamicItem.getService());
+        assertEquals("production", dynamicItem.getEnvironment());
+    }
+
+    @Test
+    void flushLoggerBuffer_bulkPayloadContainsOnlyExpectedFields() throws ApiException {
+        stubEmptyResponses();
+        LoggingAdapter mockAdapter = mock(LoggingAdapter.class);
+        when(mockAdapter.name()).thenReturn("test");
+        when(mockAdapter.discover()).thenReturn(List.of(
+                new DiscoveredLogger("com.acme.discovered", "INFO", "INFO")
+        ));
+        client.registerAdapter(mockAdapter);
+        client.start();
+
+        ArgumentCaptor<LoggerBulkRequest> captor = ArgumentCaptor.forClass(LoggerBulkRequest.class);
+        verify(mockLoggersApi).bulkRegisterLoggers(captor.capture());
+
+        LoggerBulkItem item = captor.getValue().getLoggers().get(0);
+        // auto-discovery sets id, level, resolvedLevel, service, environment only
+        assertEquals("com.acme.discovered", item.getId());
+        assertEquals("INFO", item.getLevel());
+        assertEquals("INFO", item.getResolvedLevel());
+        assertEquals("test-service", item.getService());
+        assertEquals("production", item.getEnvironment());
+        // LoggerBulkItem has no managed field — this verifies we only set expected fields
+    }
+
+    // -----------------------------------------------------------------------
+    // Periodic flush scheduling
+    // -----------------------------------------------------------------------
+
+    @Test
+    void start_schedulesPeriodicFlush() throws ApiException {
+        stubEmptyResponses();
+        LoggingAdapter mockAdapter = mock(LoggingAdapter.class);
+        when(mockAdapter.name()).thenReturn("test");
+        when(mockAdapter.discover()).thenReturn(List.of());
+        client.registerAdapter(mockAdapter);
+
+        assertFalse(client.isFlushScheduled());
+        client.start();
+        assertTrue(client.isFlushScheduled());
+    }
+
+    @Test
+    void close_cancelsFlushFuture() throws ApiException {
+        stubEmptyResponses();
+        LoggingAdapter mockAdapter = mock(LoggingAdapter.class);
+        when(mockAdapter.name()).thenReturn("test");
+        when(mockAdapter.discover()).thenReturn(List.of());
+        client.registerAdapter(mockAdapter);
+        client.start();
+        assertTrue(client.isFlushScheduled());
+
+        client.close();
+        assertFalse(client.isFlushScheduled());
+    }
+
+    @Test
+    void close_withoutStart_doesNotThrow() {
+        // close() before start() should be safe (no future scheduled, executor not started)
+        assertDoesNotThrow(() -> client.close());
     }
 
     // -----------------------------------------------------------------------
