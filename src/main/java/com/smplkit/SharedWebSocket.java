@@ -216,7 +216,8 @@ public final class SharedWebSocket {
             connectToServer();
         } catch (Exception e) {
             if (!closed) {
-                LOG.log(Level.WARNING, "SharedWebSocket initial connect failed", e);
+                LOG.warning("SharedWebSocket initial connect failed: " + e.getMessage());
+                LOG.log(Level.FINE, "SharedWebSocket initial connect failed", e);
                 reconnect(0);
             }
         }
@@ -259,7 +260,8 @@ public final class SharedWebSocket {
                 LOG.info("SharedWebSocket reconnected successfully");
                 return;
             } catch (Exception e) {
-                LOG.log(Level.WARNING, "SharedWebSocket reconnect attempt " + (attempt + 1) + " failed", e);
+                LOG.warning("SharedWebSocket reconnect attempt " + (attempt + 1) + " failed: " + e.getMessage());
+                LOG.log(Level.FINE, "SharedWebSocket reconnect attempt " + (attempt + 1) + " failed", e);
                 attempt++;
             }
         }
@@ -344,7 +346,8 @@ public final class SharedWebSocket {
                 if (metrics != null) {
                     metrics.recordGauge("platform.websocket_connections", 0, "connections");
                 }
-                LOG.log(Level.WARNING, "SharedWebSocket error, reconnecting...", error);
+                LOG.warning("SharedWebSocket error, reconnecting...: " + error.getMessage());
+                LOG.log(Level.FINE, "SharedWebSocket error, reconnecting...", error);
                 closedLatch.countDown();
                 Thread reconnectThread = new Thread(
                         () -> reconnect(0), "smplkit-ws-reconnect");

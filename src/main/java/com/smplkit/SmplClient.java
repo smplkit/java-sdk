@@ -187,7 +187,8 @@ public final class SmplClient implements AutoCloseable {
                     .contexts(List.of(envItem, svcItem));
             contextsApi.bulkRegisterContexts(reqBody);
         } catch (Exception e) {
-            LOG.log(Level.WARNING, "Failed to register service context", e);
+            LOG.warning("Failed to register service context: " + e.getMessage());
+            LOG.log(Level.FINE, "Failed to register service context", e);
         }
     }
 

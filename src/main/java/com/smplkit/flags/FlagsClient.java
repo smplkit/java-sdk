@@ -540,7 +540,8 @@ public final class FlagsClient {
             }
             flagsApi.bulkRegisterFlags(req);
         } catch (Exception e) {
-            LOG.log(Level.WARNING, "Flag registration flush failed", e);
+            LOG.warning("Flag registration flush failed: " + e.getMessage());
+            LOG.log(Level.FINE, "Flag registration flush failed", e);
         }
     }
 

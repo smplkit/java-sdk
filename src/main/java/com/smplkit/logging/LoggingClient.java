@@ -274,7 +274,8 @@ public final class LoggingClient {
         try {
             fetchAndApply("start");
         } catch (Exception e) {
-            LOG.log(Level.WARNING, "Failed to fetch/apply logging levels during start", e);
+            LOG.warning("Failed to fetch/apply logging levels during start: " + e.getMessage());
+            LOG.log(Level.FINE, "Failed to fetch/apply logging levels during start", e);
         }
         Debug.log("api", "fetched " + loggersCache.size() + " loggers and " + groupsCache.size() + " groups");
 
@@ -485,7 +486,8 @@ public final class LoggingClient {
         try {
             fetchAndApply("websocket");
         } catch (Exception e) {
-            LOG.log(Level.WARNING, "Failed to re-apply levels after logger WS event", e);
+            LOG.warning("Failed to re-apply levels after logger WS event: " + e.getMessage());
+            LOG.log(Level.FINE, "Failed to re-apply levels after logger WS event", e);
         }
     }
 
@@ -496,7 +498,8 @@ public final class LoggingClient {
         try {
             fetchAndApply("websocket");
         } catch (Exception e) {
-            LOG.log(Level.WARNING, "Failed to re-apply levels after group WS event", e);
+            LOG.warning("Failed to re-apply levels after group WS event: " + e.getMessage());
+            LOG.log(Level.FINE, "Failed to re-apply levels after group WS event", e);
         }
     }
 
@@ -534,7 +537,8 @@ public final class LoggingClient {
             loggersApi.bulkRegisterLoggers(req);
             Debug.log("registration", "bulk-registered " + batch.size() + " logger(s)");
         } catch (Exception e) {
-            LOG.log(Level.WARNING, "Bulk logger registration failed", e);
+            LOG.warning("Bulk logger registration failed: " + e.getMessage());
+            LOG.log(Level.FINE, "Bulk logger registration failed", e);
         }
     }
 
