@@ -348,7 +348,7 @@ public final class FlagsClient {
             ContextBulkRegister reqBody = new ContextBulkRegister().contexts(items);
             contextsApi.bulkRegisterContexts(reqBody);
         } catch (Exception e) {
-            LOG.log(Level.FINE, "Context flush failed", e);
+            Debug.log("registration", "Context flush failed: " + e);
         }
     }
 
@@ -456,7 +456,7 @@ public final class FlagsClient {
                         return rule.get("value");
                     }
                 } catch (Exception e) {
-                    LOG.log(Level.FINE, "JSON Logic evaluation error for rule in flag " + key, e);
+                    Debug.log("flags", "JSON Logic evaluation error for rule in flag " + key + ": " + e);
                 }
             }
         }
@@ -541,7 +541,7 @@ public final class FlagsClient {
             flagsApi.bulkRegisterFlags(req);
         } catch (Exception e) {
             LOG.warning("Flag registration flush failed: " + e.getMessage());
-            LOG.log(Level.FINE, "Flag registration flush failed", e);
+            Debug.log("registration", "Flag registration flush failed: " + e);
         }
     }
 

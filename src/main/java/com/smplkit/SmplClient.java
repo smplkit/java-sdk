@@ -18,7 +18,6 @@ import java.net.http.HttpClient;
 import java.time.Duration;
 import java.util.List;
 import java.util.Map;
-import java.util.logging.Level;
 import java.util.logging.Logger;
 
 /**
@@ -188,7 +187,7 @@ public final class SmplClient implements AutoCloseable {
             contextsApi.bulkRegisterContexts(reqBody);
         } catch (Exception e) {
             LOG.warning("Failed to register service context: " + e.getMessage());
-            LOG.log(Level.FINE, "Failed to register service context", e);
+            Debug.log("lifecycle", "Failed to register service context: " + e);
         }
     }
 

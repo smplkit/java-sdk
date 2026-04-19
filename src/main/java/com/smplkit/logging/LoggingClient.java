@@ -259,7 +259,8 @@ public final class LoggingClient {
             try {
                 adapter.installHook(this::onNewLogger);
             } catch (Exception e) {
-                LOG.log(Level.FINE, "Adapter " + adapter.name() + " installHook() failed", e);
+                LOG.warning("Adapter " + adapter.name() + " installHook() failed: " + e.getMessage());
+                Debug.log("lifecycle", "Adapter " + adapter.name() + " installHook() failed: " + e);
             }
         }
         Debug.log("registration", "installed hooks on " + adapters.size() + " adapters");
@@ -275,7 +276,7 @@ public final class LoggingClient {
             fetchAndApply("start");
         } catch (Exception e) {
             LOG.warning("Failed to fetch/apply logging levels during start: " + e.getMessage());
-            LOG.log(Level.FINE, "Failed to fetch/apply logging levels during start", e);
+            Debug.log("resolution", "Failed to fetch/apply logging levels during start: " + e);
         }
         Debug.log("api", "fetched " + loggersCache.size() + " loggers and " + groupsCache.size() + " groups");
 
@@ -435,9 +436,9 @@ public final class LoggingClient {
                 LoggingAdapter adapter = (LoggingAdapter) Class.forName(adapterClass)
                         .getDeclaredConstructor().newInstance();
                 adapters.add(adapter);
-                LOG.fine("Loaded logging adapter: " + adapter.name());
+                Debug.log("lifecycle", "Loaded logging adapter: " + adapter.name());
             } catch (ClassNotFoundException e) {
-                LOG.fine("Skipped adapter " + adapterClass + " (dependency not on classpath)");
+                Debug.log("lifecycle", "Skipped adapter " + adapterClass + " (dependency not on classpath)");
             } catch (Exception e) {
                 LOG.warning("Failed to load adapter " + adapterClass + ": " + e.getMessage());
             }
@@ -487,7 +488,7 @@ public final class LoggingClient {
             fetchAndApply("websocket");
         } catch (Exception e) {
             LOG.warning("Failed to re-apply levels after logger WS event: " + e.getMessage());
-            LOG.log(Level.FINE, "Failed to re-apply levels after logger WS event", e);
+            Debug.log("websocket", "Failed to re-apply levels after logger WS event: " + e);
         }
     }
 
@@ -499,7 +500,7 @@ public final class LoggingClient {
             fetchAndApply("websocket");
         } catch (Exception e) {
             LOG.warning("Failed to re-apply levels after group WS event: " + e.getMessage());
-            LOG.log(Level.FINE, "Failed to re-apply levels after group WS event", e);
+            Debug.log("websocket", "Failed to re-apply levels after group WS event: " + e);
         }
     }
 
@@ -538,7 +539,7 @@ public final class LoggingClient {
             Debug.log("registration", "bulk-registered " + batch.size() + " logger(s)");
         } catch (Exception e) {
             LOG.warning("Bulk logger registration failed: " + e.getMessage());
-            LOG.log(Level.FINE, "Bulk logger registration failed", e);
+            Debug.log("registration", "Bulk logger registration failed: " + e);
         }
     }
 
@@ -620,8 +621,8 @@ public final class LoggingClient {
                         adapter.applyLevel(originalName, resolved);
                         Debug.log("adapter", "applied level " + resolved + " to logger " + originalName);
                     } catch (Exception e) {
-                        LOG.log(Level.FINE, "Adapter " + adapter.name()
-                                + " applyLevel failed for " + originalName, e);
+                        Debug.log("adapter", "Adapter " + adapter.name()
+                                + " applyLevel failed for " + originalName + ": " + e);
                     }
                 }
 
@@ -634,8 +635,7 @@ public final class LoggingClient {
                 LoggerChangeEvent event = new LoggerChangeEvent(normalizedKey, logLevel, source);
                 fireChangeListeners(normalizedKey, event);
             } catch (IllegalArgumentException e) {
-                LOG.log(Level.FINE, "Unknown level ''{0}'' for logger ''{1}''",
-                        new Object[]{resolved, normalizedKey});
+                Debug.log("resolution", "Unknown level '" + resolved + "' for logger '" + normalizedKey + "'");
             }
         }
     }
@@ -682,7 +682,7 @@ public final class LoggingClient {
             try {
                 adapter.uninstallHook();
             } catch (Exception e) {
-                LOG.log(Level.FINE, "Adapter " + adapter.name() + " uninstallHook() failed", e);
+                Debug.log("lifecycle", "Adapter " + adapter.name() + " uninstallHook() failed: " + e);
             }
         }
         started = false;

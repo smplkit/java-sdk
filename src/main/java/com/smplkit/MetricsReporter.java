@@ -18,8 +18,6 @@ import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.ScheduledFuture;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.locks.ReentrantLock;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 
 /**
  * Accumulates SDK telemetry metrics and periodically flushes them to the platform.
@@ -28,7 +26,6 @@ import java.util.logging.Logger;
  */
 public final class MetricsReporter implements AutoCloseable {
 
-    private static final Logger LOG = Logger.getLogger("smplkit.metrics");
     private static final ObjectMapper OBJECT_MAPPER = new ObjectMapper();
     private static final long DEFAULT_FLUSH_INTERVAL_SECONDS = 60;
 
@@ -171,7 +168,7 @@ public final class MetricsReporter implements AutoCloseable {
                     .build();
             httpClient.send(request, HttpResponse.BodyHandlers.discarding());
         } catch (Exception e) {
-            LOG.log(Level.FINE, "Metrics flush failed", e);
+            com.smplkit.internal.Debug.log("metrics", "Metrics flush failed: " + e);
         }
     }
 
