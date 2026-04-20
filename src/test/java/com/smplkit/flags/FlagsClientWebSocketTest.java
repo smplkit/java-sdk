@@ -77,6 +77,7 @@ class FlagsClientWebSocketTest {
         client.simulateFlagDeleted();
 
         assertNotNull(received.get());
+        assertEquals("websocket", received.get().source());
     }
 
     @Test
@@ -107,6 +108,18 @@ class FlagsClientWebSocketTest {
         client._connectInternal();
 
         assertTrue(client.isConnected());
+    }
+
+    @Test
+    void connect_registersWsListenersByName() throws ApiException {
+        setupList("feature-x", Map.of());
+        SharedWebSocket mockWs = mock(SharedWebSocket.class);
+        client.setSharedWs(mockWs);
+
+        client._connectInternal();
+
+        verify(mockWs).on(eq("flag_changed"), any());
+        verify(mockWs).on(eq("flag_deleted"), any());
     }
 
     @Test

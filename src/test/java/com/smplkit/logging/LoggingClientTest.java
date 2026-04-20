@@ -1206,6 +1206,23 @@ class LoggingClientTest {
     }
 
     @Test
+    void simulateLoggerChanged_firesListenerWithWebsocketSource() throws ApiException {
+        setupManagedLoggerForStartWithAdapter("com.acme.wstest", "INFO");
+
+        AtomicReference<LoggerChangeEvent> received = new AtomicReference<>();
+        client.onChange(received::set);
+
+        client.start();
+        received.set(null); // clear the start() event
+
+        // Simulate a WS logger_changed event — fetchAndApply is called with source="websocket"
+        client.simulateLoggerChanged(Map.of("id", "com.acme.wstest"));
+
+        assertNotNull(received.get());
+        assertEquals("websocket", received.get().source());
+    }
+
+    @Test
     void simulateGroupChanged_triggersRefetch() throws ApiException {
         stubEmptyResponses();
         LoggingAdapter mockAdapter = mock(LoggingAdapter.class);
