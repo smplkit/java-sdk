@@ -25,6 +25,10 @@ import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonTypeName;
 import com.fasterxml.jackson.annotation.JsonValue;
 import java.util.Arrays;
+import org.openapitools.jackson.nullable.JsonNullable;
+import com.fasterxml.jackson.annotation.JsonIgnore;
+import org.openapitools.jackson.nullable.JsonNullable;
+import java.util.NoSuchElementException;
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 
 
@@ -38,14 +42,13 @@ import com.smplkit.internal.generated.config.ApiClient;
 @jakarta.annotation.Generated(value = "org.openapitools.codegen.languages.JavaClientCodegen", comments = "Generator version: 7.21.0")
 public class ConfigItemOverride {
   public static final String JSON_PROPERTY_VALUE = "value";
-  @jakarta.annotation.Nullable
-  private Object value = null;
+  private JsonNullable<Object> value = JsonNullable.<Object>of(null);
 
   public ConfigItemOverride() { 
   }
 
   public ConfigItemOverride value(@jakarta.annotation.Nullable Object value) {
-    this.value = value;
+    this.value = JsonNullable.<Object>of(value);
     return this;
   }
 
@@ -54,17 +57,25 @@ public class ConfigItemOverride {
    * @return value
    */
   @jakarta.annotation.Nullable
-  @JsonProperty(value = JSON_PROPERTY_VALUE, required = false)
-  @JsonInclude(value = JsonInclude.Include.ALWAYS)
+  @JsonIgnore
   public Object getValue() {
-    return value;
+        return value.orElse(null);
   }
 
-
   @JsonProperty(value = JSON_PROPERTY_VALUE, required = false)
-  @JsonInclude(value = JsonInclude.Include.ALWAYS)
-  public void setValue(@jakarta.annotation.Nullable Object value) {
+  @JsonInclude(value = JsonInclude.Include.USE_DEFAULTS)
+
+  public JsonNullable<Object> getValue_JsonNullable() {
+    return value;
+  }
+  
+  @JsonProperty(JSON_PROPERTY_VALUE)
+  public void setValue_JsonNullable(JsonNullable<Object> value) {
     this.value = value;
+  }
+
+  public void setValue(@jakarta.annotation.Nullable Object value) {
+    this.value = JsonNullable.<Object>of(value);
   }
 
 
@@ -80,12 +91,23 @@ public class ConfigItemOverride {
       return false;
     }
     ConfigItemOverride configItemOverride = (ConfigItemOverride) o;
-    return Objects.equals(this.value, configItemOverride.value);
+    return equalsNullable(this.value, configItemOverride.value);
+  }
+
+  private static <T> boolean equalsNullable(JsonNullable<T> a, JsonNullable<T> b) {
+    return a == b || (a != null && b != null && a.isPresent() && b.isPresent() && Objects.deepEquals(a.get(), b.get()));
   }
 
   @Override
   public int hashCode() {
-    return Objects.hash(value);
+    return Objects.hash(hashCodeNullable(value));
+  }
+
+  private static <T> int hashCodeNullable(JsonNullable<T> a) {
+    if (a == null) {
+      return 1;
+    }
+    return a.isPresent() ? Arrays.deepHashCode(new Object[]{a.get()}) : 31;
   }
 
   @Override
