@@ -34,7 +34,7 @@ import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 
 import com.smplkit.internal.generated.config.ApiClient;
 /**
- * Schema for a single config item.
+ * Schema for a single config item.  &#x60;&#x60;value&#x60;&#x60; may be &#x60;&#x60;None&#x60;&#x60; to represent a cleared (typed but unset) slot — e.g. after a type change that could not coerce the previous value. See ADR-024.
  */
 @JsonPropertyOrder({
   ConfigItemDefinition.JSON_PROPERTY_VALUE,
@@ -44,8 +44,7 @@ import com.smplkit.internal.generated.config.ApiClient;
 @jakarta.annotation.Generated(value = "org.openapitools.codegen.languages.JavaClientCodegen", comments = "Generator version: 7.21.0")
 public class ConfigItemDefinition {
   public static final String JSON_PROPERTY_VALUE = "value";
-  @jakarta.annotation.Nullable
-  private Object value = null;
+  private JsonNullable<Object> value = JsonNullable.<Object>of(null);
 
   /**
    * Gets or Sets type
@@ -96,7 +95,7 @@ public class ConfigItemDefinition {
   }
 
   public ConfigItemDefinition value(@jakarta.annotation.Nullable Object value) {
-    this.value = value;
+    this.value = JsonNullable.<Object>of(value);
     return this;
   }
 
@@ -105,17 +104,25 @@ public class ConfigItemDefinition {
    * @return value
    */
   @jakarta.annotation.Nullable
-  @JsonProperty(value = JSON_PROPERTY_VALUE, required = false)
-  @JsonInclude(value = JsonInclude.Include.ALWAYS)
+  @JsonIgnore
   public Object getValue() {
-    return value;
+        return value.orElse(null);
   }
 
-
   @JsonProperty(value = JSON_PROPERTY_VALUE, required = false)
-  @JsonInclude(value = JsonInclude.Include.ALWAYS)
-  public void setValue(@jakarta.annotation.Nullable Object value) {
+  @JsonInclude(value = JsonInclude.Include.USE_DEFAULTS)
+
+  public JsonNullable<Object> getValue_JsonNullable() {
+    return value;
+  }
+  
+  @JsonProperty(JSON_PROPERTY_VALUE)
+  public void setValue_JsonNullable(JsonNullable<Object> value) {
     this.value = value;
+  }
+
+  public void setValue(@jakarta.annotation.Nullable Object value) {
+    this.value = JsonNullable.<Object>of(value);
   }
 
 
@@ -195,7 +202,7 @@ public class ConfigItemDefinition {
       return false;
     }
     ConfigItemDefinition configItemDefinition = (ConfigItemDefinition) o;
-    return Objects.equals(this.value, configItemDefinition.value) &&
+    return equalsNullable(this.value, configItemDefinition.value) &&
         equalsNullable(this.type, configItemDefinition.type) &&
         equalsNullable(this.description, configItemDefinition.description);
   }
@@ -206,7 +213,7 @@ public class ConfigItemDefinition {
 
   @Override
   public int hashCode() {
-    return Objects.hash(value, hashCodeNullable(type), hashCodeNullable(description));
+    return Objects.hash(hashCodeNullable(value), hashCodeNullable(type), hashCodeNullable(description));
   }
 
   private static <T> int hashCodeNullable(JsonNullable<T> a) {
