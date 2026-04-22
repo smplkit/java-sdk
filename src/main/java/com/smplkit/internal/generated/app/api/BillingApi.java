@@ -1339,6 +1339,242 @@ public class BillingApi {
   }
 
   /**
+   * Undo Cancellation
+   * Reverse a pending cancellation; subscription will renew as normal.
+   * @param id  (required)
+   * @return SubscriptionResponse
+   * @throws ApiException if fails to make API call
+   */
+  public SubscriptionResponse uncancelSubscription(@jakarta.annotation.Nonnull UUID id) throws ApiException {
+    return uncancelSubscription(id, null);
+  }
+
+  /**
+   * Undo Cancellation
+   * Reverse a pending cancellation; subscription will renew as normal.
+   * @param id  (required)
+   * @param headers Optional headers to include in the request
+   * @return SubscriptionResponse
+   * @throws ApiException if fails to make API call
+   */
+  public SubscriptionResponse uncancelSubscription(@jakarta.annotation.Nonnull UUID id, Map<String, String> headers) throws ApiException {
+    ApiResponse<SubscriptionResponse> localVarResponse = uncancelSubscriptionWithHttpInfo(id, headers);
+    return localVarResponse.getData();
+  }
+
+  /**
+   * Undo Cancellation
+   * Reverse a pending cancellation; subscription will renew as normal.
+   * @param id  (required)
+   * @return ApiResponse&lt;SubscriptionResponse&gt;
+   * @throws ApiException if fails to make API call
+   */
+  public ApiResponse<SubscriptionResponse> uncancelSubscriptionWithHttpInfo(@jakarta.annotation.Nonnull UUID id) throws ApiException {
+    return uncancelSubscriptionWithHttpInfo(id, null);
+  }
+
+  /**
+   * Undo Cancellation
+   * Reverse a pending cancellation; subscription will renew as normal.
+   * @param id  (required)
+   * @param headers Optional headers to include in the request
+   * @return ApiResponse&lt;SubscriptionResponse&gt;
+   * @throws ApiException if fails to make API call
+   */
+  public ApiResponse<SubscriptionResponse> uncancelSubscriptionWithHttpInfo(@jakarta.annotation.Nonnull UUID id, Map<String, String> headers) throws ApiException {
+    HttpRequest.Builder localVarRequestBuilder = uncancelSubscriptionRequestBuilder(id, headers);
+    try {
+      HttpResponse<InputStream> localVarResponse = memberVarHttpClient.send(
+          localVarRequestBuilder.build(),
+          HttpResponse.BodyHandlers.ofInputStream());
+      if (memberVarResponseInterceptor != null) {
+        memberVarResponseInterceptor.accept(localVarResponse);
+      }
+      InputStream localVarResponseBody = null;
+      try {
+        if (localVarResponse.statusCode()/ 100 != 2) {
+          throw getApiException("uncancelSubscription", localVarResponse);
+        }
+        localVarResponseBody = ApiClient.getResponseBody(localVarResponse);
+        if (localVarResponseBody == null) {
+          return new ApiResponse<SubscriptionResponse>(
+              localVarResponse.statusCode(),
+              localVarResponse.headers().map(),
+              null
+          );
+        }
+
+        
+        
+        String responseBody = new String(localVarResponseBody.readAllBytes());
+        SubscriptionResponse responseValue = responseBody.isBlank()? null: memberVarObjectMapper.readValue(responseBody, new TypeReference<SubscriptionResponse>() {});
+        
+
+        return new ApiResponse<SubscriptionResponse>(
+            localVarResponse.statusCode(),
+            localVarResponse.headers().map(),
+            responseValue
+        );
+      } finally {
+        if (localVarResponseBody != null) {
+          localVarResponseBody.close();
+        }
+      }
+    } catch (IOException e) {
+      throw new ApiException(e);
+    }
+    catch (InterruptedException e) {
+      Thread.currentThread().interrupt();
+      throw new ApiException(e);
+    }
+  }
+
+  private HttpRequest.Builder uncancelSubscriptionRequestBuilder(@jakarta.annotation.Nonnull UUID id, Map<String, String> headers) throws ApiException {
+    // verify the required parameter 'id' is set
+    if (id == null) {
+      throw new ApiException(400, "Missing the required parameter 'id' when calling uncancelSubscription");
+    }
+
+    HttpRequest.Builder localVarRequestBuilder = HttpRequest.newBuilder();
+
+    String localVarPath = "/api/v1/subscriptions/{id}/actions/uncancel"
+        .replace("{id}", ApiClient.urlEncode(id.toString()));
+
+    localVarRequestBuilder.uri(URI.create(memberVarBaseUri + localVarPath));
+
+    localVarRequestBuilder.header("Accept", "application/vnd.api+json");
+
+    localVarRequestBuilder.method("POST", HttpRequest.BodyPublishers.noBody());
+    if (memberVarReadTimeout != null) {
+      localVarRequestBuilder.timeout(memberVarReadTimeout);
+    }
+    // Add custom headers if provided
+    localVarRequestBuilder = HttpRequestBuilderExtensions.withAdditionalHeaders(localVarRequestBuilder, headers);
+    if (memberVarInterceptor != null) {
+      memberVarInterceptor.accept(localVarRequestBuilder);
+    }
+    return localVarRequestBuilder;
+  }
+
+  /**
+   * Undo Pending Downgrade
+   * Reverse a pending downgrade scheduled for end of the current billing period.
+   * @param id  (required)
+   * @return SubscriptionResponse
+   * @throws ApiException if fails to make API call
+   */
+  public SubscriptionResponse undowngradeSubscription(@jakarta.annotation.Nonnull UUID id) throws ApiException {
+    return undowngradeSubscription(id, null);
+  }
+
+  /**
+   * Undo Pending Downgrade
+   * Reverse a pending downgrade scheduled for end of the current billing period.
+   * @param id  (required)
+   * @param headers Optional headers to include in the request
+   * @return SubscriptionResponse
+   * @throws ApiException if fails to make API call
+   */
+  public SubscriptionResponse undowngradeSubscription(@jakarta.annotation.Nonnull UUID id, Map<String, String> headers) throws ApiException {
+    ApiResponse<SubscriptionResponse> localVarResponse = undowngradeSubscriptionWithHttpInfo(id, headers);
+    return localVarResponse.getData();
+  }
+
+  /**
+   * Undo Pending Downgrade
+   * Reverse a pending downgrade scheduled for end of the current billing period.
+   * @param id  (required)
+   * @return ApiResponse&lt;SubscriptionResponse&gt;
+   * @throws ApiException if fails to make API call
+   */
+  public ApiResponse<SubscriptionResponse> undowngradeSubscriptionWithHttpInfo(@jakarta.annotation.Nonnull UUID id) throws ApiException {
+    return undowngradeSubscriptionWithHttpInfo(id, null);
+  }
+
+  /**
+   * Undo Pending Downgrade
+   * Reverse a pending downgrade scheduled for end of the current billing period.
+   * @param id  (required)
+   * @param headers Optional headers to include in the request
+   * @return ApiResponse&lt;SubscriptionResponse&gt;
+   * @throws ApiException if fails to make API call
+   */
+  public ApiResponse<SubscriptionResponse> undowngradeSubscriptionWithHttpInfo(@jakarta.annotation.Nonnull UUID id, Map<String, String> headers) throws ApiException {
+    HttpRequest.Builder localVarRequestBuilder = undowngradeSubscriptionRequestBuilder(id, headers);
+    try {
+      HttpResponse<InputStream> localVarResponse = memberVarHttpClient.send(
+          localVarRequestBuilder.build(),
+          HttpResponse.BodyHandlers.ofInputStream());
+      if (memberVarResponseInterceptor != null) {
+        memberVarResponseInterceptor.accept(localVarResponse);
+      }
+      InputStream localVarResponseBody = null;
+      try {
+        if (localVarResponse.statusCode()/ 100 != 2) {
+          throw getApiException("undowngradeSubscription", localVarResponse);
+        }
+        localVarResponseBody = ApiClient.getResponseBody(localVarResponse);
+        if (localVarResponseBody == null) {
+          return new ApiResponse<SubscriptionResponse>(
+              localVarResponse.statusCode(),
+              localVarResponse.headers().map(),
+              null
+          );
+        }
+
+        
+        
+        String responseBody = new String(localVarResponseBody.readAllBytes());
+        SubscriptionResponse responseValue = responseBody.isBlank()? null: memberVarObjectMapper.readValue(responseBody, new TypeReference<SubscriptionResponse>() {});
+        
+
+        return new ApiResponse<SubscriptionResponse>(
+            localVarResponse.statusCode(),
+            localVarResponse.headers().map(),
+            responseValue
+        );
+      } finally {
+        if (localVarResponseBody != null) {
+          localVarResponseBody.close();
+        }
+      }
+    } catch (IOException e) {
+      throw new ApiException(e);
+    }
+    catch (InterruptedException e) {
+      Thread.currentThread().interrupt();
+      throw new ApiException(e);
+    }
+  }
+
+  private HttpRequest.Builder undowngradeSubscriptionRequestBuilder(@jakarta.annotation.Nonnull UUID id, Map<String, String> headers) throws ApiException {
+    // verify the required parameter 'id' is set
+    if (id == null) {
+      throw new ApiException(400, "Missing the required parameter 'id' when calling undowngradeSubscription");
+    }
+
+    HttpRequest.Builder localVarRequestBuilder = HttpRequest.newBuilder();
+
+    String localVarPath = "/api/v1/subscriptions/{id}/actions/undowngrade"
+        .replace("{id}", ApiClient.urlEncode(id.toString()));
+
+    localVarRequestBuilder.uri(URI.create(memberVarBaseUri + localVarPath));
+
+    localVarRequestBuilder.header("Accept", "application/vnd.api+json");
+
+    localVarRequestBuilder.method("POST", HttpRequest.BodyPublishers.noBody());
+    if (memberVarReadTimeout != null) {
+      localVarRequestBuilder.timeout(memberVarReadTimeout);
+    }
+    // Add custom headers if provided
+    localVarRequestBuilder = HttpRequestBuilderExtensions.withAdditionalHeaders(localVarRequestBuilder, headers);
+    if (memberVarInterceptor != null) {
+      memberVarInterceptor.accept(localVarRequestBuilder);
+    }
+    return localVarRequestBuilder;
+  }
+
+  /**
    * Upgrade Subscription
    * Upgrade an existing paid subscription to a higher plan.
    * @param id  (required)
