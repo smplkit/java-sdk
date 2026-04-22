@@ -23,7 +23,6 @@ import com.smplkit.internal.generated.app.model.BundleResponse;
 import com.smplkit.internal.generated.app.model.CreateBundleBody;
 import com.smplkit.internal.generated.app.model.CreateSubscriptionBody;
 import com.smplkit.internal.generated.app.model.ErrorResponse;
-import java.io.File;
 import com.smplkit.internal.generated.app.model.InvoiceListResponse;
 import com.smplkit.internal.generated.app.model.InvoiceSingleResponse;
 import com.smplkit.internal.generated.app.model.PaymentMethodListResponse;
@@ -785,10 +784,10 @@ public class BillingApi {
    * Get Invoice
    * Return a single invoice by ID. Supports content negotiation via Accept header:  - &#x60;&#x60;application/pdf&#x60;&#x60; — PDF bytes proxy-streamed from Stripe - &#x60;&#x60;application/vnd.api+json&#x60;&#x60; / &#x60;&#x60;application/json&#x60;&#x60; / absent — JSON:API resource - Any other value — 406 Not Acceptable
    * @param invoiceId  (required)
-   * @return File
+   * @return InvoiceSingleResponse
    * @throws ApiException if fails to make API call
    */
-  public File getInvoice(@jakarta.annotation.Nonnull String invoiceId) throws ApiException {
+  public InvoiceSingleResponse getInvoice(@jakarta.annotation.Nonnull String invoiceId) throws ApiException {
     return getInvoice(invoiceId, null);
   }
 
@@ -797,11 +796,11 @@ public class BillingApi {
    * Return a single invoice by ID. Supports content negotiation via Accept header:  - &#x60;&#x60;application/pdf&#x60;&#x60; — PDF bytes proxy-streamed from Stripe - &#x60;&#x60;application/vnd.api+json&#x60;&#x60; / &#x60;&#x60;application/json&#x60;&#x60; / absent — JSON:API resource - Any other value — 406 Not Acceptable
    * @param invoiceId  (required)
    * @param headers Optional headers to include in the request
-   * @return File
+   * @return InvoiceSingleResponse
    * @throws ApiException if fails to make API call
    */
-  public File getInvoice(@jakarta.annotation.Nonnull String invoiceId, Map<String, String> headers) throws ApiException {
-    ApiResponse<File> localVarResponse = getInvoiceWithHttpInfo(invoiceId, headers);
+  public InvoiceSingleResponse getInvoice(@jakarta.annotation.Nonnull String invoiceId, Map<String, String> headers) throws ApiException {
+    ApiResponse<InvoiceSingleResponse> localVarResponse = getInvoiceWithHttpInfo(invoiceId, headers);
     return localVarResponse.getData();
   }
 
@@ -809,10 +808,10 @@ public class BillingApi {
    * Get Invoice
    * Return a single invoice by ID. Supports content negotiation via Accept header:  - &#x60;&#x60;application/pdf&#x60;&#x60; — PDF bytes proxy-streamed from Stripe - &#x60;&#x60;application/vnd.api+json&#x60;&#x60; / &#x60;&#x60;application/json&#x60;&#x60; / absent — JSON:API resource - Any other value — 406 Not Acceptable
    * @param invoiceId  (required)
-   * @return ApiResponse&lt;File&gt;
+   * @return ApiResponse&lt;InvoiceSingleResponse&gt;
    * @throws ApiException if fails to make API call
    */
-  public ApiResponse<File> getInvoiceWithHttpInfo(@jakarta.annotation.Nonnull String invoiceId) throws ApiException {
+  public ApiResponse<InvoiceSingleResponse> getInvoiceWithHttpInfo(@jakarta.annotation.Nonnull String invoiceId) throws ApiException {
     return getInvoiceWithHttpInfo(invoiceId, null);
   }
 
@@ -821,10 +820,10 @@ public class BillingApi {
    * Return a single invoice by ID. Supports content negotiation via Accept header:  - &#x60;&#x60;application/pdf&#x60;&#x60; — PDF bytes proxy-streamed from Stripe - &#x60;&#x60;application/vnd.api+json&#x60;&#x60; / &#x60;&#x60;application/json&#x60;&#x60; / absent — JSON:API resource - Any other value — 406 Not Acceptable
    * @param invoiceId  (required)
    * @param headers Optional headers to include in the request
-   * @return ApiResponse&lt;File&gt;
+   * @return ApiResponse&lt;InvoiceSingleResponse&gt;
    * @throws ApiException if fails to make API call
    */
-  public ApiResponse<File> getInvoiceWithHttpInfo(@jakarta.annotation.Nonnull String invoiceId, Map<String, String> headers) throws ApiException {
+  public ApiResponse<InvoiceSingleResponse> getInvoiceWithHttpInfo(@jakarta.annotation.Nonnull String invoiceId, Map<String, String> headers) throws ApiException {
     HttpRequest.Builder localVarRequestBuilder = getInvoiceRequestBuilder(invoiceId, headers);
     try {
       HttpResponse<InputStream> localVarResponse = memberVarHttpClient.send(
@@ -840,7 +839,7 @@ public class BillingApi {
         }
         localVarResponseBody = ApiClient.getResponseBody(localVarResponse);
         if (localVarResponseBody == null) {
-          return new ApiResponse<File>(
+          return new ApiResponse<InvoiceSingleResponse>(
               localVarResponse.statusCode(),
               localVarResponse.headers().map(),
               null
@@ -848,11 +847,12 @@ public class BillingApi {
         }
 
         
-        // Handle file downloading.
-        File responseValue = downloadFileFromResponse(localVarResponse, localVarResponseBody);
+        
+        String responseBody = new String(localVarResponseBody.readAllBytes());
+        InvoiceSingleResponse responseValue = responseBody.isBlank()? null: memberVarObjectMapper.readValue(responseBody, new TypeReference<InvoiceSingleResponse>() {});
         
 
-        return new ApiResponse<File>(
+        return new ApiResponse<InvoiceSingleResponse>(
             localVarResponse.statusCode(),
             localVarResponse.headers().map(),
             responseValue
@@ -884,7 +884,7 @@ public class BillingApi {
 
     localVarRequestBuilder.uri(URI.create(memberVarBaseUri + localVarPath));
 
-    localVarRequestBuilder.header("Accept", "application/pdf, application/vnd.api+json");
+    localVarRequestBuilder.header("Accept", "application/vnd.api+json");
 
     localVarRequestBuilder.method("GET", HttpRequest.BodyPublishers.noBody());
     if (memberVarReadTimeout != null) {
