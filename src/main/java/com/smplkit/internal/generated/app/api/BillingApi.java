@@ -23,7 +23,9 @@ import com.smplkit.internal.generated.app.model.BundleResponse;
 import com.smplkit.internal.generated.app.model.CreateBundleBody;
 import com.smplkit.internal.generated.app.model.CreateSubscriptionBody;
 import com.smplkit.internal.generated.app.model.ErrorResponse;
+import java.io.File;
 import com.smplkit.internal.generated.app.model.InvoiceListResponse;
+import com.smplkit.internal.generated.app.model.InvoiceSingleResponse;
 import com.smplkit.internal.generated.app.model.PaymentMethodListResponse;
 import com.smplkit.internal.generated.app.model.PlanChangeRequest;
 import com.smplkit.internal.generated.app.model.SetDefaultPaymentMethodRequest;
@@ -768,6 +770,123 @@ public class BillingApi {
     localVarRequestBuilder.header("Accept", "application/vnd.api+json");
 
     localVarRequestBuilder.method("POST", HttpRequest.BodyPublishers.noBody());
+    if (memberVarReadTimeout != null) {
+      localVarRequestBuilder.timeout(memberVarReadTimeout);
+    }
+    // Add custom headers if provided
+    localVarRequestBuilder = HttpRequestBuilderExtensions.withAdditionalHeaders(localVarRequestBuilder, headers);
+    if (memberVarInterceptor != null) {
+      memberVarInterceptor.accept(localVarRequestBuilder);
+    }
+    return localVarRequestBuilder;
+  }
+
+  /**
+   * Get Invoice
+   * Return a single invoice by ID. Supports content negotiation via Accept header:  - &#x60;&#x60;application/pdf&#x60;&#x60; — PDF bytes proxy-streamed from Stripe - &#x60;&#x60;application/vnd.api+json&#x60;&#x60; / &#x60;&#x60;application/json&#x60;&#x60; / absent — JSON:API resource - Any other value — 406 Not Acceptable
+   * @param invoiceId  (required)
+   * @return File
+   * @throws ApiException if fails to make API call
+   */
+  public File getInvoice(@jakarta.annotation.Nonnull String invoiceId) throws ApiException {
+    return getInvoice(invoiceId, null);
+  }
+
+  /**
+   * Get Invoice
+   * Return a single invoice by ID. Supports content negotiation via Accept header:  - &#x60;&#x60;application/pdf&#x60;&#x60; — PDF bytes proxy-streamed from Stripe - &#x60;&#x60;application/vnd.api+json&#x60;&#x60; / &#x60;&#x60;application/json&#x60;&#x60; / absent — JSON:API resource - Any other value — 406 Not Acceptable
+   * @param invoiceId  (required)
+   * @param headers Optional headers to include in the request
+   * @return File
+   * @throws ApiException if fails to make API call
+   */
+  public File getInvoice(@jakarta.annotation.Nonnull String invoiceId, Map<String, String> headers) throws ApiException {
+    ApiResponse<File> localVarResponse = getInvoiceWithHttpInfo(invoiceId, headers);
+    return localVarResponse.getData();
+  }
+
+  /**
+   * Get Invoice
+   * Return a single invoice by ID. Supports content negotiation via Accept header:  - &#x60;&#x60;application/pdf&#x60;&#x60; — PDF bytes proxy-streamed from Stripe - &#x60;&#x60;application/vnd.api+json&#x60;&#x60; / &#x60;&#x60;application/json&#x60;&#x60; / absent — JSON:API resource - Any other value — 406 Not Acceptable
+   * @param invoiceId  (required)
+   * @return ApiResponse&lt;File&gt;
+   * @throws ApiException if fails to make API call
+   */
+  public ApiResponse<File> getInvoiceWithHttpInfo(@jakarta.annotation.Nonnull String invoiceId) throws ApiException {
+    return getInvoiceWithHttpInfo(invoiceId, null);
+  }
+
+  /**
+   * Get Invoice
+   * Return a single invoice by ID. Supports content negotiation via Accept header:  - &#x60;&#x60;application/pdf&#x60;&#x60; — PDF bytes proxy-streamed from Stripe - &#x60;&#x60;application/vnd.api+json&#x60;&#x60; / &#x60;&#x60;application/json&#x60;&#x60; / absent — JSON:API resource - Any other value — 406 Not Acceptable
+   * @param invoiceId  (required)
+   * @param headers Optional headers to include in the request
+   * @return ApiResponse&lt;File&gt;
+   * @throws ApiException if fails to make API call
+   */
+  public ApiResponse<File> getInvoiceWithHttpInfo(@jakarta.annotation.Nonnull String invoiceId, Map<String, String> headers) throws ApiException {
+    HttpRequest.Builder localVarRequestBuilder = getInvoiceRequestBuilder(invoiceId, headers);
+    try {
+      HttpResponse<InputStream> localVarResponse = memberVarHttpClient.send(
+          localVarRequestBuilder.build(),
+          HttpResponse.BodyHandlers.ofInputStream());
+      if (memberVarResponseInterceptor != null) {
+        memberVarResponseInterceptor.accept(localVarResponse);
+      }
+      InputStream localVarResponseBody = null;
+      try {
+        if (localVarResponse.statusCode()/ 100 != 2) {
+          throw getApiException("getInvoice", localVarResponse);
+        }
+        localVarResponseBody = ApiClient.getResponseBody(localVarResponse);
+        if (localVarResponseBody == null) {
+          return new ApiResponse<File>(
+              localVarResponse.statusCode(),
+              localVarResponse.headers().map(),
+              null
+          );
+        }
+
+        
+        // Handle file downloading.
+        File responseValue = downloadFileFromResponse(localVarResponse, localVarResponseBody);
+        
+
+        return new ApiResponse<File>(
+            localVarResponse.statusCode(),
+            localVarResponse.headers().map(),
+            responseValue
+        );
+      } finally {
+        if (localVarResponseBody != null) {
+          localVarResponseBody.close();
+        }
+      }
+    } catch (IOException e) {
+      throw new ApiException(e);
+    }
+    catch (InterruptedException e) {
+      Thread.currentThread().interrupt();
+      throw new ApiException(e);
+    }
+  }
+
+  private HttpRequest.Builder getInvoiceRequestBuilder(@jakarta.annotation.Nonnull String invoiceId, Map<String, String> headers) throws ApiException {
+    // verify the required parameter 'invoiceId' is set
+    if (invoiceId == null) {
+      throw new ApiException(400, "Missing the required parameter 'invoiceId' when calling getInvoice");
+    }
+
+    HttpRequest.Builder localVarRequestBuilder = HttpRequest.newBuilder();
+
+    String localVarPath = "/api/v1/invoices/{invoice_id}"
+        .replace("{invoice_id}", ApiClient.urlEncode(invoiceId.toString()));
+
+    localVarRequestBuilder.uri(URI.create(memberVarBaseUri + localVarPath));
+
+    localVarRequestBuilder.header("Accept", "application/pdf, application/vnd.api+json");
+
+    localVarRequestBuilder.method("GET", HttpRequest.BodyPublishers.noBody());
     if (memberVarReadTimeout != null) {
       localVarRequestBuilder.timeout(memberVarReadTimeout);
     }
