@@ -42,6 +42,9 @@ import com.smplkit.internal.generated.app.ApiClient;
   Invitation.JSON_PROPERTY_ROLE,
   Invitation.JSON_PROPERTY_STATUS,
   Invitation.JSON_PROPERTY_INVITED_BY,
+  Invitation.JSON_PROPERTY_ACCOUNT_NAME,
+  Invitation.JSON_PROPERTY_INVITER_DISPLAY_NAME,
+  Invitation.JSON_PROPERTY_TOKEN,
   Invitation.JSON_PROPERTY_EXPIRES_AT,
   Invitation.JSON_PROPERTY_CREATED_AT,
   Invitation.JSON_PROPERTY_UPDATED_AT
@@ -59,6 +62,15 @@ public class Invitation {
 
   public static final String JSON_PROPERTY_INVITED_BY = "invited_by";
   private JsonNullable<String> invitedBy = JsonNullable.<String>undefined();
+
+  public static final String JSON_PROPERTY_ACCOUNT_NAME = "account_name";
+  private JsonNullable<String> accountName = JsonNullable.<String>undefined();
+
+  public static final String JSON_PROPERTY_INVITER_DISPLAY_NAME = "inviter_display_name";
+  private JsonNullable<String> inviterDisplayName = JsonNullable.<String>undefined();
+
+  public static final String JSON_PROPERTY_TOKEN = "token";
+  private JsonNullable<String> token = JsonNullable.<String>undefined();
 
   public static final String JSON_PROPERTY_EXPIRES_AT = "expires_at";
   private JsonNullable<OffsetDateTime> expiresAt = JsonNullable.<OffsetDateTime>undefined();
@@ -78,6 +90,9 @@ public class Invitation {
     @JsonProperty(JSON_PROPERTY_ROLE) String role, 
     @JsonProperty(JSON_PROPERTY_STATUS) String status, 
     @JsonProperty(JSON_PROPERTY_INVITED_BY) String invitedBy, 
+    @JsonProperty(JSON_PROPERTY_ACCOUNT_NAME) String accountName, 
+    @JsonProperty(JSON_PROPERTY_INVITER_DISPLAY_NAME) String inviterDisplayName, 
+    @JsonProperty(JSON_PROPERTY_TOKEN) String token, 
     @JsonProperty(JSON_PROPERTY_EXPIRES_AT) OffsetDateTime expiresAt, 
     @JsonProperty(JSON_PROPERTY_CREATED_AT) OffsetDateTime createdAt, 
     @JsonProperty(JSON_PROPERTY_UPDATED_AT) OffsetDateTime updatedAt
@@ -87,6 +102,9 @@ public class Invitation {
     this.role = role == null ? JsonNullable.<String>undefined() : JsonNullable.of(role);
     this.status = status == null ? JsonNullable.<String>undefined() : JsonNullable.of(status);
     this.invitedBy = invitedBy == null ? JsonNullable.<String>undefined() : JsonNullable.of(invitedBy);
+    this.accountName = accountName == null ? JsonNullable.<String>undefined() : JsonNullable.of(accountName);
+    this.inviterDisplayName = inviterDisplayName == null ? JsonNullable.<String>undefined() : JsonNullable.of(inviterDisplayName);
+    this.token = token == null ? JsonNullable.<String>undefined() : JsonNullable.of(token);
     this.expiresAt = expiresAt == null ? JsonNullable.<OffsetDateTime>undefined() : JsonNullable.of(expiresAt);
     this.createdAt = createdAt == null ? JsonNullable.<OffsetDateTime>undefined() : JsonNullable.of(createdAt);
     this.updatedAt = updatedAt == null ? JsonNullable.<OffsetDateTime>undefined() : JsonNullable.of(updatedAt);
@@ -205,6 +223,90 @@ public class Invitation {
 
 
   /**
+   * Get accountName
+   * @return accountName
+   */
+  @jakarta.annotation.Nullable
+  @JsonIgnore
+  public String getAccountName() {
+    
+    if (accountName == null) {
+      accountName = JsonNullable.<String>undefined();
+    }
+    return accountName.orElse(null);
+  }
+
+  @JsonProperty(value = JSON_PROPERTY_ACCOUNT_NAME, required = false)
+  @JsonInclude(value = JsonInclude.Include.USE_DEFAULTS)
+
+  public JsonNullable<String> getAccountName_JsonNullable() {
+    return accountName;
+  }
+  
+  @JsonProperty(JSON_PROPERTY_ACCOUNT_NAME)
+  private void setAccountName_JsonNullable(JsonNullable<String> accountName) {
+    this.accountName = accountName;
+  }
+
+
+
+  /**
+   * Get inviterDisplayName
+   * @return inviterDisplayName
+   */
+  @jakarta.annotation.Nullable
+  @JsonIgnore
+  public String getInviterDisplayName() {
+    
+    if (inviterDisplayName == null) {
+      inviterDisplayName = JsonNullable.<String>undefined();
+    }
+    return inviterDisplayName.orElse(null);
+  }
+
+  @JsonProperty(value = JSON_PROPERTY_INVITER_DISPLAY_NAME, required = false)
+  @JsonInclude(value = JsonInclude.Include.USE_DEFAULTS)
+
+  public JsonNullable<String> getInviterDisplayName_JsonNullable() {
+    return inviterDisplayName;
+  }
+  
+  @JsonProperty(JSON_PROPERTY_INVITER_DISPLAY_NAME)
+  private void setInviterDisplayName_JsonNullable(JsonNullable<String> inviterDisplayName) {
+    this.inviterDisplayName = inviterDisplayName;
+  }
+
+
+
+  /**
+   * Get token
+   * @return token
+   */
+  @jakarta.annotation.Nullable
+  @JsonIgnore
+  public String getToken() {
+    
+    if (token == null) {
+      token = JsonNullable.<String>undefined();
+    }
+    return token.orElse(null);
+  }
+
+  @JsonProperty(value = JSON_PROPERTY_TOKEN, required = false)
+  @JsonInclude(value = JsonInclude.Include.USE_DEFAULTS)
+
+  public JsonNullable<String> getToken_JsonNullable() {
+    return token;
+  }
+  
+  @JsonProperty(JSON_PROPERTY_TOKEN)
+  private void setToken_JsonNullable(JsonNullable<String> token) {
+    this.token = token;
+  }
+
+
+
+  /**
    * Get expiresAt
    * @return expiresAt
    */
@@ -304,6 +406,9 @@ public class Invitation {
         equalsNullable(this.role, invitation.role) &&
         equalsNullable(this.status, invitation.status) &&
         equalsNullable(this.invitedBy, invitation.invitedBy) &&
+        equalsNullable(this.accountName, invitation.accountName) &&
+        equalsNullable(this.inviterDisplayName, invitation.inviterDisplayName) &&
+        equalsNullable(this.token, invitation.token) &&
         equalsNullable(this.expiresAt, invitation.expiresAt) &&
         equalsNullable(this.createdAt, invitation.createdAt) &&
         equalsNullable(this.updatedAt, invitation.updatedAt);
@@ -315,7 +420,7 @@ public class Invitation {
 
   @Override
   public int hashCode() {
-    return Objects.hash(hashCodeNullable(email), hashCodeNullable(role), hashCodeNullable(status), hashCodeNullable(invitedBy), hashCodeNullable(expiresAt), hashCodeNullable(createdAt), hashCodeNullable(updatedAt));
+    return Objects.hash(hashCodeNullable(email), hashCodeNullable(role), hashCodeNullable(status), hashCodeNullable(invitedBy), hashCodeNullable(accountName), hashCodeNullable(inviterDisplayName), hashCodeNullable(token), hashCodeNullable(expiresAt), hashCodeNullable(createdAt), hashCodeNullable(updatedAt));
   }
 
   private static <T> int hashCodeNullable(JsonNullable<T> a) {
@@ -333,6 +438,9 @@ public class Invitation {
     sb.append("    role: ").append(toIndentedString(role)).append("\n");
     sb.append("    status: ").append(toIndentedString(status)).append("\n");
     sb.append("    invitedBy: ").append(toIndentedString(invitedBy)).append("\n");
+    sb.append("    accountName: ").append(toIndentedString(accountName)).append("\n");
+    sb.append("    inviterDisplayName: ").append(toIndentedString(inviterDisplayName)).append("\n");
+    sb.append("    token: ").append(toIndentedString(token)).append("\n");
     sb.append("    expiresAt: ").append(toIndentedString(expiresAt)).append("\n");
     sb.append("    createdAt: ").append(toIndentedString(createdAt)).append("\n");
     sb.append("    updatedAt: ").append(toIndentedString(updatedAt)).append("\n");
@@ -398,6 +506,21 @@ public class Invitation {
     // add `invited_by` to the URL query string
     if (getInvitedBy() != null) {
       joiner.add(String.format(java.util.Locale.ROOT, "%sinvited_by%s=%s", prefix, suffix, ApiClient.urlEncode(ApiClient.valueToString(getInvitedBy()))));
+    }
+
+    // add `account_name` to the URL query string
+    if (getAccountName() != null) {
+      joiner.add(String.format(java.util.Locale.ROOT, "%saccount_name%s=%s", prefix, suffix, ApiClient.urlEncode(ApiClient.valueToString(getAccountName()))));
+    }
+
+    // add `inviter_display_name` to the URL query string
+    if (getInviterDisplayName() != null) {
+      joiner.add(String.format(java.util.Locale.ROOT, "%sinviter_display_name%s=%s", prefix, suffix, ApiClient.urlEncode(ApiClient.valueToString(getInviterDisplayName()))));
+    }
+
+    // add `token` to the URL query string
+    if (getToken() != null) {
+      joiner.add(String.format(java.util.Locale.ROOT, "%stoken%s=%s", prefix, suffix, ApiClient.urlEncode(ApiClient.valueToString(getToken()))));
     }
 
     // add `expires_at` to the URL query string

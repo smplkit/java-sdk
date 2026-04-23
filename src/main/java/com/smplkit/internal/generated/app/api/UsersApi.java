@@ -167,7 +167,7 @@ public class UsersApi {
 
   /**
    * Get Current User
-   * Return the currently authenticated user.
+   * Return the currently authenticated user. &#x60;&#x60;role&#x60;&#x60; and &#x60;&#x60;account&#x60;&#x60; are populated when the user has a membership; both are null when the caller is authenticated but has no account yet — e.g. a returning user who has just accepted an invitation email.
    * @return UserResponse
    * @throws ApiException if fails to make API call
    */
@@ -177,7 +177,7 @@ public class UsersApi {
 
   /**
    * Get Current User
-   * Return the currently authenticated user.
+   * Return the currently authenticated user. &#x60;&#x60;role&#x60;&#x60; and &#x60;&#x60;account&#x60;&#x60; are populated when the user has a membership; both are null when the caller is authenticated but has no account yet — e.g. a returning user who has just accepted an invitation email.
    * @param headers Optional headers to include in the request
    * @return UserResponse
    * @throws ApiException if fails to make API call
@@ -189,7 +189,7 @@ public class UsersApi {
 
   /**
    * Get Current User
-   * Return the currently authenticated user.
+   * Return the currently authenticated user. &#x60;&#x60;role&#x60;&#x60; and &#x60;&#x60;account&#x60;&#x60; are populated when the user has a membership; both are null when the caller is authenticated but has no account yet — e.g. a returning user who has just accepted an invitation email.
    * @return ApiResponse&lt;UserResponse&gt;
    * @throws ApiException if fails to make API call
    */
@@ -199,7 +199,7 @@ public class UsersApi {
 
   /**
    * Get Current User
-   * Return the currently authenticated user.
+   * Return the currently authenticated user. &#x60;&#x60;role&#x60;&#x60; and &#x60;&#x60;account&#x60;&#x60; are populated when the user has a membership; both are null when the caller is authenticated but has no account yet — e.g. a returning user who has just accepted an invitation email.
    * @param headers Optional headers to include in the request
    * @return ApiResponse&lt;UserResponse&gt;
    * @throws ApiException if fails to make API call
