@@ -415,49 +415,53 @@ public class InvitationsApi {
 
   /**
    * List Invitations
-   * List all invitations for the authenticated account.
+   * List invitations. Authenticated admins list invitations for their own account and may narrow by status. Unauthenticated callers must pass &#x60;&#x60;filter[token]&#x60;&#x60; to look up a specific invitation by its token — used to render the invitation preview before sign-in. The token-filter path always returns an array of 0 or 1 elements.
    * @param filterStatus  (optional)
+   * @param filterToken  (optional)
    * @return InvitationListResponse
    * @throws ApiException if fails to make API call
    */
-  public InvitationListResponse listInvitations(@jakarta.annotation.Nullable String filterStatus) throws ApiException {
-    return listInvitations(filterStatus, null);
+  public InvitationListResponse listInvitations(@jakarta.annotation.Nullable String filterStatus, @jakarta.annotation.Nullable String filterToken) throws ApiException {
+    return listInvitations(filterStatus, filterToken, null);
   }
 
   /**
    * List Invitations
-   * List all invitations for the authenticated account.
+   * List invitations. Authenticated admins list invitations for their own account and may narrow by status. Unauthenticated callers must pass &#x60;&#x60;filter[token]&#x60;&#x60; to look up a specific invitation by its token — used to render the invitation preview before sign-in. The token-filter path always returns an array of 0 or 1 elements.
    * @param filterStatus  (optional)
+   * @param filterToken  (optional)
    * @param headers Optional headers to include in the request
    * @return InvitationListResponse
    * @throws ApiException if fails to make API call
    */
-  public InvitationListResponse listInvitations(@jakarta.annotation.Nullable String filterStatus, Map<String, String> headers) throws ApiException {
-    ApiResponse<InvitationListResponse> localVarResponse = listInvitationsWithHttpInfo(filterStatus, headers);
+  public InvitationListResponse listInvitations(@jakarta.annotation.Nullable String filterStatus, @jakarta.annotation.Nullable String filterToken, Map<String, String> headers) throws ApiException {
+    ApiResponse<InvitationListResponse> localVarResponse = listInvitationsWithHttpInfo(filterStatus, filterToken, headers);
     return localVarResponse.getData();
   }
 
   /**
    * List Invitations
-   * List all invitations for the authenticated account.
+   * List invitations. Authenticated admins list invitations for their own account and may narrow by status. Unauthenticated callers must pass &#x60;&#x60;filter[token]&#x60;&#x60; to look up a specific invitation by its token — used to render the invitation preview before sign-in. The token-filter path always returns an array of 0 or 1 elements.
    * @param filterStatus  (optional)
+   * @param filterToken  (optional)
    * @return ApiResponse&lt;InvitationListResponse&gt;
    * @throws ApiException if fails to make API call
    */
-  public ApiResponse<InvitationListResponse> listInvitationsWithHttpInfo(@jakarta.annotation.Nullable String filterStatus) throws ApiException {
-    return listInvitationsWithHttpInfo(filterStatus, null);
+  public ApiResponse<InvitationListResponse> listInvitationsWithHttpInfo(@jakarta.annotation.Nullable String filterStatus, @jakarta.annotation.Nullable String filterToken) throws ApiException {
+    return listInvitationsWithHttpInfo(filterStatus, filterToken, null);
   }
 
   /**
    * List Invitations
-   * List all invitations for the authenticated account.
+   * List invitations. Authenticated admins list invitations for their own account and may narrow by status. Unauthenticated callers must pass &#x60;&#x60;filter[token]&#x60;&#x60; to look up a specific invitation by its token — used to render the invitation preview before sign-in. The token-filter path always returns an array of 0 or 1 elements.
    * @param filterStatus  (optional)
+   * @param filterToken  (optional)
    * @param headers Optional headers to include in the request
    * @return ApiResponse&lt;InvitationListResponse&gt;
    * @throws ApiException if fails to make API call
    */
-  public ApiResponse<InvitationListResponse> listInvitationsWithHttpInfo(@jakarta.annotation.Nullable String filterStatus, Map<String, String> headers) throws ApiException {
-    HttpRequest.Builder localVarRequestBuilder = listInvitationsRequestBuilder(filterStatus, headers);
+  public ApiResponse<InvitationListResponse> listInvitationsWithHttpInfo(@jakarta.annotation.Nullable String filterStatus, @jakarta.annotation.Nullable String filterToken, Map<String, String> headers) throws ApiException {
+    HttpRequest.Builder localVarRequestBuilder = listInvitationsRequestBuilder(filterStatus, filterToken, headers);
     try {
       HttpResponse<InputStream> localVarResponse = memberVarHttpClient.send(
           localVarRequestBuilder.build(),
@@ -504,7 +508,7 @@ public class InvitationsApi {
     }
   }
 
-  private HttpRequest.Builder listInvitationsRequestBuilder(@jakarta.annotation.Nullable String filterStatus, Map<String, String> headers) throws ApiException {
+  private HttpRequest.Builder listInvitationsRequestBuilder(@jakarta.annotation.Nullable String filterStatus, @jakarta.annotation.Nullable String filterToken, Map<String, String> headers) throws ApiException {
 
     HttpRequest.Builder localVarRequestBuilder = HttpRequest.newBuilder();
 
@@ -515,6 +519,8 @@ public class InvitationsApi {
     String localVarQueryParameterBaseName;
     localVarQueryParameterBaseName = "filter[status]";
     localVarQueryParams.addAll(ApiClient.parameterToPairs("filter[status]", filterStatus));
+    localVarQueryParameterBaseName = "filter[token]";
+    localVarQueryParams.addAll(ApiClient.parameterToPairs("filter[token]", filterToken));
 
     if (!localVarQueryParams.isEmpty() || localVarQueryStringJoiner.length() != 0) {
       StringJoiner queryJoiner = new StringJoiner("&");
