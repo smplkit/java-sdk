@@ -24,7 +24,7 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonTypeName;
 import com.fasterxml.jackson.annotation.JsonValue;
-import com.smplkit.internal.generated.app.model.PaymentMethodAttributes;
+import com.smplkit.internal.generated.app.model.PaymentMethod;
 import java.util.Arrays;
 import org.openapitools.jackson.nullable.JsonNullable;
 import com.fasterxml.jackson.annotation.JsonIgnore;
@@ -86,7 +86,7 @@ public class PaymentMethodResource {
 
   public static final String JSON_PROPERTY_ATTRIBUTES = "attributes";
   @jakarta.annotation.Nonnull
-  private PaymentMethodAttributes attributes;
+  private PaymentMethod attributes;
 
   public PaymentMethodResource() { 
   }
@@ -147,7 +147,7 @@ public class PaymentMethodResource {
   }
 
 
-  public PaymentMethodResource attributes(@jakarta.annotation.Nonnull PaymentMethodAttributes attributes) {
+  public PaymentMethodResource attributes(@jakarta.annotation.Nonnull PaymentMethod attributes) {
     this.attributes = attributes;
     return this;
   }
@@ -159,14 +159,14 @@ public class PaymentMethodResource {
   @jakarta.annotation.Nonnull
   @JsonProperty(value = JSON_PROPERTY_ATTRIBUTES, required = true)
   @JsonInclude(value = JsonInclude.Include.ALWAYS)
-  public PaymentMethodAttributes getAttributes() {
+  public PaymentMethod getAttributes() {
     return attributes;
   }
 
 
   @JsonProperty(value = JSON_PROPERTY_ATTRIBUTES, required = true)
   @JsonInclude(value = JsonInclude.Include.ALWAYS)
-  public void setAttributes(@jakarta.annotation.Nonnull PaymentMethodAttributes attributes) {
+  public void setAttributes(@jakarta.annotation.Nonnull PaymentMethod attributes) {
     this.attributes = attributes;
   }
 

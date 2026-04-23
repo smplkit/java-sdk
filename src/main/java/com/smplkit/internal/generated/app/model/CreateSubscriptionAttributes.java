@@ -25,6 +25,10 @@ import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonTypeName;
 import com.fasterxml.jackson.annotation.JsonValue;
 import java.util.Arrays;
+import org.openapitools.jackson.nullable.JsonNullable;
+import com.fasterxml.jackson.annotation.JsonIgnore;
+import org.openapitools.jackson.nullable.JsonNullable;
+import java.util.NoSuchElementException;
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 
 
@@ -35,7 +39,7 @@ import com.smplkit.internal.generated.app.ApiClient;
 @JsonPropertyOrder({
   CreateSubscriptionAttributes.JSON_PROPERTY_PRODUCT,
   CreateSubscriptionAttributes.JSON_PROPERTY_PLAN,
-  CreateSubscriptionAttributes.JSON_PROPERTY_PAYMENT_METHOD_ID
+  CreateSubscriptionAttributes.JSON_PROPERTY_PAYMENT_METHOD
 })
 @jakarta.annotation.Generated(value = "org.openapitools.codegen.languages.JavaClientCodegen", comments = "Generator version: 7.21.0")
 public class CreateSubscriptionAttributes {
@@ -47,9 +51,8 @@ public class CreateSubscriptionAttributes {
   @jakarta.annotation.Nonnull
   private String plan;
 
-  public static final String JSON_PROPERTY_PAYMENT_METHOD_ID = "payment_method_id";
-  @jakarta.annotation.Nonnull
-  private String paymentMethodId;
+  public static final String JSON_PROPERTY_PAYMENT_METHOD = "payment_method";
+  private JsonNullable<String> paymentMethod = JsonNullable.<String>undefined();
 
   public CreateSubscriptionAttributes() { 
   }
@@ -102,27 +105,35 @@ public class CreateSubscriptionAttributes {
   }
 
 
-  public CreateSubscriptionAttributes paymentMethodId(@jakarta.annotation.Nonnull String paymentMethodId) {
-    this.paymentMethodId = paymentMethodId;
+  public CreateSubscriptionAttributes paymentMethod(@jakarta.annotation.Nullable String paymentMethod) {
+    this.paymentMethod = JsonNullable.<String>of(paymentMethod);
     return this;
   }
 
   /**
-   * Get paymentMethodId
-   * @return paymentMethodId
+   * Get paymentMethod
+   * @return paymentMethod
    */
-  @jakarta.annotation.Nonnull
-  @JsonProperty(value = JSON_PROPERTY_PAYMENT_METHOD_ID, required = true)
-  @JsonInclude(value = JsonInclude.Include.ALWAYS)
-  public String getPaymentMethodId() {
-    return paymentMethodId;
+  @jakarta.annotation.Nullable
+  @JsonIgnore
+  public String getPaymentMethod() {
+        return paymentMethod.orElse(null);
   }
 
+  @JsonProperty(value = JSON_PROPERTY_PAYMENT_METHOD, required = false)
+  @JsonInclude(value = JsonInclude.Include.USE_DEFAULTS)
 
-  @JsonProperty(value = JSON_PROPERTY_PAYMENT_METHOD_ID, required = true)
-  @JsonInclude(value = JsonInclude.Include.ALWAYS)
-  public void setPaymentMethodId(@jakarta.annotation.Nonnull String paymentMethodId) {
-    this.paymentMethodId = paymentMethodId;
+  public JsonNullable<String> getPaymentMethod_JsonNullable() {
+    return paymentMethod;
+  }
+  
+  @JsonProperty(JSON_PROPERTY_PAYMENT_METHOD)
+  public void setPaymentMethod_JsonNullable(JsonNullable<String> paymentMethod) {
+    this.paymentMethod = paymentMethod;
+  }
+
+  public void setPaymentMethod(@jakarta.annotation.Nullable String paymentMethod) {
+    this.paymentMethod = JsonNullable.<String>of(paymentMethod);
   }
 
 
@@ -140,12 +151,23 @@ public class CreateSubscriptionAttributes {
     CreateSubscriptionAttributes createSubscriptionAttributes = (CreateSubscriptionAttributes) o;
     return Objects.equals(this.product, createSubscriptionAttributes.product) &&
         Objects.equals(this.plan, createSubscriptionAttributes.plan) &&
-        Objects.equals(this.paymentMethodId, createSubscriptionAttributes.paymentMethodId);
+        equalsNullable(this.paymentMethod, createSubscriptionAttributes.paymentMethod);
+  }
+
+  private static <T> boolean equalsNullable(JsonNullable<T> a, JsonNullable<T> b) {
+    return a == b || (a != null && b != null && a.isPresent() && b.isPresent() && Objects.deepEquals(a.get(), b.get()));
   }
 
   @Override
   public int hashCode() {
-    return Objects.hash(product, plan, paymentMethodId);
+    return Objects.hash(product, plan, hashCodeNullable(paymentMethod));
+  }
+
+  private static <T> int hashCodeNullable(JsonNullable<T> a) {
+    if (a == null) {
+      return 1;
+    }
+    return a.isPresent() ? Arrays.deepHashCode(new Object[]{a.get()}) : 31;
   }
 
   @Override
@@ -154,7 +176,7 @@ public class CreateSubscriptionAttributes {
     sb.append("class CreateSubscriptionAttributes {\n");
     sb.append("    product: ").append(toIndentedString(product)).append("\n");
     sb.append("    plan: ").append(toIndentedString(plan)).append("\n");
-    sb.append("    paymentMethodId: ").append(toIndentedString(paymentMethodId)).append("\n");
+    sb.append("    paymentMethod: ").append(toIndentedString(paymentMethod)).append("\n");
     sb.append("}");
     return sb.toString();
   }
@@ -209,9 +231,9 @@ public class CreateSubscriptionAttributes {
       joiner.add(String.format(java.util.Locale.ROOT, "%splan%s=%s", prefix, suffix, ApiClient.urlEncode(ApiClient.valueToString(getPlan()))));
     }
 
-    // add `payment_method_id` to the URL query string
-    if (getPaymentMethodId() != null) {
-      joiner.add(String.format(java.util.Locale.ROOT, "%spayment_method_id%s=%s", prefix, suffix, ApiClient.urlEncode(ApiClient.valueToString(getPaymentMethodId()))));
+    // add `payment_method` to the URL query string
+    if (getPaymentMethod() != null) {
+      joiner.add(String.format(java.util.Locale.ROOT, "%spayment_method%s=%s", prefix, suffix, ApiClient.urlEncode(ApiClient.valueToString(getPaymentMethod()))));
     }
 
     return joiner.toString();

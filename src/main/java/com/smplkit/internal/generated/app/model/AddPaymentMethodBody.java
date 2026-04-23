@@ -24,52 +24,53 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonTypeName;
 import com.fasterxml.jackson.annotation.JsonValue;
+import com.smplkit.internal.generated.app.model.AddPaymentMethodData;
 import java.util.Arrays;
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 
 
 import com.smplkit.internal.generated.app.ApiClient;
 /**
- * SetDefaultPaymentMethodAttributes
+ * AddPaymentMethodBody
  */
 @JsonPropertyOrder({
-  SetDefaultPaymentMethodAttributes.JSON_PROPERTY_PAYMENT_METHOD_ID
+  AddPaymentMethodBody.JSON_PROPERTY_DATA
 })
 @jakarta.annotation.Generated(value = "org.openapitools.codegen.languages.JavaClientCodegen", comments = "Generator version: 7.21.0")
-public class SetDefaultPaymentMethodAttributes {
-  public static final String JSON_PROPERTY_PAYMENT_METHOD_ID = "payment_method_id";
+public class AddPaymentMethodBody {
+  public static final String JSON_PROPERTY_DATA = "data";
   @jakarta.annotation.Nonnull
-  private String paymentMethodId;
+  private AddPaymentMethodData data;
 
-  public SetDefaultPaymentMethodAttributes() { 
+  public AddPaymentMethodBody() { 
   }
 
-  public SetDefaultPaymentMethodAttributes paymentMethodId(@jakarta.annotation.Nonnull String paymentMethodId) {
-    this.paymentMethodId = paymentMethodId;
+  public AddPaymentMethodBody data(@jakarta.annotation.Nonnull AddPaymentMethodData data) {
+    this.data = data;
     return this;
   }
 
   /**
-   * Get paymentMethodId
-   * @return paymentMethodId
+   * Get data
+   * @return data
    */
   @jakarta.annotation.Nonnull
-  @JsonProperty(value = JSON_PROPERTY_PAYMENT_METHOD_ID, required = true)
+  @JsonProperty(value = JSON_PROPERTY_DATA, required = true)
   @JsonInclude(value = JsonInclude.Include.ALWAYS)
-  public String getPaymentMethodId() {
-    return paymentMethodId;
+  public AddPaymentMethodData getData() {
+    return data;
   }
 
 
-  @JsonProperty(value = JSON_PROPERTY_PAYMENT_METHOD_ID, required = true)
+  @JsonProperty(value = JSON_PROPERTY_DATA, required = true)
   @JsonInclude(value = JsonInclude.Include.ALWAYS)
-  public void setPaymentMethodId(@jakarta.annotation.Nonnull String paymentMethodId) {
-    this.paymentMethodId = paymentMethodId;
+  public void setData(@jakarta.annotation.Nonnull AddPaymentMethodData data) {
+    this.data = data;
   }
 
 
   /**
-   * Return true if this SetDefaultPaymentMethodAttributes object is equal to o.
+   * Return true if this AddPaymentMethodBody object is equal to o.
    */
   @Override
   public boolean equals(Object o) {
@@ -79,20 +80,20 @@ public class SetDefaultPaymentMethodAttributes {
     if (o == null || getClass() != o.getClass()) {
       return false;
     }
-    SetDefaultPaymentMethodAttributes setDefaultPaymentMethodAttributes = (SetDefaultPaymentMethodAttributes) o;
-    return Objects.equals(this.paymentMethodId, setDefaultPaymentMethodAttributes.paymentMethodId);
+    AddPaymentMethodBody addPaymentMethodBody = (AddPaymentMethodBody) o;
+    return Objects.equals(this.data, addPaymentMethodBody.data);
   }
 
   @Override
   public int hashCode() {
-    return Objects.hash(paymentMethodId);
+    return Objects.hash(data);
   }
 
   @Override
   public String toString() {
     StringBuilder sb = new StringBuilder();
-    sb.append("class SetDefaultPaymentMethodAttributes {\n");
-    sb.append("    paymentMethodId: ").append(toIndentedString(paymentMethodId)).append("\n");
+    sb.append("class AddPaymentMethodBody {\n");
+    sb.append("    data: ").append(toIndentedString(data)).append("\n");
     sb.append("}");
     return sb.toString();
   }
@@ -137,9 +138,9 @@ public class SetDefaultPaymentMethodAttributes {
 
     StringJoiner joiner = new StringJoiner("&");
 
-    // add `payment_method_id` to the URL query string
-    if (getPaymentMethodId() != null) {
-      joiner.add(String.format(java.util.Locale.ROOT, "%spayment_method_id%s=%s", prefix, suffix, ApiClient.urlEncode(ApiClient.valueToString(getPaymentMethodId()))));
+    // add `data` to the URL query string
+    if (getData() != null) {
+      joiner.add(getData().toUrlQueryString(prefix + "data" + suffix));
     }
 
     return joiner.toString();

@@ -18,6 +18,7 @@ import com.smplkit.internal.generated.app.ApiResponse;
 import com.smplkit.internal.generated.app.Configuration;
 import com.smplkit.internal.generated.app.Pair;
 
+import com.smplkit.internal.generated.app.model.AddPaymentMethodBody;
 import com.smplkit.internal.generated.app.model.BundleListResponse;
 import com.smplkit.internal.generated.app.model.BundleResponse;
 import com.smplkit.internal.generated.app.model.CreateBundleBody;
@@ -26,8 +27,8 @@ import com.smplkit.internal.generated.app.model.ErrorResponse;
 import com.smplkit.internal.generated.app.model.InvoiceListResponse;
 import com.smplkit.internal.generated.app.model.InvoiceSingleResponse;
 import com.smplkit.internal.generated.app.model.PaymentMethodListResponse;
+import com.smplkit.internal.generated.app.model.PaymentMethodResponse;
 import com.smplkit.internal.generated.app.model.PlanChangeRequest;
-import com.smplkit.internal.generated.app.model.SetDefaultPaymentMethodRequest;
 import com.smplkit.internal.generated.app.model.SetupIntentResponse;
 import com.smplkit.internal.generated.app.model.SubscriptionListResponse;
 import com.smplkit.internal.generated.app.model.SubscriptionResponse;
@@ -417,6 +418,129 @@ public class BillingApi {
   }
 
   /**
+   * Add Payment Method
+   * Register a Stripe payment method (&#x60;&#x60;pm_...&#x60;&#x60;) as a persistent resource. The frontend obtains the Stripe ID via SetupIntent + Stripe Elements, then POSTs it here. Body shape and server behavior per ADR-044 §5.1.
+   * @param addPaymentMethodBody  (required)
+   * @return PaymentMethodResponse
+   * @throws ApiException if fails to make API call
+   */
+  public PaymentMethodResponse createPaymentMethod(@jakarta.annotation.Nonnull AddPaymentMethodBody addPaymentMethodBody) throws ApiException {
+    return createPaymentMethod(addPaymentMethodBody, null);
+  }
+
+  /**
+   * Add Payment Method
+   * Register a Stripe payment method (&#x60;&#x60;pm_...&#x60;&#x60;) as a persistent resource. The frontend obtains the Stripe ID via SetupIntent + Stripe Elements, then POSTs it here. Body shape and server behavior per ADR-044 §5.1.
+   * @param addPaymentMethodBody  (required)
+   * @param headers Optional headers to include in the request
+   * @return PaymentMethodResponse
+   * @throws ApiException if fails to make API call
+   */
+  public PaymentMethodResponse createPaymentMethod(@jakarta.annotation.Nonnull AddPaymentMethodBody addPaymentMethodBody, Map<String, String> headers) throws ApiException {
+    ApiResponse<PaymentMethodResponse> localVarResponse = createPaymentMethodWithHttpInfo(addPaymentMethodBody, headers);
+    return localVarResponse.getData();
+  }
+
+  /**
+   * Add Payment Method
+   * Register a Stripe payment method (&#x60;&#x60;pm_...&#x60;&#x60;) as a persistent resource. The frontend obtains the Stripe ID via SetupIntent + Stripe Elements, then POSTs it here. Body shape and server behavior per ADR-044 §5.1.
+   * @param addPaymentMethodBody  (required)
+   * @return ApiResponse&lt;PaymentMethodResponse&gt;
+   * @throws ApiException if fails to make API call
+   */
+  public ApiResponse<PaymentMethodResponse> createPaymentMethodWithHttpInfo(@jakarta.annotation.Nonnull AddPaymentMethodBody addPaymentMethodBody) throws ApiException {
+    return createPaymentMethodWithHttpInfo(addPaymentMethodBody, null);
+  }
+
+  /**
+   * Add Payment Method
+   * Register a Stripe payment method (&#x60;&#x60;pm_...&#x60;&#x60;) as a persistent resource. The frontend obtains the Stripe ID via SetupIntent + Stripe Elements, then POSTs it here. Body shape and server behavior per ADR-044 §5.1.
+   * @param addPaymentMethodBody  (required)
+   * @param headers Optional headers to include in the request
+   * @return ApiResponse&lt;PaymentMethodResponse&gt;
+   * @throws ApiException if fails to make API call
+   */
+  public ApiResponse<PaymentMethodResponse> createPaymentMethodWithHttpInfo(@jakarta.annotation.Nonnull AddPaymentMethodBody addPaymentMethodBody, Map<String, String> headers) throws ApiException {
+    HttpRequest.Builder localVarRequestBuilder = createPaymentMethodRequestBuilder(addPaymentMethodBody, headers);
+    try {
+      HttpResponse<InputStream> localVarResponse = memberVarHttpClient.send(
+          localVarRequestBuilder.build(),
+          HttpResponse.BodyHandlers.ofInputStream());
+      if (memberVarResponseInterceptor != null) {
+        memberVarResponseInterceptor.accept(localVarResponse);
+      }
+      InputStream localVarResponseBody = null;
+      try {
+        if (localVarResponse.statusCode()/ 100 != 2) {
+          throw getApiException("createPaymentMethod", localVarResponse);
+        }
+        localVarResponseBody = ApiClient.getResponseBody(localVarResponse);
+        if (localVarResponseBody == null) {
+          return new ApiResponse<PaymentMethodResponse>(
+              localVarResponse.statusCode(),
+              localVarResponse.headers().map(),
+              null
+          );
+        }
+
+        
+        
+        String responseBody = new String(localVarResponseBody.readAllBytes());
+        PaymentMethodResponse responseValue = responseBody.isBlank()? null: memberVarObjectMapper.readValue(responseBody, new TypeReference<PaymentMethodResponse>() {});
+        
+
+        return new ApiResponse<PaymentMethodResponse>(
+            localVarResponse.statusCode(),
+            localVarResponse.headers().map(),
+            responseValue
+        );
+      } finally {
+        if (localVarResponseBody != null) {
+          localVarResponseBody.close();
+        }
+      }
+    } catch (IOException e) {
+      throw new ApiException(e);
+    }
+    catch (InterruptedException e) {
+      Thread.currentThread().interrupt();
+      throw new ApiException(e);
+    }
+  }
+
+  private HttpRequest.Builder createPaymentMethodRequestBuilder(@jakarta.annotation.Nonnull AddPaymentMethodBody addPaymentMethodBody, Map<String, String> headers) throws ApiException {
+    // verify the required parameter 'addPaymentMethodBody' is set
+    if (addPaymentMethodBody == null) {
+      throw new ApiException(400, "Missing the required parameter 'addPaymentMethodBody' when calling createPaymentMethod");
+    }
+
+    HttpRequest.Builder localVarRequestBuilder = HttpRequest.newBuilder();
+
+    String localVarPath = "/api/v1/payment_methods";
+
+    localVarRequestBuilder.uri(URI.create(memberVarBaseUri + localVarPath));
+
+    localVarRequestBuilder.header("Content-Type", "application/vnd.api+json");
+    localVarRequestBuilder.header("Accept", "application/vnd.api+json");
+
+    try {
+      byte[] localVarPostBody = memberVarObjectMapper.writeValueAsBytes(addPaymentMethodBody);
+      localVarRequestBuilder.method("POST", HttpRequest.BodyPublishers.ofByteArray(localVarPostBody));
+    } catch (IOException e) {
+      throw new ApiException(e);
+    }
+    if (memberVarReadTimeout != null) {
+      localVarRequestBuilder.timeout(memberVarReadTimeout);
+    }
+    // Add custom headers if provided
+    localVarRequestBuilder = HttpRequestBuilderExtensions.withAdditionalHeaders(localVarRequestBuilder, headers);
+    if (memberVarInterceptor != null) {
+      memberVarInterceptor.accept(localVarRequestBuilder);
+    }
+    return localVarRequestBuilder;
+  }
+
+  /**
    * Create Subscription
    * Create a new paid subscription for a product.
    * @param createSubscriptionBody  (required)
@@ -528,6 +652,110 @@ public class BillingApi {
     } catch (IOException e) {
       throw new ApiException(e);
     }
+    if (memberVarReadTimeout != null) {
+      localVarRequestBuilder.timeout(memberVarReadTimeout);
+    }
+    // Add custom headers if provided
+    localVarRequestBuilder = HttpRequestBuilderExtensions.withAdditionalHeaders(localVarRequestBuilder, headers);
+    if (memberVarInterceptor != null) {
+      memberVarInterceptor.accept(localVarRequestBuilder);
+    }
+    return localVarRequestBuilder;
+  }
+
+  /**
+   * Delete Payment Method
+   * Detach the payment method from Stripe and soft-delete the local row. Returns 409 if this is the only PM and the account has an active paid subscription. If the deleted row was default, the oldest remaining row is promoted.
+   * @param id  (required)
+   * @throws ApiException if fails to make API call
+   */
+  public void deletePaymentMethod(@jakarta.annotation.Nonnull UUID id) throws ApiException {
+    deletePaymentMethod(id, null);
+  }
+
+  /**
+   * Delete Payment Method
+   * Detach the payment method from Stripe and soft-delete the local row. Returns 409 if this is the only PM and the account has an active paid subscription. If the deleted row was default, the oldest remaining row is promoted.
+   * @param id  (required)
+   * @param headers Optional headers to include in the request
+   * @throws ApiException if fails to make API call
+   */
+  public void deletePaymentMethod(@jakarta.annotation.Nonnull UUID id, Map<String, String> headers) throws ApiException {
+    deletePaymentMethodWithHttpInfo(id, headers);
+  }
+
+  /**
+   * Delete Payment Method
+   * Detach the payment method from Stripe and soft-delete the local row. Returns 409 if this is the only PM and the account has an active paid subscription. If the deleted row was default, the oldest remaining row is promoted.
+   * @param id  (required)
+   * @return ApiResponse&lt;Void&gt;
+   * @throws ApiException if fails to make API call
+   */
+  public ApiResponse<Void> deletePaymentMethodWithHttpInfo(@jakarta.annotation.Nonnull UUID id) throws ApiException {
+    return deletePaymentMethodWithHttpInfo(id, null);
+  }
+
+  /**
+   * Delete Payment Method
+   * Detach the payment method from Stripe and soft-delete the local row. Returns 409 if this is the only PM and the account has an active paid subscription. If the deleted row was default, the oldest remaining row is promoted.
+   * @param id  (required)
+   * @param headers Optional headers to include in the request
+   * @return ApiResponse&lt;Void&gt;
+   * @throws ApiException if fails to make API call
+   */
+  public ApiResponse<Void> deletePaymentMethodWithHttpInfo(@jakarta.annotation.Nonnull UUID id, Map<String, String> headers) throws ApiException {
+    HttpRequest.Builder localVarRequestBuilder = deletePaymentMethodRequestBuilder(id, headers);
+    try {
+      HttpResponse<InputStream> localVarResponse = memberVarHttpClient.send(
+          localVarRequestBuilder.build(),
+          HttpResponse.BodyHandlers.ofInputStream());
+      if (memberVarResponseInterceptor != null) {
+        memberVarResponseInterceptor.accept(localVarResponse);
+      }
+      InputStream localVarResponseBody = null;
+      try {
+        if (localVarResponse.statusCode()/ 100 != 2) {
+          throw getApiException("deletePaymentMethod", localVarResponse);
+        }
+        localVarResponseBody = ApiClient.getResponseBody(localVarResponse);
+        if (localVarResponseBody != null) {
+          localVarResponseBody.readAllBytes();
+        }
+        return new ApiResponse<>(
+            localVarResponse.statusCode(),
+            localVarResponse.headers().map(),
+            null
+        );
+      } finally {
+        if (localVarResponseBody != null) {
+          localVarResponseBody.close();
+        }
+      }
+    } catch (IOException e) {
+      throw new ApiException(e);
+    }
+    catch (InterruptedException e) {
+      Thread.currentThread().interrupt();
+      throw new ApiException(e);
+    }
+  }
+
+  private HttpRequest.Builder deletePaymentMethodRequestBuilder(@jakarta.annotation.Nonnull UUID id, Map<String, String> headers) throws ApiException {
+    // verify the required parameter 'id' is set
+    if (id == null) {
+      throw new ApiException(400, "Missing the required parameter 'id' when calling deletePaymentMethod");
+    }
+
+    HttpRequest.Builder localVarRequestBuilder = HttpRequest.newBuilder();
+
+    String localVarPath = "/api/v1/payment_methods/{id}"
+        .replace("{id}", ApiClient.urlEncode(id.toString()));
+
+    localVarRequestBuilder.uri(URI.create(memberVarBaseUri + localVarPath));
+
+    localVarRequestBuilder.header("Accept", "application/vnd.api+json");
+
+    localVarRequestBuilder.method("DELETE", HttpRequest.BodyPublishers.noBody());
     if (memberVarReadTimeout != null) {
       localVarRequestBuilder.timeout(memberVarReadTimeout);
     }
@@ -899,6 +1127,124 @@ public class BillingApi {
   }
 
   /**
+   * Get Payment Method
+   * Return a payment method by id.
+   * @param id  (required)
+   * @return PaymentMethodResponse
+   * @throws ApiException if fails to make API call
+   */
+  public PaymentMethodResponse getPaymentMethod(@jakarta.annotation.Nonnull UUID id) throws ApiException {
+    return getPaymentMethod(id, null);
+  }
+
+  /**
+   * Get Payment Method
+   * Return a payment method by id.
+   * @param id  (required)
+   * @param headers Optional headers to include in the request
+   * @return PaymentMethodResponse
+   * @throws ApiException if fails to make API call
+   */
+  public PaymentMethodResponse getPaymentMethod(@jakarta.annotation.Nonnull UUID id, Map<String, String> headers) throws ApiException {
+    ApiResponse<PaymentMethodResponse> localVarResponse = getPaymentMethodWithHttpInfo(id, headers);
+    return localVarResponse.getData();
+  }
+
+  /**
+   * Get Payment Method
+   * Return a payment method by id.
+   * @param id  (required)
+   * @return ApiResponse&lt;PaymentMethodResponse&gt;
+   * @throws ApiException if fails to make API call
+   */
+  public ApiResponse<PaymentMethodResponse> getPaymentMethodWithHttpInfo(@jakarta.annotation.Nonnull UUID id) throws ApiException {
+    return getPaymentMethodWithHttpInfo(id, null);
+  }
+
+  /**
+   * Get Payment Method
+   * Return a payment method by id.
+   * @param id  (required)
+   * @param headers Optional headers to include in the request
+   * @return ApiResponse&lt;PaymentMethodResponse&gt;
+   * @throws ApiException if fails to make API call
+   */
+  public ApiResponse<PaymentMethodResponse> getPaymentMethodWithHttpInfo(@jakarta.annotation.Nonnull UUID id, Map<String, String> headers) throws ApiException {
+    HttpRequest.Builder localVarRequestBuilder = getPaymentMethodRequestBuilder(id, headers);
+    try {
+      HttpResponse<InputStream> localVarResponse = memberVarHttpClient.send(
+          localVarRequestBuilder.build(),
+          HttpResponse.BodyHandlers.ofInputStream());
+      if (memberVarResponseInterceptor != null) {
+        memberVarResponseInterceptor.accept(localVarResponse);
+      }
+      InputStream localVarResponseBody = null;
+      try {
+        if (localVarResponse.statusCode()/ 100 != 2) {
+          throw getApiException("getPaymentMethod", localVarResponse);
+        }
+        localVarResponseBody = ApiClient.getResponseBody(localVarResponse);
+        if (localVarResponseBody == null) {
+          return new ApiResponse<PaymentMethodResponse>(
+              localVarResponse.statusCode(),
+              localVarResponse.headers().map(),
+              null
+          );
+        }
+
+        
+        
+        String responseBody = new String(localVarResponseBody.readAllBytes());
+        PaymentMethodResponse responseValue = responseBody.isBlank()? null: memberVarObjectMapper.readValue(responseBody, new TypeReference<PaymentMethodResponse>() {});
+        
+
+        return new ApiResponse<PaymentMethodResponse>(
+            localVarResponse.statusCode(),
+            localVarResponse.headers().map(),
+            responseValue
+        );
+      } finally {
+        if (localVarResponseBody != null) {
+          localVarResponseBody.close();
+        }
+      }
+    } catch (IOException e) {
+      throw new ApiException(e);
+    }
+    catch (InterruptedException e) {
+      Thread.currentThread().interrupt();
+      throw new ApiException(e);
+    }
+  }
+
+  private HttpRequest.Builder getPaymentMethodRequestBuilder(@jakarta.annotation.Nonnull UUID id, Map<String, String> headers) throws ApiException {
+    // verify the required parameter 'id' is set
+    if (id == null) {
+      throw new ApiException(400, "Missing the required parameter 'id' when calling getPaymentMethod");
+    }
+
+    HttpRequest.Builder localVarRequestBuilder = HttpRequest.newBuilder();
+
+    String localVarPath = "/api/v1/payment_methods/{id}"
+        .replace("{id}", ApiClient.urlEncode(id.toString()));
+
+    localVarRequestBuilder.uri(URI.create(memberVarBaseUri + localVarPath));
+
+    localVarRequestBuilder.header("Accept", "application/vnd.api+json");
+
+    localVarRequestBuilder.method("GET", HttpRequest.BodyPublishers.noBody());
+    if (memberVarReadTimeout != null) {
+      localVarRequestBuilder.timeout(memberVarReadTimeout);
+    }
+    // Add custom headers if provided
+    localVarRequestBuilder = HttpRequestBuilderExtensions.withAdditionalHeaders(localVarRequestBuilder, headers);
+    if (memberVarInterceptor != null) {
+      memberVarInterceptor.accept(localVarRequestBuilder);
+    }
+    return localVarRequestBuilder;
+  }
+
+  /**
    * List Bundles
    * Return all bundle definitions as JSON:API resources. Public, unauthenticated.
    * @return BundleListResponse
@@ -1118,7 +1464,7 @@ public class BillingApi {
 
   /**
    * List Payment Methods
-   * Return the default payment method for the account&#39;s Stripe Customer.
+   * List all payment methods for the account. Default is returned first, then newest first.
    * @return PaymentMethodListResponse
    * @throws ApiException if fails to make API call
    */
@@ -1128,7 +1474,7 @@ public class BillingApi {
 
   /**
    * List Payment Methods
-   * Return the default payment method for the account&#39;s Stripe Customer.
+   * List all payment methods for the account. Default is returned first, then newest first.
    * @param headers Optional headers to include in the request
    * @return PaymentMethodListResponse
    * @throws ApiException if fails to make API call
@@ -1140,7 +1486,7 @@ public class BillingApi {
 
   /**
    * List Payment Methods
-   * Return the default payment method for the account&#39;s Stripe Customer.
+   * List all payment methods for the account. Default is returned first, then newest first.
    * @return ApiResponse&lt;PaymentMethodListResponse&gt;
    * @throws ApiException if fails to make API call
    */
@@ -1150,7 +1496,7 @@ public class BillingApi {
 
   /**
    * List Payment Methods
-   * Return the default payment method for the account&#39;s Stripe Customer.
+   * List all payment methods for the account. Default is returned first, then newest first.
    * @param headers Optional headers to include in the request
    * @return ApiResponse&lt;PaymentMethodListResponse&gt;
    * @throws ApiException if fails to make API call
@@ -1336,49 +1682,49 @@ public class BillingApi {
 
   /**
    * Set Default Payment Method
-   * Attach a payment method to the account&#39;s Stripe Customer and set it as the default.  Called by the frontend after &#x60;&#x60;stripe.confirmSetup()&#x60;&#x60; to persist the new card as the customer&#39;s &#x60;&#x60;invoice_settings.default_payment_method&#x60;&#x60;.
-   * @param setDefaultPaymentMethodRequest  (required)
-   * @return PaymentMethodListResponse
+   * Mark this payment method as the account&#39;s default. Idempotent — a no-op 200 if already default.
+   * @param id  (required)
+   * @return PaymentMethodResponse
    * @throws ApiException if fails to make API call
    */
-  public PaymentMethodListResponse setDefaultPaymentMethod(@jakarta.annotation.Nonnull SetDefaultPaymentMethodRequest setDefaultPaymentMethodRequest) throws ApiException {
-    return setDefaultPaymentMethod(setDefaultPaymentMethodRequest, null);
+  public PaymentMethodResponse setDefaultPaymentMethod(@jakarta.annotation.Nonnull UUID id) throws ApiException {
+    return setDefaultPaymentMethod(id, null);
   }
 
   /**
    * Set Default Payment Method
-   * Attach a payment method to the account&#39;s Stripe Customer and set it as the default.  Called by the frontend after &#x60;&#x60;stripe.confirmSetup()&#x60;&#x60; to persist the new card as the customer&#39;s &#x60;&#x60;invoice_settings.default_payment_method&#x60;&#x60;.
-   * @param setDefaultPaymentMethodRequest  (required)
+   * Mark this payment method as the account&#39;s default. Idempotent — a no-op 200 if already default.
+   * @param id  (required)
    * @param headers Optional headers to include in the request
-   * @return PaymentMethodListResponse
+   * @return PaymentMethodResponse
    * @throws ApiException if fails to make API call
    */
-  public PaymentMethodListResponse setDefaultPaymentMethod(@jakarta.annotation.Nonnull SetDefaultPaymentMethodRequest setDefaultPaymentMethodRequest, Map<String, String> headers) throws ApiException {
-    ApiResponse<PaymentMethodListResponse> localVarResponse = setDefaultPaymentMethodWithHttpInfo(setDefaultPaymentMethodRequest, headers);
+  public PaymentMethodResponse setDefaultPaymentMethod(@jakarta.annotation.Nonnull UUID id, Map<String, String> headers) throws ApiException {
+    ApiResponse<PaymentMethodResponse> localVarResponse = setDefaultPaymentMethodWithHttpInfo(id, headers);
     return localVarResponse.getData();
   }
 
   /**
    * Set Default Payment Method
-   * Attach a payment method to the account&#39;s Stripe Customer and set it as the default.  Called by the frontend after &#x60;&#x60;stripe.confirmSetup()&#x60;&#x60; to persist the new card as the customer&#39;s &#x60;&#x60;invoice_settings.default_payment_method&#x60;&#x60;.
-   * @param setDefaultPaymentMethodRequest  (required)
-   * @return ApiResponse&lt;PaymentMethodListResponse&gt;
+   * Mark this payment method as the account&#39;s default. Idempotent — a no-op 200 if already default.
+   * @param id  (required)
+   * @return ApiResponse&lt;PaymentMethodResponse&gt;
    * @throws ApiException if fails to make API call
    */
-  public ApiResponse<PaymentMethodListResponse> setDefaultPaymentMethodWithHttpInfo(@jakarta.annotation.Nonnull SetDefaultPaymentMethodRequest setDefaultPaymentMethodRequest) throws ApiException {
-    return setDefaultPaymentMethodWithHttpInfo(setDefaultPaymentMethodRequest, null);
+  public ApiResponse<PaymentMethodResponse> setDefaultPaymentMethodWithHttpInfo(@jakarta.annotation.Nonnull UUID id) throws ApiException {
+    return setDefaultPaymentMethodWithHttpInfo(id, null);
   }
 
   /**
    * Set Default Payment Method
-   * Attach a payment method to the account&#39;s Stripe Customer and set it as the default.  Called by the frontend after &#x60;&#x60;stripe.confirmSetup()&#x60;&#x60; to persist the new card as the customer&#39;s &#x60;&#x60;invoice_settings.default_payment_method&#x60;&#x60;.
-   * @param setDefaultPaymentMethodRequest  (required)
+   * Mark this payment method as the account&#39;s default. Idempotent — a no-op 200 if already default.
+   * @param id  (required)
    * @param headers Optional headers to include in the request
-   * @return ApiResponse&lt;PaymentMethodListResponse&gt;
+   * @return ApiResponse&lt;PaymentMethodResponse&gt;
    * @throws ApiException if fails to make API call
    */
-  public ApiResponse<PaymentMethodListResponse> setDefaultPaymentMethodWithHttpInfo(@jakarta.annotation.Nonnull SetDefaultPaymentMethodRequest setDefaultPaymentMethodRequest, Map<String, String> headers) throws ApiException {
-    HttpRequest.Builder localVarRequestBuilder = setDefaultPaymentMethodRequestBuilder(setDefaultPaymentMethodRequest, headers);
+  public ApiResponse<PaymentMethodResponse> setDefaultPaymentMethodWithHttpInfo(@jakarta.annotation.Nonnull UUID id, Map<String, String> headers) throws ApiException {
+    HttpRequest.Builder localVarRequestBuilder = setDefaultPaymentMethodRequestBuilder(id, headers);
     try {
       HttpResponse<InputStream> localVarResponse = memberVarHttpClient.send(
           localVarRequestBuilder.build(),
@@ -1393,7 +1739,7 @@ public class BillingApi {
         }
         localVarResponseBody = ApiClient.getResponseBody(localVarResponse);
         if (localVarResponseBody == null) {
-          return new ApiResponse<PaymentMethodListResponse>(
+          return new ApiResponse<PaymentMethodResponse>(
               localVarResponse.statusCode(),
               localVarResponse.headers().map(),
               null
@@ -1403,10 +1749,10 @@ public class BillingApi {
         
         
         String responseBody = new String(localVarResponseBody.readAllBytes());
-        PaymentMethodListResponse responseValue = responseBody.isBlank()? null: memberVarObjectMapper.readValue(responseBody, new TypeReference<PaymentMethodListResponse>() {});
+        PaymentMethodResponse responseValue = responseBody.isBlank()? null: memberVarObjectMapper.readValue(responseBody, new TypeReference<PaymentMethodResponse>() {});
         
 
-        return new ApiResponse<PaymentMethodListResponse>(
+        return new ApiResponse<PaymentMethodResponse>(
             localVarResponse.statusCode(),
             localVarResponse.headers().map(),
             responseValue
@@ -1425,27 +1771,22 @@ public class BillingApi {
     }
   }
 
-  private HttpRequest.Builder setDefaultPaymentMethodRequestBuilder(@jakarta.annotation.Nonnull SetDefaultPaymentMethodRequest setDefaultPaymentMethodRequest, Map<String, String> headers) throws ApiException {
-    // verify the required parameter 'setDefaultPaymentMethodRequest' is set
-    if (setDefaultPaymentMethodRequest == null) {
-      throw new ApiException(400, "Missing the required parameter 'setDefaultPaymentMethodRequest' when calling setDefaultPaymentMethod");
+  private HttpRequest.Builder setDefaultPaymentMethodRequestBuilder(@jakarta.annotation.Nonnull UUID id, Map<String, String> headers) throws ApiException {
+    // verify the required parameter 'id' is set
+    if (id == null) {
+      throw new ApiException(400, "Missing the required parameter 'id' when calling setDefaultPaymentMethod");
     }
 
     HttpRequest.Builder localVarRequestBuilder = HttpRequest.newBuilder();
 
-    String localVarPath = "/api/v1/payment_methods";
+    String localVarPath = "/api/v1/payment_methods/{id}/actions/set_default"
+        .replace("{id}", ApiClient.urlEncode(id.toString()));
 
     localVarRequestBuilder.uri(URI.create(memberVarBaseUri + localVarPath));
 
-    localVarRequestBuilder.header("Content-Type", "application/vnd.api+json");
     localVarRequestBuilder.header("Accept", "application/vnd.api+json");
 
-    try {
-      byte[] localVarPostBody = memberVarObjectMapper.writeValueAsBytes(setDefaultPaymentMethodRequest);
-      localVarRequestBuilder.method("POST", HttpRequest.BodyPublishers.ofByteArray(localVarPostBody));
-    } catch (IOException e) {
-      throw new ApiException(e);
-    }
+    localVarRequestBuilder.method("POST", HttpRequest.BodyPublishers.noBody());
     if (memberVarReadTimeout != null) {
       localVarRequestBuilder.timeout(memberVarReadTimeout);
     }
@@ -1682,6 +2023,138 @@ public class BillingApi {
     localVarRequestBuilder.header("Accept", "application/vnd.api+json");
 
     localVarRequestBuilder.method("POST", HttpRequest.BodyPublishers.noBody());
+    if (memberVarReadTimeout != null) {
+      localVarRequestBuilder.timeout(memberVarReadTimeout);
+    }
+    // Add custom headers if provided
+    localVarRequestBuilder = HttpRequestBuilderExtensions.withAdditionalHeaders(localVarRequestBuilder, headers);
+    if (memberVarInterceptor != null) {
+      memberVarInterceptor.accept(localVarRequestBuilder);
+    }
+    return localVarRequestBuilder;
+  }
+
+  /**
+   * Update Payment Method
+   * Update the mutable fields (&#x60;&#x60;billing_details&#x60;&#x60;, &#x60;&#x60;exp_month&#x60;&#x60;, &#x60;&#x60;exp_year&#x60;&#x60;). The &#x60;&#x60;default&#x60;&#x60; field is not mutable via PUT — see ADR-044 §5.2; use the &#x60;&#x60;set_default&#x60;&#x60; action instead.
+   * @param id  (required)
+   * @param paymentMethodResponse  (required)
+   * @return PaymentMethodResponse
+   * @throws ApiException if fails to make API call
+   */
+  public PaymentMethodResponse updatePaymentMethod(@jakarta.annotation.Nonnull UUID id, @jakarta.annotation.Nonnull PaymentMethodResponse paymentMethodResponse) throws ApiException {
+    return updatePaymentMethod(id, paymentMethodResponse, null);
+  }
+
+  /**
+   * Update Payment Method
+   * Update the mutable fields (&#x60;&#x60;billing_details&#x60;&#x60;, &#x60;&#x60;exp_month&#x60;&#x60;, &#x60;&#x60;exp_year&#x60;&#x60;). The &#x60;&#x60;default&#x60;&#x60; field is not mutable via PUT — see ADR-044 §5.2; use the &#x60;&#x60;set_default&#x60;&#x60; action instead.
+   * @param id  (required)
+   * @param paymentMethodResponse  (required)
+   * @param headers Optional headers to include in the request
+   * @return PaymentMethodResponse
+   * @throws ApiException if fails to make API call
+   */
+  public PaymentMethodResponse updatePaymentMethod(@jakarta.annotation.Nonnull UUID id, @jakarta.annotation.Nonnull PaymentMethodResponse paymentMethodResponse, Map<String, String> headers) throws ApiException {
+    ApiResponse<PaymentMethodResponse> localVarResponse = updatePaymentMethodWithHttpInfo(id, paymentMethodResponse, headers);
+    return localVarResponse.getData();
+  }
+
+  /**
+   * Update Payment Method
+   * Update the mutable fields (&#x60;&#x60;billing_details&#x60;&#x60;, &#x60;&#x60;exp_month&#x60;&#x60;, &#x60;&#x60;exp_year&#x60;&#x60;). The &#x60;&#x60;default&#x60;&#x60; field is not mutable via PUT — see ADR-044 §5.2; use the &#x60;&#x60;set_default&#x60;&#x60; action instead.
+   * @param id  (required)
+   * @param paymentMethodResponse  (required)
+   * @return ApiResponse&lt;PaymentMethodResponse&gt;
+   * @throws ApiException if fails to make API call
+   */
+  public ApiResponse<PaymentMethodResponse> updatePaymentMethodWithHttpInfo(@jakarta.annotation.Nonnull UUID id, @jakarta.annotation.Nonnull PaymentMethodResponse paymentMethodResponse) throws ApiException {
+    return updatePaymentMethodWithHttpInfo(id, paymentMethodResponse, null);
+  }
+
+  /**
+   * Update Payment Method
+   * Update the mutable fields (&#x60;&#x60;billing_details&#x60;&#x60;, &#x60;&#x60;exp_month&#x60;&#x60;, &#x60;&#x60;exp_year&#x60;&#x60;). The &#x60;&#x60;default&#x60;&#x60; field is not mutable via PUT — see ADR-044 §5.2; use the &#x60;&#x60;set_default&#x60;&#x60; action instead.
+   * @param id  (required)
+   * @param paymentMethodResponse  (required)
+   * @param headers Optional headers to include in the request
+   * @return ApiResponse&lt;PaymentMethodResponse&gt;
+   * @throws ApiException if fails to make API call
+   */
+  public ApiResponse<PaymentMethodResponse> updatePaymentMethodWithHttpInfo(@jakarta.annotation.Nonnull UUID id, @jakarta.annotation.Nonnull PaymentMethodResponse paymentMethodResponse, Map<String, String> headers) throws ApiException {
+    HttpRequest.Builder localVarRequestBuilder = updatePaymentMethodRequestBuilder(id, paymentMethodResponse, headers);
+    try {
+      HttpResponse<InputStream> localVarResponse = memberVarHttpClient.send(
+          localVarRequestBuilder.build(),
+          HttpResponse.BodyHandlers.ofInputStream());
+      if (memberVarResponseInterceptor != null) {
+        memberVarResponseInterceptor.accept(localVarResponse);
+      }
+      InputStream localVarResponseBody = null;
+      try {
+        if (localVarResponse.statusCode()/ 100 != 2) {
+          throw getApiException("updatePaymentMethod", localVarResponse);
+        }
+        localVarResponseBody = ApiClient.getResponseBody(localVarResponse);
+        if (localVarResponseBody == null) {
+          return new ApiResponse<PaymentMethodResponse>(
+              localVarResponse.statusCode(),
+              localVarResponse.headers().map(),
+              null
+          );
+        }
+
+        
+        
+        String responseBody = new String(localVarResponseBody.readAllBytes());
+        PaymentMethodResponse responseValue = responseBody.isBlank()? null: memberVarObjectMapper.readValue(responseBody, new TypeReference<PaymentMethodResponse>() {});
+        
+
+        return new ApiResponse<PaymentMethodResponse>(
+            localVarResponse.statusCode(),
+            localVarResponse.headers().map(),
+            responseValue
+        );
+      } finally {
+        if (localVarResponseBody != null) {
+          localVarResponseBody.close();
+        }
+      }
+    } catch (IOException e) {
+      throw new ApiException(e);
+    }
+    catch (InterruptedException e) {
+      Thread.currentThread().interrupt();
+      throw new ApiException(e);
+    }
+  }
+
+  private HttpRequest.Builder updatePaymentMethodRequestBuilder(@jakarta.annotation.Nonnull UUID id, @jakarta.annotation.Nonnull PaymentMethodResponse paymentMethodResponse, Map<String, String> headers) throws ApiException {
+    // verify the required parameter 'id' is set
+    if (id == null) {
+      throw new ApiException(400, "Missing the required parameter 'id' when calling updatePaymentMethod");
+    }
+    // verify the required parameter 'paymentMethodResponse' is set
+    if (paymentMethodResponse == null) {
+      throw new ApiException(400, "Missing the required parameter 'paymentMethodResponse' when calling updatePaymentMethod");
+    }
+
+    HttpRequest.Builder localVarRequestBuilder = HttpRequest.newBuilder();
+
+    String localVarPath = "/api/v1/payment_methods/{id}"
+        .replace("{id}", ApiClient.urlEncode(id.toString()));
+
+    localVarRequestBuilder.uri(URI.create(memberVarBaseUri + localVarPath));
+
+    localVarRequestBuilder.header("Content-Type", "application/vnd.api+json");
+    localVarRequestBuilder.header("Accept", "application/vnd.api+json");
+
+    try {
+      byte[] localVarPostBody = memberVarObjectMapper.writeValueAsBytes(paymentMethodResponse);
+      localVarRequestBuilder.method("PUT", HttpRequest.BodyPublishers.ofByteArray(localVarPostBody));
+    } catch (IOException e) {
+      throw new ApiException(e);
+    }
     if (memberVarReadTimeout != null) {
       localVarRequestBuilder.timeout(memberVarReadTimeout);
     }
