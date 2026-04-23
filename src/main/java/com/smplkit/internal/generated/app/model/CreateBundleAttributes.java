@@ -25,6 +25,10 @@ import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonTypeName;
 import com.fasterxml.jackson.annotation.JsonValue;
 import java.util.Arrays;
+import org.openapitools.jackson.nullable.JsonNullable;
+import com.fasterxml.jackson.annotation.JsonIgnore;
+import org.openapitools.jackson.nullable.JsonNullable;
+import java.util.NoSuchElementException;
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 
 
@@ -43,8 +47,7 @@ public class CreateBundleAttributes {
   private String bundle;
 
   public static final String JSON_PROPERTY_PAYMENT_METHOD = "payment_method";
-  @jakarta.annotation.Nonnull
-  private String paymentMethod;
+  private JsonNullable<String> paymentMethod = JsonNullable.<String>undefined();
 
   public CreateBundleAttributes() { 
   }
@@ -73,8 +76,8 @@ public class CreateBundleAttributes {
   }
 
 
-  public CreateBundleAttributes paymentMethod(@jakarta.annotation.Nonnull String paymentMethod) {
-    this.paymentMethod = paymentMethod;
+  public CreateBundleAttributes paymentMethod(@jakarta.annotation.Nullable String paymentMethod) {
+    this.paymentMethod = JsonNullable.<String>of(paymentMethod);
     return this;
   }
 
@@ -82,18 +85,26 @@ public class CreateBundleAttributes {
    * Get paymentMethod
    * @return paymentMethod
    */
-  @jakarta.annotation.Nonnull
-  @JsonProperty(value = JSON_PROPERTY_PAYMENT_METHOD, required = true)
-  @JsonInclude(value = JsonInclude.Include.ALWAYS)
+  @jakarta.annotation.Nullable
+  @JsonIgnore
   public String getPaymentMethod() {
-    return paymentMethod;
+        return paymentMethod.orElse(null);
   }
 
+  @JsonProperty(value = JSON_PROPERTY_PAYMENT_METHOD, required = false)
+  @JsonInclude(value = JsonInclude.Include.USE_DEFAULTS)
 
-  @JsonProperty(value = JSON_PROPERTY_PAYMENT_METHOD, required = true)
-  @JsonInclude(value = JsonInclude.Include.ALWAYS)
-  public void setPaymentMethod(@jakarta.annotation.Nonnull String paymentMethod) {
+  public JsonNullable<String> getPaymentMethod_JsonNullable() {
+    return paymentMethod;
+  }
+  
+  @JsonProperty(JSON_PROPERTY_PAYMENT_METHOD)
+  public void setPaymentMethod_JsonNullable(JsonNullable<String> paymentMethod) {
     this.paymentMethod = paymentMethod;
+  }
+
+  public void setPaymentMethod(@jakarta.annotation.Nullable String paymentMethod) {
+    this.paymentMethod = JsonNullable.<String>of(paymentMethod);
   }
 
 
@@ -110,12 +121,23 @@ public class CreateBundleAttributes {
     }
     CreateBundleAttributes createBundleAttributes = (CreateBundleAttributes) o;
     return Objects.equals(this.bundle, createBundleAttributes.bundle) &&
-        Objects.equals(this.paymentMethod, createBundleAttributes.paymentMethod);
+        equalsNullable(this.paymentMethod, createBundleAttributes.paymentMethod);
+  }
+
+  private static <T> boolean equalsNullable(JsonNullable<T> a, JsonNullable<T> b) {
+    return a == b || (a != null && b != null && a.isPresent() && b.isPresent() && Objects.deepEquals(a.get(), b.get()));
   }
 
   @Override
   public int hashCode() {
-    return Objects.hash(bundle, paymentMethod);
+    return Objects.hash(bundle, hashCodeNullable(paymentMethod));
+  }
+
+  private static <T> int hashCodeNullable(JsonNullable<T> a) {
+    if (a == null) {
+      return 1;
+    }
+    return a.isPresent() ? Arrays.deepHashCode(new Object[]{a.get()}) : 31;
   }
 
   @Override

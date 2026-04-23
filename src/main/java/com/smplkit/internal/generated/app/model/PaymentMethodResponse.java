@@ -24,28 +24,28 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonTypeName;
 import com.fasterxml.jackson.annotation.JsonValue;
-import com.smplkit.internal.generated.app.model.SetDefaultPaymentMethodData;
+import com.smplkit.internal.generated.app.model.PaymentMethodResource;
 import java.util.Arrays;
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 
 
 import com.smplkit.internal.generated.app.ApiClient;
 /**
- * SetDefaultPaymentMethodRequest
+ * PaymentMethodResponse
  */
 @JsonPropertyOrder({
-  SetDefaultPaymentMethodRequest.JSON_PROPERTY_DATA
+  PaymentMethodResponse.JSON_PROPERTY_DATA
 })
 @jakarta.annotation.Generated(value = "org.openapitools.codegen.languages.JavaClientCodegen", comments = "Generator version: 7.21.0")
-public class SetDefaultPaymentMethodRequest {
+public class PaymentMethodResponse {
   public static final String JSON_PROPERTY_DATA = "data";
   @jakarta.annotation.Nonnull
-  private SetDefaultPaymentMethodData data;
+  private PaymentMethodResource data;
 
-  public SetDefaultPaymentMethodRequest() { 
+  public PaymentMethodResponse() { 
   }
 
-  public SetDefaultPaymentMethodRequest data(@jakarta.annotation.Nonnull SetDefaultPaymentMethodData data) {
+  public PaymentMethodResponse data(@jakarta.annotation.Nonnull PaymentMethodResource data) {
     this.data = data;
     return this;
   }
@@ -57,20 +57,20 @@ public class SetDefaultPaymentMethodRequest {
   @jakarta.annotation.Nonnull
   @JsonProperty(value = JSON_PROPERTY_DATA, required = true)
   @JsonInclude(value = JsonInclude.Include.ALWAYS)
-  public SetDefaultPaymentMethodData getData() {
+  public PaymentMethodResource getData() {
     return data;
   }
 
 
   @JsonProperty(value = JSON_PROPERTY_DATA, required = true)
   @JsonInclude(value = JsonInclude.Include.ALWAYS)
-  public void setData(@jakarta.annotation.Nonnull SetDefaultPaymentMethodData data) {
+  public void setData(@jakarta.annotation.Nonnull PaymentMethodResource data) {
     this.data = data;
   }
 
 
   /**
-   * Return true if this SetDefaultPaymentMethodRequest object is equal to o.
+   * Return true if this PaymentMethodResponse object is equal to o.
    */
   @Override
   public boolean equals(Object o) {
@@ -80,8 +80,8 @@ public class SetDefaultPaymentMethodRequest {
     if (o == null || getClass() != o.getClass()) {
       return false;
     }
-    SetDefaultPaymentMethodRequest setDefaultPaymentMethodRequest = (SetDefaultPaymentMethodRequest) o;
-    return Objects.equals(this.data, setDefaultPaymentMethodRequest.data);
+    PaymentMethodResponse paymentMethodResponse = (PaymentMethodResponse) o;
+    return Objects.equals(this.data, paymentMethodResponse.data);
   }
 
   @Override
@@ -92,7 +92,7 @@ public class SetDefaultPaymentMethodRequest {
   @Override
   public String toString() {
     StringBuilder sb = new StringBuilder();
-    sb.append("class SetDefaultPaymentMethodRequest {\n");
+    sb.append("class PaymentMethodResponse {\n");
     sb.append("    data: ").append(toIndentedString(data)).append("\n");
     sb.append("}");
     return sb.toString();

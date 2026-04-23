@@ -24,21 +24,21 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonTypeName;
 import com.fasterxml.jackson.annotation.JsonValue;
-import com.smplkit.internal.generated.app.model.SetDefaultPaymentMethodAttributes;
+import com.smplkit.internal.generated.app.model.AddPaymentMethodAttributes;
 import java.util.Arrays;
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 
 
 import com.smplkit.internal.generated.app.ApiClient;
 /**
- * SetDefaultPaymentMethodData
+ * AddPaymentMethodData
  */
 @JsonPropertyOrder({
-  SetDefaultPaymentMethodData.JSON_PROPERTY_TYPE,
-  SetDefaultPaymentMethodData.JSON_PROPERTY_ATTRIBUTES
+  AddPaymentMethodData.JSON_PROPERTY_TYPE,
+  AddPaymentMethodData.JSON_PROPERTY_ATTRIBUTES
 })
 @jakarta.annotation.Generated(value = "org.openapitools.codegen.languages.JavaClientCodegen", comments = "Generator version: 7.21.0")
-public class SetDefaultPaymentMethodData {
+public class AddPaymentMethodData {
   /**
    * Gets or Sets type
    */
@@ -78,12 +78,12 @@ public class SetDefaultPaymentMethodData {
 
   public static final String JSON_PROPERTY_ATTRIBUTES = "attributes";
   @jakarta.annotation.Nonnull
-  private SetDefaultPaymentMethodAttributes attributes;
+  private AddPaymentMethodAttributes attributes;
 
-  public SetDefaultPaymentMethodData() { 
+  public AddPaymentMethodData() { 
   }
 
-  public SetDefaultPaymentMethodData type(@jakarta.annotation.Nonnull TypeEnum type) {
+  public AddPaymentMethodData type(@jakarta.annotation.Nonnull TypeEnum type) {
     this.type = type;
     return this;
   }
@@ -107,7 +107,7 @@ public class SetDefaultPaymentMethodData {
   }
 
 
-  public SetDefaultPaymentMethodData attributes(@jakarta.annotation.Nonnull SetDefaultPaymentMethodAttributes attributes) {
+  public AddPaymentMethodData attributes(@jakarta.annotation.Nonnull AddPaymentMethodAttributes attributes) {
     this.attributes = attributes;
     return this;
   }
@@ -119,20 +119,20 @@ public class SetDefaultPaymentMethodData {
   @jakarta.annotation.Nonnull
   @JsonProperty(value = JSON_PROPERTY_ATTRIBUTES, required = true)
   @JsonInclude(value = JsonInclude.Include.ALWAYS)
-  public SetDefaultPaymentMethodAttributes getAttributes() {
+  public AddPaymentMethodAttributes getAttributes() {
     return attributes;
   }
 
 
   @JsonProperty(value = JSON_PROPERTY_ATTRIBUTES, required = true)
   @JsonInclude(value = JsonInclude.Include.ALWAYS)
-  public void setAttributes(@jakarta.annotation.Nonnull SetDefaultPaymentMethodAttributes attributes) {
+  public void setAttributes(@jakarta.annotation.Nonnull AddPaymentMethodAttributes attributes) {
     this.attributes = attributes;
   }
 
 
   /**
-   * Return true if this SetDefaultPaymentMethodData object is equal to o.
+   * Return true if this AddPaymentMethodData object is equal to o.
    */
   @Override
   public boolean equals(Object o) {
@@ -142,9 +142,9 @@ public class SetDefaultPaymentMethodData {
     if (o == null || getClass() != o.getClass()) {
       return false;
     }
-    SetDefaultPaymentMethodData setDefaultPaymentMethodData = (SetDefaultPaymentMethodData) o;
-    return Objects.equals(this.type, setDefaultPaymentMethodData.type) &&
-        Objects.equals(this.attributes, setDefaultPaymentMethodData.attributes);
+    AddPaymentMethodData addPaymentMethodData = (AddPaymentMethodData) o;
+    return Objects.equals(this.type, addPaymentMethodData.type) &&
+        Objects.equals(this.attributes, addPaymentMethodData.attributes);
   }
 
   @Override
@@ -155,7 +155,7 @@ public class SetDefaultPaymentMethodData {
   @Override
   public String toString() {
     StringBuilder sb = new StringBuilder();
-    sb.append("class SetDefaultPaymentMethodData {\n");
+    sb.append("class AddPaymentMethodData {\n");
     sb.append("    type: ").append(toIndentedString(type)).append("\n");
     sb.append("    attributes: ").append(toIndentedString(attributes)).append("\n");
     sb.append("}");
