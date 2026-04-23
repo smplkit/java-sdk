@@ -24,6 +24,7 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonTypeName;
 import com.fasterxml.jackson.annotation.JsonValue;
+import com.smplkit.internal.generated.app.model.UserListMeta;
 import com.smplkit.internal.generated.app.model.UserResource;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -36,13 +37,18 @@ import com.smplkit.internal.generated.app.ApiClient;
  * UserListResponse
  */
 @JsonPropertyOrder({
-  UserListResponse.JSON_PROPERTY_DATA
+  UserListResponse.JSON_PROPERTY_DATA,
+  UserListResponse.JSON_PROPERTY_META
 })
 @jakarta.annotation.Generated(value = "org.openapitools.codegen.languages.JavaClientCodegen", comments = "Generator version: 7.21.0")
 public class UserListResponse {
   public static final String JSON_PROPERTY_DATA = "data";
   @jakarta.annotation.Nonnull
   private List<UserResource> data = new ArrayList<>();
+
+  public static final String JSON_PROPERTY_META = "meta";
+  @jakarta.annotation.Nullable
+  private UserListMeta meta;
 
   public UserListResponse() { 
   }
@@ -79,6 +85,30 @@ public class UserListResponse {
   }
 
 
+  public UserListResponse meta(@jakarta.annotation.Nullable UserListMeta meta) {
+    this.meta = meta;
+    return this;
+  }
+
+  /**
+   * Get meta
+   * @return meta
+   */
+  @jakarta.annotation.Nullable
+  @JsonProperty(value = JSON_PROPERTY_META, required = false)
+  @JsonInclude(value = JsonInclude.Include.USE_DEFAULTS)
+  public UserListMeta getMeta() {
+    return meta;
+  }
+
+
+  @JsonProperty(value = JSON_PROPERTY_META, required = false)
+  @JsonInclude(value = JsonInclude.Include.USE_DEFAULTS)
+  public void setMeta(@jakarta.annotation.Nullable UserListMeta meta) {
+    this.meta = meta;
+  }
+
+
   /**
    * Return true if this UserListResponse object is equal to o.
    */
@@ -91,12 +121,13 @@ public class UserListResponse {
       return false;
     }
     UserListResponse userListResponse = (UserListResponse) o;
-    return Objects.equals(this.data, userListResponse.data);
+    return Objects.equals(this.data, userListResponse.data) &&
+        Objects.equals(this.meta, userListResponse.meta);
   }
 
   @Override
   public int hashCode() {
-    return Objects.hash(data);
+    return Objects.hash(data, meta);
   }
 
   @Override
@@ -104,6 +135,7 @@ public class UserListResponse {
     StringBuilder sb = new StringBuilder();
     sb.append("class UserListResponse {\n");
     sb.append("    data: ").append(toIndentedString(data)).append("\n");
+    sb.append("    meta: ").append(toIndentedString(meta)).append("\n");
     sb.append("}");
     return sb.toString();
   }
@@ -156,6 +188,11 @@ public class UserListResponse {
           "".equals(suffix) ? "" : String.format(java.util.Locale.ROOT, "%s%d%s", containerPrefix, i, containerSuffix))));
         }
       }
+    }
+
+    // add `meta` to the URL query string
+    if (getMeta() != null) {
+      joiner.add(getMeta().toUrlQueryString(prefix + "meta" + suffix));
     }
 
     return joiner.toString();

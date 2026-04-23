@@ -506,11 +506,14 @@ public class UsersApi {
    * List users in the authenticated account.
    * @param filterAccount  (optional)
    * @param filterEmail  (optional)
+   * @param filterSearch Case-insensitive substring match against display_name and email. If the value is a valid UUID, also matches user id exactly. (optional)
+   * @param pageNumber 1-based page number (optional, default to 1)
+   * @param pageSize Items per page (optional, default to 50)
    * @return UserListResponse
    * @throws ApiException if fails to make API call
    */
-  public UserListResponse listUsers(@jakarta.annotation.Nullable String filterAccount, @jakarta.annotation.Nullable String filterEmail) throws ApiException {
-    return listUsers(filterAccount, filterEmail, null);
+  public UserListResponse listUsers(@jakarta.annotation.Nullable String filterAccount, @jakarta.annotation.Nullable String filterEmail, @jakarta.annotation.Nullable String filterSearch, @jakarta.annotation.Nullable Integer pageNumber, @jakarta.annotation.Nullable Integer pageSize) throws ApiException {
+    return listUsers(filterAccount, filterEmail, filterSearch, pageNumber, pageSize, null);
   }
 
   /**
@@ -518,12 +521,15 @@ public class UsersApi {
    * List users in the authenticated account.
    * @param filterAccount  (optional)
    * @param filterEmail  (optional)
+   * @param filterSearch Case-insensitive substring match against display_name and email. If the value is a valid UUID, also matches user id exactly. (optional)
+   * @param pageNumber 1-based page number (optional, default to 1)
+   * @param pageSize Items per page (optional, default to 50)
    * @param headers Optional headers to include in the request
    * @return UserListResponse
    * @throws ApiException if fails to make API call
    */
-  public UserListResponse listUsers(@jakarta.annotation.Nullable String filterAccount, @jakarta.annotation.Nullable String filterEmail, Map<String, String> headers) throws ApiException {
-    ApiResponse<UserListResponse> localVarResponse = listUsersWithHttpInfo(filterAccount, filterEmail, headers);
+  public UserListResponse listUsers(@jakarta.annotation.Nullable String filterAccount, @jakarta.annotation.Nullable String filterEmail, @jakarta.annotation.Nullable String filterSearch, @jakarta.annotation.Nullable Integer pageNumber, @jakarta.annotation.Nullable Integer pageSize, Map<String, String> headers) throws ApiException {
+    ApiResponse<UserListResponse> localVarResponse = listUsersWithHttpInfo(filterAccount, filterEmail, filterSearch, pageNumber, pageSize, headers);
     return localVarResponse.getData();
   }
 
@@ -532,11 +538,14 @@ public class UsersApi {
    * List users in the authenticated account.
    * @param filterAccount  (optional)
    * @param filterEmail  (optional)
+   * @param filterSearch Case-insensitive substring match against display_name and email. If the value is a valid UUID, also matches user id exactly. (optional)
+   * @param pageNumber 1-based page number (optional, default to 1)
+   * @param pageSize Items per page (optional, default to 50)
    * @return ApiResponse&lt;UserListResponse&gt;
    * @throws ApiException if fails to make API call
    */
-  public ApiResponse<UserListResponse> listUsersWithHttpInfo(@jakarta.annotation.Nullable String filterAccount, @jakarta.annotation.Nullable String filterEmail) throws ApiException {
-    return listUsersWithHttpInfo(filterAccount, filterEmail, null);
+  public ApiResponse<UserListResponse> listUsersWithHttpInfo(@jakarta.annotation.Nullable String filterAccount, @jakarta.annotation.Nullable String filterEmail, @jakarta.annotation.Nullable String filterSearch, @jakarta.annotation.Nullable Integer pageNumber, @jakarta.annotation.Nullable Integer pageSize) throws ApiException {
+    return listUsersWithHttpInfo(filterAccount, filterEmail, filterSearch, pageNumber, pageSize, null);
   }
 
   /**
@@ -544,12 +553,15 @@ public class UsersApi {
    * List users in the authenticated account.
    * @param filterAccount  (optional)
    * @param filterEmail  (optional)
+   * @param filterSearch Case-insensitive substring match against display_name and email. If the value is a valid UUID, also matches user id exactly. (optional)
+   * @param pageNumber 1-based page number (optional, default to 1)
+   * @param pageSize Items per page (optional, default to 50)
    * @param headers Optional headers to include in the request
    * @return ApiResponse&lt;UserListResponse&gt;
    * @throws ApiException if fails to make API call
    */
-  public ApiResponse<UserListResponse> listUsersWithHttpInfo(@jakarta.annotation.Nullable String filterAccount, @jakarta.annotation.Nullable String filterEmail, Map<String, String> headers) throws ApiException {
-    HttpRequest.Builder localVarRequestBuilder = listUsersRequestBuilder(filterAccount, filterEmail, headers);
+  public ApiResponse<UserListResponse> listUsersWithHttpInfo(@jakarta.annotation.Nullable String filterAccount, @jakarta.annotation.Nullable String filterEmail, @jakarta.annotation.Nullable String filterSearch, @jakarta.annotation.Nullable Integer pageNumber, @jakarta.annotation.Nullable Integer pageSize, Map<String, String> headers) throws ApiException {
+    HttpRequest.Builder localVarRequestBuilder = listUsersRequestBuilder(filterAccount, filterEmail, filterSearch, pageNumber, pageSize, headers);
     try {
       HttpResponse<InputStream> localVarResponse = memberVarHttpClient.send(
           localVarRequestBuilder.build(),
@@ -596,7 +608,7 @@ public class UsersApi {
     }
   }
 
-  private HttpRequest.Builder listUsersRequestBuilder(@jakarta.annotation.Nullable String filterAccount, @jakarta.annotation.Nullable String filterEmail, Map<String, String> headers) throws ApiException {
+  private HttpRequest.Builder listUsersRequestBuilder(@jakarta.annotation.Nullable String filterAccount, @jakarta.annotation.Nullable String filterEmail, @jakarta.annotation.Nullable String filterSearch, @jakarta.annotation.Nullable Integer pageNumber, @jakarta.annotation.Nullable Integer pageSize, Map<String, String> headers) throws ApiException {
 
     HttpRequest.Builder localVarRequestBuilder = HttpRequest.newBuilder();
 
@@ -609,6 +621,12 @@ public class UsersApi {
     localVarQueryParams.addAll(ApiClient.parameterToPairs("filter[account]", filterAccount));
     localVarQueryParameterBaseName = "filter[email]";
     localVarQueryParams.addAll(ApiClient.parameterToPairs("filter[email]", filterEmail));
+    localVarQueryParameterBaseName = "filter[search]";
+    localVarQueryParams.addAll(ApiClient.parameterToPairs("filter[search]", filterSearch));
+    localVarQueryParameterBaseName = "page[number]";
+    localVarQueryParams.addAll(ApiClient.parameterToPairs("page[number]", pageNumber));
+    localVarQueryParameterBaseName = "page[size]";
+    localVarQueryParams.addAll(ApiClient.parameterToPairs("page[size]", pageSize));
 
     if (!localVarQueryParams.isEmpty() || localVarQueryStringJoiner.length() != 0) {
       StringJoiner queryJoiner = new StringJoiner("&");
