@@ -41,7 +41,6 @@ import com.smplkit.internal.generated.logging.ApiClient;
  */
 @JsonPropertyOrder({
   LogGroup.JSON_PROPERTY_NAME,
-  LogGroup.JSON_PROPERTY_KEY,
   LogGroup.JSON_PROPERTY_LEVEL,
   LogGroup.JSON_PROPERTY_PARENT_ID,
   LogGroup.JSON_PROPERTY_ENVIRONMENTS,
@@ -53,9 +52,6 @@ public class LogGroup {
   public static final String JSON_PROPERTY_NAME = "name";
   @jakarta.annotation.Nonnull
   private String name;
-
-  public static final String JSON_PROPERTY_KEY = "key";
-  private JsonNullable<String> key = JsonNullable.<String>undefined();
 
   public static final String JSON_PROPERTY_LEVEL = "level";
   private JsonNullable<String> level = JsonNullable.<String>undefined();
@@ -106,38 +102,6 @@ public class LogGroup {
   @JsonInclude(value = JsonInclude.Include.ALWAYS)
   public void setName(@jakarta.annotation.Nonnull String name) {
     this.name = name;
-  }
-
-
-  public LogGroup key(@jakarta.annotation.Nullable String key) {
-    this.key = JsonNullable.<String>of(key);
-    return this;
-  }
-
-  /**
-   * Get key
-   * @return key
-   */
-  @jakarta.annotation.Nullable
-  @JsonIgnore
-  public String getKey() {
-        return key.orElse(null);
-  }
-
-  @JsonProperty(value = JSON_PROPERTY_KEY, required = false)
-  @JsonInclude(value = JsonInclude.Include.USE_DEFAULTS)
-
-  public JsonNullable<String> getKey_JsonNullable() {
-    return key;
-  }
-  
-  @JsonProperty(JSON_PROPERTY_KEY)
-  public void setKey_JsonNullable(JsonNullable<String> key) {
-    this.key = key;
-  }
-
-  public void setKey(@jakarta.annotation.Nullable String key) {
-    this.key = JsonNullable.<String>of(key);
   }
 
 
@@ -318,7 +282,6 @@ public class LogGroup {
     }
     LogGroup logGroup = (LogGroup) o;
     return Objects.equals(this.name, logGroup.name) &&
-        equalsNullable(this.key, logGroup.key) &&
         equalsNullable(this.level, logGroup.level) &&
         equalsNullable(this.parentId, logGroup.parentId) &&
         equalsNullable(this.environments, logGroup.environments) &&
@@ -332,7 +295,7 @@ public class LogGroup {
 
   @Override
   public int hashCode() {
-    return Objects.hash(name, hashCodeNullable(key), hashCodeNullable(level), hashCodeNullable(parentId), hashCodeNullable(environments), hashCodeNullable(createdAt), hashCodeNullable(updatedAt));
+    return Objects.hash(name, hashCodeNullable(level), hashCodeNullable(parentId), hashCodeNullable(environments), hashCodeNullable(createdAt), hashCodeNullable(updatedAt));
   }
 
   private static <T> int hashCodeNullable(JsonNullable<T> a) {
@@ -347,7 +310,6 @@ public class LogGroup {
     StringBuilder sb = new StringBuilder();
     sb.append("class LogGroup {\n");
     sb.append("    name: ").append(toIndentedString(name)).append("\n");
-    sb.append("    key: ").append(toIndentedString(key)).append("\n");
     sb.append("    level: ").append(toIndentedString(level)).append("\n");
     sb.append("    parentId: ").append(toIndentedString(parentId)).append("\n");
     sb.append("    environments: ").append(toIndentedString(environments)).append("\n");
@@ -400,11 +362,6 @@ public class LogGroup {
     // add `name` to the URL query string
     if (getName() != null) {
       joiner.add(String.format(java.util.Locale.ROOT, "%sname%s=%s", prefix, suffix, ApiClient.urlEncode(ApiClient.valueToString(getName()))));
-    }
-
-    // add `key` to the URL query string
-    if (getKey() != null) {
-      joiner.add(String.format(java.util.Locale.ROOT, "%skey%s=%s", prefix, suffix, ApiClient.urlEncode(ApiClient.valueToString(getKey()))));
     }
 
     // add `level` to the URL query string
