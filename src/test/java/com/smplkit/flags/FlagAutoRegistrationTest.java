@@ -44,7 +44,7 @@ class FlagAutoRegistrationTest {
         client.setEnvironment("staging");
         client.setParentService("my-service");
         // Default stub so _connectInternal doesn't fail
-        when(mockApi.listFlags(isNull(), isNull())).thenReturn(new FlagListResponse().data(List.of()));
+        when(mockApi.listFlags(isNull(), isNull(), isNull(), isNull())).thenReturn(new FlagListResponse().data(List.of()));
     }
 
     // -----------------------------------------------------------------------
@@ -221,7 +221,7 @@ class FlagAutoRegistrationTest {
             order.add("bulk");
             return new FlagBulkResponse();
         });
-        when(mockApi.listFlags(isNull(), isNull())).thenAnswer(inv -> {
+        when(mockApi.listFlags(isNull(), isNull(), isNull(), isNull())).thenAnswer(inv -> {
             order.add("list");
             return new FlagListResponse().data(List.of());
         });

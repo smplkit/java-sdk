@@ -148,7 +148,7 @@ class FlagsClientTest {
                         "default", "red", "values", List.of(), "environments", Map.of()
                 ))
         )), FlagListResponse.class);
-        when(mockApi.listFlags(isNull(), isNull())).thenReturn(listResponse);
+        when(mockApi.listFlags(isNull(), isNull(), isNull(), isNull())).thenReturn(listResponse);
 
         List<Flag<?>> result = client.management().list();
         assertEquals(2, result.size());
@@ -158,7 +158,7 @@ class FlagsClientTest {
 
     @Test
     void list_emptyResponse() throws ApiException {
-        when(mockApi.listFlags(isNull(), isNull())).thenReturn(new FlagListResponse().data(List.of()));
+        when(mockApi.listFlags(isNull(), isNull(), isNull(), isNull())).thenReturn(new FlagListResponse().data(List.of()));
 
         List<Flag<?>> result = client.management().list();
         assertTrue(result.isEmpty());
@@ -295,14 +295,14 @@ class FlagsClientTest {
 
     @Test
     void handleGet_lazyInit_callsListOnFirstEval() throws ApiException {
-        when(mockApi.listFlags(isNull(), isNull()))
+        when(mockApi.listFlags(isNull(), isNull(), isNull(), isNull()))
                 .thenReturn(new FlagListResponse().data(List.of()));
 
         Flag<Boolean> handle = client.booleanFlag("unknown-flag", false);
         assertFalse(handle.get());
 
         // _connectInternal called listFlags
-        verify(mockApi, atLeastOnce()).listFlags(isNull(), isNull());
+        verify(mockApi, atLeastOnce()).listFlags(isNull(), isNull(), isNull(), isNull());
     }
 
     @Test
@@ -376,7 +376,7 @@ class FlagsClientTest {
         client.onChange(received::set);
 
         // Refresh fires listeners
-        when(mockApi.listFlags(isNull(), isNull()))
+        when(mockApi.listFlags(isNull(), isNull(), isNull(), isNull()))
                 .thenReturn(makeFlagListResponse(TEST_FLAG_ID, "My Flag",
                         "BOOLEAN", false, Map.of()));
         client.refresh();
@@ -390,7 +390,7 @@ class FlagsClientTest {
 
     private void setupFlagStore(String id, String type, Object defaultValue,
                                  Map<String, Object> environments) throws ApiException {
-        when(mockApi.listFlags(isNull(), isNull())).thenReturn(
+        when(mockApi.listFlags(isNull(), isNull(), isNull(), isNull())).thenReturn(
                 makeFlagListResponse(id, id, type, defaultValue, environments));
         client._connectInternal();
     }

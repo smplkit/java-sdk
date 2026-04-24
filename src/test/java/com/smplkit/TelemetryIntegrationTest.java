@@ -99,7 +99,7 @@ class TelemetryIntegrationTest {
         FlagsApi flagsApi = mock(FlagsApi.class);
         ContextsApi contextsApi = mock(ContextsApi.class);
 
-        when(flagsApi.listFlags(nullable(String.class), nullable(Boolean.class))).thenReturn(
+        when(flagsApi.listFlags(nullable(String.class), nullable(Boolean.class), nullable(String.class), nullable(String.class))).thenReturn(
                 makeFlagListResponse("test-flag", "production"));
 
         FlagsClient flags = new FlagsClient(flagsApi, contextsApi,
@@ -132,7 +132,7 @@ class TelemetryIntegrationTest {
         FlagsApi flagsApi = mock(FlagsApi.class);
         ContextsApi contextsApi = mock(ContextsApi.class);
 
-        when(flagsApi.listFlags(nullable(String.class), nullable(Boolean.class))).thenReturn(
+        when(flagsApi.listFlags(nullable(String.class), nullable(Boolean.class), nullable(String.class), nullable(String.class))).thenReturn(
                 makeFlagListResponse("test-flag", "production"));
 
         FlagsClient flags = new FlagsClient(flagsApi, contextsApi,
@@ -166,7 +166,7 @@ class TelemetryIntegrationTest {
         FlagsApi flagsApi = mock(FlagsApi.class);
         ContextsApi contextsApi = mock(ContextsApi.class);
 
-        when(flagsApi.listFlags(nullable(String.class), nullable(Boolean.class))).thenReturn(
+        when(flagsApi.listFlags(nullable(String.class), nullable(Boolean.class), nullable(String.class), nullable(String.class))).thenReturn(
                 makeFlagListResponse("test-flag", "production"));
 
         FlagsClient flags = new FlagsClient(flagsApi, contextsApi,
