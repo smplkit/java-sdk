@@ -638,11 +638,13 @@ public class FlagsApi {
    * List all feature flags for the authenticated account.
    * @param filterType  (optional)
    * @param filterManaged  (optional)
+   * @param filterReferencesContext Return flags whose rules reference this context instance. Format: {type}:{key} (optional)
+   * @param filterReferencesContextType Return flags whose rules reference any attribute of the given context type. (optional)
    * @return FlagListResponse
    * @throws ApiException if fails to make API call
    */
-  public FlagListResponse listFlags(@jakarta.annotation.Nullable String filterType, @jakarta.annotation.Nullable Boolean filterManaged) throws ApiException {
-    return listFlags(filterType, filterManaged, null);
+  public FlagListResponse listFlags(@jakarta.annotation.Nullable String filterType, @jakarta.annotation.Nullable Boolean filterManaged, @jakarta.annotation.Nullable String filterReferencesContext, @jakarta.annotation.Nullable String filterReferencesContextType) throws ApiException {
+    return listFlags(filterType, filterManaged, filterReferencesContext, filterReferencesContextType, null);
   }
 
   /**
@@ -650,12 +652,14 @@ public class FlagsApi {
    * List all feature flags for the authenticated account.
    * @param filterType  (optional)
    * @param filterManaged  (optional)
+   * @param filterReferencesContext Return flags whose rules reference this context instance. Format: {type}:{key} (optional)
+   * @param filterReferencesContextType Return flags whose rules reference any attribute of the given context type. (optional)
    * @param headers Optional headers to include in the request
    * @return FlagListResponse
    * @throws ApiException if fails to make API call
    */
-  public FlagListResponse listFlags(@jakarta.annotation.Nullable String filterType, @jakarta.annotation.Nullable Boolean filterManaged, Map<String, String> headers) throws ApiException {
-    ApiResponse<FlagListResponse> localVarResponse = listFlagsWithHttpInfo(filterType, filterManaged, headers);
+  public FlagListResponse listFlags(@jakarta.annotation.Nullable String filterType, @jakarta.annotation.Nullable Boolean filterManaged, @jakarta.annotation.Nullable String filterReferencesContext, @jakarta.annotation.Nullable String filterReferencesContextType, Map<String, String> headers) throws ApiException {
+    ApiResponse<FlagListResponse> localVarResponse = listFlagsWithHttpInfo(filterType, filterManaged, filterReferencesContext, filterReferencesContextType, headers);
     return localVarResponse.getData();
   }
 
@@ -664,11 +668,13 @@ public class FlagsApi {
    * List all feature flags for the authenticated account.
    * @param filterType  (optional)
    * @param filterManaged  (optional)
+   * @param filterReferencesContext Return flags whose rules reference this context instance. Format: {type}:{key} (optional)
+   * @param filterReferencesContextType Return flags whose rules reference any attribute of the given context type. (optional)
    * @return ApiResponse&lt;FlagListResponse&gt;
    * @throws ApiException if fails to make API call
    */
-  public ApiResponse<FlagListResponse> listFlagsWithHttpInfo(@jakarta.annotation.Nullable String filterType, @jakarta.annotation.Nullable Boolean filterManaged) throws ApiException {
-    return listFlagsWithHttpInfo(filterType, filterManaged, null);
+  public ApiResponse<FlagListResponse> listFlagsWithHttpInfo(@jakarta.annotation.Nullable String filterType, @jakarta.annotation.Nullable Boolean filterManaged, @jakarta.annotation.Nullable String filterReferencesContext, @jakarta.annotation.Nullable String filterReferencesContextType) throws ApiException {
+    return listFlagsWithHttpInfo(filterType, filterManaged, filterReferencesContext, filterReferencesContextType, null);
   }
 
   /**
@@ -676,12 +682,14 @@ public class FlagsApi {
    * List all feature flags for the authenticated account.
    * @param filterType  (optional)
    * @param filterManaged  (optional)
+   * @param filterReferencesContext Return flags whose rules reference this context instance. Format: {type}:{key} (optional)
+   * @param filterReferencesContextType Return flags whose rules reference any attribute of the given context type. (optional)
    * @param headers Optional headers to include in the request
    * @return ApiResponse&lt;FlagListResponse&gt;
    * @throws ApiException if fails to make API call
    */
-  public ApiResponse<FlagListResponse> listFlagsWithHttpInfo(@jakarta.annotation.Nullable String filterType, @jakarta.annotation.Nullable Boolean filterManaged, Map<String, String> headers) throws ApiException {
-    HttpRequest.Builder localVarRequestBuilder = listFlagsRequestBuilder(filterType, filterManaged, headers);
+  public ApiResponse<FlagListResponse> listFlagsWithHttpInfo(@jakarta.annotation.Nullable String filterType, @jakarta.annotation.Nullable Boolean filterManaged, @jakarta.annotation.Nullable String filterReferencesContext, @jakarta.annotation.Nullable String filterReferencesContextType, Map<String, String> headers) throws ApiException {
+    HttpRequest.Builder localVarRequestBuilder = listFlagsRequestBuilder(filterType, filterManaged, filterReferencesContext, filterReferencesContextType, headers);
     try {
       HttpResponse<InputStream> localVarResponse = memberVarHttpClient.send(
           localVarRequestBuilder.build(),
@@ -728,7 +736,7 @@ public class FlagsApi {
     }
   }
 
-  private HttpRequest.Builder listFlagsRequestBuilder(@jakarta.annotation.Nullable String filterType, @jakarta.annotation.Nullable Boolean filterManaged, Map<String, String> headers) throws ApiException {
+  private HttpRequest.Builder listFlagsRequestBuilder(@jakarta.annotation.Nullable String filterType, @jakarta.annotation.Nullable Boolean filterManaged, @jakarta.annotation.Nullable String filterReferencesContext, @jakarta.annotation.Nullable String filterReferencesContextType, Map<String, String> headers) throws ApiException {
 
     HttpRequest.Builder localVarRequestBuilder = HttpRequest.newBuilder();
 
@@ -741,6 +749,10 @@ public class FlagsApi {
     localVarQueryParams.addAll(ApiClient.parameterToPairs("filter[type]", filterType));
     localVarQueryParameterBaseName = "filter[managed]";
     localVarQueryParams.addAll(ApiClient.parameterToPairs("filter[managed]", filterManaged));
+    localVarQueryParameterBaseName = "filter[references_context]";
+    localVarQueryParams.addAll(ApiClient.parameterToPairs("filter[references_context]", filterReferencesContext));
+    localVarQueryParameterBaseName = "filter[references_context_type]";
+    localVarQueryParams.addAll(ApiClient.parameterToPairs("filter[references_context_type]", filterReferencesContextType));
 
     if (!localVarQueryParams.isEmpty() || localVarQueryStringJoiner.length() != 0) {
       StringJoiner queryJoiner = new StringJoiner("&");
