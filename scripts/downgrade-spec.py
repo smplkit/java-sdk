@@ -6,7 +6,6 @@ Converts:
   - anyOf with {"type": "null"} -> nullable: true on the remaining schema
   - Bare {"type": ["string", "null"]} -> {"type": "string", "nullable": true}
   - const -> enum with single value (3.1 feature not in 3.0)
-  - examples: [x, ...] (3.1 plural array on schemas) -> example: x (3.0 singular)
 
 Writes the result to stdout so it can be piped or redirected.
 
@@ -42,13 +41,6 @@ def downgrade_schema(obj):
         if key == "const":
             # {"const": "value"} -> {"enum": ["value"]}
             result["enum"] = [value]
-            continue
-
-        if key == "examples" and isinstance(value, list) and value:
-            # OpenAPI 3.1 schemas may carry an ``examples`` array; 3.0
-            # schemas only support a single ``example``. Keep the first
-            # entry so the generator's documentation rendering works.
-            result["example"] = downgrade_schema(value[0])
             continue
 
         if key == "type" and isinstance(value, list):
