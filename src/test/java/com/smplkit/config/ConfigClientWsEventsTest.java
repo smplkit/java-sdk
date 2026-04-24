@@ -202,6 +202,138 @@ class ConfigClientWsEventsTest {
     }
 
     // -----------------------------------------------------------------------
+    // Exception paths and edge cases
+    // -----------------------------------------------------------------------
+
+    @Test
+    void configChanged_apiFetchThrows_isNoOp() throws ApiException {
+        configClient._connectInternal();
+
+        AtomicInteger count = new AtomicInteger();
+        configClient.onChange(e -> count.incrementAndGet());
+
+        when(mockApi.getConfig("some-config")).thenThrow(new ApiException("API failure"));
+        configClient.simulateConfigChanged(Map.of("id", "some-config"));
+
+        assertEquals(0, count.get(), "Listener should not fire when API fetch throws");
+        verify(mockApi, times(1)).listConfigs(null); // only initial call, not triggered by failed event
+        verify(mockApi, times(1)).getConfig("some-config");
+    }
+
+    @Test
+    void configChanged_withParentChain_parentFound_resolvesChain() throws ApiException {
+        // Seed child config initially
+        ConfigResource childCfg = makeResource("child-cfg", "Child",
+                Map.of("child-val", itemDef("initial", ConfigItemDefinition.TypeEnum.STRING)), Map.of());
+        ConfigListResponse initList = new ConfigListResponse();
+        initList.setData(List.of(childCfg));
+        when(mockApi.listConfigs(null)).thenReturn(initList);
+        configClient._connectInternal();
+
+        AtomicReference<ConfigChangeEvent> received = new AtomicReference<>();
+        configClient.onChange("child-cfg", received::set);
+
+        // getConfig returns child with parent set
+        ConfigResource childWithParent = makeResourceWithParent("child-cfg", "Child",
+                Map.of("child-val", itemDef("updated", ConfigItemDefinition.TypeEnum.STRING)),
+                Map.of(), "parent-cfg");
+        when(mockApi.getConfig("child-cfg")).thenReturn(singleResponse(childWithParent));
+
+        // listConfigs for management.list() returns parent + child (parent found in loop)
+        ConfigResource parentCfg = makeResource("parent-cfg", "Parent",
+                Map.of("base", itemDef(100, ConfigItemDefinition.TypeEnum.NUMBER)), Map.of());
+        ConfigListResponse bothConfigs = new ConfigListResponse();
+        bothConfigs.setData(List.of(parentCfg, childWithParent));
+        when(mockApi.listConfigs(null)).thenReturn(bothConfigs);
+
+        configClient.simulateConfigChanged(Map.of("id", "child-cfg"));
+
+        assertNotNull(received.get(), "Listener should fire when content changes with parent chain");
+        verify(mockApi, times(1)).getConfig("child-cfg");
+    }
+
+    @Test
+    void configChanged_withParentChain_parentNotFound_breaksLoop() throws ApiException {
+        // Seed child config
+        ConfigResource childCfg = makeResource("child-cfg", "Child",
+                Map.of("child-val", itemDef("initial", ConfigItemDefinition.TypeEnum.STRING)), Map.of());
+        ConfigListResponse initList = new ConfigListResponse();
+        initList.setData(List.of(childCfg));
+        when(mockApi.listConfigs(null)).thenReturn(initList);
+        configClient._connectInternal();
+
+        AtomicReference<ConfigChangeEvent> received = new AtomicReference<>();
+        configClient.onChange("child-cfg", received::set);
+
+        // getConfig returns child with parent that doesn't exist
+        ConfigResource childWithParent = makeResourceWithParent("child-cfg", "Child",
+                Map.of("child-val", itemDef("updated2", ConfigItemDefinition.TypeEnum.STRING)),
+                Map.of(), "nonexistent-parent");
+        when(mockApi.getConfig("child-cfg")).thenReturn(singleResponse(childWithParent));
+
+        // listConfigs returns only other configs — parent not found (loop exhausts, line 346)
+        ConfigResource otherCfg = makeResource("other-cfg", "Other",
+                Map.of("x", itemDef(1, ConfigItemDefinition.TypeEnum.NUMBER)), Map.of());
+        ConfigListResponse noParent = new ConfigListResponse();
+        noParent.setData(List.of(otherCfg));
+        when(mockApi.listConfigs(null)).thenReturn(noParent);
+
+        configClient.simulateConfigChanged(Map.of("id", "child-cfg"));
+
+        assertNotNull(received.get(), "Listener should still fire even when parent not found");
+    }
+
+    @Test
+    void configDeleted_emptyConfig_firesNullItemListener() throws ApiException {
+        // Config with no items — exercises removed.isEmpty() branch
+        ConfigResource cfg = makeResource("empty-cfg", "Empty", Map.of(), Map.of());
+        ConfigListResponse initList = new ConfigListResponse();
+        initList.setData(List.of(cfg));
+        when(mockApi.listConfigs(null)).thenReturn(initList);
+        configClient._connectInternal();
+
+        AtomicReference<ConfigChangeEvent> received = new AtomicReference<>();
+        configClient.onChange("empty-cfg", received::set);
+
+        configClient.simulateConfigDeleted(Map.of("id", "empty-cfg"));
+
+        assertNotNull(received.get(), "Listener should fire for empty config delete");
+        assertEquals("empty-cfg", received.get().configId());
+        assertTrue(received.get().isDeleted());
+        assertNull(received.get().itemKey(), "Item key should be null for empty config");
+    }
+
+    @Test
+    void configDeleted_emptyConfig_listenerThrows_doesNotPropagate() throws ApiException {
+        // Empty config (no items) + listener that throws → exercises exception catch at line 398-399
+        ConfigResource cfg = makeResource("empty-throw-cfg", "EmptyThrow", Map.of(), Map.of());
+        ConfigListResponse initList = new ConfigListResponse();
+        initList.setData(List.of(cfg));
+        when(mockApi.listConfigs(null)).thenReturn(initList);
+        configClient._connectInternal();
+
+        configClient.onChange("empty-throw-cfg", e -> { throw new RuntimeException("empty delete crash"); });
+
+        assertDoesNotThrow(() -> configClient.simulateConfigDeleted(Map.of("id", "empty-throw-cfg")),
+                "Exception in empty-config delete listener should not propagate");
+    }
+
+    @Test
+    void configDeleted_listenerThrows_doesNotPropagate() throws ApiException {
+        ConfigResource cfg = makeResource("del-cfg", "Del",
+                Map.of("k", itemDef("v", ConfigItemDefinition.TypeEnum.STRING)), Map.of());
+        ConfigListResponse initList = new ConfigListResponse();
+        initList.setData(List.of(cfg));
+        when(mockApi.listConfigs(null)).thenReturn(initList);
+        configClient._connectInternal();
+
+        configClient.onChange("del-cfg", e -> { throw new RuntimeException("listener crash"); });
+
+        assertDoesNotThrow(() -> configClient.simulateConfigDeleted(Map.of("id", "del-cfg")),
+                "Exception in delete listener should not propagate");
+    }
+
+    // -----------------------------------------------------------------------
     // ConfigChangeEvent.isDeleted()
     // -----------------------------------------------------------------------
 
@@ -226,6 +358,23 @@ class ConfigClientWsEventsTest {
     // -----------------------------------------------------------------------
     // Helpers
     // -----------------------------------------------------------------------
+
+    private ConfigResource makeResourceWithParent(String id, String name,
+                                                   Map<String, ConfigItemDefinition> items,
+                                                   Map<String, com.smplkit.internal.generated.config.model.EnvironmentOverride> envs,
+                                                   String parent) {
+        var attrs = new com.smplkit.internal.generated.config.model.Config(null, null);
+        attrs.setName(name);
+        attrs.setParent(parent);
+        if (!items.isEmpty()) attrs.setItems(items);
+        if (!envs.isEmpty()) attrs.setEnvironments(envs);
+
+        ConfigResource resource = new ConfigResource();
+        resource.setId(id);
+        resource.setType(ConfigResource.TypeEnum.CONFIG);
+        resource.setAttributes(attrs);
+        return resource;
+    }
 
     private ConfigResource makeResource(String id, String name,
                                          Map<String, ConfigItemDefinition> items,

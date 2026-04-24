@@ -315,6 +315,174 @@ class LoggingClientWsEventsTest {
     }
 
     // -----------------------------------------------------------------------
+    // Exception paths and edge cases
+    // -----------------------------------------------------------------------
+
+    @Test
+    void loggerChanged_apiFetchThrows_isNoOp() throws ApiException {
+        stubManagedLoggerStart("com.acme.service", "INFO");
+        client.registerAdapter(noopAdapter("com.acme.service", "INFO"));
+        client.start();
+
+        AtomicInteger count = new AtomicInteger();
+        client.onChange("com.acme.service", e -> count.incrementAndGet());
+        count.set(0);
+
+        when(mockLoggersApi.getLogger("com.acme.service"))
+                .thenThrow(new ApiException("API failure"));
+
+        client.simulateLoggerChanged(Map.of("id", "com.acme.service"));
+
+        assertEquals(0, count.get(), "Listener should not fire when API fetch throws");
+    }
+
+    @Test
+    void groupChanged_apiFetchThrows_isNoOp() throws ApiException {
+        stubEmptyStart();
+        client.start();
+
+        when(mockLogGroupsApi.getLogGroup("my-group"))
+                .thenThrow(new ApiException("API failure"));
+
+        assertDoesNotThrow(() -> client.simulateGroupChanged(Map.of("id", "my-group")));
+        verify(mockLogGroupsApi, times(1)).getLogGroup("my-group");
+    }
+
+    @Test
+    void loggersChanged_apiFetchThrows_isNoOp() throws ApiException {
+        stubEmptyStart();
+        client.start();
+
+        when(mockLoggersApi.listLoggers((Boolean) null, null, null))
+                .thenThrow(new ApiException("API failure"));
+
+        assertDoesNotThrow(() -> client.simulateLoggersChanged(Map.of()));
+    }
+
+    @Test
+    void loggersChanged_withGroupData_fetchOnlyGroupsLoop() throws ApiException {
+        // Start with managed logger at INFO
+        stubManagedLoggerStart("com.acme.svc", "INFO");
+        client.registerAdapter(noopAdapter("com.acme.svc", "INFO"));
+        client.start();
+
+        // loggers_changed: same loggers, but return an actual group in listLogGroups
+        LoggerResource lr = buildLoggerResource("com.acme.svc", "INFO", true);
+        LoggerListResponse sameLoggers = new LoggerListResponse();
+        sameLoggers.setData(new ArrayList<>(List.of(lr)));
+        when(mockLoggersApi.listLoggers((Boolean) null, null, null)).thenReturn(sameLoggers);
+
+        // Return a group with data to exercise the group loop in fetchOnly
+        LogGroupListResponse groupsWithData = buildGroupListResponse("my-group", "DEBUG");
+        when(mockLogGroupsApi.listLogGroups()).thenReturn(groupsWithData);
+
+        client.simulateLoggersChanged(Map.of());
+
+        // Both APIs called (for start + for loggersChanged)
+        verify(mockLogGroupsApi, times(2)).listLogGroups();
+    }
+
+    @Test
+    void loggersChanged_groupFetchThrows_isNoOp() throws ApiException {
+        stubEmptyStart();
+        client.start();
+
+        // listLoggers succeeds but listLogGroups throws
+        LoggerListResponse emptyLoggers = new LoggerListResponse();
+        emptyLoggers.setData(new ArrayList<>());
+        when(mockLoggersApi.listLoggers((Boolean) null, null, null)).thenReturn(emptyLoggers);
+        when(mockLogGroupsApi.listLogGroups()).thenThrow(new ApiException("group fetch failed"));
+
+        assertDoesNotThrow(() -> client.simulateLoggersChanged(Map.of()));
+    }
+
+    @Test
+    void diffAndFireLevels_globalListenerThrows_doesNotPropagate() throws ApiException {
+        stubManagedLoggerStart("com.acme.svc", "INFO");
+        client.registerAdapter(noopAdapter("com.acme.svc", "INFO"));
+        client.start();
+
+        client.onChange(e -> { throw new RuntimeException("global crash"); });
+
+        LoggerResource lr = buildLoggerResource("com.acme.svc", "WARN", true);
+        LoggerListResponse updated = new LoggerListResponse();
+        updated.setData(new ArrayList<>(List.of(lr)));
+        when(mockLoggersApi.listLoggers((Boolean) null, null, null)).thenReturn(updated);
+        LogGroupListResponse emptyGroups = new LogGroupListResponse();
+        emptyGroups.setData(new ArrayList<>());
+        when(mockLogGroupsApi.listLogGroups()).thenReturn(emptyGroups);
+
+        assertDoesNotThrow(() -> client.simulateLoggersChanged(Map.of()),
+                "Exception in global listener should not propagate");
+    }
+
+    @Test
+    void applyLevelForKey_adapterThrows_doesNotPropagate() throws ApiException {
+        stubManagedLoggerStart("com.acme.svc", "INFO");
+        LoggingAdapter throwingAdapter = mock(LoggingAdapter.class);
+        when(throwingAdapter.name()).thenReturn("throwing");
+        when(throwingAdapter.discover()).thenReturn(List.of(new DiscoveredLogger("com.acme.svc", "INFO")));
+        doThrow(new RuntimeException("adapter crash")).when(throwingAdapter).applyLevel(any(), any());
+        client.registerAdapter(throwingAdapter);
+        client.start();
+
+        LoggerResource lr = buildLoggerResource("com.acme.svc", "WARN", true);
+        LoggerListResponse updated = new LoggerListResponse();
+        updated.setData(new ArrayList<>(List.of(lr)));
+        when(mockLoggersApi.listLoggers((Boolean) null, null, null)).thenReturn(updated);
+        LogGroupListResponse emptyGroups = new LogGroupListResponse();
+        emptyGroups.setData(new ArrayList<>());
+        when(mockLogGroupsApi.listLogGroups()).thenReturn(emptyGroups);
+
+        assertDoesNotThrow(() -> client.simulateLoggersChanged(Map.of()),
+                "Exception in adapter.applyLevel should not propagate");
+    }
+
+    @Test
+    void applyLevelForKey_keyedListenerThrows_doesNotPropagate() throws ApiException {
+        stubManagedLoggerStart("com.acme.svc", "INFO");
+        client.registerAdapter(noopAdapter("com.acme.svc", "INFO"));
+        client.start();
+
+        client.onChange("com.acme.svc", e -> { throw new RuntimeException("key listener crash"); });
+
+        LoggerResource lr = buildLoggerResource("com.acme.svc", "WARN", true);
+        LoggerListResponse updated = new LoggerListResponse();
+        updated.setData(new ArrayList<>(List.of(lr)));
+        when(mockLoggersApi.listLoggers((Boolean) null, null, null)).thenReturn(updated);
+        LogGroupListResponse emptyGroups = new LogGroupListResponse();
+        emptyGroups.setData(new ArrayList<>());
+        when(mockLogGroupsApi.listLogGroups()).thenReturn(emptyGroups);
+
+        assertDoesNotThrow(() -> client.simulateLoggersChanged(Map.of()),
+                "Exception in key-scoped listener should not propagate");
+    }
+
+    @Test
+    void applyLevelForKey_invalidLevel_isNoOp() throws ApiException {
+        stubManagedLoggerStart("com.acme.svc", "INFO");
+        client.registerAdapter(noopAdapter("com.acme.svc", "INFO"));
+        client.start();
+
+        AtomicInteger count = new AtomicInteger();
+        client.onChange("com.acme.svc", e -> count.incrementAndGet());
+        count.set(0);
+
+        // Return a logger with invalid level string
+        LoggerResource lr = buildLoggerResource("com.acme.svc", "INVALID_LEVEL", true);
+        LoggerListResponse updated = new LoggerListResponse();
+        updated.setData(new ArrayList<>(List.of(lr)));
+        when(mockLoggersApi.listLoggers((Boolean) null, null, null)).thenReturn(updated);
+        LogGroupListResponse emptyGroups = new LogGroupListResponse();
+        emptyGroups.setData(new ArrayList<>());
+        when(mockLogGroupsApi.listLogGroups()).thenReturn(emptyGroups);
+
+        assertDoesNotThrow(() -> client.simulateLoggersChanged(Map.of()),
+                "Invalid level string should be handled gracefully");
+        assertEquals(0, count.get(), "Listener should not fire for invalid level");
+    }
+
+    // -----------------------------------------------------------------------
     // LoggerChangeEvent.isDeleted()
     // -----------------------------------------------------------------------
 
@@ -386,6 +554,22 @@ class LoggingClientWsEventsTest {
         LoggerResource resource = buildLoggerResource(id, level, managed);
         LoggerResponse resp = new LoggerResponse();
         resp.setData(resource);
+        return resp;
+    }
+
+    private LogGroupListResponse buildGroupListResponse(String id, String level) {
+        OffsetDateTime now = OffsetDateTime.now();
+        var attrs = new com.smplkit.internal.generated.logging.model.LogGroup(now, now);
+        attrs.setName(id);
+        if (level != null) attrs.setLevel(level);
+
+        LogGroupResource data = new LogGroupResource();
+        data.setId(id);
+        data.setType(LogGroupResource.TypeEnum.LOG_GROUP);
+        data.setAttributes(attrs);
+
+        LogGroupListResponse resp = new LogGroupListResponse();
+        resp.setData(new ArrayList<>(List.of(data)));
         return resp;
     }
 

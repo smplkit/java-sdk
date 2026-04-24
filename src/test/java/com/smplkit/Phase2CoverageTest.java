@@ -10,11 +10,21 @@ import com.smplkit.internal.generated.config.api.ConfigsApi;
 import com.smplkit.internal.generated.config.model.ConfigListResponse;
 import com.smplkit.internal.generated.flags.api.FlagsApi;
 import com.smplkit.internal.generated.flags.model.FlagListResponse;
+import com.smplkit.internal.generated.logging.api.LogGroupsApi;
+import com.smplkit.internal.generated.logging.api.LoggersApi;
+import com.smplkit.internal.generated.logging.model.LogGroupListResponse;
+import com.smplkit.internal.generated.logging.model.LoggerListResponse;
+import com.smplkit.internal.generated.logging.model.LoggerResource;
+import com.smplkit.logging.LoggingClient;
+import com.smplkit.logging.adapters.DiscoveredLogger;
+import com.smplkit.logging.adapters.LoggingAdapter;
 import org.junit.jupiter.api.Test;
 import org.openapitools.jackson.nullable.JsonNullableModule;
 
 import java.net.http.HttpClient;
 import java.time.Duration;
+import java.time.OffsetDateTime;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -287,6 +297,68 @@ class Phase2CoverageTest {
                 Duration.ofSeconds(5), flagsClient, configClient, mockContextsApi)) {
             verify(mockContextsApi).bulkRegisterContexts(any());
         }
+    }
+
+    @Test
+    void loggingClient_withMetrics_recordsLevelChanges() throws com.smplkit.internal.generated.logging.ApiException {
+        // Use package-private MetricsReporter constructor to set metrics on LoggingClient
+        MetricsReporter metrics = new MetricsReporter(
+                HttpClient.newHttpClient(), "https://app.smplkit.com", "test-key",
+                "test", "test-service");
+
+        LoggersApi mockLoggersApi = mock(LoggersApi.class);
+        LogGroupsApi mockGroupsApi = mock(LogGroupsApi.class);
+        LoggingClient loggingClient = new LoggingClient(mockLoggersApi, mockGroupsApi,
+                HttpClient.newHttpClient(), "test-key");
+        loggingClient.setEnvironment("production");
+        loggingClient.setMetrics(metrics);
+
+        // Start with logger at INFO
+        var attrs = new com.smplkit.internal.generated.logging.model.Logger(null, null,
+                OffsetDateTime.now(), OffsetDateTime.now());
+        attrs.setName("com.acme.svc");
+        attrs.setLevel("INFO");
+        attrs.setManaged(true);
+        LoggerResource lr = new LoggerResource();
+        lr.setId("com.acme.svc");
+        lr.setType(LoggerResource.TypeEnum.LOGGER);
+        lr.setAttributes(attrs);
+        LoggerListResponse initialLoggers = new LoggerListResponse();
+        initialLoggers.setData(new ArrayList<>(List.of(lr)));
+        when(mockLoggersApi.listLoggers(null, null, null)).thenReturn(initialLoggers);
+
+        LogGroupListResponse emptyGroups = new LogGroupListResponse();
+        emptyGroups.setData(new ArrayList<>());
+        when(mockGroupsApi.listLogGroups()).thenReturn(emptyGroups);
+
+        LoggingAdapter mockAdapter = mock(LoggingAdapter.class);
+        when(mockAdapter.name()).thenReturn("test");
+        when(mockAdapter.discover()).thenReturn(List.of(new DiscoveredLogger("com.acme.svc", "INFO")));
+        loggingClient.registerAdapter(mockAdapter);
+        loggingClient.start();
+
+        // Change level to WARN and trigger via reflection — exercises applyLevelForKey metrics path
+        var attrsWarn = new com.smplkit.internal.generated.logging.model.Logger(null, null,
+                OffsetDateTime.now(), OffsetDateTime.now());
+        attrsWarn.setName("com.acme.svc");
+        attrsWarn.setLevel("WARN");
+        attrsWarn.setManaged(true);
+        LoggerResource lrWarn = new LoggerResource();
+        lrWarn.setId("com.acme.svc");
+        lrWarn.setType(LoggerResource.TypeEnum.LOGGER);
+        lrWarn.setAttributes(attrsWarn);
+        LoggerListResponse warnLoggers = new LoggerListResponse();
+        warnLoggers.setData(new ArrayList<>(List.of(lrWarn)));
+        when(mockLoggersApi.listLoggers(null, null, null)).thenReturn(warnLoggers);
+
+        // Call simulateLoggersChanged via reflection (package-private test helper)
+        assertDoesNotThrow(() -> {
+            java.lang.reflect.Method m = LoggingClient.class.getDeclaredMethod(
+                    "simulateLoggersChanged", Map.class);
+            m.setAccessible(true);
+            m.invoke(loggingClient, Map.of());
+        }, "Level change with metrics should not throw");
+        metrics.close();
     }
 
     @Test

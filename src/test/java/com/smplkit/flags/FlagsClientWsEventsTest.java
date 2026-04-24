@@ -308,6 +308,61 @@ class FlagsClientWsEventsTest {
     }
 
     // -----------------------------------------------------------------------
+    // Exception paths and edge cases
+    // -----------------------------------------------------------------------
+
+    @Test
+    void flagChanged_apiFetchThrows_isNoOp() throws ApiException {
+        setupList("my-flag", "BOOLEAN", false, Map.of());
+        client._connectInternal();
+
+        AtomicInteger count = new AtomicInteger();
+        client.onChange("my-flag", e -> count.incrementAndGet());
+
+        when(mockApi.getFlag("my-flag")).thenThrow(new ApiException("API failure"));
+        client.simulateFlagChanged("my-flag");
+
+        assertEquals(0, count.get(), "Listener should not fire when API fetch throws");
+    }
+
+    @Test
+    void flagDeleted_missingIdAfterConnect_isNoOp() throws ApiException {
+        setupList("my-flag", "BOOLEAN", false, Map.of());
+        client._connectInternal();
+
+        AtomicInteger count = new AtomicInteger();
+        client.onChange(e -> count.incrementAndGet());
+
+        client.simulateFlagDeleted(); // no id field, but IS connected
+
+        assertEquals(0, count.get(), "Listener should not fire for delete with missing id (connected)");
+    }
+
+    @Test
+    void flagChanged_listenerThrows_doesNotPropagateException() throws ApiException {
+        setupList("my-flag", "BOOLEAN", false, Map.of());
+        client._connectInternal();
+
+        client.onChange("my-flag", e -> { throw new RuntimeException("listener crash"); });
+
+        setupGetFlag("my-flag", "BOOLEAN", true, Map.of());
+        assertDoesNotThrow(() -> client.simulateFlagChanged("my-flag"),
+                "Exception in per-key listener should not propagate");
+    }
+
+    @Test
+    void flagChanged_globalListenerThrows_doesNotPropagateException() throws ApiException {
+        setupList("my-flag", "BOOLEAN", false, Map.of());
+        client._connectInternal();
+
+        client.onChange(e -> { throw new RuntimeException("global listener crash"); });
+
+        setupGetFlag("my-flag", "BOOLEAN", true, Map.of());
+        assertDoesNotThrow(() -> client.simulateFlagChanged("my-flag"),
+                "Exception in global listener should not propagate");
+    }
+
+    // -----------------------------------------------------------------------
     // FlagChangeEvent.isDeleted()
     // -----------------------------------------------------------------------
 
