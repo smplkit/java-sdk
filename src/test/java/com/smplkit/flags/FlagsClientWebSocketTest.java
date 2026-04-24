@@ -198,7 +198,7 @@ class FlagsClientWebSocketTest {
                 flagAttrs("flag-a", Map.of()),
                 flagAttrs("flag-b", Map.of())
         )), FlagListResponse.class);
-        when(mockApi.listFlags(isNull(), isNull())).thenReturn(listResponse);
+        when(mockApi.listFlags(isNull(), isNull(), isNull(), isNull())).thenReturn(listResponse);
         client._connectInternal();
 
         AtomicInteger aCount = new AtomicInteger();
@@ -226,7 +226,7 @@ class FlagsClientWebSocketTest {
         FlagListResponse listResponse = OBJECT_MAPPER.convertValue(Map.of("data", List.of(Map.of(
                 "id", id, "type", "flag", "attributes", attrs
         ))), FlagListResponse.class);
-        when(mockApi.listFlags(isNull(), isNull())).thenReturn(listResponse);
+        when(mockApi.listFlags(isNull(), isNull(), isNull(), isNull())).thenReturn(listResponse);
     }
 
     private void setupGetFlag(String id, Map<String, Object> environments) throws ApiException {

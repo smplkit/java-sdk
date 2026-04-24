@@ -63,7 +63,7 @@ class FlagsClientWsEventsTest {
                 flagData("flag-x", "BOOLEAN", false, Map.of()),
                 flagData("flag-y", "BOOLEAN", false, Map.of())
         )), FlagListResponse.class);
-        when(mockApi.listFlags(isNull(), isNull())).thenReturn(both);
+        when(mockApi.listFlags(isNull(), isNull(), isNull(), isNull())).thenReturn(both);
         client._connectInternal();
 
         AtomicInteger xCount = new AtomicInteger();
@@ -85,7 +85,7 @@ class FlagsClientWsEventsTest {
                 flagData("flag-a", "BOOLEAN", false, Map.of()),
                 flagData("flag-b", "BOOLEAN", false, Map.of())
         )), FlagListResponse.class);
-        when(mockApi.listFlags(isNull(), isNull())).thenReturn(both);
+        when(mockApi.listFlags(isNull(), isNull(), isNull(), isNull())).thenReturn(both);
         client._connectInternal();
 
         AtomicInteger globalCount = new AtomicInteger();
@@ -120,7 +120,7 @@ class FlagsClientWsEventsTest {
         assertFalse(received.get().isDeleted());
         // Verify scoped fetch (getFlag) was called, not listFlags
         verify(mockApi).getFlag("my-flag");
-        verify(mockApi, times(1)).listFlags(isNull(), isNull()); // only initial
+        verify(mockApi, times(1)).listFlags(isNull(), isNull(), isNull(), isNull()); // only initial
     }
 
     @Test
@@ -175,7 +175,7 @@ class FlagsClientWsEventsTest {
         assertEquals("websocket", received.get().source());
         // No HTTP fetch should occur
         verify(mockApi, never()).getFlag(any());
-        verify(mockApi, times(1)).listFlags(isNull(), isNull()); // only initial
+        verify(mockApi, times(1)).listFlags(isNull(), isNull(), isNull(), isNull()); // only initial
     }
 
     @Test
@@ -198,7 +198,7 @@ class FlagsClientWsEventsTest {
                 flagData("flag-x", "BOOLEAN", false, Map.of()),
                 flagData("flag-y", "BOOLEAN", false, Map.of())
         )), FlagListResponse.class);
-        when(mockApi.listFlags(isNull(), isNull())).thenReturn(both);
+        when(mockApi.listFlags(isNull(), isNull(), isNull(), isNull())).thenReturn(both);
         client._connectInternal();
 
         AtomicInteger yCount = new AtomicInteger();
@@ -227,14 +227,14 @@ class FlagsClientWsEventsTest {
         FlagListResponse updated = OBJECT_MAPPER.convertValue(Map.of("data", List.of(
                 flagData("flag-1", "BOOLEAN", true, Map.of()) // changed default
         )), FlagListResponse.class);
-        when(mockApi.listFlags(isNull(), isNull())).thenReturn(updated);
+        when(mockApi.listFlags(isNull(), isNull(), isNull(), isNull())).thenReturn(updated);
         client.simulateFlagsChanged();
 
         assertNotNull(receivedKeyed.get(), "Per-key listener should fire for changed flag");
         assertEquals("flag-1", receivedKeyed.get().id());
         assertNotNull(receivedGlobal.get(), "Global listener should fire once");
         // listFlags called twice: once for init, once for flags_changed
-        verify(mockApi, times(2)).listFlags(isNull(), isNull());
+        verify(mockApi, times(2)).listFlags(isNull(), isNull(), isNull(), isNull());
     }
 
     @Test
@@ -259,7 +259,7 @@ class FlagsClientWsEventsTest {
                 flagData("f1", "BOOLEAN", false, Map.of()),
                 flagData("f2", "BOOLEAN", false, Map.of())
         )), FlagListResponse.class);
-        when(mockApi.listFlags(isNull(), isNull())).thenReturn(initial);
+        when(mockApi.listFlags(isNull(), isNull(), isNull(), isNull())).thenReturn(initial);
         client._connectInternal();
 
         AtomicInteger globalCount = new AtomicInteger();
@@ -270,7 +270,7 @@ class FlagsClientWsEventsTest {
                 flagData("f1", "BOOLEAN", true, Map.of()),
                 flagData("f2", "BOOLEAN", true, Map.of())
         )), FlagListResponse.class);
-        when(mockApi.listFlags(isNull(), isNull())).thenReturn(updated);
+        when(mockApi.listFlags(isNull(), isNull(), isNull(), isNull())).thenReturn(updated);
         client.simulateFlagsChanged();
 
         assertEquals(1, globalCount.get(), "Global listener fires exactly once per flags_changed event");
@@ -283,7 +283,7 @@ class FlagsClientWsEventsTest {
                 flagData("f2", "BOOLEAN", false, Map.of()),
                 flagData("f3", "BOOLEAN", false, Map.of())
         )), FlagListResponse.class);
-        when(mockApi.listFlags(isNull(), isNull())).thenReturn(initial);
+        when(mockApi.listFlags(isNull(), isNull(), isNull(), isNull())).thenReturn(initial);
         client._connectInternal();
 
         AtomicInteger f1Count = new AtomicInteger();
@@ -299,7 +299,7 @@ class FlagsClientWsEventsTest {
                 flagData("f2", "BOOLEAN", true, Map.of()),  // changed
                 flagData("f3", "BOOLEAN", false, Map.of())  // unchanged
         )), FlagListResponse.class);
-        when(mockApi.listFlags(isNull(), isNull())).thenReturn(updated);
+        when(mockApi.listFlags(isNull(), isNull(), isNull(), isNull())).thenReturn(updated);
         client.simulateFlagsChanged();
 
         assertEquals(1, f1Count.get(), "f1 listener should fire (changed)");
@@ -334,7 +334,7 @@ class FlagsClientWsEventsTest {
         FlagListResponse resp = OBJECT_MAPPER.convertValue(Map.of("data", List.of(
                 flagData(id, type, defaultVal, environments)
         )), FlagListResponse.class);
-        when(mockApi.listFlags(isNull(), isNull())).thenReturn(resp);
+        when(mockApi.listFlags(isNull(), isNull(), isNull(), isNull())).thenReturn(resp);
     }
 
     private void setupGetFlag(String id, String type, Object defaultVal, Map<String, Object> environments)
