@@ -687,29 +687,38 @@ class ConfigClientTest {
 
         verify(mockWs).on(eq("config_changed"), any());
         verify(mockWs).on(eq("config_deleted"), any());
+        verify(mockWs).on(eq("configs_changed"), any());
     }
 
     @Test
-    void simulateConfigChanged_triggersRefresh() throws ApiException {
+    void simulateConfigChanged_triggersSccopedFetch() throws ApiException {
         when(mockApi.listConfigs(null)).thenReturn(emptyListResponse());
+        ConfigResource resource = makeResource(CONFIG_ID, "Some Config", null, null,
+                Map.of("timeout", itemDef(30, ConfigItemDefinition.TypeEnum.NUMBER)),
+                Map.of(), null, null);
+        when(mockApi.getConfig("some-config-id")).thenReturn(singleResponse(resource));
         configClient.setEnvironment("production");
         configClient._connectInternal();
 
         configClient.simulateConfigChanged(Map.of("id", "some-config-id"));
 
-        // listConfigs should have been called twice: once for init, once for refresh
-        verify(mockApi, times(2)).listConfigs(null);
+        // Scoped fetch: getConfig called once for the changed key
+        verify(mockApi, times(1)).getConfig("some-config-id");
+        // listConfigs called only once for init, NOT for the scoped change
+        verify(mockApi, times(1)).listConfigs(null);
     }
 
     @Test
-    void simulateConfigDeleted_triggersRefresh() throws ApiException {
+    void simulateConfigDeleted_removesFromCacheNoFetch() throws ApiException {
         when(mockApi.listConfigs(null)).thenReturn(emptyListResponse());
         configClient.setEnvironment("production");
         configClient._connectInternal();
 
         configClient.simulateConfigDeleted(Map.of("id", "some-config-id"));
 
-        verify(mockApi, times(2)).listConfigs(null);
+        // No additional listConfigs or getConfig calls — deleted is handled locally
+        verify(mockApi, times(1)).listConfigs(null);
+        verify(mockApi, never()).getConfig(any());
     }
 
     @Test
@@ -717,12 +726,25 @@ class ConfigClientTest {
         // handleConfigChanged when not connected should not throw and not call API
         configClient.simulateConfigChanged(Map.of("id", "some-config-id"));
         verify(mockApi, never()).listConfigs(any());
+        verify(mockApi, never()).getConfig(any());
     }
 
     @Test
     void simulateConfigDeleted_beforeConnect_isNoOp() throws ApiException {
         configClient.simulateConfigDeleted(Map.of("id", "some-config-id"));
         verify(mockApi, never()).listConfigs(any());
+    }
+
+    @Test
+    void simulateConfigsChanged_triggersFullRefresh() throws ApiException {
+        when(mockApi.listConfigs(null)).thenReturn(emptyListResponse());
+        configClient.setEnvironment("production");
+        configClient._connectInternal();
+
+        configClient.simulateConfigsChanged(Map.of());
+
+        // configs_changed triggers full refresh: listConfigs called twice
+        verify(mockApi, times(2)).listConfigs(null);
     }
 
     private com.smplkit.internal.generated.config.model.ConfigListResponse emptyListResponse() {

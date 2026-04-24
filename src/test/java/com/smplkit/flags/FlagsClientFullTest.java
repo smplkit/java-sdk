@@ -332,7 +332,8 @@ class FlagsClientFullTest {
         AtomicInteger count = new AtomicInteger();
         client.onChange(e -> count.incrementAndGet());
 
-        setupList("feature-x", "BOOLEAN", false, Map.of());
+        // Provide different data so the diff fires the global listener
+        setupList("feature-x", "BOOLEAN", true, Map.of());
         client.refresh();
 
         assertTrue(count.get() > 0);
@@ -345,7 +346,8 @@ class FlagsClientFullTest {
         AtomicReference<FlagChangeEvent> received = new AtomicReference<>();
         client.onChange("feature-x", received::set);
 
-        setupList("feature-x", "BOOLEAN", false, Map.of());
+        // Provide different data so the diff fires the keyed listener
+        setupList("feature-x", "BOOLEAN", true, Map.of());
         client.refresh();
 
         assertNotNull(received.get());

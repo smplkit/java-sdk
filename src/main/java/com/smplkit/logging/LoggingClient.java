@@ -86,8 +86,14 @@ public final class LoggingClient {
     // WS event handlers (stored as fields so they can be unregistered)
     private final java.util.function.Consumer<java.util.Map<String, Object>> loggerChangedHandler =
             this::handleLoggerChanged;
+    private final java.util.function.Consumer<java.util.Map<String, Object>> loggerDeletedHandler =
+            this::handleLoggerDeleted;
     private final java.util.function.Consumer<java.util.Map<String, Object>> groupChangedHandler =
             this::handleGroupChanged;
+    private final java.util.function.Consumer<java.util.Map<String, Object>> groupDeletedHandler =
+            this::handleGroupDeleted;
+    private final java.util.function.Consumer<java.util.Map<String, Object>> loggersChangedHandler =
+            this::handleLoggersChanged;
 
     // Management accessor
     private final LoggingManagement management;
@@ -283,9 +289,10 @@ public final class LoggingClient {
         // 6. Register WebSocket listeners for real-time updates
         if (wsManager != null) {
             wsManager.on("logger_changed", loggerChangedHandler);
-            wsManager.on("logger_deleted", loggerChangedHandler);
+            wsManager.on("logger_deleted", loggerDeletedHandler);
             wsManager.on("group_changed", groupChangedHandler);
-            wsManager.on("group_deleted", groupChangedHandler);
+            wsManager.on("group_deleted", groupDeletedHandler);
+            wsManager.on("loggers_changed", loggersChangedHandler);
         }
 
         // 7. Start periodic flush for loggers discovered after start()
@@ -482,25 +489,208 @@ public final class LoggingClient {
 
     private void handleLoggerChanged(Map<String, Object> data) {
         if (!started) return;
-        String id = (String) data.get("id");
-        Debug.log("websocket", "logger event received, id=" + id);
-        try {
-            fetchAndApply("websocket");
-        } catch (Exception e) {
-            LOG.warning("Failed to re-apply levels after logger WS event: " + e.getMessage());
-            Debug.log("websocket", "Failed to re-apply levels after logger WS event: " + e);
+        String loggerKey = data.get("id") instanceof String s ? s : null;
+        if (loggerKey == null) {
+            Debug.log("websocket", "logger_changed event missing id, skipping");
+            return;
         }
+        Debug.log("websocket", "logger_changed event received, key=" + loggerKey);
+
+        // Snapshot pre-state for this logger
+        Map<String, Object> preEntry = loggersCache.get(loggerKey);
+        String preLevel = preEntry != null
+                ? resolveLevel(loggerKey, environment, loggersCache, groupsCache) : null;
+
+        // Scoped fetch: GET /loggers/{key}
+        try {
+            LoggerResponse resp = loggersApi.getLogger(loggerKey);
+            Logger lg = loggerResponseToModel(resp);
+            var attrs = resp.getData().getAttributes();
+            String gid = lg.getId() != null ? lg.getId() : "";
+            Map<String, Object> entry = new HashMap<>();
+            entry.put("id", gid);
+            entry.put("level", attrs.getLevel());
+            entry.put("group", attrs.getGroup());
+            entry.put("managed", attrs.getManaged());
+            entry.put("environments", attrs.getEnvironments() != null
+                    ? new HashMap<>(attrs.getEnvironments()) : new HashMap<>());
+            loggersCache.put(loggerKey, entry);
+        } catch (ApiException e) {
+            LOG.warning("Failed scoped fetch for logger key=" + loggerKey + ": " + e.getMessage());
+            Debug.log("websocket", "logger_changed scoped fetch failed for key=" + loggerKey + ": " + e);
+            return;
+        }
+
+        String postLevel = resolveLevel(loggerKey, environment, loggersCache, groupsCache);
+
+        // Only fire if level actually changed
+        if (java.util.Objects.equals(preLevel, postLevel)) {
+            Debug.log("websocket", "logger_changed: level unchanged for key=" + loggerKey + ", no listeners fired");
+            return;
+        }
+
+        // Apply level and fire listeners
+        applyLevelForKey(loggerKey, postLevel, "websocket");
+    }
+
+    private void handleLoggerDeleted(Map<String, Object> data) {
+        if (!started) return;
+        String loggerKey = data.get("id") instanceof String s ? s : null;
+        if (loggerKey == null) {
+            Debug.log("websocket", "logger_deleted event missing id, skipping");
+            return;
+        }
+        Debug.log("websocket", "logger_deleted event received, key=" + loggerKey);
+
+        // Remove from cache — no HTTP fetch
+        loggersCache.remove(loggerKey);
+
+        // Fire listener with deleted=true
+        LoggerChangeEvent event = new LoggerChangeEvent(loggerKey, null, "websocket", true);
+        fireChangeListeners(loggerKey, event);
     }
 
     private void handleGroupChanged(Map<String, Object> data) {
         if (!started) return;
-        String id = (String) data.get("id");
-        Debug.log("websocket", "group event received, id=" + id);
+        String groupKey = data.get("id") instanceof String s ? s : null;
+        if (groupKey == null) {
+            Debug.log("websocket", "group_changed event missing id, skipping");
+            return;
+        }
+        Debug.log("websocket", "group_changed event received, key=" + groupKey);
+
+        // Snapshot pre-levels for all loggers in this group
+        Map<String, String> preLevels = snapshotLevels();
+
+        // Scoped fetch: GET /log_groups/{key}
         try {
-            fetchAndApply("websocket");
+            LogGroupResponse resp = logGroupsApi.getLogGroup(groupKey);
+            var attrs = resp.getData().getAttributes();
+            String gid = resp.getData().getId() != null ? resp.getData().getId() : "";
+            Map<String, Object> entry = new HashMap<>();
+            entry.put("id", gid);
+            entry.put("level", attrs.getLevel());
+            entry.put("group", attrs.getParentId());
+            entry.put("environments", attrs.getEnvironments() != null
+                    ? new HashMap<>(attrs.getEnvironments()) : new HashMap<>());
+            groupsCache.put(groupKey, entry);
+        } catch (ApiException e) {
+            LOG.warning("Failed scoped fetch for group key=" + groupKey + ": " + e.getMessage());
+            Debug.log("websocket", "group_changed scoped fetch failed for key=" + groupKey + ": " + e);
+            return;
+        }
+
+        // Diff and fire for loggers whose resolved level changed
+        diffAndFireLevels(preLevels, "websocket");
+    }
+
+    private void handleGroupDeleted(Map<String, Object> data) {
+        if (!started) return;
+        String groupKey = data.get("id") instanceof String s ? s : null;
+        if (groupKey == null) {
+            Debug.log("websocket", "group_deleted event missing id, skipping");
+            return;
+        }
+        Debug.log("websocket", "group_deleted event received, key=" + groupKey);
+
+        // Remove from cache — no HTTP fetch
+        groupsCache.remove(groupKey);
+
+        // Fire listener with deleted=true
+        LoggerChangeEvent event = new LoggerChangeEvent(groupKey, null, "websocket", true);
+        fireChangeListeners(groupKey, event);
+    }
+
+    private void handleLoggersChanged(Map<String, Object> data) {
+        if (!started) return;
+        Debug.log("websocket", "loggers_changed event received");
+
+        // Snapshot pre-levels
+        Map<String, String> preLevels = snapshotLevels();
+
+        // Full refetch of both loggers AND log_groups (without firing listeners)
+        try {
+            fetchOnly();
         } catch (Exception e) {
-            LOG.warning("Failed to re-apply levels after group WS event: " + e.getMessage());
-            Debug.log("websocket", "Failed to re-apply levels after group WS event: " + e);
+            LOG.warning("Failed to re-fetch levels after loggers_changed event: " + e.getMessage());
+            Debug.log("websocket", "loggers_changed fetch failed: " + e);
+            return;
+        }
+
+        // Diff-based firing
+        diffAndFireLevels(preLevels, "websocket");
+    }
+
+    /** Snapshots current resolved levels for all tracked loggers. */
+    private Map<String, String> snapshotLevels() {
+        Map<String, String> snapshot = new HashMap<>();
+        for (String key : nameMap.values()) {
+            snapshot.put(key, resolveLevel(key, environment, loggersCache, groupsCache));
+        }
+        return snapshot;
+    }
+
+    /** Diffs pre vs post levels and fires listeners for changed keys; fires global listener once. */
+    private void diffAndFireLevels(Map<String, String> preLevels, String source) {
+        boolean anyChanged = false;
+        for (Map.Entry<String, String> mapping : nameMap.entrySet()) {
+            String originalName = mapping.getKey();
+            String normalizedKey = mapping.getValue();
+            String preLevel = preLevels.get(normalizedKey);
+            String postLevel = resolveLevel(normalizedKey, environment, loggersCache, groupsCache);
+
+            if (!java.util.Objects.equals(preLevel, postLevel)) {
+                anyChanged = true;
+                applyLevelForKey(normalizedKey, postLevel, source);
+            }
+        }
+        // Global listener fires once if any changed
+        if (anyChanged) {
+            for (Consumer<LoggerChangeEvent> listener : globalListeners) {
+                try {
+                    listener.accept(new LoggerChangeEvent("", null, source));
+                } catch (Exception e) {
+                    LOG.log(Level.WARNING, "Global change listener threw exception", e);
+                }
+            }
+        }
+    }
+
+    /** Applies a resolved level to adapters and fires key-scoped listeners. */
+    private void applyLevelForKey(String normalizedKey, String level, String source) {
+        // Apply through all adapters for loggers with this key
+        for (Map.Entry<String, String> mapping : nameMap.entrySet()) {
+            if (!normalizedKey.equals(mapping.getValue())) continue;
+            String originalName = mapping.getKey();
+            try {
+                LogLevel logLevel = LogLevel.valueOf(level);
+                for (LoggingAdapter adapter : adapters) {
+                    try {
+                        adapter.applyLevel(originalName, level);
+                    } catch (Exception e) {
+                        Debug.log("adapter", "Adapter " + adapter.name()
+                                + " applyLevel failed for " + originalName + ": " + e);
+                    }
+                }
+                if (metrics != null) {
+                    metrics.record("logging.level_changes", "changes",
+                            java.util.Map.of("logger", normalizedKey));
+                }
+                LoggerChangeEvent event = new LoggerChangeEvent(normalizedKey, logLevel, source);
+                // Only key-scoped listeners
+                List<Consumer<LoggerChangeEvent>> scoped = keyListeners.get(normalizedKey);
+                if (scoped != null) {
+                    for (Consumer<LoggerChangeEvent> listener : scoped) {
+                        try {
+                            listener.accept(event);
+                        } catch (Exception e) {
+                            LOG.log(Level.WARNING, "Key-scoped change listener threw exception", e);
+                        }
+                    }
+                }
+            } catch (IllegalArgumentException e) {
+                Debug.log("resolution", "Unknown level '" + level + "' for logger '" + normalizedKey + "'");
+            }
         }
     }
 
@@ -599,6 +789,56 @@ public final class LoggingClient {
         applyLevels(source);
     }
 
+    /** Fetches loggers and groups and updates the caches without firing any listeners. */
+    @SuppressWarnings("unchecked")
+    private void fetchOnly() {
+        // Fetch loggers
+        Map<String, Map<String, Object>> loggersData = new HashMap<>();
+        try {
+            LoggerListResponse loggerResp = loggersApi.listLoggers(null, null, null);
+            if (loggerResp.getData() != null) {
+                for (LoggerResource r : loggerResp.getData()) {
+                    var attrs = r.getAttributes();
+                    String id = r.getId() != null ? r.getId() : "";
+                    Map<String, Object> entry = new HashMap<>();
+                    entry.put("id", id);
+                    entry.put("level", attrs.getLevel());
+                    entry.put("group", attrs.getGroup());
+                    entry.put("managed", attrs.getManaged());
+                    entry.put("environments", attrs.getEnvironments() != null
+                            ? new HashMap<>(attrs.getEnvironments()) : new HashMap<>());
+                    loggersData.put(id, entry);
+                }
+            }
+        } catch (ApiException e) {
+            throw mapLoggingException(e);
+        }
+
+        // Fetch groups
+        Map<String, Map<String, Object>> groupsData = new HashMap<>();
+        try {
+            LogGroupListResponse groupResp = logGroupsApi.listLogGroups();
+            if (groupResp.getData() != null) {
+                for (LogGroupResource r : groupResp.getData()) {
+                    var attrs = r.getAttributes();
+                    String gid = r.getId() != null ? r.getId() : "";
+                    Map<String, Object> entry = new HashMap<>();
+                    entry.put("id", gid);
+                    entry.put("level", attrs.getLevel());
+                    entry.put("group", attrs.getParentId());
+                    entry.put("environments", attrs.getEnvironments() != null
+                            ? new HashMap<>(attrs.getEnvironments()) : new HashMap<>());
+                    groupsData.put(gid, entry);
+                }
+            }
+        } catch (ApiException e) {
+            throw mapLoggingException(e);
+        }
+
+        this.loggersCache = new ConcurrentHashMap<>(loggersData);
+        this.groupsCache = new ConcurrentHashMap<>(groupsData);
+    }
+
     @SuppressWarnings("unchecked")
     private void applyLevels(String source) {
         for (Map.Entry<String, String> mapping : nameMap.entrySet()) {
@@ -674,9 +914,10 @@ public final class LoggingClient {
         loggerFlushExecutor.shutdownNow();
         if (wsManager != null) {
             wsManager.off("logger_changed", loggerChangedHandler);
-            wsManager.off("logger_deleted", loggerChangedHandler);
+            wsManager.off("logger_deleted", loggerDeletedHandler);
             wsManager.off("group_changed", groupChangedHandler);
-            wsManager.off("group_deleted", groupChangedHandler);
+            wsManager.off("group_deleted", groupDeletedHandler);
+            wsManager.off("loggers_changed", loggersChangedHandler);
         }
         for (LoggingAdapter adapter : adapters) {
             try {
@@ -797,9 +1038,24 @@ public final class LoggingClient {
         handleLoggerChanged(data);
     }
 
+    /** Simulates a logger_deleted WebSocket event (for testing). */
+    void simulateLoggerDeleted(Map<String, Object> data) {
+        handleLoggerDeleted(data);
+    }
+
     /** Simulates a group_changed WebSocket event (for testing). */
     void simulateGroupChanged(Map<String, Object> data) {
         handleGroupChanged(data);
+    }
+
+    /** Simulates a group_deleted WebSocket event (for testing). */
+    void simulateGroupDeleted(Map<String, Object> data) {
+        handleGroupDeleted(data);
+    }
+
+    /** Simulates a loggers_changed WebSocket event (for testing). */
+    void simulateLoggersChanged(Map<String, Object> data) {
+        handleLoggersChanged(data);
     }
 
     /** Simulates a new logger detected by adapter hook (for testing). */

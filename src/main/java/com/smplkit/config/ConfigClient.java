@@ -48,6 +48,7 @@ public final class ConfigClient {
     private volatile SharedWebSocket wsManager;
     private final Consumer<Map<String, Object>> configChangedHandler;
     private final Consumer<Map<String, Object>> configDeletedHandler;
+    private final Consumer<Map<String, Object>> configsChangedHandler;
 
     /**
      * Creates a new ConfigClient. Use {@link com.smplkit.SmplClient} to obtain an instance.
@@ -57,6 +58,7 @@ public final class ConfigClient {
         this.management = new ConfigManagement(this);
         this.configChangedHandler = this::handleConfigChanged;
         this.configDeletedHandler = this::handleConfigDeleted;
+        this.configsChangedHandler = this::handleConfigsChanged;
     }
 
     // -----------------------------------------------------------------------
@@ -288,9 +290,10 @@ public final class ConfigClient {
 
         SharedWebSocket ws = this.wsManager;
         if (ws != null) {
-            Debug.log("registration", "registering config_changed and config_deleted handlers");
+            Debug.log("registration", "registering config_changed, config_deleted, and configs_changed handlers");
             ws.on("config_changed", configChangedHandler);
             ws.on("config_deleted", configDeletedHandler);
+            ws.on("configs_changed", configsChangedHandler);
             ws.ensureConnected(java.time.Duration.ofSeconds(10));
         }
 
@@ -300,15 +303,110 @@ public final class ConfigClient {
 
     private void handleConfigChanged(Map<String, Object> data) {
         if (!connected) return;
-        String configId = data.get("id") instanceof String s ? s : "<unknown>";
-        Debug.log("websocket", "config_changed event received, id=" + configId);
-        refresh();
+        String configKey = data.get("id") instanceof String s ? s : null;
+        if (configKey == null) {
+            Debug.log("websocket", "config_changed event missing id, skipping");
+            return;
+        }
+        Debug.log("websocket", "config_changed event received, key=" + configKey);
+
+        String env = this.environment;
+        if (env == null) return;
+
+        // Scoped fetch: GET /configs/{key}
+        Config fetched;
+        try {
+            fetched = management.get(configKey);
+        } catch (Exception e) {
+            Debug.log("websocket", "config_changed scoped fetch failed for key=" + configKey + ": " + e);
+            return;
+        }
+
+        // Rebuild resolution just for this config
+        Map<String, Map<String, Object>> oldCache = configCache;
+        Map<String, Map<String, Object>> newCache = new HashMap<>(configCache);
+
+        List<Resolver.ChainEntry> chain = new ArrayList<>();
+        chain.add(toChainEntry(fetched));
+
+        // Walk parent chain using current cache configs
+        Config current = fetched;
+        List<Config> allConfigs = null; // lazy: only load if parent chain needed
+        while (current.getParent() != null) {
+            if (allConfigs == null) {
+                allConfigs = management.list();
+            }
+            String parentId = current.getParent();
+            Config parent = null;
+            for (Config c : allConfigs) {
+                if (parentId.equals(c.getId())) {
+                    parent = c;
+                    break;
+                }
+            }
+            if (parent == null) break;
+            chain.add(toChainEntry(parent));
+            current = parent;
+        }
+
+        newCache.put(configKey, Resolver.resolve(chain, env));
+        configCache = newCache;
+
+        diffAndFire(oldCache, newCache, "websocket");
     }
 
     private void handleConfigDeleted(Map<String, Object> data) {
         if (!connected) return;
-        String configId = data.get("id") instanceof String s ? s : "<unknown>";
-        Debug.log("websocket", "config_deleted event received, id=" + configId);
+        String configKey = data.get("id") instanceof String s ? s : null;
+        if (configKey == null) {
+            Debug.log("websocket", "config_deleted event missing id, skipping");
+            return;
+        }
+        Debug.log("websocket", "config_deleted event received, key=" + configKey);
+
+        // Remove from cache — no HTTP fetch
+        Map<String, Map<String, Object>> oldCache = configCache;
+        Map<String, Map<String, Object>> newCache = new HashMap<>(configCache);
+        Map<String, Object> removed = newCache.remove(configKey);
+        configCache = newCache;
+
+        if (removed != null) {
+            // Fire listener with deleted=true for each item that existed
+            for (String itemKey : removed.keySet()) {
+                ConfigChangeEvent event = new ConfigChangeEvent(configKey, itemKey,
+                        removed.get(itemKey), null, "websocket", true);
+                for (ListenerEntry entry : listeners) {
+                    if (entry.configId != null && !entry.configId.equals(configKey)) continue;
+                    if (entry.itemKey != null && !entry.itemKey.equals(itemKey)) continue;
+                    try {
+                        entry.listener.accept(event);
+                    } catch (Exception e) {
+                        LOG.log(Level.WARNING,
+                                "Exception in onChange listener for deleted config " + configKey, e);
+                    }
+                }
+            }
+            // Also fire global listener for the delete, even if no items
+            if (removed.isEmpty()) {
+                ConfigChangeEvent event = new ConfigChangeEvent(configKey, null,
+                        null, null, "websocket", true);
+                for (ListenerEntry entry : listeners) {
+                    if (entry.configId != null && !entry.configId.equals(configKey)) continue;
+                    if (entry.itemKey != null) continue;
+                    try {
+                        entry.listener.accept(event);
+                    } catch (Exception e) {
+                        LOG.log(Level.WARNING,
+                                "Exception in onChange listener for deleted config " + configKey, e);
+                    }
+                }
+            }
+        }
+    }
+
+    private void handleConfigsChanged(Map<String, Object> data) {
+        if (!connected) return;
+        Debug.log("websocket", "configs_changed event received");
         refresh();
     }
 
@@ -560,6 +658,11 @@ public final class ConfigClient {
     /** Simulates a config_deleted WebSocket event (for testing). */
     void simulateConfigDeleted(Map<String, Object> data) {
         handleConfigDeleted(data);
+    }
+
+    /** Simulates a configs_changed WebSocket event (for testing). */
+    void simulateConfigsChanged(Map<String, Object> data) {
+        handleConfigsChanged(data);
     }
 
     private record ListenerEntry(String configId, String itemKey,

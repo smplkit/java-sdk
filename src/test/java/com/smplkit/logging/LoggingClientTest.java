@@ -1187,55 +1187,80 @@ class LoggingClientTest {
         verify(mockWs).on(eq("logger_deleted"), any());
         verify(mockWs).on(eq("group_changed"), any());
         verify(mockWs).on(eq("group_deleted"), any());
+        verify(mockWs).on(eq("loggers_changed"), any());
     }
 
     @Test
-    void simulateLoggerChanged_triggersRefetch() throws ApiException {
+    void simulateLoggerChanged_triggersSccopedFetch() throws ApiException {
         stubEmptyResponses();
         LoggingAdapter mockAdapter = mock(LoggingAdapter.class);
         when(mockAdapter.name()).thenReturn("test");
         when(mockAdapter.discover()).thenReturn(List.of());
         client.registerAdapter(mockAdapter);
         client.start();
+
+        // Stub getLogger for the scoped fetch
+        when(mockLoggersApi.getLogger("com.acme.somelogger"))
+                .thenReturn(buildLoggerResponse("com.acme.somelogger", "com.acme.somelogger",
+                        "SomeLogger", "INFO", false));
 
         // Simulate a logger_changed WS event
-        client.simulateLoggerChanged(Map.of("id", "com.acme.SomeLogger"));
+        client.simulateLoggerChanged(Map.of("id", "com.acme.somelogger"));
 
-        // listLoggers should have been called once for start() and once for the WS event
-        verify(mockLoggersApi, times(2)).listLoggers((Boolean) null, null, null);
+        // Scoped fetch: getLogger called once for the changed key
+        verify(mockLoggersApi, times(1)).getLogger("com.acme.somelogger");
+        // listLoggers called only once for start(), NOT for the scoped change
+        verify(mockLoggersApi, times(1)).listLoggers((Boolean) null, null, null);
     }
 
     @Test
-    void simulateLoggerChanged_firesListenerWithWebsocketSource() throws ApiException {
+    void simulateLoggerChanged_firesKeyedListenerWithWebsocketSource() throws ApiException {
         setupManagedLoggerForStartWithAdapter("com.acme.wstest", "INFO");
+        client.setEnvironment("production");
 
-        AtomicReference<LoggerChangeEvent> received = new AtomicReference<>();
-        client.onChange(received::set);
+        AtomicReference<LoggerChangeEvent> receivedKeyed = new AtomicReference<>();
+        AtomicReference<LoggerChangeEvent> receivedGlobal = new AtomicReference<>();
+        client.onChange("com.acme.wstest", receivedKeyed::set);
+        client.onChange(receivedGlobal::set);
 
         client.start();
-        received.set(null); // clear the start() event
+        receivedKeyed.set(null);
+        receivedGlobal.set(null);
 
-        // Simulate a WS logger_changed event — fetchAndApply is called with source="websocket"
+        // Stub getLogger to return WARN level (different from INFO to trigger diff)
+        when(mockLoggersApi.getLogger("com.acme.wstest"))
+                .thenReturn(buildLoggerResponse("com.acme.wstest", "com.acme.wstest",
+                        "wstest", "WARN", true));
+
+        // Simulate a WS logger_changed event — scoped fetch fires key-scoped listener
         client.simulateLoggerChanged(Map.of("id", "com.acme.wstest"));
 
-        assertNotNull(received.get());
-        assertEquals("websocket", received.get().source());
+        assertNotNull(receivedKeyed.get());
+        assertEquals("websocket", receivedKeyed.get().source());
+        // Global listener is NOT fired by scoped logger_changed (only by loggers_changed/full fetch)
+        assertNull(receivedGlobal.get());
     }
 
     @Test
-    void simulateGroupChanged_triggersRefetch() throws ApiException {
+    void simulateGroupChanged_triggersSccopedFetch() throws ApiException {
         stubEmptyResponses();
         LoggingAdapter mockAdapter = mock(LoggingAdapter.class);
         when(mockAdapter.name()).thenReturn("test");
         when(mockAdapter.discover()).thenReturn(List.of());
         client.registerAdapter(mockAdapter);
         client.start();
+
+        // Stub getLogGroup for the scoped fetch
+        when(mockLogGroupsApi.getLogGroup("some-group-id"))
+                .thenReturn(buildGroupResponse("some-group-id", "some-group-id", "Some Group", "INFO"));
 
         // Simulate a group_changed WS event
         client.simulateGroupChanged(Map.of("id", "some-group-id"));
 
-        // listLoggers should have been called once for start() and once for the WS event
-        verify(mockLoggersApi, times(2)).listLoggers((Boolean) null, null, null);
+        // Scoped fetch: getLogGroup called once
+        verify(mockLogGroupsApi, times(1)).getLogGroup("some-group-id");
+        // listLoggers NOT called again (only for start)
+        verify(mockLoggersApi, times(1)).listLoggers((Boolean) null, null, null);
     }
 
     @Test
@@ -1243,12 +1268,14 @@ class LoggingClientTest {
         // handleLoggerChanged when not started should not throw and not call API
         client.simulateLoggerChanged(Map.of("id", "com.acme.Logger"));
         verify(mockLoggersApi, never()).listLoggers(any(), any(), any());
+        verify(mockLoggersApi, never()).getLogger(any());
     }
 
     @Test
     void simulateGroupChanged_beforeStart_isNoOp() throws ApiException {
         client.simulateGroupChanged(Map.of("id", "some-group"));
         verify(mockLoggersApi, never()).listLoggers(any(), any(), any());
+        verify(mockLogGroupsApi, never()).getLogGroup(any());
     }
 
     @Test
@@ -1260,8 +1287,8 @@ class LoggingClientTest {
         client.registerAdapter(mockAdapter);
         client.start();
 
-        // Make the next listLoggers call fail
-        when(mockLoggersApi.listLoggers((Boolean) null, null, null))
+        // Make the scoped getLogger call fail
+        when(mockLoggersApi.getLogger("com.acme.Logger"))
                 .thenThrow(new ApiException(500, "server error"));
 
         // Should not throw — the exception is caught and logged
@@ -1277,7 +1304,7 @@ class LoggingClientTest {
         client.registerAdapter(mockAdapter);
         client.start();
 
-        when(mockLoggersApi.listLoggers((Boolean) null, null, null))
+        when(mockLogGroupsApi.getLogGroup("some-group"))
                 .thenThrow(new ApiException(500, "server error"));
 
         assertDoesNotThrow(() -> client.simulateGroupChanged(Map.of("id", "some-group")));

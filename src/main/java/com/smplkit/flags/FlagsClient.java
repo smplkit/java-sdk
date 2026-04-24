@@ -129,6 +129,7 @@ public final class FlagsClient {
     private volatile SharedWebSocket sharedWs;
     private final Consumer<Map<String, Object>> flagChangedHandler;
     private final Consumer<Map<String, Object>> flagDeletedHandler;
+    private final Consumer<Map<String, Object>> flagsChangedHandler;
 
     // Management accessor
     private final FlagsManagement management;
@@ -152,6 +153,7 @@ public final class FlagsClient {
 
         this.flagChangedHandler = this::handleFlagChanged;
         this.flagDeletedHandler = this::handleFlagDeleted;
+        this.flagsChangedHandler = this::handleFlagsChanged;
         this.management = new FlagsManagement(this);
     }
 
@@ -167,6 +169,7 @@ public final class FlagsClient {
         this.contextFlushExecutor = null;
         this.flagChangedHandler = this::handleFlagChanged;
         this.flagDeletedHandler = this::handleFlagDeleted;
+        this.flagsChangedHandler = this::handleFlagsChanged;
         this.management = new FlagsManagement(this);
     }
 
@@ -281,9 +284,10 @@ public final class FlagsClient {
 
         SharedWebSocket ws = this.sharedWs;
         if (ws != null) {
-            Debug.log("registration", "registering flag_changed and flag_deleted handlers");
+            Debug.log("registration", "registering flag_changed, flag_deleted, and flags_changed handlers");
             ws.on("flag_changed", flagChangedHandler);
             ws.on("flag_deleted", flagDeletedHandler);
+            ws.on("flags_changed", flagsChangedHandler);
             ws.ensureConnected(Duration.ofSeconds(10));
         }
 
@@ -303,9 +307,27 @@ public final class FlagsClient {
 
     /** Refreshes all flag definitions from the server. */
     public void refresh() {
+        Map<String, Map<String, Object>> preStore = new HashMap<>(flagStore);
         fetchAllFlags();
         resolutionCache.clear();
-        fireAllChangeListeners("manual");
+
+        // Fire per-key listeners for keys whose content changed
+        Set<String> allKeys = new HashSet<>();
+        allKeys.addAll(preStore.keySet());
+        allKeys.addAll(flagStore.keySet());
+        boolean anyChanged = false;
+        for (String key : allKeys) {
+            if (!Objects.equals(preStore.get(key), flagStore.get(key))) {
+                anyChanged = true;
+                fireListenersForKey(key, new FlagChangeEvent(key, "manual"));
+            }
+        }
+        if (anyChanged) {
+            String firstKey = allKeys.stream()
+                    .filter(k -> !Objects.equals(preStore.get(k), flagStore.get(k)))
+                    .findFirst().orElse("");
+            fireGlobalListeners(new FlagChangeEvent(firstKey, "manual"));
+        }
     }
 
     /** Returns evaluation statistics. */
@@ -575,32 +597,113 @@ public final class FlagsClient {
 
     private void handleFlagChanged(Map<String, Object> data) {
         if (!connected) return;
-        String flagId = data.get("id") instanceof String s ? s : "<unknown>";
-        Debug.log("websocket", "flag_changed event received, id=" + flagId);
-        fetchAllFlags();
+        String flagKey = data.get("id") instanceof String s ? s : null;
+        if (flagKey == null) {
+            Debug.log("websocket", "flag_changed event missing id, skipping");
+            return;
+        }
+        Debug.log("websocket", "flag_changed event received, key=" + flagKey);
+
+        // Snapshot pre-state for this key
+        Map<String, Object> preFlagData = flagStore.get(flagKey);
+
+        // Scoped fetch: GET /flags/{key}
+        Flag<?> fetched;
+        try {
+            fetched = management.get(flagKey);
+        } catch (Exception e) {
+            Debug.log("websocket", "flag_changed scoped fetch failed for key=" + flagKey + ": " + e);
+            return;
+        }
+
+        Map<String, Object> postFlagData = flagToStoreEntry(fetched);
+        flagStore.put(flagKey, postFlagData);
         resolutionCache.clear();
-        fireAllChangeListeners("websocket");
+
+        // Only fire if content actually changed
+        if (Objects.equals(preFlagData, postFlagData)) {
+            Debug.log("websocket", "flag_changed: content unchanged for key=" + flagKey + ", no listeners fired");
+            return;
+        }
+
+        fireListenersForKey(flagKey, new FlagChangeEvent(flagKey, "websocket"));
+        fireGlobalListeners(new FlagChangeEvent(flagKey, "websocket"));
     }
 
     private void handleFlagDeleted(Map<String, Object> data) {
         if (!connected) return;
-        String flagId = data.get("id") instanceof String s ? s : "<unknown>";
-        Debug.log("websocket", "flag_deleted event received, id=" + flagId);
-        fetchAllFlags();
+        String flagKey = data.get("id") instanceof String s ? s : null;
+        if (flagKey == null) {
+            Debug.log("websocket", "flag_deleted event missing id, skipping");
+            return;
+        }
+        Debug.log("websocket", "flag_deleted event received, key=" + flagKey);
+
+        // Remove from local store — no HTTP fetch
+        flagStore.remove(flagKey);
         resolutionCache.clear();
-        fireAllChangeListeners("websocket");
+
+        FlagChangeEvent event = new FlagChangeEvent(flagKey, "websocket", true);
+        fireListenersForKey(flagKey, event);
+        fireGlobalListeners(event);
     }
 
-    private void fireAllChangeListeners(String source) {
-        for (String flagId : flagStore.keySet()) {
-            FlagChangeEvent event = new FlagChangeEvent(flagId, source);
-            for (ListenerEntry entry : listeners) {
-                if (entry.id != null && !entry.id.equals(flagId)) continue;
-                try {
-                    entry.listener.accept(event);
-                } catch (Exception e) {
-                    LOG.log(Level.WARNING, "Exception in onChange listener for flag '" + flagId + "'", e);
-                }
+    private void handleFlagsChanged(Map<String, Object> data) {
+        if (!connected) return;
+        Debug.log("websocket", "flags_changed event received");
+
+        // Snapshot pre-state
+        Map<String, Map<String, Object>> preStore = new HashMap<>(flagStore);
+
+        // Full list fetch
+        fetchAllFlags();
+        resolutionCache.clear();
+
+        // Diff pre vs post — fire per-key listener for each changed key, global once
+        boolean anyChanged = false;
+        Set<String> allKeys = new HashSet<>();
+        allKeys.addAll(preStore.keySet());
+        allKeys.addAll(flagStore.keySet());
+
+        for (String key : allKeys) {
+            Map<String, Object> pre = preStore.get(key);
+            Map<String, Object> post = flagStore.get(key);
+            if (!Objects.equals(pre, post)) {
+                anyChanged = true;
+                fireListenersForKey(key, new FlagChangeEvent(key, "websocket"));
+            }
+        }
+
+        if (anyChanged) {
+            // Pick any changed key for the global event (or use a sentinel)
+            String firstKey = allKeys.stream()
+                    .filter(k -> !Objects.equals(preStore.get(k), flagStore.get(k)))
+                    .findFirst().orElse("");
+            fireGlobalListeners(new FlagChangeEvent(firstKey, "websocket"));
+        }
+    }
+
+    /** Fires per-key scoped listeners for the given flag key. */
+    private void fireListenersForKey(String flagKey, FlagChangeEvent event) {
+        for (ListenerEntry entry : listeners) {
+            if (entry.id == null) continue; // global, skip here
+            if (!entry.id.equals(flagKey)) continue;
+            try {
+                entry.listener.accept(event);
+            } catch (Exception e) {
+                LOG.log(Level.WARNING, "Exception in onChange listener for flag '" + flagKey + "'", e);
+            }
+        }
+    }
+
+    /** Fires global (null-id) listeners with the given event. */
+    private void fireGlobalListeners(FlagChangeEvent event) {
+        for (ListenerEntry entry : listeners) {
+            if (entry.id != null) continue; // scoped, skip
+            try {
+                entry.listener.accept(event);
+            } catch (Exception e) {
+                LOG.log(Level.WARNING, "Exception in global onChange listener", e);
             }
         }
     }
@@ -788,9 +891,24 @@ public final class FlagsClient {
         handleFlagChanged(Map.of());
     }
 
+    /** Simulates a flag change event for a specific key (for testing). */
+    void simulateFlagChanged(String key) {
+        handleFlagChanged(Map.of("id", key));
+    }
+
     /** Simulates a flag deletion event (for testing). */
     void simulateFlagDeleted() {
         handleFlagDeleted(Map.of());
+    }
+
+    /** Simulates a flag deletion event for a specific key (for testing). */
+    void simulateFlagDeleted(String key) {
+        handleFlagDeleted(Map.of("id", key));
+    }
+
+    /** Simulates a flags_changed (bulk) event (for testing). */
+    void simulateFlagsChanged() {
+        handleFlagsChanged(Map.of());
     }
 
     boolean isConnected() {
@@ -812,6 +930,7 @@ public final class FlagsClient {
         if (ws != null) {
             ws.off("flag_changed", flagChangedHandler);
             ws.off("flag_deleted", flagDeletedHandler);
+            ws.off("flags_changed", flagsChangedHandler);
         }
         flagStore.clear();
         resolutionCache.clear();

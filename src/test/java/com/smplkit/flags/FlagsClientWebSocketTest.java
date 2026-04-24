@@ -7,6 +7,7 @@ import com.smplkit.internal.generated.app.api.ContextsApi;
 import com.smplkit.internal.generated.flags.ApiException;
 import com.smplkit.internal.generated.flags.api.FlagsApi;
 import com.smplkit.internal.generated.flags.model.FlagListResponse;
+import com.smplkit.internal.generated.flags.model.FlagResponse;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;
@@ -57,9 +58,9 @@ class FlagsClientWebSocketTest {
         AtomicReference<FlagChangeEvent> received = new AtomicReference<>();
         client.onChange(received::set);
 
-        // Simulate a WS flag_changed event
-        setupList("feature-x", Map.of("staging", Map.of("enabled", true, "default", false)));
-        client.simulateFlagChanged();
+        // Simulate a WS flag_changed event with changed data
+        setupGetFlag("feature-x", Map.of("staging", Map.of("enabled", true, "default", false)));
+        client.simulateFlagChanged("feature-x");
 
         assertNotNull(received.get());
         assertEquals("feature-x", received.get().id());
@@ -74,10 +75,11 @@ class FlagsClientWebSocketTest {
         AtomicReference<FlagChangeEvent> received = new AtomicReference<>();
         client.onChange(received::set);
 
-        client.simulateFlagDeleted();
+        client.simulateFlagDeleted("feature-x");
 
         assertNotNull(received.get());
         assertEquals("websocket", received.get().source());
+        assertTrue(received.get().isDeleted());
     }
 
     @Test
@@ -120,6 +122,7 @@ class FlagsClientWebSocketTest {
 
         verify(mockWs).on(eq("flag_changed"), any());
         verify(mockWs).on(eq("flag_deleted"), any());
+        verify(mockWs).on(eq("flags_changed"), any());
     }
 
     @Test
@@ -174,7 +177,7 @@ class FlagsClientWebSocketTest {
 
     @Test
     void wsEventTriggeredViaSharedWs() throws ApiException {
-        setupList("feature-x", Map.of());
+        setupList("feature-x", Map.of("staging", Map.of("enabled", true, "default", true)));
         sharedWs.setConnectionStatus("connected");
         client._connectInternal();
 
@@ -182,8 +185,9 @@ class FlagsClientWebSocketTest {
         client.onChange(received::set);
 
         // Use SharedWebSocket simulateMessage to trigger event dispatch
-        setupList("feature-x", Map.of());
-        sharedWs.simulateMessage("{\"event\":\"flag_changed\",\"flag_key\":\"feature-x\"}");
+        // Message must have "id" field matching the flag key, and data must differ
+        setupGetFlag("feature-x", Map.of("staging", Map.of("enabled", true, "default", false)));
+        sharedWs.simulateMessage("{\"event\":\"flag_changed\",\"id\":\"feature-x\"}");
 
         assertNotNull(received.get());
     }
@@ -194,7 +198,7 @@ class FlagsClientWebSocketTest {
                 flagAttrs("flag-a", Map.of()),
                 flagAttrs("flag-b", Map.of())
         )), FlagListResponse.class);
-        when(mockApi.listFlags(isNull(), isNull(), isNull(), isNull())).thenReturn(listResponse);
+        when(mockApi.listFlags(isNull(), isNull())).thenReturn(listResponse);
         client._connectInternal();
 
         AtomicInteger aCount = new AtomicInteger();
@@ -202,11 +206,12 @@ class FlagsClientWebSocketTest {
         client.onChange("flag-a", e -> aCount.incrementAndGet());
         client.onChange("flag-b", e -> bCount.incrementAndGet());
 
-        when(mockApi.listFlags(isNull(), isNull(), isNull(), isNull())).thenReturn(listResponse);
-        client.refresh();
+        // flag_changed for flag-a only — only flag-a listener fires, not flag-b
+        setupGetFlag("flag-a", Map.of("staging", Map.of("enabled", true, "default", true)));
+        client.simulateFlagChanged("flag-a");
 
-        assertTrue(aCount.get() > 0);
-        assertTrue(bCount.get() > 0);
+        assertEquals(1, aCount.get());
+        assertEquals(0, bCount.get());
     }
 
     // --- Helpers ---
@@ -221,7 +226,20 @@ class FlagsClientWebSocketTest {
         FlagListResponse listResponse = OBJECT_MAPPER.convertValue(Map.of("data", List.of(Map.of(
                 "id", id, "type", "flag", "attributes", attrs
         ))), FlagListResponse.class);
-        when(mockApi.listFlags(isNull(), isNull(), isNull(), isNull())).thenReturn(listResponse);
+        when(mockApi.listFlags(isNull(), isNull())).thenReturn(listResponse);
+    }
+
+    private void setupGetFlag(String id, Map<String, Object> environments) throws ApiException {
+        Map<String, Object> attrs = new HashMap<>();
+        attrs.put("name", id);
+        attrs.put("type", "BOOLEAN");
+        attrs.put("default", false);
+        attrs.put("values", List.of());
+        attrs.put("environments", environments);
+        FlagResponse flagResponse = OBJECT_MAPPER.convertValue(Map.of("data", Map.of(
+                "id", id, "type", "flag", "attributes", attrs
+        )), FlagResponse.class);
+        when(mockApi.getFlag(id)).thenReturn(flagResponse);
     }
 
     private static Map<String, Object> flagAttrs(String id, Map<String, Object> environments) {
