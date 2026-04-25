@@ -19,7 +19,7 @@ import com.smplkit.internal.generated.flags.Configuration;
 import com.smplkit.internal.generated.flags.Pair;
 
 import com.smplkit.internal.generated.flags.model.RemoveReferencesRequest;
-import com.smplkit.internal.generated.flags.model.RemoveReferencesResponse;
+import com.smplkit.internal.generated.flags.model.RemoveReferencesResultEnvelope;
 
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -167,10 +167,10 @@ public class FunctionsApi {
    * Execute Remove References
    * Bulk-remove context references from flag rules.  Traverses every flag in the account, removes rules that reference the specified context, and emits a single flags_changed event when done.
    * @param removeReferencesRequest  (required)
-   * @return RemoveReferencesResponse
+   * @return RemoveReferencesResultEnvelope
    * @throws ApiException if fails to make API call
    */
-  public RemoveReferencesResponse removeReferences(@jakarta.annotation.Nonnull RemoveReferencesRequest removeReferencesRequest) throws ApiException {
+  public RemoveReferencesResultEnvelope removeReferences(@jakarta.annotation.Nonnull RemoveReferencesRequest removeReferencesRequest) throws ApiException {
     return removeReferences(removeReferencesRequest, null);
   }
 
@@ -179,11 +179,11 @@ public class FunctionsApi {
    * Bulk-remove context references from flag rules.  Traverses every flag in the account, removes rules that reference the specified context, and emits a single flags_changed event when done.
    * @param removeReferencesRequest  (required)
    * @param headers Optional headers to include in the request
-   * @return RemoveReferencesResponse
+   * @return RemoveReferencesResultEnvelope
    * @throws ApiException if fails to make API call
    */
-  public RemoveReferencesResponse removeReferences(@jakarta.annotation.Nonnull RemoveReferencesRequest removeReferencesRequest, Map<String, String> headers) throws ApiException {
-    ApiResponse<RemoveReferencesResponse> localVarResponse = removeReferencesWithHttpInfo(removeReferencesRequest, headers);
+  public RemoveReferencesResultEnvelope removeReferences(@jakarta.annotation.Nonnull RemoveReferencesRequest removeReferencesRequest, Map<String, String> headers) throws ApiException {
+    ApiResponse<RemoveReferencesResultEnvelope> localVarResponse = removeReferencesWithHttpInfo(removeReferencesRequest, headers);
     return localVarResponse.getData();
   }
 
@@ -191,10 +191,10 @@ public class FunctionsApi {
    * Execute Remove References
    * Bulk-remove context references from flag rules.  Traverses every flag in the account, removes rules that reference the specified context, and emits a single flags_changed event when done.
    * @param removeReferencesRequest  (required)
-   * @return ApiResponse&lt;RemoveReferencesResponse&gt;
+   * @return ApiResponse&lt;RemoveReferencesResultEnvelope&gt;
    * @throws ApiException if fails to make API call
    */
-  public ApiResponse<RemoveReferencesResponse> removeReferencesWithHttpInfo(@jakarta.annotation.Nonnull RemoveReferencesRequest removeReferencesRequest) throws ApiException {
+  public ApiResponse<RemoveReferencesResultEnvelope> removeReferencesWithHttpInfo(@jakarta.annotation.Nonnull RemoveReferencesRequest removeReferencesRequest) throws ApiException {
     return removeReferencesWithHttpInfo(removeReferencesRequest, null);
   }
 
@@ -203,10 +203,10 @@ public class FunctionsApi {
    * Bulk-remove context references from flag rules.  Traverses every flag in the account, removes rules that reference the specified context, and emits a single flags_changed event when done.
    * @param removeReferencesRequest  (required)
    * @param headers Optional headers to include in the request
-   * @return ApiResponse&lt;RemoveReferencesResponse&gt;
+   * @return ApiResponse&lt;RemoveReferencesResultEnvelope&gt;
    * @throws ApiException if fails to make API call
    */
-  public ApiResponse<RemoveReferencesResponse> removeReferencesWithHttpInfo(@jakarta.annotation.Nonnull RemoveReferencesRequest removeReferencesRequest, Map<String, String> headers) throws ApiException {
+  public ApiResponse<RemoveReferencesResultEnvelope> removeReferencesWithHttpInfo(@jakarta.annotation.Nonnull RemoveReferencesRequest removeReferencesRequest, Map<String, String> headers) throws ApiException {
     HttpRequest.Builder localVarRequestBuilder = removeReferencesRequestBuilder(removeReferencesRequest, headers);
     try {
       HttpResponse<InputStream> localVarResponse = memberVarHttpClient.send(
@@ -222,7 +222,7 @@ public class FunctionsApi {
         }
         localVarResponseBody = ApiClient.getResponseBody(localVarResponse);
         if (localVarResponseBody == null) {
-          return new ApiResponse<RemoveReferencesResponse>(
+          return new ApiResponse<RemoveReferencesResultEnvelope>(
               localVarResponse.statusCode(),
               localVarResponse.headers().map(),
               null
@@ -232,10 +232,10 @@ public class FunctionsApi {
         
         
         String responseBody = new String(localVarResponseBody.readAllBytes());
-        RemoveReferencesResponse responseValue = responseBody.isBlank()? null: memberVarObjectMapper.readValue(responseBody, new TypeReference<RemoveReferencesResponse>() {});
+        RemoveReferencesResultEnvelope responseValue = responseBody.isBlank()? null: memberVarObjectMapper.readValue(responseBody, new TypeReference<RemoveReferencesResultEnvelope>() {});
         
 
-        return new ApiResponse<RemoveReferencesResponse>(
+        return new ApiResponse<RemoveReferencesResultEnvelope>(
             localVarResponse.statusCode(),
             localVarResponse.headers().map(),
             responseValue

@@ -31,21 +31,21 @@ import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 
 import com.smplkit.internal.generated.flags.ApiClient;
 /**
- * RemoveReferencesResponse
+ * RemoveReferencesResultEnvelope
  */
 @JsonPropertyOrder({
-  RemoveReferencesResponse.JSON_PROPERTY_DATA
+  RemoveReferencesResultEnvelope.JSON_PROPERTY_DATA
 })
 @jakarta.annotation.Generated(value = "org.openapitools.codegen.languages.JavaClientCodegen", comments = "Generator version: 7.21.0")
-public class RemoveReferencesResponse {
+public class RemoveReferencesResultEnvelope {
   public static final String JSON_PROPERTY_DATA = "data";
   @jakarta.annotation.Nonnull
   private RemoveReferencesResultResource data;
 
-  public RemoveReferencesResponse() { 
+  public RemoveReferencesResultEnvelope() { 
   }
 
-  public RemoveReferencesResponse data(@jakarta.annotation.Nonnull RemoveReferencesResultResource data) {
+  public RemoveReferencesResultEnvelope data(@jakarta.annotation.Nonnull RemoveReferencesResultResource data) {
     this.data = data;
     return this;
   }
@@ -70,7 +70,7 @@ public class RemoveReferencesResponse {
 
 
   /**
-   * Return true if this RemoveReferencesResponse object is equal to o.
+   * Return true if this RemoveReferencesResultEnvelope object is equal to o.
    */
   @Override
   public boolean equals(Object o) {
@@ -80,8 +80,8 @@ public class RemoveReferencesResponse {
     if (o == null || getClass() != o.getClass()) {
       return false;
     }
-    RemoveReferencesResponse removeReferencesResponse = (RemoveReferencesResponse) o;
-    return Objects.equals(this.data, removeReferencesResponse.data);
+    RemoveReferencesResultEnvelope removeReferencesResultEnvelope = (RemoveReferencesResultEnvelope) o;
+    return Objects.equals(this.data, removeReferencesResultEnvelope.data);
   }
 
   @Override
@@ -92,7 +92,7 @@ public class RemoveReferencesResponse {
   @Override
   public String toString() {
     StringBuilder sb = new StringBuilder();
-    sb.append("class RemoveReferencesResponse {\n");
+    sb.append("class RemoveReferencesResultEnvelope {\n");
     sb.append("    data: ").append(toIndentedString(data)).append("\n");
     sb.append("}");
     return sb.toString();
