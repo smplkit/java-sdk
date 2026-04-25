@@ -165,7 +165,7 @@ public class ProductsApi {
 
   /**
    * List Products
-   * Return all products with their plans and limits as JSON:API resources.
+   * Return all flag-enabled products with their plans and limits.
    * @return ProductListResponse
    * @throws ApiException if fails to make API call
    */
@@ -175,7 +175,7 @@ public class ProductsApi {
 
   /**
    * List Products
-   * Return all products with their plans and limits as JSON:API resources.
+   * Return all flag-enabled products with their plans and limits.
    * @param headers Optional headers to include in the request
    * @return ProductListResponse
    * @throws ApiException if fails to make API call
@@ -187,7 +187,7 @@ public class ProductsApi {
 
   /**
    * List Products
-   * Return all products with their plans and limits as JSON:API resources.
+   * Return all flag-enabled products with their plans and limits.
    * @return ApiResponse&lt;ProductListResponse&gt;
    * @throws ApiException if fails to make API call
    */
@@ -197,7 +197,7 @@ public class ProductsApi {
 
   /**
    * List Products
-   * Return all products with their plans and limits as JSON:API resources.
+   * Return all flag-enabled products with their plans and limits.
    * @param headers Optional headers to include in the request
    * @return ApiResponse&lt;ProductListResponse&gt;
    * @throws ApiException if fails to make API call
