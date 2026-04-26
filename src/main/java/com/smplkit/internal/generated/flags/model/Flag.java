@@ -65,8 +65,7 @@ public class Flag {
   private JsonNullable<String> description = JsonNullable.<String>undefined();
 
   public static final String JSON_PROPERTY_TYPE = "type";
-  @jakarta.annotation.Nonnull
-  private String type;
+  private JsonNullable<String> type = JsonNullable.<String>undefined();
 
   public static final String JSON_PROPERTY_DEFAULT = "default";
   @jakarta.annotation.Nullable
@@ -162,8 +161,8 @@ public class Flag {
   }
 
 
-  public Flag type(@jakarta.annotation.Nonnull String type) {
-    this.type = type;
+  public Flag type(@jakarta.annotation.Nullable String type) {
+    this.type = JsonNullable.<String>of(type);
     return this;
   }
 
@@ -171,18 +170,26 @@ public class Flag {
    * Value type: STRING, BOOLEAN, NUMERIC, or JSON
    * @return type
    */
-  @jakarta.annotation.Nonnull
-  @JsonProperty(value = JSON_PROPERTY_TYPE, required = true)
-  @JsonInclude(value = JsonInclude.Include.ALWAYS)
+  @jakarta.annotation.Nullable
+  @JsonIgnore
   public String getType() {
-    return type;
+        return type.orElse(null);
   }
 
+  @JsonProperty(value = JSON_PROPERTY_TYPE, required = false)
+  @JsonInclude(value = JsonInclude.Include.USE_DEFAULTS)
 
-  @JsonProperty(value = JSON_PROPERTY_TYPE, required = true)
-  @JsonInclude(value = JsonInclude.Include.ALWAYS)
-  public void setType(@jakarta.annotation.Nonnull String type) {
+  public JsonNullable<String> getType_JsonNullable() {
+    return type;
+  }
+  
+  @JsonProperty(JSON_PROPERTY_TYPE)
+  public void setType_JsonNullable(JsonNullable<String> type) {
     this.type = type;
+  }
+
+  public void setType(@jakarta.annotation.Nullable String type) {
+    this.type = JsonNullable.<String>of(type);
   }
 
 
@@ -416,7 +423,7 @@ public class Flag {
     Flag flag = (Flag) o;
     return Objects.equals(this.name, flag.name) &&
         equalsNullable(this.description, flag.description) &&
-        Objects.equals(this.type, flag.type) &&
+        equalsNullable(this.type, flag.type) &&
         Objects.equals(this._default, flag._default) &&
         equalsNullable(this.values, flag.values) &&
         Objects.equals(this.environments, flag.environments) &&
@@ -432,7 +439,7 @@ public class Flag {
 
   @Override
   public int hashCode() {
-    return Objects.hash(name, hashCodeNullable(description), type, _default, hashCodeNullable(values), environments, hashCodeNullable(managed), hashCodeNullable(sources), hashCodeNullable(createdAt), hashCodeNullable(updatedAt));
+    return Objects.hash(name, hashCodeNullable(description), hashCodeNullable(type), _default, hashCodeNullable(values), environments, hashCodeNullable(managed), hashCodeNullable(sources), hashCodeNullable(createdAt), hashCodeNullable(updatedAt));
   }
 
   private static <T> int hashCodeNullable(JsonNullable<T> a) {
