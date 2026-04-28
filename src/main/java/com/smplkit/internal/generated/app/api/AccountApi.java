@@ -20,7 +20,6 @@ import com.smplkit.internal.generated.app.Pair;
 
 import com.smplkit.internal.generated.app.model.AccountResponse;
 import com.smplkit.internal.generated.app.model.AccountWipeRequest;
-import com.smplkit.internal.generated.app.model.AccountWipeResponse;
 import com.smplkit.internal.generated.app.model.ErrorResponse;
 
 import com.fasterxml.jackson.core.type.TypeReference;
@@ -712,48 +711,45 @@ public class AccountApi {
 
   /**
    * Wipe Account Data
-   * Delete every config, flag, logger, log group, context, context type (except the auto-managed &#x60;&#x60;service&#x60;&#x60;), and customer API key (except the caller&#39;s current key) on the account. Environments are preserved. The &#x60;&#x60;common&#x60;&#x60; config is preserved as a structural anchor but its items are reset. Requires &#x60;&#x60;OWNER&#x60;&#x60; role and a &#x60;&#x60;{\&quot;confirm\&quot;: true}&#x60;&#x60; body — anything else returns 400.
+   * Delete every config, flag, logger, log group, context, context type, environment, and customer API key (except the caller&#39;s current key) on the account. The &#x60;&#x60;common&#x60;&#x60; config is preserved as a structural anchor but its items are reset. Requires &#x60;&#x60;OWNER&#x60;&#x60; role and a &#x60;&#x60;{\&quot;confirm\&quot;: true}&#x60;&#x60; body — anything else returns 400. Returns 204 on success; if any sub-delete fails the response is 500.
    * @param accountWipeRequest  (required)
-   * @return AccountWipeResponse
    * @throws ApiException if fails to make API call
    */
-  public AccountWipeResponse wipeAccountData(@jakarta.annotation.Nonnull AccountWipeRequest accountWipeRequest) throws ApiException {
-    return wipeAccountData(accountWipeRequest, null);
+  public void wipeAccountData(@jakarta.annotation.Nonnull AccountWipeRequest accountWipeRequest) throws ApiException {
+    wipeAccountData(accountWipeRequest, null);
   }
 
   /**
    * Wipe Account Data
-   * Delete every config, flag, logger, log group, context, context type (except the auto-managed &#x60;&#x60;service&#x60;&#x60;), and customer API key (except the caller&#39;s current key) on the account. Environments are preserved. The &#x60;&#x60;common&#x60;&#x60; config is preserved as a structural anchor but its items are reset. Requires &#x60;&#x60;OWNER&#x60;&#x60; role and a &#x60;&#x60;{\&quot;confirm\&quot;: true}&#x60;&#x60; body — anything else returns 400.
+   * Delete every config, flag, logger, log group, context, context type, environment, and customer API key (except the caller&#39;s current key) on the account. The &#x60;&#x60;common&#x60;&#x60; config is preserved as a structural anchor but its items are reset. Requires &#x60;&#x60;OWNER&#x60;&#x60; role and a &#x60;&#x60;{\&quot;confirm\&quot;: true}&#x60;&#x60; body — anything else returns 400. Returns 204 on success; if any sub-delete fails the response is 500.
    * @param accountWipeRequest  (required)
    * @param headers Optional headers to include in the request
-   * @return AccountWipeResponse
    * @throws ApiException if fails to make API call
    */
-  public AccountWipeResponse wipeAccountData(@jakarta.annotation.Nonnull AccountWipeRequest accountWipeRequest, Map<String, String> headers) throws ApiException {
-    ApiResponse<AccountWipeResponse> localVarResponse = wipeAccountDataWithHttpInfo(accountWipeRequest, headers);
-    return localVarResponse.getData();
+  public void wipeAccountData(@jakarta.annotation.Nonnull AccountWipeRequest accountWipeRequest, Map<String, String> headers) throws ApiException {
+    wipeAccountDataWithHttpInfo(accountWipeRequest, headers);
   }
 
   /**
    * Wipe Account Data
-   * Delete every config, flag, logger, log group, context, context type (except the auto-managed &#x60;&#x60;service&#x60;&#x60;), and customer API key (except the caller&#39;s current key) on the account. Environments are preserved. The &#x60;&#x60;common&#x60;&#x60; config is preserved as a structural anchor but its items are reset. Requires &#x60;&#x60;OWNER&#x60;&#x60; role and a &#x60;&#x60;{\&quot;confirm\&quot;: true}&#x60;&#x60; body — anything else returns 400.
+   * Delete every config, flag, logger, log group, context, context type, environment, and customer API key (except the caller&#39;s current key) on the account. The &#x60;&#x60;common&#x60;&#x60; config is preserved as a structural anchor but its items are reset. Requires &#x60;&#x60;OWNER&#x60;&#x60; role and a &#x60;&#x60;{\&quot;confirm\&quot;: true}&#x60;&#x60; body — anything else returns 400. Returns 204 on success; if any sub-delete fails the response is 500.
    * @param accountWipeRequest  (required)
-   * @return ApiResponse&lt;AccountWipeResponse&gt;
+   * @return ApiResponse&lt;Void&gt;
    * @throws ApiException if fails to make API call
    */
-  public ApiResponse<AccountWipeResponse> wipeAccountDataWithHttpInfo(@jakarta.annotation.Nonnull AccountWipeRequest accountWipeRequest) throws ApiException {
+  public ApiResponse<Void> wipeAccountDataWithHttpInfo(@jakarta.annotation.Nonnull AccountWipeRequest accountWipeRequest) throws ApiException {
     return wipeAccountDataWithHttpInfo(accountWipeRequest, null);
   }
 
   /**
    * Wipe Account Data
-   * Delete every config, flag, logger, log group, context, context type (except the auto-managed &#x60;&#x60;service&#x60;&#x60;), and customer API key (except the caller&#39;s current key) on the account. Environments are preserved. The &#x60;&#x60;common&#x60;&#x60; config is preserved as a structural anchor but its items are reset. Requires &#x60;&#x60;OWNER&#x60;&#x60; role and a &#x60;&#x60;{\&quot;confirm\&quot;: true}&#x60;&#x60; body — anything else returns 400.
+   * Delete every config, flag, logger, log group, context, context type, environment, and customer API key (except the caller&#39;s current key) on the account. The &#x60;&#x60;common&#x60;&#x60; config is preserved as a structural anchor but its items are reset. Requires &#x60;&#x60;OWNER&#x60;&#x60; role and a &#x60;&#x60;{\&quot;confirm\&quot;: true}&#x60;&#x60; body — anything else returns 400. Returns 204 on success; if any sub-delete fails the response is 500.
    * @param accountWipeRequest  (required)
    * @param headers Optional headers to include in the request
-   * @return ApiResponse&lt;AccountWipeResponse&gt;
+   * @return ApiResponse&lt;Void&gt;
    * @throws ApiException if fails to make API call
    */
-  public ApiResponse<AccountWipeResponse> wipeAccountDataWithHttpInfo(@jakarta.annotation.Nonnull AccountWipeRequest accountWipeRequest, Map<String, String> headers) throws ApiException {
+  public ApiResponse<Void> wipeAccountDataWithHttpInfo(@jakarta.annotation.Nonnull AccountWipeRequest accountWipeRequest, Map<String, String> headers) throws ApiException {
     HttpRequest.Builder localVarRequestBuilder = wipeAccountDataRequestBuilder(accountWipeRequest, headers);
     try {
       HttpResponse<InputStream> localVarResponse = memberVarHttpClient.send(
@@ -768,24 +764,13 @@ public class AccountApi {
           throw getApiException("wipeAccountData", localVarResponse);
         }
         localVarResponseBody = ApiClient.getResponseBody(localVarResponse);
-        if (localVarResponseBody == null) {
-          return new ApiResponse<AccountWipeResponse>(
-              localVarResponse.statusCode(),
-              localVarResponse.headers().map(),
-              null
-          );
+        if (localVarResponseBody != null) {
+          localVarResponseBody.readAllBytes();
         }
-
-        
-        
-        String responseBody = new String(localVarResponseBody.readAllBytes());
-        AccountWipeResponse responseValue = responseBody.isBlank()? null: memberVarObjectMapper.readValue(responseBody, new TypeReference<AccountWipeResponse>() {});
-        
-
-        return new ApiResponse<AccountWipeResponse>(
+        return new ApiResponse<>(
             localVarResponse.statusCode(),
             localVarResponse.headers().map(),
-            responseValue
+            null
         );
       } finally {
         if (localVarResponseBody != null) {
