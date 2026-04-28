@@ -97,7 +97,6 @@ public final class ContextTypesClient {
 
     private ContextTypeResponse buildRequest(com.smplkit.management.ContextType ct) {
         ContextType attrs = new ContextType();
-        attrs.setId(ct.getId());
         attrs.setName(ct.getName());
         // attributes is Map<String, Map<String, Object>> — cast to Map<String, Object> for the generated model
         if (!ct.getAttributes().isEmpty()) {
