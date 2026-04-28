@@ -166,7 +166,7 @@ public class LogGroupsApi {
 
   /**
    * Create Log Group
-   * Create a new log group. The caller provides the key in data.id or attributes.key.
+   * Create a new log group. The caller provides the key in data.id, or it is auto-generated from name.
    * @param logGroupResponse  (required)
    * @return LogGroupResponse
    * @throws ApiException if fails to make API call
@@ -177,7 +177,7 @@ public class LogGroupsApi {
 
   /**
    * Create Log Group
-   * Create a new log group. The caller provides the key in data.id or attributes.key.
+   * Create a new log group. The caller provides the key in data.id, or it is auto-generated from name.
    * @param logGroupResponse  (required)
    * @param headers Optional headers to include in the request
    * @return LogGroupResponse
@@ -190,7 +190,7 @@ public class LogGroupsApi {
 
   /**
    * Create Log Group
-   * Create a new log group. The caller provides the key in data.id or attributes.key.
+   * Create a new log group. The caller provides the key in data.id, or it is auto-generated from name.
    * @param logGroupResponse  (required)
    * @return ApiResponse&lt;LogGroupResponse&gt;
    * @throws ApiException if fails to make API call
@@ -201,7 +201,7 @@ public class LogGroupsApi {
 
   /**
    * Create Log Group
-   * Create a new log group. The caller provides the key in data.id or attributes.key.
+   * Create a new log group. The caller provides the key in data.id, or it is auto-generated from name.
    * @param logGroupResponse  (required)
    * @param headers Optional headers to include in the request
    * @return ApiResponse&lt;LogGroupResponse&gt;
