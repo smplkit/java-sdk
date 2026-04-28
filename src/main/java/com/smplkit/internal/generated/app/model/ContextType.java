@@ -40,7 +40,6 @@ import com.smplkit.internal.generated.app.ApiClient;
  * ContextType
  */
 @JsonPropertyOrder({
-  ContextType.JSON_PROPERTY_ID,
   ContextType.JSON_PROPERTY_NAME,
   ContextType.JSON_PROPERTY_ATTRIBUTES,
   ContextType.JSON_PROPERTY_CREATED_AT,
@@ -48,9 +47,6 @@ import com.smplkit.internal.generated.app.ApiClient;
 })
 @jakarta.annotation.Generated(value = "org.openapitools.codegen.languages.JavaClientCodegen", comments = "Generator version: 7.21.0")
 public class ContextType {
-  public static final String JSON_PROPERTY_ID = "id";
-  private JsonNullable<String> id = JsonNullable.<String>undefined();
-
   public static final String JSON_PROPERTY_NAME = "name";
   @jakarta.annotation.Nonnull
   private String name;
@@ -77,38 +73,6 @@ public class ContextType {
     this.createdAt = createdAt == null ? JsonNullable.<OffsetDateTime>undefined() : JsonNullable.of(createdAt);
     this.updatedAt = updatedAt == null ? JsonNullable.<OffsetDateTime>undefined() : JsonNullable.of(updatedAt);
   }
-
-  public ContextType id(@jakarta.annotation.Nullable String id) {
-    this.id = JsonNullable.<String>of(id);
-    return this;
-  }
-
-  /**
-   * Get id
-   * @return id
-   */
-  @jakarta.annotation.Nullable
-  @JsonIgnore
-  public String getId() {
-        return id.orElse(null);
-  }
-
-  @JsonProperty(value = JSON_PROPERTY_ID, required = false)
-  @JsonInclude(value = JsonInclude.Include.USE_DEFAULTS)
-
-  public JsonNullable<String> getId_JsonNullable() {
-    return id;
-  }
-  
-  @JsonProperty(JSON_PROPERTY_ID)
-  public void setId_JsonNullable(JsonNullable<String> id) {
-    this.id = id;
-  }
-
-  public void setId(@jakarta.annotation.Nullable String id) {
-    this.id = JsonNullable.<String>of(id);
-  }
-
 
   public ContextType name(@jakarta.annotation.Nonnull String name) {
     this.name = name;
@@ -234,8 +198,7 @@ public class ContextType {
       return false;
     }
     ContextType contextType = (ContextType) o;
-    return equalsNullable(this.id, contextType.id) &&
-        Objects.equals(this.name, contextType.name) &&
+    return Objects.equals(this.name, contextType.name) &&
         Objects.equals(this.attributes, contextType.attributes) &&
         equalsNullable(this.createdAt, contextType.createdAt) &&
         equalsNullable(this.updatedAt, contextType.updatedAt);
@@ -247,7 +210,7 @@ public class ContextType {
 
   @Override
   public int hashCode() {
-    return Objects.hash(hashCodeNullable(id), name, attributes, hashCodeNullable(createdAt), hashCodeNullable(updatedAt));
+    return Objects.hash(name, attributes, hashCodeNullable(createdAt), hashCodeNullable(updatedAt));
   }
 
   private static <T> int hashCodeNullable(JsonNullable<T> a) {
@@ -261,7 +224,6 @@ public class ContextType {
   public String toString() {
     StringBuilder sb = new StringBuilder();
     sb.append("class ContextType {\n");
-    sb.append("    id: ").append(toIndentedString(id)).append("\n");
     sb.append("    name: ").append(toIndentedString(name)).append("\n");
     sb.append("    attributes: ").append(toIndentedString(attributes)).append("\n");
     sb.append("    createdAt: ").append(toIndentedString(createdAt)).append("\n");
@@ -309,11 +271,6 @@ public class ContextType {
     }
 
     StringJoiner joiner = new StringJoiner("&");
-
-    // add `id` to the URL query string
-    if (getId() != null) {
-      joiner.add(String.format(java.util.Locale.ROOT, "%sid%s=%s", prefix, suffix, ApiClient.urlEncode(ApiClient.valueToString(getId()))));
-    }
 
     // add `name` to the URL query string
     if (getName() != null) {
