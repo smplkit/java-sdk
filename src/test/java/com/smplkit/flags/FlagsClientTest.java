@@ -6,6 +6,7 @@ import com.smplkit.Context;
 import com.smplkit.SharedWebSocket;
 import com.smplkit.errors.SmplNotFoundException;
 import com.smplkit.errors.SmplValidationException;
+import com.smplkit.management.ContextRegistrationBuffer;
 import com.smplkit.internal.generated.app.api.ContextsApi;
 import com.smplkit.internal.generated.flags.ApiException;
 import com.smplkit.internal.generated.flags.api.FlagsApi;
@@ -408,6 +409,48 @@ class FlagsClientTest {
         Map<String, Object> map = Map.of("data", Map.of(
                 "id", id, "type", "flag", "attributes", attrs));
         return OBJECT_MAPPER.convertValue(map, FlagResponse.class);
+    }
+
+    // -----------------------------------------------------------------------
+    // Shared ContextRegistrationBuffer wiring
+    // -----------------------------------------------------------------------
+
+    @Test
+    void sharedBuffer_observeDeduplicates() {
+        ContextRegistrationBuffer buffer = new ContextRegistrationBuffer();
+        client.setContextBuffer(buffer);
+
+        client.register(new Context("user", "u1", Map.of("plan", "free")));
+        assertEquals(1, buffer.pendingCount());
+
+        // same key → deduped
+        client.register(new Context("user", "u1", null));
+        assertEquals(1, buffer.pendingCount());
+    }
+
+    @Test
+    void sharedBuffer_listOverload_addsAll() {
+        ContextRegistrationBuffer buffer = new ContextRegistrationBuffer();
+        client.setContextBuffer(buffer);
+
+        client.register(List.of(
+                new Context("user", "u1", null),
+                new Context("user", "u2", null)
+        ));
+        assertEquals(2, buffer.pendingCount());
+    }
+
+    @Test
+    void sharedBuffer_flushContexts_drainsBuffer() throws Exception {
+        ContextRegistrationBuffer buffer = new ContextRegistrationBuffer();
+        client.setContextBuffer(buffer);
+
+        client.register(new Context("user", "u1", null));
+        when(mockContextsApi.bulkRegisterContexts(any())).thenReturn(null);
+        client.flushContexts();
+
+        assertEquals(0, buffer.pendingCount());
+        verify(mockContextsApi).bulkRegisterContexts(any());
     }
 
     private static FlagListResponse makeFlagListResponse(String id, String name,

@@ -27,6 +27,7 @@ class SmplClientTest {
                 .build()) {
             assertNotNull(client);
             assertNotNull(client.config());
+            assertNotNull(client.management());
             assertEquals("test", client.environment());
             assertEquals("test-service", client.service());
         }

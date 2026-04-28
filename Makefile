@@ -1,7 +1,8 @@
 .PHONY: install generate \
 	config_runtime_showcase config_management_showcase \
 	flags_runtime_showcase flags_management_showcase \
-	logging_runtime_showcase logging_management_showcase
+	logging_runtime_showcase logging_management_showcase \
+	management_showcase
 
 install:
 	chmod +x gradlew
@@ -27,3 +28,6 @@ logging_runtime_showcase:
 
 logging_management_showcase:
 	./gradlew :examples:run -PmainClass=com.smplkit.examples.LoggingManagementShowcase
+
+management_showcase:
+	./gradlew :examples:run -PmainClass=com.smplkit.examples.ManagementShowcase

@@ -5,6 +5,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
 import com.smplkit.Context;
 import com.smplkit.SharedWebSocket;
+import com.smplkit.management.ContextRegistrationBuffer;
 import com.smplkit.errors.ApiExceptionHandler;
 import com.smplkit.errors.SmplException;
 import com.smplkit.internal.generated.app.api.ContextsApi;
@@ -96,7 +97,10 @@ public final class FlagsClient {
     private final AtomicLong cacheMisses = new AtomicLong();
     private static final Object CACHE_NULL_SENTINEL = new Object();
 
-    // Context registration buffer
+    // Shared context registration buffer (set via setContextBuffer; falls back to internal)
+    private volatile ContextRegistrationBuffer sharedContextBuffer;
+
+    // Internal fallback context buffer (used when no shared buffer is set)
     private final Map<String, Map<String, Object>> contextBuffer = Collections.synchronizedMap(
             new LinkedHashMap<>(256, 0.75f, true) {
                 @Override
@@ -192,6 +196,10 @@ public final class FlagsClient {
 
     public void setSharedWs(SharedWebSocket ws) {
         this.sharedWs = ws;
+    }
+
+    public void setContextBuffer(ContextRegistrationBuffer buffer) {
+        this.sharedContextBuffer = buffer;
     }
 
     public void setParentService(String service) {
@@ -336,22 +344,22 @@ public final class FlagsClient {
     }
 
     // -----------------------------------------------------------------------
-    // Runtime: context registration
+    // Runtime: context registration (internal — use client.management.contexts.register())
     // -----------------------------------------------------------------------
 
-    public void register(Context... contexts) {
+    void register(Context... contexts) {
         for (Context ctx : contexts) {
             observeContext(ctx);
         }
     }
 
-    public void register(List<Context> contexts) {
+    void register(List<Context> contexts) {
         for (Context ctx : contexts) {
             observeContext(ctx);
         }
     }
 
-    public void flushContexts() {
+    void flushContexts() {
         List<Map<String, Object>> batch = drainPendingContexts();
         if (batch.isEmpty()) return;
         try {
@@ -523,6 +531,12 @@ public final class FlagsClient {
     }
 
     private void observeContext(Context ctx) {
+        ContextRegistrationBuffer shared = this.sharedContextBuffer;
+        if (shared != null) {
+            shared.observe(ctx);
+            return;
+        }
+        // Fallback: internal buffer (used when no shared buffer is wired)
         String compositeKey = ctx.type() + ":" + ctx.key();
         if (contextBuffer.containsKey(compositeKey)) return;
         Map<String, Object> entry = new HashMap<>();
@@ -534,6 +548,10 @@ public final class FlagsClient {
     }
 
     private List<Map<String, Object>> drainPendingContexts() {
+        ContextRegistrationBuffer shared = this.sharedContextBuffer;
+        if (shared != null) {
+            return shared.drain();
+        }
         List<Map<String, Object>> batch = new ArrayList<>();
         Map<String, Object> item;
         while ((item = pendingContexts.poll()) != null) {

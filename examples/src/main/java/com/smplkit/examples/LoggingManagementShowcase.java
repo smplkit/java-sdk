@@ -5,6 +5,7 @@ import com.smplkit.SmplClient;
 import com.smplkit.errors.SmplNotFoundException;
 import com.smplkit.logging.LogGroup;
 import com.smplkit.logging.Logger;
+import com.smplkit.logging.LoggerSource;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -152,9 +153,24 @@ public class LoggingManagementShowcase {
             step("Cleared base level: " + auditLogger.getLevel());
 
             // ==================================================================
-            // 7. CLEANUP
+            // 7b. REGISTER SYNTHETIC LOGGER SOURCES
             // ==================================================================
-            section("7. Cleanup");
+            // registerSources() accepts explicit (service, environment) overrides —
+            // useful for sample-data seeding, cross-tenant migration, and test fixtures.
+            // ==================================================================
+            section("7b. Register synthetic logger sources");
+
+            client.logging().management().registerSources(java.util.List.of(
+                    new LoggerSource("sqlalchemy.engine", "user-service", "production", LogLevel.WARN),
+                    new LoggerSource("sqlalchemy.engine", "payment-service", "production", LogLevel.WARN),
+                    new LoggerSource("httpx", "checkout-service", "staging", LogLevel.INFO)
+            ));
+            step("3 sources registered");
+
+            // ==================================================================
+            // 8. CLEANUP
+            // ==================================================================
+            section("8. Cleanup");
 
             for (String key : createdLoggerKeys) {
                 client.logging().management().delete(key);

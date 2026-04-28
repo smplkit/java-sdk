@@ -5,9 +5,12 @@ import com.smplkit.internal.generated.logging.ApiException;
 import com.smplkit.internal.generated.logging.model.LogGroupListResponse;
 import com.smplkit.internal.generated.logging.model.LogGroupResource;
 import com.smplkit.internal.generated.logging.model.LogGroupResponse;
+import com.smplkit.internal.generated.logging.model.LoggerBulkItem;
+import com.smplkit.internal.generated.logging.model.LoggerBulkRequest;
 import com.smplkit.internal.generated.logging.model.LoggerListResponse;
 import com.smplkit.internal.generated.logging.model.LoggerResource;
 import com.smplkit.internal.generated.logging.model.LoggerResponse;
+import org.openapitools.jackson.nullable.JsonNullable;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -182,6 +185,40 @@ public final class LoggingManagement {
     public void deleteGroup(String id) {
         try {
             client.logGroupsApi.deleteLogGroup(id);
+        } catch (ApiException e) {
+            throw LoggingClient.mapLoggingException(e);
+        }
+    }
+
+    // -----------------------------------------------------------------------
+    // Explicit logger source registration
+    // -----------------------------------------------------------------------
+
+    /**
+     * Bulk-register explicit logger sources with the logging service.
+     *
+     * <p>Unlike {@link LoggingClient#start()}, which auto-discovers loggers from the current
+     * process, this method accepts explicit {@code (service, environment)} overrides — useful
+     * for sample-data seeding, cross-tenant migration, and test fixtures.</p>
+     *
+     * @param sources the list of logger sources to register
+     */
+    public void registerSources(List<LoggerSource> sources) {
+        if (sources == null || sources.isEmpty()) return;
+        LoggerBulkRequest req = new LoggerBulkRequest();
+        for (LoggerSource src : sources) {
+            LoggerBulkItem item = new LoggerBulkItem();
+            item.setId(src.name());
+            item.setResolvedLevel(src.resolvedLevel().getValue());
+            if (src.level() != null) {
+                item.setLevel_JsonNullable(JsonNullable.of(src.level().getValue()));
+            }
+            if (src.service() != null) item.setService(src.service());
+            if (src.environment() != null) item.setEnvironment(src.environment());
+            req.addLoggersItem(item);
+        }
+        try {
+            client.loggersApi.bulkRegisterLoggers(req);
         } catch (ApiException e) {
             throw LoggingClient.mapLoggingException(e);
         }

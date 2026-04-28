@@ -7,6 +7,7 @@ import com.smplkit.flags.Flag;
 import com.smplkit.flags.FlagChangeEvent;
 import com.smplkit.flags.FlagStats;
 import com.smplkit.Rule;
+import java.util.List;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -273,11 +274,11 @@ public class FlagsRuntimeShowcase {
                     .attr("role", "viewer")
                     .build();
 
-            client.flags().register(aliceCtx, bobCtx);
+            client.management().contexts.register(List.of(aliceCtx, bobCtx));
             step("Registered 2 contexts (Alice, Bob)");
 
             // Flush any buffered contexts immediately (normally happens on a timer).
-            client.flags().flushContexts();
+            client.management().contexts.flush();
             step("Flushed context buffer");
 
             // ==================================================================
