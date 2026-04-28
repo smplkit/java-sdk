@@ -1236,7 +1236,6 @@ class ManagementTest {
                                                         OffsetDateTime createdAt,
                                                         OffsetDateTime updatedAt) {
         ContextType ct = new ContextType();
-        ct.setId(id);
         ct.setName(name);
         if (attrs != null) ct.setAttributes(attrs);
         ContextTypeResource r = new ContextTypeResource()
