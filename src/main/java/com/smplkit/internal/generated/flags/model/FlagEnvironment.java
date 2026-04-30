@@ -48,7 +48,7 @@ import com.smplkit.internal.generated.flags.ApiClient;
 public class FlagEnvironment {
   public static final String JSON_PROPERTY_ENABLED = "enabled";
   @jakarta.annotation.Nullable
-  private Boolean enabled = false;
+  private Boolean enabled = true;
 
   public static final String JSON_PROPERTY_DEFAULT = "default";
   private JsonNullable<Object> _default = JsonNullable.<Object>of(null);
