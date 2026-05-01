@@ -33,13 +33,18 @@ import com.smplkit.internal.generated.app.ApiClient;
  * Confirmation envelope for &#x60;&#x60;POST /accounts/current/actions/wipe&#x60;&#x60;.
  */
 @JsonPropertyOrder({
-  AccountWipeRequest.JSON_PROPERTY_CONFIRM
+  AccountWipeRequest.JSON_PROPERTY_CONFIRM,
+  AccountWipeRequest.JSON_PROPERTY_GENERATE_SAMPLE_DATA
 })
 @jakarta.annotation.Generated(value = "org.openapitools.codegen.languages.JavaClientCodegen", comments = "Generator version: 7.21.0")
 public class AccountWipeRequest {
   public static final String JSON_PROPERTY_CONFIRM = "confirm";
   @jakarta.annotation.Nonnull
   private Boolean confirm;
+
+  public static final String JSON_PROPERTY_GENERATE_SAMPLE_DATA = "generate_sample_data";
+  @jakarta.annotation.Nullable
+  private Boolean generateSampleData = false;
 
   public AccountWipeRequest() { 
   }
@@ -68,6 +73,30 @@ public class AccountWipeRequest {
   }
 
 
+  public AccountWipeRequest generateSampleData(@jakarta.annotation.Nullable Boolean generateSampleData) {
+    this.generateSampleData = generateSampleData;
+    return this;
+  }
+
+  /**
+   * When &#x60;&#x60;true&#x60;&#x60;, the wipe re-seeds the account with the same Acme Commerce sample dataset that new accounts are bootstrapped with. Best-effort: any seeding failures are logged but do not fail the wipe.
+   * @return generateSampleData
+   */
+  @jakarta.annotation.Nullable
+  @JsonProperty(value = JSON_PROPERTY_GENERATE_SAMPLE_DATA, required = false)
+  @JsonInclude(value = JsonInclude.Include.USE_DEFAULTS)
+  public Boolean getGenerateSampleData() {
+    return generateSampleData;
+  }
+
+
+  @JsonProperty(value = JSON_PROPERTY_GENERATE_SAMPLE_DATA, required = false)
+  @JsonInclude(value = JsonInclude.Include.USE_DEFAULTS)
+  public void setGenerateSampleData(@jakarta.annotation.Nullable Boolean generateSampleData) {
+    this.generateSampleData = generateSampleData;
+  }
+
+
   /**
    * Return true if this AccountWipeRequest object is equal to o.
    */
@@ -80,12 +109,13 @@ public class AccountWipeRequest {
       return false;
     }
     AccountWipeRequest accountWipeRequest = (AccountWipeRequest) o;
-    return Objects.equals(this.confirm, accountWipeRequest.confirm);
+    return Objects.equals(this.confirm, accountWipeRequest.confirm) &&
+        Objects.equals(this.generateSampleData, accountWipeRequest.generateSampleData);
   }
 
   @Override
   public int hashCode() {
-    return Objects.hash(confirm);
+    return Objects.hash(confirm, generateSampleData);
   }
 
   @Override
@@ -93,6 +123,7 @@ public class AccountWipeRequest {
     StringBuilder sb = new StringBuilder();
     sb.append("class AccountWipeRequest {\n");
     sb.append("    confirm: ").append(toIndentedString(confirm)).append("\n");
+    sb.append("    generateSampleData: ").append(toIndentedString(generateSampleData)).append("\n");
     sb.append("}");
     return sb.toString();
   }
@@ -140,6 +171,11 @@ public class AccountWipeRequest {
     // add `confirm` to the URL query string
     if (getConfirm() != null) {
       joiner.add(String.format(java.util.Locale.ROOT, "%sconfirm%s=%s", prefix, suffix, ApiClient.urlEncode(ApiClient.valueToString(getConfirm()))));
+    }
+
+    // add `generate_sample_data` to the URL query string
+    if (getGenerateSampleData() != null) {
+      joiner.add(String.format(java.util.Locale.ROOT, "%sgenerate_sample_data%s=%s", prefix, suffix, ApiClient.urlEncode(ApiClient.valueToString(getGenerateSampleData()))));
     }
 
     return joiner.toString();
