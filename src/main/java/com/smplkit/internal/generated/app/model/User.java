@@ -41,6 +41,7 @@ import com.smplkit.internal.generated.app.ApiClient;
   User.JSON_PROPERTY_EMAIL,
   User.JSON_PROPERTY_DISPLAY_NAME,
   User.JSON_PROPERTY_PROFILE_PIC,
+  User.JSON_PROPERTY_AVATAR_URL,
   User.JSON_PROPERTY_AUTH_PROVIDER,
   User.JSON_PROPERTY_EMAIL_VERIFIED,
   User.JSON_PROPERTY_ROLE,
@@ -59,6 +60,9 @@ public class User {
 
   public static final String JSON_PROPERTY_PROFILE_PIC = "profile_pic";
   private JsonNullable<String> profilePic = JsonNullable.<String>undefined();
+
+  public static final String JSON_PROPERTY_AVATAR_URL = "avatar_url";
+  private JsonNullable<String> avatarUrl = JsonNullable.<String>undefined();
 
   public static final String JSON_PROPERTY_AUTH_PROVIDER = "auth_provider";
   private JsonNullable<String> authProvider = JsonNullable.<String>undefined();
@@ -81,12 +85,14 @@ public class User {
 
   @JsonCreator
   public User(
+    @JsonProperty(JSON_PROPERTY_AVATAR_URL) String avatarUrl, 
     @JsonProperty(JSON_PROPERTY_AUTH_PROVIDER) String authProvider, 
     @JsonProperty(JSON_PROPERTY_EMAIL_VERIFIED) Boolean emailVerified, 
     @JsonProperty(JSON_PROPERTY_ACCOUNT) String account, 
     @JsonProperty(JSON_PROPERTY_CREATED_AT) OffsetDateTime createdAt
   ) {
   this();
+    this.avatarUrl = avatarUrl == null ? JsonNullable.<String>undefined() : JsonNullable.of(avatarUrl);
     this.authProvider = authProvider == null ? JsonNullable.<String>undefined() : JsonNullable.of(authProvider);
     this.emailVerified = emailVerified;
     this.account = account == null ? JsonNullable.<String>undefined() : JsonNullable.of(account);
@@ -171,6 +177,34 @@ public class User {
   public void setProfilePic(@jakarta.annotation.Nullable String profilePic) {
     this.profilePic = JsonNullable.<String>of(profilePic);
   }
+
+
+  /**
+   * Server-computed &#x60;&#x60;data:&#x60;&#x60; URL when an OIDC provider supplied a profile picture. Null otherwise — callers should fall back to Gravatar or initials.
+   * @return avatarUrl
+   */
+  @jakarta.annotation.Nullable
+  @JsonIgnore
+  public String getAvatarUrl() {
+    
+    if (avatarUrl == null) {
+      avatarUrl = JsonNullable.<String>undefined();
+    }
+    return avatarUrl.orElse(null);
+  }
+
+  @JsonProperty(value = JSON_PROPERTY_AVATAR_URL, required = false)
+  @JsonInclude(value = JsonInclude.Include.USE_DEFAULTS)
+
+  public JsonNullable<String> getAvatarUrl_JsonNullable() {
+    return avatarUrl;
+  }
+  
+  @JsonProperty(JSON_PROPERTY_AVATAR_URL)
+  private void setAvatarUrl_JsonNullable(JsonNullable<String> avatarUrl) {
+    this.avatarUrl = avatarUrl;
+  }
+
 
 
   /**
@@ -318,6 +352,7 @@ public class User {
     return Objects.equals(this.email, user.email) &&
         Objects.equals(this.displayName, user.displayName) &&
         equalsNullable(this.profilePic, user.profilePic) &&
+        equalsNullable(this.avatarUrl, user.avatarUrl) &&
         equalsNullable(this.authProvider, user.authProvider) &&
         Objects.equals(this.emailVerified, user.emailVerified) &&
         equalsNullable(this.role, user.role) &&
@@ -331,7 +366,7 @@ public class User {
 
   @Override
   public int hashCode() {
-    return Objects.hash(email, displayName, hashCodeNullable(profilePic), hashCodeNullable(authProvider), emailVerified, hashCodeNullable(role), hashCodeNullable(account), hashCodeNullable(createdAt));
+    return Objects.hash(email, displayName, hashCodeNullable(profilePic), hashCodeNullable(avatarUrl), hashCodeNullable(authProvider), emailVerified, hashCodeNullable(role), hashCodeNullable(account), hashCodeNullable(createdAt));
   }
 
   private static <T> int hashCodeNullable(JsonNullable<T> a) {
@@ -348,6 +383,7 @@ public class User {
     sb.append("    email: ").append(toIndentedString(email)).append("\n");
     sb.append("    displayName: ").append(toIndentedString(displayName)).append("\n");
     sb.append("    profilePic: ").append(toIndentedString(profilePic)).append("\n");
+    sb.append("    avatarUrl: ").append(toIndentedString(avatarUrl)).append("\n");
     sb.append("    authProvider: ").append(toIndentedString(authProvider)).append("\n");
     sb.append("    emailVerified: ").append(toIndentedString(emailVerified)).append("\n");
     sb.append("    role: ").append(toIndentedString(role)).append("\n");
@@ -410,6 +446,11 @@ public class User {
     // add `profile_pic` to the URL query string
     if (getProfilePic() != null) {
       joiner.add(String.format(java.util.Locale.ROOT, "%sprofile_pic%s=%s", prefix, suffix, ApiClient.urlEncode(ApiClient.valueToString(getProfilePic()))));
+    }
+
+    // add `avatar_url` to the URL query string
+    if (getAvatarUrl() != null) {
+      joiner.add(String.format(java.util.Locale.ROOT, "%savatar_url%s=%s", prefix, suffix, ApiClient.urlEncode(ApiClient.valueToString(getAvatarUrl()))));
     }
 
     // add `auth_provider` to the URL query string
