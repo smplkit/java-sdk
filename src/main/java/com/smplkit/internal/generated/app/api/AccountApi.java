@@ -711,7 +711,7 @@ public class AccountApi {
 
   /**
    * Wipe Account Data
-   * Delete every config, flag, logger, log group, context, context type, environment, and customer API key (except the caller&#39;s current key) on the account. The &#x60;&#x60;common&#x60;&#x60; config is preserved as a structural anchor but its items are reset. Requires &#x60;&#x60;OWNER&#x60;&#x60; role and a &#x60;&#x60;{\&quot;confirm\&quot;: true}&#x60;&#x60; body — anything else returns 400. Returns 204 on success; if any sub-delete fails the response is 500.
+   * Delete every config, flag, logger, log group, context, context type, environment, and customer API key (except the caller&#39;s current key) on the account. The &#x60;&#x60;common&#x60;&#x60; config is preserved as a structural anchor but its items are reset. Requires &#x60;&#x60;OWNER&#x60;&#x60; role and a &#x60;&#x60;{\&quot;confirm\&quot;: true}&#x60;&#x60; body — anything else returns 400. Pass &#x60;&#x60;\&quot;generate_sample_data\&quot;: true&#x60;&#x60; to re-seed the account with the standard sample dataset after the wipe completes (best-effort; seed failures are logged but do not fail the wipe). Returns 204 on success; if any sub-delete fails the response is 500.
    * @param accountWipeRequest  (required)
    * @throws ApiException if fails to make API call
    */
@@ -721,7 +721,7 @@ public class AccountApi {
 
   /**
    * Wipe Account Data
-   * Delete every config, flag, logger, log group, context, context type, environment, and customer API key (except the caller&#39;s current key) on the account. The &#x60;&#x60;common&#x60;&#x60; config is preserved as a structural anchor but its items are reset. Requires &#x60;&#x60;OWNER&#x60;&#x60; role and a &#x60;&#x60;{\&quot;confirm\&quot;: true}&#x60;&#x60; body — anything else returns 400. Returns 204 on success; if any sub-delete fails the response is 500.
+   * Delete every config, flag, logger, log group, context, context type, environment, and customer API key (except the caller&#39;s current key) on the account. The &#x60;&#x60;common&#x60;&#x60; config is preserved as a structural anchor but its items are reset. Requires &#x60;&#x60;OWNER&#x60;&#x60; role and a &#x60;&#x60;{\&quot;confirm\&quot;: true}&#x60;&#x60; body — anything else returns 400. Pass &#x60;&#x60;\&quot;generate_sample_data\&quot;: true&#x60;&#x60; to re-seed the account with the standard sample dataset after the wipe completes (best-effort; seed failures are logged but do not fail the wipe). Returns 204 on success; if any sub-delete fails the response is 500.
    * @param accountWipeRequest  (required)
    * @param headers Optional headers to include in the request
    * @throws ApiException if fails to make API call
@@ -732,7 +732,7 @@ public class AccountApi {
 
   /**
    * Wipe Account Data
-   * Delete every config, flag, logger, log group, context, context type, environment, and customer API key (except the caller&#39;s current key) on the account. The &#x60;&#x60;common&#x60;&#x60; config is preserved as a structural anchor but its items are reset. Requires &#x60;&#x60;OWNER&#x60;&#x60; role and a &#x60;&#x60;{\&quot;confirm\&quot;: true}&#x60;&#x60; body — anything else returns 400. Returns 204 on success; if any sub-delete fails the response is 500.
+   * Delete every config, flag, logger, log group, context, context type, environment, and customer API key (except the caller&#39;s current key) on the account. The &#x60;&#x60;common&#x60;&#x60; config is preserved as a structural anchor but its items are reset. Requires &#x60;&#x60;OWNER&#x60;&#x60; role and a &#x60;&#x60;{\&quot;confirm\&quot;: true}&#x60;&#x60; body — anything else returns 400. Pass &#x60;&#x60;\&quot;generate_sample_data\&quot;: true&#x60;&#x60; to re-seed the account with the standard sample dataset after the wipe completes (best-effort; seed failures are logged but do not fail the wipe). Returns 204 on success; if any sub-delete fails the response is 500.
    * @param accountWipeRequest  (required)
    * @return ApiResponse&lt;Void&gt;
    * @throws ApiException if fails to make API call
@@ -743,7 +743,7 @@ public class AccountApi {
 
   /**
    * Wipe Account Data
-   * Delete every config, flag, logger, log group, context, context type, environment, and customer API key (except the caller&#39;s current key) on the account. The &#x60;&#x60;common&#x60;&#x60; config is preserved as a structural anchor but its items are reset. Requires &#x60;&#x60;OWNER&#x60;&#x60; role and a &#x60;&#x60;{\&quot;confirm\&quot;: true}&#x60;&#x60; body — anything else returns 400. Returns 204 on success; if any sub-delete fails the response is 500.
+   * Delete every config, flag, logger, log group, context, context type, environment, and customer API key (except the caller&#39;s current key) on the account. The &#x60;&#x60;common&#x60;&#x60; config is preserved as a structural anchor but its items are reset. Requires &#x60;&#x60;OWNER&#x60;&#x60; role and a &#x60;&#x60;{\&quot;confirm\&quot;: true}&#x60;&#x60; body — anything else returns 400. Pass &#x60;&#x60;\&quot;generate_sample_data\&quot;: true&#x60;&#x60; to re-seed the account with the standard sample dataset after the wipe completes (best-effort; seed failures are logged but do not fail the wipe). Returns 204 on success; if any sub-delete fails the response is 500.
    * @param accountWipeRequest  (required)
    * @param headers Optional headers to include in the request
    * @return ApiResponse&lt;Void&gt;
