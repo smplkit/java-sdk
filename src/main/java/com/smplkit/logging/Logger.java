@@ -50,9 +50,42 @@ public final class Logger {
     public String getGroup() { return group; }
     public boolean isManaged() { return managed; }
     public List<Map<String, Object>> getSources() { return sources; }
+
+    /**
+     * @deprecated use {@link #environments()} for the typed view. The raw-Map
+     * accessor is kept for one cycle for compatibility and will be removed in
+     * a follow-up.
+     */
+    @Deprecated
     public Map<String, Object> getEnvironments() { return environments; }
     public Instant getCreatedAt() { return createdAt; }
     public Instant getUpdatedAt() { return updatedAt; }
+
+    // --- Typed accessor (mirror Python rule 8) ---
+
+    /**
+     * Returns a typed, immutable per-environment view.
+     *
+     * <p>{@code logger.environments().get("production").level()} returns a
+     * typed {@link com.smplkit.LogLevel} (or null), not a raw string.
+     * Mirrors Python's {@code logger.environments["production"].level}.</p>
+     */
+    @SuppressWarnings("unchecked")
+    public Map<String, LoggerEnvironment> environments() {
+        Map<String, LoggerEnvironment> out = new HashMap<>();
+        for (Map.Entry<String, Object> e : environments.entrySet()) {
+            if (!(e.getValue() instanceof Map)) continue;
+            Map<String, Object> envMap = (Map<String, Object>) e.getValue();
+            Object levelStr = envMap.get("level");
+            com.smplkit.LogLevel level = null;
+            if (levelStr instanceof String s) {
+                try { level = com.smplkit.LogLevel.valueOf(s); }
+                catch (IllegalArgumentException ignored) { /* unknown level; leave null */ }
+            }
+            out.put(e.getKey(), new LoggerEnvironment(level));
+        }
+        return Map.copyOf(out);
+    }
 
     // --- Public setters for mutable fields ---
 
@@ -139,6 +172,16 @@ public final class Logger {
         if (client == null) throw new IllegalStateException("Logger not bound to a client");
         Logger saved = client._saveLogger(this);
         _apply(saved);
+    }
+
+    /** Async variant of {@link #save()} (rule 12). */
+    public java.util.concurrent.CompletableFuture<Void> saveAsync() {
+        return saveAsync(java.util.concurrent.ForkJoinPool.commonPool());
+    }
+
+    /** Async variant of {@link #save()} with a custom executor. */
+    public java.util.concurrent.CompletableFuture<Void> saveAsync(java.util.concurrent.Executor executor) {
+        return java.util.concurrent.CompletableFuture.runAsync(this::save, executor);
     }
 
     // --- Package-private setters (used by LoggingClient) ---

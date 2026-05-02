@@ -90,8 +90,7 @@ public final class FlagsManagementShowcase {
             List<Flag<?>> flags = manage.flags.list();
             System.out.println("Total flags: " + flags.size());
             for (Flag<?> f : flags) {
-                var envs = f.getEnvironments() != null
-                        ? f.getEnvironments().keySet() : List.of();
+                var envs = f.environments().keySet();
                 System.out.println("  " + f.getId() + " (" + f.getType() + ") — default="
                         + f.getDefault() + ", environments=" + envs);
             }
@@ -99,6 +98,10 @@ public final class FlagsManagementShowcase {
             // get a flag
             Flag<?> fetched = manage.flags.get("checkout-v2");
             System.out.println("\nFetched by id: " + fetched.getId());
+            int stagingRules = fetched.environments().get("staging").rules().size();
+            boolean prodEnabled = fetched.environments().get("production").enabled();
+            System.out.println("  staging rules: " + stagingRules);
+            System.out.println("  production enabled: " + prodEnabled);
 
             // update a flag
             bannerFlag.addValue("Purple", "purple");

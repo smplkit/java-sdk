@@ -58,6 +58,16 @@ public final class AccountSettings {
         _apply(saved);
     }
 
+    /** Async variant of {@link #save()} (rule 12). */
+    public java.util.concurrent.CompletableFuture<Void> saveAsync() {
+        return saveAsync(java.util.concurrent.ForkJoinPool.commonPool());
+    }
+
+    /** Async variant of {@link #save()} with a custom executor. */
+    public java.util.concurrent.CompletableFuture<Void> saveAsync(java.util.concurrent.Executor executor) {
+        return java.util.concurrent.CompletableFuture.runAsync(this::save, executor);
+    }
+
     void _apply(AccountSettings other) {
         this.data = new HashMap<>(other.data);
     }

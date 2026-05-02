@@ -57,8 +57,46 @@ public final class Config {
      */
     public Map<String, Object> getItems() { return items; }
 
-    /** Returns the environments map. */
+    /**
+     * @deprecated use {@link #environments()} for the typed view returning
+     * {@code Map<String, ConfigEnvironment>}.
+     */
+    @Deprecated
     public Map<String, Object> getEnvironments() { return environments; }
+
+    /**
+     * Returns a typed, immutable per-environment view (mirrors Python rule 8).
+     *
+     * <p>{@code config.environments().get("production").values()} returns the
+     * resolved {@code key -> value} map for that environment;
+     * {@code config.environments().get("production").valuesRaw()} returns the
+     * full {@code key -> {value, type, description}} typed map.</p>
+     */
+    @SuppressWarnings("unchecked")
+    public Map<String, ConfigEnvironment> environments() {
+        Map<String, ConfigEnvironment> out = new HashMap<>();
+        for (Map.Entry<String, Object> e : environments.entrySet()) {
+            if (!(e.getValue() instanceof Map)) continue;
+            Map<String, Object> envMap = (Map<String, Object>) e.getValue();
+            Object rawValues = envMap.getOrDefault("values", Map.of());
+            if (!(rawValues instanceof Map)) {
+                out.put(e.getKey(), new ConfigEnvironment(Map.of(), Map.of()));
+                continue;
+            }
+            Map<String, Object> valuesRawMap = (Map<String, Object>) rawValues;
+            Map<String, Object> valuesPlain = new HashMap<>();
+            for (Map.Entry<String, Object> v : valuesRawMap.entrySet()) {
+                Object val = v.getValue();
+                if (val instanceof Map && ((Map<String, Object>) val).containsKey("value")) {
+                    valuesPlain.put(v.getKey(), ((Map<String, Object>) val).get("value"));
+                } else {
+                    valuesPlain.put(v.getKey(), val);
+                }
+            }
+            out.put(e.getKey(), new ConfigEnvironment(valuesPlain, valuesRawMap));
+        }
+        return Map.copyOf(out);
+    }
 
     /** Returns the creation timestamp (may be null). */
     public Instant getCreatedAt() { return createdAt; }
@@ -236,6 +274,22 @@ public final class Config {
             Config updated = client._updateConfig(this);
             _apply(updated);
         }
+    }
+
+    /**
+     * Async variant of {@link #save()}, returning a {@link java.util.concurrent.CompletableFuture}.
+     *
+     * <p>Mirrors Python rule 12: customer picks sync vs async at the call site
+     * on the same model. The mutation is scheduled on the JDK common pool;
+     * provide a custom executor via {@link #saveAsync(java.util.concurrent.Executor)}.</p>
+     */
+    public java.util.concurrent.CompletableFuture<Void> saveAsync() {
+        return saveAsync(java.util.concurrent.ForkJoinPool.commonPool());
+    }
+
+    /** Async variant of {@link #save()} with a custom executor. */
+    public java.util.concurrent.CompletableFuture<Void> saveAsync(java.util.concurrent.Executor executor) {
+        return java.util.concurrent.CompletableFuture.runAsync(this::save, executor);
     }
 
     /**

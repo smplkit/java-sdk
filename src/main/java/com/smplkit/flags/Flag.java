@@ -53,11 +53,75 @@ public final class Flag<T> {
     public String getName() { return name; }
     public String getType() { return type; }
     public T getDefault() { return defaultValue; }
+
+    /**
+     * @deprecated use {@link #values()} for the typed view returning
+     * {@code List<FlagValue>}. The raw-Map accessor is kept for one cycle for
+     * compatibility and will be removed in a follow-up.
+     */
+    @Deprecated
     public List<Map<String, Object>> getValues() { return values; }
+
     public String getDescription() { return description; }
+
+    /**
+     * @deprecated use {@link #environments()} for the typed view returning
+     * {@code Map<String, FlagEnvironment>}. The raw-Map accessor is kept for
+     * one cycle for compatibility and will be removed in a follow-up.
+     */
+    @Deprecated
     public Map<String, Object> getEnvironments() { return environments; }
     public Instant getCreatedAt() { return createdAt; }
     public Instant getUpdatedAt() { return updatedAt; }
+
+    // --- Typed accessors (mirror Python rule 8) ---
+
+    /**
+     * Returns a typed, immutable per-environment view.
+     *
+     * <p>{@code flag.environments().get("production").enabled()},
+     * {@code flag.environments().get("production").rules()}, etc. Mirrors
+     * Python's {@code flag.environments["production"].enabled}.</p>
+     */
+    @SuppressWarnings("unchecked")
+    public Map<String, FlagEnvironment> environments() {
+        Map<String, FlagEnvironment> out = new HashMap<>();
+        for (Map.Entry<String, Object> e : environments.entrySet()) {
+            if (!(e.getValue() instanceof Map)) continue;
+            Map<String, Object> envMap = (Map<String, Object>) e.getValue();
+            boolean enabled = envMap.get("enabled") instanceof Boolean b ? b : true;
+            Object def = envMap.get("default");
+            Object rawRules = envMap.getOrDefault("rules", List.of());
+            List<FlagRule> rules = new ArrayList<>();
+            if (rawRules instanceof List) {
+                for (Object r : (List<Object>) rawRules) {
+                    if (!(r instanceof Map)) continue;
+                    Map<String, Object> ruleMap = (Map<String, Object>) r;
+                    Object logic = ruleMap.getOrDefault("logic", Map.of());
+                    rules.add(new FlagRule(
+                            logic instanceof Map ? (Map<String, Object>) logic : Map.of(),
+                            ruleMap.get("value"),
+                            (String) ruleMap.get("description")));
+                }
+            }
+            out.put(e.getKey(), new FlagEnvironment(enabled, def, rules));
+        }
+        return Map.copyOf(out);
+    }
+
+    /**
+     * Returns the constrained-values list as typed {@link FlagValue} records,
+     * or {@code null} if the flag is unconstrained. Mirrors Python's
+     * {@code flag.values}.
+     */
+    public List<FlagValue> values() {
+        if (values == null) return null;
+        List<FlagValue> out = new ArrayList<>(values.size());
+        for (Map<String, Object> v : values) {
+            out.add(new FlagValue((String) v.get("name"), v.get("value")));
+        }
+        return List.copyOf(out);
+    }
 
     // --- Setters for mutable fields ---
 
@@ -141,6 +205,16 @@ public final class Flag<T> {
             Flag<T> updated = client._updateFlag(this);
             _apply(updated);
         }
+    }
+
+    /** Async variant of {@link #save()} (rule 12). */
+    public java.util.concurrent.CompletableFuture<Void> saveAsync() {
+        return saveAsync(java.util.concurrent.ForkJoinPool.commonPool());
+    }
+
+    /** Async variant of {@link #save()} with a custom executor. */
+    public java.util.concurrent.CompletableFuture<Void> saveAsync(java.util.concurrent.Executor executor) {
+        return java.util.concurrent.CompletableFuture.runAsync(this::save, executor);
     }
 
     // ------------------------------------------------------------------

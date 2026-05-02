@@ -16,12 +16,11 @@ package com.smplkit.examples;
 import com.smplkit.SmplClient;
 import com.smplkit.config.Config;
 import com.smplkit.config.ConfigChangeEvent;
+import com.smplkit.config.LiveConfigProxy;
 import com.smplkit.examples.setup.ConfigRuntimeSetup;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Map;
-import java.util.concurrent.atomic.AtomicReference;
 
 public final class ConfigRuntimeShowcase {
 
@@ -32,7 +31,7 @@ public final class ConfigRuntimeShowcase {
             ConfigRuntimeSetup.setup(client.manage());
 
             // get a config as a plain dict
-            Map<String, Object> userSvcConfigDict = client.config().get("showcase-user-service");
+            LiveConfigProxy userSvcConfigDict = client.config().get("showcase-user-service");
             System.out.println("Total resolved keys: " + userSvcConfigDict.size());
             System.out.println("database.host = " + userSvcConfigDict.get("database.host"));
             System.out.println("max_retries = " + userSvcConfigDict.get("max_retries"));
@@ -58,8 +57,8 @@ public final class ConfigRuntimeShowcase {
             });
 
             // item-scoped listener via the live-proxy handle
-            client.config().onChange("showcase-common", "max_retries",
-                    retriesChanges::add);
+            LiveConfigProxy commonCfg = client.config().get("showcase-common");
+            commonCfg.onChange("max_retries", retriesChanges::add);
 
             // simulate someone making a change to trigger listeners
             updateMaxRetries(client, 7);
@@ -67,13 +66,12 @@ public final class ConfigRuntimeShowcase {
             // wait a moment for the event to be delivered
             Thread.sleep(200);
 
-            // userSvcConfigDict reflects the values at last fetch (re-read for latest)
-            Map<String, Object> latest = client.config().get("showcase-user-service");
-            System.out.println("max_retries after update = " + latest.get("max_retries"));
+            // userSvcConfigDict always reflects the latest values
+            System.out.println("max_retries after update = " + userSvcConfigDict.get("max_retries"));
             System.out.println("Global changes received: " + changes.size());
             System.out.println("Retries-specific changes received: " + retriesChanges.size());
 
-            assert ((Number) latest.get("max_retries")).intValue() == 7;
+            assert ((Number) userSvcConfigDict.get("max_retries")).intValue() == 7;
             assert !changes.isEmpty();
             assert !retriesChanges.isEmpty();
 
