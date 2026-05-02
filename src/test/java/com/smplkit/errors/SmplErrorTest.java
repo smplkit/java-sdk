@@ -7,11 +7,11 @@ import static org.junit.jupiter.api.Assertions.*;
 /**
  * Tests for the exception hierarchy.
  */
-class SmplExceptionTest {
+class SmplErrorTest {
 
     @Test
     void smplExceptionCarriesStatusCodeAndBody() {
-        SmplException ex = new SmplException("something failed", 500, "{\"error\":\"oops\"}");
+        SmplError ex = new SmplError("something failed", 500, "{\"error\":\"oops\"}");
         assertEquals("something failed", ex.getMessage());
         assertEquals(500, ex.statusCode());
         assertEquals("{\"error\":\"oops\"}", ex.responseBody());
@@ -20,7 +20,7 @@ class SmplExceptionTest {
     @Test
     void smplExceptionWithCause() {
         RuntimeException cause = new RuntimeException("root cause");
-        SmplException ex = new SmplException("wrapped", 0, null, cause);
+        SmplError ex = new SmplError("wrapped", 0, null, cause);
         assertEquals("wrapped", ex.getMessage());
         assertSame(cause, ex.getCause());
         assertEquals(0, ex.statusCode());
@@ -28,9 +28,9 @@ class SmplExceptionTest {
     }
 
     @Test
-    void notFoundExceptionIsSmplException() {
-        SmplNotFoundException ex = new SmplNotFoundException("not found", "body");
-        assertInstanceOf(SmplException.class, ex);
+    void notFoundExceptionIsSmplError() {
+        NotFoundError ex = new NotFoundError("not found", "body");
+        assertInstanceOf(SmplError.class, ex);
         assertInstanceOf(RuntimeException.class, ex);
         assertEquals(404, ex.statusCode());
         assertEquals("body", ex.responseBody());
@@ -38,60 +38,60 @@ class SmplExceptionTest {
     }
 
     @Test
-    void conflictExceptionIsSmplException() {
-        SmplConflictException ex = new SmplConflictException("conflict", "body");
-        assertInstanceOf(SmplException.class, ex);
+    void conflictExceptionIsSmplError() {
+        ConflictError ex = new ConflictError("conflict", "body");
+        assertInstanceOf(SmplError.class, ex);
         assertEquals(409, ex.statusCode());
         assertEquals("body", ex.responseBody());
     }
 
     @Test
-    void validationExceptionIsSmplException() {
-        SmplValidationException ex = new SmplValidationException("invalid", "body");
-        assertInstanceOf(SmplException.class, ex);
+    void validationExceptionIsSmplError() {
+        ValidationError ex = new ValidationError("invalid", "body");
+        assertInstanceOf(SmplError.class, ex);
         assertEquals(422, ex.statusCode());
         assertEquals("body", ex.responseBody());
     }
 
     @Test
-    void connectionExceptionIsSmplException() {
+    void connectionExceptionIsSmplError() {
         Exception cause = new Exception("conn refused");
-        SmplConnectionException ex = new SmplConnectionException("connection failed", cause);
-        assertInstanceOf(SmplException.class, ex);
+        ConnectionError ex = new ConnectionError("connection failed", cause);
+        assertInstanceOf(SmplError.class, ex);
         assertEquals(0, ex.statusCode());
         assertNull(ex.responseBody());
         assertSame(cause, ex.getCause());
     }
 
     @Test
-    void timeoutExceptionIsSmplException() {
+    void timeoutExceptionIsSmplError() {
         Exception cause = new Exception("timed out");
-        SmplTimeoutException ex = new SmplTimeoutException("timeout", cause);
-        assertInstanceOf(SmplException.class, ex);
+        TimeoutError ex = new TimeoutError("timeout", cause);
+        assertInstanceOf(SmplError.class, ex);
         assertEquals(0, ex.statusCode());
         assertNull(ex.responseBody());
         assertSame(cause, ex.getCause());
     }
 
     @Test
-    void allExceptionsCatchableAsSmplException() {
-        // Verify all subtypes can be caught as SmplException
-        SmplException[] exceptions = {
-                new SmplNotFoundException("a", "b"),
-                new SmplConflictException("a", "b"),
-                new SmplValidationException("a", "b"),
-                new SmplConnectionException("a", new Exception()),
-                new SmplTimeoutException("a", new Exception()),
+    void allExceptionsCatchableAsSmplError() {
+        // Verify all subtypes can be caught as SmplError
+        SmplError[] exceptions = {
+                new NotFoundError("a", "b"),
+                new ConflictError("a", "b"),
+                new ValidationError("a", "b"),
+                new ConnectionError("a", new Exception()),
+                new TimeoutError("a", new Exception()),
         };
-        for (SmplException ex : exceptions) {
-            assertInstanceOf(SmplException.class, ex);
+        for (SmplError ex : exceptions) {
+            assertInstanceOf(SmplError.class, ex);
             assertInstanceOf(RuntimeException.class, ex);
         }
     }
 
     @Test
     void allExceptionsCatchableAsRuntimeException() {
-        SmplNotFoundException ex = new SmplNotFoundException("test", "body");
+        NotFoundError ex = new NotFoundError("test", "body");
         try {
             throw ex;
         } catch (RuntimeException caught) {

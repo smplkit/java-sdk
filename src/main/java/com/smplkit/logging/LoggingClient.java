@@ -3,7 +3,7 @@ package com.smplkit.logging;
 import com.smplkit.LogLevel;
 import com.smplkit.SharedWebSocket;
 import com.smplkit.errors.ApiExceptionHandler;
-import com.smplkit.errors.SmplNotFoundException;
+import com.smplkit.errors.NotFoundError;
 import com.smplkit.internal.Debug;
 import com.smplkit.internal.generated.logging.ApiException;
 import com.smplkit.internal.generated.logging.api.LogGroupsApi;
@@ -162,16 +162,16 @@ public final class LoggingClient {
     // -----------------------------------------------------------------------
 
     /**
-     * Registers a custom logging adapter. Must be called before {@link #start()}.
+     * Registers a custom logging adapter. Must be called before {@link #install()}.
      *
      * <p>Registering an adapter disables automatic adapter detection.</p>
      *
      * @param adapter the adapter to register
-     * @throws IllegalStateException if called after start()
+     * @throws IllegalStateException if called after install()
      */
     public void registerAdapter(LoggingAdapter adapter) {
         if (started) {
-            throw new IllegalStateException("Cannot register adapters after start()");
+            throw new IllegalStateException("Cannot register adapters after install()");
         }
         explicitAdapters = true;
         adapters.add(adapter);
@@ -220,16 +220,21 @@ public final class LoggingClient {
     }
 
     // -----------------------------------------------------------------------
-    // Runtime: start, onChange
+    // Runtime: install, onChange
     // -----------------------------------------------------------------------
 
     /**
-     * Starts runtime logging control. Idempotent.
+     * Installs runtime logging control. Idempotent.
      *
-     * <p>Fetches managed log levels from the server and applies them
-     * to the logging framework(s) in use.</p>
+     * <p>Mirrors Python's {@code client.logging.install()}: hooks the SDK into
+     * the existing logging machinery — loads adapters, scans loggers, applies
+     * the resolved levels from the server. There is no {@code stop()}; close
+     * the parent {@link com.smplkit.SmplClient} to release adapters.</p>
+     *
+     * <p>Renamed from {@code start()} in the Python-PR-127 mirror to make the
+     * "install adapters into your runtime" intent explicit.</p>
      */
-    public void start() {
+    public void install() {
         if (started) {
             return;
         }
@@ -321,8 +326,8 @@ public final class LoggingClient {
         keyListeners.computeIfAbsent(id, k -> new CopyOnWriteArrayList<>()).add(listener);
     }
 
-    /** Returns whether start() has been called. */
-    public boolean isStarted() {
+    /** Returns whether {@link #install()} has been called. */
+    public boolean isInstalled() {
         return started;
     }
 

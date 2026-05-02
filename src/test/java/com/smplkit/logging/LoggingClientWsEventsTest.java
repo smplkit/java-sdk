@@ -59,7 +59,7 @@ class LoggingClientWsEventsTest {
         // Start with managed logger at INFO
         stubManagedLoggerStart("com.acme.service", "INFO");
         client.registerAdapter(noopAdapter("com.acme.service", "INFO"));
-        client.start();
+        client.install();
 
         AtomicReference<LoggerChangeEvent> received = new AtomicReference<>();
         client.onChange("com.acme.service", received::set);
@@ -83,7 +83,7 @@ class LoggingClientWsEventsTest {
     void loggerChanged_contentUnchanged_listenerDoesNotFire() throws ApiException {
         stubManagedLoggerStart("com.acme.service", "INFO");
         client.registerAdapter(noopAdapter("com.acme.service", "INFO"));
-        client.start();
+        client.install();
 
         AtomicInteger count = new AtomicInteger();
         client.onChange("com.acme.service", e -> count.incrementAndGet());
@@ -101,7 +101,7 @@ class LoggingClientWsEventsTest {
     @Test
     void loggerChanged_missingId_isNoOp() throws ApiException {
         stubEmptyStart();
-        client.start();
+        client.install();
 
         AtomicInteger count = new AtomicInteger();
         client.onChange(e -> count.incrementAndGet());
@@ -117,7 +117,7 @@ class LoggingClientWsEventsTest {
         // Global listener should NOT fire for logger_changed; only loggers_changed fires global
         stubManagedLoggerStart("com.acme.service", "INFO");
         client.registerAdapter(noopAdapter("com.acme.service", "INFO"));
-        client.start();
+        client.install();
 
         AtomicInteger globalCount = new AtomicInteger();
         client.onChange(e -> globalCount.incrementAndGet());
@@ -139,7 +139,7 @@ class LoggingClientWsEventsTest {
     void loggerDeleted_removesFromCache_firesListenerWithDeletedTrue() throws ApiException {
         stubManagedLoggerStart("com.acme.service", "INFO");
         client.registerAdapter(noopAdapter("com.acme.service", "INFO"));
-        client.start();
+        client.install();
 
         AtomicReference<LoggerChangeEvent> received = new AtomicReference<>();
         client.onChange("com.acme.service", received::set);
@@ -169,7 +169,7 @@ class LoggingClientWsEventsTest {
     @Test
     void loggerDeleted_missingId_isNoOp() throws ApiException {
         stubEmptyStart();
-        client.start();
+        client.install();
 
         AtomicInteger count = new AtomicInteger();
         client.onChange(e -> count.incrementAndGet());
@@ -186,7 +186,7 @@ class LoggingClientWsEventsTest {
     @Test
     void groupChanged_scopedFetch_isCalledNotListLoggers() throws ApiException {
         stubEmptyStart();
-        client.start();
+        client.install();
 
         when(mockLogGroupsApi.getLogGroup("my-group"))
                 .thenReturn(buildGroupResponse("my-group", "INFO"));
@@ -200,7 +200,7 @@ class LoggingClientWsEventsTest {
     @Test
     void groupChanged_missingId_isNoOp() throws ApiException {
         stubEmptyStart();
-        client.start();
+        client.install();
 
         client.simulateGroupChanged(Map.of()); // no "id"
 
@@ -221,7 +221,7 @@ class LoggingClientWsEventsTest {
     @Test
     void groupDeleted_firesListenerWithDeletedTrue() throws ApiException {
         stubEmptyStart();
-        client.start();
+        client.install();
 
         AtomicReference<LoggerChangeEvent> received = new AtomicReference<>();
         client.onChange("my-group", received::set);
@@ -247,7 +247,7 @@ class LoggingClientWsEventsTest {
     @Test
     void groupDeleted_missingId_isNoOp() throws ApiException {
         stubEmptyStart();
-        client.start();
+        client.install();
 
         AtomicInteger count = new AtomicInteger();
         client.onChange(e -> count.incrementAndGet());
@@ -264,7 +264,7 @@ class LoggingClientWsEventsTest {
     @Test
     void loggersChanged_fullFetch_bothLoggersAndGroups() throws ApiException {
         stubEmptyStart();
-        client.start();
+        client.install();
 
         // Second listLoggers call returns same empty list
         LoggerListResponse emptyLoggers = new LoggerListResponse();
@@ -294,7 +294,7 @@ class LoggingClientWsEventsTest {
         // Start with managed logger at INFO
         stubManagedLoggerStart("com.acme.svc", "INFO");
         client.registerAdapter(noopAdapter("com.acme.svc", "INFO"));
-        client.start();
+        client.install();
 
         AtomicInteger globalCount = new AtomicInteger();
         client.onChange(e -> globalCount.incrementAndGet());
@@ -322,7 +322,7 @@ class LoggingClientWsEventsTest {
     void loggerChanged_apiFetchThrows_isNoOp() throws ApiException {
         stubManagedLoggerStart("com.acme.service", "INFO");
         client.registerAdapter(noopAdapter("com.acme.service", "INFO"));
-        client.start();
+        client.install();
 
         AtomicInteger count = new AtomicInteger();
         client.onChange("com.acme.service", e -> count.incrementAndGet());
@@ -339,7 +339,7 @@ class LoggingClientWsEventsTest {
     @Test
     void groupChanged_apiFetchThrows_isNoOp() throws ApiException {
         stubEmptyStart();
-        client.start();
+        client.install();
 
         when(mockLogGroupsApi.getLogGroup("my-group"))
                 .thenThrow(new ApiException("API failure"));
@@ -351,7 +351,7 @@ class LoggingClientWsEventsTest {
     @Test
     void loggersChanged_apiFetchThrows_isNoOp() throws ApiException {
         stubEmptyStart();
-        client.start();
+        client.install();
 
         when(mockLoggersApi.listLoggers((Boolean) null, null, null))
                 .thenThrow(new ApiException("API failure"));
@@ -364,7 +364,7 @@ class LoggingClientWsEventsTest {
         // Start with managed logger at INFO
         stubManagedLoggerStart("com.acme.svc", "INFO");
         client.registerAdapter(noopAdapter("com.acme.svc", "INFO"));
-        client.start();
+        client.install();
 
         // loggers_changed: same loggers, but return an actual group in listLogGroups
         LoggerResource lr = buildLoggerResource("com.acme.svc", "INFO", true);
@@ -385,7 +385,7 @@ class LoggingClientWsEventsTest {
     @Test
     void loggersChanged_groupFetchThrows_isNoOp() throws ApiException {
         stubEmptyStart();
-        client.start();
+        client.install();
 
         // listLoggers succeeds but listLogGroups throws
         LoggerListResponse emptyLoggers = new LoggerListResponse();
@@ -400,7 +400,7 @@ class LoggingClientWsEventsTest {
     void diffAndFireLevels_globalListenerThrows_doesNotPropagate() throws ApiException {
         stubManagedLoggerStart("com.acme.svc", "INFO");
         client.registerAdapter(noopAdapter("com.acme.svc", "INFO"));
-        client.start();
+        client.install();
 
         client.onChange(e -> { throw new RuntimeException("global crash"); });
 
@@ -424,7 +424,7 @@ class LoggingClientWsEventsTest {
         when(throwingAdapter.discover()).thenReturn(List.of(new DiscoveredLogger("com.acme.svc", "INFO")));
         doThrow(new RuntimeException("adapter crash")).when(throwingAdapter).applyLevel(any(), any());
         client.registerAdapter(throwingAdapter);
-        client.start();
+        client.install();
 
         LoggerResource lr = buildLoggerResource("com.acme.svc", "WARN", true);
         LoggerListResponse updated = new LoggerListResponse();
@@ -442,7 +442,7 @@ class LoggingClientWsEventsTest {
     void applyLevelForKey_keyedListenerThrows_doesNotPropagate() throws ApiException {
         stubManagedLoggerStart("com.acme.svc", "INFO");
         client.registerAdapter(noopAdapter("com.acme.svc", "INFO"));
-        client.start();
+        client.install();
 
         client.onChange("com.acme.svc", e -> { throw new RuntimeException("key listener crash"); });
 
@@ -462,7 +462,7 @@ class LoggingClientWsEventsTest {
     void applyLevelForKey_invalidLevel_isNoOp() throws ApiException {
         stubManagedLoggerStart("com.acme.svc", "INFO");
         client.registerAdapter(noopAdapter("com.acme.svc", "INFO"));
-        client.start();
+        client.install();
 
         AtomicInteger count = new AtomicInteger();
         client.onChange("com.acme.svc", e -> count.incrementAndGet());

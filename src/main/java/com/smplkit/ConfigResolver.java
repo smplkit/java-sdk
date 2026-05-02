@@ -1,6 +1,6 @@
 package com.smplkit;
 
-import com.smplkit.errors.SmplException;
+import com.smplkit.errors.SmplError;
 
 import java.io.IOException;
 import java.nio.file.Files;
@@ -18,7 +18,7 @@ import java.util.Map;
  *   <li>Constructor/builder arguments</li>
  * </ol>
  */
-final class ConfigResolver {
+public final class ConfigResolver {
 
     /** Known config keys and their corresponding environment variables. */
     private static final Map<String, String> CONFIG_KEYS = Map.of(
@@ -38,7 +38,7 @@ final class ConfigResolver {
     /**
      * Fully resolved SDK configuration after the 4-step resolution.
      */
-    static final class ResolvedConfig {
+    public static final class ResolvedConfig {
         final String apiKey;
         final String baseDomain;
         final String scheme;
@@ -58,6 +58,92 @@ final class ConfigResolver {
             this.debug = debug;
             this.disableTelemetry = disableTelemetry;
         }
+
+        /** Project to the management subset (drops environment/service/telemetry). */
+        ResolvedManagementConfig toManagement() {
+            return new ResolvedManagementConfig(apiKey, baseDomain, scheme, debug);
+        }
+    }
+
+    /**
+     * Management-only resolved configuration: omits environment/service since
+     * {@link com.smplkit.management.SmplManagementClient} has no runtime story.
+     */
+    public static final class ResolvedManagementConfig {
+        public final String apiKey;
+        public final String baseDomain;
+        public final String scheme;
+        public final boolean debug;
+
+        public ResolvedManagementConfig(String apiKey, String baseDomain, String scheme, boolean debug) {
+            this.apiKey = apiKey;
+            this.baseDomain = baseDomain;
+            this.scheme = scheme;
+            this.debug = debug;
+        }
+    }
+
+    /** Resolve management-only config (no environment/service required). */
+    public static ResolvedManagementConfig resolveManagement(String profile, String apiKey,
+                                                       String baseDomain, String scheme,
+                                                       Boolean debug) {
+        return resolveManagement(profile, apiKey, baseDomain, scheme, debug,
+                System.getenv("SMPLKIT_PROFILE"),
+                key -> System.getenv(key),
+                Paths.get(System.getProperty("user.home"), ".smplkit"));
+    }
+
+    /** Injectable variant for tests. */
+    public static ResolvedManagementConfig resolveManagement(String profile, String apiKey,
+                                                       String baseDomain, String scheme,
+                                                       Boolean debug,
+                                                       String envProfile, EnvLookup envLookup,
+                                                       Path configPath) {
+        String resolvedApiKey = null;
+        String resolvedBaseDomain = "smplkit.com";
+        String resolvedScheme = "https";
+        boolean resolvedDebug = false;
+
+        String activeProfile = profile;
+        if (activeProfile == null || activeProfile.isEmpty()) activeProfile = envProfile;
+        if (activeProfile == null || activeProfile.isEmpty()) activeProfile = "default";
+
+        Map<String, String> fileValues = readConfigFile(activeProfile, configPath);
+        if (fileValues.containsKey("api_key")) resolvedApiKey = fileValues.get("api_key");
+        if (fileValues.containsKey("base_domain")) resolvedBaseDomain = fileValues.get("base_domain");
+        if (fileValues.containsKey("scheme")) resolvedScheme = fileValues.get("scheme");
+        if (fileValues.containsKey("debug")) resolvedDebug = parseBool(fileValues.get("debug"), "debug");
+
+        for (Map.Entry<String, String> entry : CONFIG_KEYS.entrySet()) {
+            String key = entry.getKey();
+            String envVar = entry.getValue();
+            String envVal = envLookup.get(envVar);
+            if (envVal != null && !envVal.isEmpty()) {
+                switch (key) {
+                    case "api_key" -> resolvedApiKey = envVal;
+                    case "base_domain" -> resolvedBaseDomain = envVal;
+                    case "scheme" -> resolvedScheme = envVal;
+                    case "debug" -> resolvedDebug = parseBool(envVal, envVar);
+                    default -> { /* environment/service/disable_telemetry are runtime-only */ }
+                }
+            }
+        }
+
+        if (apiKey != null && !apiKey.isEmpty()) resolvedApiKey = apiKey;
+        if (baseDomain != null && !baseDomain.isEmpty()) resolvedBaseDomain = baseDomain;
+        if (scheme != null && !scheme.isEmpty()) resolvedScheme = scheme;
+        if (debug != null) resolvedDebug = debug;
+
+        if (resolvedApiKey == null || resolvedApiKey.isEmpty()) {
+            throw new SmplError(
+                    "No API key provided. Set one of:\n" +
+                    "  1. Call .apiKey() on the builder or use SmplManagementClient.create(apiKey)\n" +
+                    "  2. Set the SMPLKIT_API_KEY environment variable\n" +
+                    "  3. Add api_key to the [" + activeProfile + "] section in ~/.smplkit",
+                    0, null);
+        }
+
+        return new ResolvedManagementConfig(resolvedApiKey, resolvedBaseDomain, resolvedScheme, resolvedDebug);
     }
 
     /**
@@ -165,7 +251,7 @@ final class ConfigResolver {
 
         // Validate required fields
         if (resolvedEnvironment == null || resolvedEnvironment.isEmpty()) {
-            throw new SmplException(
+            throw new SmplError(
                     "No environment provided. Set one of:\n" +
                     "  1. Call .environment() on the builder\n" +
                     "  2. Set the SMPLKIT_ENVIRONMENT environment variable\n" +
@@ -174,7 +260,7 @@ final class ConfigResolver {
         }
 
         if (resolvedService == null || resolvedService.isEmpty()) {
-            throw new SmplException(
+            throw new SmplError(
                     "No service provided. Set one of:\n" +
                     "  1. Call .service() on the builder\n" +
                     "  2. Set the SMPLKIT_SERVICE environment variable\n" +
@@ -183,7 +269,7 @@ final class ConfigResolver {
         }
 
         if (resolvedApiKey == null || resolvedApiKey.isEmpty()) {
-            throw new SmplException(
+            throw new SmplError(
                     "No API key provided. Set one of:\n" +
                     "  1. Call .apiKey() on the builder or use SmplClient.create(apiKey)\n" +
                     "  2. Set the SMPLKIT_API_KEY environment variable\n" +
@@ -198,14 +284,14 @@ final class ConfigResolver {
     /**
      * Builds a service URL: {scheme}://{subdomain}.{baseDomain}.
      */
-    static String serviceUrl(String scheme, String subdomain, String baseDomain) {
+    public static String serviceUrl(String scheme, String subdomain, String baseDomain) {
         return scheme + "://" + subdomain + "." + baseDomain;
     }
 
     /**
      * Parses a boolean string value (true/1/yes or false/0/no, case-insensitive).
      *
-     * @throws SmplException for invalid values
+     * @throws SmplError for invalid values
      */
     static boolean parseBool(String value, String key) {
         String lower = value.strip().toLowerCase();
@@ -215,7 +301,7 @@ final class ConfigResolver {
         if ("false".equals(lower) || "0".equals(lower) || "no".equals(lower)) {
             return false;
         }
-        throw new SmplException(
+        throw new SmplError(
                 "Invalid boolean value for " + key + ": \"" + value + "\". " +
                 "Expected one of: true, false, 1, 0, yes, no",
                 0, null);
@@ -261,7 +347,7 @@ final class ConfigResolver {
                     .filter(s -> !"common".equals(s))
                     .toList();
             if (!nonCommonSections.isEmpty() && !"default".equals(profile)) {
-                throw new SmplException(
+                throw new SmplError(
                         "Profile [" + profile + "] not found in ~/.smplkit. " +
                         "Available profiles: " + String.join(", ", nonCommonSections),
                         0, null);

@@ -1,7 +1,7 @@
 package com.smplkit;
 
 import com.smplkit.config.ConfigClient;
-import com.smplkit.errors.SmplException;
+import com.smplkit.errors.SmplError;
 import com.smplkit.flags.FlagsClient;
 import com.smplkit.logging.LoggingClient;
 import org.junit.jupiter.api.Test;
@@ -27,7 +27,7 @@ class SmplClientTest {
                 .build()) {
             assertNotNull(client);
             assertNotNull(client.config());
-            assertNotNull(client.management());
+            assertNotNull(client.manage());
             assertEquals("test", client.environment());
             assertEquals("test-service", client.service());
         }
@@ -104,35 +104,35 @@ class SmplClientTest {
     }
 
     @Test
-    void builderWithoutEnvironment_throwsSmplException(@TempDir Path tempDir) {
+    void builderWithoutEnvironment_throwsSmplError(@TempDir Path tempDir) {
         String origHome = System.getProperty("user.home");
         try {
             System.setProperty("user.home", tempDir.toString());
             SmplClientBuilder builder = SmplClient.builder().apiKey("test-key").service("test-service");
-            assertThrows(SmplException.class, builder::build);
+            assertThrows(SmplError.class, builder::build);
         } finally {
             System.setProperty("user.home", origHome);
         }
     }
 
     @Test
-    void builderWithNoService_throwsSmplException() {
+    void builderWithNoService_throwsSmplError() {
         SmplClientBuilder builder = SmplClient.builder().apiKey("test-key").environment("test");
-        SmplException ex = assertThrows(SmplException.class, builder::build);
+        SmplError ex = assertThrows(SmplError.class, builder::build);
         assertTrue(ex.getMessage().contains("No service provided"));
         assertTrue(ex.getMessage().contains(".service()"));
         assertTrue(ex.getMessage().contains("SMPLKIT_SERVICE"));
     }
 
     @Test
-    void builderWithoutApiKeyOrEnv_throwsSmplException() {
+    void builderWithoutApiKeyOrEnv_throwsSmplError() {
         String envKey = System.getenv("SMPLKIT_API_KEY");
         boolean hasConfigFile = java.nio.file.Files.exists(
                 java.nio.file.Paths.get(System.getProperty("user.home"), ".smplkit"));
         if (envKey == null || envKey.isEmpty()) {
             if (!hasConfigFile) {
                 SmplClientBuilder builder = SmplClient.builder().environment("test").service("test-service");
-                assertThrows(SmplException.class, builder::build);
+                assertThrows(SmplError.class, builder::build);
             }
         }
     }

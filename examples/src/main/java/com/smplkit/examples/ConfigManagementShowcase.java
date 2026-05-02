@@ -1,200 +1,91 @@
+/*
+ * Demonstrates the smplkit management SDK for Smpl Config.
+ *
+ * Prerequisites:
+ *     - smplkit-sdk on the classpath
+ *     - A valid smplkit API key, provided via one of:
+ *         - SMPLKIT_API_KEY environment variable
+ *         - ~/.smplkit configuration file (see SDK docs)
+ *     - The smplkit Config service running and reachable
+ *
+ * Usage:
+ *     ./gradlew :examples:run -PmainClass=com.smplkit.examples.ConfigManagementShowcase
+ */
 package com.smplkit.examples;
 
-import com.smplkit.SmplClient;
 import com.smplkit.config.Config;
-import com.smplkit.errors.SmplNotFoundException;
+import com.smplkit.examples.setup.ConfigManagementSetup;
+import com.smplkit.management.SmplManagementClient;
 
-import java.util.List;
-import java.util.Map;
+public final class ConfigManagementShowcase {
 
-/**
- * Smpl Config Management Showcase
- * =================================
- *
- * <p>Demonstrates the management-plane API for configurations, covering:</p>
- * <ul>
- *   <li>Client initialization ({@link SmplClient})</li>
- *   <li>Creating configs with {@code new_()} + {@code save()}</li>
- *   <li>Getting configs by id</li>
- *   <li>Listing all configs</li>
- *   <li>Updating configs via mutation + {@code save()}</li>
- *   <li>Multi-level hierarchy: auth_module &rarr; user_service &rarr; common</li>
- *   <li>Deleting configs by id</li>
- * </ul>
- *
- * <p>Prerequisites:</p>
- * <ul>
- *   <li>A valid smplkit API key, provided via {@code SMPLKIT_API_KEY} env var or {@code ~/.smplkit} config file</li>
- *   <li>The smplkit Config service running and reachable</li>
- * </ul>
- *
- * <p>Usage:</p>
- * <pre>
- *   ./gradlew :examples:run -PmainClass=com.smplkit.examples.ConfigManagementShowcase
- * </pre>
- */
-public class ConfigManagementShowcase {
+    public static void main(String[] args) {
+        // create the client (use SmplManagementClient for synchronous use)
+        try (SmplManagementClient manage = SmplManagementClient.create()) {
+            ConfigManagementSetup.setup(manage);
 
-    public static void main(String[] args) throws Exception {
-        // ======================================================================
-        // 1. SDK INITIALIZATION
-        // ======================================================================
-        section("1. SDK Initialization");
+            // create a "parent" configuration that all other configs inherit from
+            Config shared = manage.config.new_(
+                    "showcase-common", "Showcase Common",
+                    "Showcase-only shared configuration.", (String) null);
+            shared.setString("app_name", "Acme SaaS Platform");
+            shared.setString("support_email", "support@acme.dev");
+            shared.setNumber("max_retries", 3);
+            shared.setNumber("request_timeout_ms", 5000);
+            shared.setNumber("pagination_default_page_size", 25);
+            shared.setNumber("max_retries", 5, "production");
+            shared.setNumber("request_timeout_ms", 10000, "production");
+            shared.setNumber("max_retries", 2, "staging");
+            shared.save();
+            System.out.println("Created config: " + shared.getId());
 
-        try (SmplClient client = SmplClient.builder()
-                .environment("production")
-                .service("showcase-service")
-                .build()) {
+            // create a config (inherits from showcase-common)
+            Config userService = manage.config.new_(
+                    "showcase-user-service", "Showcase User Service",
+                    "Configuration for the user microservice.", shared);
+            userService.setString("database.host", "localhost");
+            userService.setNumber("database.port", 5432);
+            userService.setString("database.name", "users_dev");
+            userService.setNumber("database.pool_size", 5);
+            userService.setNumber("cache_ttl_seconds", 300);
+            userService.setBoolean("enable_signup", true);
+            userService.setNumber("pagination_default_page_size", 50);
+            userService.save();
 
-            step("SmplClient initialized with environment=production");
+            // update a config
+            userService.setString("database.host",
+                    "prod-users-rds.internal.acme.dev", "production");
+            userService.setString("database.name", "users_prod", "production");
+            userService.setNumber("database.pool_size", 20, "production");
+            userService.setNumber("cache_ttl_seconds", 600, "production");
+            userService.setBoolean("enable_signup", false, "production");
+            userService.save();
+            System.out.println("Updated config: " + userService.getId());
 
-            // Clean up any leftover configs from a previous failed run.
-            for (String key : new String[]{"auth_module", "user_service"}) {
-                try {
-                    client.config().management().delete(key);
-                    step("Pre-cleanup: deleted leftover config " + key);
-                } catch (SmplNotFoundException ignored) { }
+            // list configs
+            for (Config cfg : manage.config.list()) {
+                String parentInfo = cfg.getParent() != null
+                        ? " (parent: " + cfg.getParent() + ")" : " (root)";
+                System.out.println("  " + cfg.getId() + parentInfo);
             }
 
-            // ==================================================================
-            // 2a. UPDATE THE COMMON CONFIG
-            // ==================================================================
-            section("2a. Update the Common Config");
+            // get a config
+            Config fetched = manage.config.get("showcase-user-service");
+            System.out.println("Fetched: id=" + fetched.getId()
+                    + ", name=" + fetched.getName());
+            System.out.println("  description=" + fetched.getDescription());
+            System.out.println("  parent=" +
+                    (fetched.getParent() != null ? fetched.getParent() : "(none)"));
+            System.out.println("  items: " + fetched.getResolvedItems().keySet());
 
-            Config common = client.config().management().get("common");
-            step("Fetched common config: id=" + common.getId());
+            // delete configs
+            manage.config.delete(userService.getId());
+            manage.config.delete(shared.getId());
+            System.out.println("Deleted configs");
 
-            common.setDescription("Organization-wide shared configuration");
-            common.setItems(Map.of(
-                    "app_name", Map.of("value", "Acme SaaS Platform"),
-                    "support_email", Map.of("value", "support@acme.dev"),
-                    "max_retries", Map.of("value", 3),
-                    "request_timeout_ms", Map.of("value", 5000),
-                    "log_level", Map.of("value", "info"),
-                    "feature_analytics", Map.of("value", true)
-            ));
-            common.save();
-            step("Common config base values set (6 items)");
-
-            // ==================================================================
-            // 2b. ENVIRONMENT OVERRIDES
-            // ==================================================================
-            section("2b. Environment Overrides");
-
-            Map<String, Object> prodEnv = new java.util.HashMap<>();
-            prodEnv.put("values", Map.of(
-                    "max_retries", 5,
-                    "request_timeout_ms", 10000,
-                    "log_level", "warn"
-            ));
-            Map<String, Object> stagingEnv = new java.util.HashMap<>();
-            stagingEnv.put("values", Map.of(
-                    "max_retries", 10,
-                    "log_level", "debug"
-            ));
-            common.setEnvironments(Map.of("production", prodEnv, "staging", stagingEnv));
-            common.save();
-            step("Production and staging overrides set on common config");
-
-            // ==================================================================
-            // 3a. CREATE USER SERVICE CONFIG
-            // ==================================================================
-            section("3a. Create User Service Config");
-
-            Config userService = client.config().management().new_("user_service", "User Service", null, common.getId());
-            userService.setItems(Map.of(
-                    "cache_ttl_seconds", Map.of("value", 300),
-                    "enable_signup", Map.of("value", true),
-                    "pagination_default_page_size", Map.of("value", 50),
-                    "session_timeout_minutes", Map.of("value", 30)
-            ));
-            userService.save();
-            step("Created user_service config: id=" + userService.getId()
-                    + ", parent=" + common.getId());
-
-            // ==================================================================
-            // 3b. CREATE AUTH MODULE CONFIG (CHILD)
-            // ==================================================================
-            section("3b. Create Auth Module Config (child of user_service)");
-
-            Config authModule = client.config().management().new_("auth_module", "Auth Module", null, userService.getId());
-            authModule.setItems(Map.of(
-                    "mfa_enabled", Map.of("value", false),
-                    "token_expiry_minutes", Map.of("value", 15),
-                    "max_login_attempts", Map.of("value", 5),
-                    "lockout_duration_minutes", Map.of("value", 30),
-                    "password_min_length", Map.of("value", 8)
-            ));
-            authModule.save();
-            step("Created auth_module config: id=" + authModule.getId()
-                    + ", parent=" + userService.getId());
-
-            // ==================================================================
-            // 4a. LIST ALL CONFIGS
-            // ==================================================================
-            section("4a. List All Configs");
-
-            List<Config> allConfigs = client.config().management().list();
-            step("Total configs in account: " + allConfigs.size());
-            for (Config c : allConfigs) {
-                step("  " + c.getId() + " - " + c.getName());
-            }
-
-            // ==================================================================
-            // 4b. GET CONFIG BY KEY
-            // ==================================================================
-            section("4b. Get Config by ID");
-
-            Config fetchedUserService = client.config().management().get("user_service");
-            step("Fetched by id: id=" + fetchedUserService.getId()
-                    + ", name=" + fetchedUserService.getName());
-
-            Config fetchedAuthModule = client.config().management().get("auth_module");
-            step("Fetched by id: id=" + fetchedAuthModule.getId()
-                    + ", name=" + fetchedAuthModule.getName());
-
-            // ==================================================================
-            // 5. UPDATE A CONFIG
-            // ==================================================================
-            section("5. Update a Config");
-
-            userService = client.config().management().get("user_service");
-            userService.setDescription("Updated: User service with new pagination settings");
-            userService.save();
-            step("Updated user_service description: " + userService.getDescription());
-
-            // ==================================================================
-            // 6. CLEANUP
-            // ==================================================================
-            section("6. Cleanup");
-
-            client.config().management().delete("auth_module");
-            step("Deleted auth_module");
-
-            client.config().management().delete("user_service");
-            step("Deleted user_service");
-
-            Config latestCommon = client.config().management().get("common");
-            latestCommon.setDescription("");
-            latestCommon.setItems(Map.of());
-            latestCommon.setEnvironments(Map.of());
-            latestCommon.save();
-            step("Common config reset to empty");
-
+            // cleanup
+            ConfigManagementSetup.cleanup(manage);
+            System.out.println("Done!");
         }
-
-        section("ALL DONE");
-        System.out.println("  The Config Management showcase completed successfully.");
-        System.out.println("  All created resources have been cleaned up.\n");
-    }
-
-    private static void section(String title) {
-        System.out.println("\n" + "=".repeat(60));
-        System.out.println("  " + title);
-        System.out.println("=".repeat(60) + "\n");
-    }
-
-    private static void step(String description) {
-        System.out.println("  -> " + description);
     }
 }

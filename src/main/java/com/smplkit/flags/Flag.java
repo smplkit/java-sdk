@@ -206,6 +206,50 @@ public final class Flag<T> {
         envData.put("rules", new ArrayList<>());
     }
 
+    // --- Per-env unified methods (mirror Python's enable_rules / disable_rules / clear_default) ---
+
+    /** Enables rules in a specific environment. */
+    public void enableRules(String envKey) { setEnvironmentEnabled(envKey, true); }
+
+    /** Disables rules in a specific environment. */
+    public void disableRules(String envKey) { setEnvironmentEnabled(envKey, false); }
+
+    /**
+     * Sets the default value for a specific environment.
+     * {@code environment=null} sets the flag-level default (not env-scoped).
+     */
+    public void setDefault(T value, String environment) {
+        if (environment == null) {
+            this.defaultValue = value;
+        } else {
+            setEnvironmentDefault(environment, value);
+        }
+    }
+
+    /** Removes the per-environment default override (does not change the flag-level default). */
+    @SuppressWarnings("unchecked")
+    public void clearDefault(String envKey) {
+        Map<String, Object> envData = (Map<String, Object>) environments.get(envKey);
+        if (envData != null) envData.remove("default");
+    }
+
+    /** Appends a value to the constrained-values list. */
+    public Flag<T> addValue(String name, Object value) {
+        if (values == null) values = new ArrayList<>();
+        values.add(Map.of("name", name, "value", value));
+        return this;
+    }
+
+    /** Removes the first value entry whose {@code value} matches. */
+    public Flag<T> removeValue(Object value) {
+        if (values == null) return this;
+        values.removeIf(v -> java.util.Objects.equals(v.get("value"), value));
+        return this;
+    }
+
+    /** Clears all constrained values (the flag becomes unconstrained). */
+    public void clearValues() { this.values = null; }
+
     // ------------------------------------------------------------------
     // Internal
     // ------------------------------------------------------------------

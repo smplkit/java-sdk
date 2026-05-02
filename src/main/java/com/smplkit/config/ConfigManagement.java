@@ -34,7 +34,7 @@ public final class ConfigManagement {
      * @return a new unsaved Config
      */
     public Config new_(String id) {
-        return new_(id, null, null, null);
+        return new_(id, null, null, (String) null);
     }
 
     /**
@@ -53,6 +53,11 @@ public final class ConfigManagement {
         return config;
     }
 
+    /** Convenience overload accepting a {@link Config} for the parent (uses its id). */
+    public Config new_(String id, String name, String description, Config parent) {
+        return new_(id, name, description, parent != null ? parent.getId() : null);
+    }
+
     // -----------------------------------------------------------------------
     // CRUD
     // -----------------------------------------------------------------------
@@ -62,7 +67,7 @@ public final class ConfigManagement {
      *
      * @param id the config id
      * @return the matching Config
-     * @throws com.smplkit.errors.SmplNotFoundException if no matching config exists
+     * @throws com.smplkit.errors.NotFoundError if no matching config exists
      */
     public Config get(String id) {
         try {
@@ -99,7 +104,7 @@ public final class ConfigManagement {
      * Deletes a config by id.
      *
      * @param id the config id
-     * @throws com.smplkit.errors.SmplNotFoundException if the config does not exist
+     * @throws com.smplkit.errors.NotFoundError if the config does not exist
      */
     public void delete(String id) {
         try {

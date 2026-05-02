@@ -1,6 +1,6 @@
 package com.smplkit.config;
 
-import com.smplkit.errors.SmplException;
+import com.smplkit.errors.SmplError;
 import com.smplkit.internal.generated.config.ApiException;
 import com.smplkit.internal.generated.config.api.ConfigsApi;
 import com.smplkit.internal.generated.config.model.ConfigItemDefinition;
@@ -113,7 +113,7 @@ class ConfigClientFullTest {
                 now, now);
         when(mockApi.createConfig(any())).thenReturn(singleResponse(created));
 
-        Config config = configClient.management().new_("svc", "Svc", "initial desc", null);
+        Config config = configClient.management().new_("svc", "Svc", "initial desc", (String) null);
         config.setItems(Map.of("a", Map.of("value", 1)));
         config.save();
 
@@ -169,7 +169,7 @@ class ConfigClientFullTest {
     // -----------------------------------------------------------------------
 
     @Test
-    void save_update_apiException_throwsSmplException() throws ApiException {
+    void save_update_apiException_throwsSmplError() throws ApiException {
         OffsetDateTime now = OffsetDateTime.now();
         // Setup: create a config first to give it createdAt
         ConfigResource created = makeResource(CONFIG_ID, "Svc", null,
@@ -184,7 +184,7 @@ class ConfigClientFullTest {
                 .thenThrow(new ApiException(500, "Error"));
 
         config.setName("New Name");
-        assertThrows(SmplException.class, config::save);
+        assertThrows(SmplError.class, config::save);
     }
 
     // -----------------------------------------------------------------------

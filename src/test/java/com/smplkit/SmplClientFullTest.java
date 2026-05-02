@@ -1,6 +1,6 @@
 package com.smplkit;
 
-import com.smplkit.errors.SmplException;
+import com.smplkit.errors.SmplError;
 import org.junit.jupiter.api.Test;
 
 import java.time.Duration;

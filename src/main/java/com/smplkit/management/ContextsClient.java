@@ -132,7 +132,7 @@ public final class ContextsClient {
         try {
             ContextResponse resp = api.getContext(compositeId);
             if (resp == null || resp.getData() == null) {
-                throw new com.smplkit.errors.SmplNotFoundException(
+                throw new com.smplkit.errors.NotFoundError(
                         "Context '" + compositeId + "' not found", null);
             }
             return resourceToEntity(resp.getData());
@@ -187,7 +187,7 @@ public final class ContextsClient {
         return new ContextEntity(type, key, name, attributes, createdAt, updatedAt);
     }
 
-    private static com.smplkit.errors.SmplException mapException(ApiException e) {
+    private static com.smplkit.errors.SmplError mapException(ApiException e) {
         if (e.getCode() == 0) return ApiExceptionHandler.mapApiException(e);
         return ApiExceptionHandler.mapApiException(e.getCode(), e.getResponseBody());
     }

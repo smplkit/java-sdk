@@ -3,7 +3,7 @@ package com.smplkit.config;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.smplkit.SharedWebSocket;
 import com.smplkit.errors.ApiExceptionHandler;
-import com.smplkit.errors.SmplException;
+import com.smplkit.errors.SmplError;
 import com.smplkit.internal.Debug;
 import com.smplkit.internal.generated.config.ApiException;
 import com.smplkit.internal.generated.config.api.ConfigsApi;
@@ -643,7 +643,7 @@ public final class ConfigClient {
         return result;
     }
 
-    static SmplException mapException(ApiException e) {
+    static SmplError mapException(ApiException e) {
         if (e.getCode() == 0) {
             return ApiExceptionHandler.mapApiException(e);
         }

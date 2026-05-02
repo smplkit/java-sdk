@@ -1,4 +1,5 @@
 package com.smplkit.errors;
+import com.smplkit.errors.ApiErrorDetail;
 
 import org.junit.jupiter.api.Test;
 
@@ -32,18 +33,18 @@ class ApiExceptionHandlerTest {
                 }
                 """;
 
-        SmplException ex = ApiExceptionHandler.mapApiException(400, body);
+        SmplError ex = ApiExceptionHandler.mapApiException(400, body);
 
-        assertInstanceOf(SmplValidationException.class, ex);
+        assertInstanceOf(ValidationError.class, ex);
         assertEquals("The 'name' field is required.", ex.getMessage());
         assertEquals(400, ex.statusCode());
         assertEquals(Integer.valueOf(400), ex.getStatusCode());
         assertEquals(body, ex.responseBody());
 
-        List<SmplException.ApiError> errors = ex.getErrors();
+        List<ApiErrorDetail> errors = ex.getErrors();
         assertEquals(1, errors.size());
 
-        SmplException.ApiError error = errors.get(0);
+        ApiErrorDetail error = errors.get(0);
         assertEquals("400", error.getStatus());
         assertEquals("Validation Error", error.getTitle());
         assertEquals("The 'name' field is required.", error.getDetail());
@@ -52,7 +53,7 @@ class ApiExceptionHandlerTest {
 
         // toString includes JSON
         String str = ex.toString();
-        assertTrue(str.contains("SmplValidationException"));
+        assertTrue(str.contains("ValidationError"));
         assertTrue(str.contains("The 'name' field is required."));
         assertTrue(str.contains("\"status\": \"400\""));
         assertTrue(str.contains("\"pointer\": \"/data/attributes/name\""));
@@ -83,12 +84,12 @@ class ApiExceptionHandlerTest {
                 }
                 """;
 
-        SmplException ex = ApiExceptionHandler.mapApiException(400, body);
+        SmplError ex = ApiExceptionHandler.mapApiException(400, body);
 
-        assertInstanceOf(SmplValidationException.class, ex);
+        assertInstanceOf(ValidationError.class, ex);
         assertEquals("The 'name' field is required. (and 1 more error)", ex.getMessage());
 
-        List<SmplException.ApiError> errors = ex.getErrors();
+        List<ApiErrorDetail> errors = ex.getErrors();
         assertEquals(2, errors.size());
 
         assertEquals("The 'name' field is required.", errors.get(0).getDetail());
@@ -121,13 +122,13 @@ class ApiExceptionHandlerTest {
                 }
                 """;
 
-        SmplException ex = ApiExceptionHandler.mapApiException(404, body);
+        SmplError ex = ApiExceptionHandler.mapApiException(404, body);
 
-        assertInstanceOf(SmplNotFoundException.class, ex);
+        assertInstanceOf(NotFoundError.class, ex);
         assertEquals("Config with id '123' does not exist.", ex.getMessage());
         assertEquals(404, ex.statusCode());
 
-        List<SmplException.ApiError> errors = ex.getErrors();
+        List<ApiErrorDetail> errors = ex.getErrors();
         assertEquals(1, errors.size());
         assertEquals("Not Found", errors.get(0).getTitle());
         assertNull(errors.get(0).getSource());
@@ -151,13 +152,13 @@ class ApiExceptionHandlerTest {
                 }
                 """;
 
-        SmplException ex = ApiExceptionHandler.mapApiException(409, body);
+        SmplError ex = ApiExceptionHandler.mapApiException(409, body);
 
-        assertInstanceOf(SmplConflictException.class, ex);
+        assertInstanceOf(ConflictError.class, ex);
         assertEquals("Cannot delete config with children.", ex.getMessage());
         assertEquals(409, ex.statusCode());
 
-        List<SmplException.ApiError> errors = ex.getErrors();
+        List<ApiErrorDetail> errors = ex.getErrors();
         assertEquals(1, errors.size());
         assertEquals("Conflict", errors.get(0).getTitle());
     }
@@ -167,22 +168,22 @@ class ApiExceptionHandlerTest {
     // -----------------------------------------------------------------------
 
     @Test
-    void nonJson502_throwsSmplException_withHttpStatus() {
+    void nonJson502_throwsSmplError_withHttpStatus() {
         String body = "<html>Bad Gateway</html>";
 
-        SmplException ex = ApiExceptionHandler.mapApiException(502, body);
+        SmplError ex = ApiExceptionHandler.mapApiException(502, body);
 
-        assertInstanceOf(SmplException.class, ex);
-        assertFalse(ex instanceof SmplValidationException);
-        assertFalse(ex instanceof SmplNotFoundException);
-        assertFalse(ex instanceof SmplConflictException);
+        assertInstanceOf(SmplError.class, ex);
+        assertFalse(ex instanceof ValidationError);
+        assertFalse(ex instanceof NotFoundError);
+        assertFalse(ex instanceof ConflictError);
         assertEquals("HTTP 502", ex.getMessage());
         assertEquals(502, ex.statusCode());
         assertTrue(ex.getErrors().isEmpty());
 
         // toString should not show error JSON
         String str = ex.toString();
-        assertTrue(str.contains("SmplException"));
+        assertTrue(str.contains("SmplError"));
         assertTrue(str.contains("HTTP 502"));
     }
 
@@ -192,7 +193,7 @@ class ApiExceptionHandlerTest {
 
     @Test
     void nullBody_fallsBackToHttpStatus() {
-        SmplException ex = ApiExceptionHandler.mapApiException(500, null);
+        SmplError ex = ApiExceptionHandler.mapApiException(500, null);
 
         assertEquals("HTTP 500", ex.getMessage());
         assertTrue(ex.getErrors().isEmpty());
@@ -201,7 +202,7 @@ class ApiExceptionHandlerTest {
 
     @Test
     void emptyBody_fallsBackToHttpStatus() {
-        SmplException ex = ApiExceptionHandler.mapApiException(500, "");
+        SmplError ex = ApiExceptionHandler.mapApiException(500, "");
 
         assertEquals("HTTP 500", ex.getMessage());
         assertTrue(ex.getErrors().isEmpty());
@@ -213,7 +214,7 @@ class ApiExceptionHandlerTest {
                 {"message": "Something went wrong"}
                 """;
 
-        SmplException ex = ApiExceptionHandler.mapApiException(500, body);
+        SmplError ex = ApiExceptionHandler.mapApiException(500, body);
 
         assertEquals("HTTP 500", ex.getMessage());
         assertTrue(ex.getErrors().isEmpty());
@@ -232,7 +233,7 @@ class ApiExceptionHandlerTest {
                 }
                 """;
 
-        SmplException ex = ApiExceptionHandler.mapApiException(400, body);
+        SmplError ex = ApiExceptionHandler.mapApiException(400, body);
 
         assertEquals("Bad Request", ex.getMessage());
     }
@@ -249,7 +250,7 @@ class ApiExceptionHandlerTest {
                 }
                 """;
 
-        SmplException ex = ApiExceptionHandler.mapApiException(400, body);
+        SmplError ex = ApiExceptionHandler.mapApiException(400, body);
 
         assertEquals("HTTP 400", ex.getMessage());
     }
@@ -264,7 +265,7 @@ class ApiExceptionHandlerTest {
                 }
                 """;
 
-        SmplException ex = ApiExceptionHandler.mapApiException(400, body);
+        SmplError ex = ApiExceptionHandler.mapApiException(400, body);
 
         assertEquals("An API error occurred", ex.getMessage());
     }
@@ -282,9 +283,9 @@ class ApiExceptionHandlerTest {
                 }
                 """;
 
-        SmplException ex = ApiExceptionHandler.mapApiException(422, body);
+        SmplError ex = ApiExceptionHandler.mapApiException(422, body);
 
-        assertInstanceOf(SmplValidationException.class, ex);
+        assertInstanceOf(ValidationError.class, ex);
         assertEquals(422, ex.statusCode());
     }
 
@@ -300,7 +301,7 @@ class ApiExceptionHandlerTest {
                 }
                 """;
 
-        SmplException ex = ApiExceptionHandler.mapApiException(400, body);
+        SmplError ex = ApiExceptionHandler.mapApiException(400, body);
 
         assertEquals("Error one (and 2 more errors)", ex.getMessage());
         assertEquals(3, ex.getErrors().size());
@@ -319,9 +320,9 @@ class ApiExceptionHandlerTest {
                 }
                 """;
 
-        SmplException ex = ApiExceptionHandler.mapApiException(400, body);
+        SmplError ex = ApiExceptionHandler.mapApiException(400, body);
 
-        SmplException.ApiError error = ex.getErrors().get(0);
+        ApiErrorDetail error = ex.getErrors().get(0);
         assertNotNull(error.getSource());
         assertNull(error.getSource().getPointer());
         // Source with null pointer should still produce valid JSON
@@ -330,8 +331,8 @@ class ApiExceptionHandlerTest {
 
     @Test
     void apiErrorToJson_allFields() {
-        SmplException.ApiErrorSource source = new SmplException.ApiErrorSource("/data/id");
-        SmplException.ApiError error = new SmplException.ApiError("400", "Bad Request", "Missing field", source);
+        ApiErrorDetail.Source source = new ApiErrorDetail.Source("/data/id");
+        ApiErrorDetail error = new ApiErrorDetail("400", "Bad Request", "Missing field", source);
 
         String json = error.toJson();
 
@@ -343,7 +344,7 @@ class ApiExceptionHandlerTest {
 
     @Test
     void apiErrorToJson_minimalFields() {
-        SmplException.ApiError error = new SmplException.ApiError(null, null, "Only detail", null);
+        ApiErrorDetail error = new ApiErrorDetail(null, null, "Only detail", null);
 
         String json = error.toJson();
 
@@ -352,47 +353,47 @@ class ApiExceptionHandlerTest {
 
     @Test
     void getStatusCode_returnsNullForZero() {
-        SmplException ex = new SmplException("test", 0, null);
+        SmplError ex = new SmplError("test", 0, null);
         assertNull(ex.getStatusCode());
     }
 
     @Test
     void getStatusCode_returnsValueForNonZero() {
-        SmplException ex = new SmplException("test", 500, null);
+        SmplError ex = new SmplError("test", 500, null);
         assertEquals(Integer.valueOf(500), ex.getStatusCode());
     }
 
     @Test
     void constructorWithNullErrors_defaultsToEmptyList() {
-        SmplException ex = new SmplException("test", 500, null, (List<SmplException.ApiError>) null);
+        SmplError ex = new SmplError("test", 500, null, (List<ApiErrorDetail>) null);
         assertTrue(ex.getErrors().isEmpty());
         assertEquals("test", ex.getMessage());
     }
 
     @Test
     void deriveMessage_nullList_returnsDefault() {
-        assertEquals("An API error occurred", SmplException.deriveMessage(null));
+        assertEquals("An API error occurred", SmplError.deriveMessage(null));
     }
 
     @Test
     void deriveMessage_emptyList_returnsDefault() {
-        assertEquals("An API error occurred", SmplException.deriveMessage(List.of()));
+        assertEquals("An API error occurred", SmplError.deriveMessage(List.of()));
     }
 
     @Test
     void escapeJson_null_returnsEmptyString() {
-        assertEquals("", SmplException.escapeJson(null));
+        assertEquals("", SmplError.escapeJson(null));
     }
 
     @Test
     void escapeJson_escapesQuotesAndBackslashes() {
-        assertEquals("a\\\\b\\\"c", SmplException.escapeJson("a\\b\"c"));
+        assertEquals("a\\\\b\\\"c", SmplError.escapeJson("a\\b\"c"));
     }
 
     @Test
     void toString_noErrors_showsClassAndMessage() {
-        SmplException ex = new SmplException("test message", 500, null);
-        assertEquals("SmplException: test message", ex.toString());
+        SmplError ex = new SmplError("test message", 500, null);
+        assertEquals("SmplError: test message", ex.toString());
     }
 
     // -----------------------------------------------------------------------
@@ -405,9 +406,9 @@ class ApiExceptionHandlerTest {
         var ioEx = new java.io.IOException("connection failed", unknownHost);
         var wrapper = new RuntimeException(ioEx);
 
-        SmplException ex = ApiExceptionHandler.mapApiException(wrapper);
+        SmplError ex = ApiExceptionHandler.mapApiException(wrapper);
 
-        assertInstanceOf(SmplConnectionException.class, ex);
+        assertInstanceOf(ConnectionError.class, ex);
         assertTrue(ex.getMessage().contains("config.localhost"),
                 "Expected hostname in message but got: " + ex.getMessage());
     }
@@ -417,9 +418,9 @@ class ApiExceptionHandlerTest {
         var timeout = new HttpConnectTimeoutException("timed out");
         var wrapper = new RuntimeException(timeout);
 
-        SmplException ex = ApiExceptionHandler.mapApiException(wrapper);
+        SmplError ex = ApiExceptionHandler.mapApiException(wrapper);
 
-        assertInstanceOf(SmplTimeoutException.class, ex);
+        assertInstanceOf(TimeoutError.class, ex);
         assertTrue(ex.getMessage().contains("timed out"),
                 "Expected timeout message but got: " + ex.getMessage());
     }
@@ -429,9 +430,9 @@ class ApiExceptionHandlerTest {
         var ioEx = new java.io.IOException("connection refused");
         var wrapper = new RuntimeException(ioEx);
 
-        SmplException ex = ApiExceptionHandler.mapApiException(wrapper);
+        SmplError ex = ApiExceptionHandler.mapApiException(wrapper);
 
-        assertInstanceOf(SmplConnectionException.class, ex);
+        assertInstanceOf(ConnectionError.class, ex);
         assertTrue(ex.getMessage().contains("connection refused"),
                 "Expected cause message but got: " + ex.getMessage());
     }
@@ -440,9 +441,9 @@ class ApiExceptionHandlerTest {
     void networkException_noCause_throwsConnectionExceptionWithMessage() {
         var wrapper = new RuntimeException("some error");
 
-        SmplException ex = ApiExceptionHandler.mapApiException(wrapper);
+        SmplError ex = ApiExceptionHandler.mapApiException(wrapper);
 
-        assertInstanceOf(SmplConnectionException.class, ex);
+        assertInstanceOf(ConnectionError.class, ex);
         assertTrue(ex.getMessage().contains("some error"),
                 "Expected exception message but got: " + ex.getMessage());
     }

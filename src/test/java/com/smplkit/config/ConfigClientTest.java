@@ -1,10 +1,10 @@
 package com.smplkit.config;
 
 import com.smplkit.SharedWebSocket;
-import com.smplkit.errors.SmplConflictException;
-import com.smplkit.errors.SmplNotFoundException;
-import com.smplkit.errors.SmplValidationException;
-import com.smplkit.errors.SmplException;
+import com.smplkit.errors.ConflictError;
+import com.smplkit.errors.NotFoundError;
+import com.smplkit.errors.ValidationError;
+import com.smplkit.errors.SmplError;
 import com.smplkit.internal.generated.config.ApiException;
 import com.smplkit.internal.generated.config.api.ConfigsApi;
 import com.smplkit.internal.generated.config.model.ConfigItemDefinition;
@@ -140,7 +140,7 @@ class ConfigClientTest {
 
     @Test
     void new_nullName_autoGeneratesFromId() {
-        Config config = configClient.management().new_("checkout-v2", null, null, null);
+        Config config = configClient.management().new_("checkout-v2", null, null, (String) null);
 
         assertEquals("Checkout V2", config.getName());
     }
@@ -232,7 +232,7 @@ class ConfigClientTest {
                 .thenThrow(new ApiException(422, "Validation error"));
 
         Config config = configClient.management().new_("bad");
-        assertThrows(SmplValidationException.class, config::save);
+        assertThrows(ValidationError.class, config::save);
     }
 
     // -----------------------------------------------------------------------
@@ -313,16 +313,16 @@ class ConfigClientTest {
         when(mockApi.getConfig(any()))
                 .thenThrow(new ApiException(404, "Not Found"));
 
-        assertThrows(SmplNotFoundException.class, () ->
+        assertThrows(NotFoundError.class, () ->
                 configClient.management().get("nonexistent"));
     }
 
     @Test
-    void get_apiException_throwsSmplException() throws ApiException {
+    void get_apiException_throwsSmplError() throws ApiException {
         when(mockApi.getConfig(any()))
                 .thenThrow(new ApiException(500, "Internal Server Error"));
 
-        SmplException ex = assertThrows(SmplException.class, () ->
+        SmplError ex = assertThrows(SmplError.class, () ->
                 configClient.management().get("some-id"));
         assertEquals(500, ex.statusCode());
     }
@@ -418,11 +418,11 @@ class ConfigClientTest {
     }
 
     @Test
-    void list_apiException_throwsSmplException() throws ApiException {
+    void list_apiException_throwsSmplError() throws ApiException {
         when(mockApi.listConfigs(null))
                 .thenThrow(new ApiException(503, "Service Unavailable"));
 
-        SmplException ex = assertThrows(SmplException.class, () ->
+        SmplError ex = assertThrows(SmplError.class, () ->
                 configClient.management().list());
         assertEquals(503, ex.statusCode());
     }
@@ -443,7 +443,7 @@ class ConfigClientTest {
         Mockito.doThrow(new ApiException(409, "Has children"))
                 .when(mockApi).deleteConfig("parent_config");
 
-        SmplConflictException ex = assertThrows(SmplConflictException.class, () ->
+        ConflictError ex = assertThrows(ConflictError.class, () ->
                 configClient.management().delete("parent_config"));
         assertEquals(409, ex.statusCode());
     }
@@ -453,7 +453,7 @@ class ConfigClientTest {
         Mockito.doThrow(new ApiException(404, "Not Found"))
                 .when(mockApi).deleteConfig("nonexistent");
 
-        assertThrows(SmplNotFoundException.class, () -> configClient.management().delete("nonexistent"));
+        assertThrows(NotFoundError.class, () -> configClient.management().delete("nonexistent"));
     }
 
     // -----------------------------------------------------------------------
@@ -461,21 +461,21 @@ class ConfigClientTest {
     // -----------------------------------------------------------------------
 
     @Test
-    void apiException_500_mapsToSmplException() throws ApiException {
+    void apiException_500_mapsToSmplError() throws ApiException {
         when(mockApi.getConfig(any()))
                 .thenThrow(new ApiException(500, "Internal Server Error"));
 
-        SmplException ex = assertThrows(SmplException.class, () ->
+        SmplError ex = assertThrows(SmplError.class, () ->
                 configClient.management().get(CONFIG_ID));
         assertEquals(500, ex.statusCode());
     }
 
     @Test
-    void apiException_0_mapsToSmplException() throws ApiException {
+    void apiException_0_mapsToSmplError() throws ApiException {
         when(mockApi.getConfig(any()))
                 .thenThrow(new ApiException("network failure"));
 
-        assertThrows(SmplException.class, () -> configClient.management().get(CONFIG_ID));
+        assertThrows(SmplError.class, () -> configClient.management().get(CONFIG_ID));
     }
 
     @Test
@@ -483,7 +483,7 @@ class ConfigClientTest {
         when(mockApi.getConfig(any()))
                 .thenThrow(new ApiException(503, (String) null));
 
-        SmplException ex = assertThrows(SmplException.class, () ->
+        SmplError ex = assertThrows(SmplError.class, () ->
                 configClient.management().get("some-id"));
         assertTrue(ex.getMessage().contains("503"));
     }

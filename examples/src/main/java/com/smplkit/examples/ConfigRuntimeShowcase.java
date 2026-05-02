@@ -1,146 +1,90 @@
+/*
+ * Demonstrates the smplkit runtime SDK for Smpl Config.
+ *
+ * Prerequisites:
+ *     - smplkit-sdk on the classpath
+ *     - A valid smplkit API key, provided via one of:
+ *         - SMPLKIT_API_KEY environment variable
+ *         - ~/.smplkit configuration file (see SDK docs)
+ *     - The smplkit Config service running and reachable
+ *
+ * Usage:
+ *     ./gradlew :examples:run -PmainClass=com.smplkit.examples.ConfigRuntimeShowcase
+ */
 package com.smplkit.examples;
 
 import com.smplkit.SmplClient;
 import com.smplkit.config.Config;
 import com.smplkit.config.ConfigChangeEvent;
-import com.smplkit.config.LiveConfig;
+import com.smplkit.examples.setup.ConfigRuntimeSetup;
 
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.atomic.AtomicReference;
 
-/**
- * Smpl Config Runtime Showcase
- * =============================
- *
- * <p>Demonstrates the runtime (prescriptive) tier of the Config SDK, covering:</p>
- * <ul>
- *   <li>Client initialization and demo hierarchy setup via {@link ConfigRuntimeSetup}</li>
- *   <li>Resolved values via {@code get()}</li>
- *   <li>Live subscriptions via {@code subscribe()}</li>
- *   <li>Multi-level inheritance: auth_module &rarr; user_service &rarr; common</li>
- *   <li>Real-time updates via global and key-specific {@code onChange} listeners</li>
- *   <li>Manual refresh via {@code refresh()}</li>
- *   <li>Cleanup of all created resources</li>
- * </ul>
- *
- * <p>Prerequisites:</p>
- * <ul>
- *   <li>A valid smplkit API key, provided via {@code SMPLKIT_API_KEY} env var or {@code ~/.smplkit} config file</li>
- *   <li>The smplkit Config service running and reachable</li>
- * </ul>
- *
- * <p>Usage:</p>
- * <pre>
- *   ./gradlew :examples:run -PmainClass=com.smplkit.examples.ConfigRuntimeShowcase
- * </pre>
- */
-public class ConfigRuntimeShowcase {
+public final class ConfigRuntimeShowcase {
 
     public static void main(String[] args) throws Exception {
-        // ======================================================================
-        // 1. SDK INITIALIZATION + DEMO SETUP
-        // ======================================================================
-        section("1. SDK Initialization + Demo Setup");
-
+        // create the client (use SmplClient for synchronous use)
         try (SmplClient client = SmplClient.builder()
-                .environment("production")
-                .service("showcase-service")
-                .build()) {
+                .environment("production").service("showcase-service").build()) {
+            ConfigRuntimeSetup.setup(client.manage());
 
-            step("SmplClient initialized with environment=production");
+            // get a config as a plain dict
+            Map<String, Object> userSvcConfigDict = client.config().get("showcase-user-service");
+            System.out.println("Total resolved keys: " + userSvcConfigDict.size());
+            System.out.println("database.host = " + userSvcConfigDict.get("database.host"));
+            System.out.println("max_retries = " + userSvcConfigDict.get("max_retries"));
+            System.out.println("cache_ttl_seconds = " + userSvcConfigDict.get("cache_ttl_seconds"));
+            System.out.println("pagination_default_page_size = "
+                    + userSvcConfigDict.get("pagination_default_page_size"));
+            System.out.println("enable_signup = " + userSvcConfigDict.get("enable_signup"));
+            System.out.println("nonexistent_key = " + userSvcConfigDict.get("nonexistent_key"));
 
-            ConfigRuntimeSetup.DemoConfigs demo = ConfigRuntimeSetup.setupDemoConfigs(client);
-
-            // ==================================================================
-            // 2. PRESCRIPTIVE ACCESS via get()
-            // ==================================================================
-            section("2. Prescriptive Access via get()");
-
-            Map<String, Object> commonValues = client.config().get("common");
-            step("common resolved values: " + commonValues.size() + " keys");
-            step("  app_name = " + commonValues.get("app_name"));
-            step("  max_retries = " + commonValues.get("max_retries"));
-
-            Map<String, Object> userServiceValues = client.config().get("user_service");
-            step("user_service resolved values: " + userServiceValues.size() + " keys");
-            step("  enable_signup = " + userServiceValues.get("enable_signup"));
-
-            // ==================================================================
-            // 3. SUBSCRIBE — live updates
-            // ==================================================================
-            section("3. Subscribe - Live Updates");
-
-            LiveConfig<Map<String, Object>> liveCommon = client.config().subscribe("common");
-            step("Subscribed to common config");
-            step("  Current max_retries = " + liveCommon.getAsMap().get("max_retries"));
-
-            // ==================================================================
-            // 4. MULTI-LEVEL INHERITANCE
-            // ==================================================================
-            section("4. Multi-Level Inheritance");
-
-            step("Hierarchy: common -> user_service -> auth_module");
-
-            Map<String, Object> authValues = client.config().get("auth_module");
-            step("auth_module resolved values: " + authValues.size() + " keys");
-            step("  mfa_enabled = " + authValues.get("mfa_enabled"));
-            step("  app_name (inherited from common) = " + authValues.get("app_name"));
-
-            // ==================================================================
-            // 5. ONCHANGE + REFRESH
-            // ==================================================================
-            section("5. OnChange + Refresh");
+            // production overrides resolve through the inheritance chain
+            assert "prod-users-rds.internal.acme.dev".equals(userSvcConfigDict.get("database.host"));
+            assert userSvcConfigDict.get("nonexistent_key") == null;
 
             List<ConfigChangeEvent> changes = new ArrayList<>();
-            client.config().onChange(evt -> {
-                changes.add(evt);
-                System.out.println("    [CHANGE] " + evt.configId() + "/" + evt.itemKey()
-                        + ": " + evt.oldValue() + " -> " + evt.newValue());
+            List<ConfigChangeEvent> retriesChanges = new ArrayList<>();
+
+            // global listener — fires when ANY config item changes
+            client.config().onChange(event -> {
+                changes.add(event);
+                System.out.println("    [CHANGE] " + event.configId() + "."
+                        + event.itemKey() + ": " + event.oldValue()
+                        + " -> " + event.newValue());
             });
-            step("Global change listener registered");
 
-            List<ConfigChangeEvent> retryChanges = new ArrayList<>();
-            client.config().onChange("common", "max_retries", retryChanges::add);
-            step("Item-scoped listener registered for common/max_retries");
+            // item-scoped listener via the live-proxy handle
+            client.config().onChange("showcase-common", "max_retries",
+                    retriesChanges::add);
 
-            Config latestCommon = client.config().management().get("common");
-            Map<String, Object> prodEnv = new java.util.HashMap<>();
-            prodEnv.put("values", Map.of(
-                    "max_retries", 7,
-                    "request_timeout_ms", 10000,
-                    "log_level", "warn"
-            ));
-            latestCommon.setEnvironments(Map.of("production", prodEnv));
-            latestCommon.save();
-            step("Updated max_retries to 7 via management API");
+            // simulate someone making a change to trigger listeners
+            updateMaxRetries(client, 7);
 
-            client.config().refresh();
-            step("Manual refresh completed");
+            // wait a moment for the event to be delivered
+            Thread.sleep(200);
 
-            step("max_retries after refresh = " + client.config().get("common").get("max_retries"));
-            step("Live common max_retries = " + liveCommon.getAsMap().get("max_retries"));
-            step("Global changes: " + changes.size() + ", retry-specific: " + retryChanges.size());
+            // userSvcConfigDict reflects the values at last fetch (re-read for latest)
+            Map<String, Object> latest = client.config().get("showcase-user-service");
+            System.out.println("max_retries after update = " + latest.get("max_retries"));
+            System.out.println("Global changes received: " + changes.size());
+            System.out.println("Retries-specific changes received: " + retriesChanges.size());
 
-            // ==================================================================
-            // 6. CLEANUP
-            // ==================================================================
-            ConfigRuntimeSetup.teardownDemoConfigs(client, demo);
+            assert ((Number) latest.get("max_retries")).intValue() == 7;
+            assert !changes.isEmpty();
+            assert !retriesChanges.isEmpty();
 
+            ConfigRuntimeSetup.cleanup(client.manage());
+            System.out.println("Done!");
         }
-
-        section("ALL DONE");
-        System.out.println("  The Config Runtime showcase completed successfully.");
-        System.out.println("  All created resources have been cleaned up.\n");
     }
 
-    private static void section(String title) {
-        System.out.println("\n" + "=".repeat(60));
-        System.out.println("  " + title);
-        System.out.println("=".repeat(60) + "\n");
-    }
-
-    private static void step(String description) {
-        System.out.println("  -> " + description);
+    private static void updateMaxRetries(SmplClient client, int maxRetries) {
+        Config commonCfg = client.manage().config.get("showcase-common");
+        commonCfg.setNumber("max_retries", maxRetries, "production");
+        commonCfg.save();
     }
 }

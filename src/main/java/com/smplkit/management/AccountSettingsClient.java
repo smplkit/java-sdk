@@ -71,14 +71,14 @@ public final class AccountSettingsClient {
             Map<String, Object> saved = MAPPER.readValue(response.body(),
                     new TypeReference<Map<String, Object>>() {});
             return new AccountSettings(this, saved != null ? saved : new HashMap<>());
-        } catch (com.smplkit.errors.SmplException e) {
+        } catch (com.smplkit.errors.SmplError e) {
             throw e;
         } catch (Exception e) {
-            throw new com.smplkit.errors.SmplConnectionException("Failed to save account settings: " + e.getMessage(), e);
+            throw new com.smplkit.errors.ConnectionError("Failed to save account settings: " + e.getMessage(), e);
         }
     }
 
-    private static com.smplkit.errors.SmplException mapException(ApiException e) {
+    private static com.smplkit.errors.SmplError mapException(ApiException e) {
         if (e.getCode() == 0) return ApiExceptionHandler.mapApiException(e);
         return ApiExceptionHandler.mapApiException(e.getCode(), e.getResponseBody());
     }

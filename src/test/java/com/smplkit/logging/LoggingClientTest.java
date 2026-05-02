@@ -372,13 +372,13 @@ class LoggingClientTest {
         when(mockAdapter.discover()).thenReturn(List.of());
         client.registerAdapter(mockAdapter);
 
-        assertFalse(client.isStarted());
+        assertFalse(client.isInstalled());
 
-        client.start();
-        assertTrue(client.isStarted());
+        client.install();
+        assertTrue(client.isInstalled());
 
-        client.start(); // second call should be no-op
-        assertTrue(client.isStarted());
+        client.install(); // second call should be no-op
+        assertTrue(client.isInstalled());
 
         // listLoggers should only be called once (the second start() is a no-op)
         verify(mockLoggersApi, times(1)).listLoggers((Boolean) null, null, null);
@@ -394,8 +394,8 @@ class LoggingClientTest {
         client.registerAdapter(mockAdapter);
 
         // start should not throw, just log warning
-        client.start();
-        assertTrue(client.isStarted());
+        client.install();
+        assertTrue(client.isInstalled());
     }
 
     // -----------------------------------------------------------------------
@@ -410,7 +410,7 @@ class LoggingClientTest {
         // Set up a managed logger that will trigger change events
         setupManagedLoggerForStartWithAdapter("com.acme", "INFO");
 
-        client.start();
+        client.install();
 
         assertNotNull(received.get());
         assertEquals("com.acme", received.get().id());
@@ -427,7 +427,7 @@ class LoggingClientTest {
 
         setupManagedLoggerForStartWithAdapter("com.acme", "WARN");
 
-        client.start();
+        client.install();
 
         assertNotNull(received.get());
         assertEquals("com.acme", received.get().id());
@@ -444,7 +444,7 @@ class LoggingClientTest {
 
         setupManagedLoggerForStartWithAdapter("com.acme", "INFO");
 
-        client.start();
+        client.install();
 
         assertNotNull(received.get());
     }
@@ -458,7 +458,7 @@ class LoggingClientTest {
 
         setupManagedLoggerForStartWithAdapter("com.acme", "DEBUG");
 
-        client.start();
+        client.install();
 
         assertNotNull(received.get());
     }
@@ -694,7 +694,7 @@ class LoggingClientTest {
         ));
 
         client.registerAdapter(mockAdapter);
-        client.start();
+        client.install();
 
         verify(mockAdapter).discover();
         verify(mockAdapter).installHook(any());
@@ -711,7 +711,7 @@ class LoggingClientTest {
         client.registerAdapter(mockAdapter);
         setupManagedLoggerForStartWithAdapter("com.acme.applied", "WARN");
 
-        client.start();
+        client.install();
 
         verify(mockAdapter).applyLevel("com.acme.applied", "WARN");
     }
@@ -725,7 +725,7 @@ class LoggingClientTest {
         when(mockAdapter.discover()).thenReturn(List.of());
 
         client.registerAdapter(mockAdapter);
-        client.start();
+        client.install();
         client.close();
 
         verify(mockAdapter).uninstallHook();
@@ -746,7 +746,7 @@ class LoggingClientTest {
                 new DiscoveredLogger("com.acme.Service", "WARN", "WARN")
         ));
         client.registerAdapter(mockAdapter);
-        client.start();
+        client.install();
 
         ArgumentCaptor<LoggerBulkRequest> captor = ArgumentCaptor.forClass(LoggerBulkRequest.class);
         verify(mockLoggersApi).bulkRegisterLoggers(captor.capture());
@@ -776,7 +776,7 @@ class LoggingClientTest {
                 new DiscoveredLogger("com.acme.inherited", null, "INFO")
         ));
         client.registerAdapter(mockAdapter);
-        client.start();
+        client.install();
 
         ArgumentCaptor<LoggerBulkRequest> captor = ArgumentCaptor.forClass(LoggerBulkRequest.class);
         verify(mockLoggersApi).bulkRegisterLoggers(captor.capture());
@@ -796,7 +796,7 @@ class LoggingClientTest {
         when(mockAdapter.name()).thenReturn("test");
         when(mockAdapter.discover()).thenReturn(List.of());
         client.registerAdapter(mockAdapter);
-        client.start();
+        client.install();
 
         verify(mockLoggersApi, never()).bulkRegisterLoggers(any());
     }
@@ -815,8 +815,8 @@ class LoggingClientTest {
         when(mockLoggersApi.bulkRegisterLoggers(any())).thenThrow(new ApiException(500, "bulk error"));
 
         // start() should not throw when bulkRegister fails
-        client.start();
-        assertTrue(client.isStarted());
+        client.install();
+        assertTrue(client.isInstalled());
     }
 
     // -----------------------------------------------------------------------
@@ -885,11 +885,11 @@ class LoggingClientTest {
         when(mockAdapter.discover()).thenReturn(List.of());
         client.registerAdapter(mockAdapter);
 
-        client.start();
-        assertTrue(client.isStarted());
+        client.install();
+        assertTrue(client.isInstalled());
 
         client.close();
-        assertFalse(client.isStarted());
+        assertFalse(client.isInstalled());
         verify(mockAdapter).uninstallHook();
     }
 
@@ -898,7 +898,7 @@ class LoggingClientTest {
     // -----------------------------------------------------------------------
 
     @Test
-    void get_mapsApiExceptionToSmplException() throws ApiException {
+    void get_mapsApiExceptionToSmplError() throws ApiException {
         when(mockLoggersApi.getLogger("fail"))
                 .thenThrow(new ApiException(500, "server error"));
 
@@ -914,7 +914,7 @@ class LoggingClientTest {
     }
 
     @Test
-    void list_apiException_code0_mapsToSmplConnectionException() throws ApiException {
+    void list_apiException_code0_mapsToConnectionError() throws ApiException {
         when(mockLoggersApi.listLoggers((Boolean) null, null, null))
                 .thenThrow(new ApiException("network failure"));
 
@@ -1106,7 +1106,7 @@ class LoggingClientTest {
         AtomicReference<LoggerChangeEvent> received = new AtomicReference<>();
         client.onChange(received::set);
 
-        client.start();
+        client.install();
 
         // Logger should resolve to group's level (WARN) since it has no own level
         assertNotNull(received.get());
@@ -1130,8 +1130,8 @@ class LoggingClientTest {
         client.registerAdapter(mockAdapter);
 
         // start() should not throw, just log warning
-        client.start();
-        assertTrue(client.isStarted());
+        client.install();
+        assertTrue(client.isInstalled());
     }
 
     // -----------------------------------------------------------------------
@@ -1162,8 +1162,8 @@ class LoggingClientTest {
         when(mockLogGroupsApi.listLogGroups()).thenReturn(groupResp);
 
         // Should not throw -- the invalid level is caught and logged
-        client.start();
-        assertTrue(client.isStarted());
+        client.install();
+        assertTrue(client.isInstalled());
     }
 
     // -----------------------------------------------------------------------
@@ -1181,7 +1181,7 @@ class LoggingClientTest {
         SharedWebSocket mockWs = mock(SharedWebSocket.class);
         client.setSharedWs(mockWs);
 
-        client.start();
+        client.install();
 
         verify(mockWs).on(eq("logger_changed"), any());
         verify(mockWs).on(eq("logger_deleted"), any());
@@ -1197,7 +1197,7 @@ class LoggingClientTest {
         when(mockAdapter.name()).thenReturn("test");
         when(mockAdapter.discover()).thenReturn(List.of());
         client.registerAdapter(mockAdapter);
-        client.start();
+        client.install();
 
         // Stub getLogger for the scoped fetch
         when(mockLoggersApi.getLogger("com.acme.somelogger"))
@@ -1223,7 +1223,7 @@ class LoggingClientTest {
         client.onChange("com.acme.wstest", receivedKeyed::set);
         client.onChange(receivedGlobal::set);
 
-        client.start();
+        client.install();
         receivedKeyed.set(null);
         receivedGlobal.set(null);
 
@@ -1248,7 +1248,7 @@ class LoggingClientTest {
         when(mockAdapter.name()).thenReturn("test");
         when(mockAdapter.discover()).thenReturn(List.of());
         client.registerAdapter(mockAdapter);
-        client.start();
+        client.install();
 
         // Stub getLogGroup for the scoped fetch
         when(mockLogGroupsApi.getLogGroup("some-group-id"))
@@ -1285,7 +1285,7 @@ class LoggingClientTest {
         when(mockAdapter.name()).thenReturn("test");
         when(mockAdapter.discover()).thenReturn(List.of());
         client.registerAdapter(mockAdapter);
-        client.start();
+        client.install();
 
         // Make the scoped getLogger call fail
         when(mockLoggersApi.getLogger("com.acme.Logger"))
@@ -1302,7 +1302,7 @@ class LoggingClientTest {
         when(mockAdapter.name()).thenReturn("test");
         when(mockAdapter.discover()).thenReturn(List.of());
         client.registerAdapter(mockAdapter);
-        client.start();
+        client.install();
 
         when(mockLogGroupsApi.getLogGroup("some-group"))
                 .thenThrow(new ApiException(500, "server error"));
@@ -1340,7 +1340,7 @@ class LoggingClientTest {
         client.registerAdapter(mockAdapter);
 
         assertEquals(0, client.getLoggerBufferPendingCount()); // empty before start
-        client.start();
+        client.install();
 
         // After start() flush, initial discovery is registered and buffer is drained
         assertEquals(0, client.getLoggerBufferPendingCount());
@@ -1365,7 +1365,7 @@ class LoggingClientTest {
         groupResp.setData(new ArrayList<>());
         when(mockLogGroupsApi.listLogGroups()).thenReturn(groupResp);
 
-        client.start(); // fetches and caches the managed logger
+        client.install(); // fetches and caches the managed logger
 
         // Simulate post-startup logger discovery
         client.simulateNewLogger(key, "INFO");
@@ -1392,7 +1392,7 @@ class LoggingClientTest {
         groupResp.setData(new ArrayList<>());
         when(mockLogGroupsApi.listLogGroups()).thenReturn(groupResp);
 
-        client.start();
+        client.install();
         client.simulateNewLogger(key, "DEBUG");
 
         verify(mockAdapter, never()).applyLevel(any(), any());
@@ -1429,7 +1429,7 @@ class LoggingClientTest {
         groupResp.setData(new ArrayList<>());
         when(mockLogGroupsApi.listLogGroups()).thenReturn(groupResp);
 
-        client.start();
+        client.install();
 
         // Should not throw even though applyLevel throws
         assertDoesNotThrow(() -> client.simulateNewLogger(key, "INFO"));
@@ -1442,7 +1442,7 @@ class LoggingClientTest {
         when(mockAdapter.name()).thenReturn("test");
         when(mockAdapter.discover()).thenReturn(List.of());
         client.registerAdapter(mockAdapter);
-        client.start(); // drains any buffered loggers
+        client.install(); // drains any buffered loggers
 
         // Add 50 distinct post-startup loggers to trigger eager flush
         for (int i = 0; i < 50; i++) {
@@ -1464,7 +1464,7 @@ class LoggingClientTest {
         when(mockAdapter.name()).thenReturn("test");
         when(mockAdapter.discover()).thenReturn(List.of());
         client.registerAdapter(mockAdapter);
-        client.start(); // drains initial buffer (empty)
+        client.install(); // drains initial buffer (empty)
 
         // Simulate a post-startup logger with explicit level
         client.simulateNewLogger("com.acme.Dynamic", "WARN");
@@ -1500,7 +1500,7 @@ class LoggingClientTest {
                 new DiscoveredLogger("com.acme.discovered", "INFO", "INFO")
         ));
         client.registerAdapter(mockAdapter);
-        client.start();
+        client.install();
 
         ArgumentCaptor<LoggerBulkRequest> captor = ArgumentCaptor.forClass(LoggerBulkRequest.class);
         verify(mockLoggersApi).bulkRegisterLoggers(captor.capture());
@@ -1528,7 +1528,7 @@ class LoggingClientTest {
         client.registerAdapter(mockAdapter);
 
         assertFalse(client.isFlushScheduled());
-        client.start();
+        client.install();
         assertTrue(client.isFlushScheduled());
     }
 
@@ -1539,7 +1539,7 @@ class LoggingClientTest {
         when(mockAdapter.name()).thenReturn("test");
         when(mockAdapter.discover()).thenReturn(List.of());
         client.registerAdapter(mockAdapter);
-        client.start();
+        client.install();
         assertTrue(client.isFlushScheduled());
 
         client.close();

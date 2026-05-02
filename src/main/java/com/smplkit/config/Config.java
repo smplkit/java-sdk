@@ -86,9 +86,108 @@ public final class Config {
         this.environments = environments != null ? new HashMap<>(environments) : new HashMap<>();
     }
 
+    /** Sets the parent config id. */
+    public void setParent(String parent) { this.parent = parent; }
+
+    // --- Per-env unified setters (mirror Python's set_string / set_number / etc.) ---
+
+    /** Sets a string item at the base level. */
+    public void setString(String name, String value) {
+        setString(name, value, null);
+    }
+
+    /** Sets a string item; {@code environment=null} sets the base, otherwise the per-env override. */
+    @SuppressWarnings("unchecked")
+    public void setString(String name, String value, String environment) {
+        if (environment == null) {
+            items.put(name, Map.of("value", value, "type", "STRING"));
+        } else {
+            Map<String, Object> env = (Map<String, Object>)
+                    environments.computeIfAbsent(environment, k -> new HashMap<String, Object>());
+            Map<String, Object> values = (Map<String, Object>)
+                    env.computeIfAbsent("values", k -> new HashMap<String, Object>());
+            values.put(name, Map.of("value", value, "type", "STRING"));
+        }
+    }
+
+    /** Sets a number item at the base level. */
+    public void setNumber(String name, Number value) {
+        setNumber(name, value, null);
+    }
+
+    /** Sets a number item; {@code environment=null} sets the base. */
+    @SuppressWarnings("unchecked")
+    public void setNumber(String name, Number value, String environment) {
+        if (environment == null) {
+            items.put(name, Map.of("value", value, "type", "NUMBER"));
+        } else {
+            Map<String, Object> env = (Map<String, Object>)
+                    environments.computeIfAbsent(environment, k -> new HashMap<String, Object>());
+            Map<String, Object> values = (Map<String, Object>)
+                    env.computeIfAbsent("values", k -> new HashMap<String, Object>());
+            values.put(name, Map.of("value", value, "type", "NUMBER"));
+        }
+    }
+
+    /** Sets a boolean item at the base level. */
+    public void setBoolean(String name, boolean value) {
+        setBoolean(name, value, null);
+    }
+
+    /** Sets a boolean item; {@code environment=null} sets the base. */
+    @SuppressWarnings("unchecked")
+    public void setBoolean(String name, boolean value, String environment) {
+        if (environment == null) {
+            items.put(name, Map.of("value", value, "type", "BOOLEAN"));
+        } else {
+            Map<String, Object> env = (Map<String, Object>)
+                    environments.computeIfAbsent(environment, k -> new HashMap<String, Object>());
+            Map<String, Object> values = (Map<String, Object>)
+                    env.computeIfAbsent("values", k -> new HashMap<String, Object>());
+            values.put(name, Map.of("value", value, "type", "BOOLEAN"));
+        }
+    }
+
+    /** Sets a JSON item at the base level. */
+    public void setJson(String name, Object value) {
+        setJson(name, value, null);
+    }
+
+    /** Sets a JSON item; {@code environment=null} sets the base. */
+    @SuppressWarnings("unchecked")
+    public void setJson(String name, Object value, String environment) {
+        if (environment == null) {
+            items.put(name, Map.of("value", value, "type", "JSON"));
+        } else {
+            Map<String, Object> env = (Map<String, Object>)
+                    environments.computeIfAbsent(environment, k -> new HashMap<String, Object>());
+            Map<String, Object> values = (Map<String, Object>)
+                    env.computeIfAbsent("values", k -> new HashMap<String, Object>());
+            values.put(name, Map.of("value", value, "type", "JSON"));
+        }
+    }
+
+    /** Removes an item; {@code environment=null} removes from base. */
+    @SuppressWarnings("unchecked")
+    public void remove(String name, String environment) {
+        if (environment == null) {
+            items.remove(name);
+        } else {
+            Map<String, Object> env = (Map<String, Object>) environments.get(environment);
+            if (env != null) {
+                Map<String, Object> values = (Map<String, Object>) env.get("values");
+                if (values != null) values.remove(name);
+            }
+        }
+    }
+
+    /** Removes an item from the base. */
+    public void remove(String name) {
+        remove(name, null);
+    }
+
     // --- Package-private setters (used by ConfigClient) ---
 
-    void setParent(String parent) { this.parent = parent; }
     void setCreatedAt(Instant createdAt) { this.createdAt = createdAt; }
     void setUpdatedAt(Instant updatedAt) { this.updatedAt = updatedAt; }
     void setClient(ConfigClient client) { this.client = client; }
