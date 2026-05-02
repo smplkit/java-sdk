@@ -92,28 +92,30 @@ public final class SmplClient implements AutoCloseable {
                 : new MetricsReporter(httpClient, appBaseUrl, apiKey, environment, service);
         this.sharedWs = new SharedWebSocket(httpClient, appBaseUrl, apiKey, metrics);
         this.contextsApi = buildContextsApi(appBaseUrl, apiKey, timeout);
-        // Build the management client first; the runtime sub-clients reuse its
-        // HTTP transports + registration buffers under the hood.
-        this.manage = SmplManagementClient.fromResolved(
-                new ConfigResolver.ResolvedManagementConfig(
-                        apiKey, resolvedConfig.baseDomain, resolvedConfig.scheme, resolvedConfig.debug),
-                timeout);
-        ContextRegistrationBuffer contextBuffer = manage.contextBuffer;
-        this.config = manage.configRuntime;
+
+        // SmplClient owns its own runtime sub-clients with their own generated
+        // ApiClients. The management client is constructed as an *independent peer*
+        // sharing only the JDK HttpClient and ContextRegistrationBuffer through
+        // a package-private factory — neither owns the other's transports.
+        ContextRegistrationBuffer contextBuffer = new ContextRegistrationBuffer();
+        this.config = buildConfigClient(httpClient, apiKey, timeout, configBaseUrl);
         this.config.setEnvironment(environment);
         this.config.setMetrics(metrics);
         this.config.setSharedWs(this.sharedWs);
-        this.flags = manage.flagsRuntime;
-        this.flags.setSharedWs(this.sharedWs);
-        this.flags.setParentService(service);
-        this.flags.setEnvironment(environment);
+        this.flags = buildFlagsClient(httpClient, apiKey, timeout, sharedWs, environment, service,
+                flagsBaseUrl, appBaseUrl);
         this.flags.setMetrics(metrics);
         this.flags.setContextBuffer(contextBuffer);
-        this.logging = manage.loggingRuntime;
-        this.logging.setEnvironment(environment);
-        this.logging.setService(service);
+        this.logging = buildLoggingClient(httpClient, apiKey, timeout, environment, service,
+                loggingBaseUrl);
         this.logging.setMetrics(metrics);
         this.logging.setSharedWs(this.sharedWs);
+
+        this.manage = SmplManagementClient.sharedWith(
+                new ConfigResolver.ResolvedManagementConfig(
+                        apiKey, resolvedConfig.baseDomain, resolvedConfig.scheme, resolvedConfig.debug),
+                timeout, httpClient, contextBuffer);
+
         String maskedKey = apiKey.length() > 10 ? apiKey.substring(0, 10) + "..." : apiKey + "...";
         Debug.log("lifecycle", "SmplClient created (api_key=" + maskedKey + ", environment=" + environment + ", service=" + service + ")");
     }
@@ -129,22 +131,22 @@ public final class SmplClient implements AutoCloseable {
         this.httpClient = httpClient;
         this.metrics = null;
         String appBaseUrl = serviceUrl(DEFAULT_SCHEME, "app", DEFAULT_BASE_DOMAIN);
+        String configBaseUrl = serviceUrl(DEFAULT_SCHEME, "config", DEFAULT_BASE_DOMAIN);
+        String flagsBaseUrl = serviceUrl(DEFAULT_SCHEME, "flags", DEFAULT_BASE_DOMAIN);
+        String loggingBaseUrl = serviceUrl(DEFAULT_SCHEME, "logging", DEFAULT_BASE_DOMAIN);
         this.sharedWs = new SharedWebSocket(httpClient, appBaseUrl, apiKey);
         this.contextsApi = buildContextsApi(appBaseUrl, apiKey, timeout);
-        this.manage = SmplManagementClient.fromResolved(
-                new ConfigResolver.ResolvedManagementConfig(apiKey, DEFAULT_BASE_DOMAIN, DEFAULT_SCHEME, false),
-                timeout);
-        ContextRegistrationBuffer contextBuffer = manage.contextBuffer;
-        this.config = manage.configRuntime;
+        ContextRegistrationBuffer contextBuffer = new ContextRegistrationBuffer();
+        this.config = buildConfigClient(httpClient, apiKey, timeout, configBaseUrl);
         this.config.setEnvironment(environment);
-        this.flags = manage.flagsRuntime;
-        this.flags.setSharedWs(this.sharedWs);
-        this.flags.setParentService(service);
-        this.flags.setEnvironment(environment);
+        this.flags = buildFlagsClient(httpClient, apiKey, timeout, sharedWs, environment, service,
+                flagsBaseUrl, appBaseUrl);
         this.flags.setContextBuffer(contextBuffer);
-        this.logging = manage.loggingRuntime;
-        this.logging.setEnvironment(environment);
-        this.logging.setService(service);
+        this.logging = buildLoggingClient(httpClient, apiKey, timeout, environment, service,
+                loggingBaseUrl);
+        this.manage = SmplManagementClient.sharedWith(
+                new ConfigResolver.ResolvedManagementConfig(apiKey, DEFAULT_BASE_DOMAIN, DEFAULT_SCHEME, false),
+                timeout, httpClient, contextBuffer);
     }
 
     /**
@@ -159,20 +161,20 @@ public final class SmplClient implements AutoCloseable {
         this.httpClient = httpClient;
         this.metrics = null;
         String appBaseUrl = serviceUrl(DEFAULT_SCHEME, "app", DEFAULT_BASE_DOMAIN);
+        String loggingBaseUrl = serviceUrl(DEFAULT_SCHEME, "logging", DEFAULT_BASE_DOMAIN);
         this.sharedWs = new SharedWebSocket(httpClient, appBaseUrl, apiKey);
         this.contextsApi = buildContextsApi(appBaseUrl, apiKey, timeout);
-        this.manage = SmplManagementClient.fromResolved(
-                new ConfigResolver.ResolvedManagementConfig(apiKey, DEFAULT_BASE_DOMAIN, DEFAULT_SCHEME, false),
-                timeout);
-        ContextRegistrationBuffer contextBuffer = manage.contextBuffer;
+        ContextRegistrationBuffer contextBuffer = new ContextRegistrationBuffer();
         this.config = config;
         this.flags = flags;
         this.flags.setParentService(service);
         this.flags.setEnvironment(environment);
         this.flags.setContextBuffer(contextBuffer);
-        this.logging = manage.loggingRuntime;
-        this.logging.setEnvironment(environment);
-        this.logging.setService(service);
+        this.logging = buildLoggingClient(httpClient, apiKey, timeout, environment, service,
+                loggingBaseUrl);
+        this.manage = SmplManagementClient.sharedWith(
+                new ConfigResolver.ResolvedManagementConfig(apiKey, DEFAULT_BASE_DOMAIN, DEFAULT_SCHEME, false),
+                timeout, httpClient, contextBuffer);
     }
 
     /**
@@ -187,20 +189,20 @@ public final class SmplClient implements AutoCloseable {
         this.httpClient = httpClient;
         this.metrics = null;
         String appBaseUrl = serviceUrl(DEFAULT_SCHEME, "app", DEFAULT_BASE_DOMAIN);
+        String loggingBaseUrl = serviceUrl(DEFAULT_SCHEME, "logging", DEFAULT_BASE_DOMAIN);
         this.sharedWs = new SharedWebSocket(httpClient, appBaseUrl, apiKey);
         this.contextsApi = contextsApi;
-        this.manage = SmplManagementClient.fromResolved(
-                new ConfigResolver.ResolvedManagementConfig(apiKey, DEFAULT_BASE_DOMAIN, DEFAULT_SCHEME, false),
-                timeout);
-        ContextRegistrationBuffer contextBuffer = manage.contextBuffer;
+        ContextRegistrationBuffer contextBuffer = new ContextRegistrationBuffer();
         this.config = config;
         this.flags = flags;
         this.flags.setParentService(service);
         this.flags.setEnvironment(environment);
         this.flags.setContextBuffer(contextBuffer);
-        this.logging = manage.loggingRuntime;
-        this.logging.setEnvironment(environment);
-        this.logging.setService(service);
+        this.logging = buildLoggingClient(httpClient, apiKey, timeout, environment, service,
+                loggingBaseUrl);
+        this.manage = SmplManagementClient.sharedWith(
+                new ConfigResolver.ResolvedManagementConfig(apiKey, DEFAULT_BASE_DOMAIN, DEFAULT_SCHEME, false),
+                timeout, httpClient, contextBuffer);
 
         // Synchronous registration for testability (contextsApi is injected)
         registerServiceContext();

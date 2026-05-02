@@ -63,22 +63,63 @@ public final class Logger {
         this.environments = environments != null ? new HashMap<>(environments) : new HashMap<>();
     }
 
-    // --- Level convenience methods ---
+    // --- Level convenience methods (per-env unified, mirrors Python rule 7) ---
 
     /** Set the base log level. */
-    public void setLevel(LogLevel level) { this.level = level.getValue(); }
-
-    /** Remove the base log level (inherit from group/ancestry). */
-    public void clearLevel() { this.level = null; }
-
-    /** Set the log level for a specific environment. */
-    public void setEnvironmentLevel(String env, LogLevel level) {
-        this.environments.put(env, Map.of("level", level.getValue()));
+    public void setLevel(LogLevel level) {
+        setLevel(level, null);
     }
 
-    /** Remove the log level override for a specific environment. */
+    /**
+     * Set the log level. {@code environment=null} sets the base level; otherwise
+     * sets the per-environment override.
+     *
+     * <p>Mirrors Python's {@code logger.set_level(level, environment=None)}.</p>
+     */
+    public void setLevel(LogLevel level, String environment) {
+        if (environment == null) {
+            this.level = level != null ? level.getValue() : null;
+        } else {
+            this.environments.put(environment,
+                    Map.of("level", level != null ? level.getValue() : null));
+        }
+    }
+
+    /** Remove the base log level (inherit from group/ancestry). */
+    public void clearLevel() {
+        clearLevel(null);
+    }
+
+    /**
+     * Clear a log level. {@code environment=null} clears the base level; otherwise
+     * clears the per-environment override only.
+     *
+     * <p>Mirrors Python's {@code logger.clear_level(environment=None)}.</p>
+     */
+    public void clearLevel(String environment) {
+        if (environment == null) {
+            this.level = null;
+        } else {
+            this.environments.remove(environment);
+        }
+    }
+
+    /**
+     * @deprecated use {@link #setLevel(LogLevel, String)} instead. Retained
+     * for compatibility; will be removed once the per-env unification rolls
+     * out across the SDK.
+     */
+    @Deprecated
+    public void setEnvironmentLevel(String env, LogLevel level) {
+        setLevel(level, env);
+    }
+
+    /**
+     * @deprecated use {@link #clearLevel(String)} instead.
+     */
+    @Deprecated
     public void clearEnvironmentLevel(String env) {
-        this.environments.remove(env);
+        clearLevel(env);
     }
 
     /** Remove all environment-level overrides. */
