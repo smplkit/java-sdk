@@ -376,15 +376,19 @@ class SmplClientTest {
     @Test
     void waitUntilReadyReturnsImmediatelyWhenAlreadyConnected() throws Exception {
         // Cover the happy-path return of waitUntilReady AND the no-arg
-        // overload's delegation to the Duration overload. We pre-flip the
-        // shared WS status to "connected" so the wait loop exits without
-        // ever touching the real network.
+        // overload's delegation to the Duration overload. We close the
+        // client first so SharedWebSocket.start() early-returns instead
+        // of spawning a connect thread that would race our pre-flip and
+        // overwrite the status back to "connecting". Then we set status
+        // to "connected" and call waitUntilReady; the loop exits on the
+        // first check without touching the real network.
         try (SmplClient client = SmplClient.builder()
                 .apiKey("test-key")
                 .environment("test")
                 .service("test-service")
                 .disableTelemetry(true)
                 .build()) {
+            client.close();
             client.sharedWsForTesting().setConnectionStatus("connected");
             client.waitUntilReady();
             client.waitUntilReady(Duration.ofSeconds(1));
