@@ -7,11 +7,7 @@ on:
   workflow_dispatch:
     inputs:
       manual_version:
-        description: >-
-          Override version (e.g. "3.0.0"). Bypasses semantic-release: tags
-          v${manual_version} against the dispatched ref and publishes to
-          Maven Central. Leave empty for the normal semantic-release flow.
-          Use only for one-off corrections (e.g. cross-SDK version alignment).
+        description: "Force version"
         required: false
         default: ""
 
