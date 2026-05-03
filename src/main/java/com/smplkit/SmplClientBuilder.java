@@ -154,7 +154,7 @@ public final class SmplClientBuilder {
      * </ol>
      *
      * @return the configured client
-     * @throws com.smplkit.errors.SmplException if environment, service, or API key cannot be resolved
+     * @throws com.smplkit.errors.SmplError if environment, service, or API key cannot be resolved
      */
     public SmplClient build() {
         ConfigResolver.ResolvedConfig config = ConfigResolver.resolve(

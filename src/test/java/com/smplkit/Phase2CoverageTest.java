@@ -335,7 +335,7 @@ class Phase2CoverageTest {
         when(mockAdapter.name()).thenReturn("test");
         when(mockAdapter.discover()).thenReturn(List.of(new DiscoveredLogger("com.acme.svc", "INFO")));
         loggingClient.registerAdapter(mockAdapter);
-        loggingClient.start();
+        loggingClient.install();
 
         // Change level to WARN and trigger via reflection — exercises applyLevelForKey metrics path
         var attrsWarn = new com.smplkit.internal.generated.logging.model.Logger(null, null,

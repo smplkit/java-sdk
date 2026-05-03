@@ -2,8 +2,8 @@ package com.smplkit.management;
 
 import com.smplkit.Context;
 import com.smplkit.LogLevel;
-import com.smplkit.errors.SmplException;
-import com.smplkit.errors.SmplNotFoundException;
+import com.smplkit.errors.SmplError;
+import com.smplkit.errors.NotFoundError;
 import com.smplkit.internal.generated.app.ApiException;
 import com.smplkit.internal.generated.app.api.AccountApi;
 import com.smplkit.internal.generated.app.api.ContextTypesApi;
@@ -520,13 +520,13 @@ class ManagementTest {
     @Test
     void envClient_apiException_mapped() throws Exception {
         when(mockEnvApi.listEnvironments()).thenThrow(new ApiException(404, "not found"));
-        assertThrows(SmplException.class, () -> envClient.list());
+        assertThrows(SmplError.class, () -> envClient.list());
     }
 
     @Test
     void envClient_apiException_zeroCode() throws Exception {
         when(mockEnvApi.listEnvironments()).thenThrow(new ApiException(0, "network error"));
-        assertThrows(SmplException.class, () -> envClient.list());
+        assertThrows(SmplError.class, () -> envClient.list());
     }
 
     @Test
@@ -697,13 +697,13 @@ class ManagementTest {
     @Test
     void ctClient_apiException_mapped() throws Exception {
         when(mockCtApi.listContextTypes()).thenThrow(new ApiException(404, "not found"));
-        assertThrows(SmplException.class, () -> ctClient.list());
+        assertThrows(SmplError.class, () -> ctClient.list());
     }
 
     @Test
     void ctClient_apiException_zeroCode() throws Exception {
         when(mockCtApi.listContextTypes()).thenThrow(new ApiException(0, "network"));
-        assertThrows(SmplException.class, () -> ctClient.list());
+        assertThrows(SmplError.class, () -> ctClient.list());
     }
 
     // -----------------------------------------------------------------------
@@ -777,7 +777,7 @@ class ManagementTest {
     void ctxClient_flush_apiException() throws Exception {
         when(mockCtxApi.bulkRegisterContexts(any())).thenThrow(new ApiException(500, "error"));
         ctxClient.register(new Context("user", "u1", null));
-        assertThrows(SmplException.class, () -> ctxClient.flush());
+        assertThrows(SmplError.class, () -> ctxClient.flush());
     }
 
     @Test
@@ -826,7 +826,7 @@ class ManagementTest {
     void ctxClient_get_nullResponse_throwsNotFound() throws Exception {
         ContextResponse resp = new ContextResponse(); // data = null
         when(mockCtxApi.getContext("user:u1")).thenReturn(resp);
-        assertThrows(SmplNotFoundException.class, () -> ctxClient.get("user:u1"));
+        assertThrows(NotFoundError.class, () -> ctxClient.get("user:u1"));
     }
 
     @Test
@@ -864,19 +864,19 @@ class ManagementTest {
     @Test
     void ctxClient_delete_apiException() throws Exception {
         doThrow(new ApiException(404, "not found")).when(mockCtxApi).deleteContext(any());
-        assertThrows(SmplException.class, () -> ctxClient.delete("user:u1"));
+        assertThrows(SmplError.class, () -> ctxClient.delete("user:u1"));
     }
 
     @Test
     void ctxClient_get_apiException() throws Exception {
         when(mockCtxApi.getContext(any())).thenThrow(new ApiException(404, "not found"));
-        assertThrows(SmplException.class, () -> ctxClient.get("user:u1"));
+        assertThrows(SmplError.class, () -> ctxClient.get("user:u1"));
     }
 
     @Test
     void ctxClient_list_apiException() throws Exception {
         when(mockCtxApi.listContexts(any())).thenThrow(new ApiException(0, "error"));
-        assertThrows(SmplException.class, () -> ctxClient.list("user"));
+        assertThrows(SmplError.class, () -> ctxClient.list("user"));
     }
 
     @Test
@@ -971,7 +971,7 @@ class ManagementTest {
     void registerSources_apiException_throws() throws Exception {
         when(mockLoggersApi.bulkRegisterLoggers(any()))
                 .thenThrow(new com.smplkit.internal.generated.logging.ApiException(500, "error"));
-        assertThrows(SmplException.class,
+        assertThrows(SmplError.class,
                 () -> loggingMgmt.registerSources(List.of(
                         new LoggerSource("x", "s", "e", LogLevel.INFO))));
     }
@@ -983,20 +983,20 @@ class ManagementTest {
     @Test
     void ctClient_get_apiException() throws Exception {
         when(mockCtApi.getContextType(any())).thenThrow(new ApiException(404, "not found"));
-        assertThrows(SmplException.class, () -> ctClient.get("user"));
+        assertThrows(SmplError.class, () -> ctClient.get("user"));
     }
 
     @Test
     void ctClient_delete_apiException() throws Exception {
         doThrow(new ApiException(500, "error")).when(mockCtApi).deleteContextType(any());
-        assertThrows(SmplException.class, () -> ctClient.delete("user"));
+        assertThrows(SmplError.class, () -> ctClient.delete("user"));
     }
 
     @Test
     void ctClient_create_apiException() throws Exception {
         when(mockCtApi.createContextType(any())).thenThrow(new ApiException(400, "bad request"));
         com.smplkit.management.ContextType ct = ctClient.new_("user");
-        assertThrows(SmplException.class, ct::save);
+        assertThrows(SmplError.class, ct::save);
     }
 
     @Test
@@ -1006,7 +1006,7 @@ class ManagementTest {
         com.smplkit.management.ContextType ct = new com.smplkit.management.ContextType(
                 ctClient, "user", "User", Map.of(),
                 java.time.Instant.now(), java.time.Instant.now());
-        assertThrows(SmplException.class, ct::save);
+        assertThrows(SmplError.class, ct::save);
     }
 
     // -----------------------------------------------------------------------
@@ -1029,20 +1029,20 @@ class ManagementTest {
     @Test
     void envClient_get_apiException() throws Exception {
         when(mockEnvApi.getEnvironment(any())).thenThrow(new ApiException(404, "not found"));
-        assertThrows(SmplException.class, () -> envClient.get("prod"));
+        assertThrows(SmplError.class, () -> envClient.get("prod"));
     }
 
     @Test
     void envClient_delete_apiException() throws Exception {
         doThrow(new ApiException(500, "error")).when(mockEnvApi).deleteEnvironment(any());
-        assertThrows(SmplException.class, () -> envClient.delete("prod"));
+        assertThrows(SmplError.class, () -> envClient.delete("prod"));
     }
 
     @Test
     void envClient_create_apiException() throws Exception {
         when(mockEnvApi.createEnvironment(any())).thenThrow(new ApiException(400, "bad request"));
         com.smplkit.management.Environment env = envClient.new_("prod", "Production", null, EnvironmentClassification.STANDARD);
-        assertThrows(SmplException.class, env::save);
+        assertThrows(SmplError.class, env::save);
     }
 
     @Test
@@ -1052,7 +1052,7 @@ class ManagementTest {
         com.smplkit.management.Environment env = new com.smplkit.management.Environment(
                 envClient, "prod", "Production", null, EnvironmentClassification.STANDARD,
                 java.time.Instant.now(), java.time.Instant.now());
-        assertThrows(SmplException.class, env::save);
+        assertThrows(SmplError.class, env::save);
     }
 
     // -----------------------------------------------------------------------
@@ -1112,13 +1112,13 @@ class ManagementTest {
     @Test
     void acctClient_get_apiException() throws Exception {
         when(mockAccountApi.getAccountSettings()).thenThrow(new ApiException(500, "error"));
-        assertThrows(SmplException.class, acctClient::get);
+        assertThrows(SmplError.class, acctClient::get);
     }
 
     @Test
     void acctClient_get_apiException_zeroCode() throws Exception {
         when(mockAccountApi.getAccountSettings()).thenThrow(new ApiException(0, "connection error"));
-        assertThrows(SmplException.class, acctClient::get);
+        assertThrows(SmplError.class, acctClient::get);
     }
 
     @Test
@@ -1167,7 +1167,7 @@ class ManagementTest {
                     buildFakeApiClient(), "http://localhost:" + port, "test-key");
 
             AccountSettings settings = new AccountSettings(testClient, Map.of());
-            assertThrows(com.smplkit.errors.SmplException.class, settings::save);
+            assertThrows(com.smplkit.errors.SmplError.class, settings::save);
         } finally {
             server.stop(0);
         }
@@ -1178,7 +1178,7 @@ class ManagementTest {
         AccountSettingsClient testClient = new AccountSettingsClient(
                 buildFakeApiClient(), "http://localhost:1", "test-key");
         AccountSettings settings = new AccountSettings(testClient, Map.of());
-        assertThrows(com.smplkit.errors.SmplException.class, settings::save);
+        assertThrows(com.smplkit.errors.SmplError.class, settings::save);
     }
 
     // -----------------------------------------------------------------------
@@ -1186,22 +1186,25 @@ class ManagementTest {
     // -----------------------------------------------------------------------
 
     @Test
-    void managementClient_constructsAllSubClients() {
-        ContextRegistrationBuffer buf = new ContextRegistrationBuffer();
-        ManagementClient mc = new ManagementClient(
-                "https://app.smplkit.com", "test-key",
-                Duration.ofSeconds(5), buf);
-        assertNotNull(mc.environments);
-        assertNotNull(mc.contexts);
-        assertNotNull(mc.contextTypes);
-        assertNotNull(mc.accountSettings);
+    void smplManagementClient_exposesAllEightNamespaces() {
+        try (com.smplkit.management.SmplManagementClient mc =
+                     com.smplkit.management.SmplManagementClient.create("test-key")) {
+            assertNotNull(mc.contexts);
+            assertNotNull(mc.contextTypes);
+            assertNotNull(mc.environments);
+            assertNotNull(mc.accountSettings);
+            assertNotNull(mc.config);
+            assertNotNull(mc.flags);
+            assertNotNull(mc.loggers);
+            assertNotNull(mc.logGroups);
+        }
     }
 
     @Test
-    void managementClient_buildAppApiClient_interceptorAddsAuthHeader() throws Exception {
+    void smplManagementClient_buildAppApiClient_interceptorAddsAuthHeader() throws Exception {
         com.smplkit.internal.generated.app.ApiClient apiClient =
-                ManagementClient.buildAppApiClient("https://app.smplkit.com", "my-key", null);
-        // Invoke the interceptor by passing a real HttpRequest.Builder
+                com.smplkit.management.SmplManagementClient.buildAppApiClient(
+                        "https://app.smplkit.com", "my-key", null);
         java.net.http.HttpRequest.Builder builder =
                 java.net.http.HttpRequest.newBuilder().uri(java.net.URI.create("https://app.smplkit.com"));
         apiClient.getRequestInterceptor().accept(builder);

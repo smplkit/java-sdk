@@ -4,7 +4,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import com.smplkit.Context;
 import com.smplkit.Helpers;
-import com.smplkit.errors.SmplException;
+import com.smplkit.errors.SmplError;
 import com.smplkit.internal.generated.app.api.ContextsApi;
 import com.smplkit.internal.generated.app.model.ContextBulkRegister;
 import com.smplkit.internal.generated.flags.ApiException;
@@ -480,17 +480,17 @@ class FlagsClientCoverageTest {
     // --- list() ApiException ---
 
     @Test
-    void list_apiException_throwsSmplException() throws ApiException {
+    void list_apiException_throwsSmplError() throws ApiException {
         when(mockApi.listFlags(isNull(), isNull(), isNull(), isNull()))
                 .thenThrow(new ApiException(500, "Server Error"));
-        assertThrows(SmplException.class, () -> client.management().list());
+        assertThrows(SmplError.class, () -> client.management().list());
     }
 
     @Test
-    void list_apiException_code0_mapsToSmplConnectionException() throws ApiException {
+    void list_apiException_code0_mapsToConnectionError() throws ApiException {
         when(mockApi.listFlags(isNull(), isNull(), isNull(), isNull()))
                 .thenThrow(new ApiException("network failure"));
-        assertThrows(SmplException.class, () -> client.management().list());
+        assertThrows(SmplError.class, () -> client.management().list());
     }
 
     // --- _createFlag with environments ---
@@ -573,11 +573,11 @@ class FlagsClientCoverageTest {
     // --- delete() ApiException path ---
 
     @Test
-    void delete_apiException_throwsSmplException() throws ApiException {
+    void delete_apiException_throwsSmplError() throws ApiException {
         doThrow(new ApiException(500, "Server Error"))
                 .when(mockApi).deleteFlag("my-flag");
 
-        assertThrows(SmplException.class, () -> client.management().delete("my-flag"));
+        assertThrows(SmplError.class, () -> client.management().delete("my-flag"));
     }
 
     // --- _updateFlag with description ---

@@ -65,7 +65,7 @@ public final class LoggingManagement {
      *
      * @param id the logger id
      * @return the Logger
-     * @throws com.smplkit.errors.SmplNotFoundException if no logger with the given id exists
+     * @throws com.smplkit.errors.NotFoundError if no logger with the given id exists
      */
     public Logger get(String id) {
         try {
@@ -146,7 +146,7 @@ public final class LoggingManagement {
      *
      * @param id the group id
      * @return the LogGroup
-     * @throws com.smplkit.errors.SmplNotFoundException if no group with the given id exists
+     * @throws com.smplkit.errors.NotFoundError if no group with the given id exists
      */
     public LogGroup getGroup(String id) {
         try {
@@ -197,7 +197,7 @@ public final class LoggingManagement {
     /**
      * Bulk-register explicit logger sources with the logging service.
      *
-     * <p>Unlike {@link LoggingClient#start()}, which auto-discovers loggers from the current
+     * <p>Unlike {@link LoggingClient#install()}, which auto-discovers loggers from the current
      * process, this method accepts explicit {@code (service, environment)} overrides — useful
      * for sample-data seeding, cross-tenant migration, and test fixtures.</p>
      *

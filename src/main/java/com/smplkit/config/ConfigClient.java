@@ -3,7 +3,7 @@ package com.smplkit.config;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.smplkit.SharedWebSocket;
 import com.smplkit.errors.ApiExceptionHandler;
-import com.smplkit.errors.SmplException;
+import com.smplkit.errors.SmplError;
 import com.smplkit.internal.Debug;
 import com.smplkit.internal.generated.config.ApiException;
 import com.smplkit.internal.generated.config.api.ConfigsApi;
@@ -23,6 +23,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.Consumer;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -43,6 +44,8 @@ public final class ConfigClient {
     private volatile String environment;
     private volatile com.smplkit.MetricsReporter metrics;
     private Map<String, Map<String, Object>> configCache = new HashMap<>();
+    /** Identity-stable proxy cache: same id → same proxy instance across calls. */
+    private final Map<String, LiveConfigProxy> proxyCache = new ConcurrentHashMap<>();
     private final List<ListenerEntry> listeners = Collections.synchronizedList(new ArrayList<>());
     private final ConfigManagement management;
     private volatile SharedWebSocket wsManager;
@@ -168,47 +171,45 @@ public final class ConfigClient {
     // -----------------------------------------------------------------------
 
     /**
-     * Returns resolved config values for the given id as a flat map.
+     * Returns a {@link LiveConfigProxy} for the given config id.
+     *
+     * <p>Mirrors Python rule 10: the proxy is dict-like (read-through against
+     * the resolved-config cache, picks up WebSocket updates automatically),
+     * read-only (mutation paths raise), and identity-stable (calling
+     * {@code get(id)} twice returns the same proxy instance). For typed access,
+     * call {@link LiveConfigProxy#into(Class)}.</p>
      *
      * @param id the config id
-     * @return resolved values map, or an empty map if not found
+     * @return a live proxy reading through the resolved-config cache
      */
-    public Map<String, Object> get(String id) {
+    public LiveConfigProxy get(String id) {
         _connectInternal();
         if (metrics != null) {
             metrics.record("config.resolutions", "resolutions", Map.of("config", id));
         }
-        return new HashMap<>(configCache.getOrDefault(id, Map.of()));
+        return proxyCache.computeIfAbsent(id, k -> new LiveConfigProxy(this, k));
     }
 
     /**
-     * Returns resolved config values mapped to a model type.
+     * Convenience: returns a typed model instance from the live proxy.
      *
-     * <p>Dot-notation keys (e.g. "database.host") are expanded into nested
-     * objects before mapping to the model type.</p>
-     *
-     * @param id    the config id
-     * @param model the target model class
-     * @param <T>   the model type
-     * @return an instance of the model type
+     * <p>Equivalent to {@code get(id).into(model)} — preserved as a one-call
+     * shortcut. Each invocation maps fresh from the current cache, so the
+     * returned model reflects the values at this call. For an always-fresh
+     * typed view, hold onto the proxy and call {@code proxy.into(model)} at
+     * the read site.</p>
      */
     public <T> T get(String id, Class<T> model) {
-        _connectInternal();
-        if (metrics != null) {
-            metrics.record("config.resolutions", "resolutions", Map.of("config", id));
-        }
-        Map<String, Object> values = new HashMap<>(configCache.getOrDefault(id, Map.of()));
-        Map<String, Object> nested = unflatten(values);
-        ObjectMapper mapper = new ObjectMapper();
-        return mapper.convertValue(nested, model);
+        return get(id).into(model);
     }
 
     /**
-     * Returns a {@link LiveConfig} for the given id that always reflects the latest values.
-     *
-     * @param id the config id
-     * @return a LiveConfig returning {@code Map<String, Object>} values
+     * @deprecated mirrors Python rule 10: subscription semantics are now
+     * folded into {@link #get(String)}. Use {@code get(id)} (returns a live
+     * {@link LiveConfigProxy}) and call {@link LiveConfigProxy#onChange} for
+     * listener registration.
      */
+    @Deprecated
     @SuppressWarnings("unchecked")
     public LiveConfig<Map<String, Object>> subscribe(String id) {
         _connectInternal();
@@ -216,14 +217,11 @@ public final class ConfigClient {
     }
 
     /**
-     * Returns a {@link LiveConfig} for the given id that always reflects the latest values,
-     * mapped to the given model type.
-     *
-     * @param id    the config id
-     * @param model the target model class
-     * @param <T>   the model type
-     * @return a LiveConfig returning instances of the model type
+     * @deprecated use {@code get(id).into(model)} — returns a live proxy whose
+     * {@code into(model)} call is equivalent to the previous {@code subscribe(id, model).get()}
+     * with the additional benefit of identity-stability across calls.
      */
+    @Deprecated
     public <T> LiveConfig<T> subscribe(String id, Class<T> model) {
         _connectInternal();
         return new LiveConfig<>(this, id, model);
@@ -643,7 +641,7 @@ public final class ConfigClient {
         return result;
     }
 
-    static SmplException mapException(ApiException e) {
+    static SmplError mapException(ApiException e) {
         if (e.getCode() == 0) {
             return ApiExceptionHandler.mapApiException(e);
         }

@@ -1,7 +1,7 @@
 package com.smplkit.flags;
 
 import com.smplkit.Helpers;
-import com.smplkit.errors.SmplException;
+import com.smplkit.errors.SmplError;
 import com.smplkit.internal.generated.flags.ApiException;
 import com.smplkit.internal.generated.flags.model.FlagListResponse;
 import com.smplkit.internal.generated.flags.model.FlagResponse;

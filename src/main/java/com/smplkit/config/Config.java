@@ -57,8 +57,46 @@ public final class Config {
      */
     public Map<String, Object> getItems() { return items; }
 
-    /** Returns the environments map. */
+    /**
+     * @deprecated use {@link #environments()} for the typed view returning
+     * {@code Map<String, ConfigEnvironment>}.
+     */
+    @Deprecated
     public Map<String, Object> getEnvironments() { return environments; }
+
+    /**
+     * Returns a typed, immutable per-environment view (mirrors Python rule 8).
+     *
+     * <p>{@code config.environments().get("production").values()} returns the
+     * resolved {@code key -> value} map for that environment;
+     * {@code config.environments().get("production").valuesRaw()} returns the
+     * full {@code key -> {value, type, description}} typed map.</p>
+     */
+    @SuppressWarnings("unchecked")
+    public Map<String, ConfigEnvironment> environments() {
+        Map<String, ConfigEnvironment> out = new HashMap<>();
+        for (Map.Entry<String, Object> e : environments.entrySet()) {
+            if (!(e.getValue() instanceof Map)) continue;
+            Map<String, Object> envMap = (Map<String, Object>) e.getValue();
+            Object rawValues = envMap.getOrDefault("values", Map.of());
+            if (!(rawValues instanceof Map)) {
+                out.put(e.getKey(), new ConfigEnvironment(Map.of(), Map.of()));
+                continue;
+            }
+            Map<String, Object> valuesRawMap = (Map<String, Object>) rawValues;
+            Map<String, Object> valuesPlain = new HashMap<>();
+            for (Map.Entry<String, Object> v : valuesRawMap.entrySet()) {
+                Object val = v.getValue();
+                if (val instanceof Map && ((Map<String, Object>) val).containsKey("value")) {
+                    valuesPlain.put(v.getKey(), ((Map<String, Object>) val).get("value"));
+                } else {
+                    valuesPlain.put(v.getKey(), val);
+                }
+            }
+            out.put(e.getKey(), new ConfigEnvironment(valuesPlain, valuesRawMap));
+        }
+        return Map.copyOf(out);
+    }
 
     /** Returns the creation timestamp (may be null). */
     public Instant getCreatedAt() { return createdAt; }
@@ -86,9 +124,108 @@ public final class Config {
         this.environments = environments != null ? new HashMap<>(environments) : new HashMap<>();
     }
 
+    /** Sets the parent config id. */
+    public void setParent(String parent) { this.parent = parent; }
+
+    // --- Per-env unified setters (mirror Python's set_string / set_number / etc.) ---
+
+    /** Sets a string item at the base level. */
+    public void setString(String name, String value) {
+        setString(name, value, null);
+    }
+
+    /** Sets a string item; {@code environment=null} sets the base, otherwise the per-env override. */
+    @SuppressWarnings("unchecked")
+    public void setString(String name, String value, String environment) {
+        if (environment == null) {
+            items.put(name, Map.of("value", value, "type", "STRING"));
+        } else {
+            Map<String, Object> env = (Map<String, Object>)
+                    environments.computeIfAbsent(environment, k -> new HashMap<String, Object>());
+            Map<String, Object> values = (Map<String, Object>)
+                    env.computeIfAbsent("values", k -> new HashMap<String, Object>());
+            values.put(name, Map.of("value", value, "type", "STRING"));
+        }
+    }
+
+    /** Sets a number item at the base level. */
+    public void setNumber(String name, Number value) {
+        setNumber(name, value, null);
+    }
+
+    /** Sets a number item; {@code environment=null} sets the base. */
+    @SuppressWarnings("unchecked")
+    public void setNumber(String name, Number value, String environment) {
+        if (environment == null) {
+            items.put(name, Map.of("value", value, "type", "NUMBER"));
+        } else {
+            Map<String, Object> env = (Map<String, Object>)
+                    environments.computeIfAbsent(environment, k -> new HashMap<String, Object>());
+            Map<String, Object> values = (Map<String, Object>)
+                    env.computeIfAbsent("values", k -> new HashMap<String, Object>());
+            values.put(name, Map.of("value", value, "type", "NUMBER"));
+        }
+    }
+
+    /** Sets a boolean item at the base level. */
+    public void setBoolean(String name, boolean value) {
+        setBoolean(name, value, null);
+    }
+
+    /** Sets a boolean item; {@code environment=null} sets the base. */
+    @SuppressWarnings("unchecked")
+    public void setBoolean(String name, boolean value, String environment) {
+        if (environment == null) {
+            items.put(name, Map.of("value", value, "type", "BOOLEAN"));
+        } else {
+            Map<String, Object> env = (Map<String, Object>)
+                    environments.computeIfAbsent(environment, k -> new HashMap<String, Object>());
+            Map<String, Object> values = (Map<String, Object>)
+                    env.computeIfAbsent("values", k -> new HashMap<String, Object>());
+            values.put(name, Map.of("value", value, "type", "BOOLEAN"));
+        }
+    }
+
+    /** Sets a JSON item at the base level. */
+    public void setJson(String name, Object value) {
+        setJson(name, value, null);
+    }
+
+    /** Sets a JSON item; {@code environment=null} sets the base. */
+    @SuppressWarnings("unchecked")
+    public void setJson(String name, Object value, String environment) {
+        if (environment == null) {
+            items.put(name, Map.of("value", value, "type", "JSON"));
+        } else {
+            Map<String, Object> env = (Map<String, Object>)
+                    environments.computeIfAbsent(environment, k -> new HashMap<String, Object>());
+            Map<String, Object> values = (Map<String, Object>)
+                    env.computeIfAbsent("values", k -> new HashMap<String, Object>());
+            values.put(name, Map.of("value", value, "type", "JSON"));
+        }
+    }
+
+    /** Removes an item; {@code environment=null} removes from base. */
+    @SuppressWarnings("unchecked")
+    public void remove(String name, String environment) {
+        if (environment == null) {
+            items.remove(name);
+        } else {
+            Map<String, Object> env = (Map<String, Object>) environments.get(environment);
+            if (env != null) {
+                Map<String, Object> values = (Map<String, Object>) env.get("values");
+                if (values != null) values.remove(name);
+            }
+        }
+    }
+
+    /** Removes an item from the base. */
+    public void remove(String name) {
+        remove(name, null);
+    }
+
     // --- Package-private setters (used by ConfigClient) ---
 
-    void setParent(String parent) { this.parent = parent; }
     void setCreatedAt(Instant createdAt) { this.createdAt = createdAt; }
     void setUpdatedAt(Instant updatedAt) { this.updatedAt = updatedAt; }
     void setClient(ConfigClient client) { this.client = client; }
@@ -137,6 +274,22 @@ public final class Config {
             Config updated = client._updateConfig(this);
             _apply(updated);
         }
+    }
+
+    /**
+     * Async variant of {@link #save()}, returning a {@link java.util.concurrent.CompletableFuture}.
+     *
+     * <p>Mirrors Python rule 12: customer picks sync vs async at the call site
+     * on the same model. The mutation is scheduled on the JDK common pool;
+     * provide a custom executor via {@link #saveAsync(java.util.concurrent.Executor)}.</p>
+     */
+    public java.util.concurrent.CompletableFuture<Void> saveAsync() {
+        return saveAsync(java.util.concurrent.ForkJoinPool.commonPool());
+    }
+
+    /** Async variant of {@link #save()} with a custom executor. */
+    public java.util.concurrent.CompletableFuture<Void> saveAsync(java.util.concurrent.Executor executor) {
+        return java.util.concurrent.CompletableFuture.runAsync(this::save, executor);
     }
 
     /**

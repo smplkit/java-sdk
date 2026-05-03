@@ -49,7 +49,7 @@ class AutoLoadTest {
     @Test
     void autoLoad_findsJul() throws ApiException {
         stubEmptyResponses();
-        client.start();
+        client.install();
 
         List<LoggingAdapter> adapters = client.getAdapters();
         assertTrue(adapters.stream().anyMatch(a -> a.name().equals("jul")),
@@ -59,7 +59,7 @@ class AutoLoadTest {
     @Test
     void autoLoad_findsLogback() throws ApiException {
         stubEmptyResponses();
-        client.start();
+        client.install();
 
         List<LoggingAdapter> adapters = client.getAdapters();
         assertTrue(adapters.stream().anyMatch(a -> a.name().equals("slf4j-logback")),
@@ -69,7 +69,7 @@ class AutoLoadTest {
     @Test
     void autoLoad_findsLog4j2() throws ApiException {
         stubEmptyResponses();
-        client.start();
+        client.install();
 
         List<LoggingAdapter> adapters = client.getAdapters();
         assertTrue(adapters.stream().anyMatch(a -> a.name().equals("log4j2")),
@@ -85,7 +85,7 @@ class AutoLoadTest {
         when(mockAdapter.discover()).thenReturn(List.of());
 
         client.registerAdapter(mockAdapter);
-        client.start();
+        client.install();
 
         List<LoggingAdapter> adapters = client.getAdapters();
         assertEquals(1, adapters.size());
@@ -95,7 +95,7 @@ class AutoLoadTest {
     @Test
     void registerAdapter_afterStartThrows() throws ApiException {
         stubEmptyResponses();
-        client.start();
+        client.install();
 
         LoggingAdapter mockAdapter = mock(LoggingAdapter.class);
         assertThrows(IllegalStateException.class, () -> client.registerAdapter(mockAdapter));
@@ -119,7 +119,7 @@ class AutoLoadTest {
 
         client.registerAdapter(adapter1);
         client.registerAdapter(adapter2);
-        client.start();
+        client.install();
 
         // Both should have discover() called
         verify(adapter1).discover();
@@ -144,12 +144,12 @@ class AutoLoadTest {
 
         client.registerAdapter(adapter1);
         client.registerAdapter(adapter2);
-        client.start();
+        client.install();
         client.close();
 
         verify(adapter1).uninstallHook();
         verify(adapter2).uninstallHook();
-        assertFalse(client.isStarted());
+        assertFalse(client.isInstalled());
     }
 
     @Test
@@ -168,11 +168,11 @@ class AutoLoadTest {
 
         client.registerAdapter(failAdapter);
         client.registerAdapter(goodAdapter);
-        client.start();
+        client.install();
 
         // Good adapter should still be called
         verify(goodAdapter).discover();
-        assertTrue(client.isStarted());
+        assertTrue(client.isInstalled());
     }
 
     @Test
@@ -211,7 +211,7 @@ class AutoLoadTest {
 
         client.registerAdapter(failAdapter);
         client.registerAdapter(goodAdapter);
-        client.start();
+        client.install();
 
         // Good adapter should still receive applyLevel
         verify(goodAdapter).applyLevel("com.acme.multi", "DEBUG");
@@ -232,11 +232,11 @@ class AutoLoadTest {
 
         client.registerAdapter(failAdapter);
         client.registerAdapter(goodAdapter);
-        client.start();
+        client.install();
 
         // Good adapter should still have installHook called
         verify(goodAdapter).installHook(any());
-        assertTrue(client.isStarted());
+        assertTrue(client.isInstalled());
     }
 
     @Test
@@ -254,13 +254,13 @@ class AutoLoadTest {
 
         client.registerAdapter(failAdapter);
         client.registerAdapter(goodAdapter);
-        client.start();
+        client.install();
 
         // close should not throw even if uninstallHook fails
         client.close();
 
         verify(failAdapter).uninstallHook();
         verify(goodAdapter).uninstallHook();
-        assertFalse(client.isStarted());
+        assertFalse(client.isInstalled());
     }
 }

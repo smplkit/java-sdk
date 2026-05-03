@@ -326,7 +326,7 @@ class TelemetryIntegrationTest {
             @Override public void uninstallHook() {}
         });
 
-        logging.start();
+        logging.install();
 
         reporter.flush();
 
@@ -384,7 +384,7 @@ class TelemetryIntegrationTest {
             @Override public void uninstallHook() {}
         });
 
-        logging.start();
+        logging.install();
 
         reporter.flush();
 

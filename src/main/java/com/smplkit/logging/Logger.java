@@ -50,9 +50,42 @@ public final class Logger {
     public String getGroup() { return group; }
     public boolean isManaged() { return managed; }
     public List<Map<String, Object>> getSources() { return sources; }
+
+    /**
+     * @deprecated use {@link #environments()} for the typed view. The raw-Map
+     * accessor is kept for one cycle for compatibility and will be removed in
+     * a follow-up.
+     */
+    @Deprecated
     public Map<String, Object> getEnvironments() { return environments; }
     public Instant getCreatedAt() { return createdAt; }
     public Instant getUpdatedAt() { return updatedAt; }
+
+    // --- Typed accessor (mirror Python rule 8) ---
+
+    /**
+     * Returns a typed, immutable per-environment view.
+     *
+     * <p>{@code logger.environments().get("production").level()} returns a
+     * typed {@link com.smplkit.LogLevel} (or null), not a raw string.
+     * Mirrors Python's {@code logger.environments["production"].level}.</p>
+     */
+    @SuppressWarnings("unchecked")
+    public Map<String, LoggerEnvironment> environments() {
+        Map<String, LoggerEnvironment> out = new HashMap<>();
+        for (Map.Entry<String, Object> e : environments.entrySet()) {
+            if (!(e.getValue() instanceof Map)) continue;
+            Map<String, Object> envMap = (Map<String, Object>) e.getValue();
+            Object levelStr = envMap.get("level");
+            com.smplkit.LogLevel level = null;
+            if (levelStr instanceof String s) {
+                try { level = com.smplkit.LogLevel.valueOf(s); }
+                catch (IllegalArgumentException ignored) { /* unknown level; leave null */ }
+            }
+            out.put(e.getKey(), new LoggerEnvironment(level));
+        }
+        return Map.copyOf(out);
+    }
 
     // --- Public setters for mutable fields ---
 
@@ -63,22 +96,63 @@ public final class Logger {
         this.environments = environments != null ? new HashMap<>(environments) : new HashMap<>();
     }
 
-    // --- Level convenience methods ---
+    // --- Level convenience methods (per-env unified, mirrors Python rule 7) ---
 
     /** Set the base log level. */
-    public void setLevel(LogLevel level) { this.level = level.getValue(); }
-
-    /** Remove the base log level (inherit from group/ancestry). */
-    public void clearLevel() { this.level = null; }
-
-    /** Set the log level for a specific environment. */
-    public void setEnvironmentLevel(String env, LogLevel level) {
-        this.environments.put(env, Map.of("level", level.getValue()));
+    public void setLevel(LogLevel level) {
+        setLevel(level, null);
     }
 
-    /** Remove the log level override for a specific environment. */
+    /**
+     * Set the log level. {@code environment=null} sets the base level; otherwise
+     * sets the per-environment override.
+     *
+     * <p>Mirrors Python's {@code logger.set_level(level, environment=None)}.</p>
+     */
+    public void setLevel(LogLevel level, String environment) {
+        if (environment == null) {
+            this.level = level != null ? level.getValue() : null;
+        } else {
+            this.environments.put(environment,
+                    Map.of("level", level != null ? level.getValue() : null));
+        }
+    }
+
+    /** Remove the base log level (inherit from group/ancestry). */
+    public void clearLevel() {
+        clearLevel(null);
+    }
+
+    /**
+     * Clear a log level. {@code environment=null} clears the base level; otherwise
+     * clears the per-environment override only.
+     *
+     * <p>Mirrors Python's {@code logger.clear_level(environment=None)}.</p>
+     */
+    public void clearLevel(String environment) {
+        if (environment == null) {
+            this.level = null;
+        } else {
+            this.environments.remove(environment);
+        }
+    }
+
+    /**
+     * @deprecated use {@link #setLevel(LogLevel, String)} instead. Retained
+     * for compatibility; will be removed once the per-env unification rolls
+     * out across the SDK.
+     */
+    @Deprecated
+    public void setEnvironmentLevel(String env, LogLevel level) {
+        setLevel(level, env);
+    }
+
+    /**
+     * @deprecated use {@link #clearLevel(String)} instead.
+     */
+    @Deprecated
     public void clearEnvironmentLevel(String env) {
-        this.environments.remove(env);
+        clearLevel(env);
     }
 
     /** Remove all environment-level overrides. */
@@ -98,6 +172,16 @@ public final class Logger {
         if (client == null) throw new IllegalStateException("Logger not bound to a client");
         Logger saved = client._saveLogger(this);
         _apply(saved);
+    }
+
+    /** Async variant of {@link #save()} (rule 12). */
+    public java.util.concurrent.CompletableFuture<Void> saveAsync() {
+        return saveAsync(java.util.concurrent.ForkJoinPool.commonPool());
+    }
+
+    /** Async variant of {@link #save()} with a custom executor. */
+    public java.util.concurrent.CompletableFuture<Void> saveAsync(java.util.concurrent.Executor executor) {
+        return java.util.concurrent.CompletableFuture.runAsync(this::save, executor);
     }
 
     // --- Package-private setters (used by LoggingClient) ---

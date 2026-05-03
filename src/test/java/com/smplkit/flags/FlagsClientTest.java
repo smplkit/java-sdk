@@ -4,8 +4,8 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import com.smplkit.Context;
 import com.smplkit.SharedWebSocket;
-import com.smplkit.errors.SmplNotFoundException;
-import com.smplkit.errors.SmplValidationException;
+import com.smplkit.errors.NotFoundError;
+import com.smplkit.errors.ValidationError;
 import com.smplkit.management.ContextRegistrationBuffer;
 import com.smplkit.internal.generated.app.api.ContextsApi;
 import com.smplkit.internal.generated.flags.ApiException;
@@ -120,19 +120,19 @@ class FlagsClientTest {
     }
 
     @Test
-    void get_notFound_throwsSmplNotFoundException() throws ApiException {
+    void get_notFound_throwsNotFoundError() throws ApiException {
         when(mockApi.getFlag(eq("unknown")))
                 .thenThrow(new ApiException(404, "Not Found"));
 
-        assertThrows(SmplNotFoundException.class, () -> client.management().get("unknown"));
+        assertThrows(NotFoundError.class, () -> client.management().get("unknown"));
     }
 
     @Test
-    void get_apiError_throwsSmplException() throws ApiException {
+    void get_apiError_throwsSmplError() throws ApiException {
         when(mockApi.getFlag(eq("my-flag")))
                 .thenThrow(new ApiException(404, "Not Found"));
 
-        assertThrows(SmplNotFoundException.class, () -> client.management().get("my-flag"));
+        assertThrows(NotFoundError.class, () -> client.management().get("my-flag"));
     }
 
     // --- list() returns all flags ---
@@ -250,26 +250,26 @@ class FlagsClientTest {
     // --- Error mapping ---
 
     @Test
-    void apiException404_throwsSmplNotFoundException() throws ApiException {
+    void apiException404_throwsNotFoundError() throws ApiException {
         when(mockApi.getFlag(anyString()))
                 .thenThrow(new ApiException(404, "Not Found"));
-        assertThrows(SmplNotFoundException.class, () -> client.management().get("my-flag"));
+        assertThrows(NotFoundError.class, () -> client.management().get("my-flag"));
     }
 
     @Test
-    void apiException409_throwsSmplConflictException() throws ApiException {
+    void apiException409_throwsConflictError() throws ApiException {
         when(mockApi.createFlag(any(FlagResponse.class)))
                 .thenThrow(new ApiException(409, "Conflict"));
         Flag<Boolean> flag = client.management().newBooleanFlag("dup", false);
-        assertThrows(com.smplkit.errors.SmplConflictException.class, flag::save);
+        assertThrows(com.smplkit.errors.ConflictError.class, flag::save);
     }
 
     @Test
-    void apiException422_throwsSmplValidationException() throws ApiException {
+    void apiException422_throwsValidationError() throws ApiException {
         when(mockApi.createFlag(any(FlagResponse.class)))
                 .thenThrow(new ApiException(422, "Validation Error"));
         Flag<Boolean> flag = client.management().newBooleanFlag("bad-flag", false);
-        assertThrows(SmplValidationException.class, flag::save);
+        assertThrows(ValidationError.class, flag::save);
     }
 
     // --- handleGet with lazy init and JSON logic ---

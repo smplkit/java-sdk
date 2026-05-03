@@ -4,10 +4,10 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import com.smplkit.Context;
 import com.smplkit.Rule;
-import com.smplkit.errors.SmplConflictException;
-import com.smplkit.errors.SmplException;
-import com.smplkit.errors.SmplNotFoundException;
-import com.smplkit.errors.SmplValidationException;
+import com.smplkit.errors.ConflictError;
+import com.smplkit.errors.SmplError;
+import com.smplkit.errors.NotFoundError;
+import com.smplkit.errors.ValidationError;
 import com.smplkit.internal.generated.app.api.ContextsApi;
 import com.smplkit.internal.generated.flags.ApiException;
 import com.smplkit.internal.generated.flags.api.FlagsApi;
@@ -357,39 +357,39 @@ class FlagsClientFullTest {
     // --- Error mapping ---
 
     @Test
-    void apiException409_throwsSmplConflictException() throws ApiException {
+    void apiException409_throwsConflictError() throws ApiException {
         when(mockApi.createFlag(any(FlagResponse.class)))
                 .thenThrow(new ApiException(409, "Conflict"));
 
         Flag<Boolean> flag = client.management().newBooleanFlag("dup-key", false);
-        assertThrows(SmplConflictException.class, flag::save);
+        assertThrows(ConflictError.class, flag::save);
     }
 
     @Test
-    void apiExceptionGeneric_throwsSmplException() throws ApiException {
+    void apiExceptionGeneric_throwsSmplError() throws ApiException {
         when(mockApi.createFlag(any(FlagResponse.class)))
                 .thenThrow(new ApiException(500, "Server Error"));
 
         Flag<Boolean> flag = client.management().newBooleanFlag("my-flag", false);
-        assertThrows(SmplException.class, flag::save);
+        assertThrows(SmplError.class, flag::save);
     }
 
     @Test
-    void apiException422_onUpdate_throwsSmplValidationException() throws ApiException {
+    void apiException422_onUpdate_throwsValidationError() throws ApiException {
         when(mockApi.updateFlag(any(), any(FlagResponse.class)))
                 .thenThrow(new ApiException(422, "Validation Error"));
 
         Flag<Boolean> flag = client.management().newBooleanFlag("my-flag", false);
         flag.setCreatedAt(java.time.Instant.parse("2024-06-01T12:00:00Z"));
-        assertThrows(SmplValidationException.class, flag::save);
+        assertThrows(ValidationError.class, flag::save);
     }
 
     @Test
-    void delete_notFound_throwsSmplNotFoundException() throws ApiException {
+    void delete_notFound_throwsNotFoundError() throws ApiException {
         doThrow(new ApiException(404, "Not Found"))
                 .when(mockApi).deleteFlag("my-flag");
 
-        assertThrows(SmplNotFoundException.class, () -> client.management().delete("my-flag"));
+        assertThrows(NotFoundError.class, () -> client.management().delete("my-flag"));
     }
 
     // --- Stats ---

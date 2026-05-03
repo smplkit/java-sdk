@@ -1,6 +1,6 @@
 package com.smplkit;
 
-import com.smplkit.errors.SmplException;
+import com.smplkit.errors.SmplError;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
 
@@ -138,7 +138,7 @@ class ConfigResolverTest {
                 "environment = production\n" +
                 "service = svc\n");
 
-        SmplException ex = assertThrows(SmplException.class, () -> resolve(
+        SmplError ex = assertThrows(SmplError.class, () -> resolve(
                 "staging", null, null, null, null, null, null, null,
                 null, Map.of(), configFile));
         assertTrue(ex.getMessage().contains("Profile [staging] not found"));
@@ -338,7 +338,7 @@ class ConfigResolverTest {
                 "api_key = sk_file\n" +
                 "service = svc\n");
 
-        SmplException ex = assertThrows(SmplException.class, () -> resolve(
+        SmplError ex = assertThrows(SmplError.class, () -> resolve(
                 null, null, null, null, null, null, null, null,
                 null, Map.of(), configFile));
         assertTrue(ex.getMessage().contains("No environment provided"));
@@ -354,7 +354,7 @@ class ConfigResolverTest {
                 "api_key = sk_file\n" +
                 "environment = env\n");
 
-        SmplException ex = assertThrows(SmplException.class, () -> resolve(
+        SmplError ex = assertThrows(SmplError.class, () -> resolve(
                 null, null, null, null, null, null, null, null,
                 null, Map.of(), configFile));
         assertTrue(ex.getMessage().contains("No service provided"));
@@ -369,7 +369,7 @@ class ConfigResolverTest {
                 "environment = env\n" +
                 "service = svc\n");
 
-        SmplException ex = assertThrows(SmplException.class, () -> resolve(
+        SmplError ex = assertThrows(SmplError.class, () -> resolve(
                 null, null, null, null, null, null, null, null,
                 null, Map.of(), configFile));
         assertTrue(ex.getMessage().contains("No API key provided"));
@@ -383,7 +383,7 @@ class ConfigResolverTest {
                 "[staging]\n" +
                 "api_key = sk_staging\n");
 
-        SmplException ex = assertThrows(SmplException.class, () -> resolve(
+        SmplError ex = assertThrows(SmplError.class, () -> resolve(
                 "staging", null, null, null, null, null, null, null,
                 null, Map.of(), configFile));
         assertTrue(ex.getMessage().contains("[staging]"));
@@ -392,7 +392,7 @@ class ConfigResolverTest {
     @Test
     void throwsWhenNoKeyAnywhere(@TempDir Path tempDir) {
         Path configFile = tempDir.resolve(".smplkit"); // does not exist
-        SmplException ex = assertThrows(SmplException.class, () -> resolve(
+        SmplError ex = assertThrows(SmplError.class, () -> resolve(
                 null, null, null, null, "env", "svc", null, null,
                 null, Map.of(), configFile));
         assertTrue(ex.getMessage().contains("No API key provided"));
@@ -426,7 +426,7 @@ class ConfigResolverTest {
 
     @Test
     void parseBoolInvalidThrows() {
-        SmplException ex = assertThrows(SmplException.class,
+        SmplError ex = assertThrows(SmplError.class,
                 () -> ConfigResolver.parseBool("maybe", "debug"));
         assertTrue(ex.getMessage().contains("Invalid boolean value"));
         assertTrue(ex.getMessage().contains("maybe"));
@@ -483,7 +483,7 @@ class ConfigResolverTest {
                 "service = svc\n" +
                 "debug = maybe\n");
 
-        assertThrows(SmplException.class, () -> resolve(
+        assertThrows(SmplError.class, () -> resolve(
                 null, null, null, null, null, null, null, null,
                 null, Map.of(), configFile));
     }
@@ -580,7 +580,7 @@ class ConfigResolverTest {
                 "service = svc\n");
 
         // api_key is empty in file, so should fail since no other source
-        SmplException ex = assertThrows(SmplException.class, () -> resolve(
+        SmplError ex = assertThrows(SmplError.class, () -> resolve(
                 null, null, null, null, null, null, null, null,
                 null, Map.of(), configFile));
         assertTrue(ex.getMessage().contains("No API key provided"));

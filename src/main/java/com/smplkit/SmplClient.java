@@ -4,7 +4,7 @@ import com.smplkit.config.ConfigClient;
 import com.smplkit.flags.FlagsClient;
 import com.smplkit.logging.LoggingClient;
 import com.smplkit.management.ContextRegistrationBuffer;
-import com.smplkit.management.ManagementClient;
+import com.smplkit.management.SmplManagementClient;
 import com.smplkit.internal.generated.app.api.ContextsApi;
 import com.smplkit.internal.generated.app.model.ContextBulkItem;
 import com.smplkit.internal.generated.app.model.ContextBulkRegister;
@@ -56,7 +56,7 @@ public final class SmplClient implements AutoCloseable {
     private ConfigClient config;
     private FlagsClient flags;
     private LoggingClient logging;
-    private ManagementClient management;
+    private SmplManagementClient manage;
     private final SharedWebSocket sharedWs;
     private final HttpClient httpClient;
     private final ContextsApi contextsApi;
@@ -92,6 +92,11 @@ public final class SmplClient implements AutoCloseable {
                 : new MetricsReporter(httpClient, appBaseUrl, apiKey, environment, service);
         this.sharedWs = new SharedWebSocket(httpClient, appBaseUrl, apiKey, metrics);
         this.contextsApi = buildContextsApi(appBaseUrl, apiKey, timeout);
+
+        // SmplClient owns its own runtime sub-clients with their own generated
+        // ApiClients. The management client is constructed as an *independent peer*
+        // sharing only the JDK HttpClient and ContextRegistrationBuffer through
+        // a package-private factory — neither owns the other's transports.
         ContextRegistrationBuffer contextBuffer = new ContextRegistrationBuffer();
         this.config = buildConfigClient(httpClient, apiKey, timeout, configBaseUrl);
         this.config.setEnvironment(environment);
@@ -105,7 +110,12 @@ public final class SmplClient implements AutoCloseable {
                 loggingBaseUrl);
         this.logging.setMetrics(metrics);
         this.logging.setSharedWs(this.sharedWs);
-        this.management = new ManagementClient(appBaseUrl, apiKey, timeout, contextBuffer);
+
+        this.manage = SmplManagementClient.sharedWith(
+                new ConfigResolver.ResolvedManagementConfig(
+                        apiKey, resolvedConfig.baseDomain, resolvedConfig.scheme, resolvedConfig.debug),
+                timeout, httpClient, contextBuffer);
+
         String maskedKey = apiKey.length() > 10 ? apiKey.substring(0, 10) + "..." : apiKey + "...";
         Debug.log("lifecycle", "SmplClient created (api_key=" + maskedKey + ", environment=" + environment + ", service=" + service + ")");
     }
@@ -121,18 +131,22 @@ public final class SmplClient implements AutoCloseable {
         this.httpClient = httpClient;
         this.metrics = null;
         String appBaseUrl = serviceUrl(DEFAULT_SCHEME, "app", DEFAULT_BASE_DOMAIN);
+        String configBaseUrl = serviceUrl(DEFAULT_SCHEME, "config", DEFAULT_BASE_DOMAIN);
+        String flagsBaseUrl = serviceUrl(DEFAULT_SCHEME, "flags", DEFAULT_BASE_DOMAIN);
+        String loggingBaseUrl = serviceUrl(DEFAULT_SCHEME, "logging", DEFAULT_BASE_DOMAIN);
         this.sharedWs = new SharedWebSocket(httpClient, appBaseUrl, apiKey);
         this.contextsApi = buildContextsApi(appBaseUrl, apiKey, timeout);
         ContextRegistrationBuffer contextBuffer = new ContextRegistrationBuffer();
-        this.config = buildConfigClient(httpClient, apiKey, timeout,
-                serviceUrl(DEFAULT_SCHEME, "config", DEFAULT_BASE_DOMAIN));
+        this.config = buildConfigClient(httpClient, apiKey, timeout, configBaseUrl);
         this.config.setEnvironment(environment);
         this.flags = buildFlagsClient(httpClient, apiKey, timeout, sharedWs, environment, service,
-                serviceUrl(DEFAULT_SCHEME, "flags", DEFAULT_BASE_DOMAIN), appBaseUrl);
+                flagsBaseUrl, appBaseUrl);
         this.flags.setContextBuffer(contextBuffer);
         this.logging = buildLoggingClient(httpClient, apiKey, timeout, environment, service,
-                serviceUrl(DEFAULT_SCHEME, "logging", DEFAULT_BASE_DOMAIN));
-        this.management = new ManagementClient(appBaseUrl, apiKey, timeout, contextBuffer);
+                loggingBaseUrl);
+        this.manage = SmplManagementClient.sharedWith(
+                new ConfigResolver.ResolvedManagementConfig(apiKey, DEFAULT_BASE_DOMAIN, DEFAULT_SCHEME, false),
+                timeout, httpClient, contextBuffer);
     }
 
     /**
@@ -147,6 +161,7 @@ public final class SmplClient implements AutoCloseable {
         this.httpClient = httpClient;
         this.metrics = null;
         String appBaseUrl = serviceUrl(DEFAULT_SCHEME, "app", DEFAULT_BASE_DOMAIN);
+        String loggingBaseUrl = serviceUrl(DEFAULT_SCHEME, "logging", DEFAULT_BASE_DOMAIN);
         this.sharedWs = new SharedWebSocket(httpClient, appBaseUrl, apiKey);
         this.contextsApi = buildContextsApi(appBaseUrl, apiKey, timeout);
         ContextRegistrationBuffer contextBuffer = new ContextRegistrationBuffer();
@@ -156,8 +171,10 @@ public final class SmplClient implements AutoCloseable {
         this.flags.setEnvironment(environment);
         this.flags.setContextBuffer(contextBuffer);
         this.logging = buildLoggingClient(httpClient, apiKey, timeout, environment, service,
-                serviceUrl(DEFAULT_SCHEME, "logging", DEFAULT_BASE_DOMAIN));
-        this.management = new ManagementClient(appBaseUrl, apiKey, timeout, contextBuffer);
+                loggingBaseUrl);
+        this.manage = SmplManagementClient.sharedWith(
+                new ConfigResolver.ResolvedManagementConfig(apiKey, DEFAULT_BASE_DOMAIN, DEFAULT_SCHEME, false),
+                timeout, httpClient, contextBuffer);
     }
 
     /**
@@ -172,6 +189,7 @@ public final class SmplClient implements AutoCloseable {
         this.httpClient = httpClient;
         this.metrics = null;
         String appBaseUrl = serviceUrl(DEFAULT_SCHEME, "app", DEFAULT_BASE_DOMAIN);
+        String loggingBaseUrl = serviceUrl(DEFAULT_SCHEME, "logging", DEFAULT_BASE_DOMAIN);
         this.sharedWs = new SharedWebSocket(httpClient, appBaseUrl, apiKey);
         this.contextsApi = contextsApi;
         ContextRegistrationBuffer contextBuffer = new ContextRegistrationBuffer();
@@ -181,8 +199,10 @@ public final class SmplClient implements AutoCloseable {
         this.flags.setEnvironment(environment);
         this.flags.setContextBuffer(contextBuffer);
         this.logging = buildLoggingClient(httpClient, apiKey, timeout, environment, service,
-                serviceUrl(DEFAULT_SCHEME, "logging", DEFAULT_BASE_DOMAIN));
-        this.management = new ManagementClient(appBaseUrl, apiKey, timeout, contextBuffer);
+                loggingBaseUrl);
+        this.manage = SmplManagementClient.sharedWith(
+                new ConfigResolver.ResolvedManagementConfig(apiKey, DEFAULT_BASE_DOMAIN, DEFAULT_SCHEME, false),
+                timeout, httpClient, contextBuffer);
 
         // Synchronous registration for testability (contextsApi is injected)
         registerServiceContext();
@@ -291,9 +311,16 @@ public final class SmplClient implements AutoCloseable {
         return logging;
     }
 
-    /** Returns the management client (environments, contexts, context types, account settings). */
-    public ManagementClient management() {
-        return management;
+    /**
+     * Returns the management client.
+     *
+     * <p>Mirrors Python's {@code client.manage}: a strict-CRUD entry point with
+     * the eight namespaces (contexts, context_types, environments,
+     * account_settings, config, flags, loggers, log_groups). Construction has
+     * zero side effects.</p>
+     */
+    public SmplManagementClient manage() {
+        return manage;
     }
 
     private void ensureServiceContextRegistered() {
@@ -312,6 +339,36 @@ public final class SmplClient implements AutoCloseable {
     /** Returns the configured service name. */
     public String service() {
         return service;
+    }
+
+    /** Per-thread evaluation context, mirrors Python's contextvars-backed implementation. */
+    private static final ThreadLocal<java.util.List<Context>> CURRENT_CONTEXT =
+            ThreadLocal.withInitial(java.util.Collections::emptyList);
+
+    /**
+     * Stash {@code contexts} as the current thread's evaluation context.
+     *
+     * <p>Mirrors Python's {@code client.set_context([...])}: typical use is from
+     * middleware — set the context once at request entry and every subsequent
+     * {@code flag.get()} on the same thread automatically picks it up. Each
+     * unique {@code (type, key)} is also queued for bulk registration.</p>
+     *
+     * <p>Note: pure-Python uses {@code contextvars} for per-task isolation;
+     * Java uses {@code ThreadLocal} since {@code CompletableFuture}-based
+     * workflows reuse threads. For per-async-task isolation you may need an
+     * explicit context wrapper — out of scope for the initial mirror.</p>
+     */
+    public void setContext(java.util.List<Context> contexts) {
+        if (contexts != null && !contexts.isEmpty()) {
+            manage.contexts.register(contexts);
+        }
+        CURRENT_CONTEXT.set(contexts != null ? contexts : java.util.Collections.emptyList());
+        flags.setContextProvider(CURRENT_CONTEXT::get);
+    }
+
+    /** Clears the current thread's evaluation context. */
+    public void clearContext() {
+        CURRENT_CONTEXT.remove();
     }
 
     /**

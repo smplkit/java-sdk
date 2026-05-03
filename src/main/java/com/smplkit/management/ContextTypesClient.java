@@ -148,7 +148,7 @@ public final class ContextTypesClient {
         return new com.smplkit.management.ContextType(this, id, name, attributes, createdAt, updatedAt);
     }
 
-    private static com.smplkit.errors.SmplException mapException(ApiException e) {
+    private static com.smplkit.errors.SmplError mapException(ApiException e) {
         if (e.getCode() == 0) return ApiExceptionHandler.mapApiException(e);
         return ApiExceptionHandler.mapApiException(e.getCode(), e.getResponseBody());
     }
