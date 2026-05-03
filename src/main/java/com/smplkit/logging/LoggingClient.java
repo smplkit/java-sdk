@@ -42,7 +42,7 @@ import java.util.logging.Level;
  * Client for the smplkit Logging service.
  *
  * <p>Provides logger and group management via {@link #management()} and runtime
- * level control ({@link #start()}, {@link #onChange}).</p>
+ * level control ({@link #install()}, {@link #onChange}).</p>
  *
  * <p>Supports JUL, Logback, and Log4j2 via pluggable {@link LoggingAdapter} instances.</p>
  */
