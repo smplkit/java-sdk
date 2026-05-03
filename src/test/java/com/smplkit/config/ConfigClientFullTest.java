@@ -260,6 +260,38 @@ class ConfigClientFullTest {
         assertNotNull(wrapped.get("staging"));
     }
 
+    @Test
+    void wrapEnvironments_unwrapsTypedMapShape() {
+        // Per-env setters (setNumber/setString/etc.) store {value, type} for
+        // symmetry with base items. The server override expects the scalar,
+        // not the typed wrapper — wrapEnvironments must unwrap.
+        Config cfg = new Config(null, "k", "K");
+        cfg.setNumber("max_retries", 5, "production");
+        cfg.setString("env_label", "prod", "production");
+
+        Map<String, EnvironmentOverride> wrapped =
+                ConfigClient.wrapEnvironments(cfg.getEnvironments());
+
+        EnvironmentOverride prod = wrapped.get("production");
+        assertNotNull(prod);
+        assertEquals(5, prod.getValues().get("max_retries").getValue());
+        assertEquals("prod", prod.getValues().get("env_label").getValue());
+    }
+
+    @Test
+    void wrapEnvironments_passesThroughPlainScalar() {
+        // If a per-env value is already a plain scalar (no {value, type}
+        // wrapper), pass it through unchanged.
+        Map<String, Object> values = new HashMap<>();
+        values.put("plain", "hello");
+        Map<String, Object> envData = new HashMap<>();
+        envData.put("values", values);
+        Map<String, Object> envs = Map.of("staging", envData);
+
+        Map<String, EnvironmentOverride> wrapped = ConfigClient.wrapEnvironments(envs);
+        assertEquals("hello", wrapped.get("staging").getValues().get("plain").getValue());
+    }
+
     // -----------------------------------------------------------------------
     // Config.getClient() package-private getter
     // -----------------------------------------------------------------------

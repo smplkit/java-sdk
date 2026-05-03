@@ -601,7 +601,16 @@ public final class ConfigClient {
                     Map<String, ConfigItemOverride> wrappedValues = new HashMap<>();
                     for (Map.Entry<String, Object> valEntry : valuesMap.entrySet()) {
                         ConfigItemOverride itemOverride = new ConfigItemOverride();
-                        itemOverride.setValue(valEntry.getValue());
+                        // The per-env setters (setString/setNumber/setBoolean/setJson)
+                        // store {value, type} for symmetry with base items. The server
+                        // override only carries the scalar — unwrap it here, mirroring
+                        // getResolvedItems() / environments() on the base side.
+                        Object raw = valEntry.getValue();
+                        if (raw instanceof Map<?, ?> typed && typed.containsKey("value")) {
+                            itemOverride.setValue(typed.get("value"));
+                        } else {
+                            itemOverride.setValue(raw);
+                        }
                         wrappedValues.put(valEntry.getKey(), itemOverride);
                     }
                     override.setValues(wrappedValues);
