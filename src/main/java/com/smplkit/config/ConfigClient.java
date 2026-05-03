@@ -44,6 +44,12 @@ public final class ConfigClient {
     private volatile String environment;
     private volatile com.smplkit.MetricsReporter metrics;
     private Map<String, Map<String, Object>> configCache = new HashMap<>();
+    /** Raw Config objects keyed by id, kept around so a single-config
+     * change (WS event) can refetch one config and rebuild the resolved
+     * cache for everyone — including descendants that inherit from the
+     * changed config — without a full re-list. Mirrors Python's
+     * {@code _raw_config_cache}. */
+    private Map<String, Config> configStore = new HashMap<>();
     /** Identity-stable proxy cache: same id → same proxy instance across calls. */
     private final Map<String, LiveConfigProxy> proxyCache = new ConcurrentHashMap<>();
     private final List<ListenerEntry> listeners = Collections.synchronizedList(new ArrayList<>());
@@ -311,7 +317,11 @@ public final class ConfigClient {
         String env = this.environment;
         if (env == null) return;
 
-        // Scoped fetch: GET /configs/{key}
+        // Refetch JUST the changed config (single GET — fast), update the
+        // local raw store, then rebuild every config's resolved cache from
+        // the store. This handles the cascade case: any config that has
+        // `configKey` in its parent chain has a stale resolved value.
+        // Mirrors Python's _handle_config_changed -> _rebuild_resolved_cache.
         Config fetched;
         try {
             fetched = management.get(configKey);
@@ -320,35 +330,13 @@ public final class ConfigClient {
             return;
         }
 
-        // Rebuild resolution just for this config
+        Map<String, Config> newStore = new HashMap<>(configStore);
+        newStore.put(configKey, fetched);
+        Map<String, Map<String, Object>> newCache = resolveAllFromStore(newStore, env);
+
         Map<String, Map<String, Object>> oldCache = configCache;
-        Map<String, Map<String, Object>> newCache = new HashMap<>(configCache);
-
-        List<Resolver.ChainEntry> chain = new ArrayList<>();
-        chain.add(toChainEntry(fetched));
-
-        // Walk parent chain using current cache configs
-        Config current = fetched;
-        List<Config> allConfigs = null; // lazy: only load if parent chain needed
-        while (current.getParent() != null) {
-            if (allConfigs == null) {
-                allConfigs = management.list();
-            }
-            String parentId = current.getParent();
-            Config parent = null;
-            for (Config c : allConfigs) {
-                if (parentId.equals(c.getId())) {
-                    parent = c;
-                    break;
-                }
-            }
-            if (parent == null) break;
-            chain.add(toChainEntry(parent));
-            current = parent;
-        }
-
-        newCache.put(configKey, Resolver.resolve(chain, env));
         configCache = newCache;
+        configStore = newStore;
 
         diffAndFire(oldCache, newCache, "websocket");
     }
@@ -420,14 +408,22 @@ public final class ConfigClient {
                 configById.put(cfg.getId(), cfg);
             }
         }
+        // Side-effect: persist the raw store so single-config WS events
+        // can rebuild the resolved cache without a full re-list.
+        configStore = configById;
+        return resolveAllFromStore(configById, env);
+    }
 
+    /** Build the resolved cache from a pre-fetched config store keyed by id. */
+    private Map<String, Map<String, Object>> resolveAllFromStore(
+            Map<String, Config> store, String env) {
         Map<String, Map<String, Object>> newCache = new HashMap<>();
-        for (Config cfg : allConfigs) {
+        for (Config cfg : store.values()) {
             List<Resolver.ChainEntry> chain = new ArrayList<>();
             chain.add(toChainEntry(cfg));
             Config current = cfg;
-            while (current.getParent() != null && configById.containsKey(current.getParent())) {
-                Config parent = configById.get(current.getParent());
+            while (current.getParent() != null && store.containsKey(current.getParent())) {
+                Config parent = store.get(current.getParent());
                 chain.add(toChainEntry(parent));
                 current = parent;
             }
