@@ -30,6 +30,13 @@ public final class ConfigRuntimeShowcase {
                 .environment("production").service("showcase-service").build()) {
             ConfigRuntimeSetup.setup(client.manage());
 
+            // Block until the live-updates WebSocket subscription is registered
+            // server-side. Without this, writes fired immediately afterward can
+            // race the broadcast of their own change events (the SDK isn't in
+            // the subscriber registry yet) and silently miss them. Mirrors
+            // `await client.wait_until_ready()` in the Python showcase.
+            client.waitUntilReady();
+
             // get a config as a plain dict
             LiveConfigProxy userSvcConfigDict = client.config().get("showcase-user-service");
             System.out.println("Total resolved keys: " + userSvcConfigDict.size());

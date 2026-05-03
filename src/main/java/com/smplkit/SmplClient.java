@@ -323,6 +323,54 @@ public final class SmplClient implements AutoCloseable {
         return manage;
     }
 
+    /** Default deadline for {@link #waitUntilReady(Duration)}. */
+    private static final Duration DEFAULT_WAIT_UNTIL_READY = Duration.ofSeconds(10);
+
+    /**
+     * Eagerly opens the live-updates WebSocket and blocks until the server
+     * has accepted the upgrade, validated the API key, and registered the
+     * subscription. After this returns, on-change listeners are guaranteed
+     * to receive every server event from this point forward — including
+     * events triggered by writes the caller fires immediately afterward.
+     *
+     * <p>Without this, code that constructs a SmplClient and immediately
+     * calls a management write (Save / Delete / SetX+Save) can race the
+     * broadcast of the resulting change event and silently miss it: the
+     * SDK has not yet appeared in the server's subscriber registry when
+     * the broadcast runs, so the broadcast goes to zero subscribers.</p>
+     *
+     * <p>Mirrors Python's {@code client.wait_until_ready()} and TypeScript's
+     * {@code client.waitUntilReady()}.</p>
+     *
+     * @throws com.smplkit.errors.TimeoutError If the WebSocket fails to
+     *     connect within the given timeout.
+     * @throws InterruptedException If the calling thread is interrupted.
+     */
+    public void waitUntilReady(Duration timeout) throws InterruptedException {
+        sharedWs.start();
+        long deadlineNanos = System.nanoTime() + timeout.toNanos();
+        while (!"connected".equals(sharedWs.connectionStatus())) {
+            if (System.nanoTime() >= deadlineNanos) {
+                throw new com.smplkit.errors.TimeoutError(
+                        "Live-updates websocket did not connect within " + timeout
+                                + " (status: " + sharedWs.connectionStatus() + ")",
+                        null);
+            }
+            Thread.sleep(50);
+        }
+    }
+
+    /** Equivalent to {@code waitUntilReady(Duration.ofSeconds(10))}. */
+    public void waitUntilReady() throws InterruptedException {
+        waitUntilReady(DEFAULT_WAIT_UNTIL_READY);
+    }
+
+    /** Test-only accessor for the shared WebSocket. Used to flip status
+     * to "connected" without opening a real network connection. */
+    SharedWebSocket sharedWsForTesting() {
+        return sharedWs;
+    }
+
     private void ensureServiceContextRegistered() {
         if (serviceContextRegistered) return;
         serviceContextRegistered = true;

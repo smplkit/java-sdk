@@ -355,4 +355,39 @@ class SmplClientTest {
         assertEquals("smplkit.com", SmplClient.DEFAULT_BASE_DOMAIN);
         assertEquals("https", SmplClient.DEFAULT_SCHEME);
     }
+
+    @Test
+    void waitUntilReadyTimesOutWhenWsUnreachable() {
+        // Point the WS at an unreachable port so it never reaches "connected".
+        // waitUntilReady must throw a TimeoutError instead of blocking forever.
+        try (SmplClient client = SmplClient.builder()
+                .apiKey("test-key")
+                .environment("test")
+                .service("test-service")
+                .baseDomain("127.0.0.1:1")
+                .scheme("http")
+                .disableTelemetry(true)
+                .build()) {
+            assertThrows(com.smplkit.errors.TimeoutError.class,
+                    () -> client.waitUntilReady(Duration.ofMillis(50)));
+        }
+    }
+
+    @Test
+    void waitUntilReadyReturnsImmediatelyWhenAlreadyConnected() throws Exception {
+        // Cover the happy-path return of waitUntilReady AND the no-arg
+        // overload's delegation to the Duration overload. We pre-flip the
+        // shared WS status to "connected" so the wait loop exits without
+        // ever touching the real network.
+        try (SmplClient client = SmplClient.builder()
+                .apiKey("test-key")
+                .environment("test")
+                .service("test-service")
+                .disableTelemetry(true)
+                .build()) {
+            client.sharedWsForTesting().setConnectionStatus("connected");
+            client.waitUntilReady();
+            client.waitUntilReady(Duration.ofSeconds(1));
+        }
+    }
 }
