@@ -88,10 +88,16 @@ public final class EnvironmentsClient {
     }
 
     private EnvironmentResponse buildRequest(com.smplkit.management.Environment env) {
-        // classification is ReadOnly on the server — do not include it in create/update requests.
-        Environment attrs = new Environment(null, null, null);
+        Environment attrs = new Environment();
         attrs.setName(env.getName());
         if (env.getColor() != null) attrs.setColor(env.getColor());
+        // Round-trip classification (get-mutate-put). The server requires
+        // admin only when classification is changing, so non-admin
+        // edits to name/color still work as long as we send the existing
+        // value back.
+        attrs.setClassification(env.getClassification() == EnvironmentClassification.AD_HOC
+                ? Environment.ClassificationEnum.AD_HOC
+                : Environment.ClassificationEnum.STANDARD);
         EnvironmentResource data = new EnvironmentResource()
                 .id(env.getId())
                 .type(EnvironmentResource.TypeEnum.ENVIRONMENT)
@@ -113,8 +119,10 @@ public final class EnvironmentsClient {
         String color = attrs != null ? attrs.getColor() : null;
         EnvironmentClassification classification = EnvironmentClassification.STANDARD;
         if (attrs != null) {
-            String cls = attrs.getClassification();
-            if (cls != null) classification = EnvironmentClassification.fromValue(cls);
+            Environment.ClassificationEnum cls = attrs.getClassification();
+            if (cls == Environment.ClassificationEnum.AD_HOC) {
+                classification = EnvironmentClassification.AD_HOC;
+            }
         }
         Instant createdAt = null;
         Instant updatedAt = null;
