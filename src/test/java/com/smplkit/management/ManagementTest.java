@@ -1226,9 +1226,12 @@ class ManagementTest {
                                                          String classification,
                                                          OffsetDateTime createdAt,
                                                          OffsetDateTime updatedAt) {
-        Environment attrs = new Environment(classification, createdAt, updatedAt);
+        Environment attrs = new Environment(createdAt, updatedAt);
         attrs.setName(name);
         if (color != null) attrs.setColor(color);
+        if (classification != null) {
+            attrs.setClassification(Environment.ClassificationEnum.fromValue(classification));
+        }
         return new EnvironmentResource().id(id)
                 .type(EnvironmentResource.TypeEnum.ENVIRONMENT)
                 .attributes(attrs);
