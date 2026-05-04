@@ -53,8 +53,44 @@ public class Environment {
   public static final String JSON_PROPERTY_COLOR = "color";
   private JsonNullable<String> color = JsonNullable.<String>undefined();
 
+  /**
+   * Gets or Sets classification
+   */
+  public enum ClassificationEnum {
+    STANDARD(String.valueOf("STANDARD")),
+    
+    AD_HOC(String.valueOf("AD_HOC"));
+
+    private String value;
+
+    ClassificationEnum(String value) {
+      this.value = value;
+    }
+
+    @JsonValue
+    public String getValue() {
+      return value;
+    }
+
+    @Override
+    public String toString() {
+      return String.valueOf(value);
+    }
+
+    @JsonCreator
+    public static ClassificationEnum fromValue(String value) {
+      for (ClassificationEnum b : ClassificationEnum.values()) {
+        if (b.value.equals(value)) {
+          return b;
+        }
+      }
+      throw new IllegalArgumentException("Unexpected value '" + value + "'");
+    }
+  }
+
   public static final String JSON_PROPERTY_CLASSIFICATION = "classification";
-  private JsonNullable<String> classification = JsonNullable.<String>undefined();
+  @jakarta.annotation.Nullable
+  private ClassificationEnum classification = ClassificationEnum.AD_HOC;
 
   public static final String JSON_PROPERTY_CREATED_AT = "created_at";
   private JsonNullable<OffsetDateTime> createdAt = JsonNullable.<OffsetDateTime>undefined();
@@ -67,12 +103,10 @@ public class Environment {
 
   @JsonCreator
   public Environment(
-    @JsonProperty(JSON_PROPERTY_CLASSIFICATION) String classification, 
     @JsonProperty(JSON_PROPERTY_CREATED_AT) OffsetDateTime createdAt, 
     @JsonProperty(JSON_PROPERTY_UPDATED_AT) OffsetDateTime updatedAt
   ) {
   this();
-    this.classification = classification == null ? JsonNullable.<String>undefined() : JsonNullable.of(classification);
     this.createdAt = createdAt == null ? JsonNullable.<OffsetDateTime>undefined() : JsonNullable.of(createdAt);
     this.updatedAt = updatedAt == null ? JsonNullable.<OffsetDateTime>undefined() : JsonNullable.of(updatedAt);
   }
@@ -133,32 +167,28 @@ public class Environment {
   }
 
 
+  public Environment classification(@jakarta.annotation.Nullable ClassificationEnum classification) {
+    this.classification = classification;
+    return this;
+  }
+
   /**
    * Get classification
    * @return classification
    */
   @jakarta.annotation.Nullable
-  @JsonIgnore
-  public String getClassification() {
-    
-    if (classification == null) {
-      classification = JsonNullable.<String>undefined();
-    }
-    return classification.orElse(null);
+  @JsonProperty(value = JSON_PROPERTY_CLASSIFICATION, required = false)
+  @JsonInclude(value = JsonInclude.Include.USE_DEFAULTS)
+  public ClassificationEnum getClassification() {
+    return classification;
   }
+
 
   @JsonProperty(value = JSON_PROPERTY_CLASSIFICATION, required = false)
   @JsonInclude(value = JsonInclude.Include.USE_DEFAULTS)
-
-  public JsonNullable<String> getClassification_JsonNullable() {
-    return classification;
-  }
-  
-  @JsonProperty(JSON_PROPERTY_CLASSIFICATION)
-  private void setClassification_JsonNullable(JsonNullable<String> classification) {
+  public void setClassification(@jakarta.annotation.Nullable ClassificationEnum classification) {
     this.classification = classification;
   }
-
 
 
   /**
@@ -231,7 +261,7 @@ public class Environment {
     Environment environment = (Environment) o;
     return Objects.equals(this.name, environment.name) &&
         equalsNullable(this.color, environment.color) &&
-        equalsNullable(this.classification, environment.classification) &&
+        Objects.equals(this.classification, environment.classification) &&
         equalsNullable(this.createdAt, environment.createdAt) &&
         equalsNullable(this.updatedAt, environment.updatedAt);
   }
@@ -242,7 +272,7 @@ public class Environment {
 
   @Override
   public int hashCode() {
-    return Objects.hash(name, hashCodeNullable(color), hashCodeNullable(classification), hashCodeNullable(createdAt), hashCodeNullable(updatedAt));
+    return Objects.hash(name, hashCodeNullable(color), classification, hashCodeNullable(createdAt), hashCodeNullable(updatedAt));
   }
 
   private static <T> int hashCodeNullable(JsonNullable<T> a) {
