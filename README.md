@@ -9,13 +9,13 @@ The official Java SDK for [smplkit](https://www.smplkit.com) — simple applicat
 ### Gradle (Kotlin DSL)
 
 ```kotlin
-implementation("com.smplkit:smplkit-sdk:1.0.0")
+implementation("com.smplkit:smplkit-sdk:3.0.4")
 ```
 
 ### Gradle (Groovy DSL)
 
 ```groovy
-implementation 'com.smplkit:smplkit-sdk:1.0.0'
+implementation 'com.smplkit:smplkit-sdk:3.0.4'
 ```
 
 ### Maven
@@ -24,7 +24,7 @@ implementation 'com.smplkit:smplkit-sdk:1.0.0'
 <dependency>
     <groupId>com.smplkit</groupId>
     <artifactId>smplkit-sdk</artifactId>
-    <version>1.0.0</version>
+    <version>3.0.4</version>
 </dependency>
 ```
 
@@ -34,27 +34,47 @@ implementation 'com.smplkit:smplkit-sdk:1.0.0'
 
 ## Quick Start
 
+`SmplClient` requires three settings — `apiKey`, `environment`, and `service` —
+each resolvable from builder methods, environment variables (`SMPLKIT_API_KEY`,
+`SMPLKIT_ENVIRONMENT`, `SMPLKIT_SERVICE`), or `~/.smplkit`. `build()` throws if
+any of them can't be resolved.
+
 ```java
 import com.smplkit.SmplClient;
 
-// Option 1: Explicit API key
-SmplClient client = SmplClient.builder()
-    .apiKey("sk_api_...")
-    .environment("production")
-    .build();
+// Option 1: Fully explicit
+try (SmplClient client = SmplClient.builder()
+        .apiKey("sk_api_...")
+        .environment("production")
+        .service("my-service")
+        .build()) {
+    // ... use client.config() / .flags() / .logging() / .manage()
+}
 
-// Option 2: Environment variable (SMPLKIT_API_KEY)
-// export SMPLKIT_API_KEY=sk_api_...
-SmplClient client = SmplClient.builder()
-    .environment("production")
-    .build();
+// Option 2: Environment variables only
+// export SMPLKIT_API_KEY=sk_api_... SMPLKIT_ENVIRONMENT=production SMPLKIT_SERVICE=my-service
+try (SmplClient client = SmplClient.builder().build()) { /* ... */ }
 
-// Option 3: Configuration file (~/.smplkit)
-// [default]
-// api_key = sk_api_...
-SmplClient client = SmplClient.builder()
-    .environment("production")
-    .build();
+// Option 3: Named profile from ~/.smplkit
+try (SmplClient client = SmplClient.builder().profile("local").build()) { /* ... */ }
+```
+
+`SmplClient` is `AutoCloseable` — always use try-with-resources or call
+`close()`, otherwise the live-updates WebSocket and metrics threads stay alive.
+
+### `waitUntilReady()`
+
+Code that creates a client and immediately fires a management write (then expects
+to observe the resulting WebSocket event) needs to wait until the live-updates
+subscription is registered server-side. Without it the broadcast races the
+subscribe and is silently missed:
+
+```java
+try (SmplClient client = SmplClient.builder().build()) {
+    client.waitUntilReady();                    // default 10s deadline
+    // client.waitUntilReady(Duration.ofSeconds(30));  // custom deadline
+    // ... safe to fire writes that you expect to broadcast back
+}
 ```
 
 ## Flags
@@ -105,8 +125,9 @@ try (SmplClient client = SmplClient.builder()
     darkMode.setDescription("Updated description");
     darkMode.save();
 
-    // Delete
-    client.flags().management().delete("dark-mode");
+    // Delete — either through the active record or the management facade
+    darkMode.delete();
+    // client.flags().management().delete("dark-mode");
 }
 ```
 
@@ -128,27 +149,42 @@ try (SmplClient client = SmplClient.builder()
     Flag<Number> rateLimit = client.flags().numberFlag("rate-limit", 100);
     Flag<Object> uiConfig = client.flags().jsonFlag("ui-config", Map.of("theme", "light"));
 
-    // Set a context provider (called on every evaluation)
-    client.flags().setContextProvider(() -> List.of(
+    // Two ways to attach context to evaluations:
+    //
+    // (a) Ambient context for the current thread — typical for request middleware:
+    client.setContext(List.of(
         Context.builder("user", "user-42")
             .attr("plan", "enterprise")
             .attr("country", "US")
             .build()
     ));
+    // ...later, on the same thread:
+    boolean isDarkMode = darkMode.get();        // picks up the ambient context
 
-    // Evaluate — synchronous, local, zero network after first call
-    boolean isDarkMode = darkMode.get();        // true (enterprise rule matches)
-    String bannerText = banner.get();           // resolved or default
-    Number limit = rateLimit.get();             // resolved or default
+    // (b) A context provider callback — invoked on every evaluation:
+    client.flags().setContextProvider(() -> List.of(
+        Context.builder("user", currentUserId()).build()
+    ));
 
-    // Override context per-request
+    // Override context per-call (highest priority — wins over both above):
     boolean guestDarkMode = darkMode.get(List.of(
         Context.builder("user", "guest-1").attr("plan", "free").build()
     ));
 
-    // Listen for flag changes
+    // Evaluate — synchronous, local, zero network after first call
+    String bannerText = banner.get();
+    Number limit = rateLimit.get();
+
+    // Listen for flag changes (WebSocket + manual refresh both fire these)
     client.flags().onChange(event ->
         System.out.println("Flag changed: " + event.id()));
+
+    // Force a server re-fetch (useful after server-side bulk updates)
+    client.flags().refresh();
+
+    // Cache stats for diagnostics
+    FlagStats stats = client.flags().stats();
+    System.out.println("hits=" + stats.cacheHits() + " misses=" + stats.cacheMisses());
 }
 ```
 
@@ -166,18 +202,17 @@ try (SmplClient client = SmplClient.builder()
         .environment("production")
         .build()) {
 
-    // Create a config with items
-    Config svc = client.config().management().new_("user_service", "User Service", null, null);
-    svc.setItems(Map.of(
-        "cache_ttl", Map.of("value", 300),
-        "enable_signup", Map.of("value", true)
-    ));
+    // Create a config and set items via the typed setters
+    Config svc = client.config().management().new_("user_service",
+            "User Service", "Main user service config", null);
+    svc.setNumber("cache_ttl", 300);
+    svc.setBoolean("enable_signup", true);
+    svc.setString("database.host", "users-rds.internal");
     svc.save();
 
-    // Add environment overrides
-    svc.setEnvironments(Map.of("production", Map.of(
-        "values", Map.of("cache_ttl", 600, "enable_signup", false)
-    )));
+    // Per-environment overrides — third arg is the environment name
+    svc.setNumber("cache_ttl", 600, "production");
+    svc.setBoolean("enable_signup", false, "production");
     svc.save();
 
     // Fetch, list, update
@@ -187,35 +222,55 @@ try (SmplClient client = SmplClient.builder()
     fetched.setDescription("Updated description");
     fetched.save();
 
-    // Delete
-    client.config().management().delete("user_service");
+    // Delete — either through the active record or the management facade
+    fetched.delete();
+    // client.config().management().delete("user_service");
 }
 ```
 
-### Runtime API (Prescriptive Access)
+### Runtime API (Live Proxy)
 
 ```java
+import com.smplkit.config.LiveConfigProxy;
+
 try (SmplClient client = SmplClient.builder()
         .apiKey("sk_api_...")
         .environment("production")
+        .service("my-service")
         .build()) {
+    client.waitUntilReady();
 
-    // Resolve a config as a flat key→value map (lazy init, environment-aware)
-    Map<String, Object> values = client.config().get("user_service");
-    int ttl = (int) values.get("cache_ttl");
+    // Get a live, dict-like, identity-stable proxy over the resolved config.
+    // Reads pass through the resolution cache and pick up WebSocket updates
+    // automatically — no separate subscribe() step.
+    LiveConfigProxy svc = client.config().get("user_service");
+    Number ttl = (Number) svc.get("cache_ttl");
+    String host = (String) svc.get("database.host");
 
-    // Resolve into a typed model
-    MyServiceConfig cfg = client.config().get("user_service", MyServiceConfig.class);
+    // Or project the current values into a typed model (dot-notation keys
+    // like "database.host" are expanded into nested objects):
+    MyServiceConfig cfg = svc.into(MyServiceConfig.class);
+    // shortcut: client.config().get("user_service", MyServiceConfig.class)
 
-    // Subscribe to live updates
-    client.config().subscribe("user_service", values2 ->
-        System.out.println("Config updated: " + values2));
+    // Item-scoped change listener — fires when a single key changes
+    svc.onChange("cache_ttl", event ->
+        System.out.println("cache_ttl: " + event.oldValue() + " → " + event.newValue()));
+
+    // Config-scoped or global listeners are also available off the client
+    client.config().onChange(event ->
+        System.out.println(event.configId() + "." + event.itemKey() + " changed"));
+
+    // Force a re-fetch from the server (rarely needed — WS events drive this)
+    client.config().refresh();
 }
 ```
 
 ## Logging
 
-The Logging module manages logger configurations and log groups with level resolution and environment overrides.
+The Logging module manages logger configurations and log groups with level
+resolution and environment overrides, plus a runtime tier that auto-discovers
+existing JUL / SLF4J-Logback / Log4j2 loggers and applies server-managed levels
+back onto them.
 
 ### Management API
 
@@ -227,42 +282,84 @@ import com.smplkit.logging.LogGroup;
 try (SmplClient client = SmplClient.builder()
         .apiKey("sk_api_...")
         .environment("production")
+        .service("my-service")
         .build()) {
 
     // Create a log group
-    LogGroup group = client.logging().management().newGroup("infra", "Infrastructure", null);
+    LogGroup group = client.manage().logGroups.new_("infra", "Infrastructure", null);
     group.setLevel(LogLevel.WARN);
     group.save();
 
-    // Create a logger
-    Logger logger = client.logging().management().new_("payment-service", "Payment Service", true);
+    // Create a logger (managed=true means the SDK runtime should apply the
+    // resolved level back to the native logger)
+    Logger logger = client.manage().loggers.new_("payment-service", true);
     logger.setLevel(LogLevel.INFO);
     logger.setGroup(group.getId());
     logger.save();
 
-    // Environment overrides
-    logger.setEnvironmentLevel("production", LogLevel.WARN);
-    logger.setEnvironmentLevel("staging", LogLevel.DEBUG);
+    // Per-environment overrides — second arg is the environment name
+    logger.setLevel(LogLevel.WARN, "production");
+    logger.setLevel(LogLevel.DEBUG, "staging");
     logger.save();
 
     // Fetch, list, update
-    Logger fetched = client.logging().management().get("payment-service");
-    List<Logger> all = client.logging().management().list();
-    List<LogGroup> groups = client.logging().management().listGroups();
+    Logger fetched = client.manage().loggers.get("payment-service");
+    List<Logger> all = client.manage().loggers.list();
+    List<LogGroup> groups = client.manage().logGroups.list();
 
-    // Delete
-    client.logging().management().delete("payment-service");
-    client.logging().management().deleteGroup("infra");
+    // Force-drain the in-memory discovery buffer (rarely needed — the runtime
+    // auto-flushes every 30s and eagerly past 50 entries)
+    client.manage().loggers.flush();
+
+    // Delete — either through the active record or the management facade
+    logger.delete();
+    group.delete();
+    // client.manage().loggers.delete("payment-service");
+    // client.manage().logGroups.delete("infra");
 }
 ```
 
-## Configuration
+### Runtime Tier (Auto-Discovery + Apply Levels)
 
-All settings are resolved from three sources, in order of precedence:
+`install()` scans every logger registered with the JVM's logging frameworks
+(JUL is always available; SLF4J-Logback and Log4j2 are picked up if on the
+classpath), bulk-registers them with the server, and applies the resolved
+levels back to the native loggers. WebSocket events keep the levels live;
+`refresh()` forces a re-pull when you've made server-side changes elsewhere.
 
-1. **Builder methods** — highest priority, always wins.
-2. **Environment variables** — e.g. `SMPLKIT_API_KEY`, `SMPLKIT_ENVIRONMENT`.
-3. **Configuration file** (`~/.smplkit`) — INI-format with profile support.
+```java
+try (SmplClient client = SmplClient.builder()
+        .apiKey("sk_api_...")
+        .environment("production")
+        .service("my-service")
+        .build()) {
+
+    // Discover all native loggers, register them, apply server-managed levels.
+    client.logging().install();
+
+    // Use SLF4J / JUL / Log4j2 normally — levels are now driven by the server.
+    LoggerFactory.getLogger("payment-service").info("...");
+
+    // Force a re-fetch + re-apply (no-op if install() hasn't been called)
+    client.logging().refresh();
+
+    // Listen for level changes (WS events + manual refresh both fire these)
+    client.logging().onChange(event ->
+        System.out.println(event.id() + " → " + event.level()));
+}
+```
+
+## Client Configuration
+
+All settings are resolved from four sources, in order of precedence (highest
+wins):
+
+1. **Builder methods** — `.apiKey(...)`, `.environment(...)`, etc.
+2. **Environment variables** — `SMPLKIT_API_KEY`, `SMPLKIT_ENVIRONMENT`,
+   `SMPLKIT_SERVICE`, `SMPLKIT_PROFILE`, `SMPLKIT_BASE_DOMAIN`,
+   `SMPLKIT_SCHEME`, `SMPLKIT_DEBUG`, `SMPLKIT_DISABLE_TELEMETRY`.
+3. **Configuration file** (`~/.smplkit`) — INI-format with `[common]` plus
+   per-profile sections.
 4. **Defaults** — built-in SDK defaults.
 
 ### Configuration File
@@ -303,37 +400,39 @@ For the complete configuration reference, see the [Configuration Guide](https://
 
 ## Error Handling
 
-All SDK exceptions extend `SmplException` (unchecked `RuntimeException`):
+All SDK exceptions extend `SmplError` (unchecked `RuntimeException`). The
+`Smpl` prefix is kept on the base class to avoid colliding with
+`java.lang.Error`; subclasses follow Python naming:
 
 ```java
 import com.smplkit.errors.*;
 
 try {
     Flag<?> flag = client.flags().management().get("nonexistent");
-} catch (SmplNotFoundException e) {
+} catch (NotFoundError e) {
     // HTTP 404
-} catch (SmplConflictException e) {
+} catch (ConflictError e) {
     // HTTP 409
-} catch (SmplValidationException e) {
+} catch (ValidationError e) {
     // HTTP 422
-} catch (SmplTimeoutException e) {
+} catch (TimeoutError e) {
     // Request timed out
-} catch (SmplConnectionException e) {
+} catch (ConnectionError e) {
     // Network error
-} catch (SmplException e) {
+} catch (SmplError e) {
     System.err.println("Status: " + e.statusCode());
     System.err.println("Body: " + e.responseBody());
 }
 ```
 
-| Exception                 | Cause                         |
-|---------------------------|-------------------------------|
-| `SmplNotFoundException`   | HTTP 404 — resource not found |
-| `SmplConflictException`   | HTTP 409 — conflict           |
-| `SmplValidationException` | HTTP 422 — validation error   |
-| `SmplTimeoutException`    | Request timed out             |
-| `SmplConnectionException` | Network connectivity issue    |
-| `SmplException`           | Any other SDK error           |
+| Exception         | Cause                         |
+|-------------------|-------------------------------|
+| `NotFoundError`   | HTTP 404 — resource not found |
+| `ConflictError`   | HTTP 409 — conflict           |
+| `ValidationError` | HTTP 422 — validation error   |
+| `TimeoutError`    | Request timed out             |
+| `ConnectionError` | Network connectivity issue    |
+| `SmplError`       | Base class / any other        |
 
 ## Debug Logging
 
@@ -351,7 +450,7 @@ Each line follows the format:
 [smplkit:{subsystem}] {ISO-8601 timestamp} {message}
 ```
 
-Subsystems: `lifecycle`, `websocket`, `api`, `discovery`, `resolution`, `adapter`, `registration`.
+Subsystems: `lifecycle`, `websocket`, `api`, `flags`, `discovery`, `resolution`, `adapter`, `registration`, `metrics`.
 
 Output bypasses the Java logging framework and writes directly to stderr to avoid interference with level management.
 
