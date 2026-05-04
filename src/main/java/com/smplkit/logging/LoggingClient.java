@@ -326,6 +326,31 @@ public final class LoggingClient {
         keyListeners.computeIfAbsent(id, k -> new CopyOnWriteArrayList<>()).add(listener);
     }
 
+    /**
+     * Re-fetches logger and group definitions from the server, recomputes
+     * resolved levels, applies them through the registered adapters, and fires
+     * change listeners for any logger whose resolved level changed.
+     *
+     * <p>Mirrors Python's {@code client.logging.refresh()}. The runtime path is
+     * normally driven by WebSocket events (registered in {@link #install()});
+     * call this to force a re-pull when you've made server-side changes through
+     * a different process and want them reflected immediately.</p>
+     *
+     * <p>No-op if {@link #install()} has not been called.</p>
+     */
+    public void refresh() {
+        if (!started) return;
+        Map<String, String> preLevels = snapshotLevels();
+        try {
+            fetchOnly();
+        } catch (Exception e) {
+            LOG.warning("Failed to fetch levels during refresh: " + e.getMessage());
+            Debug.log("resolution", "refresh fetch failed: " + e);
+            return;
+        }
+        diffAndFireLevels(preLevels, "manual");
+    }
+
     /** Returns whether {@link #install()} has been called. */
     public boolean isInstalled() {
         return started;
@@ -706,8 +731,11 @@ public final class LoggingClient {
     /**
      * Drains the registration buffer and sends all pending loggers to the server via
      * the bulk-register endpoint. No-op if the buffer is empty.
+     *
+     * <p>Package-private so the management facade {@link LoggersClient#flush()}
+     * can call it; not part of the public {@link LoggingClient} surface.</p>
      */
-    private void flushLoggerBuffer() {
+    void flushLoggerBuffer() {
         List<LoggerRegistrationEntry> batch = loggerBuffer.drain();
         if (batch.isEmpty()) return;
 

@@ -293,6 +293,20 @@ public final class Config {
     }
 
     /**
+     * Deletes this config from the server.
+     *
+     * <p>Mirrors Python's {@code config.delete()}: delegates to
+     * {@code mgmt.config.delete(id)}. Bubbles {@link com.smplkit.errors.NotFoundError}
+     * if the config is not on the server (e.g. unsaved or already deleted).</p>
+     *
+     * @throws IllegalStateException if not bound to a client
+     */
+    public void delete() {
+        if (client == null) throw new IllegalStateException("Config not bound to a client");
+        client.management().delete(id);
+    }
+
+    /**
      * Copy all properties from {@code other} into this instance.
      */
     void _apply(Config other) {

@@ -204,6 +204,86 @@ class LoggersClientCrudTest {
         assertThrows(NotFoundError.class, () -> groups.delete("missing"));
     }
 
+    // -------------------------------------------------------------- Logger.delete() / LogGroup.delete()
+
+    @Test
+    void logger_activeRecord_delete_callsApi() throws ApiException {
+        Logger lg = loggers.new_("doomed");
+        lg.delete();
+        verify(mockLoggersApi).deleteLogger("doomed");
+    }
+
+    @Test
+    void logger_activeRecord_delete_bubblesNotFound() throws ApiException {
+        org.mockito.Mockito.doThrow(new ApiException(404, "missing"))
+                .when(mockLoggersApi).deleteLogger("ghost");
+        Logger lg = loggers.new_("ghost");
+        assertThrows(NotFoundError.class, lg::delete);
+    }
+
+    @Test
+    void logger_activeRecord_delete_unboundClient_throwsIllegalState() {
+        Logger orphan = new Logger(null, "orphan", "Orphan",
+                null, null, false, null, null, null, null);
+        assertThrows(IllegalStateException.class, orphan::delete);
+    }
+
+    @Test
+    void logGroup_activeRecord_delete_callsApi() throws ApiException {
+        LogGroup grp = groups.new_("doomed-group");
+        grp.delete();
+        verify(mockLogGroupsApi).deleteLogGroup("doomed-group");
+    }
+
+    @Test
+    void logGroup_activeRecord_delete_bubblesNotFound() throws ApiException {
+        org.mockito.Mockito.doThrow(new ApiException(404, "missing"))
+                .when(mockLogGroupsApi).deleteLogGroup("ghost-group");
+        LogGroup grp = groups.new_("ghost-group");
+        assertThrows(NotFoundError.class, grp::delete);
+    }
+
+    @Test
+    void logGroup_activeRecord_delete_unboundClient_throwsIllegalState() {
+        LogGroup orphan = new LogGroup(null, "orphan", "Orphan",
+                null, null, null, null, null);
+        assertThrows(IllegalStateException.class, orphan::delete);
+    }
+
+    // -------------------------------------------------------------- LoggersClient.flush()
+
+    @Test
+    void loggers_flush_isNoOpWhenBufferEmpty() throws ApiException {
+        loggers.flush();
+        verify(mockLoggersApi, org.mockito.Mockito.never()).bulkRegisterLoggers(any());
+    }
+
+    @Test
+    void loggers_flush_drainsPendingDiscoveryBuffer() throws ApiException {
+        // Simulate a discovered logger entering the buffer via the adapter hook path.
+        inner.simulateNewLogger("com.acme.payments", "INFO");
+
+        loggers.flush();
+
+        ArgumentCaptor<LoggerBulkRequest> captor = ArgumentCaptor.forClass(LoggerBulkRequest.class);
+        verify(mockLoggersApi).bulkRegisterLoggers(captor.capture());
+        LoggerBulkRequest req = captor.getValue();
+        assertEquals(1, req.getLoggers().size());
+        assertEquals("com.acme.payments", req.getLoggers().get(0).getId());
+    }
+
+    @Test
+    void loggers_flush_swallowsApiException() throws ApiException {
+        inner.simulateNewLogger("com.acme.payments", "INFO");
+        org.mockito.Mockito.doThrow(new ApiException(500, "boom"))
+                .when(mockLoggersApi).bulkRegisterLoggers(any());
+
+        // flush() must not propagate the exception (matches periodic-flush semantics)
+        loggers.flush();
+
+        verify(mockLoggersApi).bulkRegisterLoggers(any());
+    }
+
     // -------------------------------------------------------------- helpers
 
     private LoggerResource buildLoggerResource(String id, String name, String level) {

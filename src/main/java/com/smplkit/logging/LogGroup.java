@@ -169,6 +169,20 @@ public final class LogGroup {
         return java.util.concurrent.CompletableFuture.runAsync(this::save, executor);
     }
 
+    /**
+     * Deletes this log group from the server.
+     *
+     * <p>Mirrors Python's {@code log_group.delete()}: delegates to
+     * {@code mgmt.log_groups.delete(id)}. Bubbles
+     * {@link com.smplkit.errors.NotFoundError} if the group is not on the server.</p>
+     *
+     * @throws IllegalStateException if not bound to a client
+     */
+    public void delete() {
+        if (client == null) throw new IllegalStateException("LogGroup not bound to a client");
+        client.management().deleteGroup(id);
+    }
+
     // --- Package-private setters (used by LoggingClient) ---
 
     void setId(String id) { this.id = id; }

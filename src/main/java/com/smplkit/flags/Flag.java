@@ -217,6 +217,20 @@ public final class Flag<T> {
         return java.util.concurrent.CompletableFuture.runAsync(this::save, executor);
     }
 
+    /**
+     * Deletes this flag from the server.
+     *
+     * <p>Mirrors Python's {@code flag.delete()}: delegates to
+     * {@code mgmt.flags.delete(id)}. Bubbles {@link com.smplkit.errors.NotFoundError}
+     * if the flag is not on the server.</p>
+     *
+     * @throws IllegalStateException if not bound to a client
+     */
+    public void delete() {
+        if (client == null) throw new IllegalStateException("Flag not bound to a client");
+        client.management().delete(id);
+    }
+
     // ------------------------------------------------------------------
     // Management: local mutations
     // ------------------------------------------------------------------

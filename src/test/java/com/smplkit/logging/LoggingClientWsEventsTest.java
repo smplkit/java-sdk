@@ -502,6 +502,108 @@ class LoggingClientWsEventsTest {
     // Helpers
     // -----------------------------------------------------------------------
 
+    // -----------------------------------------------------------------------
+    // F. refresh() — manual re-fetch + re-apply
+    // -----------------------------------------------------------------------
+
+    @Test
+    void refresh_beforeInstall_isNoOp() throws ApiException {
+        client.refresh();
+        verify(mockLoggersApi, never()).listLoggers(any(), any(), any());
+        verify(mockLogGroupsApi, never()).listLogGroups();
+    }
+
+    @Test
+    void refresh_afterInstall_refetchesBothLoggersAndGroups() throws ApiException {
+        stubEmptyStart();
+        client.install();
+
+        // Reset stubs: refresh issues another listLoggers + listLogGroups.
+        LoggerListResponse emptyLoggers = new LoggerListResponse();
+        emptyLoggers.setData(new ArrayList<>());
+        when(mockLoggersApi.listLoggers((Boolean) null, null, null)).thenReturn(emptyLoggers);
+        LogGroupListResponse emptyGroups = new LogGroupListResponse();
+        emptyGroups.setData(new ArrayList<>());
+        when(mockLogGroupsApi.listLogGroups()).thenReturn(emptyGroups);
+
+        client.refresh();
+
+        verify(mockLoggersApi, times(2)).listLoggers((Boolean) null, null, null);
+        verify(mockLogGroupsApi, times(2)).listLogGroups();
+    }
+
+    @Test
+    void refresh_levelChanged_firesPerKeyAndGlobalListeners() throws ApiException {
+        stubManagedLoggerStart("com.acme.svc", "INFO");
+        client.registerAdapter(noopAdapter("com.acme.svc", "INFO"));
+        client.install();
+
+        AtomicReference<LoggerChangeEvent> keyed = new AtomicReference<>();
+        AtomicInteger globalCount = new AtomicInteger();
+        client.onChange("com.acme.svc", keyed::set);
+        client.onChange(e -> globalCount.incrementAndGet());
+        keyed.set(null);
+        globalCount.set(0); // clear start events
+
+        // Server now reports WARN — different from cached INFO.
+        LoggerResource lr = buildLoggerResource("com.acme.svc", "WARN", true);
+        LoggerListResponse changed = new LoggerListResponse();
+        changed.setData(new ArrayList<>(List.of(lr)));
+        when(mockLoggersApi.listLoggers((Boolean) null, null, null)).thenReturn(changed);
+        LogGroupListResponse emptyGroups = new LogGroupListResponse();
+        emptyGroups.setData(new ArrayList<>());
+        when(mockLogGroupsApi.listLogGroups()).thenReturn(emptyGroups);
+
+        client.refresh();
+
+        assertNotNull(keyed.get(), "Key-scoped listener should fire when refresh sees a level change");
+        assertEquals("com.acme.svc", keyed.get().id());
+        assertEquals(LogLevel.WARN, keyed.get().level());
+        assertEquals("manual", keyed.get().source());
+        assertEquals(1, globalCount.get(), "Global listener should fire exactly once per refresh");
+    }
+
+    @Test
+    void refresh_levelUnchanged_doesNotFireListeners() throws ApiException {
+        stubManagedLoggerStart("com.acme.svc", "INFO");
+        client.registerAdapter(noopAdapter("com.acme.svc", "INFO"));
+        client.install();
+
+        AtomicInteger keyedCount = new AtomicInteger();
+        AtomicInteger globalCount = new AtomicInteger();
+        client.onChange("com.acme.svc", e -> keyedCount.incrementAndGet());
+        client.onChange(e -> globalCount.incrementAndGet());
+        keyedCount.set(0);
+        globalCount.set(0);
+
+        // Server returns the same level as cached — no diff.
+        LoggerResource lr = buildLoggerResource("com.acme.svc", "INFO", true);
+        LoggerListResponse same = new LoggerListResponse();
+        same.setData(new ArrayList<>(List.of(lr)));
+        when(mockLoggersApi.listLoggers((Boolean) null, null, null)).thenReturn(same);
+        LogGroupListResponse emptyGroups = new LogGroupListResponse();
+        emptyGroups.setData(new ArrayList<>());
+        when(mockLogGroupsApi.listLogGroups()).thenReturn(emptyGroups);
+
+        client.refresh();
+
+        assertEquals(0, keyedCount.get(), "Key-scoped listener should not fire when level unchanged");
+        assertEquals(0, globalCount.get(), "Global listener should not fire when nothing changed");
+    }
+
+    @Test
+    void refresh_apiFetchThrows_isNoOp() throws ApiException {
+        stubEmptyStart();
+        client.install();
+
+        when(mockLoggersApi.listLoggers((Boolean) null, null, null))
+                .thenThrow(new ApiException("API failure"));
+
+        assertDoesNotThrow(() -> client.refresh());
+    }
+
+    // -----------------------------------------------------------------------
+
     private void stubEmptyStart() throws ApiException {
         LoggerListResponse emptyLoggers = new LoggerListResponse();
         emptyLoggers.setData(new ArrayList<>());

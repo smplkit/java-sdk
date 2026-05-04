@@ -457,6 +457,33 @@ class ConfigClientTest {
     }
 
     // -----------------------------------------------------------------------
+    // Config.delete() — active-record delete
+    // -----------------------------------------------------------------------
+
+    @Test
+    void activeRecord_delete_callsManagementDelete() throws ApiException {
+        Config config = configClient.management().new_("doomed");
+        config.delete();
+
+        verify(mockApi).deleteConfig("doomed");
+    }
+
+    @Test
+    void activeRecord_delete_bubblesNotFound() throws ApiException {
+        Mockito.doThrow(new ApiException(404, "Not Found"))
+                .when(mockApi).deleteConfig("ghost");
+
+        Config config = configClient.management().new_("ghost");
+        assertThrows(NotFoundError.class, config::delete);
+    }
+
+    @Test
+    void activeRecord_delete_unboundClient_throwsIllegalState() {
+        Config config = new Config(null, "orphan", "Orphan");
+        assertThrows(IllegalStateException.class, config::delete);
+    }
+
+    // -----------------------------------------------------------------------
     // Error mapping
     // -----------------------------------------------------------------------
 

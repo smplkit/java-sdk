@@ -184,6 +184,20 @@ public final class Logger {
         return java.util.concurrent.CompletableFuture.runAsync(this::save, executor);
     }
 
+    /**
+     * Deletes this logger from the server.
+     *
+     * <p>Mirrors Python's {@code logger.delete()}: delegates to
+     * {@code mgmt.loggers.delete(id)}. Bubbles {@link com.smplkit.errors.NotFoundError}
+     * if the logger is not on the server.</p>
+     *
+     * @throws IllegalStateException if not bound to a client
+     */
+    public void delete() {
+        if (client == null) throw new IllegalStateException("Logger not bound to a client");
+        client.management().delete(id);
+    }
+
     // --- Package-private setters (used by LoggingClient) ---
 
     void setId(String id) { this.id = id; }

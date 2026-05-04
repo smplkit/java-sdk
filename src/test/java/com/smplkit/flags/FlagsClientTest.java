@@ -176,6 +176,31 @@ class FlagsClientTest {
         verify(mockApi).deleteFlag("my-flag");
     }
 
+    // --- Flag.delete() — active-record delete ---
+
+    @Test
+    void activeRecord_delete_callsManagementDelete() throws ApiException {
+        Flag<Boolean> flag = client.management().newBooleanFlag("doomed", false);
+        flag.delete();
+
+        verify(mockApi).deleteFlag("doomed");
+    }
+
+    @Test
+    void activeRecord_delete_bubblesNotFound() throws ApiException {
+        doThrow(new ApiException(404, "Not Found")).when(mockApi).deleteFlag("ghost");
+
+        Flag<Boolean> flag = client.management().newBooleanFlag("ghost", false);
+        assertThrows(NotFoundError.class, flag::delete);
+    }
+
+    @Test
+    void activeRecord_delete_unboundClient_throwsIllegalState() {
+        Flag<Boolean> orphan = new Flag<>(null, "orphan", "Orphan",
+                "BOOLEAN", false, null, null, null, null, null, Boolean.class);
+        assertThrows(IllegalStateException.class, orphan::delete);
+    }
+
     // --- _createFlag POSTs and returns created flag ---
 
     @Test

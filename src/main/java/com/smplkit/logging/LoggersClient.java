@@ -83,6 +83,22 @@ public final class LoggersClient {
     }
 
     /**
+     * Drains any pending discovered-logger registrations to the server.
+     *
+     * <p>Mirrors Python's {@code mgmt.loggers.flush()}. The runtime path
+     * auto-flushes the buffer on a 30s timer (started by {@code install()}) and
+     * eagerly when ≥50 loggers have queued up, but for IaC scripts and tests
+     * it's useful to force a synchronous drain.</p>
+     *
+     * <p>No-op if the buffer is empty. Errors during the bulk-register call
+     * are swallowed by the underlying flush, matching the runtime behavior —
+     * use {@link #registerSources(List)} when you want explicit control.</p>
+     */
+    public void flush() {
+        inner.flushLoggerBuffer();
+    }
+
+    /**
      * Bulk-register explicit logger sources with the logging service.
      *
      * <p>Useful for sample-data seeding, cross-tenant migration, and test fixtures.
