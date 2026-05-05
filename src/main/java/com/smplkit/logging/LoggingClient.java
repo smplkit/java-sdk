@@ -34,6 +34,8 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.ScheduledFuture;
+import java.util.ServiceConfigurationError;
+import java.util.ServiceLoader;
 import java.util.concurrent.TimeUnit;
 import java.util.function.Consumer;
 import java.util.logging.Level;
@@ -50,12 +52,6 @@ public final class LoggingClient {
 
     private static final java.util.logging.Logger LOG = java.util.logging.Logger.getLogger("smplkit.logging");
     private static final String FALLBACK_LEVEL = "INFO";
-
-    private static final String[][] BUILTIN_ADAPTERS = {
-            {"com.smplkit.logging.adapters.JulAdapter", null},
-            {"com.smplkit.logging.adapters.Slf4jLogbackAdapter", "ch.qos.logback.classic.LoggerContext"},
-            {"com.smplkit.logging.adapters.Log4j2Adapter", "org.apache.logging.log4j.core.LoggerContext"},
-    };
 
     final LoggersApi loggersApi;
     final LogGroupsApi logGroupsApi;
@@ -458,26 +454,20 @@ public final class LoggingClient {
     // -----------------------------------------------------------------------
 
     private void autoLoadAdapters() {
-        loadAdaptersFromTable(BUILTIN_ADAPTERS);
+        loadAdaptersFromProviders(ServiceLoader.load(LoggingAdapter.class).stream().collect(java.util.stream.Collectors.toList()));
     }
 
-    /** Loads adapters from a configuration table. Package-private for testing. */
-    void loadAdaptersFromTable(String[][] adapterTable) {
-        for (String[] entry : adapterTable) {
-            String adapterClass = entry[0];
-            String probeClass = entry[1];
+    /** Package-private for testing — production code always calls autoLoadAdapters(). */
+    void loadAdaptersFromProviders(Iterable<ServiceLoader.Provider<LoggingAdapter>> providers) {
+        for (ServiceLoader.Provider<LoggingAdapter> provider : providers) {
             try {
-                if (probeClass != null) {
-                    Class.forName(probeClass);
-                }
-                LoggingAdapter adapter = (LoggingAdapter) Class.forName(adapterClass)
-                        .getDeclaredConstructor().newInstance();
+                LoggingAdapter adapter = provider.get();
                 adapters.add(adapter);
                 Debug.log("lifecycle", "Loaded logging adapter: " + adapter.name());
-            } catch (ClassNotFoundException e) {
-                Debug.log("lifecycle", "Skipped adapter " + adapterClass + " (dependency not on classpath)");
+            } catch (ServiceConfigurationError | NoClassDefFoundError e) {
+                Debug.log("lifecycle", "Skipped logging adapter (dependency not on classpath): " + e.getMessage());
             } catch (Exception e) {
-                LOG.warning("Failed to load adapter " + adapterClass + ": " + e.getMessage());
+                LOG.warning("Failed to load logging adapter: " + e.getMessage());
             }
         }
         if (adapters.isEmpty()) {

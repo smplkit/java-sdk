@@ -1,0 +1,3 @@
+com.smplkit.logging.adapters.JulAdapter
+com.smplkit.logging.adapters.Slf4jLogbackAdapter
+com.smplkit.logging.adapters.Log4j2Adapter
