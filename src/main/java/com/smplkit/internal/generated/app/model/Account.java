@@ -46,7 +46,9 @@ import com.smplkit.internal.generated.app.ApiClient;
   Account.JSON_PROPERTY_EXPIRES_AT,
   Account.JSON_PROPERTY_CREATED_AT,
   Account.JSON_PROPERTY_DELETED_AT,
-  Account.JSON_PROPERTY_PRODUCT_SUBSCRIPTIONS
+  Account.JSON_PROPERTY_PRODUCT_SUBSCRIPTIONS,
+  Account.JSON_PROPERTY_ENTRY_POINT,
+  Account.JSON_PROPERTY_SHOW_SAMPLE_DATA
 })
 @jakarta.annotation.Generated(value = "org.openapitools.codegen.languages.JavaClientCodegen", comments = "Generator version: 7.21.0")
 public class Account {
@@ -74,6 +76,12 @@ public class Account {
   public static final String JSON_PROPERTY_PRODUCT_SUBSCRIPTIONS = "product_subscriptions";
   private JsonNullable<Map<String, Object>> productSubscriptions = JsonNullable.<Map<String, Object>>undefined();
 
+  public static final String JSON_PROPERTY_ENTRY_POINT = "entry_point";
+  private JsonNullable<String> entryPoint = JsonNullable.<String>undefined();
+
+  public static final String JSON_PROPERTY_SHOW_SAMPLE_DATA = "show_sample_data";
+  private JsonNullable<Boolean> showSampleData = JsonNullable.<Boolean>undefined();
+
   public Account() { 
   }
 
@@ -83,7 +91,9 @@ public class Account {
     @JsonProperty(JSON_PROPERTY_EXPIRES_AT) OffsetDateTime expiresAt, 
     @JsonProperty(JSON_PROPERTY_CREATED_AT) OffsetDateTime createdAt, 
     @JsonProperty(JSON_PROPERTY_DELETED_AT) OffsetDateTime deletedAt, 
-    @JsonProperty(JSON_PROPERTY_PRODUCT_SUBSCRIPTIONS) Map<String, Object> productSubscriptions
+    @JsonProperty(JSON_PROPERTY_PRODUCT_SUBSCRIPTIONS) Map<String, Object> productSubscriptions, 
+    @JsonProperty(JSON_PROPERTY_ENTRY_POINT) String entryPoint, 
+    @JsonProperty(JSON_PROPERTY_SHOW_SAMPLE_DATA) Boolean showSampleData
   ) {
   this();
     this.hasStripeCustomer = hasStripeCustomer;
@@ -91,6 +101,8 @@ public class Account {
     this.createdAt = createdAt == null ? JsonNullable.<OffsetDateTime>undefined() : JsonNullable.of(createdAt);
     this.deletedAt = deletedAt == null ? JsonNullable.<OffsetDateTime>undefined() : JsonNullable.of(deletedAt);
     this.productSubscriptions = productSubscriptions == null ? JsonNullable.<Map<String, Object>>undefined() : JsonNullable.of(productSubscriptions);
+    this.entryPoint = entryPoint == null ? JsonNullable.<String>undefined() : JsonNullable.of(entryPoint);
+    this.showSampleData = showSampleData == null ? JsonNullable.<Boolean>undefined() : JsonNullable.of(showSampleData);
   }
 
   public Account name(@jakarta.annotation.Nonnull String name) {
@@ -268,6 +280,62 @@ public class Account {
 
 
   /**
+   * Registration entry point (from account.data)
+   * @return entryPoint
+   */
+  @jakarta.annotation.Nullable
+  @JsonIgnore
+  public String getEntryPoint() {
+    
+    if (entryPoint == null) {
+      entryPoint = JsonNullable.<String>undefined();
+    }
+    return entryPoint.orElse(null);
+  }
+
+  @JsonProperty(value = JSON_PROPERTY_ENTRY_POINT, required = false)
+  @JsonInclude(value = JsonInclude.Include.USE_DEFAULTS)
+
+  public JsonNullable<String> getEntryPoint_JsonNullable() {
+    return entryPoint;
+  }
+  
+  @JsonProperty(JSON_PROPERTY_ENTRY_POINT)
+  private void setEntryPoint_JsonNullable(JsonNullable<String> entryPoint) {
+    this.entryPoint = entryPoint;
+  }
+
+
+
+  /**
+   * Whether sample data is active (from account.settings)
+   * @return showSampleData
+   */
+  @jakarta.annotation.Nullable
+  @JsonIgnore
+  public Boolean getShowSampleData() {
+    
+    if (showSampleData == null) {
+      showSampleData = JsonNullable.<Boolean>undefined();
+    }
+    return showSampleData.orElse(null);
+  }
+
+  @JsonProperty(value = JSON_PROPERTY_SHOW_SAMPLE_DATA, required = false)
+  @JsonInclude(value = JsonInclude.Include.USE_DEFAULTS)
+
+  public JsonNullable<Boolean> getShowSampleData_JsonNullable() {
+    return showSampleData;
+  }
+  
+  @JsonProperty(JSON_PROPERTY_SHOW_SAMPLE_DATA)
+  private void setShowSampleData_JsonNullable(JsonNullable<Boolean> showSampleData) {
+    this.showSampleData = showSampleData;
+  }
+
+
+
+  /**
    * Return true if this Account object is equal to o.
    */
   @Override
@@ -285,7 +353,9 @@ public class Account {
         equalsNullable(this.expiresAt, account.expiresAt) &&
         equalsNullable(this.createdAt, account.createdAt) &&
         equalsNullable(this.deletedAt, account.deletedAt) &&
-        equalsNullable(this.productSubscriptions, account.productSubscriptions);
+        equalsNullable(this.productSubscriptions, account.productSubscriptions) &&
+        equalsNullable(this.entryPoint, account.entryPoint) &&
+        equalsNullable(this.showSampleData, account.showSampleData);
   }
 
   private static <T> boolean equalsNullable(JsonNullable<T> a, JsonNullable<T> b) {
@@ -294,7 +364,7 @@ public class Account {
 
   @Override
   public int hashCode() {
-    return Objects.hash(name, key, hasStripeCustomer, hashCodeNullable(expiresAt), hashCodeNullable(createdAt), hashCodeNullable(deletedAt), hashCodeNullable(productSubscriptions));
+    return Objects.hash(name, key, hasStripeCustomer, hashCodeNullable(expiresAt), hashCodeNullable(createdAt), hashCodeNullable(deletedAt), hashCodeNullable(productSubscriptions), hashCodeNullable(entryPoint), hashCodeNullable(showSampleData));
   }
 
   private static <T> int hashCodeNullable(JsonNullable<T> a) {
@@ -315,6 +385,8 @@ public class Account {
     sb.append("    createdAt: ").append(toIndentedString(createdAt)).append("\n");
     sb.append("    deletedAt: ").append(toIndentedString(deletedAt)).append("\n");
     sb.append("    productSubscriptions: ").append(toIndentedString(productSubscriptions)).append("\n");
+    sb.append("    entryPoint: ").append(toIndentedString(entryPoint)).append("\n");
+    sb.append("    showSampleData: ").append(toIndentedString(showSampleData)).append("\n");
     sb.append("}");
     return sb.toString();
   }
@@ -396,6 +468,16 @@ public class Account {
             "".equals(suffix) ? "" : String.format(java.util.Locale.ROOT, "%s%d%s", containerPrefix, _key, containerSuffix),
             getProductSubscriptions().get(_key), ApiClient.urlEncode(ApiClient.valueToString(getProductSubscriptions().get(_key)))));
       }
+    }
+
+    // add `entry_point` to the URL query string
+    if (getEntryPoint() != null) {
+      joiner.add(String.format(java.util.Locale.ROOT, "%sentry_point%s=%s", prefix, suffix, ApiClient.urlEncode(ApiClient.valueToString(getEntryPoint()))));
+    }
+
+    // add `show_sample_data` to the URL query string
+    if (getShowSampleData() != null) {
+      joiner.add(String.format(java.util.Locale.ROOT, "%sshow_sample_data%s=%s", prefix, suffix, ApiClient.urlEncode(ApiClient.valueToString(getShowSampleData()))));
     }
 
     return joiner.toString();

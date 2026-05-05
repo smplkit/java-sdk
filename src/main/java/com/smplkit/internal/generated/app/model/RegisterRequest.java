@@ -25,6 +25,10 @@ import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonTypeName;
 import com.fasterxml.jackson.annotation.JsonValue;
 import java.util.Arrays;
+import org.openapitools.jackson.nullable.JsonNullable;
+import com.fasterxml.jackson.annotation.JsonIgnore;
+import org.openapitools.jackson.nullable.JsonNullable;
+import java.util.NoSuchElementException;
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 
 
@@ -34,7 +38,8 @@ import com.smplkit.internal.generated.app.ApiClient;
  */
 @JsonPropertyOrder({
   RegisterRequest.JSON_PROPERTY_EMAIL,
-  RegisterRequest.JSON_PROPERTY_PASSWORD
+  RegisterRequest.JSON_PROPERTY_PASSWORD,
+  RegisterRequest.JSON_PROPERTY_ENTRY_POINT
 })
 @jakarta.annotation.Generated(value = "org.openapitools.codegen.languages.JavaClientCodegen", comments = "Generator version: 7.21.0")
 public class RegisterRequest {
@@ -45,6 +50,48 @@ public class RegisterRequest {
   public static final String JSON_PROPERTY_PASSWORD = "password";
   @jakarta.annotation.Nonnull
   private String password;
+
+  /**
+   * Registration entry point. Allowed: login, get_started, live_demo, unknown. Defaults to unknown when omitted.
+   */
+  public enum EntryPointEnum {
+    LOGIN(String.valueOf("login")),
+    
+    GET_STARTED(String.valueOf("get_started")),
+    
+    LIVE_DEMO(String.valueOf("live_demo")),
+    
+    UNKNOWN(String.valueOf("unknown"));
+
+    private String value;
+
+    EntryPointEnum(String value) {
+      this.value = value;
+    }
+
+    @JsonValue
+    public String getValue() {
+      return value;
+    }
+
+    @Override
+    public String toString() {
+      return String.valueOf(value);
+    }
+
+    @JsonCreator
+    public static EntryPointEnum fromValue(String value) {
+      for (EntryPointEnum b : EntryPointEnum.values()) {
+        if (b.value.equals(value)) {
+          return b;
+        }
+      }
+      return null;
+    }
+  }
+
+  public static final String JSON_PROPERTY_ENTRY_POINT = "entry_point";
+  private JsonNullable<EntryPointEnum> entryPoint = JsonNullable.<EntryPointEnum>undefined();
 
   public RegisterRequest() { 
   }
@@ -97,6 +144,38 @@ public class RegisterRequest {
   }
 
 
+  public RegisterRequest entryPoint(@jakarta.annotation.Nullable EntryPointEnum entryPoint) {
+    this.entryPoint = JsonNullable.<EntryPointEnum>of(entryPoint);
+    return this;
+  }
+
+  /**
+   * Registration entry point. Allowed: login, get_started, live_demo, unknown. Defaults to unknown when omitted.
+   * @return entryPoint
+   */
+  @jakarta.annotation.Nullable
+  @JsonIgnore
+  public EntryPointEnum getEntryPoint() {
+        return entryPoint.orElse(null);
+  }
+
+  @JsonProperty(value = JSON_PROPERTY_ENTRY_POINT, required = false)
+  @JsonInclude(value = JsonInclude.Include.USE_DEFAULTS)
+
+  public JsonNullable<EntryPointEnum> getEntryPoint_JsonNullable() {
+    return entryPoint;
+  }
+  
+  @JsonProperty(JSON_PROPERTY_ENTRY_POINT)
+  public void setEntryPoint_JsonNullable(JsonNullable<EntryPointEnum> entryPoint) {
+    this.entryPoint = entryPoint;
+  }
+
+  public void setEntryPoint(@jakarta.annotation.Nullable EntryPointEnum entryPoint) {
+    this.entryPoint = JsonNullable.<EntryPointEnum>of(entryPoint);
+  }
+
+
   /**
    * Return true if this RegisterRequest object is equal to o.
    */
@@ -110,12 +189,24 @@ public class RegisterRequest {
     }
     RegisterRequest registerRequest = (RegisterRequest) o;
     return Objects.equals(this.email, registerRequest.email) &&
-        Objects.equals(this.password, registerRequest.password);
+        Objects.equals(this.password, registerRequest.password) &&
+        equalsNullable(this.entryPoint, registerRequest.entryPoint);
+  }
+
+  private static <T> boolean equalsNullable(JsonNullable<T> a, JsonNullable<T> b) {
+    return a == b || (a != null && b != null && a.isPresent() && b.isPresent() && Objects.deepEquals(a.get(), b.get()));
   }
 
   @Override
   public int hashCode() {
-    return Objects.hash(email, password);
+    return Objects.hash(email, password, hashCodeNullable(entryPoint));
+  }
+
+  private static <T> int hashCodeNullable(JsonNullable<T> a) {
+    if (a == null) {
+      return 1;
+    }
+    return a.isPresent() ? Arrays.deepHashCode(new Object[]{a.get()}) : 31;
   }
 
   @Override
@@ -124,6 +215,7 @@ public class RegisterRequest {
     sb.append("class RegisterRequest {\n");
     sb.append("    email: ").append(toIndentedString(email)).append("\n");
     sb.append("    password: ").append(toIndentedString(password)).append("\n");
+    sb.append("    entryPoint: ").append(toIndentedString(entryPoint)).append("\n");
     sb.append("}");
     return sb.toString();
   }
@@ -176,6 +268,11 @@ public class RegisterRequest {
     // add `password` to the URL query string
     if (getPassword() != null) {
       joiner.add(String.format(java.util.Locale.ROOT, "%spassword%s=%s", prefix, suffix, ApiClient.urlEncode(ApiClient.valueToString(getPassword()))));
+    }
+
+    // add `entry_point` to the URL query string
+    if (getEntryPoint() != null) {
+      joiner.add(String.format(java.util.Locale.ROOT, "%sentry_point%s=%s", prefix, suffix, ApiClient.urlEncode(ApiClient.valueToString(getEntryPoint()))));
     }
 
     return joiner.toString();
