@@ -25,6 +25,9 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.ServiceConfigurationError;
+import java.util.ServiceLoader;
+import java.util.stream.Collectors;
 import java.util.UUID;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
@@ -820,56 +823,62 @@ class LoggingClientTest {
     }
 
     // -----------------------------------------------------------------------
-    // Auto-load edge cases
+    // Auto-load via ServiceLoader
     // -----------------------------------------------------------------------
 
     @Test
-    void loadAdaptersFromTable_skipsMissingProbeClass() {
-        String[][] table = {
-                {"com.smplkit.logging.adapters.JulAdapter", "com.nonexistent.ProbeClass"},
-        };
-        client.loadAdaptersFromTable(table);
+    void serviceLoader_loadsRealAdapters() {
+        // Verifies the META-INF/services file is on the test classpath and JUL loads
+        List<ServiceLoader.Provider<LoggingAdapter>> providers =
+                ServiceLoader.load(LoggingAdapter.class).stream().collect(Collectors.toList());
+        client.loadAdaptersFromProviders(providers);
+        assertTrue(client.getAdapters().stream().anyMatch(a -> a.name().equals("jul")));
+    }
+
+    @Test
+    @SuppressWarnings("unchecked")
+    void serviceLoader_skipsAdapterWithMissingDependency() {
+        ServiceLoader.Provider<LoggingAdapter> provider = mock(ServiceLoader.Provider.class);
+        when(provider.get()).thenThrow(new NoClassDefFoundError("missing/FrameworkClass"));
+        client.loadAdaptersFromProviders(List.of(provider));
         assertTrue(client.getAdapters().isEmpty());
     }
 
     @Test
-    void loadAdaptersFromTable_skipsMissingAdapterClass() {
-        String[][] table = {
-                {"com.nonexistent.AdapterClass", null},
-        };
-        client.loadAdaptersFromTable(table);
+    @SuppressWarnings("unchecked")
+    void serviceLoader_handlesServiceConfigError() {
+        ServiceLoader.Provider<LoggingAdapter> provider = mock(ServiceLoader.Provider.class);
+        when(provider.get()).thenThrow(new ServiceConfigurationError("broken service"));
+        client.loadAdaptersFromProviders(List.of(provider));
         assertTrue(client.getAdapters().isEmpty());
     }
 
     @Test
-    void loadAdaptersFromTable_handlesInstantiationFailure() {
-        // Use a class that exists but isn't a valid adapter (e.g., String has no no-arg constructor that returns LoggingAdapter)
-        String[][] table = {
-                {"java.lang.String", null},
-        };
-        client.loadAdaptersFromTable(table);
+    @SuppressWarnings("unchecked")
+    void serviceLoader_handlesInstantiationFailure() {
+        ServiceLoader.Provider<LoggingAdapter> provider = mock(ServiceLoader.Provider.class);
+        when(provider.get()).thenThrow(new RuntimeException("instantiation failed"));
+        client.loadAdaptersFromProviders(List.of(provider));
         assertTrue(client.getAdapters().isEmpty());
     }
 
     @Test
-    void loadAdaptersFromTable_warnsWhenNoAdaptersFound() {
-        String[][] table = {
-                {"com.nonexistent.Adapter1", null},
-                {"com.nonexistent.Adapter2", null},
-        };
-        // Should not throw, just log a warning
-        client.loadAdaptersFromTable(table);
+    void serviceLoader_warnsWhenNoAdaptersFound() {
+        // Empty iterable — should not throw, just log a warning
+        client.loadAdaptersFromProviders(List.of());
         assertTrue(client.getAdapters().isEmpty());
     }
 
     @Test
-    void loadAdaptersFromTable_loadsValidAdapter() {
-        String[][] table = {
-                {"com.smplkit.logging.adapters.JulAdapter", null},
-        };
-        client.loadAdaptersFromTable(table);
+    @SuppressWarnings("unchecked")
+    void serviceLoader_loadsValidAdapter() {
+        LoggingAdapter mockAdapter = mock(LoggingAdapter.class);
+        when(mockAdapter.name()).thenReturn("test");
+        ServiceLoader.Provider<LoggingAdapter> provider = mock(ServiceLoader.Provider.class);
+        when(provider.get()).thenReturn(mockAdapter);
+        client.loadAdaptersFromProviders(List.of(provider));
         assertEquals(1, client.getAdapters().size());
-        assertEquals("jul", client.getAdapters().get(0).name());
+        assertEquals("test", client.getAdapters().get(0).name());
     }
 
     // -----------------------------------------------------------------------
