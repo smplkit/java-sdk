@@ -173,10 +173,11 @@ public class AuthApi {
    * @param provider  (required)
    * @param mode  (optional, default to signin)
    * @param source  (optional)
+   * @param entryPoint  (optional)
    * @throws ApiException if fails to make API call
    */
-  public void beginOidcLogin(@jakarta.annotation.Nonnull OidcProvider provider, @jakarta.annotation.Nullable String mode, @jakarta.annotation.Nullable String source) throws ApiException {
-    beginOidcLogin(provider, mode, source, null);
+  public void beginOidcLogin(@jakarta.annotation.Nonnull OidcProvider provider, @jakarta.annotation.Nullable String mode, @jakarta.annotation.Nullable String source, @jakarta.annotation.Nullable String entryPoint) throws ApiException {
+    beginOidcLogin(provider, mode, source, entryPoint, null);
   }
 
   /**
@@ -185,11 +186,12 @@ public class AuthApi {
    * @param provider  (required)
    * @param mode  (optional, default to signin)
    * @param source  (optional)
+   * @param entryPoint  (optional)
    * @param headers Optional headers to include in the request
    * @throws ApiException if fails to make API call
    */
-  public void beginOidcLogin(@jakarta.annotation.Nonnull OidcProvider provider, @jakarta.annotation.Nullable String mode, @jakarta.annotation.Nullable String source, Map<String, String> headers) throws ApiException {
-    beginOidcLoginWithHttpInfo(provider, mode, source, headers);
+  public void beginOidcLogin(@jakarta.annotation.Nonnull OidcProvider provider, @jakarta.annotation.Nullable String mode, @jakarta.annotation.Nullable String source, @jakarta.annotation.Nullable String entryPoint, Map<String, String> headers) throws ApiException {
+    beginOidcLoginWithHttpInfo(provider, mode, source, entryPoint, headers);
   }
 
   /**
@@ -198,11 +200,12 @@ public class AuthApi {
    * @param provider  (required)
    * @param mode  (optional, default to signin)
    * @param source  (optional)
+   * @param entryPoint  (optional)
    * @return ApiResponse&lt;Void&gt;
    * @throws ApiException if fails to make API call
    */
-  public ApiResponse<Void> beginOidcLoginWithHttpInfo(@jakarta.annotation.Nonnull OidcProvider provider, @jakarta.annotation.Nullable String mode, @jakarta.annotation.Nullable String source) throws ApiException {
-    return beginOidcLoginWithHttpInfo(provider, mode, source, null);
+  public ApiResponse<Void> beginOidcLoginWithHttpInfo(@jakarta.annotation.Nonnull OidcProvider provider, @jakarta.annotation.Nullable String mode, @jakarta.annotation.Nullable String source, @jakarta.annotation.Nullable String entryPoint) throws ApiException {
+    return beginOidcLoginWithHttpInfo(provider, mode, source, entryPoint, null);
   }
 
   /**
@@ -211,12 +214,13 @@ public class AuthApi {
    * @param provider  (required)
    * @param mode  (optional, default to signin)
    * @param source  (optional)
+   * @param entryPoint  (optional)
    * @param headers Optional headers to include in the request
    * @return ApiResponse&lt;Void&gt;
    * @throws ApiException if fails to make API call
    */
-  public ApiResponse<Void> beginOidcLoginWithHttpInfo(@jakarta.annotation.Nonnull OidcProvider provider, @jakarta.annotation.Nullable String mode, @jakarta.annotation.Nullable String source, Map<String, String> headers) throws ApiException {
-    HttpRequest.Builder localVarRequestBuilder = beginOidcLoginRequestBuilder(provider, mode, source, headers);
+  public ApiResponse<Void> beginOidcLoginWithHttpInfo(@jakarta.annotation.Nonnull OidcProvider provider, @jakarta.annotation.Nullable String mode, @jakarta.annotation.Nullable String source, @jakarta.annotation.Nullable String entryPoint, Map<String, String> headers) throws ApiException {
+    HttpRequest.Builder localVarRequestBuilder = beginOidcLoginRequestBuilder(provider, mode, source, entryPoint, headers);
     try {
       HttpResponse<InputStream> localVarResponse = memberVarHttpClient.send(
           localVarRequestBuilder.build(),
@@ -252,7 +256,7 @@ public class AuthApi {
     }
   }
 
-  private HttpRequest.Builder beginOidcLoginRequestBuilder(@jakarta.annotation.Nonnull OidcProvider provider, @jakarta.annotation.Nullable String mode, @jakarta.annotation.Nullable String source, Map<String, String> headers) throws ApiException {
+  private HttpRequest.Builder beginOidcLoginRequestBuilder(@jakarta.annotation.Nonnull OidcProvider provider, @jakarta.annotation.Nullable String mode, @jakarta.annotation.Nullable String source, @jakarta.annotation.Nullable String entryPoint, Map<String, String> headers) throws ApiException {
     // verify the required parameter 'provider' is set
     if (provider == null) {
       throw new ApiException(400, "Missing the required parameter 'provider' when calling beginOidcLogin");
@@ -270,6 +274,8 @@ public class AuthApi {
     localVarQueryParams.addAll(ApiClient.parameterToPairs("mode", mode));
     localVarQueryParameterBaseName = "source";
     localVarQueryParams.addAll(ApiClient.parameterToPairs("source", source));
+    localVarQueryParameterBaseName = "entry_point";
+    localVarQueryParams.addAll(ApiClient.parameterToPairs("entry_point", entryPoint));
 
     if (!localVarQueryParams.isEmpty() || localVarQueryStringJoiner.length() != 0) {
       StringJoiner queryJoiner = new StringJoiner("&");
