@@ -349,6 +349,17 @@ try (SmplClient client = SmplClient.builder()
 }
 ```
 
+The three built-in adapters (JUL, SLF4J–Logback, Log4j2) are registered in `META-INF/services/com.smplkit.logging.adapters.LoggingAdapter` and loaded via Java's standard `ServiceLoader`. To support an additional framework, implement `LoggingAdapter` and either register it explicitly before `install()`:
+
+```java
+client.logging().registerAdapter(new MyFrameworkAdapter());
+client.logging().install();
+```
+
+or ship a `META-INF/services/com.smplkit.logging.adapters.LoggingAdapter` file in your adapter JAR (one FQN per line) so it is discovered automatically when the JAR is on the classpath.
+
+Calling `registerAdapter()` disables auto-loading — only the adapters you register are used.
+
 ## Client Configuration
 
 All settings are resolved from four sources, in order of precedence (highest
