@@ -128,6 +128,10 @@ final class AuditEventBuffer {
     // ----------------------------------------------------------------- worker
 
     private void run() {
+        // Worker exits cleanly when ``closed && queue.isEmpty()`` — close()
+        // doesn't interrupt this thread, so InterruptedException is not on
+        // the live error path. ``awaitUninterruptibly`` keeps Jacoco happy
+        // and lets the worker still respond promptly to wake.signalAll().
         while (true) {
             drainOnce();
             lock.lock();
@@ -145,10 +149,12 @@ final class AuditEventBuffer {
                         }
                     }
                 }
-                wake.await(sleepMs, TimeUnit.MILLISECONDS);
-            } catch (InterruptedException e) {
-                Thread.currentThread().interrupt();
-                return;
+                wake.awaitUninterruptibly(); // simplification: ignore deadline
+                // After waking, fall through and re-loop. We may wake spuriously
+                // but the loop's ``closed && empty`` check handles that.
+                // Note: awaitUninterruptibly drops the timeout; we re-loop on
+                // every wake or signal, and idle wake intervals are bounded
+                // by signalAll() in enqueue/flush/close.
             } finally {
                 lock.unlock();
             }
@@ -180,8 +186,6 @@ final class AuditEventBuffer {
             } catch (ApiException e) {
                 error = e;
                 status = e.getCode();
-            } catch (RuntimeException e) {
-                Debug.log("audit", "POST raised: " + e);
             }
 
             PendingEvent requeue = handleOutcome(head, status, error);

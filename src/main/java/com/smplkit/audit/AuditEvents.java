@@ -118,7 +118,7 @@ public final class AuditEvents {
     }
 
     /** Drains best-effort and stops the background worker. Called from {@code SmplClient.close}. */
-    public void close() throws IOException {
+    public void close() {
         buffer.close();
     }
 

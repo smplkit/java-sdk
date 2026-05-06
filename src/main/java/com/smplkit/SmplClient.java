@@ -147,6 +147,8 @@ public final class SmplClient implements AutoCloseable {
         this.flags.setContextBuffer(contextBuffer);
         this.logging = buildLoggingClient(httpClient, apiKey, timeout, environment, service,
                 loggingBaseUrl);
+        this.audit = new com.smplkit.audit.AuditClient(httpClient, apiKey, timeout,
+                serviceUrl(DEFAULT_SCHEME, "audit", DEFAULT_BASE_DOMAIN));
         this.manage = SmplManagementClient.sharedWith(
                 new ConfigResolver.ResolvedManagementConfig(apiKey, DEFAULT_BASE_DOMAIN, DEFAULT_SCHEME, false),
                 timeout, httpClient, contextBuffer);
@@ -175,6 +177,8 @@ public final class SmplClient implements AutoCloseable {
         this.flags.setContextBuffer(contextBuffer);
         this.logging = buildLoggingClient(httpClient, apiKey, timeout, environment, service,
                 loggingBaseUrl);
+        this.audit = new com.smplkit.audit.AuditClient(httpClient, apiKey, timeout,
+                serviceUrl(DEFAULT_SCHEME, "audit", DEFAULT_BASE_DOMAIN));
         this.manage = SmplManagementClient.sharedWith(
                 new ConfigResolver.ResolvedManagementConfig(apiKey, DEFAULT_BASE_DOMAIN, DEFAULT_SCHEME, false),
                 timeout, httpClient, contextBuffer);
@@ -462,11 +466,7 @@ public final class SmplClient implements AutoCloseable {
     public void close() {
         Debug.log("lifecycle", "SmplClient.close() called");
         if (audit != null) {
-            try {
-                audit.close();
-            } catch (Exception e) {
-                Debug.log("lifecycle", "Failed to close audit client: " + e);
-            }
+            audit.close();
         }
         if (logging != null) {
             logging.close();

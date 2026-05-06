@@ -3,7 +3,6 @@ package com.smplkit.audit;
 import com.smplkit.internal.generated.audit.ApiClient;
 import com.smplkit.internal.generated.audit.api.DefaultApi;
 
-import java.io.IOException;
 import java.net.http.HttpClient;
 import java.time.Duration;
 
@@ -33,7 +32,7 @@ public final class AuditClient implements AutoCloseable {
     }
 
     @Override
-    public void close() throws IOException {
+    public void close() {
         events.close();
     }
 }
