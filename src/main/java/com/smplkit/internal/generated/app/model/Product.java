@@ -26,9 +26,15 @@ import com.fasterxml.jackson.annotation.JsonTypeName;
 import com.fasterxml.jackson.annotation.JsonValue;
 import com.smplkit.internal.generated.app.model.LimitDefinition;
 import com.smplkit.internal.generated.app.model.PlanDefinition;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
+import org.openapitools.jackson.nullable.JsonNullable;
+import com.fasterxml.jackson.annotation.JsonIgnore;
+import org.openapitools.jackson.nullable.JsonNullable;
+import java.util.NoSuchElementException;
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 
 
@@ -39,6 +45,8 @@ import com.smplkit.internal.generated.app.ApiClient;
 @JsonPropertyOrder({
   Product.JSON_PROPERTY_DISPLAY_NAME,
   Product.JSON_PROPERTY_DESCRIPTION,
+  Product.JSON_PROPERTY_TAGLINE,
+  Product.JSON_PROPERTY_FEATURES,
   Product.JSON_PROPERTY_COMING_SOON,
   Product.JSON_PROPERTY_LIMITS,
   Product.JSON_PROPERTY_PLANS
@@ -52,6 +60,13 @@ public class Product {
   public static final String JSON_PROPERTY_DESCRIPTION = "description";
   @jakarta.annotation.Nonnull
   private String description;
+
+  public static final String JSON_PROPERTY_TAGLINE = "tagline";
+  private JsonNullable<String> tagline = JsonNullable.<String>undefined();
+
+  public static final String JSON_PROPERTY_FEATURES = "features";
+  @jakarta.annotation.Nullable
+  private List<String> features = new ArrayList<>();
 
   public static final String JSON_PROPERTY_COMING_SOON = "coming_soon";
   @jakarta.annotation.Nullable
@@ -113,6 +128,70 @@ public class Product {
   @JsonInclude(value = JsonInclude.Include.ALWAYS)
   public void setDescription(@jakarta.annotation.Nonnull String description) {
     this.description = description;
+  }
+
+
+  public Product tagline(@jakarta.annotation.Nullable String tagline) {
+    this.tagline = JsonNullable.<String>of(tagline);
+    return this;
+  }
+
+  /**
+   * Get tagline
+   * @return tagline
+   */
+  @jakarta.annotation.Nullable
+  @JsonIgnore
+  public String getTagline() {
+        return tagline.orElse(null);
+  }
+
+  @JsonProperty(value = JSON_PROPERTY_TAGLINE, required = false)
+  @JsonInclude(value = JsonInclude.Include.USE_DEFAULTS)
+
+  public JsonNullable<String> getTagline_JsonNullable() {
+    return tagline;
+  }
+  
+  @JsonProperty(JSON_PROPERTY_TAGLINE)
+  public void setTagline_JsonNullable(JsonNullable<String> tagline) {
+    this.tagline = tagline;
+  }
+
+  public void setTagline(@jakarta.annotation.Nullable String tagline) {
+    this.tagline = JsonNullable.<String>of(tagline);
+  }
+
+
+  public Product features(@jakarta.annotation.Nullable List<String> features) {
+    this.features = features;
+    return this;
+  }
+
+  public Product addFeaturesItem(String featuresItem) {
+    if (this.features == null) {
+      this.features = new ArrayList<>();
+    }
+    this.features.add(featuresItem);
+    return this;
+  }
+
+  /**
+   * Get features
+   * @return features
+   */
+  @jakarta.annotation.Nullable
+  @JsonProperty(value = JSON_PROPERTY_FEATURES, required = false)
+  @JsonInclude(value = JsonInclude.Include.USE_DEFAULTS)
+  public List<String> getFeatures() {
+    return features;
+  }
+
+
+  @JsonProperty(value = JSON_PROPERTY_FEATURES, required = false)
+  @JsonInclude(value = JsonInclude.Include.USE_DEFAULTS)
+  public void setFeatures(@jakarta.annotation.Nullable List<String> features) {
+    this.features = features;
   }
 
 
@@ -218,14 +297,27 @@ public class Product {
     Product product = (Product) o;
     return Objects.equals(this.displayName, product.displayName) &&
         Objects.equals(this.description, product.description) &&
+        equalsNullable(this.tagline, product.tagline) &&
+        Objects.equals(this.features, product.features) &&
         Objects.equals(this.comingSoon, product.comingSoon) &&
         Objects.equals(this.limits, product.limits) &&
         Objects.equals(this.plans, product.plans);
   }
 
+  private static <T> boolean equalsNullable(JsonNullable<T> a, JsonNullable<T> b) {
+    return a == b || (a != null && b != null && a.isPresent() && b.isPresent() && Objects.deepEquals(a.get(), b.get()));
+  }
+
   @Override
   public int hashCode() {
-    return Objects.hash(displayName, description, comingSoon, limits, plans);
+    return Objects.hash(displayName, description, hashCodeNullable(tagline), features, comingSoon, limits, plans);
+  }
+
+  private static <T> int hashCodeNullable(JsonNullable<T> a) {
+    if (a == null) {
+      return 1;
+    }
+    return a.isPresent() ? Arrays.deepHashCode(new Object[]{a.get()}) : 31;
   }
 
   @Override
@@ -234,6 +326,8 @@ public class Product {
     sb.append("class Product {\n");
     sb.append("    displayName: ").append(toIndentedString(displayName)).append("\n");
     sb.append("    description: ").append(toIndentedString(description)).append("\n");
+    sb.append("    tagline: ").append(toIndentedString(tagline)).append("\n");
+    sb.append("    features: ").append(toIndentedString(features)).append("\n");
     sb.append("    comingSoon: ").append(toIndentedString(comingSoon)).append("\n");
     sb.append("    limits: ").append(toIndentedString(limits)).append("\n");
     sb.append("    plans: ").append(toIndentedString(plans)).append("\n");
@@ -289,6 +383,20 @@ public class Product {
     // add `description` to the URL query string
     if (getDescription() != null) {
       joiner.add(String.format(java.util.Locale.ROOT, "%sdescription%s=%s", prefix, suffix, ApiClient.urlEncode(ApiClient.valueToString(getDescription()))));
+    }
+
+    // add `tagline` to the URL query string
+    if (getTagline() != null) {
+      joiner.add(String.format(java.util.Locale.ROOT, "%stagline%s=%s", prefix, suffix, ApiClient.urlEncode(ApiClient.valueToString(getTagline()))));
+    }
+
+    // add `features` to the URL query string
+    if (getFeatures() != null) {
+      for (int i = 0; i < getFeatures().size(); i++) {
+        joiner.add(String.format(java.util.Locale.ROOT, "%sfeatures%s%s=%s", prefix, suffix,
+            "".equals(suffix) ? "" : String.format(java.util.Locale.ROOT, "%s%d%s", containerPrefix, i, containerSuffix),
+            ApiClient.urlEncode(ApiClient.valueToString(getFeatures().get(i)))));
+      }
     }
 
     // add `coming_soon` to the URL query string
