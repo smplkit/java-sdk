@@ -56,6 +56,7 @@ public final class SmplClient implements AutoCloseable {
     private ConfigClient config;
     private FlagsClient flags;
     private LoggingClient logging;
+    private com.smplkit.audit.AuditClient audit;
     private SmplManagementClient manage;
     private final SharedWebSocket sharedWs;
     private final HttpClient httpClient;
@@ -80,6 +81,7 @@ public final class SmplClient implements AutoCloseable {
         String flagsBaseUrl = ConfigResolver.serviceUrl(resolvedConfig.scheme, "flags", resolvedConfig.baseDomain);
         String appBaseUrl = ConfigResolver.serviceUrl(resolvedConfig.scheme, "app", resolvedConfig.baseDomain);
         String loggingBaseUrl = ConfigResolver.serviceUrl(resolvedConfig.scheme, "logging", resolvedConfig.baseDomain);
+        String auditBaseUrl = ConfigResolver.serviceUrl(resolvedConfig.scheme, "audit", resolvedConfig.baseDomain);
 
         if (resolvedConfig.debug) {
             Debug.enable();
@@ -110,6 +112,7 @@ public final class SmplClient implements AutoCloseable {
                 loggingBaseUrl);
         this.logging.setMetrics(metrics);
         this.logging.setSharedWs(this.sharedWs);
+        this.audit = new com.smplkit.audit.AuditClient(httpClient, apiKey, timeout, auditBaseUrl);
 
         this.manage = SmplManagementClient.sharedWith(
                 new ConfigResolver.ResolvedManagementConfig(
@@ -312,6 +315,18 @@ public final class SmplClient implements AutoCloseable {
     }
 
     /**
+     * Returns the audit client (ADR-047). Use
+     * {@code client.audit().events().create(...)} to record an event;
+     * the call is fire-and-forget and returns immediately while a
+     * background worker thread issues the POST and retries transient
+     * failures.
+     */
+    public com.smplkit.audit.AuditClient audit() {
+        ensureServiceContextRegistered();
+        return audit;
+    }
+
+    /**
      * Returns the management client.
      *
      * <p>Mirrors Python's {@code client.manage}: a strict-CRUD entry point with
@@ -446,6 +461,13 @@ public final class SmplClient implements AutoCloseable {
     @Override
     public void close() {
         Debug.log("lifecycle", "SmplClient.close() called");
+        if (audit != null) {
+            try {
+                audit.close();
+            } catch (Exception e) {
+                Debug.log("lifecycle", "Failed to close audit client: " + e);
+            }
+        }
         if (logging != null) {
             logging.close();
         }
