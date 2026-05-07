@@ -109,9 +109,13 @@ class AuditClientTest {
         client.events().create(input);
         // flush() signals the worker to drain immediately. Wait on the
         // handler's CountDownLatch so we don't race the network round-trip
-        // — CI is much slower than local and a polling loop with a 2s
-        // budget can flake on loaded runners.
+        // — CI runners are much slower than local.
         client.events().flush(2_000);
+        // flush() restores the interrupt flag if its internal Thread.sleep
+        // was interrupted by Gradle's test executor. Clear the flag before
+        // awaiting the latch so we don't trip over JUnit reused threads
+        // carrying state from earlier tests in the run.
+        Thread.interrupted();
         assertTrue(firstPostSeen.await(15, java.util.concurrent.TimeUnit.SECONDS),
                 "test server never received the POST");
         assertEquals("key-abc", lastIdempotencyKey.get());

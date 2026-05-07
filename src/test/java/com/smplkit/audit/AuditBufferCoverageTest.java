@@ -332,6 +332,22 @@ class AuditBufferCoverageTest {
     }
 
     @Test
+    void buffer_close_handlesThreadInterrupt() throws Exception {
+        // Pre-interrupt the test thread so close()'s worker.awaitTermination
+        // sees the flag and the InterruptedException catch path fires —
+        // covers AuditEventBuffer.close lines 123-124.
+        AuditEventBuffer buf = new AuditEventBuffer(api);
+        try {
+            buf.enqueue(simpleBody(), null);
+        } finally {
+            Thread.currentThread().interrupt();
+            buf.close();
+            // Clear the interrupt flag so subsequent tests don't see it.
+            Thread.interrupted();
+        }
+    }
+
+    @Test
     void auditClient_close_isIdempotent() throws Exception {
         var apiClient = new ApiClient();
         apiClient.updateBaseUri("http://127.0.0.1:" + server.getAddress().getPort());
