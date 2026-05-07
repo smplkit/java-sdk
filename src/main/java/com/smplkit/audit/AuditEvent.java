@@ -21,12 +21,13 @@ public final class AuditEvent {
     public final Map<String, Object> snapshot; // nullable
     public final Map<String, Object> data;
     public final String idempotencyKey;
+    public final boolean doNotForward;
 
     public AuditEvent(UUID id, String action, String resourceType, String resourceId,
                       OffsetDateTime occurredAt, OffsetDateTime createdAt,
                       String actorType, UUID actorId, String actorLabel,
                       Map<String, Object> snapshot, Map<String, Object> data,
-                      String idempotencyKey) {
+                      String idempotencyKey, boolean doNotForward) {
         this.id = id;
         this.action = action;
         this.resourceType = resourceType;
@@ -39,5 +40,6 @@ public final class AuditEvent {
         this.snapshot = snapshot;
         this.data = data;
         this.idempotencyKey = idempotencyKey;
+        this.doNotForward = doNotForward;
     }
 }

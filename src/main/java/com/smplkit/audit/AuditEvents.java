@@ -60,6 +60,9 @@ public final class AuditEvents {
         if (input.data != null) {
             attrs.data(input.data);
         }
+        if (input.doNotForward) {
+            attrs.doNotForward(true);
+        }
         EventResource resource = new EventResource()
                 .id("") // server assigns
                 .type("event")
@@ -136,7 +139,8 @@ public final class AuditEvents {
                 a.getActorLabel(),
                 a.getSnapshot(),
                 a.getData(),
-                a.getIdempotencyKey()
+                a.getIdempotencyKey(),
+                a.getDoNotForward() != null ? a.getDoNotForward() : false
         );
     }
 }

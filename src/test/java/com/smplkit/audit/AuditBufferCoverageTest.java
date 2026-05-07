@@ -180,11 +180,12 @@ class AuditBufferCoverageTest {
     void auditEvent_constructorPopulatesAllFields() {
         var id = UUID.randomUUID();
         var actorId = UUID.randomUUID();
+        java.util.Map<String, Object> snapshot = java.util.Map.of("k", "v");
+        java.util.Map<String, Object> data = java.util.Map.of("d", 1);
         var ev = new AuditEvent(id, "act", "rt", "rid",
                 OffsetDateTime.now(), OffsetDateTime.now(),
                 "USER", actorId, "label",
-                java.util.Map.of("k", "v"), java.util.Map.of("d", 1),
-                "ik");
+                snapshot, data, "ik", false);
         assertEquals(id, ev.id);
         assertEquals("act", ev.action);
         assertEquals(actorId, ev.actorId);

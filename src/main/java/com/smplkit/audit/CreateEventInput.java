@@ -21,6 +21,13 @@ public final class CreateEventInput {
     public Map<String, Object> data;
     /** Optional. Server derives a content hash if null. */
     public String idempotencyKey;
+    /**
+     * When true, the audit service records the event normally but does NOT
+     * POST it through any configured SIEM forwarder. A
+     * {@code skipped_do_not_forward} delivery row is recorded for each
+     * enabled forwarder so the skip is visible in the delivery log.
+     */
+    public boolean doNotForward;
 
     public CreateEventInput() {}
 
