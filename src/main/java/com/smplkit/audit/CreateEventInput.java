@@ -4,7 +4,7 @@ import java.time.OffsetDateTime;
 import java.util.Map;
 
 /**
- * Input for {@link AuditEvents#create(CreateEventInput)}.
+ * Input for {@link AuditEvents#record(CreateEventInput)}.
  *
  * <p>{@code resourceType} starting with {@code smpl.} is reserved for
  * smplkit-emitted events; the server returns 403 for customer attempts.</p>
