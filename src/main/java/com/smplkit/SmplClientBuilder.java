@@ -1,6 +1,9 @@
 package com.smplkit;
 
 import java.time.Duration;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.Objects;
 
 /**
@@ -26,6 +29,7 @@ public final class SmplClientBuilder {
     private Duration timeout = Duration.ofSeconds(30);
     private Boolean debug;
     private Boolean disableTelemetry;
+    private Map<String, String> extraHeaders;
 
     SmplClientBuilder() {
         // Package-private: use SmplClient.builder()
@@ -143,6 +147,21 @@ public final class SmplClientBuilder {
     }
 
     /**
+     * Adds additional HTTP headers sent on every request made by this client.
+     *
+     * <p>SDK-owned headers ({@code Authorization}, {@code Accept},
+     * {@code Content-Type}) take precedence — callers cannot override them.</p>
+     *
+     * @param extraHeaders map of header name to value
+     * @return this builder
+     */
+    public SmplClientBuilder extraHeaders(Map<String, String> extraHeaders) {
+        Objects.requireNonNull(extraHeaders, "extraHeaders must not be null");
+        this.extraHeaders = Collections.unmodifiableMap(new HashMap<>(extraHeaders));
+        return this;
+    }
+
+    /**
      * Builds and returns a new {@link SmplClient}.
      *
      * <p>Resolution order (4-step):</p>
@@ -160,6 +179,6 @@ public final class SmplClientBuilder {
         ConfigResolver.ResolvedConfig config = ConfigResolver.resolve(
                 profile, apiKey, baseDomain, scheme, environment, service,
                 debug, disableTelemetry);
-        return new SmplClient(config, timeout);
+        return new SmplClient(config, timeout, extraHeaders != null ? extraHeaders : Map.of());
     }
 }

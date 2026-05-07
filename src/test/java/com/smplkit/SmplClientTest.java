@@ -7,8 +7,11 @@ import com.smplkit.logging.LoggingClient;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
 
+import java.net.URI;
+import java.net.http.HttpRequest;
 import java.nio.file.Path;
 import java.time.Duration;
+import java.util.Map;
 
 import static org.junit.jupiter.api.Assertions.*;
 
@@ -393,5 +396,42 @@ class SmplClientTest {
             client.waitUntilReady();
             client.waitUntilReady(Duration.ofSeconds(1));
         }
+    }
+
+    @Test
+    void builderExtraHeaders_acceptsMapAndBuildsClient() {
+        try (SmplClient client = SmplClient.builder()
+                .apiKey("test-key")
+                .environment("test")
+                .service("test-service")
+                .disableTelemetry(true)
+                .extraHeaders(Map.of("X-Custom", "hello"))
+                .build()) {
+            assertNotNull(client);
+        }
+    }
+
+    @Test
+    void compositeInterceptor_setsExtraHeadersAndAuth() throws Exception {
+        var interceptor = SmplClient.compositeInterceptor("sk_api_test",
+                Map.of("X-Custom", "value"));
+        var builder = HttpRequest.newBuilder(new URI("http://example.com"));
+        interceptor.accept(builder);
+        var request = builder.build();
+        assertEquals("value", request.headers().firstValue("X-Custom").orElse(""));
+        assertEquals("Bearer sk_api_test", request.headers().firstValue("Authorization").orElse(""));
+    }
+
+    @Test
+    void compositeInterceptor_sdkHeadersWinOnCollision() throws Exception {
+        var interceptor = SmplClient.compositeInterceptor("sk_api_test",
+                Map.of("Authorization", "Bearer overridden", "X-Tenant", "acme"));
+        var builder = HttpRequest.newBuilder(new URI("http://example.com"));
+        interceptor.accept(builder);
+        var request = builder.build();
+        // Authorization supplied by user is skipped; SDK's Authorization is present
+        assertEquals("Bearer sk_api_test", request.headers().firstValue("Authorization").orElse(""));
+        // Non-SDK header passes through
+        assertEquals("acme", request.headers().firstValue("X-Tenant").orElse(""));
     }
 }

@@ -15,6 +15,7 @@ import java.net.InetSocketAddress;
 import java.net.http.HttpClient;
 import java.time.Duration;
 import java.time.OffsetDateTime;
+import java.util.Map;
 import java.util.UUID;
 import java.util.concurrent.atomic.AtomicInteger;
 
@@ -352,7 +353,7 @@ class AuditBufferCoverageTest {
     void auditClient_close_isIdempotent() throws Exception {
         var apiClient = new ApiClient();
         apiClient.updateBaseUri("http://127.0.0.1:" + server.getAddress().getPort());
-        var client = new com.smplkit.audit.AuditClient(HttpClient.newHttpClient(), "k", Duration.ofSeconds(1),
+        var client = new com.smplkit.audit.AuditClient(HttpClient.newHttpClient(), "k", Map.of(), Duration.ofSeconds(1),
                 "http://127.0.0.1:" + server.getAddress().getPort());
         client.close();
         assertTrue(true);

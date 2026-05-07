@@ -12,6 +12,7 @@ import java.io.IOException;
 import java.net.InetSocketAddress;
 import java.net.http.HttpClient;
 import java.time.Duration;
+import java.util.Map;
 import java.util.UUID;
 import java.util.concurrent.atomic.AtomicReference;
 
@@ -48,7 +49,7 @@ class AuditForwardersTest {
         server.start();
         String baseUrl = "http://127.0.0.1:" + server.getAddress().getPort();
         client = new AuditClient(HttpClient.newHttpClient(), "sk_api_test",
-                Duration.ofSeconds(5), baseUrl);
+                Map.of(), Duration.ofSeconds(5), baseUrl);
     }
 
     @AfterEach

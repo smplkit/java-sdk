@@ -16,6 +16,7 @@ import java.net.InetSocketAddress;
 import java.net.http.HttpClient;
 import java.time.Duration;
 import java.time.OffsetDateTime;
+import java.util.Map;
 import java.util.UUID;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -40,7 +41,7 @@ class AuditClientTest {
         installDefaultHandlers();
         server.start();
         String baseUrl = "http://127.0.0.1:" + server.getAddress().getPort();
-        client = new AuditClient(HttpClient.newHttpClient(), "sk_api_test", Duration.ofSeconds(5), baseUrl);
+        client = new AuditClient(HttpClient.newHttpClient(), "sk_api_test", Map.of(), Duration.ofSeconds(5), baseUrl);
     }
 
     @AfterEach

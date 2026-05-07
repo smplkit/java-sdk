@@ -1,11 +1,13 @@
 package com.smplkit.audit;
 
+import com.smplkit.SmplClient;
 import com.smplkit.internal.generated.audit.ApiClient;
 import com.smplkit.internal.generated.audit.api.EventsApi;
 import com.smplkit.internal.generated.audit.api.ForwardersApi;
 
 import java.net.http.HttpClient;
 import java.time.Duration;
+import java.util.Map;
 
 /**
  * Audit-product entry point — accessed via {@code SmplClient.audit()}.
@@ -22,10 +24,11 @@ public final class AuditClient implements AutoCloseable {
     private final AuditForwarders forwarders;
     private final AuditFunctions functions;
 
-    public AuditClient(HttpClient httpClient, String apiKey, Duration timeout, String baseUrl) {
+    public AuditClient(HttpClient httpClient, String apiKey, Map<String, String> extraHeaders,
+                       Duration timeout, String baseUrl) {
         ApiClient apiClient = new ApiClient();
         apiClient.updateBaseUri(baseUrl);
-        apiClient.setRequestInterceptor(builder -> builder.header("Authorization", "Bearer " + apiKey));
+        apiClient.setRequestInterceptor(SmplClient.compositeInterceptor(apiKey, extraHeaders));
         apiClient.setReadTimeout(timeout);
         EventsApi eventsApi = new EventsApi(apiClient);
         ForwardersApi forwardersApi = new ForwardersApi(apiClient);

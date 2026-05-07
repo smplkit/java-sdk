@@ -17,9 +17,13 @@ import com.smplkit.internal.generated.logging.api.LoggersApi;
 import com.smplkit.internal.Debug;
 
 import java.net.http.HttpClient;
+import java.net.http.HttpRequest;
 import java.time.Duration;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
+import java.util.Set;
+import java.util.function.Consumer;
 import java.util.logging.Logger;
 
 /**
@@ -68,10 +72,14 @@ public final class SmplClient implements AutoCloseable {
     private final MetricsReporter metrics;
     private volatile boolean serviceContextRegistered;
 
+    /** Headers the SDK always sets; users cannot override these via extraHeaders. */
+    private static final Set<String> SDK_MANAGED_HEADERS = Set.of("authorization", "accept", "content-type");
+
     /**
      * Creates a new SmplClient from resolved config. Package-private; use {@link #builder()}.
      */
-    SmplClient(ConfigResolver.ResolvedConfig resolvedConfig, Duration timeout) {
+    SmplClient(ConfigResolver.ResolvedConfig resolvedConfig, Duration timeout,
+               Map<String, String> extraHeaders) {
         this.apiKey = resolvedConfig.apiKey;
         this.environment = resolvedConfig.environment;
         this.service = resolvedConfig.service;
@@ -93,26 +101,26 @@ public final class SmplClient implements AutoCloseable {
         this.metrics = resolvedConfig.disableTelemetry ? null
                 : new MetricsReporter(httpClient, appBaseUrl, apiKey, environment, service);
         this.sharedWs = new SharedWebSocket(httpClient, appBaseUrl, apiKey, metrics);
-        this.contextsApi = buildContextsApi(appBaseUrl, apiKey, timeout);
+        this.contextsApi = buildContextsApi(appBaseUrl, apiKey, extraHeaders, timeout);
 
         // SmplClient owns its own runtime sub-clients with their own generated
         // ApiClients. The management client is constructed as an *independent peer*
         // sharing only the JDK HttpClient and ContextRegistrationBuffer through
         // a package-private factory — neither owns the other's transports.
         ContextRegistrationBuffer contextBuffer = new ContextRegistrationBuffer();
-        this.config = buildConfigClient(httpClient, apiKey, timeout, configBaseUrl);
+        this.config = buildConfigClient(httpClient, apiKey, extraHeaders, timeout, configBaseUrl);
         this.config.setEnvironment(environment);
         this.config.setMetrics(metrics);
         this.config.setSharedWs(this.sharedWs);
-        this.flags = buildFlagsClient(httpClient, apiKey, timeout, sharedWs, environment, service,
-                flagsBaseUrl, appBaseUrl);
+        this.flags = buildFlagsClient(httpClient, apiKey, extraHeaders, timeout, sharedWs,
+                environment, service, flagsBaseUrl, appBaseUrl);
         this.flags.setMetrics(metrics);
         this.flags.setContextBuffer(contextBuffer);
-        this.logging = buildLoggingClient(httpClient, apiKey, timeout, environment, service,
-                loggingBaseUrl);
+        this.logging = buildLoggingClient(httpClient, apiKey, extraHeaders, timeout, environment,
+                service, loggingBaseUrl);
         this.logging.setMetrics(metrics);
         this.logging.setSharedWs(this.sharedWs);
-        this.audit = new com.smplkit.audit.AuditClient(httpClient, apiKey, timeout, auditBaseUrl);
+        this.audit = new com.smplkit.audit.AuditClient(httpClient, apiKey, extraHeaders, timeout, auditBaseUrl);
 
         this.manage = SmplManagementClient.sharedWith(
                 new ConfigResolver.ResolvedManagementConfig(
@@ -138,16 +146,16 @@ public final class SmplClient implements AutoCloseable {
         String flagsBaseUrl = serviceUrl(DEFAULT_SCHEME, "flags", DEFAULT_BASE_DOMAIN);
         String loggingBaseUrl = serviceUrl(DEFAULT_SCHEME, "logging", DEFAULT_BASE_DOMAIN);
         this.sharedWs = new SharedWebSocket(httpClient, appBaseUrl, apiKey);
-        this.contextsApi = buildContextsApi(appBaseUrl, apiKey, timeout);
+        this.contextsApi = buildContextsApi(appBaseUrl, apiKey, Map.of(), timeout);
         ContextRegistrationBuffer contextBuffer = new ContextRegistrationBuffer();
-        this.config = buildConfigClient(httpClient, apiKey, timeout, configBaseUrl);
+        this.config = buildConfigClient(httpClient, apiKey, Map.of(), timeout, configBaseUrl);
         this.config.setEnvironment(environment);
-        this.flags = buildFlagsClient(httpClient, apiKey, timeout, sharedWs, environment, service,
-                flagsBaseUrl, appBaseUrl);
+        this.flags = buildFlagsClient(httpClient, apiKey, Map.of(), timeout, sharedWs, environment,
+                service, flagsBaseUrl, appBaseUrl);
         this.flags.setContextBuffer(contextBuffer);
-        this.logging = buildLoggingClient(httpClient, apiKey, timeout, environment, service,
-                loggingBaseUrl);
-        this.audit = new com.smplkit.audit.AuditClient(httpClient, apiKey, timeout,
+        this.logging = buildLoggingClient(httpClient, apiKey, Map.of(), timeout, environment,
+                service, loggingBaseUrl);
+        this.audit = new com.smplkit.audit.AuditClient(httpClient, apiKey, Map.of(), timeout,
                 serviceUrl(DEFAULT_SCHEME, "audit", DEFAULT_BASE_DOMAIN));
         this.manage = SmplManagementClient.sharedWith(
                 new ConfigResolver.ResolvedManagementConfig(apiKey, DEFAULT_BASE_DOMAIN, DEFAULT_SCHEME, false),
@@ -168,16 +176,16 @@ public final class SmplClient implements AutoCloseable {
         String appBaseUrl = serviceUrl(DEFAULT_SCHEME, "app", DEFAULT_BASE_DOMAIN);
         String loggingBaseUrl = serviceUrl(DEFAULT_SCHEME, "logging", DEFAULT_BASE_DOMAIN);
         this.sharedWs = new SharedWebSocket(httpClient, appBaseUrl, apiKey);
-        this.contextsApi = buildContextsApi(appBaseUrl, apiKey, timeout);
+        this.contextsApi = buildContextsApi(appBaseUrl, apiKey, Map.of(), timeout);
         ContextRegistrationBuffer contextBuffer = new ContextRegistrationBuffer();
         this.config = config;
         this.flags = flags;
         this.flags.setParentService(service);
         this.flags.setEnvironment(environment);
         this.flags.setContextBuffer(contextBuffer);
-        this.logging = buildLoggingClient(httpClient, apiKey, timeout, environment, service,
-                loggingBaseUrl);
-        this.audit = new com.smplkit.audit.AuditClient(httpClient, apiKey, timeout,
+        this.logging = buildLoggingClient(httpClient, apiKey, Map.of(), timeout, environment,
+                service, loggingBaseUrl);
+        this.audit = new com.smplkit.audit.AuditClient(httpClient, apiKey, Map.of(), timeout,
                 serviceUrl(DEFAULT_SCHEME, "audit", DEFAULT_BASE_DOMAIN));
         this.manage = SmplManagementClient.sharedWith(
                 new ConfigResolver.ResolvedManagementConfig(apiKey, DEFAULT_BASE_DOMAIN, DEFAULT_SCHEME, false),
@@ -205,8 +213,8 @@ public final class SmplClient implements AutoCloseable {
         this.flags.setParentService(service);
         this.flags.setEnvironment(environment);
         this.flags.setContextBuffer(contextBuffer);
-        this.logging = buildLoggingClient(httpClient, apiKey, timeout, environment, service,
-                loggingBaseUrl);
+        this.logging = buildLoggingClient(httpClient, apiKey, Map.of(), timeout, environment,
+                service, loggingBaseUrl);
         this.manage = SmplManagementClient.sharedWith(
                 new ConfigResolver.ResolvedManagementConfig(apiKey, DEFAULT_BASE_DOMAIN, DEFAULT_SCHEME, false),
                 timeout, httpClient, contextBuffer);
@@ -234,31 +242,32 @@ public final class SmplClient implements AutoCloseable {
     }
 
     private static ConfigClient buildConfigClient(HttpClient httpClient, String apiKey,
+                                                   Map<String, String> extraHeaders,
                                                    Duration timeout, String configBaseUrl) {
         ApiClient apiClient = new ApiClient();
         apiClient.updateBaseUri(configBaseUrl);
-        apiClient.setRequestInterceptor(
-                builder -> builder.header("Authorization", "Bearer " + apiKey));
+        apiClient.setRequestInterceptor(compositeInterceptor(apiKey, extraHeaders));
         apiClient.setReadTimeout(timeout);
         ConfigsApi configsApi = new ConfigsApi(apiClient);
         return new ConfigClient(configsApi, httpClient, apiKey);
     }
 
     private static FlagsClient buildFlagsClient(HttpClient httpClient, String apiKey,
+                                                 Map<String, String> extraHeaders,
                                                  Duration timeout, SharedWebSocket sharedWs,
                                                  String environment, String service,
                                                  String flagsBaseUrl, String appBaseUrl) {
         com.smplkit.internal.generated.flags.ApiClient flagsApiClient =
                 new com.smplkit.internal.generated.flags.ApiClient();
         flagsApiClient.updateBaseUri(flagsBaseUrl);
-        flagsApiClient.setRequestInterceptor(authInterceptor(apiKey));
+        flagsApiClient.setRequestInterceptor(compositeInterceptor(apiKey, extraHeaders));
         flagsApiClient.setReadTimeout(timeout);
         FlagsApi flagsApi = new FlagsApi(flagsApiClient);
 
         com.smplkit.internal.generated.app.ApiClient appApiClient =
                 new com.smplkit.internal.generated.app.ApiClient();
         appApiClient.updateBaseUri(appBaseUrl);
-        appApiClient.setRequestInterceptor(authInterceptor(apiKey));
+        appApiClient.setRequestInterceptor(compositeInterceptor(apiKey, extraHeaders));
         appApiClient.setReadTimeout(timeout);
         ContextsApi contextsApi = new ContextsApi(appApiClient);
 
@@ -270,27 +279,47 @@ public final class SmplClient implements AutoCloseable {
         return client;
     }
 
-    private static ContextsApi buildContextsApi(String baseUrl, String apiKey, Duration timeout) {
+    private static ContextsApi buildContextsApi(String baseUrl, String apiKey,
+                                                 Map<String, String> extraHeaders, Duration timeout) {
         com.smplkit.internal.generated.app.ApiClient appApiClient =
                 new com.smplkit.internal.generated.app.ApiClient();
         appApiClient.updateBaseUri(baseUrl);
-        appApiClient.setRequestInterceptor(authInterceptor(apiKey));
+        appApiClient.setRequestInterceptor(compositeInterceptor(apiKey, extraHeaders));
         appApiClient.setReadTimeout(timeout);
         return new ContextsApi(appApiClient);
     }
 
-    /** Builds the auth header interceptor. */
-    static java.util.function.Consumer<java.net.http.HttpRequest.Builder> authInterceptor(String apiKey) {
+    /**
+     * Builds a request interceptor that sets extra headers (excluding SDK-managed ones),
+     * then always sets the Authorization header. SDK headers win on collision.
+     */
+    public static Consumer<HttpRequest.Builder> compositeInterceptor(String apiKey,
+                                                               Map<String, String> extraHeaders) {
+        return builder -> {
+            if (extraHeaders != null) {
+                extraHeaders.forEach((k, v) -> {
+                    if (!SDK_MANAGED_HEADERS.contains(k.toLowerCase(Locale.ROOT))) {
+                        builder.header(k, v);
+                    }
+                });
+            }
+            builder.header("Authorization", "Bearer " + apiKey);
+        };
+    }
+
+    /** Builds the auth-only interceptor (no extra headers). */
+    static Consumer<HttpRequest.Builder> authInterceptor(String apiKey) {
         return builder -> builder.header("Authorization", "Bearer " + apiKey);
     }
 
     private static LoggingClient buildLoggingClient(HttpClient httpClient, String apiKey,
+                                                    Map<String, String> extraHeaders,
                                                     Duration timeout, String environment,
                                                     String service, String loggingBaseUrl) {
         com.smplkit.internal.generated.logging.ApiClient loggingApiClient =
                 new com.smplkit.internal.generated.logging.ApiClient();
         loggingApiClient.updateBaseUri(loggingBaseUrl);
-        loggingApiClient.setRequestInterceptor(authInterceptor(apiKey));
+        loggingApiClient.setRequestInterceptor(compositeInterceptor(apiKey, extraHeaders));
         loggingApiClient.setReadTimeout(timeout);
         LoggersApi loggersApi = new LoggersApi(loggingApiClient);
         LogGroupsApi logGroupsApi = new LogGroupsApi(loggingApiClient);
