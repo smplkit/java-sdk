@@ -2,7 +2,7 @@ package com.smplkit.audit;
 
 import com.smplkit.internal.Debug;
 import com.smplkit.internal.generated.audit.ApiException;
-import com.smplkit.internal.generated.audit.api.DefaultApi;
+import com.smplkit.internal.generated.audit.api.EventsApi;
 import com.smplkit.internal.generated.audit.model.EventResponse;
 
 import java.util.ArrayDeque;
@@ -36,7 +36,7 @@ final class AuditEventBuffer {
     static final long INITIAL_BACKOFF_MS = 250;
     static final long MAX_BACKOFF_MS = 8_000;
 
-    private final DefaultApi api;
+    private final EventsApi api;
     private final ReentrantLock lock = new ReentrantLock();
     private final Condition wake = lock.newCondition();
     private final Deque<PendingEvent> queue = new ArrayDeque<>();
@@ -44,7 +44,7 @@ final class AuditEventBuffer {
     private long droppedCount;
     private final ScheduledExecutorService worker;
 
-    AuditEventBuffer(DefaultApi api) {
+    AuditEventBuffer(EventsApi api) {
         this.api = api;
         this.worker = Executors.newSingleThreadScheduledExecutor(r -> {
             Thread t = new Thread(r, "smplkit-audit-flush");
@@ -181,7 +181,7 @@ final class AuditEventBuffer {
             int status = 0;
             ApiException error = null;
             try {
-                api.createEvent(head.body, head.idempotencyKey);
+                api.recordEvent(head.body, head.idempotencyKey);
                 status = 201;
             } catch (ApiException e) {
                 error = e;

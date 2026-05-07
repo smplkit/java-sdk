@@ -1,7 +1,7 @@
 package com.smplkit.audit;
 
 import com.smplkit.internal.generated.audit.ApiException;
-import com.smplkit.internal.generated.audit.api.DefaultApi;
+import com.smplkit.internal.generated.audit.api.EventsApi;
 import com.smplkit.internal.generated.audit.model.Event;
 import com.smplkit.internal.generated.audit.model.EventResource;
 import com.smplkit.internal.generated.audit.model.EventResponse;
