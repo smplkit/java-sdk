@@ -17,6 +17,7 @@ import java.net.http.HttpClient;
 import java.time.Duration;
 import java.time.OffsetDateTime;
 import java.util.UUID;
+import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicReference;
 
@@ -28,11 +29,13 @@ class AuditClientTest {
     private AuditClient client;
     private AtomicInteger postCount;
     private AtomicReference<String> lastIdempotencyKey;
+    private CountDownLatch firstPostSeen;
 
     @BeforeEach
     void start() throws Exception {
         postCount = new AtomicInteger();
         lastIdempotencyKey = new AtomicReference<>();
+        firstPostSeen = new CountDownLatch(1);
         server = HttpServer.create(new InetSocketAddress("127.0.0.1", 0), 0);
         installDefaultHandlers();
         server.start();
@@ -63,6 +66,7 @@ class AuditClientTest {
                     }
                     lastIdempotencyKey.set(found);
                     postCount.incrementAndGet();
+                    firstPostSeen.countDown();
                     String body = "{\"data\":{\"id\":\"00000000-0000-0000-0000-000000000001\",\"type\":\"event\",\"attributes\":{\"action\":\"x.created\",\"resource_type\":\"x\",\"resource_id\":\"1\",\"occurred_at\":\"2026-05-06T12:00:00Z\",\"created_at\":\"2026-05-06T12:00:01Z\",\"actor_type\":\"API_KEY\",\"actor_id\":null,\"actor_label\":\"\",\"snapshot\":null,\"data\":{},\"idempotency_key\":\"\"}}}";
                     byte[] resp = body.getBytes();
                     ex.getResponseHeaders().add("Content-Type", "application/vnd.api+json");
@@ -103,15 +107,13 @@ class AuditClientTest {
         CreateEventInput input = new CreateEventInput("user.created", "user", "u-1");
         input.idempotencyKey = "key-abc";
         client.events().create(input);
-        // flush() pokes the worker to drain the queue (otherwise it sleeps for
-        // FLUSH_INTERVAL_MS), and then we poll until the test server has
-        // actually received the header — flush only knows about queue depth,
-        // not handler completion.
+        // flush() signals the worker to drain immediately. Wait on the
+        // handler's CountDownLatch so we don't race the network round-trip
+        // — CI is much slower than local and a polling loop with a 2s
+        // budget can flake on loaded runners.
         client.events().flush(2_000);
-        long deadline = System.currentTimeMillis() + 2_000;
-        while (System.currentTimeMillis() < deadline && lastIdempotencyKey.get() == null) {
-            Thread.sleep(20);
-        }
+        assertTrue(firstPostSeen.await(15, java.util.concurrent.TimeUnit.SECONDS),
+                "test server never received the POST");
         assertEquals("key-abc", lastIdempotencyKey.get());
     }
 
