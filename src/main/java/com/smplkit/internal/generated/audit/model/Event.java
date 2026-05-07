@@ -47,6 +47,7 @@ import com.smplkit.internal.generated.audit.ApiClient;
   Event.JSON_PROPERTY_OCCURRED_AT,
   Event.JSON_PROPERTY_SNAPSHOT,
   Event.JSON_PROPERTY_DATA,
+  Event.JSON_PROPERTY_DO_NOT_FORWARD,
   Event.JSON_PROPERTY_CREATED_AT,
   Event.JSON_PROPERTY_ACTOR_TYPE,
   Event.JSON_PROPERTY_ACTOR_ID,
@@ -76,6 +77,10 @@ public class Event {
   public static final String JSON_PROPERTY_DATA = "data";
   @jakarta.annotation.Nullable
   private Map<String, Object> data = new HashMap<>();
+
+  public static final String JSON_PROPERTY_DO_NOT_FORWARD = "do_not_forward";
+  @jakarta.annotation.Nullable
+  private Boolean doNotForward = false;
 
   public static final String JSON_PROPERTY_CREATED_AT = "created_at";
   private JsonNullable<OffsetDateTime> createdAt = JsonNullable.<OffsetDateTime>undefined();
@@ -291,6 +296,30 @@ public class Event {
   }
 
 
+  public Event doNotForward(@jakarta.annotation.Nullable Boolean doNotForward) {
+    this.doNotForward = doNotForward;
+    return this;
+  }
+
+  /**
+   * When true, this event is recorded normally but is not forwarded to any configured SIEM forwarder. A forwarder_delivery row with status&#x3D;skipped_do_not_forward is recorded for each enabled forwarder so the skip is visible in the delivery log.
+   * @return doNotForward
+   */
+  @jakarta.annotation.Nullable
+  @JsonProperty(value = JSON_PROPERTY_DO_NOT_FORWARD, required = false)
+  @JsonInclude(value = JsonInclude.Include.USE_DEFAULTS)
+  public Boolean getDoNotForward() {
+    return doNotForward;
+  }
+
+
+  @JsonProperty(value = JSON_PROPERTY_DO_NOT_FORWARD, required = false)
+  @JsonInclude(value = JsonInclude.Include.USE_DEFAULTS)
+  public void setDoNotForward(@jakarta.annotation.Nullable Boolean doNotForward) {
+    this.doNotForward = doNotForward;
+  }
+
+
   /**
    * Get createdAt
    * @return createdAt
@@ -449,6 +478,7 @@ public class Event {
         equalsNullable(this.occurredAt, event.occurredAt) &&
         equalsNullable(this.snapshot, event.snapshot) &&
         Objects.equals(this.data, event.data) &&
+        Objects.equals(this.doNotForward, event.doNotForward) &&
         equalsNullable(this.createdAt, event.createdAt) &&
         equalsNullable(this.actorType, event.actorType) &&
         equalsNullable(this.actorId, event.actorId) &&
@@ -462,7 +492,7 @@ public class Event {
 
   @Override
   public int hashCode() {
-    return Objects.hash(action, resourceType, resourceId, hashCodeNullable(occurredAt), hashCodeNullable(snapshot), data, hashCodeNullable(createdAt), hashCodeNullable(actorType), hashCodeNullable(actorId), hashCodeNullable(actorLabel), hashCodeNullable(idempotencyKey));
+    return Objects.hash(action, resourceType, resourceId, hashCodeNullable(occurredAt), hashCodeNullable(snapshot), data, doNotForward, hashCodeNullable(createdAt), hashCodeNullable(actorType), hashCodeNullable(actorId), hashCodeNullable(actorLabel), hashCodeNullable(idempotencyKey));
   }
 
   private static <T> int hashCodeNullable(JsonNullable<T> a) {
@@ -482,6 +512,7 @@ public class Event {
     sb.append("    occurredAt: ").append(toIndentedString(occurredAt)).append("\n");
     sb.append("    snapshot: ").append(toIndentedString(snapshot)).append("\n");
     sb.append("    data: ").append(toIndentedString(data)).append("\n");
+    sb.append("    doNotForward: ").append(toIndentedString(doNotForward)).append("\n");
     sb.append("    createdAt: ").append(toIndentedString(createdAt)).append("\n");
     sb.append("    actorType: ").append(toIndentedString(actorType)).append("\n");
     sb.append("    actorId: ").append(toIndentedString(actorId)).append("\n");
@@ -567,6 +598,11 @@ public class Event {
             "".equals(suffix) ? "" : String.format(java.util.Locale.ROOT, "%s%d%s", containerPrefix, _key, containerSuffix),
             getData().get(_key), ApiClient.urlEncode(ApiClient.valueToString(getData().get(_key)))));
       }
+    }
+
+    // add `do_not_forward` to the URL query string
+    if (getDoNotForward() != null) {
+      joiner.add(String.format(java.util.Locale.ROOT, "%sdo_not_forward%s=%s", prefix, suffix, ApiClient.urlEncode(ApiClient.valueToString(getDoNotForward()))));
     }
 
     // add `created_at` to the URL query string
