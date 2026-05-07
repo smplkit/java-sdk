@@ -42,6 +42,12 @@ final class AuditEventBuffer {
     private final Deque<PendingEvent> queue = new ArrayDeque<>();
     private final AtomicBoolean closed = new AtomicBoolean(false);
     private long droppedCount;
+    // inFlight is the number of items the worker has popped from the queue
+    // but not yet finished POSTing. flush() must wait on both queue empty
+    // AND inFlight == 0 — otherwise it can return while a just-popped item
+    // is still in the middle of its HTTP round-trip, and an immediately
+    // following list() call would miss the event.
+    private int inFlight;
     private final ScheduledExecutorService worker;
 
     AuditEventBuffer(EventsApi api) {
@@ -79,19 +85,22 @@ final class AuditEventBuffer {
         }
     }
 
-    /** Cooperatively block until the queue is empty or the timeout elapses. */
+    /** Cooperatively block until the buffer is idle or the timeout elapses. */
     void flush(long timeoutMs) {
         long deadline = System.currentTimeMillis() + timeoutMs;
         while (true) {
-            boolean empty;
+            boolean idle;
             lock.lock();
             try {
-                empty = queue.isEmpty();
+                // Idle = queue empty AND no in-flight POST. Without the
+                // inFlight check, a just-popped item still mid-roundtrip
+                // would fool flush into returning early.
+                idle = queue.isEmpty() && inFlight == 0;
                 wake.signalAll();
             } finally {
                 lock.unlock();
             }
-            if (empty) {
+            if (idle) {
                 return;
             }
             if (System.currentTimeMillis() >= deadline) {
@@ -174,6 +183,7 @@ final class AuditEventBuffer {
                     return;
                 }
                 queue.pollFirst();
+                inFlight++;
             } finally {
                 lock.unlock();
             }
@@ -189,13 +199,16 @@ final class AuditEventBuffer {
             }
 
             PendingEvent requeue = handleOutcome(head, status, error);
-            if (requeue != null) {
-                lock.lock();
-                try {
+            lock.lock();
+            try {
+                inFlight--;
+                if (requeue != null) {
                     queue.addFirst(requeue);
-                } finally {
-                    lock.unlock();
                 }
+            } finally {
+                lock.unlock();
+            }
+            if (requeue != null) {
                 return;
             }
         }

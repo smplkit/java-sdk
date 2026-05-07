@@ -95,7 +95,7 @@ class AuditClientTest {
         long start = System.currentTimeMillis();
         for (int i = 0; i < 20; i++) {
             CreateEventInput input = new CreateEventInput("user.created", "user", "u-" + i);
-            client.events().create(input);
+            client.events().record(input);
         }
         assertTrue(System.currentTimeMillis() - start < 200, "create should return in milliseconds");
         client.events().flush(2_000);
@@ -106,7 +106,7 @@ class AuditClientTest {
     void create_passesIdempotencyKeyHeader() throws Exception {
         CreateEventInput input = new CreateEventInput("user.created", "user", "u-1");
         input.idempotencyKey = "key-abc";
-        client.events().create(input);
+        client.events().record(input);
         // flush() signals the worker to drain immediately. Wait on the
         // handler's CountDownLatch so we don't race the network round-trip
         // — CI runners are much slower than local.
@@ -126,7 +126,7 @@ class AuditClientTest {
         CreateEventInput input = new CreateEventInput();
         input.action = "user.created";
         IllegalArgumentException ex = assertThrows(IllegalArgumentException.class,
-                () -> client.events().create(input));
+                () -> client.events().record(input));
         assertTrue(ex.getMessage().contains("resourceType")
                 || ex.getMessage().contains("resourceId"));
     }
@@ -160,7 +160,7 @@ class AuditClientTest {
         input.occurredAt = OffsetDateTime.parse("2026-05-06T12:00:00Z");
         input.snapshot = java.util.Map.of("total_cents", 4900);
         input.data = java.util.Map.of("request_id", "req-1");
-        client.events().create(input);
+        client.events().record(input);
         client.events().flush(2_000);
         assertTrue(postCount.get() >= 1);
     }

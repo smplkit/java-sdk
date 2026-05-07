@@ -15,7 +15,7 @@ import java.util.UUID;
 /**
  * Audit events surface — accessed via {@link AuditClient#events()}.
  *
- * <p>{@link #create(CreateEventInput)} is fire-and-forget per ADR-047
+ * <p>{@link #record(CreateEventInput)} is fire-and-forget per ADR-047
  * §2.6 — the call enqueues the event onto an in-memory bounded buffer
  * and returns immediately. Reads ({@link #list(ListEventsInput)}, {@link
  * #get(UUID)}) are synchronous.</p>
@@ -40,12 +40,12 @@ public final class AuditEvents {
      * @throws IllegalArgumentException if action / resourceType / resourceId
      *     are missing
      */
-    public void create(CreateEventInput input) {
+    public void record(CreateEventInput input) {
         if (input.action == null || input.action.isEmpty()
                 || input.resourceType == null || input.resourceType.isEmpty()
                 || input.resourceId == null || input.resourceId.isEmpty()) {
             throw new IllegalArgumentException(
-                    "AuditEvents.create requires action, resourceType, and resourceId");
+                    "AuditEvents.record requires action, resourceType, and resourceId");
         }
         Event attrs = new Event()
                 .action(input.action)
