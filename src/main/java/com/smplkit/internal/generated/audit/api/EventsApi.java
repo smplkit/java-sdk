@@ -21,7 +21,6 @@ import com.smplkit.internal.generated.audit.Pair;
 import com.smplkit.internal.generated.audit.model.EventListResponse;
 import com.smplkit.internal.generated.audit.model.EventResponse;
 import java.util.UUID;
-import com.smplkit.internal.generated.audit.model.UsageResponse;
 
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -49,7 +48,7 @@ import java.util.Set;
 import java.util.function.Consumer;
 
 @jakarta.annotation.Generated(value = "org.openapitools.codegen.languages.JavaClientCodegen", comments = "Generator version: 7.21.0")
-public class DefaultApi {
+public class EventsApi {
   /**
    * Utility class for extending HttpRequest.Builder functionality.
    */
@@ -78,11 +77,11 @@ public class DefaultApi {
   private final Consumer<HttpResponse<InputStream>> memberVarResponseInterceptor;
   private final Consumer<HttpResponse<InputStream>> memberVarAsyncResponseInterceptor;
 
-  public DefaultApi() {
+  public EventsApi() {
     this(Configuration.getDefaultApiClient());
   }
 
-  public DefaultApi(ApiClient apiClient) {
+  public EventsApi(ApiClient apiClient) {
     memberVarHttpClient = apiClient.getHttpClient();
     memberVarObjectMapper = apiClient.getObjectMapper();
     memberVarBaseUri = apiClient.getBaseUri();
@@ -163,136 +162,6 @@ public class DefaultApi {
       file.deleteOnExit(); // best effort cleanup
     }
     return file;
-  }
-
-  /**
-   * Create Event
-   * Record an audit event for the authenticated account.  Returns &#x60;&#x60;201 Created&#x60;&#x60; on first write, &#x60;&#x60;200 OK&#x60;&#x60; if the request was a duplicate (matched by &#x60;&#x60;Idempotency-Key&#x60;&#x60; or auto-derived key).  Customers may not emit events whose &#x60;&#x60;resource_type&#x60;&#x60; starts with &#x60;&#x60;smpl.&#x60;&#x60; — that namespace is reserved for smplkit-emitted events about platform resources.
-   * @param eventResponse  (required)
-   * @param idempotencyKey  (optional)
-   * @return EventResponse
-   * @throws ApiException if fails to make API call
-   */
-  public EventResponse createEvent(@jakarta.annotation.Nonnull EventResponse eventResponse, @jakarta.annotation.Nullable String idempotencyKey) throws ApiException {
-    return createEvent(eventResponse, idempotencyKey, null);
-  }
-
-  /**
-   * Create Event
-   * Record an audit event for the authenticated account.  Returns &#x60;&#x60;201 Created&#x60;&#x60; on first write, &#x60;&#x60;200 OK&#x60;&#x60; if the request was a duplicate (matched by &#x60;&#x60;Idempotency-Key&#x60;&#x60; or auto-derived key).  Customers may not emit events whose &#x60;&#x60;resource_type&#x60;&#x60; starts with &#x60;&#x60;smpl.&#x60;&#x60; — that namespace is reserved for smplkit-emitted events about platform resources.
-   * @param eventResponse  (required)
-   * @param idempotencyKey  (optional)
-   * @param headers Optional headers to include in the request
-   * @return EventResponse
-   * @throws ApiException if fails to make API call
-   */
-  public EventResponse createEvent(@jakarta.annotation.Nonnull EventResponse eventResponse, @jakarta.annotation.Nullable String idempotencyKey, Map<String, String> headers) throws ApiException {
-    ApiResponse<EventResponse> localVarResponse = createEventWithHttpInfo(eventResponse, idempotencyKey, headers);
-    return localVarResponse.getData();
-  }
-
-  /**
-   * Create Event
-   * Record an audit event for the authenticated account.  Returns &#x60;&#x60;201 Created&#x60;&#x60; on first write, &#x60;&#x60;200 OK&#x60;&#x60; if the request was a duplicate (matched by &#x60;&#x60;Idempotency-Key&#x60;&#x60; or auto-derived key).  Customers may not emit events whose &#x60;&#x60;resource_type&#x60;&#x60; starts with &#x60;&#x60;smpl.&#x60;&#x60; — that namespace is reserved for smplkit-emitted events about platform resources.
-   * @param eventResponse  (required)
-   * @param idempotencyKey  (optional)
-   * @return ApiResponse&lt;EventResponse&gt;
-   * @throws ApiException if fails to make API call
-   */
-  public ApiResponse<EventResponse> createEventWithHttpInfo(@jakarta.annotation.Nonnull EventResponse eventResponse, @jakarta.annotation.Nullable String idempotencyKey) throws ApiException {
-    return createEventWithHttpInfo(eventResponse, idempotencyKey, null);
-  }
-
-  /**
-   * Create Event
-   * Record an audit event for the authenticated account.  Returns &#x60;&#x60;201 Created&#x60;&#x60; on first write, &#x60;&#x60;200 OK&#x60;&#x60; if the request was a duplicate (matched by &#x60;&#x60;Idempotency-Key&#x60;&#x60; or auto-derived key).  Customers may not emit events whose &#x60;&#x60;resource_type&#x60;&#x60; starts with &#x60;&#x60;smpl.&#x60;&#x60; — that namespace is reserved for smplkit-emitted events about platform resources.
-   * @param eventResponse  (required)
-   * @param idempotencyKey  (optional)
-   * @param headers Optional headers to include in the request
-   * @return ApiResponse&lt;EventResponse&gt;
-   * @throws ApiException if fails to make API call
-   */
-  public ApiResponse<EventResponse> createEventWithHttpInfo(@jakarta.annotation.Nonnull EventResponse eventResponse, @jakarta.annotation.Nullable String idempotencyKey, Map<String, String> headers) throws ApiException {
-    HttpRequest.Builder localVarRequestBuilder = createEventRequestBuilder(eventResponse, idempotencyKey, headers);
-    try {
-      HttpResponse<InputStream> localVarResponse = memberVarHttpClient.send(
-          localVarRequestBuilder.build(),
-          HttpResponse.BodyHandlers.ofInputStream());
-      if (memberVarResponseInterceptor != null) {
-        memberVarResponseInterceptor.accept(localVarResponse);
-      }
-      InputStream localVarResponseBody = null;
-      try {
-        if (localVarResponse.statusCode()/ 100 != 2) {
-          throw getApiException("createEvent", localVarResponse);
-        }
-        localVarResponseBody = ApiClient.getResponseBody(localVarResponse);
-        if (localVarResponseBody == null) {
-          return new ApiResponse<EventResponse>(
-              localVarResponse.statusCode(),
-              localVarResponse.headers().map(),
-              null
-          );
-        }
-
-        
-        
-        String responseBody = new String(localVarResponseBody.readAllBytes());
-        EventResponse responseValue = responseBody.isBlank()? null: memberVarObjectMapper.readValue(responseBody, new TypeReference<EventResponse>() {});
-        
-
-        return new ApiResponse<EventResponse>(
-            localVarResponse.statusCode(),
-            localVarResponse.headers().map(),
-            responseValue
-        );
-      } finally {
-        if (localVarResponseBody != null) {
-          localVarResponseBody.close();
-        }
-      }
-    } catch (IOException e) {
-      throw new ApiException(e);
-    }
-    catch (InterruptedException e) {
-      Thread.currentThread().interrupt();
-      throw new ApiException(e);
-    }
-  }
-
-  private HttpRequest.Builder createEventRequestBuilder(@jakarta.annotation.Nonnull EventResponse eventResponse, @jakarta.annotation.Nullable String idempotencyKey, Map<String, String> headers) throws ApiException {
-    // verify the required parameter 'eventResponse' is set
-    if (eventResponse == null) {
-      throw new ApiException(400, "Missing the required parameter 'eventResponse' when calling createEvent");
-    }
-
-    HttpRequest.Builder localVarRequestBuilder = HttpRequest.newBuilder();
-
-    String localVarPath = "/api/v1/events";
-
-    localVarRequestBuilder.uri(URI.create(memberVarBaseUri + localVarPath));
-
-    if (idempotencyKey != null) {
-      localVarRequestBuilder.header("Idempotency-Key", idempotencyKey.toString());
-    }
-    localVarRequestBuilder.header("Content-Type", "application/vnd.api+json");
-    localVarRequestBuilder.header("Accept", "application/vnd.api+json");
-
-    try {
-      byte[] localVarPostBody = memberVarObjectMapper.writeValueAsBytes(eventResponse);
-      localVarRequestBuilder.method("POST", HttpRequest.BodyPublishers.ofByteArray(localVarPostBody));
-    } catch (IOException e) {
-      throw new ApiException(e);
-    }
-    if (memberVarReadTimeout != null) {
-      localVarRequestBuilder.timeout(memberVarReadTimeout);
-    }
-    // Add custom headers if provided
-    localVarRequestBuilder = HttpRequestBuilderExtensions.withAdditionalHeaders(localVarRequestBuilder, headers);
-    if (memberVarInterceptor != null) {
-      memberVarInterceptor.accept(localVarRequestBuilder);
-    }
-    return localVarRequestBuilder;
   }
 
   /**
@@ -584,50 +453,54 @@ public class DefaultApi {
   }
 
   /**
-   * List Usage
-   * Current-period usage and quota for the audit product.  Only &#x60;&#x60;filter[period]&#x3D;current&#x60;&#x60; is supported; historical usage is a follow-up.
-   * @param filterPeriod  (required)
-   * @return UsageResponse
+   * Record Event
+   * Record an audit event for the authenticated account.  Returns &#x60;&#x60;201 Created&#x60;&#x60; on first write, &#x60;&#x60;200 OK&#x60;&#x60; if the request was a duplicate (matched by &#x60;&#x60;Idempotency-Key&#x60;&#x60; or auto-derived key).  Customers may not emit events whose &#x60;&#x60;resource_type&#x60;&#x60; starts with &#x60;&#x60;smpl.&#x60;&#x60; — that namespace is reserved for smplkit-emitted events about platform resources.
+   * @param eventResponse  (required)
+   * @param idempotencyKey  (optional)
+   * @return EventResponse
    * @throws ApiException if fails to make API call
    */
-  public UsageResponse listUsage(@jakarta.annotation.Nonnull String filterPeriod) throws ApiException {
-    return listUsage(filterPeriod, null);
+  public EventResponse recordEvent(@jakarta.annotation.Nonnull EventResponse eventResponse, @jakarta.annotation.Nullable String idempotencyKey) throws ApiException {
+    return recordEvent(eventResponse, idempotencyKey, null);
   }
 
   /**
-   * List Usage
-   * Current-period usage and quota for the audit product.  Only &#x60;&#x60;filter[period]&#x3D;current&#x60;&#x60; is supported; historical usage is a follow-up.
-   * @param filterPeriod  (required)
+   * Record Event
+   * Record an audit event for the authenticated account.  Returns &#x60;&#x60;201 Created&#x60;&#x60; on first write, &#x60;&#x60;200 OK&#x60;&#x60; if the request was a duplicate (matched by &#x60;&#x60;Idempotency-Key&#x60;&#x60; or auto-derived key).  Customers may not emit events whose &#x60;&#x60;resource_type&#x60;&#x60; starts with &#x60;&#x60;smpl.&#x60;&#x60; — that namespace is reserved for smplkit-emitted events about platform resources.
+   * @param eventResponse  (required)
+   * @param idempotencyKey  (optional)
    * @param headers Optional headers to include in the request
-   * @return UsageResponse
+   * @return EventResponse
    * @throws ApiException if fails to make API call
    */
-  public UsageResponse listUsage(@jakarta.annotation.Nonnull String filterPeriod, Map<String, String> headers) throws ApiException {
-    ApiResponse<UsageResponse> localVarResponse = listUsageWithHttpInfo(filterPeriod, headers);
+  public EventResponse recordEvent(@jakarta.annotation.Nonnull EventResponse eventResponse, @jakarta.annotation.Nullable String idempotencyKey, Map<String, String> headers) throws ApiException {
+    ApiResponse<EventResponse> localVarResponse = recordEventWithHttpInfo(eventResponse, idempotencyKey, headers);
     return localVarResponse.getData();
   }
 
   /**
-   * List Usage
-   * Current-period usage and quota for the audit product.  Only &#x60;&#x60;filter[period]&#x3D;current&#x60;&#x60; is supported; historical usage is a follow-up.
-   * @param filterPeriod  (required)
-   * @return ApiResponse&lt;UsageResponse&gt;
+   * Record Event
+   * Record an audit event for the authenticated account.  Returns &#x60;&#x60;201 Created&#x60;&#x60; on first write, &#x60;&#x60;200 OK&#x60;&#x60; if the request was a duplicate (matched by &#x60;&#x60;Idempotency-Key&#x60;&#x60; or auto-derived key).  Customers may not emit events whose &#x60;&#x60;resource_type&#x60;&#x60; starts with &#x60;&#x60;smpl.&#x60;&#x60; — that namespace is reserved for smplkit-emitted events about platform resources.
+   * @param eventResponse  (required)
+   * @param idempotencyKey  (optional)
+   * @return ApiResponse&lt;EventResponse&gt;
    * @throws ApiException if fails to make API call
    */
-  public ApiResponse<UsageResponse> listUsageWithHttpInfo(@jakarta.annotation.Nonnull String filterPeriod) throws ApiException {
-    return listUsageWithHttpInfo(filterPeriod, null);
+  public ApiResponse<EventResponse> recordEventWithHttpInfo(@jakarta.annotation.Nonnull EventResponse eventResponse, @jakarta.annotation.Nullable String idempotencyKey) throws ApiException {
+    return recordEventWithHttpInfo(eventResponse, idempotencyKey, null);
   }
 
   /**
-   * List Usage
-   * Current-period usage and quota for the audit product.  Only &#x60;&#x60;filter[period]&#x3D;current&#x60;&#x60; is supported; historical usage is a follow-up.
-   * @param filterPeriod  (required)
+   * Record Event
+   * Record an audit event for the authenticated account.  Returns &#x60;&#x60;201 Created&#x60;&#x60; on first write, &#x60;&#x60;200 OK&#x60;&#x60; if the request was a duplicate (matched by &#x60;&#x60;Idempotency-Key&#x60;&#x60; or auto-derived key).  Customers may not emit events whose &#x60;&#x60;resource_type&#x60;&#x60; starts with &#x60;&#x60;smpl.&#x60;&#x60; — that namespace is reserved for smplkit-emitted events about platform resources.
+   * @param eventResponse  (required)
+   * @param idempotencyKey  (optional)
    * @param headers Optional headers to include in the request
-   * @return ApiResponse&lt;UsageResponse&gt;
+   * @return ApiResponse&lt;EventResponse&gt;
    * @throws ApiException if fails to make API call
    */
-  public ApiResponse<UsageResponse> listUsageWithHttpInfo(@jakarta.annotation.Nonnull String filterPeriod, Map<String, String> headers) throws ApiException {
-    HttpRequest.Builder localVarRequestBuilder = listUsageRequestBuilder(filterPeriod, headers);
+  public ApiResponse<EventResponse> recordEventWithHttpInfo(@jakarta.annotation.Nonnull EventResponse eventResponse, @jakarta.annotation.Nullable String idempotencyKey, Map<String, String> headers) throws ApiException {
+    HttpRequest.Builder localVarRequestBuilder = recordEventRequestBuilder(eventResponse, idempotencyKey, headers);
     try {
       HttpResponse<InputStream> localVarResponse = memberVarHttpClient.send(
           localVarRequestBuilder.build(),
@@ -638,11 +511,11 @@ public class DefaultApi {
       InputStream localVarResponseBody = null;
       try {
         if (localVarResponse.statusCode()/ 100 != 2) {
-          throw getApiException("listUsage", localVarResponse);
+          throw getApiException("recordEvent", localVarResponse);
         }
         localVarResponseBody = ApiClient.getResponseBody(localVarResponse);
         if (localVarResponseBody == null) {
-          return new ApiResponse<UsageResponse>(
+          return new ApiResponse<EventResponse>(
               localVarResponse.statusCode(),
               localVarResponse.headers().map(),
               null
@@ -652,10 +525,10 @@ public class DefaultApi {
         
         
         String responseBody = new String(localVarResponseBody.readAllBytes());
-        UsageResponse responseValue = responseBody.isBlank()? null: memberVarObjectMapper.readValue(responseBody, new TypeReference<UsageResponse>() {});
+        EventResponse responseValue = responseBody.isBlank()? null: memberVarObjectMapper.readValue(responseBody, new TypeReference<EventResponse>() {});
         
 
-        return new ApiResponse<UsageResponse>(
+        return new ApiResponse<EventResponse>(
             localVarResponse.statusCode(),
             localVarResponse.headers().map(),
             responseValue
@@ -674,36 +547,30 @@ public class DefaultApi {
     }
   }
 
-  private HttpRequest.Builder listUsageRequestBuilder(@jakarta.annotation.Nonnull String filterPeriod, Map<String, String> headers) throws ApiException {
-    // verify the required parameter 'filterPeriod' is set
-    if (filterPeriod == null) {
-      throw new ApiException(400, "Missing the required parameter 'filterPeriod' when calling listUsage");
+  private HttpRequest.Builder recordEventRequestBuilder(@jakarta.annotation.Nonnull EventResponse eventResponse, @jakarta.annotation.Nullable String idempotencyKey, Map<String, String> headers) throws ApiException {
+    // verify the required parameter 'eventResponse' is set
+    if (eventResponse == null) {
+      throw new ApiException(400, "Missing the required parameter 'eventResponse' when calling recordEvent");
     }
 
     HttpRequest.Builder localVarRequestBuilder = HttpRequest.newBuilder();
 
-    String localVarPath = "/api/v1/usage";
+    String localVarPath = "/api/v1/events";
 
-    List<Pair> localVarQueryParams = new ArrayList<>();
-    StringJoiner localVarQueryStringJoiner = new StringJoiner("&");
-    String localVarQueryParameterBaseName;
-    localVarQueryParameterBaseName = "filter[period]";
-    localVarQueryParams.addAll(ApiClient.parameterToPairs("filter[period]", filterPeriod));
+    localVarRequestBuilder.uri(URI.create(memberVarBaseUri + localVarPath));
 
-    if (!localVarQueryParams.isEmpty() || localVarQueryStringJoiner.length() != 0) {
-      StringJoiner queryJoiner = new StringJoiner("&");
-      localVarQueryParams.forEach(p -> queryJoiner.add(p.getName() + '=' + p.getValue()));
-      if (localVarQueryStringJoiner.length() != 0) {
-        queryJoiner.add(localVarQueryStringJoiner.toString());
-      }
-      localVarRequestBuilder.uri(URI.create(memberVarBaseUri + localVarPath + '?' + queryJoiner.toString()));
-    } else {
-      localVarRequestBuilder.uri(URI.create(memberVarBaseUri + localVarPath));
+    if (idempotencyKey != null) {
+      localVarRequestBuilder.header("Idempotency-Key", idempotencyKey.toString());
     }
-
+    localVarRequestBuilder.header("Content-Type", "application/vnd.api+json");
     localVarRequestBuilder.header("Accept", "application/vnd.api+json");
 
-    localVarRequestBuilder.method("GET", HttpRequest.BodyPublishers.noBody());
+    try {
+      byte[] localVarPostBody = memberVarObjectMapper.writeValueAsBytes(eventResponse);
+      localVarRequestBuilder.method("POST", HttpRequest.BodyPublishers.ofByteArray(localVarPostBody));
+    } catch (IOException e) {
+      throw new ApiException(e);
+    }
     if (memberVarReadTimeout != null) {
       localVarRequestBuilder.timeout(memberVarReadTimeout);
     }

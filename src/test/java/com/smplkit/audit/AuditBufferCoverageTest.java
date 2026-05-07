@@ -2,7 +2,7 @@ package com.smplkit.audit;
 
 import com.smplkit.internal.generated.audit.ApiClient;
 import com.smplkit.internal.generated.audit.ApiException;
-import com.smplkit.internal.generated.audit.api.DefaultApi;
+import com.smplkit.internal.generated.audit.api.EventsApi;
 import com.smplkit.internal.generated.audit.model.Event;
 import com.smplkit.internal.generated.audit.model.EventResource;
 import com.smplkit.internal.generated.audit.model.EventResponse;
@@ -28,7 +28,7 @@ import static org.junit.jupiter.api.Assertions.*;
 class AuditBufferCoverageTest {
 
     private HttpServer server;
-    private DefaultApi api;
+    private EventsApi api;
     private AtomicInteger postCount;
 
     @BeforeEach
@@ -39,7 +39,7 @@ class AuditBufferCoverageTest {
         var apiClient = new ApiClient();
         apiClient.updateBaseUri("http://127.0.0.1:" + server.getAddress().getPort());
         apiClient.setReadTimeout(Duration.ofSeconds(2));
-        api = new DefaultApi(apiClient);
+        api = new EventsApi(apiClient);
     }
 
     @AfterEach

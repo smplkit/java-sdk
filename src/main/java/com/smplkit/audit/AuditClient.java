@@ -1,7 +1,7 @@
 package com.smplkit.audit;
 
 import com.smplkit.internal.generated.audit.ApiClient;
-import com.smplkit.internal.generated.audit.api.DefaultApi;
+import com.smplkit.internal.generated.audit.api.EventsApi;
 
 import java.net.http.HttpClient;
 import java.time.Duration;
@@ -22,7 +22,7 @@ public final class AuditClient implements AutoCloseable {
         apiClient.updateBaseUri(baseUrl);
         apiClient.setRequestInterceptor(builder -> builder.header("Authorization", "Bearer " + apiKey));
         apiClient.setReadTimeout(timeout);
-        DefaultApi api = new DefaultApi(apiClient);
+        EventsApi api = new EventsApi(apiClient);
         this.events = new AuditEvents(api);
     }
 
