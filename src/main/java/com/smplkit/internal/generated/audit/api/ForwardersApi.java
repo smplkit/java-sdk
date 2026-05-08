@@ -521,7 +521,7 @@ public class ForwardersApi {
 
   /**
    * Get Forwarder
-   * Retrieve a single forwarder by id.  Returns 404 if no forwarder with that id exists in the caller&#39;s account, including if the forwarder is soft-deleted. Header values in the response are always redacted regardless of caller permission.
+   * Retrieve a single forwarder by id.  Returns 404 if no forwarder with that id exists in the caller&#39;s account, including if the forwarder is soft-deleted. Header values in the response are returned in plaintext so callers can perform a GET-modify-PUT round-trip without re-entering secrets (ADR-014). The persisted &#x60;&#x60;forwarder_delivery.request&#x60;&#x60; log column is what keeps redaction; that read path is unaffected by this route.
    * @param forwarderId  (required)
    * @return ForwarderResponse
    * @throws ApiException if fails to make API call
@@ -532,7 +532,7 @@ public class ForwardersApi {
 
   /**
    * Get Forwarder
-   * Retrieve a single forwarder by id.  Returns 404 if no forwarder with that id exists in the caller&#39;s account, including if the forwarder is soft-deleted. Header values in the response are always redacted regardless of caller permission.
+   * Retrieve a single forwarder by id.  Returns 404 if no forwarder with that id exists in the caller&#39;s account, including if the forwarder is soft-deleted. Header values in the response are returned in plaintext so callers can perform a GET-modify-PUT round-trip without re-entering secrets (ADR-014). The persisted &#x60;&#x60;forwarder_delivery.request&#x60;&#x60; log column is what keeps redaction; that read path is unaffected by this route.
    * @param forwarderId  (required)
    * @param headers Optional headers to include in the request
    * @return ForwarderResponse
@@ -545,7 +545,7 @@ public class ForwardersApi {
 
   /**
    * Get Forwarder
-   * Retrieve a single forwarder by id.  Returns 404 if no forwarder with that id exists in the caller&#39;s account, including if the forwarder is soft-deleted. Header values in the response are always redacted regardless of caller permission.
+   * Retrieve a single forwarder by id.  Returns 404 if no forwarder with that id exists in the caller&#39;s account, including if the forwarder is soft-deleted. Header values in the response are returned in plaintext so callers can perform a GET-modify-PUT round-trip without re-entering secrets (ADR-014). The persisted &#x60;&#x60;forwarder_delivery.request&#x60;&#x60; log column is what keeps redaction; that read path is unaffected by this route.
    * @param forwarderId  (required)
    * @return ApiResponse&lt;ForwarderResponse&gt;
    * @throws ApiException if fails to make API call
@@ -556,7 +556,7 @@ public class ForwardersApi {
 
   /**
    * Get Forwarder
-   * Retrieve a single forwarder by id.  Returns 404 if no forwarder with that id exists in the caller&#39;s account, including if the forwarder is soft-deleted. Header values in the response are always redacted regardless of caller permission.
+   * Retrieve a single forwarder by id.  Returns 404 if no forwarder with that id exists in the caller&#39;s account, including if the forwarder is soft-deleted. Header values in the response are returned in plaintext so callers can perform a GET-modify-PUT round-trip without re-entering secrets (ADR-014). The persisted &#x60;&#x60;forwarder_delivery.request&#x60;&#x60; log column is what keeps redaction; that read path is unaffected by this route.
    * @param forwarderId  (required)
    * @param headers Optional headers to include in the request
    * @return ApiResponse&lt;ForwarderResponse&gt;
@@ -1185,7 +1185,7 @@ public class ForwardersApi {
 
   /**
    * Update Forwarder
-   * Full-replace update. PUT semantics — every field is overwritten.  The header values must be re-supplied; the GET path redacts them, but a PUT body that contains &#x60;&#x60;\&quot;&lt;redacted&gt;\&quot;&#x60;&#x60; would persist that literal. Customers must round-trip the actual secret back. This is the standard get-mutate-put pattern (see CLAUDE.md \&quot;Updating Resources via the API\&quot;); the SDK helpers track the un-redacted secret client-side so customers don&#39;t usually need to re-enter it.
+   * Full-replace update. PUT semantics — every field is overwritten.  The GET path returns plaintext header values, so the standard get-mutate-put round-trip (ADR-014) preserves secrets without any extra work from the caller: GET, change one field, PUT the result.
    * @param forwarderId  (required)
    * @param forwarderResponse  (required)
    * @return ForwarderResponse
@@ -1197,7 +1197,7 @@ public class ForwardersApi {
 
   /**
    * Update Forwarder
-   * Full-replace update. PUT semantics — every field is overwritten.  The header values must be re-supplied; the GET path redacts them, but a PUT body that contains &#x60;&#x60;\&quot;&lt;redacted&gt;\&quot;&#x60;&#x60; would persist that literal. Customers must round-trip the actual secret back. This is the standard get-mutate-put pattern (see CLAUDE.md \&quot;Updating Resources via the API\&quot;); the SDK helpers track the un-redacted secret client-side so customers don&#39;t usually need to re-enter it.
+   * Full-replace update. PUT semantics — every field is overwritten.  The GET path returns plaintext header values, so the standard get-mutate-put round-trip (ADR-014) preserves secrets without any extra work from the caller: GET, change one field, PUT the result.
    * @param forwarderId  (required)
    * @param forwarderResponse  (required)
    * @param headers Optional headers to include in the request
@@ -1211,7 +1211,7 @@ public class ForwardersApi {
 
   /**
    * Update Forwarder
-   * Full-replace update. PUT semantics — every field is overwritten.  The header values must be re-supplied; the GET path redacts them, but a PUT body that contains &#x60;&#x60;\&quot;&lt;redacted&gt;\&quot;&#x60;&#x60; would persist that literal. Customers must round-trip the actual secret back. This is the standard get-mutate-put pattern (see CLAUDE.md \&quot;Updating Resources via the API\&quot;); the SDK helpers track the un-redacted secret client-side so customers don&#39;t usually need to re-enter it.
+   * Full-replace update. PUT semantics — every field is overwritten.  The GET path returns plaintext header values, so the standard get-mutate-put round-trip (ADR-014) preserves secrets without any extra work from the caller: GET, change one field, PUT the result.
    * @param forwarderId  (required)
    * @param forwarderResponse  (required)
    * @return ApiResponse&lt;ForwarderResponse&gt;
@@ -1223,7 +1223,7 @@ public class ForwardersApi {
 
   /**
    * Update Forwarder
-   * Full-replace update. PUT semantics — every field is overwritten.  The header values must be re-supplied; the GET path redacts them, but a PUT body that contains &#x60;&#x60;\&quot;&lt;redacted&gt;\&quot;&#x60;&#x60; would persist that literal. Customers must round-trip the actual secret back. This is the standard get-mutate-put pattern (see CLAUDE.md \&quot;Updating Resources via the API\&quot;); the SDK helpers track the un-redacted secret client-side so customers don&#39;t usually need to re-enter it.
+   * Full-replace update. PUT semantics — every field is overwritten.  The GET path returns plaintext header values, so the standard get-mutate-put round-trip (ADR-014) preserves secrets without any extra work from the caller: GET, change one field, PUT the result.
    * @param forwarderId  (required)
    * @param forwarderResponse  (required)
    * @param headers Optional headers to include in the request
