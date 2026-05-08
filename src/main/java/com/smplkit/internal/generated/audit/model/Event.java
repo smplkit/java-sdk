@@ -38,14 +38,13 @@ import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 
 import com.smplkit.internal.generated.audit.ApiClient;
 /**
- * Public-facing event resource.  Attribute set on POST /api/v1/events:     - action (required)     - resource_type (required)     - resource_id (required)     - occurred_at (optional; defaults to &#x60;&#x60;created_at&#x60;&#x60;)     - snapshot (optional)     - data (optional; defaults to &#x60;&#x60;{}&#x60;&#x60;)  Attribute set on GET responses includes everything above plus the server-populated fields: &#x60;&#x60;created_at&#x60;&#x60;, &#x60;&#x60;actor_type&#x60;&#x60;, &#x60;&#x60;actor_id&#x60;&#x60;, &#x60;&#x60;actor_label&#x60;&#x60;, &#x60;&#x60;idempotency_key&#x60;&#x60;.
+ * Public-facing event resource.  Attribute set on POST /api/v1/events:     - action (required)     - resource_type (required)     - resource_id (required)     - occurred_at (optional; defaults to &#x60;&#x60;created_at&#x60;&#x60;)     - data (optional; defaults to &#x60;&#x60;{}&#x60;&#x60;)  There is no top-level &#x60;&#x60;snapshot&#x60;&#x60; attribute. Customers wishing to record a resource snapshot place it inside &#x60;&#x60;data&#x60;&#x60; -- smplkit&#39;s internal convention nests it at &#x60;&#x60;data.snapshot&#x60;&#x60;, but customers may follow their own convention.  Attribute set on GET responses includes everything above plus the server-populated fields: &#x60;&#x60;created_at&#x60;&#x60;, &#x60;&#x60;actor_type&#x60;&#x60;, &#x60;&#x60;actor_id&#x60;&#x60;, &#x60;&#x60;actor_label&#x60;&#x60;, &#x60;&#x60;idempotency_key&#x60;&#x60;.
  */
 @JsonPropertyOrder({
   Event.JSON_PROPERTY_ACTION,
   Event.JSON_PROPERTY_RESOURCE_TYPE,
   Event.JSON_PROPERTY_RESOURCE_ID,
   Event.JSON_PROPERTY_OCCURRED_AT,
-  Event.JSON_PROPERTY_SNAPSHOT,
   Event.JSON_PROPERTY_DATA,
   Event.JSON_PROPERTY_DO_NOT_FORWARD,
   Event.JSON_PROPERTY_CREATED_AT,
@@ -70,9 +69,6 @@ public class Event {
 
   public static final String JSON_PROPERTY_OCCURRED_AT = "occurred_at";
   private JsonNullable<OffsetDateTime> occurredAt = JsonNullable.<OffsetDateTime>undefined();
-
-  public static final String JSON_PROPERTY_SNAPSHOT = "snapshot";
-  private JsonNullable<Map<String, Object>> snapshot = JsonNullable.<Map<String, Object>>undefined();
 
   public static final String JSON_PROPERTY_DATA = "data";
   @jakarta.annotation.Nullable
@@ -217,50 +213,6 @@ public class Event {
 
   public void setOccurredAt(@jakarta.annotation.Nullable OffsetDateTime occurredAt) {
     this.occurredAt = JsonNullable.<OffsetDateTime>of(occurredAt);
-  }
-
-
-  public Event snapshot(@jakarta.annotation.Nullable Map<String, Object> snapshot) {
-    this.snapshot = JsonNullable.<Map<String, Object>>of(snapshot);
-    return this;
-  }
-
-  public Event putSnapshotItem(String key, Object snapshotItem) {
-    if (this.snapshot == null || !this.snapshot.isPresent()) {
-      this.snapshot = JsonNullable.<Map<String, Object>>of(new HashMap<>());
-    }
-    try {
-      this.snapshot.get().put(key, snapshotItem);
-    } catch (java.util.NoSuchElementException e) {
-      // this can never happen, as we make sure above that the value is present
-    }
-    return this;
-  }
-
-  /**
-   * Get snapshot
-   * @return snapshot
-   */
-  @jakarta.annotation.Nullable
-  @JsonIgnore
-  public Map<String, Object> getSnapshot() {
-        return snapshot.orElse(null);
-  }
-
-  @JsonProperty(value = JSON_PROPERTY_SNAPSHOT, required = false)
-  @JsonInclude(content = JsonInclude.Include.ALWAYS, value = JsonInclude.Include.USE_DEFAULTS)
-
-  public JsonNullable<Map<String, Object>> getSnapshot_JsonNullable() {
-    return snapshot;
-  }
-  
-  @JsonProperty(JSON_PROPERTY_SNAPSHOT)
-  public void setSnapshot_JsonNullable(JsonNullable<Map<String, Object>> snapshot) {
-    this.snapshot = snapshot;
-  }
-
-  public void setSnapshot(@jakarta.annotation.Nullable Map<String, Object> snapshot) {
-    this.snapshot = JsonNullable.<Map<String, Object>>of(snapshot);
   }
 
 
@@ -476,7 +428,6 @@ public class Event {
         Objects.equals(this.resourceType, event.resourceType) &&
         Objects.equals(this.resourceId, event.resourceId) &&
         equalsNullable(this.occurredAt, event.occurredAt) &&
-        equalsNullable(this.snapshot, event.snapshot) &&
         Objects.equals(this.data, event.data) &&
         Objects.equals(this.doNotForward, event.doNotForward) &&
         equalsNullable(this.createdAt, event.createdAt) &&
@@ -492,7 +443,7 @@ public class Event {
 
   @Override
   public int hashCode() {
-    return Objects.hash(action, resourceType, resourceId, hashCodeNullable(occurredAt), hashCodeNullable(snapshot), data, doNotForward, hashCodeNullable(createdAt), hashCodeNullable(actorType), hashCodeNullable(actorId), hashCodeNullable(actorLabel), hashCodeNullable(idempotencyKey));
+    return Objects.hash(action, resourceType, resourceId, hashCodeNullable(occurredAt), data, doNotForward, hashCodeNullable(createdAt), hashCodeNullable(actorType), hashCodeNullable(actorId), hashCodeNullable(actorLabel), hashCodeNullable(idempotencyKey));
   }
 
   private static <T> int hashCodeNullable(JsonNullable<T> a) {
@@ -510,7 +461,6 @@ public class Event {
     sb.append("    resourceType: ").append(toIndentedString(resourceType)).append("\n");
     sb.append("    resourceId: ").append(toIndentedString(resourceId)).append("\n");
     sb.append("    occurredAt: ").append(toIndentedString(occurredAt)).append("\n");
-    sb.append("    snapshot: ").append(toIndentedString(snapshot)).append("\n");
     sb.append("    data: ").append(toIndentedString(data)).append("\n");
     sb.append("    doNotForward: ").append(toIndentedString(doNotForward)).append("\n");
     sb.append("    createdAt: ").append(toIndentedString(createdAt)).append("\n");
@@ -580,15 +530,6 @@ public class Event {
     // add `occurred_at` to the URL query string
     if (getOccurredAt() != null) {
       joiner.add(String.format(java.util.Locale.ROOT, "%soccurred_at%s=%s", prefix, suffix, ApiClient.urlEncode(ApiClient.valueToString(getOccurredAt()))));
-    }
-
-    // add `snapshot` to the URL query string
-    if (getSnapshot() != null) {
-      for (String _key : getSnapshot().keySet()) {
-        joiner.add(String.format(java.util.Locale.ROOT, "%ssnapshot%s%s=%s", prefix, suffix,
-            "".equals(suffix) ? "" : String.format(java.util.Locale.ROOT, "%s%d%s", containerPrefix, _key, containerSuffix),
-            getSnapshot().get(_key), ApiClient.urlEncode(ApiClient.valueToString(getSnapshot().get(_key)))));
-      }
     }
 
     // add `data` to the URL query string
