@@ -78,7 +78,7 @@ class AuditBufferCoverageTest {
                     "\"occurred_at\":\"2026-05-06T12:00:00Z\"," +
                     "\"created_at\":\"2026-05-06T12:00:01Z\"," +
                     "\"actor_type\":\"API_KEY\",\"actor_id\":null,\"actor_label\":\"\"," +
-                    "\"snapshot\":null,\"data\":{},\"idempotency_key\":\"\"}}}").getBytes();
+                    "\"data\":{},\"idempotency_key\":\"\"}}}").getBytes();
             ex.getResponseHeaders().add("Content-Type", "application/vnd.api+json");
             ex.sendResponseHeaders(201, resp.length);
             ex.getResponseBody().write(resp);
@@ -181,12 +181,13 @@ class AuditBufferCoverageTest {
     void auditEvent_constructorPopulatesAllFields() {
         var id = UUID.randomUUID();
         var actorId = UUID.randomUUID();
-        java.util.Map<String, Object> snapshot = java.util.Map.of("k", "v");
-        java.util.Map<String, Object> data = java.util.Map.of("d", 1);
+        java.util.Map<String, Object> data = java.util.Map.of(
+                "snapshot", java.util.Map.of("k", "v"),
+                "d", 1);
         var ev = new AuditEvent(id, "act", "rt", "rid",
                 OffsetDateTime.now(), OffsetDateTime.now(),
                 "USER", actorId, "label",
-                snapshot, data, "ik", false);
+                data, "ik", false);
         assertEquals(id, ev.id);
         assertEquals("act", ev.action);
         assertEquals(actorId, ev.actorId);
@@ -266,7 +267,7 @@ class AuditBufferCoverageTest {
                     "\"occurred_at\":\"2026-05-06T12:00:00Z\"," +
                     "\"created_at\":\"2026-05-06T12:00:01Z\"," +
                     "\"actor_type\":\"USER\",\"actor_id\":\"aaaaaaaa-bbbb-cccc-dddd-eeeeeeeeeeee\"," +
-                    "\"actor_label\":\"a@b.c\",\"snapshot\":null,\"data\":{},\"idempotency_key\":\"k\"}}],\"meta\":{\"page_size\":1}}").getBytes();
+                    "\"actor_label\":\"a@b.c\",\"data\":{},\"idempotency_key\":\"k\"}}],\"meta\":{\"page_size\":1}}").getBytes();
             ex.getResponseHeaders().add("Content-Type", "application/vnd.api+json");
             ex.sendResponseHeaders(200, resp.length);
             ex.getResponseBody().write(resp);
@@ -318,7 +319,7 @@ class AuditBufferCoverageTest {
                     "\"occurred_at\":\"2026-05-06T12:00:00Z\"," +
                     "\"created_at\":\"2026-05-06T12:00:01Z\"," +
                     "\"actor_type\":\"API_KEY\",\"actor_id\":null,\"actor_label\":\"\"," +
-                    "\"snapshot\":null,\"data\":{},\"idempotency_key\":\"\"}}}").getBytes();
+                    "\"data\":{},\"idempotency_key\":\"\"}}}").getBytes();
             ex.getResponseHeaders().add("Content-Type", "application/vnd.api+json");
             ex.sendResponseHeaders(code, code == 503 ? -1 : resp.length);
             if (code != 503) ex.getResponseBody().write(resp);

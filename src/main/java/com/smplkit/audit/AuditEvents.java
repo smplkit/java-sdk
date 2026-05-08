@@ -54,9 +54,6 @@ public final class AuditEvents {
         if (input.occurredAt != null) {
             attrs.occurredAt(input.occurredAt);
         }
-        if (input.snapshot != null) {
-            attrs.snapshot(input.snapshot);
-        }
         if (input.data != null) {
             attrs.data(input.data);
         }
@@ -137,7 +134,6 @@ public final class AuditEvents {
                 a.getActorType(),
                 a.getActorId(),
                 a.getActorLabel(),
-                a.getSnapshot(),
                 a.getData(),
                 a.getIdempotencyKey(),
                 a.getDoNotForward() != null ? a.getDoNotForward() : false
