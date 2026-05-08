@@ -15,9 +15,11 @@ public final class CreateEventInput {
     public String resourceId;
     /** Optional. Defaults to server-side now() if null. */
     public OffsetDateTime occurredAt;
-    /** Optional full resource snapshot (ADR-047 §2.5). */
-    public Map<String, Object> snapshot;
-    /** Optional contextual extras (request id, IP, etc.). */
+    /**
+     * Optional contextual extras. To record a resource snapshot, nest it
+     * inside {@code data} — smplkit's internal convention is
+     * {@code data.put("snapshot", ...)}, but the shape is unconstrained.
+     */
     public Map<String, Object> data;
     /** Optional. Server derives a content hash if null. */
     public String idempotencyKey;

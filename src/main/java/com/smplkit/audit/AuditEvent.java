@@ -7,6 +7,10 @@ import java.util.UUID;
 /**
  * Public-facing audit event resource — flat-named projection of the
  * JSON:API attributes shape returned by the audit service. ADR-047 §2.3.1.
+ *
+ * <p>Snapshots, when recorded, live inside {@code data}. smplkit's internal
+ * convention nests them at {@code data.get("snapshot")} but the shape is
+ * unconstrained — customers may follow their own convention.
  */
 public final class AuditEvent {
     public final UUID id;
@@ -18,7 +22,6 @@ public final class AuditEvent {
     public final String actorType;
     public final UUID actorId; // nullable — null for API_KEY actor
     public final String actorLabel;
-    public final Map<String, Object> snapshot; // nullable
     public final Map<String, Object> data;
     public final String idempotencyKey;
     public final boolean doNotForward;
@@ -26,7 +29,7 @@ public final class AuditEvent {
     public AuditEvent(UUID id, String action, String resourceType, String resourceId,
                       OffsetDateTime occurredAt, OffsetDateTime createdAt,
                       String actorType, UUID actorId, String actorLabel,
-                      Map<String, Object> snapshot, Map<String, Object> data,
+                      Map<String, Object> data,
                       String idempotencyKey, boolean doNotForward) {
         this.id = id;
         this.action = action;
@@ -37,7 +40,6 @@ public final class AuditEvent {
         this.actorType = actorType;
         this.actorId = actorId;
         this.actorLabel = actorLabel;
-        this.snapshot = snapshot;
         this.data = data;
         this.idempotencyKey = idempotencyKey;
         this.doNotForward = doNotForward;

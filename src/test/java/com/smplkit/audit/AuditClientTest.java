@@ -68,7 +68,7 @@ class AuditClientTest {
                     lastIdempotencyKey.set(found);
                     postCount.incrementAndGet();
                     firstPostSeen.countDown();
-                    String body = "{\"data\":{\"id\":\"00000000-0000-0000-0000-000000000001\",\"type\":\"event\",\"attributes\":{\"action\":\"x.created\",\"resource_type\":\"x\",\"resource_id\":\"1\",\"occurred_at\":\"2026-05-06T12:00:00Z\",\"created_at\":\"2026-05-06T12:00:01Z\",\"actor_type\":\"API_KEY\",\"actor_id\":null,\"actor_label\":\"\",\"snapshot\":null,\"data\":{},\"idempotency_key\":\"\"}}}";
+                    String body = "{\"data\":{\"id\":\"00000000-0000-0000-0000-000000000001\",\"type\":\"event\",\"attributes\":{\"action\":\"x.created\",\"resource_type\":\"x\",\"resource_id\":\"1\",\"occurred_at\":\"2026-05-06T12:00:00Z\",\"created_at\":\"2026-05-06T12:00:01Z\",\"actor_type\":\"API_KEY\",\"actor_id\":null,\"actor_label\":\"\",\"data\":{},\"idempotency_key\":\"\"}}}";
                     byte[] resp = body.getBytes();
                     ex.getResponseHeaders().add("Content-Type", "application/vnd.api+json");
                     ex.sendResponseHeaders(201, resp.length);
@@ -77,7 +77,7 @@ class AuditClientTest {
                     return;
                 }
                 if (ex.getRequestMethod().equals("GET")) {
-                    String body = "{\"data\":{\"id\":\"11111111-2222-3333-4444-555555555555\",\"type\":\"event\",\"attributes\":{\"action\":\"x.created\",\"resource_type\":\"x\",\"resource_id\":\"1\",\"occurred_at\":\"2026-05-06T12:00:00Z\",\"created_at\":\"2026-05-06T12:00:01Z\",\"actor_type\":\"API_KEY\",\"actor_id\":null,\"actor_label\":\"\",\"snapshot\":null,\"data\":{},\"idempotency_key\":\"k\"}}}";
+                    String body = "{\"data\":{\"id\":\"11111111-2222-3333-4444-555555555555\",\"type\":\"event\",\"attributes\":{\"action\":\"x.created\",\"resource_type\":\"x\",\"resource_id\":\"1\",\"occurred_at\":\"2026-05-06T12:00:00Z\",\"created_at\":\"2026-05-06T12:00:01Z\",\"actor_type\":\"API_KEY\",\"actor_id\":null,\"actor_label\":\"\",\"data\":{},\"idempotency_key\":\"k\"}}}";
                     byte[] resp = body.getBytes();
                     ex.getResponseHeaders().add("Content-Type", "application/vnd.api+json");
                     ex.sendResponseHeaders(200, resp.length);
@@ -156,11 +156,12 @@ class AuditClientTest {
     }
 
     @Test
-    void create_withSnapshotAndData_includedInPayload() throws Exception {
+    void create_nestsSnapshotInsideData() throws Exception {
         CreateEventInput input = new CreateEventInput("invoice.created", "invoice", "inv-1");
         input.occurredAt = OffsetDateTime.parse("2026-05-06T12:00:00Z");
-        input.snapshot = java.util.Map.of("total_cents", 4900);
-        input.data = java.util.Map.of("request_id", "req-1");
+        input.data = java.util.Map.of(
+                "snapshot", java.util.Map.of("total_cents", 4900),
+                "request_id", "req-1");
         client.events().record(input);
         client.events().flush(2_000);
         assertTrue(postCount.get() >= 1);

@@ -47,8 +47,9 @@ public final class AuditRuntimeShowcase {
             String someResourceId = "showcase-" + UUID.randomUUID().toString().substring(0, 8);
             CreateEventInput input = new CreateEventInput("invoice.created", "invoice", someResourceId);
             input.occurredAt = OffsetDateTime.now();
-            input.snapshot = Map.of("total_cents", 4900, "currency", "USD");
-            input.data = Map.of("request_id", "req-abc");
+            input.data = Map.of(
+                    "snapshot", Map.of("total_cents", 4900, "currency", "USD"),
+                    "request_id", "req-abc");
             client.audit().events().record(input);
 
             // force the event to be posted (normally happens automatically, in the
