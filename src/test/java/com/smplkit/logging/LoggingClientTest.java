@@ -882,6 +882,37 @@ class LoggingClientTest {
     }
 
     // -----------------------------------------------------------------------
+    // install() — NoClassDefFoundError from adapter methods
+    // -----------------------------------------------------------------------
+
+    @Test
+    void install_discover_noClassDefFoundError_isSkippedGracefully() throws ApiException {
+        stubEmptyResponses();
+
+        LoggingAdapter mockAdapter = mock(LoggingAdapter.class);
+        when(mockAdapter.name()).thenReturn("broken");
+        when(mockAdapter.discover()).thenThrow(new NoClassDefFoundError("missing/FrameworkClass"));
+        client.registerAdapter(mockAdapter);
+
+        assertDoesNotThrow(() -> client.install());
+        assertTrue(client.isInstalled());
+    }
+
+    @Test
+    void install_installHook_noClassDefFoundError_isSkippedGracefully() throws ApiException {
+        stubEmptyResponses();
+
+        LoggingAdapter mockAdapter = mock(LoggingAdapter.class);
+        when(mockAdapter.name()).thenReturn("broken");
+        when(mockAdapter.discover()).thenReturn(List.of());
+        doThrow(new NoClassDefFoundError("missing/FrameworkClass")).when(mockAdapter).installHook(any());
+        client.registerAdapter(mockAdapter);
+
+        assertDoesNotThrow(() -> client.install());
+        assertTrue(client.isInstalled());
+    }
+
+    // -----------------------------------------------------------------------
     // close()
     // -----------------------------------------------------------------------
 

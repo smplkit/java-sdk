@@ -252,6 +252,8 @@ public final class LoggingClient {
                     Debug.log("discovery", "discovered logger: " + normalized + " (level=" + dl.level() + ")");
                     discoveredCount++;
                 }
+            } catch (NoClassDefFoundError e) {
+                Debug.log("lifecycle", "Skipped adapter " + adapter.name() + " discover() — dependency missing: " + e.getMessage());
             } catch (Exception e) {
                 LOG.log(Level.WARNING, "Adapter " + adapter.name() + " discover() failed", e);
             }
@@ -265,6 +267,8 @@ public final class LoggingClient {
         for (LoggingAdapter adapter : adapters) {
             try {
                 adapter.installHook(this::onNewLogger);
+            } catch (NoClassDefFoundError e) {
+                Debug.log("lifecycle", "Skipped adapter " + adapter.name() + " installHook() — dependency missing: " + e.getMessage());
             } catch (Exception e) {
                 LOG.warning("Adapter " + adapter.name() + " installHook() failed: " + e.getMessage());
                 Debug.log("lifecycle", "Adapter " + adapter.name() + " installHook() failed: " + e);
