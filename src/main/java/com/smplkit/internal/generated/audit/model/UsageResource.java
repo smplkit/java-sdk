@@ -24,9 +24,8 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonTypeName;
 import com.fasterxml.jackson.annotation.JsonValue;
+import com.smplkit.internal.generated.audit.model.UsageAttributes;
 import java.util.Arrays;
-import java.util.HashMap;
-import java.util.Map;
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 
 
@@ -51,7 +50,7 @@ public class UsageResource {
 
   public static final String JSON_PROPERTY_ATTRIBUTES = "attributes";
   @jakarta.annotation.Nonnull
-  private Map<String, Object> attributes = new HashMap<>();
+  private UsageAttributes attributes;
 
   public UsageResource() { 
   }
@@ -104,16 +103,8 @@ public class UsageResource {
   }
 
 
-  public UsageResource attributes(@jakarta.annotation.Nonnull Map<String, Object> attributes) {
+  public UsageResource attributes(@jakarta.annotation.Nonnull UsageAttributes attributes) {
     this.attributes = attributes;
-    return this;
-  }
-
-  public UsageResource putAttributesItem(String key, Object attributesItem) {
-    if (this.attributes == null) {
-      this.attributes = new HashMap<>();
-    }
-    this.attributes.put(key, attributesItem);
     return this;
   }
 
@@ -123,15 +114,15 @@ public class UsageResource {
    */
   @jakarta.annotation.Nonnull
   @JsonProperty(value = JSON_PROPERTY_ATTRIBUTES, required = true)
-  @JsonInclude(content = JsonInclude.Include.ALWAYS, value = JsonInclude.Include.ALWAYS)
-  public Map<String, Object> getAttributes() {
+  @JsonInclude(value = JsonInclude.Include.ALWAYS)
+  public UsageAttributes getAttributes() {
     return attributes;
   }
 
 
   @JsonProperty(value = JSON_PROPERTY_ATTRIBUTES, required = true)
-  @JsonInclude(content = JsonInclude.Include.ALWAYS, value = JsonInclude.Include.ALWAYS)
-  public void setAttributes(@jakarta.annotation.Nonnull Map<String, Object> attributes) {
+  @JsonInclude(value = JsonInclude.Include.ALWAYS)
+  public void setAttributes(@jakarta.annotation.Nonnull UsageAttributes attributes) {
     this.attributes = attributes;
   }
 
@@ -221,11 +212,7 @@ public class UsageResource {
 
     // add `attributes` to the URL query string
     if (getAttributes() != null) {
-      for (String _key : getAttributes().keySet()) {
-        joiner.add(String.format(java.util.Locale.ROOT, "%sattributes%s%s=%s", prefix, suffix,
-            "".equals(suffix) ? "" : String.format(java.util.Locale.ROOT, "%s%d%s", containerPrefix, _key, containerSuffix),
-            getAttributes().get(_key), ApiClient.urlEncode(ApiClient.valueToString(getAttributes().get(_key)))));
-      }
+      joiner.add(getAttributes().toUrlQueryString(prefix + "attributes" + suffix));
     }
 
     return joiner.toString();
