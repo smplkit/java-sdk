@@ -102,7 +102,7 @@ class AuditForwardersTest {
         handler.set(ex -> respondJson(ex, 201, "application/vnd.api+json",
                 "{\"data\":" + forwarderResource("Datadog production", "datadog_production") + "}"));
         CreateForwarderInput input = new CreateForwarderInput(
-                "Datadog production", "datadog",
+                "Datadog production", ForwarderType.DATADOG,
                 new ForwarderHttp("https://siem.example.com/in"));
         input.http.headers.add(new HttpHeader("DD-API-KEY", "real-secret"));
         input.filter = java.util.Map.of("==", java.util.List.of(1, 1));
@@ -118,7 +118,7 @@ class AuditForwardersTest {
     void create_402_throwsApiException() {
         handler.set(ex -> respondJson(ex, 402, "application/vnd.api+json",
                 "{\"errors\":[{\"status\":\"402\"}]}"));
-        CreateForwarderInput input = new CreateForwarderInput("x", "http",
+        CreateForwarderInput input = new CreateForwarderInput("x", ForwarderType.HTTP,
                 new ForwarderHttp("https://x"));
         assertThrows(ApiException.class, () -> client.forwarders().create(input));
     }
@@ -137,7 +137,7 @@ class AuditForwardersTest {
             respondJson(ex, 200, "application/vnd.api+json", body);
         });
         ListForwardersInput in1 = new ListForwardersInput();
-        in1.forwarderType = "datadog";
+        in1.forwarderType = ForwarderType.DATADOG;
         in1.enabled = true;
         in1.pageSize = 1;
         ListForwardersPage first = client.forwarders().list(in1);
@@ -160,7 +160,7 @@ class AuditForwardersTest {
     void update_success() throws Exception {
         handler.set(ex -> respondJson(ex, 200, "application/vnd.api+json",
                 "{\"data\":" + forwarderResource("Renamed", "renamed") + "}"));
-        CreateForwarderInput in = new CreateForwarderInput("Renamed", "datadog",
+        CreateForwarderInput in = new CreateForwarderInput("Renamed", ForwarderType.DATADOG,
                 new ForwarderHttp("https://x"));
         Forwarder fwd = client.forwarders().update(FWD_ID, in);
         assertEquals("Renamed", fwd.name);
@@ -327,5 +327,17 @@ class AuditForwardersTest {
         assertTrue(latch.await(2, java.util.concurrent.TimeUnit.SECONDS));
         assertTrue(capturedBody.get().contains("\"do_not_forward\":true"),
                 "expected do_not_forward in body, got: " + capturedBody.get());
+    }
+
+    @Test
+    void forwarderTypeFromValueRoundTripsAndRejectsUnknown() {
+        // Round-trips every published value — that mapping IS the wire
+        // contract with the audit service.
+        for (ForwarderType t : ForwarderType.values()) {
+            assertEquals(t, ForwarderType.fromValue(t.getValue()));
+        }
+        // Unknown values fail at the call site, not deeper in the stack.
+        assertThrows(IllegalArgumentException.class,
+                () -> ForwarderType.fromValue("definitely-not-a-real-type"));
     }
 }

@@ -24,6 +24,7 @@ import com.smplkit.audit.CreateEventInput;
 import com.smplkit.audit.CreateForwarderInput;
 import com.smplkit.audit.Forwarder;
 import com.smplkit.audit.ForwarderHttp;
+import com.smplkit.audit.ForwarderType;
 import com.smplkit.audit.HttpHeader;
 import com.smplkit.audit.ListEventsInput;
 import com.smplkit.audit.ListEventsPage;
@@ -80,7 +81,7 @@ public final class AuditRuntimeShowcase {
                 http.headers.add(new HttpHeader("X-Showcase", "ok"));
                 CreateForwarderInput fwdInput = new CreateForwarderInput(
                         "showcase-" + UUID.randomUUID().toString().substring(0, 6),
-                        "http", http);
+                        ForwarderType.HTTP, http);
                 fwd = client.audit().forwarders().create(fwdInput);
                 System.out.println("Created forwarder: " + fwd.slug);
             } catch (ApiException e) {
