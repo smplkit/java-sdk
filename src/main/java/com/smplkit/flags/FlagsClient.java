@@ -113,9 +113,16 @@ public final class FlagsClient {
     private final ScheduledExecutorService contextFlushExecutor;
     private ScheduledFuture<?> contextFlushFuture;
 
-    // Flag registration buffer
-    private final FlagRegistrationBuffer flagBuffer = new FlagRegistrationBuffer();
+    // Flag registration buffer (package-private for test inspection)
+    final FlagRegistrationBuffer flagBuffer = new FlagRegistrationBuffer();
     private ScheduledFuture<?> flagFlushFuture;
+
+    // Connect retry state
+    private final Object connectLock = new Object();
+    private volatile long backoffSeconds = 1;
+    private volatile boolean retryScheduled = false;
+    private volatile boolean wsHandlersRegistered = false;
+    private volatile ScheduledFuture<?> retryFuture;
 
     // Change listeners
     private final List<ListenerEntry> listeners = Collections.synchronizedList(new ArrayList<>());
@@ -279,37 +286,66 @@ public final class FlagsClient {
     // Runtime: lazy init
     // -----------------------------------------------------------------------
 
-    /** Initializes the flags runtime on first use. Idempotent. */
+    /** Initializes the flags runtime on first use. Idempotent. Thread-safe. */
     void _connectInternal() {
         if (connected) return;
-        Debug.log("websocket", "flags runtime initializing");
+        synchronized (connectLock) {
+            if (connected) return;
+            if (retryScheduled) return;
+            Debug.log("websocket", "flags runtime initializing");
 
-        // Flush discovered flags before fetching definitions
-        flushFlagsSafe();
+            // Flush + refresh are a transaction: only mark connected after both succeed.
+            if (!flushFlags()) {
+                scheduleConnectRetry();
+                return;
+            }
 
-        fetchAllFlags();
-        resolutionCache.clear();
+            try {
+                fetchAllFlags();
+            } catch (Exception e) {
+                Debug.log("websocket", "flags runtime fetchAllFlags failed: " + e);
+                scheduleConnectRetry();
+                return;
+            }
+            resolutionCache.clear();
 
-        SharedWebSocket ws = this.sharedWs;
-        if (ws != null) {
-            Debug.log("registration", "registering flag_changed, flag_deleted, and flags_changed handlers");
-            ws.on("flag_changed", flagChangedHandler);
-            ws.on("flag_deleted", flagDeletedHandler);
-            ws.on("flags_changed", flagsChangedHandler);
-            ws.ensureConnected(Duration.ofSeconds(10));
+            SharedWebSocket ws = this.sharedWs;
+            if (ws != null && !wsHandlersRegistered) {
+                Debug.log("registration", "registering flag_changed, flag_deleted, and flags_changed handlers");
+                ws.on("flag_changed", flagChangedHandler);
+                ws.on("flag_deleted", flagDeletedHandler);
+                ws.on("flags_changed", flagsChangedHandler);
+                ws.ensureConnected(Duration.ofSeconds(10));
+                wsHandlersRegistered = true;
+            }
+
+            connected = true;
+            backoffSeconds = 1;
+            Debug.log("websocket", "flags runtime connected");
+
+            if (contextFlushExecutor != null && flagFlushFuture == null) {
+                flagFlushFuture = contextFlushExecutor.scheduleAtFixedRate(
+                        this::flushFlagsSafe, 30, 30, TimeUnit.SECONDS);
+            }
+
+            if (contextFlushExecutor != null && contextFlushFuture == null) {
+                contextFlushFuture = contextFlushExecutor.scheduleAtFixedRate(
+                        this::flushContextsSafe, 30, 30, TimeUnit.SECONDS);
+            }
         }
+    }
 
-        connected = true;
-        Debug.log("websocket", "flags runtime connected");
-
-        if (contextFlushExecutor != null && flagFlushFuture == null) {
-            flagFlushFuture = contextFlushExecutor.scheduleAtFixedRate(
-                    this::flushFlagsSafe, 30, 30, TimeUnit.SECONDS);
-        }
-
-        if (contextFlushExecutor != null && contextFlushFuture == null) {
-            contextFlushFuture = contextFlushExecutor.scheduleAtFixedRate(
-                    this::flushContextsSafe, 30, 30, TimeUnit.SECONDS);
+    private void scheduleConnectRetry() {
+        long delay = backoffSeconds;
+        backoffSeconds = Math.min(backoffSeconds * 2, 60);
+        retryScheduled = true;
+        LOG.warning("Flags runtime init failed, retrying in " + delay + "s");
+        if (contextFlushExecutor != null) {
+            retryFuture = contextFlushExecutor.schedule(() -> {
+                retryScheduled = false;
+                retryFuture = null;
+                _connectInternal();
+            }, delay, TimeUnit.SECONDS);
         }
     }
 
@@ -564,11 +600,13 @@ public final class FlagsClient {
         flushContexts();
     }
 
-    void flushFlags() {
-        List<FlagRegistrationEntry> batch = flagBuffer.drain();
-        if (batch.isEmpty()) return;
+    /** Peeks the buffer, POSTs to the server, and commits only on success. Returns true on success. */
+    boolean flushFlags() {
+        List<FlagRegistrationEntry> batch = flagBuffer.peek();
+        if (batch.isEmpty()) return true;
         try {
             FlagBulkRequest req = new FlagBulkRequest();
+            Set<String> ids = new HashSet<>();
             for (FlagRegistrationEntry entry : batch) {
                 FlagBulkItem item = new FlagBulkItem();
                 item.setId(entry.id());
@@ -577,11 +615,15 @@ public final class FlagsClient {
                 if (entry.service() != null) item.setService(entry.service());
                 if (entry.environment() != null) item.setEnvironment(entry.environment());
                 req.addFlagsItem(item);
+                ids.add(entry.id());
             }
             flagsApi.bulkRegisterFlags(req);
+            flagBuffer.commit(ids);
+            return true;
         } catch (Exception e) {
             LOG.warning("Flag registration flush failed: " + e.getMessage());
             Debug.log("registration", "Flag registration flush failed: " + e);
+            return false;
         }
     }
 
@@ -933,9 +975,20 @@ public final class FlagsClient {
         return connected;
     }
 
+    boolean isRetryScheduled() {
+        return retryScheduled;
+    }
+
     /** Resets runtime state (for testing). */
     void disconnect() {
         connected = false;
+        retryScheduled = false;
+        wsHandlersRegistered = false;
+        backoffSeconds = 1;
+        if (retryFuture != null) {
+            retryFuture.cancel(false);
+            retryFuture = null;
+        }
         if (flagFlushFuture != null) {
             flagFlushFuture.cancel(false);
             flagFlushFuture = null;
@@ -976,6 +1029,21 @@ public final class FlagsClient {
             }
         }
 
+        /** Returns a snapshot of pending entries without removing them. */
+        List<FlagRegistrationEntry> peek() {
+            synchronized (lock) {
+                return new ArrayList<>(pending);
+            }
+        }
+
+        /** Removes entries with the given ids after a successful POST. The seen-set is kept intact. */
+        void commit(Set<String> ids) {
+            synchronized (lock) {
+                pending.removeIf(e -> ids.contains(e.id()));
+            }
+        }
+
+        /** Unconditional drain for teardown / tests. */
         List<FlagRegistrationEntry> drain() {
             synchronized (lock) {
                 List<FlagRegistrationEntry> batch = new ArrayList<>(pending);

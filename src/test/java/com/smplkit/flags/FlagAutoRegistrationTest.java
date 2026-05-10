@@ -95,6 +95,37 @@ class FlagAutoRegistrationTest {
     }
 
     @Test
+    void buffer_peek_returnsSnapshotWithoutRemoving() {
+        FlagsClient.FlagRegistrationBuffer buf = new FlagsClient.FlagRegistrationBuffer();
+        buf.add("flag-a", "BOOLEAN", false, "svc", "env");
+        buf.add("flag-b", "STRING", "x", "svc", "env");
+
+        List<FlagsClient.FlagRegistrationEntry> snapshot = buf.peek();
+        assertEquals(2, snapshot.size());
+        assertEquals(2, buf.pendingCount(), "peek must not remove entries");
+    }
+
+    @Test
+    void buffer_commit_removesOnlyCommittedIds() {
+        FlagsClient.FlagRegistrationBuffer buf = new FlagsClient.FlagRegistrationBuffer();
+        buf.add("flag-a", "BOOLEAN", false, "svc", "env");
+        buf.add("flag-b", "STRING", "x", "svc", "env");
+
+        buf.commit(java.util.Set.of("flag-a"));
+        assertEquals(1, buf.pendingCount(), "only committed id should be removed");
+        assertEquals("flag-b", buf.peek().get(0).id());
+    }
+
+    @Test
+    void buffer_commit_emptySet_leavesBufferIntact() {
+        FlagsClient.FlagRegistrationBuffer buf = new FlagsClient.FlagRegistrationBuffer();
+        buf.add("flag-a", "BOOLEAN", false, "svc", "env");
+
+        buf.commit(java.util.Set.of());
+        assertEquals(1, buf.pendingCount());
+    }
+
+    @Test
     void buffer_threadSafety_concurrentAdds() throws InterruptedException {
         FlagsClient.FlagRegistrationBuffer buf = new FlagsClient.FlagRegistrationBuffer();
         int threads = 10;
@@ -192,20 +223,25 @@ class FlagAutoRegistrationTest {
     // -----------------------------------------------------------------------
 
     @Test
-    void flushFlags_apiFailure_doesNotPropagate() throws ApiException {
+    void flushFlags_apiFailure_returnsFalseAndRetainsBuffer() throws ApiException {
         when(mockApi.bulkRegisterFlags(any())).thenThrow(new ApiException(500, "Server Error"));
 
         client.booleanFlag("flag-x", false);
-        assertDoesNotThrow(() -> client.flushFlags());
+        boolean result = client.flushFlags();
+        assertFalse(result, "flushFlags should return false on server error");
+        assertEquals(1, client.flagBuffer.pendingCount(), "buffer must be intact after failed flush");
     }
 
     @Test
-    void connectInternal_flushFailure_doesNotPreventConnect() throws ApiException {
+    void connectInternal_flushFailure_preventsConnect_schedulesRetry() throws ApiException {
         when(mockApi.bulkRegisterFlags(any())).thenThrow(new ApiException(500, "Internal Error"));
         client.booleanFlag("flag-x", false);
-        // flushFlagsSafe -> flushFlags catches the exception; connect should proceed
-        assertDoesNotThrow(() -> client._connectInternal());
-        assertTrue(client.isConnected());
+
+        client._connectInternal();
+
+        assertFalse(client.isConnected(), "connected must stay false when flush fails");
+        assertTrue(client.isRetryScheduled(), "a retry must be scheduled after flush failure");
+        assertEquals(1, client.flagBuffer.pendingCount(), "buffer must be intact after failed connect");
     }
 
     // -----------------------------------------------------------------------
