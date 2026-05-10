@@ -39,8 +39,12 @@ public final class AuditForwarders {
     }
 
     public ListForwardersPage list(ListForwardersInput input) throws ApiException {
+        // The generated listForwarders takes the filter as a plain
+        // String (it's a query-string param on the wire), so unwrap
+        // the typed enum to its slug value.
+        String filterType = input.forwarderType == null ? null : input.forwarderType.getValue();
         ForwarderListResponse resp = api.listForwarders(
-                input.forwarderType, input.enabled, input.pageSize, input.pageAfter);
+                filterType, input.enabled, input.pageSize, input.pageAfter);
         List<com.smplkit.audit.Forwarder> out = new ArrayList<>();
         if (resp.getData() != null) {
             for (ForwarderResource r : resp.getData()) out.add(fromResource(r));
@@ -103,7 +107,7 @@ public final class AuditForwarders {
     private static ForwarderResponse wrap(UUID id, CreateForwarderInput input) {
         Forwarder attrs = new Forwarder();
         attrs.setName(input.name);
-        attrs.setForwarderType(input.forwarderType);
+        attrs.setForwarderType(toGenForwarderType(input.forwarderType));
         attrs.setEnabled(input.enabled);
         attrs.setHttp(toGenHttp(input.http));
         if (input.filter != null) attrs.setFilter(input.filter);
@@ -145,7 +149,7 @@ public final class AuditForwarders {
                 id,
                 a.getName(),
                 a.getSlug(),
-                a.getForwarderType(),
+                fromGenForwarderType(a.getForwarderType()),
                 a.getEnabled() != null ? a.getEnabled() : true,
                 a.getFilter(),
                 a.getTransform(),
@@ -155,6 +159,20 @@ public final class AuditForwarders {
                 a.getUpdatedAt(),
                 a.getDeletedAt(),
                 a.getVersion());
+    }
+
+    /** Convert the wrapper's public enum to the codegen's internal one. */
+    private static com.smplkit.internal.generated.audit.model.ForwarderType toGenForwarderType(
+            com.smplkit.audit.ForwarderType src) {
+        if (src == null) return null;
+        return com.smplkit.internal.generated.audit.model.ForwarderType.fromValue(src.getValue());
+    }
+
+    /** Convert the codegen's internal enum to the wrapper's public one. */
+    private static com.smplkit.audit.ForwarderType fromGenForwarderType(
+            com.smplkit.internal.generated.audit.model.ForwarderType src) {
+        if (src == null) return null;
+        return com.smplkit.audit.ForwarderType.fromValue(src.getValue());
     }
 
     private static com.smplkit.audit.ForwarderHttp httpFromGen(ForwarderHttp src) {

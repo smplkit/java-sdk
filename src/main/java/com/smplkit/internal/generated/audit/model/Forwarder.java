@@ -25,6 +25,7 @@ import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonTypeName;
 import com.fasterxml.jackson.annotation.JsonValue;
 import com.smplkit.internal.generated.audit.model.ForwarderHttp;
+import com.smplkit.internal.generated.audit.model.ForwarderType;
 import java.time.OffsetDateTime;
 import java.util.Arrays;
 import java.util.HashMap;
@@ -62,7 +63,7 @@ public class Forwarder {
 
   public static final String JSON_PROPERTY_FORWARDER_TYPE = "forwarder_type";
   @jakarta.annotation.Nonnull
-  private String forwarderType;
+  private ForwarderType forwarderType;
 
   public static final String JSON_PROPERTY_ENABLED = "enabled";
   @jakarta.annotation.Nullable
@@ -138,7 +139,7 @@ public class Forwarder {
   }
 
 
-  public Forwarder forwarderType(@jakarta.annotation.Nonnull String forwarderType) {
+  public Forwarder forwarderType(@jakarta.annotation.Nonnull ForwarderType forwarderType) {
     this.forwarderType = forwarderType;
     return this;
   }
@@ -150,14 +151,14 @@ public class Forwarder {
   @jakarta.annotation.Nonnull
   @JsonProperty(value = JSON_PROPERTY_FORWARDER_TYPE, required = true)
   @JsonInclude(value = JsonInclude.Include.ALWAYS)
-  public String getForwarderType() {
+  public ForwarderType getForwarderType() {
     return forwarderType;
   }
 
 
   @JsonProperty(value = JSON_PROPERTY_FORWARDER_TYPE, required = true)
   @JsonInclude(value = JsonInclude.Include.ALWAYS)
-  public void setForwarderType(@jakarta.annotation.Nonnull String forwarderType) {
+  public void setForwarderType(@jakarta.annotation.Nonnull ForwarderType forwarderType) {
     this.forwarderType = forwarderType;
   }
 

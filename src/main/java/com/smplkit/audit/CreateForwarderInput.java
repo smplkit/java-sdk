@@ -8,7 +8,7 @@ import java.util.Map;
  */
 public final class CreateForwarderInput {
     public String name;
-    public String forwarderType;
+    public ForwarderType forwarderType;
     public ForwarderHttp http;
     public boolean enabled = true;
     public Map<String, Object> filter; // nullable, JSON Logic
@@ -17,7 +17,7 @@ public final class CreateForwarderInput {
 
     public CreateForwarderInput() {}
 
-    public CreateForwarderInput(String name, String forwarderType, ForwarderHttp http) {
+    public CreateForwarderInput(String name, ForwarderType forwarderType, ForwarderHttp http) {
         this.name = name;
         this.forwarderType = forwarderType;
         this.http = http;

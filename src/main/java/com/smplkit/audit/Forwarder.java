@@ -15,7 +15,7 @@ public final class Forwarder {
     public final UUID id;
     public final String name;
     public final String slug;
-    public final String forwarderType;
+    public final ForwarderType forwarderType;
     public final boolean enabled;
     public final Map<String, Object> filter; // nullable
     public final String transform; // nullable
@@ -26,7 +26,7 @@ public final class Forwarder {
     public final OffsetDateTime deletedAt;
     public final Integer version;
 
-    public Forwarder(UUID id, String name, String slug, String forwarderType, boolean enabled,
+    public Forwarder(UUID id, String name, String slug, ForwarderType forwarderType, boolean enabled,
                      Map<String, Object> filter, String transform, ForwarderHttp http,
                      Map<String, Object> data, OffsetDateTime createdAt,
                      OffsetDateTime updatedAt, OffsetDateTime deletedAt, Integer version) {
