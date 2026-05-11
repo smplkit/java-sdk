@@ -31,7 +31,7 @@ import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 
 import com.smplkit.internal.generated.config.ApiClient;
 /**
- * UsageResource
+ * JSON:API resource envelope for a usage counter.
  */
 @JsonPropertyOrder({
   UsageResource.JSON_PROPERTY_ID,

@@ -35,7 +35,7 @@ import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 
 import com.smplkit.internal.generated.config.ApiClient;
 /**
- * ConfigResource
+ * JSON:API resource envelope for a config.  &#x60;id&#x60; is the human-readable key for the config and must be supplied by the caller on create. It is unique within the account.
  */
 @JsonPropertyOrder({
   ConfigResource.JSON_PROPERTY_ID,

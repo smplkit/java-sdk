@@ -164,8 +164,8 @@ public class UsageApi {
 
   /**
    * List Config Usage
-   * Return current resource usage counts for the authenticated account.
-   * @param filterPeriod  (optional)
+   * Report the current-period usage counters for this account.
+   * @param filterPeriod Period to report. &#x60;current&#x60; is the only supported value. (optional)
    * @return UsageListResponse
    * @throws ApiException if fails to make API call
    */
@@ -175,8 +175,8 @@ public class UsageApi {
 
   /**
    * List Config Usage
-   * Return current resource usage counts for the authenticated account.
-   * @param filterPeriod  (optional)
+   * Report the current-period usage counters for this account.
+   * @param filterPeriod Period to report. &#x60;current&#x60; is the only supported value. (optional)
    * @param headers Optional headers to include in the request
    * @return UsageListResponse
    * @throws ApiException if fails to make API call
@@ -188,8 +188,8 @@ public class UsageApi {
 
   /**
    * List Config Usage
-   * Return current resource usage counts for the authenticated account.
-   * @param filterPeriod  (optional)
+   * Report the current-period usage counters for this account.
+   * @param filterPeriod Period to report. &#x60;current&#x60; is the only supported value. (optional)
    * @return ApiResponse&lt;UsageListResponse&gt;
    * @throws ApiException if fails to make API call
    */
@@ -199,8 +199,8 @@ public class UsageApi {
 
   /**
    * List Config Usage
-   * Return current resource usage counts for the authenticated account.
-   * @param filterPeriod  (optional)
+   * Report the current-period usage counters for this account.
+   * @param filterPeriod Period to report. &#x60;current&#x60; is the only supported value. (optional)
    * @param headers Optional headers to include in the request
    * @return ApiResponse&lt;UsageListResponse&gt;
    * @throws ApiException if fails to make API call
