@@ -11,6 +11,7 @@ import com.smplkit.internal.generated.flags.ApiException;
 import com.smplkit.internal.generated.flags.api.FlagsApi;
 import com.smplkit.internal.generated.flags.model.FlagListResponse;
 import com.smplkit.internal.generated.flags.model.FlagResponse;
+import com.smplkit.internal.generated.flags.model.FlagRequest;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;
@@ -506,14 +507,14 @@ class FlagsClientCoverageTest {
                         "created_at", "2024-06-01T12:00:00Z", "updated_at", "2024-06-01T12:00:00Z"
                 )
         )), FlagResponse.class);
-        when(mockApi.createFlag(any(FlagResponse.class))).thenReturn(response);
+        when(mockApi.createFlag(any(FlagRequest.class))).thenReturn(response);
 
         Flag<Boolean> flag = client.management().newBooleanFlag("my-flag", false, "My Flag", "A test flag");
         flag.setEnvironmentEnabled("staging", true);
         flag.save();
 
         assertEquals(FLAG_ID, flag.getId());
-        verify(mockApi).createFlag(any(FlagResponse.class));
+        verify(mockApi).createFlag(any(FlagRequest.class));
     }
 
     // --- Context batch flush threshold ---
@@ -591,14 +592,14 @@ class FlagsClientCoverageTest {
                         "created_at", "2024-06-01T12:00:00Z", "updated_at", "2024-06-01T12:00:00Z"
                 )
         )), FlagResponse.class);
-        when(mockApi.updateFlag(eq(FLAG_ID), any(FlagResponse.class)))
+        when(mockApi.updateFlag(eq(FLAG_ID), any(FlagRequest.class)))
                 .thenReturn(response);
 
         Flag<Boolean> flag = client.management().newBooleanFlag("my-flag", false, "My Flag", "Updated desc");
         flag.setCreatedAt(java.time.Instant.parse("2024-06-01T12:00:00Z"));
         flag.save();
 
-        verify(mockApi).updateFlag(eq(FLAG_ID), any(FlagResponse.class));
+        verify(mockApi).updateFlag(eq(FLAG_ID), any(FlagRequest.class));
     }
 
     // --- evaluateFlag returns flagDefault when no environments ---
@@ -627,14 +628,14 @@ class FlagsClientCoverageTest {
                         "created_at", "2024-06-01T12:00:00Z", "updated_at", "2024-06-01T12:00:00Z"
                 )
         )), FlagResponse.class);
-        when(mockApi.createFlag(any(FlagResponse.class))).thenReturn(response);
+        when(mockApi.createFlag(any(FlagRequest.class))).thenReturn(response);
 
         Flag<Boolean> flag = client.management().newBooleanFlag("my-flag", false);
         flag.setEnvironmentEnabled("staging", true);
         flag.setEnvironmentDefault("staging", true);
         flag.save();
 
-        verify(mockApi).createFlag(any(FlagResponse.class));
+        verify(mockApi).createFlag(any(FlagRequest.class));
     }
 
     // --- Helpers ---

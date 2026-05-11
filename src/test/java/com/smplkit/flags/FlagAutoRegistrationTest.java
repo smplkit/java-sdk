@@ -3,6 +3,7 @@ package com.smplkit.flags;
 import com.smplkit.internal.generated.app.api.ContextsApi;
 import com.smplkit.internal.generated.flags.ApiException;
 import com.smplkit.internal.generated.flags.api.FlagsApi;
+import com.smplkit.internal.generated.flags.model.FlagBulkItem;
 import com.smplkit.internal.generated.flags.model.FlagBulkRequest;
 import com.smplkit.internal.generated.flags.model.FlagBulkResponse;
 import com.smplkit.internal.generated.flags.model.FlagListResponse;
@@ -159,7 +160,7 @@ class FlagAutoRegistrationTest {
         assertEquals(1, req.getFlags().size());
         var item = req.getFlags().get(0);
         assertEquals("feature-x", item.getId());
-        assertEquals("BOOLEAN", item.getType());
+        assertEquals(FlagBulkItem.TypeEnum.BOOLEAN, item.getType());
         assertEquals(false, item.getDefault());
         assertEquals("my-service", item.getService());
         assertEquals("staging", item.getEnvironment());
@@ -173,7 +174,7 @@ class FlagAutoRegistrationTest {
 
         ArgumentCaptor<FlagBulkRequest> captor = ArgumentCaptor.forClass(FlagBulkRequest.class);
         verify(mockApi).bulkRegisterFlags(captor.capture());
-        assertEquals("STRING", captor.getValue().getFlags().get(0).getType());
+        assertEquals(FlagBulkItem.TypeEnum.STRING, captor.getValue().getFlags().get(0).getType());
         assertEquals("red", captor.getValue().getFlags().get(0).getDefault());
     }
 
@@ -185,7 +186,7 @@ class FlagAutoRegistrationTest {
 
         ArgumentCaptor<FlagBulkRequest> captor = ArgumentCaptor.forClass(FlagBulkRequest.class);
         verify(mockApi).bulkRegisterFlags(captor.capture());
-        assertEquals("NUMERIC", captor.getValue().getFlags().get(0).getType());
+        assertEquals(FlagBulkItem.TypeEnum.NUMERIC, captor.getValue().getFlags().get(0).getType());
         assertEquals(100, captor.getValue().getFlags().get(0).getDefault());
     }
 
@@ -197,7 +198,7 @@ class FlagAutoRegistrationTest {
 
         ArgumentCaptor<FlagBulkRequest> captor = ArgumentCaptor.forClass(FlagBulkRequest.class);
         verify(mockApi).bulkRegisterFlags(captor.capture());
-        assertEquals("JSON", captor.getValue().getFlags().get(0).getType());
+        assertEquals(FlagBulkItem.TypeEnum.JSON, captor.getValue().getFlags().get(0).getType());
     }
 
     @Test
