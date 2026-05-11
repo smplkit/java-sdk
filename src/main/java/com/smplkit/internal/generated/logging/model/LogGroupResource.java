@@ -35,7 +35,7 @@ import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 
 import com.smplkit.internal.generated.logging.ApiClient;
 /**
- * LogGroupResource
+ * JSON:API resource envelope for a log group.  &#x60;id&#x60; is the group&#39;s key (e.g. &#x60;database-loggers&#x60;). On a create request the id may be supplied; if omitted, the server generates one from &#x60;name&#x60;.
  */
 @JsonPropertyOrder({
   LogGroupResource.JSON_PROPERTY_ID,

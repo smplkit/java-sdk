@@ -9,11 +9,13 @@ import com.smplkit.internal.generated.logging.ApiException;
 import com.smplkit.internal.generated.logging.api.LogGroupsApi;
 import com.smplkit.internal.generated.logging.api.LoggersApi;
 import com.smplkit.internal.generated.logging.model.LogGroupListResponse;
+import com.smplkit.internal.generated.logging.model.LogGroupRequest;
 import com.smplkit.internal.generated.logging.model.LogGroupResource;
 import com.smplkit.internal.generated.logging.model.LogGroupResponse;
 import com.smplkit.internal.generated.logging.model.LoggerBulkItem;
 import com.smplkit.internal.generated.logging.model.LoggerBulkRequest;
 import com.smplkit.internal.generated.logging.model.LoggerListResponse;
+import com.smplkit.internal.generated.logging.model.LoggerRequest;
 import com.smplkit.internal.generated.logging.model.LoggerResource;
 import com.smplkit.internal.generated.logging.model.LoggerResponse;
 import org.openapitools.jackson.nullable.JsonNullable;
@@ -180,7 +182,7 @@ public final class LoggingClient {
     /** Saves a logger on the server (upsert via PUT). Called by {@link Logger#save()}. */
     Logger _saveLogger(Logger lg) {
         try {
-            LoggerResponse body = buildLoggerBody(lg.getId(), lg);
+            LoggerRequest body = buildLoggerBody(lg.getId(), lg);
             LoggerResponse response = loggersApi.updateLogger(lg.getId(), body);
             return loggerResponseToModel(response);
         } catch (ApiException e) {
@@ -196,7 +198,7 @@ public final class LoggingClient {
     /** Creates a new group on the server. Called by {@link LogGroup#save()}. */
     LogGroup _createGroup(LogGroup grp) {
         try {
-            LogGroupResponse body = buildGroupBody(null, grp);
+            LogGroupRequest body = buildGroupBody(null, grp);
             LogGroupResponse response = logGroupsApi.createLogGroup(body);
             return logGroupResponseToModel(response);
         } catch (ApiException e) {
@@ -207,7 +209,7 @@ public final class LoggingClient {
     /** Updates an existing group on the server. Called by {@link LogGroup#save()}. */
     LogGroup _updateGroup(LogGroup grp) {
         try {
-            LogGroupResponse body = buildGroupBody(grp.getId(), grp);
+            LogGroupRequest body = buildGroupBody(grp.getId(), grp);
             LogGroupResponse response = logGroupsApi.updateLogGroup(grp.getId(), body);
             return logGroupResponseToModel(response);
         } catch (ApiException e) {
@@ -533,7 +535,7 @@ public final class LoggingClient {
             String gid = lg.getId() != null ? lg.getId() : "";
             Map<String, Object> entry = new HashMap<>();
             entry.put("id", gid);
-            entry.put("level", attrs.getLevel());
+            entry.put("level", attrs.getLevel() != null ? attrs.getLevel().getValue() : null);
             entry.put("group", attrs.getGroup());
             entry.put("managed", attrs.getManaged());
             entry.put("environments", attrs.getEnvironments() != null
@@ -593,7 +595,7 @@ public final class LoggingClient {
             String gid = resp.getData().getId() != null ? resp.getData().getId() : "";
             Map<String, Object> entry = new HashMap<>();
             entry.put("id", gid);
-            entry.put("level", attrs.getLevel());
+            entry.put("level", attrs.getLevel() != null ? attrs.getLevel().getValue() : null);
             entry.put("group", attrs.getParentId());
             entry.put("environments", attrs.getEnvironments() != null
                     ? new HashMap<>(attrs.getEnvironments()) : new HashMap<>());
@@ -776,7 +778,7 @@ public final class LoggingClient {
                     String id = r.getId() != null ? r.getId() : "";
                     Map<String, Object> entry = new HashMap<>();
                     entry.put("id", id);
-                    entry.put("level", attrs.getLevel());
+                    entry.put("level", attrs.getLevel() != null ? attrs.getLevel().getValue() : null);
                     entry.put("group", attrs.getGroup());
                     entry.put("managed", attrs.getManaged());
                     entry.put("environments", attrs.getEnvironments() != null
@@ -798,7 +800,7 @@ public final class LoggingClient {
                     String gid = r.getId() != null ? r.getId() : "";
                     Map<String, Object> entry = new HashMap<>();
                     entry.put("id", gid);
-                    entry.put("level", attrs.getLevel());
+                    entry.put("level", attrs.getLevel() != null ? attrs.getLevel().getValue() : null);
                     entry.put("group", attrs.getParentId());
                     entry.put("environments", attrs.getEnvironments() != null
                             ? new HashMap<>(attrs.getEnvironments()) : new HashMap<>());
@@ -829,7 +831,7 @@ public final class LoggingClient {
                     String id = r.getId() != null ? r.getId() : "";
                     Map<String, Object> entry = new HashMap<>();
                     entry.put("id", id);
-                    entry.put("level", attrs.getLevel());
+                    entry.put("level", attrs.getLevel() != null ? attrs.getLevel().getValue() : null);
                     entry.put("group", attrs.getGroup());
                     entry.put("managed", attrs.getManaged());
                     entry.put("environments", attrs.getEnvironments() != null
@@ -851,7 +853,7 @@ public final class LoggingClient {
                     String gid = r.getId() != null ? r.getId() : "";
                     Map<String, Object> entry = new HashMap<>();
                     entry.put("id", gid);
-                    entry.put("level", attrs.getLevel());
+                    entry.put("level", attrs.getLevel() != null ? attrs.getLevel().getValue() : null);
                     entry.put("group", attrs.getParentId());
                     entry.put("environments", attrs.getEnvironments() != null
                             ? new HashMap<>(attrs.getEnvironments()) : new HashMap<>());
@@ -970,7 +972,7 @@ public final class LoggingClient {
                 this,
                 resource.getId() != null ? resource.getId() : null,
                 attrs.getName(),
-                attrs.getLevel(),
+                attrs.getLevel() != null ? attrs.getLevel().getValue() : null,
                 attrs.getGroup(),
                 attrs.getManaged() != null ? attrs.getManaged() : false,
                 attrs.getSources() != null ? new ArrayList<>(attrs.getSources()) : new ArrayList<>(),
@@ -990,7 +992,7 @@ public final class LoggingClient {
                 this,
                 resource.getId() != null ? resource.getId() : null,
                 attrs.getName(),
-                attrs.getLevel(),
+                attrs.getLevel() != null ? attrs.getLevel().getValue() : null,
                 attrs.getParentId(),
                 attrs.getEnvironments() != null ? new HashMap<>(attrs.getEnvironments()) : new HashMap<>(),
                 toInstant(attrs.getCreatedAt()),
@@ -1002,10 +1004,12 @@ public final class LoggingClient {
     // Request body building
     // -----------------------------------------------------------------------
 
-    private LoggerResponse buildLoggerBody(String loggerId, Logger lg) {
+    private LoggerRequest buildLoggerBody(String loggerId, Logger lg) {
         var attrs = new com.smplkit.internal.generated.logging.model.Logger();
         attrs.setName(lg.getName());
-        if (lg.getLevel() != null) attrs.setLevel(lg.getLevel());
+        if (lg.getLevel() != null) {
+            attrs.setLevel(com.smplkit.internal.generated.logging.model.Logger.LevelEnum.fromValue(lg.getLevel()));
+        }
         if (lg.getGroup() != null) attrs.setGroup(lg.getGroup());
         attrs.setManaged(lg.isManaged());
         if (lg.getEnvironments() != null && !lg.getEnvironments().isEmpty()) {
@@ -1017,15 +1021,17 @@ public final class LoggingClient {
         data.setAttributes(attrs);
         data.setId(loggerId != null ? loggerId : lg.getId());
 
-        LoggerResponse body = new LoggerResponse();
+        LoggerRequest body = new LoggerRequest();
         body.setData(data);
         return body;
     }
 
-    private LogGroupResponse buildGroupBody(String groupId, LogGroup grp) {
+    private LogGroupRequest buildGroupBody(String groupId, LogGroup grp) {
         var attrs = new com.smplkit.internal.generated.logging.model.LogGroup();
         attrs.setName(grp.getName());
-        if (grp.getLevel() != null) attrs.setLevel(grp.getLevel());
+        if (grp.getLevel() != null) {
+            attrs.setLevel(com.smplkit.internal.generated.logging.model.LogGroup.LevelEnum.fromValue(grp.getLevel()));
+        }
         if (grp.getGroup() != null) attrs.setParentId(grp.getGroup());
         if (grp.getEnvironments() != null && !grp.getEnvironments().isEmpty()) {
             attrs.setEnvironments(new HashMap<>(grp.getEnvironments()));
@@ -1036,7 +1042,7 @@ public final class LoggingClient {
         data.setAttributes(attrs);
         data.setId(groupId != null ? groupId : grp.getId());
 
-        LogGroupResponse body = new LogGroupResponse();
+        LogGroupRequest body = new LogGroupRequest();
         body.setData(data);
         return body;
     }

@@ -33,7 +33,7 @@ import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 
 import com.smplkit.internal.generated.logging.ApiClient;
 /**
- * LoggerBulkRequest
+ * Payload for bulk registration of loggers discovered by an SDK.
  */
 @JsonPropertyOrder({
   LoggerBulkRequest.JSON_PROPERTY_LOGGERS
@@ -61,7 +61,7 @@ public class LoggerBulkRequest {
   }
 
   /**
-   * Get loggers
+   * Loggers to register or refresh observations for.
    * @return loggers
    */
   @jakarta.annotation.Nonnull

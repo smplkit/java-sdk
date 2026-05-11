@@ -39,7 +39,7 @@ import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 
 import com.smplkit.internal.generated.logging.ApiClient;
 /**
- * Logger
+ * A logger configured for the account.  Loggers are organized by dot-separated key (for example, &#x60;sqlalchemy.engine&#x60;), matching the hierarchical naming convention used by most logging frameworks. A managed logger applies the configured level to every runtime where the logger appears; unmanaged loggers are tracked only as observations from SDKs.
  */
 @JsonPropertyOrder({
   Logger.JSON_PROPERTY_NAME,
@@ -58,8 +58,53 @@ public class Logger {
   @jakarta.annotation.Nonnull
   private String name;
 
+  /**
+   * Account-wide log level applied to this logger. &#x60;null&#x60; means no override at the logger level — the level is inherited from the logger&#39;s group or the framework default.
+   */
+  public enum LevelEnum {
+    TRACE(String.valueOf("TRACE")),
+    
+    DEBUG(String.valueOf("DEBUG")),
+    
+    INFO(String.valueOf("INFO")),
+    
+    WARN(String.valueOf("WARN")),
+    
+    ERROR(String.valueOf("ERROR")),
+    
+    FATAL(String.valueOf("FATAL")),
+    
+    SILENT(String.valueOf("SILENT"));
+
+    private String value;
+
+    LevelEnum(String value) {
+      this.value = value;
+    }
+
+    @JsonValue
+    public String getValue() {
+      return value;
+    }
+
+    @Override
+    public String toString() {
+      return String.valueOf(value);
+    }
+
+    @JsonCreator
+    public static LevelEnum fromValue(String value) {
+      for (LevelEnum b : LevelEnum.values()) {
+        if (b.value.equals(value)) {
+          return b;
+        }
+      }
+      return null;
+    }
+  }
+
   public static final String JSON_PROPERTY_LEVEL = "level";
-  private JsonNullable<String> level = JsonNullable.<String>undefined();
+  private JsonNullable<LevelEnum> level = JsonNullable.<LevelEnum>undefined();
 
   public static final String JSON_PROPERTY_GROUP = "group";
   private JsonNullable<String> group = JsonNullable.<String>undefined();
@@ -105,7 +150,7 @@ public class Logger {
   }
 
   /**
-   * Get name
+   * Human-readable label for the logger.
    * @return name
    */
   @jakarta.annotation.Nonnull
@@ -123,35 +168,35 @@ public class Logger {
   }
 
 
-  public Logger level(@jakarta.annotation.Nullable String level) {
-    this.level = JsonNullable.<String>of(level);
+  public Logger level(@jakarta.annotation.Nullable LevelEnum level) {
+    this.level = JsonNullable.<LevelEnum>of(level);
     return this;
   }
 
   /**
-   * Get level
+   * Account-wide log level applied to this logger. &#x60;null&#x60; means no override at the logger level — the level is inherited from the logger&#39;s group or the framework default.
    * @return level
    */
   @jakarta.annotation.Nullable
   @JsonIgnore
-  public String getLevel() {
+  public LevelEnum getLevel() {
         return level.orElse(null);
   }
 
   @JsonProperty(value = JSON_PROPERTY_LEVEL, required = false)
   @JsonInclude(value = JsonInclude.Include.USE_DEFAULTS)
 
-  public JsonNullable<String> getLevel_JsonNullable() {
+  public JsonNullable<LevelEnum> getLevel_JsonNullable() {
     return level;
   }
   
   @JsonProperty(JSON_PROPERTY_LEVEL)
-  public void setLevel_JsonNullable(JsonNullable<String> level) {
+  public void setLevel_JsonNullable(JsonNullable<LevelEnum> level) {
     this.level = level;
   }
 
-  public void setLevel(@jakarta.annotation.Nullable String level) {
-    this.level = JsonNullable.<String>of(level);
+  public void setLevel(@jakarta.annotation.Nullable LevelEnum level) {
+    this.level = JsonNullable.<LevelEnum>of(level);
   }
 
 
@@ -161,7 +206,7 @@ public class Logger {
   }
 
   /**
-   * Get group
+   * Key of the log group this logger belongs to, or &#x60;null&#x60; if the logger is not grouped. Assigning a logger to a group promotes it to managed; assigning a group cascades to unmanaged descendants by clearing their group reference.
    * @return group
    */
   @jakarta.annotation.Nullable
@@ -193,7 +238,7 @@ public class Logger {
   }
 
   /**
-   * Get managed
+   * When &#x60;true&#x60;, the logger is part of the account&#39;s managed configuration and counts toward the managed-loggers usage counter. Setting &#x60;level&#x60;, &#x60;group&#x60;, or &#x60;environments&#x60; on an unmanaged logger promotes it to managed automatically.
    * @return managed
    */
   @jakarta.annotation.Nullable
@@ -220,7 +265,7 @@ public class Logger {
 
 
   /**
-   * Get sources
+   * Service / environment observations reported by SDKs for this logger. Each entry carries the service name, environment, the level the SDK saw, the resolved level after framework inheritance, and timestamps for the first and most recent sighting.
    * @return sources
    */
   @jakarta.annotation.Nullable
@@ -265,7 +310,7 @@ public class Logger {
   }
 
   /**
-   * Get environments
+   * Per-environment level overrides keyed by environment name. Each value is an object with an optional &#x60;level&#x60; field, e.g. &#x60;{\&quot;production\&quot;: {\&quot;level\&quot;: \&quot;WARN\&quot;}}&#x60;. An environment may be present with no &#x60;level&#x60; to record that the logger applies there without changing the resolved level.
    * @return environments
    */
   @jakarta.annotation.Nullable
@@ -292,7 +337,7 @@ public class Logger {
 
 
   /**
-   * Get effectiveLevels
+   * Per-environment summary of what runtimes are reporting for this logger. Keyed by environment name; each entry is one of &#x60;{\&quot;status\&quot;: \&quot;none\&quot;}&#x60;, &#x60;{\&quot;status\&quot;: \&quot;agrees\&quot;, \&quot;level\&quot;: \&quot;&lt;LEVEL&gt;\&quot;}&#x60;, or &#x60;{\&quot;status\&quot;: \&quot;varies\&quot;}&#x60;. &#x60;agrees&#x60; means every observed source in that environment reports the same resolved level; &#x60;varies&#x60; means at least two sources disagree.
    * @return effectiveLevels
    */
   @jakarta.annotation.Nullable
@@ -320,7 +365,7 @@ public class Logger {
 
 
   /**
-   * Get createdAt
+   * When the logger was first created or discovered.
    * @return createdAt
    */
   @jakarta.annotation.Nullable
@@ -348,7 +393,7 @@ public class Logger {
 
 
   /**
-   * Get updatedAt
+   * When the logger was last modified.
    * @return updatedAt
    */
   @jakarta.annotation.Nullable

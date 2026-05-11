@@ -317,7 +317,7 @@ class Phase2CoverageTest {
         var attrs = new com.smplkit.internal.generated.logging.model.Logger(null, null,
                 OffsetDateTime.now(), OffsetDateTime.now());
         attrs.setName("com.acme.svc");
-        attrs.setLevel("INFO");
+        attrs.setLevel(com.smplkit.internal.generated.logging.model.Logger.LevelEnum.INFO);
         attrs.setManaged(true);
         LoggerResource lr = new LoggerResource();
         lr.setId("com.acme.svc");
@@ -341,7 +341,7 @@ class Phase2CoverageTest {
         var attrsWarn = new com.smplkit.internal.generated.logging.model.Logger(null, null,
                 OffsetDateTime.now(), OffsetDateTime.now());
         attrsWarn.setName("com.acme.svc");
-        attrsWarn.setLevel("WARN");
+        attrsWarn.setLevel(com.smplkit.internal.generated.logging.model.Logger.LevelEnum.WARN);
         attrsWarn.setManaged(true);
         LoggerResource lrWarn = new LoggerResource();
         lrWarn.setId("com.acme.svc");

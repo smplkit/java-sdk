@@ -165,7 +165,7 @@ public class ServicesApi {
 
   /**
    * List Services
-   * Return the distinct service names observed across all logger sources for the account.
+   * List the services that have reported a logger for this account.
    * @return ServiceListResponse
    * @throws ApiException if fails to make API call
    */
@@ -175,7 +175,7 @@ public class ServicesApi {
 
   /**
    * List Services
-   * Return the distinct service names observed across all logger sources for the account.
+   * List the services that have reported a logger for this account.
    * @param headers Optional headers to include in the request
    * @return ServiceListResponse
    * @throws ApiException if fails to make API call
@@ -187,7 +187,7 @@ public class ServicesApi {
 
   /**
    * List Services
-   * Return the distinct service names observed across all logger sources for the account.
+   * List the services that have reported a logger for this account.
    * @return ApiResponse&lt;ServiceListResponse&gt;
    * @throws ApiException if fails to make API call
    */
@@ -197,7 +197,7 @@ public class ServicesApi {
 
   /**
    * List Services
-   * Return the distinct service names observed across all logger sources for the account.
+   * List the services that have reported a logger for this account.
    * @param headers Optional headers to include in the request
    * @return ApiResponse&lt;ServiceListResponse&gt;
    * @throws ApiException if fails to make API call

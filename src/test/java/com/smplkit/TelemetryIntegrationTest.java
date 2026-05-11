@@ -358,7 +358,7 @@ class TelemetryIntegrationTest {
         lr.setId("com.myapp.service");
         var attrs = new Logger();
         attrs.setName("Service Logger");
-        attrs.setLevel("DEBUG");
+        attrs.setLevel(Logger.LevelEnum.DEBUG);
         attrs.setManaged(true);
         lr.setAttributes(attrs);
         loggerResp.setData(List.of(lr));

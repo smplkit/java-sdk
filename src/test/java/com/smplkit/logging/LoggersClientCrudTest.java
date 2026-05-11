@@ -290,7 +290,7 @@ class LoggersClientCrudTest {
         OffsetDateTime now = OffsetDateTime.now();
         var attrs = new com.smplkit.internal.generated.logging.model.Logger(null, null, now, now);
         attrs.setName(name);
-        if (level != null) attrs.setLevel(level);
+        if (level != null) attrs.setLevel(com.smplkit.internal.generated.logging.model.Logger.LevelEnum.fromValue(level));
         attrs.setManaged(false);
 
         LoggerResource res = new LoggerResource();
@@ -310,7 +310,7 @@ class LoggersClientCrudTest {
         OffsetDateTime now = OffsetDateTime.now();
         var attrs = new com.smplkit.internal.generated.logging.model.LogGroup(now, now);
         attrs.setName(name);
-        if (level != null) attrs.setLevel(level);
+        if (level != null) attrs.setLevel(com.smplkit.internal.generated.logging.model.LogGroup.LevelEnum.fromValue(level));
 
         LogGroupResource res = new LogGroupResource();
         res.setId(id);

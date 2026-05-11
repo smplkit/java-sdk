@@ -24,28 +24,28 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonTypeName;
 import com.fasterxml.jackson.annotation.JsonValue;
-import com.smplkit.internal.generated.logging.model.LogGroupResource;
+import com.smplkit.internal.generated.logging.model.LoggerResource;
 import java.util.Arrays;
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 
 
 import com.smplkit.internal.generated.logging.ApiClient;
 /**
- * JSON:API single-resource response envelope for a log group.
+ * JSON:API request envelope for creating or updating a logger.
  */
 @JsonPropertyOrder({
-  LogGroupResponse.JSON_PROPERTY_DATA
+  LoggerRequest.JSON_PROPERTY_DATA
 })
 @jakarta.annotation.Generated(value = "org.openapitools.codegen.languages.JavaClientCodegen", comments = "Generator version: 7.21.0")
-public class LogGroupResponse {
+public class LoggerRequest {
   public static final String JSON_PROPERTY_DATA = "data";
   @jakarta.annotation.Nonnull
-  private LogGroupResource data;
+  private LoggerResource data;
 
-  public LogGroupResponse() { 
+  public LoggerRequest() { 
   }
 
-  public LogGroupResponse data(@jakarta.annotation.Nonnull LogGroupResource data) {
+  public LoggerRequest data(@jakarta.annotation.Nonnull LoggerResource data) {
     this.data = data;
     return this;
   }
@@ -57,20 +57,20 @@ public class LogGroupResponse {
   @jakarta.annotation.Nonnull
   @JsonProperty(value = JSON_PROPERTY_DATA, required = true)
   @JsonInclude(value = JsonInclude.Include.ALWAYS)
-  public LogGroupResource getData() {
+  public LoggerResource getData() {
     return data;
   }
 
 
   @JsonProperty(value = JSON_PROPERTY_DATA, required = true)
   @JsonInclude(value = JsonInclude.Include.ALWAYS)
-  public void setData(@jakarta.annotation.Nonnull LogGroupResource data) {
+  public void setData(@jakarta.annotation.Nonnull LoggerResource data) {
     this.data = data;
   }
 
 
   /**
-   * Return true if this LogGroupResponse object is equal to o.
+   * Return true if this LoggerRequest object is equal to o.
    */
   @Override
   public boolean equals(Object o) {
@@ -80,8 +80,8 @@ public class LogGroupResponse {
     if (o == null || getClass() != o.getClass()) {
       return false;
     }
-    LogGroupResponse logGroupResponse = (LogGroupResponse) o;
-    return Objects.equals(this.data, logGroupResponse.data);
+    LoggerRequest loggerRequest = (LoggerRequest) o;
+    return Objects.equals(this.data, loggerRequest.data);
   }
 
   @Override
@@ -92,7 +92,7 @@ public class LogGroupResponse {
   @Override
   public String toString() {
     StringBuilder sb = new StringBuilder();
-    sb.append("class LogGroupResponse {\n");
+    sb.append("class LoggerRequest {\n");
     sb.append("    data: ").append(toIndentedString(data)).append("\n");
     sb.append("}");
     return sb.toString();

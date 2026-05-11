@@ -165,7 +165,7 @@ public class LoggerSourcesApi {
 
   /**
    * List All Logger Sources
-   * List all logger sources across all loggers. Optionally filter by environment or service.
+   * List every logger source observation for this account.  Supports &#x60;filter[environment]&#x60; and &#x60;filter[service]&#x60; to narrow to a specific environment or service.
    * @param filterEnvironment  (optional)
    * @param filterService  (optional)
    * @return LoggerSourceListResponse
@@ -177,7 +177,7 @@ public class LoggerSourcesApi {
 
   /**
    * List All Logger Sources
-   * List all logger sources across all loggers. Optionally filter by environment or service.
+   * List every logger source observation for this account.  Supports &#x60;filter[environment]&#x60; and &#x60;filter[service]&#x60; to narrow to a specific environment or service.
    * @param filterEnvironment  (optional)
    * @param filterService  (optional)
    * @param headers Optional headers to include in the request
@@ -191,7 +191,7 @@ public class LoggerSourcesApi {
 
   /**
    * List All Logger Sources
-   * List all logger sources across all loggers. Optionally filter by environment or service.
+   * List every logger source observation for this account.  Supports &#x60;filter[environment]&#x60; and &#x60;filter[service]&#x60; to narrow to a specific environment or service.
    * @param filterEnvironment  (optional)
    * @param filterService  (optional)
    * @return ApiResponse&lt;LoggerSourceListResponse&gt;
@@ -203,7 +203,7 @@ public class LoggerSourcesApi {
 
   /**
    * List All Logger Sources
-   * List all logger sources across all loggers. Optionally filter by environment or service.
+   * List every logger source observation for this account.  Supports &#x60;filter[environment]&#x60; and &#x60;filter[service]&#x60; to narrow to a specific environment or service.
    * @param filterEnvironment  (optional)
    * @param filterService  (optional)
    * @param headers Optional headers to include in the request
@@ -299,7 +299,7 @@ public class LoggerSourcesApi {
 
   /**
    * List Logger Sources
-   * List all sources (service/environment observations) for a specific logger.
+   * List the service / environment observations recorded for a logger.
    * @param id  (required)
    * @return LoggerSourceListResponse
    * @throws ApiException if fails to make API call
@@ -310,7 +310,7 @@ public class LoggerSourcesApi {
 
   /**
    * List Logger Sources
-   * List all sources (service/environment observations) for a specific logger.
+   * List the service / environment observations recorded for a logger.
    * @param id  (required)
    * @param headers Optional headers to include in the request
    * @return LoggerSourceListResponse
@@ -323,7 +323,7 @@ public class LoggerSourcesApi {
 
   /**
    * List Logger Sources
-   * List all sources (service/environment observations) for a specific logger.
+   * List the service / environment observations recorded for a logger.
    * @param id  (required)
    * @return ApiResponse&lt;LoggerSourceListResponse&gt;
    * @throws ApiException if fails to make API call
@@ -334,7 +334,7 @@ public class LoggerSourcesApi {
 
   /**
    * List Logger Sources
-   * List all sources (service/environment observations) for a specific logger.
+   * List the service / environment observations recorded for a logger.
    * @param id  (required)
    * @param headers Optional headers to include in the request
    * @return ApiResponse&lt;LoggerSourceListResponse&gt;
