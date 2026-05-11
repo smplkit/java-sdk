@@ -164,7 +164,7 @@ public class FunctionsApi {
 
   /**
    * Execute Wipe
-   * Delete every audit-database row scoped to the authenticated account.  Returns the per-table row counts that were deleted along with the completion timestamp. The action is atomic within the audit database — either every account-scoped row is gone, or none is. The body is required to be &#x60;&#x60;{}&#x60;&#x60;; no parameters are accepted.
+   * Delete every audit record this account has stored.  Atomic: either every record is deleted, or none is. Returns the per-table counts and the completion timestamp. The request body must be &#x60;{}&#x60;.
    * @param body  (required)
    * @return WipeResponse
    * @throws ApiException if fails to make API call
@@ -175,7 +175,7 @@ public class FunctionsApi {
 
   /**
    * Execute Wipe
-   * Delete every audit-database row scoped to the authenticated account.  Returns the per-table row counts that were deleted along with the completion timestamp. The action is atomic within the audit database — either every account-scoped row is gone, or none is. The body is required to be &#x60;&#x60;{}&#x60;&#x60;; no parameters are accepted.
+   * Delete every audit record this account has stored.  Atomic: either every record is deleted, or none is. Returns the per-table counts and the completion timestamp. The request body must be &#x60;{}&#x60;.
    * @param body  (required)
    * @param headers Optional headers to include in the request
    * @return WipeResponse
@@ -188,7 +188,7 @@ public class FunctionsApi {
 
   /**
    * Execute Wipe
-   * Delete every audit-database row scoped to the authenticated account.  Returns the per-table row counts that were deleted along with the completion timestamp. The action is atomic within the audit database — either every account-scoped row is gone, or none is. The body is required to be &#x60;&#x60;{}&#x60;&#x60;; no parameters are accepted.
+   * Delete every audit record this account has stored.  Atomic: either every record is deleted, or none is. Returns the per-table counts and the completion timestamp. The request body must be &#x60;{}&#x60;.
    * @param body  (required)
    * @return ApiResponse&lt;WipeResponse&gt;
    * @throws ApiException if fails to make API call
@@ -199,7 +199,7 @@ public class FunctionsApi {
 
   /**
    * Execute Wipe
-   * Delete every audit-database row scoped to the authenticated account.  Returns the per-table row counts that were deleted along with the completion timestamp. The action is atomic within the audit database — either every account-scoped row is gone, or none is. The body is required to be &#x60;&#x60;{}&#x60;&#x60;; no parameters are accepted.
+   * Delete every audit record this account has stored.  Atomic: either every record is deleted, or none is. Returns the per-table counts and the completion timestamp. The request body must be &#x60;{}&#x60;.
    * @param body  (required)
    * @param headers Optional headers to include in the request
    * @return ApiResponse&lt;WipeResponse&gt;

@@ -24,28 +24,28 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonTypeName;
 import com.fasterxml.jackson.annotation.JsonValue;
-import com.smplkit.internal.generated.audit.model.ForwarderResource;
+import com.smplkit.internal.generated.audit.model.EventResource;
 import java.util.Arrays;
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 
 
 import com.smplkit.internal.generated.audit.ApiClient;
 /**
- * JSON:API single-resource response envelope for a forwarder.
+ * JSON:API request envelope for recording an audit event.
  */
 @JsonPropertyOrder({
-  ForwarderResponse.JSON_PROPERTY_DATA
+  EventRequest.JSON_PROPERTY_DATA
 })
 @jakarta.annotation.Generated(value = "org.openapitools.codegen.languages.JavaClientCodegen", comments = "Generator version: 7.21.0")
-public class ForwarderResponse {
+public class EventRequest {
   public static final String JSON_PROPERTY_DATA = "data";
   @jakarta.annotation.Nonnull
-  private ForwarderResource data;
+  private EventResource data;
 
-  public ForwarderResponse() { 
+  public EventRequest() { 
   }
 
-  public ForwarderResponse data(@jakarta.annotation.Nonnull ForwarderResource data) {
+  public EventRequest data(@jakarta.annotation.Nonnull EventResource data) {
     this.data = data;
     return this;
   }
@@ -57,20 +57,20 @@ public class ForwarderResponse {
   @jakarta.annotation.Nonnull
   @JsonProperty(value = JSON_PROPERTY_DATA, required = true)
   @JsonInclude(value = JsonInclude.Include.ALWAYS)
-  public ForwarderResource getData() {
+  public EventResource getData() {
     return data;
   }
 
 
   @JsonProperty(value = JSON_PROPERTY_DATA, required = true)
   @JsonInclude(value = JsonInclude.Include.ALWAYS)
-  public void setData(@jakarta.annotation.Nonnull ForwarderResource data) {
+  public void setData(@jakarta.annotation.Nonnull EventResource data) {
     this.data = data;
   }
 
 
   /**
-   * Return true if this ForwarderResponse object is equal to o.
+   * Return true if this EventRequest object is equal to o.
    */
   @Override
   public boolean equals(Object o) {
@@ -80,8 +80,8 @@ public class ForwarderResponse {
     if (o == null || getClass() != o.getClass()) {
       return false;
     }
-    ForwarderResponse forwarderResponse = (ForwarderResponse) o;
-    return Objects.equals(this.data, forwarderResponse.data);
+    EventRequest eventRequest = (EventRequest) o;
+    return Objects.equals(this.data, eventRequest.data);
   }
 
   @Override
@@ -92,7 +92,7 @@ public class ForwarderResponse {
   @Override
   public String toString() {
     StringBuilder sb = new StringBuilder();
-    sb.append("class ForwarderResponse {\n");
+    sb.append("class EventRequest {\n");
     sb.append("    data: ").append(toIndentedString(data)).append("\n");
     sb.append("}");
     return sb.toString();

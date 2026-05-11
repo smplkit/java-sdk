@@ -30,7 +30,7 @@ import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 
 import com.smplkit.internal.generated.audit.ApiClient;
 /**
- * A single header on a forwarder&#39;s HTTP destination.
+ * A single HTTP header attached to a forwarder delivery request.
  */
 @JsonPropertyOrder({
   HttpHeader.JSON_PROPERTY_NAME,
@@ -55,7 +55,7 @@ public class HttpHeader {
   }
 
   /**
-   * Get name
+   * Header name.
    * @return name
    */
   @jakarta.annotation.Nonnull
@@ -79,7 +79,7 @@ public class HttpHeader {
   }
 
   /**
-   * Get value
+   * Header value.
    * @return value
    */
   @jakarta.annotation.Nonnull

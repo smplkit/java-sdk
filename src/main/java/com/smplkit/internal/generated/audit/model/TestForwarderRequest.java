@@ -37,7 +37,7 @@ import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 
 import com.smplkit.internal.generated.audit.ApiClient;
 /**
- * Plain-JSON body for the test_forwarder execute action.  Mirrors the encrypted &#x60;&#x60;ForwarderHttp&#x60;&#x60; shape with one addition — &#x60;&#x60;timeout_ms&#x60;&#x60;, capped server-side.
+ * Inputs to the test-forwarder action.  Mirrors a forwarder&#39;s HTTP destination configuration with one addition: &#x60;timeout_ms&#x60;, applied per-request and capped server-side.
  */
 @JsonPropertyOrder({
   TestForwarderRequest.JSON_PROPERTY_METHOD,
@@ -49,9 +49,50 @@ import com.smplkit.internal.generated.audit.ApiClient;
 })
 @jakarta.annotation.Generated(value = "org.openapitools.codegen.languages.JavaClientCodegen", comments = "Generator version: 7.21.0")
 public class TestForwarderRequest {
+  /**
+   * HTTP method used for the test request.
+   */
+  public enum MethodEnum {
+    GET(String.valueOf("GET")),
+    
+    POST(String.valueOf("POST")),
+    
+    PUT(String.valueOf("PUT")),
+    
+    PATCH(String.valueOf("PATCH")),
+    
+    DELETE(String.valueOf("DELETE"));
+
+    private String value;
+
+    MethodEnum(String value) {
+      this.value = value;
+    }
+
+    @JsonValue
+    public String getValue() {
+      return value;
+    }
+
+    @Override
+    public String toString() {
+      return String.valueOf(value);
+    }
+
+    @JsonCreator
+    public static MethodEnum fromValue(String value) {
+      for (MethodEnum b : MethodEnum.values()) {
+        if (b.value.equals(value)) {
+          return b;
+        }
+      }
+      throw new IllegalArgumentException("Unexpected value '" + value + "'");
+    }
+  }
+
   public static final String JSON_PROPERTY_METHOD = "method";
   @jakarta.annotation.Nullable
-  private String method = "POST";
+  private MethodEnum method = MethodEnum.POST;
 
   public static final String JSON_PROPERTY_URL = "url";
   @jakarta.annotation.Nonnull
@@ -74,26 +115,26 @@ public class TestForwarderRequest {
   public TestForwarderRequest() { 
   }
 
-  public TestForwarderRequest method(@jakarta.annotation.Nullable String method) {
+  public TestForwarderRequest method(@jakarta.annotation.Nullable MethodEnum method) {
     this.method = method;
     return this;
   }
 
   /**
-   * Get method
+   * HTTP method used for the test request.
    * @return method
    */
   @jakarta.annotation.Nullable
   @JsonProperty(value = JSON_PROPERTY_METHOD, required = false)
   @JsonInclude(value = JsonInclude.Include.USE_DEFAULTS)
-  public String getMethod() {
+  public MethodEnum getMethod() {
     return method;
   }
 
 
   @JsonProperty(value = JSON_PROPERTY_METHOD, required = false)
   @JsonInclude(value = JsonInclude.Include.USE_DEFAULTS)
-  public void setMethod(@jakarta.annotation.Nullable String method) {
+  public void setMethod(@jakarta.annotation.Nullable MethodEnum method) {
     this.method = method;
   }
 
@@ -104,7 +145,7 @@ public class TestForwarderRequest {
   }
 
   /**
-   * Get url
+   * Destination URL.
    * @return url
    */
   @jakarta.annotation.Nonnull
@@ -136,7 +177,7 @@ public class TestForwarderRequest {
   }
 
   /**
-   * Get headers
+   * HTTP headers attached to the test request.
    * @return headers
    */
   @jakarta.annotation.Nullable
@@ -160,7 +201,7 @@ public class TestForwarderRequest {
   }
 
   /**
-   * Get body
+   * Request body. If omitted, an empty body is sent.
    * @return body
    */
   @jakarta.annotation.Nullable
@@ -192,7 +233,7 @@ public class TestForwarderRequest {
   }
 
   /**
-   * Get successStatus
+   * HTTP response status that indicates success. Either a specific status code (e.g. &#x60;200&#x60;, &#x60;204&#x60;) or a status class (&#x60;1xx&#x60;, &#x60;2xx&#x60;, &#x60;3xx&#x60;, &#x60;4xx&#x60;, &#x60;5xx&#x60;).
    * @return successStatus
    */
   @jakarta.annotation.Nullable
@@ -216,7 +257,7 @@ public class TestForwarderRequest {
   }
 
   /**
-   * Get timeoutMs
+   * Per-request timeout in milliseconds. Capped at 30 seconds.
    * minimum: 1
    * maximum: 30000
    * @return timeoutMs

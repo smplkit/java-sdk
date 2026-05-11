@@ -30,7 +30,7 @@ import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 
 import com.smplkit.internal.generated.audit.ApiClient;
 /**
- * Attribute set for a usage resource.  The shape mirrors the &#x60;&#x60;/api/v1/usage&#x60;&#x60; contract used by config, flags, and logging — three fields, no per-product extras. Per-period limits live in the product catalog (&#x60;&#x60;GET /api/v1/products&#x60;&#x60;); the usage endpoint reports counts only.
+ * Usage counter for a single metered limit.
  */
 @JsonPropertyOrder({
   UsageAttributes.JSON_PROPERTY_LIMIT_KEY,
@@ -60,7 +60,7 @@ public class UsageAttributes {
   }
 
   /**
-   * Get limitKey
+   * Identifier of the metered limit, e.g. &#x60;audit.customer_events_per_month&#x60;.
    * @return limitKey
    */
   @jakarta.annotation.Nonnull
@@ -84,7 +84,7 @@ public class UsageAttributes {
   }
 
   /**
-   * Get period
+   * Period the counter covers. &#x60;current&#x60; is the only supported value.
    * @return period
    */
   @jakarta.annotation.Nonnull
@@ -108,7 +108,7 @@ public class UsageAttributes {
   }
 
   /**
-   * Get value
+   * Count for the period.
    * @return value
    */
   @jakarta.annotation.Nonnull

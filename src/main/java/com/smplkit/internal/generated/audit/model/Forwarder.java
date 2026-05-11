@@ -39,7 +39,7 @@ import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 
 import com.smplkit.internal.generated.audit.ApiClient;
 /**
- * Public-facing forwarder resource.  Attribute set on POST /api/v1/forwarders:     - name (required)     - forwarder_type (required)     - http (required)     - enabled (optional, defaults true)     - filter (optional, JSON Logic)     - transform (optional, JSONata)  The slug is server-derived from name on create; it is immutable on update because consumers (UI, observability) key off it.
+ * A destination that receives audit events recorded for the account.  Each event recorded for the account is evaluated against every enabled forwarder. If the filter expression evaluates truthy — or is absent — the event is delivered to the destination using the configured HTTP request. The slug, derived from &#x60;name&#x60; at create time, is the stable identifier used by the console and other tooling.
  */
 @JsonPropertyOrder({
   Forwarder.JSON_PROPERTY_NAME,
@@ -52,8 +52,7 @@ import com.smplkit.internal.generated.audit.ApiClient;
   Forwarder.JSON_PROPERTY_CREATED_AT,
   Forwarder.JSON_PROPERTY_UPDATED_AT,
   Forwarder.JSON_PROPERTY_DELETED_AT,
-  Forwarder.JSON_PROPERTY_VERSION,
-  Forwarder.JSON_PROPERTY_DATA
+  Forwarder.JSON_PROPERTY_VERSION
 })
 @jakarta.annotation.Generated(value = "org.openapitools.codegen.languages.JavaClientCodegen", comments = "Generator version: 7.21.0")
 public class Forwarder {
@@ -94,21 +93,19 @@ public class Forwarder {
   public static final String JSON_PROPERTY_VERSION = "version";
   private JsonNullable<Integer> version = JsonNullable.<Integer>undefined();
 
-  public static final String JSON_PROPERTY_DATA = "data";
-  @jakarta.annotation.Nullable
-  private Map<String, Object> data = new HashMap<>();
-
   public Forwarder() { 
   }
 
   @JsonCreator
   public Forwarder(
+    @JsonProperty(JSON_PROPERTY_SLUG) String slug, 
     @JsonProperty(JSON_PROPERTY_CREATED_AT) OffsetDateTime createdAt, 
     @JsonProperty(JSON_PROPERTY_UPDATED_AT) OffsetDateTime updatedAt, 
     @JsonProperty(JSON_PROPERTY_DELETED_AT) OffsetDateTime deletedAt, 
     @JsonProperty(JSON_PROPERTY_VERSION) Integer version
   ) {
   this();
+    this.slug = slug == null ? JsonNullable.<String>undefined() : JsonNullable.of(slug);
     this.createdAt = createdAt == null ? JsonNullable.<OffsetDateTime>undefined() : JsonNullable.of(createdAt);
     this.updatedAt = updatedAt == null ? JsonNullable.<OffsetDateTime>undefined() : JsonNullable.of(updatedAt);
     this.deletedAt = deletedAt == null ? JsonNullable.<OffsetDateTime>undefined() : JsonNullable.of(deletedAt);
@@ -121,7 +118,7 @@ public class Forwarder {
   }
 
   /**
-   * Get name
+   * Human-readable name for the forwarder.
    * @return name
    */
   @jakarta.annotation.Nonnull
@@ -169,7 +166,7 @@ public class Forwarder {
   }
 
   /**
-   * Get enabled
+   * Whether the forwarder is currently delivering events. Set to &#x60;false&#x60; to pause deliveries without deleting the forwarder.
    * @return enabled
    */
   @jakarta.annotation.Nullable
@@ -205,7 +202,7 @@ public class Forwarder {
   }
 
   /**
-   * Get filter
+   * JSON Logic expression evaluated against each event. The event is delivered only if the expression returns truthy. Omit to deliver every event.
    * @return filter
    */
   @jakarta.annotation.Nullable
@@ -237,7 +234,7 @@ public class Forwarder {
   }
 
   /**
-   * Get transform
+   * JSONata template applied to each event before delivery. Omit to deliver the event unchanged.
    * @return transform
    */
   @jakarta.annotation.Nullable
@@ -287,19 +284,18 @@ public class Forwarder {
   }
 
 
-  public Forwarder slug(@jakarta.annotation.Nullable String slug) {
-    this.slug = JsonNullable.<String>of(slug);
-    return this;
-  }
-
   /**
-   * Get slug
+   * URL-safe identifier derived from &#x60;name&#x60; at create time. Stable for the lifetime of the forwarder.
    * @return slug
    */
   @jakarta.annotation.Nullable
   @JsonIgnore
   public String getSlug() {
-        return slug.orElse(null);
+    
+    if (slug == null) {
+      slug = JsonNullable.<String>undefined();
+    }
+    return slug.orElse(null);
   }
 
   @JsonProperty(value = JSON_PROPERTY_SLUG, required = false)
@@ -310,17 +306,14 @@ public class Forwarder {
   }
   
   @JsonProperty(JSON_PROPERTY_SLUG)
-  public void setSlug_JsonNullable(JsonNullable<String> slug) {
+  private void setSlug_JsonNullable(JsonNullable<String> slug) {
     this.slug = slug;
   }
 
-  public void setSlug(@jakarta.annotation.Nullable String slug) {
-    this.slug = JsonNullable.<String>of(slug);
-  }
 
 
   /**
-   * Get createdAt
+   * When the forwarder was created.
    * @return createdAt
    */
   @jakarta.annotation.Nullable
@@ -348,7 +341,7 @@ public class Forwarder {
 
 
   /**
-   * Get updatedAt
+   * When the forwarder was last modified.
    * @return updatedAt
    */
   @jakarta.annotation.Nullable
@@ -376,7 +369,7 @@ public class Forwarder {
 
 
   /**
-   * Get deletedAt
+   * When the forwarder was deleted. &#x60;null&#x60; for active forwarders.
    * @return deletedAt
    */
   @jakarta.annotation.Nullable
@@ -404,7 +397,7 @@ public class Forwarder {
 
 
   /**
-   * Get version
+   * Monotonic counter incremented on every update, starting at 1.
    * @return version
    */
   @jakarta.annotation.Nullable
@@ -431,38 +424,6 @@ public class Forwarder {
 
 
 
-  public Forwarder data(@jakarta.annotation.Nullable Map<String, Object> data) {
-    this.data = data;
-    return this;
-  }
-
-  public Forwarder putDataItem(String key, Object dataItem) {
-    if (this.data == null) {
-      this.data = new HashMap<>();
-    }
-    this.data.put(key, dataItem);
-    return this;
-  }
-
-  /**
-   * Get data
-   * @return data
-   */
-  @jakarta.annotation.Nullable
-  @JsonProperty(value = JSON_PROPERTY_DATA, required = false)
-  @JsonInclude(content = JsonInclude.Include.ALWAYS, value = JsonInclude.Include.USE_DEFAULTS)
-  public Map<String, Object> getData() {
-    return data;
-  }
-
-
-  @JsonProperty(value = JSON_PROPERTY_DATA, required = false)
-  @JsonInclude(content = JsonInclude.Include.ALWAYS, value = JsonInclude.Include.USE_DEFAULTS)
-  public void setData(@jakarta.annotation.Nullable Map<String, Object> data) {
-    this.data = data;
-  }
-
-
   /**
    * Return true if this Forwarder object is equal to o.
    */
@@ -485,8 +446,7 @@ public class Forwarder {
         equalsNullable(this.createdAt, forwarder.createdAt) &&
         equalsNullable(this.updatedAt, forwarder.updatedAt) &&
         equalsNullable(this.deletedAt, forwarder.deletedAt) &&
-        equalsNullable(this.version, forwarder.version) &&
-        Objects.equals(this.data, forwarder.data);
+        equalsNullable(this.version, forwarder.version);
   }
 
   private static <T> boolean equalsNullable(JsonNullable<T> a, JsonNullable<T> b) {
@@ -495,7 +455,7 @@ public class Forwarder {
 
   @Override
   public int hashCode() {
-    return Objects.hash(name, forwarderType, enabled, hashCodeNullable(filter), hashCodeNullable(transform), http, hashCodeNullable(slug), hashCodeNullable(createdAt), hashCodeNullable(updatedAt), hashCodeNullable(deletedAt), hashCodeNullable(version), data);
+    return Objects.hash(name, forwarderType, enabled, hashCodeNullable(filter), hashCodeNullable(transform), http, hashCodeNullable(slug), hashCodeNullable(createdAt), hashCodeNullable(updatedAt), hashCodeNullable(deletedAt), hashCodeNullable(version));
   }
 
   private static <T> int hashCodeNullable(JsonNullable<T> a) {
@@ -520,7 +480,6 @@ public class Forwarder {
     sb.append("    updatedAt: ").append(toIndentedString(updatedAt)).append("\n");
     sb.append("    deletedAt: ").append(toIndentedString(deletedAt)).append("\n");
     sb.append("    version: ").append(toIndentedString(version)).append("\n");
-    sb.append("    data: ").append(toIndentedString(data)).append("\n");
     sb.append("}");
     return sb.toString();
   }
@@ -622,15 +581,6 @@ public class Forwarder {
     // add `version` to the URL query string
     if (getVersion() != null) {
       joiner.add(String.format(java.util.Locale.ROOT, "%sversion%s=%s", prefix, suffix, ApiClient.urlEncode(ApiClient.valueToString(getVersion()))));
-    }
-
-    // add `data` to the URL query string
-    if (getData() != null) {
-      for (String _key : getData().keySet()) {
-        joiner.add(String.format(java.util.Locale.ROOT, "%sdata%s%s=%s", prefix, suffix,
-            "".equals(suffix) ? "" : String.format(java.util.Locale.ROOT, "%s%d%s", containerPrefix, _key, containerSuffix),
-            getData().get(_key), ApiClient.urlEncode(ApiClient.valueToString(getData().get(_key)))));
-      }
     }
 
     return joiner.toString();

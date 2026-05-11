@@ -21,6 +21,7 @@ import com.smplkit.internal.generated.audit.Pair;
 import com.smplkit.internal.generated.audit.model.ForwarderDeliveryListResponse;
 import com.smplkit.internal.generated.audit.model.ForwarderDeliveryResponse;
 import com.smplkit.internal.generated.audit.model.ForwarderListResponse;
+import com.smplkit.internal.generated.audit.model.ForwarderRequest;
 import com.smplkit.internal.generated.audit.model.ForwarderResponse;
 import com.smplkit.internal.generated.audit.model.RetryFailedDeliveriesSummary;
 import com.smplkit.internal.generated.audit.model.TestForwarderRequest;
@@ -171,49 +172,49 @@ public class ForwardersApi {
 
   /**
    * Create Forwarder
-   * Create a forwarder. Requires the &#x60;&#x60;audit.siem_streaming&#x60;&#x60; entitlement on the account; lower-tier accounts get 402.
-   * @param forwarderResponse  (required)
+   * Create a forwarder for this account.
+   * @param forwarderRequest  (required)
    * @return ForwarderResponse
    * @throws ApiException if fails to make API call
    */
-  public ForwarderResponse createForwarder(@jakarta.annotation.Nonnull ForwarderResponse forwarderResponse) throws ApiException {
-    return createForwarder(forwarderResponse, null);
+  public ForwarderResponse createForwarder(@jakarta.annotation.Nonnull ForwarderRequest forwarderRequest) throws ApiException {
+    return createForwarder(forwarderRequest, null);
   }
 
   /**
    * Create Forwarder
-   * Create a forwarder. Requires the &#x60;&#x60;audit.siem_streaming&#x60;&#x60; entitlement on the account; lower-tier accounts get 402.
-   * @param forwarderResponse  (required)
+   * Create a forwarder for this account.
+   * @param forwarderRequest  (required)
    * @param headers Optional headers to include in the request
    * @return ForwarderResponse
    * @throws ApiException if fails to make API call
    */
-  public ForwarderResponse createForwarder(@jakarta.annotation.Nonnull ForwarderResponse forwarderResponse, Map<String, String> headers) throws ApiException {
-    ApiResponse<ForwarderResponse> localVarResponse = createForwarderWithHttpInfo(forwarderResponse, headers);
+  public ForwarderResponse createForwarder(@jakarta.annotation.Nonnull ForwarderRequest forwarderRequest, Map<String, String> headers) throws ApiException {
+    ApiResponse<ForwarderResponse> localVarResponse = createForwarderWithHttpInfo(forwarderRequest, headers);
     return localVarResponse.getData();
   }
 
   /**
    * Create Forwarder
-   * Create a forwarder. Requires the &#x60;&#x60;audit.siem_streaming&#x60;&#x60; entitlement on the account; lower-tier accounts get 402.
-   * @param forwarderResponse  (required)
+   * Create a forwarder for this account.
+   * @param forwarderRequest  (required)
    * @return ApiResponse&lt;ForwarderResponse&gt;
    * @throws ApiException if fails to make API call
    */
-  public ApiResponse<ForwarderResponse> createForwarderWithHttpInfo(@jakarta.annotation.Nonnull ForwarderResponse forwarderResponse) throws ApiException {
-    return createForwarderWithHttpInfo(forwarderResponse, null);
+  public ApiResponse<ForwarderResponse> createForwarderWithHttpInfo(@jakarta.annotation.Nonnull ForwarderRequest forwarderRequest) throws ApiException {
+    return createForwarderWithHttpInfo(forwarderRequest, null);
   }
 
   /**
    * Create Forwarder
-   * Create a forwarder. Requires the &#x60;&#x60;audit.siem_streaming&#x60;&#x60; entitlement on the account; lower-tier accounts get 402.
-   * @param forwarderResponse  (required)
+   * Create a forwarder for this account.
+   * @param forwarderRequest  (required)
    * @param headers Optional headers to include in the request
    * @return ApiResponse&lt;ForwarderResponse&gt;
    * @throws ApiException if fails to make API call
    */
-  public ApiResponse<ForwarderResponse> createForwarderWithHttpInfo(@jakarta.annotation.Nonnull ForwarderResponse forwarderResponse, Map<String, String> headers) throws ApiException {
-    HttpRequest.Builder localVarRequestBuilder = createForwarderRequestBuilder(forwarderResponse, headers);
+  public ApiResponse<ForwarderResponse> createForwarderWithHttpInfo(@jakarta.annotation.Nonnull ForwarderRequest forwarderRequest, Map<String, String> headers) throws ApiException {
+    HttpRequest.Builder localVarRequestBuilder = createForwarderRequestBuilder(forwarderRequest, headers);
     try {
       HttpResponse<InputStream> localVarResponse = memberVarHttpClient.send(
           localVarRequestBuilder.build(),
@@ -260,10 +261,10 @@ public class ForwardersApi {
     }
   }
 
-  private HttpRequest.Builder createForwarderRequestBuilder(@jakarta.annotation.Nonnull ForwarderResponse forwarderResponse, Map<String, String> headers) throws ApiException {
-    // verify the required parameter 'forwarderResponse' is set
-    if (forwarderResponse == null) {
-      throw new ApiException(400, "Missing the required parameter 'forwarderResponse' when calling createForwarder");
+  private HttpRequest.Builder createForwarderRequestBuilder(@jakarta.annotation.Nonnull ForwarderRequest forwarderRequest, Map<String, String> headers) throws ApiException {
+    // verify the required parameter 'forwarderRequest' is set
+    if (forwarderRequest == null) {
+      throw new ApiException(400, "Missing the required parameter 'forwarderRequest' when calling createForwarder");
     }
 
     HttpRequest.Builder localVarRequestBuilder = HttpRequest.newBuilder();
@@ -276,7 +277,7 @@ public class ForwardersApi {
     localVarRequestBuilder.header("Accept", "application/vnd.api+json");
 
     try {
-      byte[] localVarPostBody = memberVarObjectMapper.writeValueAsBytes(forwarderResponse);
+      byte[] localVarPostBody = memberVarObjectMapper.writeValueAsBytes(forwarderRequest);
       localVarRequestBuilder.method("POST", HttpRequest.BodyPublishers.ofByteArray(localVarPostBody));
     } catch (IOException e) {
       throw new ApiException(e);
@@ -294,7 +295,7 @@ public class ForwardersApi {
 
   /**
    * Delete Forwarder
-   * Soft-delete a forwarder. Delivery rows are retained per the normal forwarder_delivery retention; a future create with the same slug is allowed (the unique index is partial on deleted_at IS NULL).
+   * Delete a forwarder.  Past delivery log entries are retained. A new forwarder may be created later under the same name.
    * @param forwarderId  (required)
    * @throws ApiException if fails to make API call
    */
@@ -304,7 +305,7 @@ public class ForwardersApi {
 
   /**
    * Delete Forwarder
-   * Soft-delete a forwarder. Delivery rows are retained per the normal forwarder_delivery retention; a future create with the same slug is allowed (the unique index is partial on deleted_at IS NULL).
+   * Delete a forwarder.  Past delivery log entries are retained. A new forwarder may be created later under the same name.
    * @param forwarderId  (required)
    * @param headers Optional headers to include in the request
    * @throws ApiException if fails to make API call
@@ -315,7 +316,7 @@ public class ForwardersApi {
 
   /**
    * Delete Forwarder
-   * Soft-delete a forwarder. Delivery rows are retained per the normal forwarder_delivery retention; a future create with the same slug is allowed (the unique index is partial on deleted_at IS NULL).
+   * Delete a forwarder.  Past delivery log entries are retained. A new forwarder may be created later under the same name.
    * @param forwarderId  (required)
    * @return ApiResponse&lt;Void&gt;
    * @throws ApiException if fails to make API call
@@ -326,7 +327,7 @@ public class ForwardersApi {
 
   /**
    * Delete Forwarder
-   * Soft-delete a forwarder. Delivery rows are retained per the normal forwarder_delivery retention; a future create with the same slug is allowed (the unique index is partial on deleted_at IS NULL).
+   * Delete a forwarder.  Past delivery log entries are retained. A new forwarder may be created later under the same name.
    * @param forwarderId  (required)
    * @param headers Optional headers to include in the request
    * @return ApiResponse&lt;Void&gt;
@@ -398,7 +399,7 @@ public class ForwardersApi {
 
   /**
    * Execute Test Forwarder
-   * Execute a prepared HTTP request server-side and return the response.  The same SSRF guard that gates the in-line forwarder loop is applied here — internal/private addresses, link-local IPs (including the EC2 metadata service at 169.254.169.254), unique-local IPv6, and ports outside the configured allowlist are all rejected.
+   * Send a test HTTP request to a forwarder destination and return the result.  Useful for verifying a destination URL, credentials, or transform before saving the forwarder. The same network-safety rules that apply to live deliveries (private/internal address blocking, port allowlist) apply here.
    * @param testForwarderRequest  (required)
    * @return TestForwarderResponse
    * @throws ApiException if fails to make API call
@@ -409,7 +410,7 @@ public class ForwardersApi {
 
   /**
    * Execute Test Forwarder
-   * Execute a prepared HTTP request server-side and return the response.  The same SSRF guard that gates the in-line forwarder loop is applied here — internal/private addresses, link-local IPs (including the EC2 metadata service at 169.254.169.254), unique-local IPv6, and ports outside the configured allowlist are all rejected.
+   * Send a test HTTP request to a forwarder destination and return the result.  Useful for verifying a destination URL, credentials, or transform before saving the forwarder. The same network-safety rules that apply to live deliveries (private/internal address blocking, port allowlist) apply here.
    * @param testForwarderRequest  (required)
    * @param headers Optional headers to include in the request
    * @return TestForwarderResponse
@@ -422,7 +423,7 @@ public class ForwardersApi {
 
   /**
    * Execute Test Forwarder
-   * Execute a prepared HTTP request server-side and return the response.  The same SSRF guard that gates the in-line forwarder loop is applied here — internal/private addresses, link-local IPs (including the EC2 metadata service at 169.254.169.254), unique-local IPv6, and ports outside the configured allowlist are all rejected.
+   * Send a test HTTP request to a forwarder destination and return the result.  Useful for verifying a destination URL, credentials, or transform before saving the forwarder. The same network-safety rules that apply to live deliveries (private/internal address blocking, port allowlist) apply here.
    * @param testForwarderRequest  (required)
    * @return ApiResponse&lt;TestForwarderResponse&gt;
    * @throws ApiException if fails to make API call
@@ -433,7 +434,7 @@ public class ForwardersApi {
 
   /**
    * Execute Test Forwarder
-   * Execute a prepared HTTP request server-side and return the response.  The same SSRF guard that gates the in-line forwarder loop is applied here — internal/private addresses, link-local IPs (including the EC2 metadata service at 169.254.169.254), unique-local IPv6, and ports outside the configured allowlist are all rejected.
+   * Send a test HTTP request to a forwarder destination and return the result.  Useful for verifying a destination URL, credentials, or transform before saving the forwarder. The same network-safety rules that apply to live deliveries (private/internal address blocking, port allowlist) apply here.
    * @param testForwarderRequest  (required)
    * @param headers Optional headers to include in the request
    * @return ApiResponse&lt;TestForwarderResponse&gt;
@@ -521,7 +522,7 @@ public class ForwardersApi {
 
   /**
    * Get Forwarder
-   * Retrieve a single forwarder by id.  Returns 404 if no forwarder with that id exists in the caller&#39;s account, including if the forwarder is soft-deleted. Header values in the response are returned in plaintext so callers can perform a GET-modify-PUT round-trip without re-entering secrets (ADR-014). The persisted &#x60;&#x60;forwarder_delivery.request&#x60;&#x60; log column is what keeps redaction; that read path is unaffected by this route.
+   * Retrieve a single forwarder by id.  Header values are returned in plaintext so the resource can be round-tripped with &#x60;GET&#x60;, mutate, &#x60;PUT&#x60; without re-entering secrets.
    * @param forwarderId  (required)
    * @return ForwarderResponse
    * @throws ApiException if fails to make API call
@@ -532,7 +533,7 @@ public class ForwardersApi {
 
   /**
    * Get Forwarder
-   * Retrieve a single forwarder by id.  Returns 404 if no forwarder with that id exists in the caller&#39;s account, including if the forwarder is soft-deleted. Header values in the response are returned in plaintext so callers can perform a GET-modify-PUT round-trip without re-entering secrets (ADR-014). The persisted &#x60;&#x60;forwarder_delivery.request&#x60;&#x60; log column is what keeps redaction; that read path is unaffected by this route.
+   * Retrieve a single forwarder by id.  Header values are returned in plaintext so the resource can be round-tripped with &#x60;GET&#x60;, mutate, &#x60;PUT&#x60; without re-entering secrets.
    * @param forwarderId  (required)
    * @param headers Optional headers to include in the request
    * @return ForwarderResponse
@@ -545,7 +546,7 @@ public class ForwardersApi {
 
   /**
    * Get Forwarder
-   * Retrieve a single forwarder by id.  Returns 404 if no forwarder with that id exists in the caller&#39;s account, including if the forwarder is soft-deleted. Header values in the response are returned in plaintext so callers can perform a GET-modify-PUT round-trip without re-entering secrets (ADR-014). The persisted &#x60;&#x60;forwarder_delivery.request&#x60;&#x60; log column is what keeps redaction; that read path is unaffected by this route.
+   * Retrieve a single forwarder by id.  Header values are returned in plaintext so the resource can be round-tripped with &#x60;GET&#x60;, mutate, &#x60;PUT&#x60; without re-entering secrets.
    * @param forwarderId  (required)
    * @return ApiResponse&lt;ForwarderResponse&gt;
    * @throws ApiException if fails to make API call
@@ -556,7 +557,7 @@ public class ForwardersApi {
 
   /**
    * Get Forwarder
-   * Retrieve a single forwarder by id.  Returns 404 if no forwarder with that id exists in the caller&#39;s account, including if the forwarder is soft-deleted. Header values in the response are returned in plaintext so callers can perform a GET-modify-PUT round-trip without re-entering secrets (ADR-014). The persisted &#x60;&#x60;forwarder_delivery.request&#x60;&#x60; log column is what keeps redaction; that read path is unaffected by this route.
+   * Retrieve a single forwarder by id.  Header values are returned in plaintext so the resource can be round-tripped with &#x60;GET&#x60;, mutate, &#x60;PUT&#x60; without re-entering secrets.
    * @param forwarderId  (required)
    * @param headers Optional headers to include in the request
    * @return ApiResponse&lt;ForwarderResponse&gt;
@@ -639,7 +640,7 @@ public class ForwardersApi {
 
   /**
    * List Forwarder Deliveries
-   * List delivery rows for a forwarder.  Default sort is &#x60;&#x60;-created_at&#x60;&#x60;. Cursor pagination via &#x60;&#x60;page[after]&#x60;&#x60;. Filter by status (&#x60;&#x60;SUCCEEDED&#x60;&#x60; / &#x60;&#x60;FAILED&#x60;&#x60; / &#x60;&#x60;FILTERED_OUT&#x60;&#x60; / &#x60;&#x60;SKIPPED_DO_NOT_FORWARD&#x60;&#x60;, case-insensitive) or by a &#x60;&#x60;created_at&#x60;&#x60; range using the platform&#39;s interval notation (&#x60;&#x60;[2026-01-01T00:00:00Z,*)&#x60;&#x60;). Reads do not require the entitlement — a downgraded account can still inspect historical deliveries from when the forwarder was active.
+   * List delivery log entries for a forwarder.  Default sort is newest first. Filter by &#x60;status&#x60; (one of &#x60;SUCCEEDED&#x60;, &#x60;FAILED&#x60;, &#x60;FILTERED_OUT&#x60;, &#x60;SKIPPED_DO_NOT_FORWARD&#x60; — case-insensitive), by &#x60;event_id&#x60;, or by a &#x60;created_at&#x60; range using interval notation (e.g. &#x60;[2026-01-01T00:00:00Z,*)&#x60;).
    * @param forwarderId  (required)
    * @param filterStatus  (optional)
    * @param filterCreatedAt  (optional)
@@ -655,7 +656,7 @@ public class ForwardersApi {
 
   /**
    * List Forwarder Deliveries
-   * List delivery rows for a forwarder.  Default sort is &#x60;&#x60;-created_at&#x60;&#x60;. Cursor pagination via &#x60;&#x60;page[after]&#x60;&#x60;. Filter by status (&#x60;&#x60;SUCCEEDED&#x60;&#x60; / &#x60;&#x60;FAILED&#x60;&#x60; / &#x60;&#x60;FILTERED_OUT&#x60;&#x60; / &#x60;&#x60;SKIPPED_DO_NOT_FORWARD&#x60;&#x60;, case-insensitive) or by a &#x60;&#x60;created_at&#x60;&#x60; range using the platform&#39;s interval notation (&#x60;&#x60;[2026-01-01T00:00:00Z,*)&#x60;&#x60;). Reads do not require the entitlement — a downgraded account can still inspect historical deliveries from when the forwarder was active.
+   * List delivery log entries for a forwarder.  Default sort is newest first. Filter by &#x60;status&#x60; (one of &#x60;SUCCEEDED&#x60;, &#x60;FAILED&#x60;, &#x60;FILTERED_OUT&#x60;, &#x60;SKIPPED_DO_NOT_FORWARD&#x60; — case-insensitive), by &#x60;event_id&#x60;, or by a &#x60;created_at&#x60; range using interval notation (e.g. &#x60;[2026-01-01T00:00:00Z,*)&#x60;).
    * @param forwarderId  (required)
    * @param filterStatus  (optional)
    * @param filterCreatedAt  (optional)
@@ -673,7 +674,7 @@ public class ForwardersApi {
 
   /**
    * List Forwarder Deliveries
-   * List delivery rows for a forwarder.  Default sort is &#x60;&#x60;-created_at&#x60;&#x60;. Cursor pagination via &#x60;&#x60;page[after]&#x60;&#x60;. Filter by status (&#x60;&#x60;SUCCEEDED&#x60;&#x60; / &#x60;&#x60;FAILED&#x60;&#x60; / &#x60;&#x60;FILTERED_OUT&#x60;&#x60; / &#x60;&#x60;SKIPPED_DO_NOT_FORWARD&#x60;&#x60;, case-insensitive) or by a &#x60;&#x60;created_at&#x60;&#x60; range using the platform&#39;s interval notation (&#x60;&#x60;[2026-01-01T00:00:00Z,*)&#x60;&#x60;). Reads do not require the entitlement — a downgraded account can still inspect historical deliveries from when the forwarder was active.
+   * List delivery log entries for a forwarder.  Default sort is newest first. Filter by &#x60;status&#x60; (one of &#x60;SUCCEEDED&#x60;, &#x60;FAILED&#x60;, &#x60;FILTERED_OUT&#x60;, &#x60;SKIPPED_DO_NOT_FORWARD&#x60; — case-insensitive), by &#x60;event_id&#x60;, or by a &#x60;created_at&#x60; range using interval notation (e.g. &#x60;[2026-01-01T00:00:00Z,*)&#x60;).
    * @param forwarderId  (required)
    * @param filterStatus  (optional)
    * @param filterCreatedAt  (optional)
@@ -689,7 +690,7 @@ public class ForwardersApi {
 
   /**
    * List Forwarder Deliveries
-   * List delivery rows for a forwarder.  Default sort is &#x60;&#x60;-created_at&#x60;&#x60;. Cursor pagination via &#x60;&#x60;page[after]&#x60;&#x60;. Filter by status (&#x60;&#x60;SUCCEEDED&#x60;&#x60; / &#x60;&#x60;FAILED&#x60;&#x60; / &#x60;&#x60;FILTERED_OUT&#x60;&#x60; / &#x60;&#x60;SKIPPED_DO_NOT_FORWARD&#x60;&#x60;, case-insensitive) or by a &#x60;&#x60;created_at&#x60;&#x60; range using the platform&#39;s interval notation (&#x60;&#x60;[2026-01-01T00:00:00Z,*)&#x60;&#x60;). Reads do not require the entitlement — a downgraded account can still inspect historical deliveries from when the forwarder was active.
+   * List delivery log entries for a forwarder.  Default sort is newest first. Filter by &#x60;status&#x60; (one of &#x60;SUCCEEDED&#x60;, &#x60;FAILED&#x60;, &#x60;FILTERED_OUT&#x60;, &#x60;SKIPPED_DO_NOT_FORWARD&#x60; — case-insensitive), by &#x60;event_id&#x60;, or by a &#x60;created_at&#x60; range using interval notation (e.g. &#x60;[2026-01-01T00:00:00Z,*)&#x60;).
    * @param forwarderId  (required)
    * @param filterStatus  (optional)
    * @param filterCreatedAt  (optional)
@@ -800,7 +801,7 @@ public class ForwardersApi {
 
   /**
    * List Forwarders
-   * List forwarders for the authenticated account.  Reads do not require the entitlement — a downgraded account can still inspect what they configured, they just can&#39;t create new ones.
+   * List forwarders for this account.
    * @param filterForwarderType  (optional)
    * @param filterEnabled  (optional)
    * @param pageSize  (optional)
@@ -814,7 +815,7 @@ public class ForwardersApi {
 
   /**
    * List Forwarders
-   * List forwarders for the authenticated account.  Reads do not require the entitlement — a downgraded account can still inspect what they configured, they just can&#39;t create new ones.
+   * List forwarders for this account.
    * @param filterForwarderType  (optional)
    * @param filterEnabled  (optional)
    * @param pageSize  (optional)
@@ -830,7 +831,7 @@ public class ForwardersApi {
 
   /**
    * List Forwarders
-   * List forwarders for the authenticated account.  Reads do not require the entitlement — a downgraded account can still inspect what they configured, they just can&#39;t create new ones.
+   * List forwarders for this account.
    * @param filterForwarderType  (optional)
    * @param filterEnabled  (optional)
    * @param pageSize  (optional)
@@ -844,7 +845,7 @@ public class ForwardersApi {
 
   /**
    * List Forwarders
-   * List forwarders for the authenticated account.  Reads do not require the entitlement — a downgraded account can still inspect what they configured, they just can&#39;t create new ones.
+   * List forwarders for this account.
    * @param filterForwarderType  (optional)
    * @param filterEnabled  (optional)
    * @param pageSize  (optional)
@@ -946,7 +947,7 @@ public class ForwardersApi {
 
   /**
    * Retry Failed Forwarder Deliveries
-   * Retry every failed delivery for the forwarder.  For each failed delivery row, re-attempt with the latest forwarder configuration and the original event payload. Returns counts.
+   * Retry every failed delivery for this forwarder.  Each failed delivery is re-attempted using the forwarder&#39;s current configuration and the original event. Returns the counts.
    * @param forwarderId  (required)
    * @return RetryFailedDeliveriesSummary
    * @throws ApiException if fails to make API call
@@ -957,7 +958,7 @@ public class ForwardersApi {
 
   /**
    * Retry Failed Forwarder Deliveries
-   * Retry every failed delivery for the forwarder.  For each failed delivery row, re-attempt with the latest forwarder configuration and the original event payload. Returns counts.
+   * Retry every failed delivery for this forwarder.  Each failed delivery is re-attempted using the forwarder&#39;s current configuration and the original event. Returns the counts.
    * @param forwarderId  (required)
    * @param headers Optional headers to include in the request
    * @return RetryFailedDeliveriesSummary
@@ -970,7 +971,7 @@ public class ForwardersApi {
 
   /**
    * Retry Failed Forwarder Deliveries
-   * Retry every failed delivery for the forwarder.  For each failed delivery row, re-attempt with the latest forwarder configuration and the original event payload. Returns counts.
+   * Retry every failed delivery for this forwarder.  Each failed delivery is re-attempted using the forwarder&#39;s current configuration and the original event. Returns the counts.
    * @param forwarderId  (required)
    * @return ApiResponse&lt;RetryFailedDeliveriesSummary&gt;
    * @throws ApiException if fails to make API call
@@ -981,7 +982,7 @@ public class ForwardersApi {
 
   /**
    * Retry Failed Forwarder Deliveries
-   * Retry every failed delivery for the forwarder.  For each failed delivery row, re-attempt with the latest forwarder configuration and the original event payload. Returns counts.
+   * Retry every failed delivery for this forwarder.  Each failed delivery is re-attempted using the forwarder&#39;s current configuration and the original event. Returns the counts.
    * @param forwarderId  (required)
    * @param headers Optional headers to include in the request
    * @return ApiResponse&lt;RetryFailedDeliveriesSummary&gt;
@@ -1064,7 +1065,7 @@ public class ForwardersApi {
 
   /**
    * Retry Forwarder Delivery
-   * Retry a single failed delivery. Returns the new delivery row with its outcome. Prior delivery rows are not modified.
+   * Retry a single failed delivery.  Returns the new delivery log entry. The prior entry is left in place.
    * @param forwarderId  (required)
    * @param deliveryId  (required)
    * @return ForwarderDeliveryResponse
@@ -1076,7 +1077,7 @@ public class ForwardersApi {
 
   /**
    * Retry Forwarder Delivery
-   * Retry a single failed delivery. Returns the new delivery row with its outcome. Prior delivery rows are not modified.
+   * Retry a single failed delivery.  Returns the new delivery log entry. The prior entry is left in place.
    * @param forwarderId  (required)
    * @param deliveryId  (required)
    * @param headers Optional headers to include in the request
@@ -1090,7 +1091,7 @@ public class ForwardersApi {
 
   /**
    * Retry Forwarder Delivery
-   * Retry a single failed delivery. Returns the new delivery row with its outcome. Prior delivery rows are not modified.
+   * Retry a single failed delivery.  Returns the new delivery log entry. The prior entry is left in place.
    * @param forwarderId  (required)
    * @param deliveryId  (required)
    * @return ApiResponse&lt;ForwarderDeliveryResponse&gt;
@@ -1102,7 +1103,7 @@ public class ForwardersApi {
 
   /**
    * Retry Forwarder Delivery
-   * Retry a single failed delivery. Returns the new delivery row with its outcome. Prior delivery rows are not modified.
+   * Retry a single failed delivery.  Returns the new delivery log entry. The prior entry is left in place.
    * @param forwarderId  (required)
    * @param deliveryId  (required)
    * @param headers Optional headers to include in the request
@@ -1191,53 +1192,53 @@ public class ForwardersApi {
 
   /**
    * Update Forwarder
-   * Full-replace update. PUT semantics — every field is overwritten.  The GET path returns plaintext header values, so the standard get-mutate-put round-trip (ADR-014) preserves secrets without any extra work from the caller: GET, change one field, PUT the result.
+   * Replace an existing forwarder. Every writable field is overwritten.
    * @param forwarderId  (required)
-   * @param forwarderResponse  (required)
+   * @param forwarderRequest  (required)
    * @return ForwarderResponse
    * @throws ApiException if fails to make API call
    */
-  public ForwarderResponse updateForwarder(@jakarta.annotation.Nonnull UUID forwarderId, @jakarta.annotation.Nonnull ForwarderResponse forwarderResponse) throws ApiException {
-    return updateForwarder(forwarderId, forwarderResponse, null);
+  public ForwarderResponse updateForwarder(@jakarta.annotation.Nonnull UUID forwarderId, @jakarta.annotation.Nonnull ForwarderRequest forwarderRequest) throws ApiException {
+    return updateForwarder(forwarderId, forwarderRequest, null);
   }
 
   /**
    * Update Forwarder
-   * Full-replace update. PUT semantics — every field is overwritten.  The GET path returns plaintext header values, so the standard get-mutate-put round-trip (ADR-014) preserves secrets without any extra work from the caller: GET, change one field, PUT the result.
+   * Replace an existing forwarder. Every writable field is overwritten.
    * @param forwarderId  (required)
-   * @param forwarderResponse  (required)
+   * @param forwarderRequest  (required)
    * @param headers Optional headers to include in the request
    * @return ForwarderResponse
    * @throws ApiException if fails to make API call
    */
-  public ForwarderResponse updateForwarder(@jakarta.annotation.Nonnull UUID forwarderId, @jakarta.annotation.Nonnull ForwarderResponse forwarderResponse, Map<String, String> headers) throws ApiException {
-    ApiResponse<ForwarderResponse> localVarResponse = updateForwarderWithHttpInfo(forwarderId, forwarderResponse, headers);
+  public ForwarderResponse updateForwarder(@jakarta.annotation.Nonnull UUID forwarderId, @jakarta.annotation.Nonnull ForwarderRequest forwarderRequest, Map<String, String> headers) throws ApiException {
+    ApiResponse<ForwarderResponse> localVarResponse = updateForwarderWithHttpInfo(forwarderId, forwarderRequest, headers);
     return localVarResponse.getData();
   }
 
   /**
    * Update Forwarder
-   * Full-replace update. PUT semantics — every field is overwritten.  The GET path returns plaintext header values, so the standard get-mutate-put round-trip (ADR-014) preserves secrets without any extra work from the caller: GET, change one field, PUT the result.
+   * Replace an existing forwarder. Every writable field is overwritten.
    * @param forwarderId  (required)
-   * @param forwarderResponse  (required)
+   * @param forwarderRequest  (required)
    * @return ApiResponse&lt;ForwarderResponse&gt;
    * @throws ApiException if fails to make API call
    */
-  public ApiResponse<ForwarderResponse> updateForwarderWithHttpInfo(@jakarta.annotation.Nonnull UUID forwarderId, @jakarta.annotation.Nonnull ForwarderResponse forwarderResponse) throws ApiException {
-    return updateForwarderWithHttpInfo(forwarderId, forwarderResponse, null);
+  public ApiResponse<ForwarderResponse> updateForwarderWithHttpInfo(@jakarta.annotation.Nonnull UUID forwarderId, @jakarta.annotation.Nonnull ForwarderRequest forwarderRequest) throws ApiException {
+    return updateForwarderWithHttpInfo(forwarderId, forwarderRequest, null);
   }
 
   /**
    * Update Forwarder
-   * Full-replace update. PUT semantics — every field is overwritten.  The GET path returns plaintext header values, so the standard get-mutate-put round-trip (ADR-014) preserves secrets without any extra work from the caller: GET, change one field, PUT the result.
+   * Replace an existing forwarder. Every writable field is overwritten.
    * @param forwarderId  (required)
-   * @param forwarderResponse  (required)
+   * @param forwarderRequest  (required)
    * @param headers Optional headers to include in the request
    * @return ApiResponse&lt;ForwarderResponse&gt;
    * @throws ApiException if fails to make API call
    */
-  public ApiResponse<ForwarderResponse> updateForwarderWithHttpInfo(@jakarta.annotation.Nonnull UUID forwarderId, @jakarta.annotation.Nonnull ForwarderResponse forwarderResponse, Map<String, String> headers) throws ApiException {
-    HttpRequest.Builder localVarRequestBuilder = updateForwarderRequestBuilder(forwarderId, forwarderResponse, headers);
+  public ApiResponse<ForwarderResponse> updateForwarderWithHttpInfo(@jakarta.annotation.Nonnull UUID forwarderId, @jakarta.annotation.Nonnull ForwarderRequest forwarderRequest, Map<String, String> headers) throws ApiException {
+    HttpRequest.Builder localVarRequestBuilder = updateForwarderRequestBuilder(forwarderId, forwarderRequest, headers);
     try {
       HttpResponse<InputStream> localVarResponse = memberVarHttpClient.send(
           localVarRequestBuilder.build(),
@@ -1284,14 +1285,14 @@ public class ForwardersApi {
     }
   }
 
-  private HttpRequest.Builder updateForwarderRequestBuilder(@jakarta.annotation.Nonnull UUID forwarderId, @jakarta.annotation.Nonnull ForwarderResponse forwarderResponse, Map<String, String> headers) throws ApiException {
+  private HttpRequest.Builder updateForwarderRequestBuilder(@jakarta.annotation.Nonnull UUID forwarderId, @jakarta.annotation.Nonnull ForwarderRequest forwarderRequest, Map<String, String> headers) throws ApiException {
     // verify the required parameter 'forwarderId' is set
     if (forwarderId == null) {
       throw new ApiException(400, "Missing the required parameter 'forwarderId' when calling updateForwarder");
     }
-    // verify the required parameter 'forwarderResponse' is set
-    if (forwarderResponse == null) {
-      throw new ApiException(400, "Missing the required parameter 'forwarderResponse' when calling updateForwarder");
+    // verify the required parameter 'forwarderRequest' is set
+    if (forwarderRequest == null) {
+      throw new ApiException(400, "Missing the required parameter 'forwarderRequest' when calling updateForwarder");
     }
 
     HttpRequest.Builder localVarRequestBuilder = HttpRequest.newBuilder();
@@ -1305,7 +1306,7 @@ public class ForwardersApi {
     localVarRequestBuilder.header("Accept", "application/vnd.api+json");
 
     try {
-      byte[] localVarPostBody = memberVarObjectMapper.writeValueAsBytes(forwarderResponse);
+      byte[] localVarPostBody = memberVarObjectMapper.writeValueAsBytes(forwarderRequest);
       localVarRequestBuilder.method("PUT", HttpRequest.BodyPublishers.ofByteArray(localVarPostBody));
     } catch (IOException e) {
       throw new ApiException(e);

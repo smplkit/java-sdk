@@ -19,6 +19,7 @@ import com.smplkit.internal.generated.audit.Configuration;
 import com.smplkit.internal.generated.audit.Pair;
 
 import com.smplkit.internal.generated.audit.model.EventListResponse;
+import com.smplkit.internal.generated.audit.model.EventRequest;
 import com.smplkit.internal.generated.audit.model.EventResponse;
 import java.util.UUID;
 
@@ -166,7 +167,7 @@ public class EventsApi {
 
   /**
    * Get Event
-   * Retrieve a single audit event by id.  Returns 404 if no event with that id exists in the caller&#39;s account — RLS enforces tenant isolation; this endpoint never leaks the existence of another tenant&#39;s event.
+   * Retrieve a single audit event by id.
    * @param eventId  (required)
    * @return EventResponse
    * @throws ApiException if fails to make API call
@@ -177,7 +178,7 @@ public class EventsApi {
 
   /**
    * Get Event
-   * Retrieve a single audit event by id.  Returns 404 if no event with that id exists in the caller&#39;s account — RLS enforces tenant isolation; this endpoint never leaks the existence of another tenant&#39;s event.
+   * Retrieve a single audit event by id.
    * @param eventId  (required)
    * @param headers Optional headers to include in the request
    * @return EventResponse
@@ -190,7 +191,7 @@ public class EventsApi {
 
   /**
    * Get Event
-   * Retrieve a single audit event by id.  Returns 404 if no event with that id exists in the caller&#39;s account — RLS enforces tenant isolation; this endpoint never leaks the existence of another tenant&#39;s event.
+   * Retrieve a single audit event by id.
    * @param eventId  (required)
    * @return ApiResponse&lt;EventResponse&gt;
    * @throws ApiException if fails to make API call
@@ -201,7 +202,7 @@ public class EventsApi {
 
   /**
    * Get Event
-   * Retrieve a single audit event by id.  Returns 404 if no event with that id exists in the caller&#39;s account — RLS enforces tenant isolation; this endpoint never leaks the existence of another tenant&#39;s event.
+   * Retrieve a single audit event by id.
    * @param eventId  (required)
    * @param headers Optional headers to include in the request
    * @return ApiResponse&lt;EventResponse&gt;
@@ -284,14 +285,14 @@ public class EventsApi {
 
   /**
    * List Events
-   * List audit events for the authenticated account.  Default sort is &#x60;&#x60;-created_at&#x60;&#x60;; cursor pagination via &#x60;&#x60;page[after]&#x60;&#x60; (the opaque cursor returned in &#x60;&#x60;links.next&#x60;&#x60;). Filters are exact-match except &#x60;&#x60;filter[occurred_at]&#x60;&#x60; which uses the platform&#39;s range notation (&#x60;&#x60;[2026-01-01T00:00:00Z,*)&#x60;&#x60;) and &#x60;&#x60;filter[search]&#x60;&#x60; which is a case-insensitive substring match (per ADR-014; targets &#x60;&#x60;resource_id&#x60;&#x60; only at this revision).
+   * List audit events for this account.  Default sort is newest first. Filters are exact-match except &#x60;filter[occurred_at]&#x60;, which uses interval notation (e.g. &#x60;[2026-01-01T00:00:00Z,*)&#x60;), and &#x60;filter[search]&#x60;, which is a case-insensitive substring match against &#x60;resource_id&#x60;.
    * @param filterOccurredAt  (optional)
    * @param filterActorType  (optional)
    * @param filterActorId  (optional)
    * @param filterAction  (optional)
    * @param filterResourceType  (optional)
    * @param filterResourceId  (optional)
-   * @param filterSearch Case-insensitive substring match. Searches against &#x60;&#x60;resource_id&#x60;&#x60; only — see ADR-014 for the platform-wide &#x60;&#x60;filter[search]&#x60;&#x60; convention. Use &#x60;&#x60;filter[resource_id]&#x60;&#x60; for an exact match. (optional)
+   * @param filterSearch Case-insensitive substring match against &#x60;resource_id&#x60;. Use &#x60;filter[resource_id]&#x60; for an exact match. (optional)
    * @param pageSize  (optional)
    * @param pageAfter  (optional)
    * @return EventListResponse
@@ -303,14 +304,14 @@ public class EventsApi {
 
   /**
    * List Events
-   * List audit events for the authenticated account.  Default sort is &#x60;&#x60;-created_at&#x60;&#x60;; cursor pagination via &#x60;&#x60;page[after]&#x60;&#x60; (the opaque cursor returned in &#x60;&#x60;links.next&#x60;&#x60;). Filters are exact-match except &#x60;&#x60;filter[occurred_at]&#x60;&#x60; which uses the platform&#39;s range notation (&#x60;&#x60;[2026-01-01T00:00:00Z,*)&#x60;&#x60;) and &#x60;&#x60;filter[search]&#x60;&#x60; which is a case-insensitive substring match (per ADR-014; targets &#x60;&#x60;resource_id&#x60;&#x60; only at this revision).
+   * List audit events for this account.  Default sort is newest first. Filters are exact-match except &#x60;filter[occurred_at]&#x60;, which uses interval notation (e.g. &#x60;[2026-01-01T00:00:00Z,*)&#x60;), and &#x60;filter[search]&#x60;, which is a case-insensitive substring match against &#x60;resource_id&#x60;.
    * @param filterOccurredAt  (optional)
    * @param filterActorType  (optional)
    * @param filterActorId  (optional)
    * @param filterAction  (optional)
    * @param filterResourceType  (optional)
    * @param filterResourceId  (optional)
-   * @param filterSearch Case-insensitive substring match. Searches against &#x60;&#x60;resource_id&#x60;&#x60; only — see ADR-014 for the platform-wide &#x60;&#x60;filter[search]&#x60;&#x60; convention. Use &#x60;&#x60;filter[resource_id]&#x60;&#x60; for an exact match. (optional)
+   * @param filterSearch Case-insensitive substring match against &#x60;resource_id&#x60;. Use &#x60;filter[resource_id]&#x60; for an exact match. (optional)
    * @param pageSize  (optional)
    * @param pageAfter  (optional)
    * @param headers Optional headers to include in the request
@@ -324,14 +325,14 @@ public class EventsApi {
 
   /**
    * List Events
-   * List audit events for the authenticated account.  Default sort is &#x60;&#x60;-created_at&#x60;&#x60;; cursor pagination via &#x60;&#x60;page[after]&#x60;&#x60; (the opaque cursor returned in &#x60;&#x60;links.next&#x60;&#x60;). Filters are exact-match except &#x60;&#x60;filter[occurred_at]&#x60;&#x60; which uses the platform&#39;s range notation (&#x60;&#x60;[2026-01-01T00:00:00Z,*)&#x60;&#x60;) and &#x60;&#x60;filter[search]&#x60;&#x60; which is a case-insensitive substring match (per ADR-014; targets &#x60;&#x60;resource_id&#x60;&#x60; only at this revision).
+   * List audit events for this account.  Default sort is newest first. Filters are exact-match except &#x60;filter[occurred_at]&#x60;, which uses interval notation (e.g. &#x60;[2026-01-01T00:00:00Z,*)&#x60;), and &#x60;filter[search]&#x60;, which is a case-insensitive substring match against &#x60;resource_id&#x60;.
    * @param filterOccurredAt  (optional)
    * @param filterActorType  (optional)
    * @param filterActorId  (optional)
    * @param filterAction  (optional)
    * @param filterResourceType  (optional)
    * @param filterResourceId  (optional)
-   * @param filterSearch Case-insensitive substring match. Searches against &#x60;&#x60;resource_id&#x60;&#x60; only — see ADR-014 for the platform-wide &#x60;&#x60;filter[search]&#x60;&#x60; convention. Use &#x60;&#x60;filter[resource_id]&#x60;&#x60; for an exact match. (optional)
+   * @param filterSearch Case-insensitive substring match against &#x60;resource_id&#x60;. Use &#x60;filter[resource_id]&#x60; for an exact match. (optional)
    * @param pageSize  (optional)
    * @param pageAfter  (optional)
    * @return ApiResponse&lt;EventListResponse&gt;
@@ -343,14 +344,14 @@ public class EventsApi {
 
   /**
    * List Events
-   * List audit events for the authenticated account.  Default sort is &#x60;&#x60;-created_at&#x60;&#x60;; cursor pagination via &#x60;&#x60;page[after]&#x60;&#x60; (the opaque cursor returned in &#x60;&#x60;links.next&#x60;&#x60;). Filters are exact-match except &#x60;&#x60;filter[occurred_at]&#x60;&#x60; which uses the platform&#39;s range notation (&#x60;&#x60;[2026-01-01T00:00:00Z,*)&#x60;&#x60;) and &#x60;&#x60;filter[search]&#x60;&#x60; which is a case-insensitive substring match (per ADR-014; targets &#x60;&#x60;resource_id&#x60;&#x60; only at this revision).
+   * List audit events for this account.  Default sort is newest first. Filters are exact-match except &#x60;filter[occurred_at]&#x60;, which uses interval notation (e.g. &#x60;[2026-01-01T00:00:00Z,*)&#x60;), and &#x60;filter[search]&#x60;, which is a case-insensitive substring match against &#x60;resource_id&#x60;.
    * @param filterOccurredAt  (optional)
    * @param filterActorType  (optional)
    * @param filterActorId  (optional)
    * @param filterAction  (optional)
    * @param filterResourceType  (optional)
    * @param filterResourceId  (optional)
-   * @param filterSearch Case-insensitive substring match. Searches against &#x60;&#x60;resource_id&#x60;&#x60; only — see ADR-014 for the platform-wide &#x60;&#x60;filter[search]&#x60;&#x60; convention. Use &#x60;&#x60;filter[resource_id]&#x60;&#x60; for an exact match. (optional)
+   * @param filterSearch Case-insensitive substring match against &#x60;resource_id&#x60;. Use &#x60;filter[resource_id]&#x60; for an exact match. (optional)
    * @param pageSize  (optional)
    * @param pageAfter  (optional)
    * @param headers Optional headers to include in the request
@@ -460,53 +461,53 @@ public class EventsApi {
 
   /**
    * Record Event
-   * Record an audit event for the authenticated account.  Returns &#x60;&#x60;201 Created&#x60;&#x60; on first write, &#x60;&#x60;200 OK&#x60;&#x60; if the request was a duplicate (matched by &#x60;&#x60;Idempotency-Key&#x60;&#x60; or auto-derived key).  Customers may not emit events whose &#x60;&#x60;resource_type&#x60;&#x60; starts with &#x60;&#x60;smpl.&#x60;&#x60; — that namespace is reserved for smplkit-emitted events about platform resources.
-   * @param eventResponse  (required)
+   * Record an audit event for this account.  Returns &#x60;201 Created&#x60; on first write, &#x60;200 OK&#x60; if the request was a duplicate (matched by &#x60;Idempotency-Key&#x60; or a key derived from the event&#39;s content).  &#x60;resource_type&#x60; values beginning with &#x60;smpl.&#x60; are reserved for events that smplkit emits about its own resources and cannot be used here.
+   * @param eventRequest  (required)
    * @param idempotencyKey  (optional)
    * @return EventResponse
    * @throws ApiException if fails to make API call
    */
-  public EventResponse recordEvent(@jakarta.annotation.Nonnull EventResponse eventResponse, @jakarta.annotation.Nullable String idempotencyKey) throws ApiException {
-    return recordEvent(eventResponse, idempotencyKey, null);
+  public EventResponse recordEvent(@jakarta.annotation.Nonnull EventRequest eventRequest, @jakarta.annotation.Nullable String idempotencyKey) throws ApiException {
+    return recordEvent(eventRequest, idempotencyKey, null);
   }
 
   /**
    * Record Event
-   * Record an audit event for the authenticated account.  Returns &#x60;&#x60;201 Created&#x60;&#x60; on first write, &#x60;&#x60;200 OK&#x60;&#x60; if the request was a duplicate (matched by &#x60;&#x60;Idempotency-Key&#x60;&#x60; or auto-derived key).  Customers may not emit events whose &#x60;&#x60;resource_type&#x60;&#x60; starts with &#x60;&#x60;smpl.&#x60;&#x60; — that namespace is reserved for smplkit-emitted events about platform resources.
-   * @param eventResponse  (required)
+   * Record an audit event for this account.  Returns &#x60;201 Created&#x60; on first write, &#x60;200 OK&#x60; if the request was a duplicate (matched by &#x60;Idempotency-Key&#x60; or a key derived from the event&#39;s content).  &#x60;resource_type&#x60; values beginning with &#x60;smpl.&#x60; are reserved for events that smplkit emits about its own resources and cannot be used here.
+   * @param eventRequest  (required)
    * @param idempotencyKey  (optional)
    * @param headers Optional headers to include in the request
    * @return EventResponse
    * @throws ApiException if fails to make API call
    */
-  public EventResponse recordEvent(@jakarta.annotation.Nonnull EventResponse eventResponse, @jakarta.annotation.Nullable String idempotencyKey, Map<String, String> headers) throws ApiException {
-    ApiResponse<EventResponse> localVarResponse = recordEventWithHttpInfo(eventResponse, idempotencyKey, headers);
+  public EventResponse recordEvent(@jakarta.annotation.Nonnull EventRequest eventRequest, @jakarta.annotation.Nullable String idempotencyKey, Map<String, String> headers) throws ApiException {
+    ApiResponse<EventResponse> localVarResponse = recordEventWithHttpInfo(eventRequest, idempotencyKey, headers);
     return localVarResponse.getData();
   }
 
   /**
    * Record Event
-   * Record an audit event for the authenticated account.  Returns &#x60;&#x60;201 Created&#x60;&#x60; on first write, &#x60;&#x60;200 OK&#x60;&#x60; if the request was a duplicate (matched by &#x60;&#x60;Idempotency-Key&#x60;&#x60; or auto-derived key).  Customers may not emit events whose &#x60;&#x60;resource_type&#x60;&#x60; starts with &#x60;&#x60;smpl.&#x60;&#x60; — that namespace is reserved for smplkit-emitted events about platform resources.
-   * @param eventResponse  (required)
+   * Record an audit event for this account.  Returns &#x60;201 Created&#x60; on first write, &#x60;200 OK&#x60; if the request was a duplicate (matched by &#x60;Idempotency-Key&#x60; or a key derived from the event&#39;s content).  &#x60;resource_type&#x60; values beginning with &#x60;smpl.&#x60; are reserved for events that smplkit emits about its own resources and cannot be used here.
+   * @param eventRequest  (required)
    * @param idempotencyKey  (optional)
    * @return ApiResponse&lt;EventResponse&gt;
    * @throws ApiException if fails to make API call
    */
-  public ApiResponse<EventResponse> recordEventWithHttpInfo(@jakarta.annotation.Nonnull EventResponse eventResponse, @jakarta.annotation.Nullable String idempotencyKey) throws ApiException {
-    return recordEventWithHttpInfo(eventResponse, idempotencyKey, null);
+  public ApiResponse<EventResponse> recordEventWithHttpInfo(@jakarta.annotation.Nonnull EventRequest eventRequest, @jakarta.annotation.Nullable String idempotencyKey) throws ApiException {
+    return recordEventWithHttpInfo(eventRequest, idempotencyKey, null);
   }
 
   /**
    * Record Event
-   * Record an audit event for the authenticated account.  Returns &#x60;&#x60;201 Created&#x60;&#x60; on first write, &#x60;&#x60;200 OK&#x60;&#x60; if the request was a duplicate (matched by &#x60;&#x60;Idempotency-Key&#x60;&#x60; or auto-derived key).  Customers may not emit events whose &#x60;&#x60;resource_type&#x60;&#x60; starts with &#x60;&#x60;smpl.&#x60;&#x60; — that namespace is reserved for smplkit-emitted events about platform resources.
-   * @param eventResponse  (required)
+   * Record an audit event for this account.  Returns &#x60;201 Created&#x60; on first write, &#x60;200 OK&#x60; if the request was a duplicate (matched by &#x60;Idempotency-Key&#x60; or a key derived from the event&#39;s content).  &#x60;resource_type&#x60; values beginning with &#x60;smpl.&#x60; are reserved for events that smplkit emits about its own resources and cannot be used here.
+   * @param eventRequest  (required)
    * @param idempotencyKey  (optional)
    * @param headers Optional headers to include in the request
    * @return ApiResponse&lt;EventResponse&gt;
    * @throws ApiException if fails to make API call
    */
-  public ApiResponse<EventResponse> recordEventWithHttpInfo(@jakarta.annotation.Nonnull EventResponse eventResponse, @jakarta.annotation.Nullable String idempotencyKey, Map<String, String> headers) throws ApiException {
-    HttpRequest.Builder localVarRequestBuilder = recordEventRequestBuilder(eventResponse, idempotencyKey, headers);
+  public ApiResponse<EventResponse> recordEventWithHttpInfo(@jakarta.annotation.Nonnull EventRequest eventRequest, @jakarta.annotation.Nullable String idempotencyKey, Map<String, String> headers) throws ApiException {
+    HttpRequest.Builder localVarRequestBuilder = recordEventRequestBuilder(eventRequest, idempotencyKey, headers);
     try {
       HttpResponse<InputStream> localVarResponse = memberVarHttpClient.send(
           localVarRequestBuilder.build(),
@@ -553,10 +554,10 @@ public class EventsApi {
     }
   }
 
-  private HttpRequest.Builder recordEventRequestBuilder(@jakarta.annotation.Nonnull EventResponse eventResponse, @jakarta.annotation.Nullable String idempotencyKey, Map<String, String> headers) throws ApiException {
-    // verify the required parameter 'eventResponse' is set
-    if (eventResponse == null) {
-      throw new ApiException(400, "Missing the required parameter 'eventResponse' when calling recordEvent");
+  private HttpRequest.Builder recordEventRequestBuilder(@jakarta.annotation.Nonnull EventRequest eventRequest, @jakarta.annotation.Nullable String idempotencyKey, Map<String, String> headers) throws ApiException {
+    // verify the required parameter 'eventRequest' is set
+    if (eventRequest == null) {
+      throw new ApiException(400, "Missing the required parameter 'eventRequest' when calling recordEvent");
     }
 
     HttpRequest.Builder localVarRequestBuilder = HttpRequest.newBuilder();
@@ -572,7 +573,7 @@ public class EventsApi {
     localVarRequestBuilder.header("Accept", "application/vnd.api+json");
 
     try {
-      byte[] localVarPostBody = memberVarObjectMapper.writeValueAsBytes(eventResponse);
+      byte[] localVarPostBody = memberVarObjectMapper.writeValueAsBytes(eventRequest);
       localVarRequestBuilder.method("POST", HttpRequest.BodyPublishers.ofByteArray(localVarPostBody));
     } catch (IOException e) {
       throw new ApiException(e);

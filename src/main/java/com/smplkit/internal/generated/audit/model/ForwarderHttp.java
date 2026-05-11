@@ -37,7 +37,7 @@ import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 
 import com.smplkit.internal.generated.audit.ApiClient;
 /**
- * The destination HTTP request shape stored encrypted on a forwarder.  &#x60;&#x60;success_status&#x60;&#x60; is a string: either a single status code (e.g. &#x60;&#x60;\&quot;200\&quot;&#x60;&#x60;, &#x60;&#x60;\&quot;204\&quot;&#x60;&#x60;) or a class (e.g. &#x60;&#x60;\&quot;2xx\&quot;&#x60;&#x60;, &#x60;&#x60;\&quot;3xx\&quot;&#x60;&#x60;). The string-only contract is intentional — a Pydantic &#x60;&#x60;int | str&#x60;&#x60; union confused several SDK code generators (Java in particular wrote the default &#x60;&#x60;\&quot;2xx\&quot;&#x60;&#x60; unquoted into a typed enum). String covers both shapes universally with a single wire type.
+ * HTTP request configuration used to deliver an event to the destination.
  */
 @JsonPropertyOrder({
   ForwarderHttp.JSON_PROPERTY_METHOD,
@@ -48,9 +48,50 @@ import com.smplkit.internal.generated.audit.ApiClient;
 })
 @jakarta.annotation.Generated(value = "org.openapitools.codegen.languages.JavaClientCodegen", comments = "Generator version: 7.21.0")
 public class ForwarderHttp {
+  /**
+   * HTTP method used when delivering an event.
+   */
+  public enum MethodEnum {
+    GET(String.valueOf("GET")),
+    
+    POST(String.valueOf("POST")),
+    
+    PUT(String.valueOf("PUT")),
+    
+    PATCH(String.valueOf("PATCH")),
+    
+    DELETE(String.valueOf("DELETE"));
+
+    private String value;
+
+    MethodEnum(String value) {
+      this.value = value;
+    }
+
+    @JsonValue
+    public String getValue() {
+      return value;
+    }
+
+    @Override
+    public String toString() {
+      return String.valueOf(value);
+    }
+
+    @JsonCreator
+    public static MethodEnum fromValue(String value) {
+      for (MethodEnum b : MethodEnum.values()) {
+        if (b.value.equals(value)) {
+          return b;
+        }
+      }
+      throw new IllegalArgumentException("Unexpected value '" + value + "'");
+    }
+  }
+
   public static final String JSON_PROPERTY_METHOD = "method";
   @jakarta.annotation.Nullable
-  private String method = "POST";
+  private MethodEnum method = MethodEnum.POST;
 
   public static final String JSON_PROPERTY_URL = "url";
   @jakarta.annotation.Nonnull
@@ -70,26 +111,26 @@ public class ForwarderHttp {
   public ForwarderHttp() { 
   }
 
-  public ForwarderHttp method(@jakarta.annotation.Nullable String method) {
+  public ForwarderHttp method(@jakarta.annotation.Nullable MethodEnum method) {
     this.method = method;
     return this;
   }
 
   /**
-   * Get method
+   * HTTP method used when delivering an event.
    * @return method
    */
   @jakarta.annotation.Nullable
   @JsonProperty(value = JSON_PROPERTY_METHOD, required = false)
   @JsonInclude(value = JsonInclude.Include.USE_DEFAULTS)
-  public String getMethod() {
+  public MethodEnum getMethod() {
     return method;
   }
 
 
   @JsonProperty(value = JSON_PROPERTY_METHOD, required = false)
   @JsonInclude(value = JsonInclude.Include.USE_DEFAULTS)
-  public void setMethod(@jakarta.annotation.Nullable String method) {
+  public void setMethod(@jakarta.annotation.Nullable MethodEnum method) {
     this.method = method;
   }
 
@@ -100,7 +141,7 @@ public class ForwarderHttp {
   }
 
   /**
-   * Get url
+   * Destination URL.
    * @return url
    */
   @jakarta.annotation.Nonnull
@@ -132,7 +173,7 @@ public class ForwarderHttp {
   }
 
   /**
-   * Get headers
+   * HTTP headers attached to each delivery request.
    * @return headers
    */
   @jakarta.annotation.Nullable
@@ -156,7 +197,7 @@ public class ForwarderHttp {
   }
 
   /**
-   * Get body
+   * Request body sent to the destination. If omitted, the event JSON is sent as the body.
    * @return body
    */
   @jakarta.annotation.Nullable
@@ -188,7 +229,7 @@ public class ForwarderHttp {
   }
 
   /**
-   * Get successStatus
+   * HTTP response status that indicates a successful delivery. Either a specific status code (e.g. &#x60;200&#x60;, &#x60;204&#x60;) or a status class (&#x60;1xx&#x60;, &#x60;2xx&#x60;, &#x60;3xx&#x60;, &#x60;4xx&#x60;, &#x60;5xx&#x60;).
    * @return successStatus
    */
   @jakarta.annotation.Nullable

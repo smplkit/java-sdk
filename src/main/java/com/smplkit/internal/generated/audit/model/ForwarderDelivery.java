@@ -38,7 +38,7 @@ import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 
 import com.smplkit.internal.generated.audit.ApiClient;
 /**
- * Read-only delivery log row.  All fields are server-populated. Headers in &#x60;&#x60;request&#x60;&#x60; always show redacted values, regardless of who configured them.
+ * A log entry for one attempt to deliver an event to a forwarder.
  */
 @JsonPropertyOrder({
   ForwarderDelivery.JSON_PROPERTY_FORWARDER_ID,
@@ -67,7 +67,7 @@ public class ForwarderDelivery {
   private Integer attemptNumber;
 
   /**
-   * Gets or Sets status
+   * Delivery outcome. &#x60;SUCCEEDED&#x60; and &#x60;FAILED&#x60; are the live-delivery outcomes; &#x60;FILTERED_OUT&#x60; is recorded when the forwarder&#39;s filter rejected the event; &#x60;SKIPPED_DO_NOT_FORWARD&#x60; is recorded when the event was emitted with &#x60;do_not_forward&#x3D;true&#x60;.
    */
   public enum StatusEnum {
     SUCCEEDED(String.valueOf("SUCCEEDED")),
@@ -136,7 +136,7 @@ public class ForwarderDelivery {
   }
 
   /**
-   * Get forwarderId
+   * Forwarder the delivery belongs to.
    * @return forwarderId
    */
   @jakarta.annotation.Nonnull
@@ -160,7 +160,7 @@ public class ForwarderDelivery {
   }
 
   /**
-   * Get eventId
+   * Event that was being delivered.
    * @return eventId
    */
   @jakarta.annotation.Nonnull
@@ -184,7 +184,7 @@ public class ForwarderDelivery {
   }
 
   /**
-   * Get attemptNumber
+   * 1 for the initial delivery, incremented for each retry.
    * @return attemptNumber
    */
   @jakarta.annotation.Nonnull
@@ -208,7 +208,7 @@ public class ForwarderDelivery {
   }
 
   /**
-   * Get status
+   * Delivery outcome. &#x60;SUCCEEDED&#x60; and &#x60;FAILED&#x60; are the live-delivery outcomes; &#x60;FILTERED_OUT&#x60; is recorded when the forwarder&#39;s filter rejected the event; &#x60;SKIPPED_DO_NOT_FORWARD&#x60; is recorded when the event was emitted with &#x60;do_not_forward&#x3D;true&#x60;.
    * @return status
    */
   @jakarta.annotation.Nonnull
@@ -244,7 +244,7 @@ public class ForwarderDelivery {
   }
 
   /**
-   * Get request
+   * The HTTP request as it was sent to the destination. Header values are redacted.
    * @return request
    */
   @jakarta.annotation.Nullable
@@ -276,7 +276,7 @@ public class ForwarderDelivery {
   }
 
   /**
-   * Get responseStatus
+   * HTTP status code returned by the destination.
    * @return responseStatus
    */
   @jakarta.annotation.Nullable
@@ -308,7 +308,7 @@ public class ForwarderDelivery {
   }
 
   /**
-   * Get responseBody
+   * Response body returned by the destination.
    * @return responseBody
    */
   @jakarta.annotation.Nullable
@@ -340,7 +340,7 @@ public class ForwarderDelivery {
   }
 
   /**
-   * Get latencyMs
+   * Elapsed time of the delivery attempt in milliseconds.
    * @return latencyMs
    */
   @jakarta.annotation.Nullable
@@ -372,7 +372,7 @@ public class ForwarderDelivery {
   }
 
   /**
-   * Get error
+   * Error message if the delivery did not complete.
    * @return error
    */
   @jakarta.annotation.Nullable
@@ -404,7 +404,7 @@ public class ForwarderDelivery {
   }
 
   /**
-   * Get createdAt
+   * When the delivery attempt was recorded.
    * @return createdAt
    */
   @jakarta.annotation.Nullable
