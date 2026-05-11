@@ -26,7 +26,7 @@ import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonValue;
 
 /**
- * Supported forwarder destination types.  Carried as a typed enum so the OpenAPI spec emits an &#x60;&#x60;enum&#x60;&#x60; constraint and the auto-generated SDK clients (in all 6 languages) surface a typed enum to customers rather than free-form strings. Subclassing &#x60;&#x60;str&#x60;&#x60; keeps JSON serialization byte-identical to the prior &#x60;&#x60;str&#x60;&#x60; field — no migration of stored &#x60;&#x60;forwarder.type&#x60;&#x60; values needed.  Values are SCREAMING_SNAKE_CASE per ADR-014. The Forwarder schema accepts any casing on input via _normalize_forwarder_type.  Adding a new destination here requires a corresponding implementation in &#x60;&#x60;app.services.forwarding&#x60;&#x60; and a regeneration of the OpenAPI spec so the SDK clients pick up the new variant.
+ * Supported forwarder destination types.
  */
 public enum ForwarderType {
   

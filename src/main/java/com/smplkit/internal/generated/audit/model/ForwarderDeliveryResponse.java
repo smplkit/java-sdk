@@ -31,7 +31,7 @@ import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 
 import com.smplkit.internal.generated.audit.ApiClient;
 /**
- * ForwarderDeliveryResponse
+ * JSON:API single-resource response for a forwarder delivery.
  */
 @JsonPropertyOrder({
   ForwarderDeliveryResponse.JSON_PROPERTY_DATA

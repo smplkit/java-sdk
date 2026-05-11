@@ -164,8 +164,8 @@ public class UsageApi {
 
   /**
    * List Usage
-   * Current-period usage and quota for the audit product.  Only &#x60;&#x60;filter[period]&#x3D;current&#x60;&#x60; is supported; historical usage is a follow-up.
-   * @param filterPeriod  (required)
+   * Report the current-period usage counters for this account.
+   * @param filterPeriod Period to report. &#x60;current&#x60; is the only supported value. (required)
    * @return UsageResponse
    * @throws ApiException if fails to make API call
    */
@@ -175,8 +175,8 @@ public class UsageApi {
 
   /**
    * List Usage
-   * Current-period usage and quota for the audit product.  Only &#x60;&#x60;filter[period]&#x3D;current&#x60;&#x60; is supported; historical usage is a follow-up.
-   * @param filterPeriod  (required)
+   * Report the current-period usage counters for this account.
+   * @param filterPeriod Period to report. &#x60;current&#x60; is the only supported value. (required)
    * @param headers Optional headers to include in the request
    * @return UsageResponse
    * @throws ApiException if fails to make API call
@@ -188,8 +188,8 @@ public class UsageApi {
 
   /**
    * List Usage
-   * Current-period usage and quota for the audit product.  Only &#x60;&#x60;filter[period]&#x3D;current&#x60;&#x60; is supported; historical usage is a follow-up.
-   * @param filterPeriod  (required)
+   * Report the current-period usage counters for this account.
+   * @param filterPeriod Period to report. &#x60;current&#x60; is the only supported value. (required)
    * @return ApiResponse&lt;UsageResponse&gt;
    * @throws ApiException if fails to make API call
    */
@@ -199,8 +199,8 @@ public class UsageApi {
 
   /**
    * List Usage
-   * Current-period usage and quota for the audit product.  Only &#x60;&#x60;filter[period]&#x3D;current&#x60;&#x60; is supported; historical usage is a follow-up.
-   * @param filterPeriod  (required)
+   * Report the current-period usage counters for this account.
+   * @param filterPeriod Period to report. &#x60;current&#x60; is the only supported value. (required)
    * @param headers Optional headers to include in the request
    * @return ApiResponse&lt;UsageResponse&gt;
    * @throws ApiException if fails to make API call

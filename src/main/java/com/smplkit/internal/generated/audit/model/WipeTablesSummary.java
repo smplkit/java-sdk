@@ -30,7 +30,7 @@ import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 
 import com.smplkit.internal.generated.audit.ApiClient;
 /**
- * WipeTablesSummary
+ * Counts of records deleted, broken down by record kind.
  */
 @JsonPropertyOrder({
   WipeTablesSummary.JSON_PROPERTY_AUDIT_EVENT,
@@ -75,7 +75,7 @@ public class WipeTablesSummary {
   }
 
   /**
-   * Get auditEvent
+   * Number of audit events deleted.
    * minimum: 0
    * @return auditEvent
    */
@@ -100,7 +100,7 @@ public class WipeTablesSummary {
   }
 
   /**
-   * Get auditEventQuota
+   * Number of monthly usage-quota counters deleted.
    * minimum: 0
    * @return auditEventQuota
    */
@@ -125,7 +125,7 @@ public class WipeTablesSummary {
   }
 
   /**
-   * Get forwarder
+   * Number of forwarders deleted.
    * minimum: 0
    * @return forwarder
    */
@@ -150,7 +150,7 @@ public class WipeTablesSummary {
   }
 
   /**
-   * Get forwarderDelivery
+   * Number of forwarder delivery log entries deleted.
    * minimum: 0
    * @return forwarderDelivery
    */
@@ -175,7 +175,7 @@ public class WipeTablesSummary {
   }
 
   /**
-   * Get resourceType
+   * Number of distinct &#x60;resource_type&#x60; entries deleted.
    * minimum: 0
    * @return resourceType
    */
@@ -200,7 +200,7 @@ public class WipeTablesSummary {
   }
 
   /**
-   * Get action
+   * Number of distinct &#x60;action&#x60; entries deleted.
    * minimum: 0
    * @return action
    */

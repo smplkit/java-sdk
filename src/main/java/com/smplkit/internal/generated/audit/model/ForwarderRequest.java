@@ -31,21 +31,21 @@ import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 
 import com.smplkit.internal.generated.audit.ApiClient;
 /**
- * JSON:API single-resource response envelope for a forwarder.
+ * JSON:API request envelope for creating or updating a forwarder.
  */
 @JsonPropertyOrder({
-  ForwarderResponse.JSON_PROPERTY_DATA
+  ForwarderRequest.JSON_PROPERTY_DATA
 })
 @jakarta.annotation.Generated(value = "org.openapitools.codegen.languages.JavaClientCodegen", comments = "Generator version: 7.21.0")
-public class ForwarderResponse {
+public class ForwarderRequest {
   public static final String JSON_PROPERTY_DATA = "data";
   @jakarta.annotation.Nonnull
   private ForwarderResource data;
 
-  public ForwarderResponse() { 
+  public ForwarderRequest() { 
   }
 
-  public ForwarderResponse data(@jakarta.annotation.Nonnull ForwarderResource data) {
+  public ForwarderRequest data(@jakarta.annotation.Nonnull ForwarderResource data) {
     this.data = data;
     return this;
   }
@@ -70,7 +70,7 @@ public class ForwarderResponse {
 
 
   /**
-   * Return true if this ForwarderResponse object is equal to o.
+   * Return true if this ForwarderRequest object is equal to o.
    */
   @Override
   public boolean equals(Object o) {
@@ -80,8 +80,8 @@ public class ForwarderResponse {
     if (o == null || getClass() != o.getClass()) {
       return false;
     }
-    ForwarderResponse forwarderResponse = (ForwarderResponse) o;
-    return Objects.equals(this.data, forwarderResponse.data);
+    ForwarderRequest forwarderRequest = (ForwarderRequest) o;
+    return Objects.equals(this.data, forwarderRequest.data);
   }
 
   @Override
@@ -92,7 +92,7 @@ public class ForwarderResponse {
   @Override
   public String toString() {
     StringBuilder sb = new StringBuilder();
-    sb.append("class ForwarderResponse {\n");
+    sb.append("class ForwarderRequest {\n");
     sb.append("    data: ").append(toIndentedString(data)).append("\n");
     sb.append("}");
     return sb.toString();

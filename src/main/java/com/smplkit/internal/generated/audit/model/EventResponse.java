@@ -31,7 +31,7 @@ import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 
 import com.smplkit.internal.generated.audit.ApiClient;
 /**
- * JSON:API single-resource response.
+ * JSON:API single-resource response for an audit event.
  */
 @JsonPropertyOrder({
   EventResponse.JSON_PROPERTY_DATA

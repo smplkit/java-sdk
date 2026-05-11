@@ -32,7 +32,7 @@ import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 
 import com.smplkit.internal.generated.audit.ApiClient;
 /**
- * WipeResponse
+ * Summary of a completed wipe action.
  */
 @JsonPropertyOrder({
   WipeResponse.JSON_PROPERTY_WIPED,
@@ -62,7 +62,7 @@ public class WipeResponse {
   }
 
   /**
-   * Get wiped
+   * Always &#x60;true&#x60; for a successful wipe.
    * @return wiped
    */
   @jakarta.annotation.Nullable
@@ -110,7 +110,7 @@ public class WipeResponse {
   }
 
   /**
-   * Get completedAt
+   * When the wipe completed.
    * @return completedAt
    */
   @jakarta.annotation.Nonnull
