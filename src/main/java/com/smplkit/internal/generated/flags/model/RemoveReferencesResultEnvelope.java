@@ -31,7 +31,7 @@ import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 
 import com.smplkit.internal.generated.flags.ApiClient;
 /**
- * RemoveReferencesResultEnvelope
+ * JSON:API single-resource response envelope for the remove-references action.
  */
 @JsonPropertyOrder({
   RemoveReferencesResultEnvelope.JSON_PROPERTY_DATA

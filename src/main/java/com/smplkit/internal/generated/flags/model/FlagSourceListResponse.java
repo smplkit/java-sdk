@@ -33,7 +33,7 @@ import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 
 import com.smplkit.internal.generated.flags.ApiClient;
 /**
- * FlagSourceListResponse
+ * JSON:API collection response envelope for flag sources.
  */
 @JsonPropertyOrder({
   FlagSourceListResponse.JSON_PROPERTY_DATA

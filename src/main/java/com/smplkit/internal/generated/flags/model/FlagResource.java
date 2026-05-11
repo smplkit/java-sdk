@@ -35,7 +35,7 @@ import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 
 import com.smplkit.internal.generated.flags.ApiClient;
 /**
- * FlagResource
+ * JSON:API resource envelope for a flag.  &#x60;id&#x60; is the flag key. For create requests, &#x60;id&#x60; is required and is chosen by the caller. For update requests, &#x60;id&#x60; may be omitted (the server reads the key from the URL) or supplied to rename the flag.
  */
 @JsonPropertyOrder({
   FlagResource.JSON_PROPERTY_ID,

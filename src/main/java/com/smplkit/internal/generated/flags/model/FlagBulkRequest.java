@@ -33,7 +33,7 @@ import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 
 import com.smplkit.internal.generated.flags.ApiClient;
 /**
- * FlagBulkRequest
+ * Inputs to the bulk-register-flags action.
  */
 @JsonPropertyOrder({
   FlagBulkRequest.JSON_PROPERTY_FLAGS
@@ -61,7 +61,7 @@ public class FlagBulkRequest {
   }
 
   /**
-   * Get flags
+   * Flags reported by the SDK in this batch.
    * @return flags
    */
   @jakarta.annotation.Nonnull

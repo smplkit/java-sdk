@@ -25,6 +25,7 @@ import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonTypeName;
 import com.fasterxml.jackson.annotation.JsonValue;
 import com.smplkit.internal.generated.flags.model.FlagEnvironment;
+import com.smplkit.internal.generated.flags.model.FlagSource;
 import com.smplkit.internal.generated.flags.model.FlagValue;
 import java.time.OffsetDateTime;
 import java.util.ArrayList;
@@ -41,7 +42,7 @@ import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 
 import com.smplkit.internal.generated.flags.ApiClient;
 /**
- * Flag
+ * A feature flag whose value is resolved at runtime from environment rules and a default.  A flag has a value type (&#x60;BOOLEAN&#x60;, &#x60;STRING&#x60;, &#x60;NUMERIC&#x60;, or &#x60;JSON&#x60;) and either a fixed set of allowed values (constrained) or accepts any value matching the type (unconstrained). Each environment can enable or disable the flag, set its own default, and define targeting rules that override the default for specific evaluation contexts.
  */
 @JsonPropertyOrder({
   Flag.JSON_PROPERTY_NAME,
@@ -64,9 +65,48 @@ public class Flag {
   public static final String JSON_PROPERTY_DESCRIPTION = "description";
   private JsonNullable<String> description = JsonNullable.<String>undefined();
 
+  /**
+   * Value type of the flag. Accepted case-insensitively. Changing the type cascades to &#x60;values&#x60;, &#x60;default&#x60;, and every environment&#39;s rules and default.
+   */
+  public enum TypeEnum {
+    BOOLEAN(String.valueOf("BOOLEAN")),
+    
+    STRING(String.valueOf("STRING")),
+    
+    NUMERIC(String.valueOf("NUMERIC")),
+    
+    JSON(String.valueOf("JSON"));
+
+    private String value;
+
+    TypeEnum(String value) {
+      this.value = value;
+    }
+
+    @JsonValue
+    public String getValue() {
+      return value;
+    }
+
+    @Override
+    public String toString() {
+      return String.valueOf(value);
+    }
+
+    @JsonCreator
+    public static TypeEnum fromValue(String value) {
+      for (TypeEnum b : TypeEnum.values()) {
+        if (b.value.equals(value)) {
+          return b;
+        }
+      }
+      throw new IllegalArgumentException("Unexpected value '" + value + "'");
+    }
+  }
+
   public static final String JSON_PROPERTY_TYPE = "type";
   @jakarta.annotation.Nonnull
-  private String type;
+  private TypeEnum type;
 
   public static final String JSON_PROPERTY_DEFAULT = "default";
   @jakarta.annotation.Nullable
@@ -83,7 +123,7 @@ public class Flag {
   private JsonNullable<Boolean> managed = JsonNullable.<Boolean>undefined();
 
   public static final String JSON_PROPERTY_SOURCES = "sources";
-  private JsonNullable<List<Map<String, Object>>> sources = JsonNullable.<List<Map<String, Object>>>undefined();
+  private JsonNullable<List<FlagSource>> sources = JsonNullable.<List<FlagSource>>undefined();
 
   public static final String JSON_PROPERTY_CREATED_AT = "created_at";
   private JsonNullable<OffsetDateTime> createdAt = JsonNullable.<OffsetDateTime>undefined();
@@ -96,12 +136,12 @@ public class Flag {
 
   @JsonCreator
   public Flag(
-    @JsonProperty(JSON_PROPERTY_SOURCES) List<Map<String, Object>> sources, 
+    @JsonProperty(JSON_PROPERTY_SOURCES) List<FlagSource> sources, 
     @JsonProperty(JSON_PROPERTY_CREATED_AT) OffsetDateTime createdAt, 
     @JsonProperty(JSON_PROPERTY_UPDATED_AT) OffsetDateTime updatedAt
   ) {
   this();
-    this.sources = sources == null ? JsonNullable.<List<Map<String, Object>>>undefined() : JsonNullable.of(sources);
+    this.sources = sources == null ? JsonNullable.<List<FlagSource>>undefined() : JsonNullable.of(sources);
     this.createdAt = createdAt == null ? JsonNullable.<OffsetDateTime>undefined() : JsonNullable.of(createdAt);
     this.updatedAt = updatedAt == null ? JsonNullable.<OffsetDateTime>undefined() : JsonNullable.of(updatedAt);
   }
@@ -112,7 +152,7 @@ public class Flag {
   }
 
   /**
-   * Human-readable display name
+   * Human-readable display name for the flag.
    * @return name
    */
   @jakarta.annotation.Nonnull
@@ -136,7 +176,7 @@ public class Flag {
   }
 
   /**
-   * Get description
+   * Human-readable description of the flag&#39;s purpose.
    * @return description
    */
   @jakarta.annotation.Nullable
@@ -162,26 +202,26 @@ public class Flag {
   }
 
 
-  public Flag type(@jakarta.annotation.Nonnull String type) {
+  public Flag type(@jakarta.annotation.Nonnull TypeEnum type) {
     this.type = type;
     return this;
   }
 
   /**
-   * Value type: STRING, BOOLEAN, NUMERIC, or JSON
+   * Value type of the flag. Accepted case-insensitively. Changing the type cascades to &#x60;values&#x60;, &#x60;default&#x60;, and every environment&#39;s rules and default.
    * @return type
    */
   @jakarta.annotation.Nonnull
   @JsonProperty(value = JSON_PROPERTY_TYPE, required = true)
   @JsonInclude(value = JsonInclude.Include.ALWAYS)
-  public String getType() {
+  public TypeEnum getType() {
     return type;
   }
 
 
   @JsonProperty(value = JSON_PROPERTY_TYPE, required = true)
   @JsonInclude(value = JsonInclude.Include.ALWAYS)
-  public void setType(@jakarta.annotation.Nonnull String type) {
+  public void setType(@jakarta.annotation.Nonnull TypeEnum type) {
     this.type = type;
   }
 
@@ -192,7 +232,7 @@ public class Flag {
   }
 
   /**
-   * Default value; must reference a value in the values array (constrained) or match the flag type (unconstrained)
+   * Default value returned when no environment rule fires and the environment has no &#x60;default&#x60;. For constrained flags (non-null &#x60;values&#x60;), must equal one of the entries in the &#x60;values&#x60; array. For unconstrained flags, must match &#x60;type&#x60;.
    * @return _default
    */
   @jakarta.annotation.Nullable
@@ -228,7 +268,7 @@ public class Flag {
   }
 
   /**
-   * Ordered set of allowed values (constrained), or null (unconstrained)
+   * Ordered set of allowed values for a constrained flag, or &#x60;null&#x60; for an unconstrained flag. &#x60;BOOLEAN&#x60; flags, if constrained, must declare exactly two values.
    * @return values
    */
   @jakarta.annotation.Nullable
@@ -268,7 +308,7 @@ public class Flag {
   }
 
   /**
-   * Get environments
+   * Per-environment configuration keyed by environment name (&#x60;production&#x60;, &#x60;staging&#x60;, etc.). Environments not listed fall back to the flag&#39;s global &#x60;default&#x60;.
    * @return environments
    */
   @jakarta.annotation.Nullable
@@ -292,7 +332,7 @@ public class Flag {
   }
 
   /**
-   * True if admin-managed, false if auto-discovered
+   * &#x60;true&#x60; when the flag was created through the API, &#x60;false&#x60; when it was auto-discovered from a bulk-register call. Auto-discovered flags can be edited and converted to managed by setting this to &#x60;true&#x60;.
    * @return managed
    */
   @jakarta.annotation.Nullable
@@ -319,15 +359,15 @@ public class Flag {
 
 
   /**
-   * Get sources
+   * SDK-reported observations of this flag, grouped by service and environment. Populated automatically by the bulk-register endpoint.
    * @return sources
    */
   @jakarta.annotation.Nullable
   @JsonIgnore
-  public List<Map<String, Object>> getSources() {
+  public List<FlagSource> getSources() {
     
     if (sources == null) {
-      sources = JsonNullable.<List<Map<String, Object>>>undefined();
+      sources = JsonNullable.<List<FlagSource>>undefined();
     }
     return sources.orElse(null);
   }
@@ -335,19 +375,19 @@ public class Flag {
   @JsonProperty(value = JSON_PROPERTY_SOURCES, required = false)
   @JsonInclude(value = JsonInclude.Include.USE_DEFAULTS)
 
-  public JsonNullable<List<Map<String, Object>>> getSources_JsonNullable() {
+  public JsonNullable<List<FlagSource>> getSources_JsonNullable() {
     return sources;
   }
   
   @JsonProperty(JSON_PROPERTY_SOURCES)
-  private void setSources_JsonNullable(JsonNullable<List<Map<String, Object>>> sources) {
+  private void setSources_JsonNullable(JsonNullable<List<FlagSource>> sources) {
     this.sources = sources;
   }
 
 
 
   /**
-   * Get createdAt
+   * When the flag was created.
    * @return createdAt
    */
   @jakarta.annotation.Nullable
@@ -375,7 +415,7 @@ public class Flag {
 
 
   /**
-   * Get updatedAt
+   * When the flag was last modified.
    * @return updatedAt
    */
   @jakarta.annotation.Nullable
@@ -548,9 +588,10 @@ public class Flag {
     // add `sources` to the URL query string
     if (getSources() != null) {
       for (int i = 0; i < getSources().size(); i++) {
-        joiner.add(String.format(java.util.Locale.ROOT, "%ssources%s%s=%s", prefix, suffix,
-            "".equals(suffix) ? "" : String.format(java.util.Locale.ROOT, "%s%d%s", containerPrefix, i, containerSuffix),
-            ApiClient.urlEncode(ApiClient.valueToString(getSources().get(i)))));
+        if (getSources().get(i) != null) {
+          joiner.add(getSources().get(i).toUrlQueryString(String.format(java.util.Locale.ROOT, "%ssources%s%s", prefix, suffix,
+          "".equals(suffix) ? "" : String.format(java.util.Locale.ROOT, "%s%d%s", containerPrefix, i, containerSuffix))));
+        }
       }
     }
 

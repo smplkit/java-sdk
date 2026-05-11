@@ -35,7 +35,7 @@ import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 
 import com.smplkit.internal.generated.flags.ApiClient;
 /**
- * FlagSourceResource
+ * JSON:API resource envelope for a flag source.  &#x60;id&#x60; is the source record&#39;s UUID. Sources are not created or modified directly — the flags service registers and refreshes them in response to SDK bulk-register requests.
  */
 @JsonPropertyOrder({
   FlagSourceResource.JSON_PROPERTY_ID,

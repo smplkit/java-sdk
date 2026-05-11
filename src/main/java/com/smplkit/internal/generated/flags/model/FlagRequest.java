@@ -31,21 +31,21 @@ import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 
 import com.smplkit.internal.generated.flags.ApiClient;
 /**
- * JSON:API single-resource response envelope for a flag.
+ * JSON:API request envelope for creating or updating a flag.
  */
 @JsonPropertyOrder({
-  FlagResponse.JSON_PROPERTY_DATA
+  FlagRequest.JSON_PROPERTY_DATA
 })
 @jakarta.annotation.Generated(value = "org.openapitools.codegen.languages.JavaClientCodegen", comments = "Generator version: 7.21.0")
-public class FlagResponse {
+public class FlagRequest {
   public static final String JSON_PROPERTY_DATA = "data";
   @jakarta.annotation.Nonnull
   private FlagResource data;
 
-  public FlagResponse() { 
+  public FlagRequest() { 
   }
 
-  public FlagResponse data(@jakarta.annotation.Nonnull FlagResource data) {
+  public FlagRequest data(@jakarta.annotation.Nonnull FlagResource data) {
     this.data = data;
     return this;
   }
@@ -70,7 +70,7 @@ public class FlagResponse {
 
 
   /**
-   * Return true if this FlagResponse object is equal to o.
+   * Return true if this FlagRequest object is equal to o.
    */
   @Override
   public boolean equals(Object o) {
@@ -80,8 +80,8 @@ public class FlagResponse {
     if (o == null || getClass() != o.getClass()) {
       return false;
     }
-    FlagResponse flagResponse = (FlagResponse) o;
-    return Objects.equals(this.data, flagResponse.data);
+    FlagRequest flagRequest = (FlagRequest) o;
+    return Objects.equals(this.data, flagRequest.data);
   }
 
   @Override
@@ -92,7 +92,7 @@ public class FlagResponse {
   @Override
   public String toString() {
     StringBuilder sb = new StringBuilder();
-    sb.append("class FlagResponse {\n");
+    sb.append("class FlagRequest {\n");
     sb.append("    data: ").append(toIndentedString(data)).append("\n");
     sb.append("}");
     return sb.toString();

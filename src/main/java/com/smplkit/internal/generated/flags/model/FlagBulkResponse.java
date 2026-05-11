@@ -30,7 +30,7 @@ import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 
 import com.smplkit.internal.generated.flags.ApiClient;
 /**
- * FlagBulkResponse
+ * Result of a bulk-register-flags action.
  */
 @JsonPropertyOrder({
   FlagBulkResponse.JSON_PROPERTY_REGISTERED
@@ -50,7 +50,7 @@ public class FlagBulkResponse {
   }
 
   /**
-   * Get registered
+   * Number of items in the batch that were registered or refreshed.
    * @return registered
    */
   @jakarta.annotation.Nonnull

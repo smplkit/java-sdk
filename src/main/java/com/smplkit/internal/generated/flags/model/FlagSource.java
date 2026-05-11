@@ -26,8 +26,6 @@ import com.fasterxml.jackson.annotation.JsonTypeName;
 import com.fasterxml.jackson.annotation.JsonValue;
 import java.time.OffsetDateTime;
 import java.util.Arrays;
-import java.util.HashMap;
-import java.util.Map;
 import org.openapitools.jackson.nullable.JsonNullable;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import org.openapitools.jackson.nullable.JsonNullable;
@@ -37,35 +35,76 @@ import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 
 import com.smplkit.internal.generated.flags.ApiClient;
 /**
- * FlagSource
+ * A record of an SDK observing a feature flag from a particular service and environment.  The flags service auto-registers a source the first time an SDK reports a flag from a given service/environment pair and refreshes &#x60;last_seen&#x60; on every subsequent report. Each source captures the value type and default value the SDK declared in source code at that location, which makes it possible to detect when service code has drifted from the flag&#39;s authoritative configuration.
  */
 @JsonPropertyOrder({
   FlagSource.JSON_PROPERTY_SERVICE,
   FlagSource.JSON_PROPERTY_ENVIRONMENT,
+  FlagSource.JSON_PROPERTY_DECLARED_TYPE,
+  FlagSource.JSON_PROPERTY_DECLARED_DEFAULT,
   FlagSource.JSON_PROPERTY_FIRST_OBSERVED,
   FlagSource.JSON_PROPERTY_LAST_SEEN,
-  FlagSource.JSON_PROPERTY_DATA,
   FlagSource.JSON_PROPERTY_CREATED_AT,
   FlagSource.JSON_PROPERTY_UPDATED_AT
 })
 @jakarta.annotation.Generated(value = "org.openapitools.codegen.languages.JavaClientCodegen", comments = "Generator version: 7.21.0")
 public class FlagSource {
   public static final String JSON_PROPERTY_SERVICE = "service";
-  @jakarta.annotation.Nullable
-  private String service;
+  private JsonNullable<String> service = JsonNullable.<String>undefined();
 
   public static final String JSON_PROPERTY_ENVIRONMENT = "environment";
-  @jakarta.annotation.Nullable
-  private String environment;
+  private JsonNullable<String> environment = JsonNullable.<String>undefined();
+
+  /**
+   * Value type the SDK reported when registering the flag from this service/environment. May differ from the flag&#39;s authoritative &#x60;type&#x60; if the service is running stale code.
+   */
+  public enum DeclaredTypeEnum {
+    BOOLEAN(String.valueOf("BOOLEAN")),
+    
+    STRING(String.valueOf("STRING")),
+    
+    NUMERIC(String.valueOf("NUMERIC")),
+    
+    JSON(String.valueOf("JSON"));
+
+    private String value;
+
+    DeclaredTypeEnum(String value) {
+      this.value = value;
+    }
+
+    @JsonValue
+    public String getValue() {
+      return value;
+    }
+
+    @Override
+    public String toString() {
+      return String.valueOf(value);
+    }
+
+    @JsonCreator
+    public static DeclaredTypeEnum fromValue(String value) {
+      for (DeclaredTypeEnum b : DeclaredTypeEnum.values()) {
+        if (b.value.equals(value)) {
+          return b;
+        }
+      }
+      return null;
+    }
+  }
+
+  public static final String JSON_PROPERTY_DECLARED_TYPE = "declared_type";
+  private JsonNullable<DeclaredTypeEnum> declaredType = JsonNullable.<DeclaredTypeEnum>undefined();
+
+  public static final String JSON_PROPERTY_DECLARED_DEFAULT = "declared_default";
+  private JsonNullable<Object> declaredDefault = JsonNullable.<Object>of(null);
 
   public static final String JSON_PROPERTY_FIRST_OBSERVED = "first_observed";
   private JsonNullable<OffsetDateTime> firstObserved = JsonNullable.<OffsetDateTime>undefined();
 
   public static final String JSON_PROPERTY_LAST_SEEN = "last_seen";
   private JsonNullable<OffsetDateTime> lastSeen = JsonNullable.<OffsetDateTime>undefined();
-
-  public static final String JSON_PROPERTY_DATA = "data";
-  private JsonNullable<Map<String, Object>> data = JsonNullable.<Map<String, Object>>undefined();
 
   public static final String JSON_PROPERTY_CREATED_AT = "created_at";
   private JsonNullable<OffsetDateTime> createdAt = JsonNullable.<OffsetDateTime>undefined();
@@ -80,52 +119,138 @@ public class FlagSource {
   public FlagSource(
     @JsonProperty(JSON_PROPERTY_SERVICE) String service, 
     @JsonProperty(JSON_PROPERTY_ENVIRONMENT) String environment, 
+    @JsonProperty(JSON_PROPERTY_DECLARED_TYPE) DeclaredTypeEnum declaredType, 
+    @JsonProperty(JSON_PROPERTY_DECLARED_DEFAULT) Object declaredDefault, 
     @JsonProperty(JSON_PROPERTY_FIRST_OBSERVED) OffsetDateTime firstObserved, 
     @JsonProperty(JSON_PROPERTY_LAST_SEEN) OffsetDateTime lastSeen, 
-    @JsonProperty(JSON_PROPERTY_DATA) Map<String, Object> data, 
     @JsonProperty(JSON_PROPERTY_CREATED_AT) OffsetDateTime createdAt, 
     @JsonProperty(JSON_PROPERTY_UPDATED_AT) OffsetDateTime updatedAt
   ) {
   this();
-    this.service = service;
-    this.environment = environment;
+    this.service = service == null ? JsonNullable.<String>undefined() : JsonNullable.of(service);
+    this.environment = environment == null ? JsonNullable.<String>undefined() : JsonNullable.of(environment);
+    this.declaredType = declaredType == null ? JsonNullable.<DeclaredTypeEnum>undefined() : JsonNullable.of(declaredType);
+    this.declaredDefault = declaredDefault == null ? JsonNullable.<Object>undefined() : JsonNullable.of(declaredDefault);
     this.firstObserved = firstObserved == null ? JsonNullable.<OffsetDateTime>undefined() : JsonNullable.of(firstObserved);
     this.lastSeen = lastSeen == null ? JsonNullable.<OffsetDateTime>undefined() : JsonNullable.of(lastSeen);
-    this.data = data == null ? JsonNullable.<Map<String, Object>>undefined() : JsonNullable.of(data);
     this.createdAt = createdAt == null ? JsonNullable.<OffsetDateTime>undefined() : JsonNullable.of(createdAt);
     this.updatedAt = updatedAt == null ? JsonNullable.<OffsetDateTime>undefined() : JsonNullable.of(updatedAt);
   }
 
   /**
-   * Get service
+   * Service that declared the flag.
    * @return service
    */
   @jakarta.annotation.Nullable
+  @JsonIgnore
+  public String getService() {
+    
+    if (service == null) {
+      service = JsonNullable.<String>undefined();
+    }
+    return service.orElse(null);
+  }
+
   @JsonProperty(value = JSON_PROPERTY_SERVICE, required = false)
   @JsonInclude(value = JsonInclude.Include.USE_DEFAULTS)
-  public String getService() {
+
+  public JsonNullable<String> getService_JsonNullable() {
     return service;
+  }
+  
+  @JsonProperty(JSON_PROPERTY_SERVICE)
+  private void setService_JsonNullable(JsonNullable<String> service) {
+    this.service = service;
   }
 
 
 
-
   /**
-   * Get environment
+   * Environment in which the service declared the flag.
    * @return environment
    */
   @jakarta.annotation.Nullable
+  @JsonIgnore
+  public String getEnvironment() {
+    
+    if (environment == null) {
+      environment = JsonNullable.<String>undefined();
+    }
+    return environment.orElse(null);
+  }
+
   @JsonProperty(value = JSON_PROPERTY_ENVIRONMENT, required = false)
   @JsonInclude(value = JsonInclude.Include.USE_DEFAULTS)
-  public String getEnvironment() {
+
+  public JsonNullable<String> getEnvironment_JsonNullable() {
     return environment;
+  }
+  
+  @JsonProperty(JSON_PROPERTY_ENVIRONMENT)
+  private void setEnvironment_JsonNullable(JsonNullable<String> environment) {
+    this.environment = environment;
   }
 
 
 
+  /**
+   * Value type the SDK reported when registering the flag from this service/environment. May differ from the flag&#39;s authoritative &#x60;type&#x60; if the service is running stale code.
+   * @return declaredType
+   */
+  @jakarta.annotation.Nullable
+  @JsonIgnore
+  public DeclaredTypeEnum getDeclaredType() {
+    
+    if (declaredType == null) {
+      declaredType = JsonNullable.<DeclaredTypeEnum>undefined();
+    }
+    return declaredType.orElse(null);
+  }
+
+  @JsonProperty(value = JSON_PROPERTY_DECLARED_TYPE, required = false)
+  @JsonInclude(value = JsonInclude.Include.USE_DEFAULTS)
+
+  public JsonNullable<DeclaredTypeEnum> getDeclaredType_JsonNullable() {
+    return declaredType;
+  }
+  
+  @JsonProperty(JSON_PROPERTY_DECLARED_TYPE)
+  private void setDeclaredType_JsonNullable(JsonNullable<DeclaredTypeEnum> declaredType) {
+    this.declaredType = declaredType;
+  }
+
+
 
   /**
-   * Get firstObserved
+   * Default value the SDK reported when registering the flag from this service/environment. May differ from the flag&#39;s authoritative &#x60;default&#x60; if the service is running stale code.
+   * @return declaredDefault
+   */
+  @jakarta.annotation.Nullable
+  @JsonIgnore
+  public Object getDeclaredDefault() {
+    
+    if (declaredDefault == null) {
+      declaredDefault = JsonNullable.<Object>of(null);
+    }
+    return declaredDefault.orElse(null);
+  }
+
+  @JsonProperty(value = JSON_PROPERTY_DECLARED_DEFAULT, required = false)
+  @JsonInclude(value = JsonInclude.Include.USE_DEFAULTS)
+
+  public JsonNullable<Object> getDeclaredDefault_JsonNullable() {
+    return declaredDefault;
+  }
+  
+  @JsonProperty(JSON_PROPERTY_DECLARED_DEFAULT)
+  private void setDeclaredDefault_JsonNullable(JsonNullable<Object> declaredDefault) {
+    this.declaredDefault = declaredDefault;
+  }
+
+
+
+  /**
+   * When this source was first observed.
    * @return firstObserved
    */
   @jakarta.annotation.Nullable
@@ -153,7 +278,7 @@ public class FlagSource {
 
 
   /**
-   * Get lastSeen
+   * Most recent time the SDK re-registered this source.
    * @return lastSeen
    */
   @jakarta.annotation.Nullable
@@ -181,35 +306,7 @@ public class FlagSource {
 
 
   /**
-   * Get data
-   * @return data
-   */
-  @jakarta.annotation.Nullable
-  @JsonIgnore
-  public Map<String, Object> getData() {
-    
-    if (data == null) {
-      data = JsonNullable.<Map<String, Object>>undefined();
-    }
-    return data.orElse(null);
-  }
-
-  @JsonProperty(value = JSON_PROPERTY_DATA, required = false)
-  @JsonInclude(content = JsonInclude.Include.ALWAYS, value = JsonInclude.Include.USE_DEFAULTS)
-
-  public JsonNullable<Map<String, Object>> getData_JsonNullable() {
-    return data;
-  }
-  
-  @JsonProperty(JSON_PROPERTY_DATA)
-  private void setData_JsonNullable(JsonNullable<Map<String, Object>> data) {
-    this.data = data;
-  }
-
-
-
-  /**
-   * Get createdAt
+   * When the source record was created.
    * @return createdAt
    */
   @jakarta.annotation.Nullable
@@ -237,7 +334,7 @@ public class FlagSource {
 
 
   /**
-   * Get updatedAt
+   * When the source record was last modified.
    * @return updatedAt
    */
   @jakarta.annotation.Nullable
@@ -276,11 +373,12 @@ public class FlagSource {
       return false;
     }
     FlagSource flagSource = (FlagSource) o;
-    return Objects.equals(this.service, flagSource.service) &&
-        Objects.equals(this.environment, flagSource.environment) &&
+    return equalsNullable(this.service, flagSource.service) &&
+        equalsNullable(this.environment, flagSource.environment) &&
+        equalsNullable(this.declaredType, flagSource.declaredType) &&
+        equalsNullable(this.declaredDefault, flagSource.declaredDefault) &&
         equalsNullable(this.firstObserved, flagSource.firstObserved) &&
         equalsNullable(this.lastSeen, flagSource.lastSeen) &&
-        equalsNullable(this.data, flagSource.data) &&
         equalsNullable(this.createdAt, flagSource.createdAt) &&
         equalsNullable(this.updatedAt, flagSource.updatedAt);
   }
@@ -291,7 +389,7 @@ public class FlagSource {
 
   @Override
   public int hashCode() {
-    return Objects.hash(service, environment, hashCodeNullable(firstObserved), hashCodeNullable(lastSeen), hashCodeNullable(data), hashCodeNullable(createdAt), hashCodeNullable(updatedAt));
+    return Objects.hash(hashCodeNullable(service), hashCodeNullable(environment), hashCodeNullable(declaredType), hashCodeNullable(declaredDefault), hashCodeNullable(firstObserved), hashCodeNullable(lastSeen), hashCodeNullable(createdAt), hashCodeNullable(updatedAt));
   }
 
   private static <T> int hashCodeNullable(JsonNullable<T> a) {
@@ -307,9 +405,10 @@ public class FlagSource {
     sb.append("class FlagSource {\n");
     sb.append("    service: ").append(toIndentedString(service)).append("\n");
     sb.append("    environment: ").append(toIndentedString(environment)).append("\n");
+    sb.append("    declaredType: ").append(toIndentedString(declaredType)).append("\n");
+    sb.append("    declaredDefault: ").append(toIndentedString(declaredDefault)).append("\n");
     sb.append("    firstObserved: ").append(toIndentedString(firstObserved)).append("\n");
     sb.append("    lastSeen: ").append(toIndentedString(lastSeen)).append("\n");
-    sb.append("    data: ").append(toIndentedString(data)).append("\n");
     sb.append("    createdAt: ").append(toIndentedString(createdAt)).append("\n");
     sb.append("    updatedAt: ").append(toIndentedString(updatedAt)).append("\n");
     sb.append("}");
@@ -366,6 +465,16 @@ public class FlagSource {
       joiner.add(String.format(java.util.Locale.ROOT, "%senvironment%s=%s", prefix, suffix, ApiClient.urlEncode(ApiClient.valueToString(getEnvironment()))));
     }
 
+    // add `declared_type` to the URL query string
+    if (getDeclaredType() != null) {
+      joiner.add(String.format(java.util.Locale.ROOT, "%sdeclared_type%s=%s", prefix, suffix, ApiClient.urlEncode(ApiClient.valueToString(getDeclaredType()))));
+    }
+
+    // add `declared_default` to the URL query string
+    if (getDeclaredDefault() != null) {
+      joiner.add(String.format(java.util.Locale.ROOT, "%sdeclared_default%s=%s", prefix, suffix, ApiClient.urlEncode(ApiClient.valueToString(getDeclaredDefault()))));
+    }
+
     // add `first_observed` to the URL query string
     if (getFirstObserved() != null) {
       joiner.add(String.format(java.util.Locale.ROOT, "%sfirst_observed%s=%s", prefix, suffix, ApiClient.urlEncode(ApiClient.valueToString(getFirstObserved()))));
@@ -374,15 +483,6 @@ public class FlagSource {
     // add `last_seen` to the URL query string
     if (getLastSeen() != null) {
       joiner.add(String.format(java.util.Locale.ROOT, "%slast_seen%s=%s", prefix, suffix, ApiClient.urlEncode(ApiClient.valueToString(getLastSeen()))));
-    }
-
-    // add `data` to the URL query string
-    if (getData() != null) {
-      for (String _key : getData().keySet()) {
-        joiner.add(String.format(java.util.Locale.ROOT, "%sdata%s%s=%s", prefix, suffix,
-            "".equals(suffix) ? "" : String.format(java.util.Locale.ROOT, "%s%d%s", containerPrefix, _key, containerSuffix),
-            getData().get(_key), ApiClient.urlEncode(ApiClient.valueToString(getData().get(_key)))));
-      }
     }
 
     // add `created_at` to the URL query string

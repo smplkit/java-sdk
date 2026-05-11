@@ -164,7 +164,7 @@ public class UsageApi {
 
   /**
    * List Flags Usage
-   * Return current resource usage counts for the authenticated account.
+   * Report current-period usage counters for this account.
    * @param filterPeriod  (optional)
    * @return UsageListResponse
    * @throws ApiException if fails to make API call
@@ -175,7 +175,7 @@ public class UsageApi {
 
   /**
    * List Flags Usage
-   * Return current resource usage counts for the authenticated account.
+   * Report current-period usage counters for this account.
    * @param filterPeriod  (optional)
    * @param headers Optional headers to include in the request
    * @return UsageListResponse
@@ -188,7 +188,7 @@ public class UsageApi {
 
   /**
    * List Flags Usage
-   * Return current resource usage counts for the authenticated account.
+   * Report current-period usage counters for this account.
    * @param filterPeriod  (optional)
    * @return ApiResponse&lt;UsageListResponse&gt;
    * @throws ApiException if fails to make API call
@@ -199,7 +199,7 @@ public class UsageApi {
 
   /**
    * List Flags Usage
-   * Return current resource usage counts for the authenticated account.
+   * Report current-period usage counters for this account.
    * @param filterPeriod  (optional)
    * @param headers Optional headers to include in the request
    * @return ApiResponse&lt;UsageListResponse&gt;

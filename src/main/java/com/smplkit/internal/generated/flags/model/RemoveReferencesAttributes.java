@@ -33,7 +33,7 @@ import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 
 import com.smplkit.internal.generated.flags.ApiClient;
 /**
- * RemoveReferencesAttributes
+ * Counts and follow-ups returned by the remove-references action.
  */
 @JsonPropertyOrder({
   RemoveReferencesAttributes.JSON_PROPERTY_FLAGS_MODIFIED,
@@ -71,7 +71,7 @@ public class RemoveReferencesAttributes {
   }
 
   /**
-   * Get flagsModified
+   * Keys of flags whose rules were modified.
    * @return flagsModified
    */
   @jakarta.annotation.Nonnull
@@ -95,7 +95,7 @@ public class RemoveReferencesAttributes {
   }
 
   /**
-   * Get rulesRemoved
+   * Total number of rules removed across all flags.
    * @return rulesRemoved
    */
   @jakarta.annotation.Nonnull
@@ -127,7 +127,7 @@ public class RemoveReferencesAttributes {
   }
 
   /**
-   * Get rulesNeedingManualReview
+   * Rules that referenced the context but could not be removed automatically (typically because the reference is inside an &#x60;and&#x60; expression where removal would broaden the rule).
    * @return rulesNeedingManualReview
    */
   @jakarta.annotation.Nonnull
