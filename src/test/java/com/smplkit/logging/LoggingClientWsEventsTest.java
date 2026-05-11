@@ -642,7 +642,7 @@ class LoggingClientWsEventsTest {
         OffsetDateTime now = OffsetDateTime.now();
         var attrs = new com.smplkit.internal.generated.logging.model.Logger(null, null, now, now);
         attrs.setName(id);
-        if (level != null) attrs.setLevel(level);
+        if (level != null) attrs.setLevel(com.smplkit.internal.generated.logging.model.Logger.LevelEnum.fromValue(level));
         attrs.setManaged(managed);
 
         LoggerResource resource = new LoggerResource();
@@ -663,7 +663,7 @@ class LoggingClientWsEventsTest {
         OffsetDateTime now = OffsetDateTime.now();
         var attrs = new com.smplkit.internal.generated.logging.model.LogGroup(now, now);
         attrs.setName(id);
-        if (level != null) attrs.setLevel(level);
+        if (level != null) attrs.setLevel(com.smplkit.internal.generated.logging.model.LogGroup.LevelEnum.fromValue(level));
 
         LogGroupResource data = new LogGroupResource();
         data.setId(id);
@@ -679,7 +679,7 @@ class LoggingClientWsEventsTest {
         OffsetDateTime now = OffsetDateTime.now();
         var attrs = new com.smplkit.internal.generated.logging.model.LogGroup(now, now);
         attrs.setName(id);
-        if (level != null) attrs.setLevel(level);
+        if (level != null) attrs.setLevel(com.smplkit.internal.generated.logging.model.LogGroup.LevelEnum.fromValue(level));
 
         LogGroupResource data = new LogGroupResource();
         data.setId(id);

@@ -6,11 +6,13 @@ import com.smplkit.internal.generated.logging.ApiException;
 import com.smplkit.internal.generated.logging.api.LogGroupsApi;
 import com.smplkit.internal.generated.logging.api.LoggersApi;
 import com.smplkit.internal.generated.logging.model.LogGroupListResponse;
+import com.smplkit.internal.generated.logging.model.LogGroupRequest;
 import com.smplkit.internal.generated.logging.model.LogGroupResource;
 import com.smplkit.internal.generated.logging.model.LogGroupResponse;
 import com.smplkit.internal.generated.logging.model.LoggerBulkItem;
 import com.smplkit.internal.generated.logging.model.LoggerBulkRequest;
 import com.smplkit.internal.generated.logging.model.LoggerListResponse;
+import com.smplkit.internal.generated.logging.model.LoggerRequest;
 import com.smplkit.internal.generated.logging.model.LoggerResource;
 import com.smplkit.internal.generated.logging.model.LoggerResponse;
 import org.mockito.ArgumentCaptor;
@@ -148,21 +150,21 @@ class LoggingClientTest {
     @Test
     void saveLogger_putsAndReturnsModel() throws ApiException {
         LoggerResponse resp = buildLoggerResponse("new-id", "key", "Name", null, false);
-        when(mockLoggersApi.updateLogger(any(), any(LoggerResponse.class))).thenReturn(resp);
+        when(mockLoggersApi.updateLogger(any(), any(LoggerRequest.class))).thenReturn(resp);
 
         Logger lg = new Logger(client, "new-id", "Name", null, null, false, null, null, null, null);
         Logger result = client._saveLogger(lg);
 
         assertEquals("new-id", result.getId());
         verify(mockLoggersApi, never()).bulkRegisterLoggers(any(LoggerBulkRequest.class));
-        verify(mockLoggersApi).updateLogger(any(), any(LoggerResponse.class));
+        verify(mockLoggersApi).updateLogger(any(), any(LoggerRequest.class));
     }
 
     @Test
     void saveLogger_putsNullLevelWhenNotSet() throws ApiException {
         LoggerResponse resp = buildLoggerResponse("my-logger", "my-logger", "My Logger", null, false);
-        when(mockLoggersApi.updateLogger(any(), any(LoggerResponse.class))).thenReturn(resp);
-        ArgumentCaptor<LoggerResponse> bodyCaptor = ArgumentCaptor.forClass(LoggerResponse.class);
+        when(mockLoggersApi.updateLogger(any(), any(LoggerRequest.class))).thenReturn(resp);
+        ArgumentCaptor<LoggerRequest> bodyCaptor = ArgumentCaptor.forClass(LoggerRequest.class);
 
         Logger lg = new Logger(client, "my-logger", "My Logger", null, null, false, null, null, null, null);
         client._saveLogger(lg);
@@ -175,14 +177,14 @@ class LoggingClientTest {
     void updateLogger_putsAndReturnsModel() throws ApiException {
         String id = UUID.randomUUID().toString();
         LoggerResponse resp = buildLoggerResponse(id, "key", "Updated", "WARN", true);
-        when(mockLoggersApi.updateLogger(eq(id), any(LoggerResponse.class))).thenReturn(resp);
+        when(mockLoggersApi.updateLogger(eq(id), any(LoggerRequest.class))).thenReturn(resp);
 
         Logger lg = new Logger(client, id, "Updated", "WARN", null, true, null, null, null, null);
         Logger result = client._updateLogger(lg);
 
         assertEquals("Updated", result.getName());
         assertEquals("WARN", result.getLevel());
-        verify(mockLoggersApi).updateLogger(eq(id), any(LoggerResponse.class));
+        verify(mockLoggersApi).updateLogger(eq(id), any(LoggerRequest.class));
     }
 
     // -----------------------------------------------------------------------
@@ -192,7 +194,7 @@ class LoggingClientTest {
     @Test
     void loggerActiveRecord_createFlow() throws ApiException {
         LoggerResponse createResp = buildLoggerResponse("created-id", "payment-logger", "Payment Logger", null, false);
-        when(mockLoggersApi.updateLogger(any(), any(LoggerResponse.class))).thenReturn(createResp);
+        when(mockLoggersApi.updateLogger(any(), any(LoggerRequest.class))).thenReturn(createResp);
 
         Logger lg = client.management().new_("payment-logger");
         assertEquals("payment-logger", lg.getId());
@@ -201,7 +203,7 @@ class LoggingClientTest {
         assertEquals("created-id", lg.getId());
         // Single PUT — no bulk pre-step
         verify(mockLoggersApi, never()).bulkRegisterLoggers(any(LoggerBulkRequest.class));
-        verify(mockLoggersApi).updateLogger(any(), any(LoggerResponse.class));
+        verify(mockLoggersApi).updateLogger(any(), any(LoggerRequest.class));
     }
 
     @Test
@@ -217,7 +219,7 @@ class LoggingClientTest {
         lg.setName("Debug Logger");
 
         LoggerResponse updateResp = buildLoggerResponse(id, "edit-logger", "Debug Logger", "DEBUG", false);
-        when(mockLoggersApi.updateLogger(eq(id), any(LoggerResponse.class))).thenReturn(updateResp);
+        when(mockLoggersApi.updateLogger(eq(id), any(LoggerRequest.class))).thenReturn(updateResp);
 
         lg.save();
         assertEquals("Debug Logger", lg.getName());
@@ -309,7 +311,7 @@ class LoggingClientTest {
     @Test
     void createGroup_postsAndReturnsModel() throws ApiException {
         LogGroupResponse resp = buildGroupResponse("new-grp-id", "key", "Name", null);
-        when(mockLogGroupsApi.createLogGroup(any(LogGroupResponse.class))).thenReturn(resp);
+        when(mockLogGroupsApi.createLogGroup(any(LogGroupRequest.class))).thenReturn(resp);
 
         LogGroup grp = new LogGroup(client, null, "Name", null, null, null, null, null);
         LogGroup result = client._createGroup(grp);
@@ -321,7 +323,7 @@ class LoggingClientTest {
     void updateGroup_putsAndReturnsModel() throws ApiException {
         String id = UUID.randomUUID().toString();
         LogGroupResponse resp = buildGroupResponse(id, "key", "Updated", "WARN");
-        when(mockLogGroupsApi.updateLogGroup(eq(id), any(LogGroupResponse.class))).thenReturn(resp);
+        when(mockLogGroupsApi.updateLogGroup(eq(id), any(LogGroupRequest.class))).thenReturn(resp);
 
         LogGroup grp = new LogGroup(client, id, "Updated", "WARN", null, null, null, null);
         LogGroup result = client._updateGroup(grp);
@@ -336,7 +338,7 @@ class LoggingClientTest {
     @Test
     void logGroupActiveRecord_createFlow() throws ApiException {
         LogGroupResponse createResp = buildGroupResponse("created-grp", "infra", "Infra", null);
-        when(mockLogGroupsApi.createLogGroup(any(LogGroupResponse.class))).thenReturn(createResp);
+        when(mockLogGroupsApi.createLogGroup(any(LogGroupRequest.class))).thenReturn(createResp);
 
         LogGroup grp = client.management().newGroup("infra");
         assertEquals("infra", grp.getId());
@@ -356,7 +358,7 @@ class LoggingClientTest {
         grp.setName("Debug Group");
 
         LogGroupResponse updateResp = buildGroupResponse(id, "edit-group", "Debug Group", "DEBUG");
-        when(mockLogGroupsApi.updateLogGroup(eq(id), any(LogGroupResponse.class))).thenReturn(updateResp);
+        when(mockLogGroupsApi.updateLogGroup(eq(id), any(LogGroupRequest.class))).thenReturn(updateResp);
 
         grp.save();
         assertEquals("Debug Group", grp.getName());
@@ -1092,25 +1094,25 @@ class LoggingClientTest {
     @Test
     void saveLogger_includesEnvironmentsInBody() throws ApiException {
         LoggerResponse resp = buildLoggerResponse("new-id", "key", "Name", null, false);
-        when(mockLoggersApi.updateLogger(any(), any(LoggerResponse.class))).thenReturn(resp);
+        when(mockLoggersApi.updateLogger(any(), any(LoggerRequest.class))).thenReturn(resp);
 
         Logger lg = new Logger(client, null, "Name", null, null, false, null,
                 Map.of("prod", Map.of("level", "WARN")), null, null);
         client._saveLogger(lg);
 
-        verify(mockLoggersApi).updateLogger(any(), any(LoggerResponse.class));
+        verify(mockLoggersApi).updateLogger(any(), any(LoggerRequest.class));
     }
 
     @Test
     void createGroup_includesEnvironmentsAndGroupInBody() throws ApiException {
         LogGroupResponse resp = buildGroupResponse("new-id", "key", "Name", null);
-        when(mockLogGroupsApi.createLogGroup(any(LogGroupResponse.class))).thenReturn(resp);
+        when(mockLogGroupsApi.createLogGroup(any(LogGroupRequest.class))).thenReturn(resp);
 
         LogGroup grp = new LogGroup(client, null, "Name", "INFO", "parent-id",
                 Map.of("prod", Map.of("level", "WARN")), null, null);
         client._createGroup(grp);
 
-        verify(mockLogGroupsApi).createLogGroup(any(LogGroupResponse.class));
+        verify(mockLogGroupsApi).createLogGroup(any(LogGroupRequest.class));
     }
 
     // -----------------------------------------------------------------------
@@ -1630,7 +1632,7 @@ class LoggingClientTest {
         OffsetDateTime now = OffsetDateTime.now();
         var attrs = new com.smplkit.internal.generated.logging.model.Logger(null, null, now, now);
         attrs.setName(name);
-        if (level != null) attrs.setLevel(level);
+        if (level != null) attrs.setLevel(com.smplkit.internal.generated.logging.model.Logger.LevelEnum.fromValue(level));
         attrs.setManaged(false);
 
         LoggerResource resource = new LoggerResource();
@@ -1651,7 +1653,7 @@ class LoggingClientTest {
         OffsetDateTime now = OffsetDateTime.now();
         var attrs = new com.smplkit.internal.generated.logging.model.Logger(null, null, now, now);
         attrs.setName(name);
-        if (level != null) attrs.setLevel(level);
+        if (level != null) attrs.setLevel(com.smplkit.internal.generated.logging.model.Logger.LevelEnum.fromValue(level));
         attrs.setManaged(managed);
 
         LoggerResource data = new LoggerResource();
@@ -1668,7 +1670,7 @@ class LoggingClientTest {
         OffsetDateTime now = OffsetDateTime.now();
         var attrs = new com.smplkit.internal.generated.logging.model.LogGroup(now, now);
         attrs.setName(name);
-        if (level != null) attrs.setLevel(level);
+        if (level != null) attrs.setLevel(com.smplkit.internal.generated.logging.model.LogGroup.LevelEnum.fromValue(level));
 
         LogGroupResource resource = new LogGroupResource();
         resource.setId(id);
@@ -1688,7 +1690,7 @@ class LoggingClientTest {
         OffsetDateTime now = OffsetDateTime.now();
         var attrs = new com.smplkit.internal.generated.logging.model.LogGroup(now, now);
         attrs.setName(name);
-        if (level != null) attrs.setLevel(level);
+        if (level != null) attrs.setLevel(com.smplkit.internal.generated.logging.model.LogGroup.LevelEnum.fromValue(level));
 
         LogGroupResource data = new LogGroupResource();
         data.setId(id);
