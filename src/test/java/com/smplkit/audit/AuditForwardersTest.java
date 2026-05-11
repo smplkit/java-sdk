@@ -74,7 +74,7 @@ class AuditForwardersTest {
     private static String forwarderResource(String name, String slug) {
         return "{\"id\":\"" + FWD_ID + "\",\"type\":\"forwarder\",\"attributes\":{"
                 + "\"name\":\"" + name + "\",\"slug\":\"" + slug + "\","
-                + "\"forwarder_type\":\"datadog\",\"enabled\":true,"
+                + "\"forwarder_type\":\"DATADOG\",\"enabled\":true,"
                 + "\"http\":{\"method\":\"POST\",\"url\":\"https://siem.example.com/in\","
                 + "\"headers\":[{\"name\":\"DD-API-KEY\",\"value\":\"<redacted>\"}],"
                 + "\"success_status\":\"2xx\"},"
@@ -179,23 +179,23 @@ class AuditForwardersTest {
     @Test
     void deliveries_list_filtersAndPaginates() throws Exception {
         handler.set(ex -> respondJson(ex, 200, "application/vnd.api+json",
-                "{\"data\":[" + deliveryResource("succeeded") + "],"
+                "{\"data\":[" + deliveryResource("SUCCEEDED") + "],"
                         + "\"meta\":{\"page_size\":1}}"));
         ListDeliveriesInput in = new ListDeliveriesInput();
-        in.status = "succeeded";
+        in.status = "SUCCEEDED";
         in.createdAtRange = "[2020-01-01T00:00:00Z,*)";
         in.pageSize = 1;
         ListDeliveriesPage page = client.forwarders().listDeliveries(FWD_ID, in);
         assertEquals(1, page.deliveries.size());
-        assertEquals("succeeded", page.deliveries.get(0).status);
+        assertEquals("SUCCEEDED", page.deliveries.get(0).status);
     }
 
     @Test
     void retryDelivery_returnsNewRow() throws Exception {
         handler.set(ex -> respondJson(ex, 200, "application/vnd.api+json",
-                "{\"data\":" + deliveryResource("succeeded") + "}"));
+                "{\"data\":" + deliveryResource("SUCCEEDED") + "}"));
         ForwarderDelivery row = client.forwarders().retryDelivery(FWD_ID, DELIVERY_ID);
-        assertEquals("succeeded", row.status);
+        assertEquals("SUCCEEDED", row.status);
     }
 
     @Test
@@ -339,5 +339,28 @@ class AuditForwardersTest {
         // Unknown values fail at the call site, not deeper in the stack.
         assertThrows(IllegalArgumentException.class,
                 () -> ForwarderType.fromValue("definitely-not-a-real-type"));
+    }
+
+    @Test
+    void deliveries_list_filterByEventId() throws Exception {
+        // Verifies that setting ListDeliveriesInput.eventId is converted
+        // to a UUID string and forwarded as filter[event_id] to the API.
+        java.util.concurrent.atomic.AtomicReference<String> capturedQuery =
+                new java.util.concurrent.atomic.AtomicReference<>();
+        handler.set(ex -> {
+            capturedQuery.set(ex.getRequestURI().getQuery());
+            respondJson(ex, 200, "application/vnd.api+json",
+                    "{\"data\":[" + deliveryResource("SUCCEEDED") + "],"
+                            + "\"meta\":{\"page_size\":1}}");
+        });
+        UUID eventId = UUID.fromString("33333333-4444-5555-6666-777777777777");
+        ListDeliveriesInput in = new ListDeliveriesInput();
+        in.eventId = eventId;
+        ListDeliveriesPage page = client.forwarders().listDeliveries(FWD_ID, in);
+        assertEquals(1, page.deliveries.size());
+        String q = capturedQuery.get();
+        assertNotNull(q);
+        assertTrue(q.contains("33333333-4444-5555-6666-777777777777"),
+                "expected event_id in query, got: " + q);
     }
 }

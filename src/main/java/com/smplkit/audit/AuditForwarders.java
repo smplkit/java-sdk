@@ -72,9 +72,10 @@ public final class AuditForwarders {
     /** List delivery rows for a forwarder. */
     public ListDeliveriesPage listDeliveries(UUID forwarderId, ListDeliveriesInput input)
             throws ApiException {
+        String filterEventId = input.eventId != null ? input.eventId.toString() : null;
         ForwarderDeliveryListResponse resp = api.listForwarderDeliveries(
                 forwarderId, input.status, input.createdAtRange,
-                input.pageSize, input.pageAfter);
+                filterEventId, input.pageSize, input.pageAfter);
         List<com.smplkit.audit.ForwarderDelivery> out = new ArrayList<>();
         if (resp.getData() != null) {
             for (ForwarderDeliveryResource r : resp.getData()) out.add(deliveryFromResource(r));

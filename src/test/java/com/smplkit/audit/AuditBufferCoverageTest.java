@@ -355,6 +355,49 @@ class AuditBufferCoverageTest {
     }
 
     @Test
+    void auditEvents_listWithSearch_forwardsSearchParam() throws Exception {
+        // Verifies that ListEventsInput.search is passed to the generated
+        // listEvents call as the filter[search] parameter.
+        var capturedQuery = new java.util.concurrent.atomic.AtomicReference<String>();
+        server.createContext("/api/v1/events/search", ex -> {
+            // Unused — listEvents goes to /api/v1/events, handled below.
+            ex.sendResponseHeaders(404, -1); ex.close();
+        });
+        server.createContext("/api/v1/events/search-test", ex -> {
+            ex.sendResponseHeaders(404, -1); ex.close();
+        });
+        // Re-use the events context slot via a fresh server per test.
+        HttpServer searchServer = HttpServer.create(new InetSocketAddress("127.0.0.1", 0), 0);
+        searchServer.createContext("/api/v1/events", ex -> {
+            capturedQuery.set(ex.getRequestURI().getQuery());
+            byte[] resp = "{\"data\":[],\"meta\":{\"page_size\":1}}".getBytes();
+            ex.getResponseHeaders().add("Content-Type", "application/vnd.api+json");
+            ex.sendResponseHeaders(200, resp.length);
+            ex.getResponseBody().write(resp);
+            ex.close();
+        });
+        searchServer.start();
+        try {
+            var searchApiClient = new ApiClient();
+            searchApiClient.updateBaseUri("http://127.0.0.1:" + searchServer.getAddress().getPort());
+            searchApiClient.setReadTimeout(Duration.ofSeconds(2));
+            var searchApi = new EventsApi(searchApiClient);
+            AuditEvents events = new AuditEvents(searchApi);
+            var input = new ListEventsInput();
+            input.search = "user-42";
+            var page = events.list(input);
+            assertNotNull(page);
+            String q = capturedQuery.get();
+            assertNotNull(q);
+            assertTrue(q.contains("user-42") || q.contains("user%2D42") || q.contains("user-42"),
+                    "expected search term in query, got: " + q);
+            events.close();
+        } finally {
+            searchServer.stop(0);
+        }
+    }
+
+    @Test
     void auditClient_close_isIdempotent() throws Exception {
         var apiClient = new ApiClient();
         apiClient.updateBaseUri("http://127.0.0.1:" + server.getAddress().getPort());

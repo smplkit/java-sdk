@@ -8,9 +8,9 @@ import java.util.UUID;
  * Read-only delivery row.
  *
  * <p>{@code request.headers} have always-redacted values regardless of
- * who configured them. {@code status} is one of {@code "succeeded"},
- * {@code "failed"}, {@code "filtered_out"}, or
- * {@code "skipped_do_not_forward"}.</p>
+ * who configured them. {@code status} is one of {@code "SUCCEEDED"},
+ * {@code "FAILED"}, {@code "FILTERED_OUT"}, or
+ * {@code "SKIPPED_DO_NOT_FORWARD"}.</p>
  */
 public final class ForwarderDelivery {
     public final UUID id;
