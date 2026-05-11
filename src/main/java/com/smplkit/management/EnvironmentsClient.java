@@ -7,6 +7,7 @@ import com.smplkit.internal.generated.app.api.EnvironmentsApi;
 import com.smplkit.internal.generated.app.model.Environment;
 import com.smplkit.internal.generated.app.model.EnvironmentListResponse;
 import com.smplkit.internal.generated.app.model.EnvironmentResource;
+import com.smplkit.internal.generated.app.model.EnvironmentRequest;
 import com.smplkit.internal.generated.app.model.EnvironmentResponse;
 import java.time.Instant;
 import java.util.ArrayList;
@@ -69,7 +70,7 @@ public final class EnvironmentsClient {
 
     com.smplkit.management.Environment _create(com.smplkit.management.Environment env) {
         try {
-            EnvironmentResponse body = buildRequest(env);
+            EnvironmentRequest body = buildRequest(env);
             EnvironmentResponse resp = api.createEnvironment(body);
             return responseToModel(resp);
         } catch (ApiException e) {
@@ -79,7 +80,7 @@ public final class EnvironmentsClient {
 
     com.smplkit.management.Environment _update(com.smplkit.management.Environment env) {
         try {
-            EnvironmentResponse body = buildRequest(env);
+            EnvironmentRequest body = buildRequest(env);
             EnvironmentResponse resp = api.updateEnvironment(env.getId(), body);
             return responseToModel(resp);
         } catch (ApiException e) {
@@ -87,7 +88,7 @@ public final class EnvironmentsClient {
         }
     }
 
-    private EnvironmentResponse buildRequest(com.smplkit.management.Environment env) {
+    private EnvironmentRequest buildRequest(com.smplkit.management.Environment env) {
         Environment attrs = new Environment();
         attrs.setName(env.getName());
         if (env.getColor() != null) attrs.setColor(env.getColor());
@@ -102,7 +103,7 @@ public final class EnvironmentsClient {
                 .id(env.getId())
                 .type(EnvironmentResource.TypeEnum.ENVIRONMENT)
                 .attributes(attrs);
-        return new EnvironmentResponse().data(data);
+        return new EnvironmentRequest().data(data);
     }
 
     private com.smplkit.management.Environment responseToModel(EnvironmentResponse resp) {
