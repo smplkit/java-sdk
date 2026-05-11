@@ -33,7 +33,7 @@ import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 
 import com.smplkit.internal.generated.app.ApiClient;
 /**
- * MetricListResponse
+ * JSON:API collection response for metric data points.
  */
 @JsonPropertyOrder({
   MetricListResponse.JSON_PROPERTY_DATA

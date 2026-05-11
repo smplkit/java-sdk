@@ -37,7 +37,7 @@ import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 
 import com.smplkit.internal.generated.app.ApiClient;
 /**
- * Attributes for a saved card payment method.  &#x60;&#x60;default&#x60;&#x60; is the API-facing name; the underlying column is &#x60;&#x60;is_default&#x60;&#x60; per ADR-013 (reserved-word exception) and ADR-014 (unprefixed API fields).
+ * A saved card on file for the account, used to charge subscription invoices.  The default payment method is changed via the &#x60;set_default&#x60; action rather than by updating this field through PUT.
  */
 @JsonPropertyOrder({
   PaymentMethod.JSON_PROPERTY_BRAND,
@@ -93,7 +93,7 @@ public class PaymentMethod {
   }
 
   /**
-   * Get brand
+   * Card network brand, e.g. &#x60;visa&#x60;, &#x60;mastercard&#x60;, &#x60;amex&#x60;.
    * @return brand
    */
   @jakarta.annotation.Nullable
@@ -121,7 +121,7 @@ public class PaymentMethod {
 
 
   /**
-   * Get last4
+   * Last four digits of the card number.
    * @return last4
    */
   @jakarta.annotation.Nullable
@@ -154,7 +154,7 @@ public class PaymentMethod {
   }
 
   /**
-   * Get expMonth
+   * Expiry month (1-12).
    * minimum: 1
    * maximum: 12
    * @return expMonth
@@ -188,7 +188,7 @@ public class PaymentMethod {
   }
 
   /**
-   * Get expYear
+   * Expiry year (four-digit).
    * minimum: 2000
    * maximum: 2100
    * @return expYear
@@ -222,7 +222,7 @@ public class PaymentMethod {
   }
 
   /**
-   * Get _default
+   * Whether this payment method is the account&#39;s default for subscription charges. Use the &#x60;set_default&#x60; action to change which payment method is default — this field is not writable via PUT.
    * @return _default
    */
   @jakarta.annotation.Nullable
@@ -266,7 +266,7 @@ public class PaymentMethod {
   }
 
   /**
-   * Get billingDetails
+   * Billing details (name, email, phone, address) associated with the card.
    * @return billingDetails
    */
   @jakarta.annotation.Nullable
@@ -293,7 +293,7 @@ public class PaymentMethod {
 
 
   /**
-   * Get createdAt
+   * When the payment method was registered.
    * @return createdAt
    */
   @jakarta.annotation.Nullable
@@ -321,7 +321,7 @@ public class PaymentMethod {
 
 
   /**
-   * Get updatedAt
+   * When the payment method was last modified.
    * @return updatedAt
    */
   @jakarta.annotation.Nullable

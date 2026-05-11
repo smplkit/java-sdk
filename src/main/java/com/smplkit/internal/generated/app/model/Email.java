@@ -36,7 +36,7 @@ import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 
 import com.smplkit.internal.generated.app.ApiClient;
 /**
- * Contact-us email resource attributes.  This resource is a pure action — it is not persisted. The id returned in the response is a per-request uuid4 for correlation only.
+ * A contact-us submission. Sending the resource delivers a support ticket and an auto-response email; nothing is persisted. The &#x60;id&#x60; returned on the response is a per-request correlation identifier.
  */
 @JsonPropertyOrder({
   Email.JSON_PROPERTY_TOPIC,
@@ -97,7 +97,7 @@ public class Email {
   }
 
   /**
-   * Get body
+   * Free-form text of the message. Trimmed before validation.
    * @return body
    */
   @jakarta.annotation.Nonnull
@@ -116,7 +116,7 @@ public class Email {
 
 
   /**
-   * Get sentAt
+   * When the message was accepted by the server.
    * @return sentAt
    */
   @jakarta.annotation.Nullable

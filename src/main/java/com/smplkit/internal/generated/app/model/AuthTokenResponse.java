@@ -30,7 +30,7 @@ import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 
 import com.smplkit.internal.generated.app.ApiClient;
 /**
- * AuthTokenResponse
+ * Authentication token issued on successful login or registration.
  */
 @JsonPropertyOrder({
   AuthTokenResponse.JSON_PROPERTY_TOKEN,
@@ -55,7 +55,7 @@ public class AuthTokenResponse {
   }
 
   /**
-   * Get token
+   * Bearer token to pass in the &#x60;Authorization&#x60; header.
    * @return token
    */
   @jakarta.annotation.Nonnull
@@ -79,7 +79,7 @@ public class AuthTokenResponse {
   }
 
   /**
-   * Get expiresIn
+   * Seconds until the token expires.
    * @return expiresIn
    */
   @jakarta.annotation.Nonnull

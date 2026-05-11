@@ -24,39 +24,29 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonTypeName;
 import com.fasterxml.jackson.annotation.JsonValue;
-import com.smplkit.internal.generated.app.model.ServiceResource;
-import java.util.ArrayList;
+import com.smplkit.internal.generated.app.model.ContextResource;
 import java.util.Arrays;
-import java.util.List;
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 
 
 import com.smplkit.internal.generated.app.ApiClient;
 /**
- * JSON:API collection response for services.
+ * JSON:API request envelope for creating or updating a context instance.
  */
 @JsonPropertyOrder({
-  ServiceListResponse.JSON_PROPERTY_DATA
+  ContextRequest.JSON_PROPERTY_DATA
 })
 @jakarta.annotation.Generated(value = "org.openapitools.codegen.languages.JavaClientCodegen", comments = "Generator version: 7.21.0")
-public class ServiceListResponse {
+public class ContextRequest {
   public static final String JSON_PROPERTY_DATA = "data";
   @jakarta.annotation.Nonnull
-  private List<ServiceResource> data = new ArrayList<>();
+  private ContextResource data;
 
-  public ServiceListResponse() { 
+  public ContextRequest() { 
   }
 
-  public ServiceListResponse data(@jakarta.annotation.Nonnull List<ServiceResource> data) {
+  public ContextRequest data(@jakarta.annotation.Nonnull ContextResource data) {
     this.data = data;
-    return this;
-  }
-
-  public ServiceListResponse addDataItem(ServiceResource dataItem) {
-    if (this.data == null) {
-      this.data = new ArrayList<>();
-    }
-    this.data.add(dataItem);
     return this;
   }
 
@@ -67,20 +57,20 @@ public class ServiceListResponse {
   @jakarta.annotation.Nonnull
   @JsonProperty(value = JSON_PROPERTY_DATA, required = true)
   @JsonInclude(value = JsonInclude.Include.ALWAYS)
-  public List<ServiceResource> getData() {
+  public ContextResource getData() {
     return data;
   }
 
 
   @JsonProperty(value = JSON_PROPERTY_DATA, required = true)
   @JsonInclude(value = JsonInclude.Include.ALWAYS)
-  public void setData(@jakarta.annotation.Nonnull List<ServiceResource> data) {
+  public void setData(@jakarta.annotation.Nonnull ContextResource data) {
     this.data = data;
   }
 
 
   /**
-   * Return true if this ServiceListResponse object is equal to o.
+   * Return true if this ContextRequest object is equal to o.
    */
   @Override
   public boolean equals(Object o) {
@@ -90,8 +80,8 @@ public class ServiceListResponse {
     if (o == null || getClass() != o.getClass()) {
       return false;
     }
-    ServiceListResponse serviceListResponse = (ServiceListResponse) o;
-    return Objects.equals(this.data, serviceListResponse.data);
+    ContextRequest contextRequest = (ContextRequest) o;
+    return Objects.equals(this.data, contextRequest.data);
   }
 
   @Override
@@ -102,7 +92,7 @@ public class ServiceListResponse {
   @Override
   public String toString() {
     StringBuilder sb = new StringBuilder();
-    sb.append("class ServiceListResponse {\n");
+    sb.append("class ContextRequest {\n");
     sb.append("    data: ").append(toIndentedString(data)).append("\n");
     sb.append("}");
     return sb.toString();
@@ -150,12 +140,7 @@ public class ServiceListResponse {
 
     // add `data` to the URL query string
     if (getData() != null) {
-      for (int i = 0; i < getData().size(); i++) {
-        if (getData().get(i) != null) {
-          joiner.add(getData().get(i).toUrlQueryString(String.format(java.util.Locale.ROOT, "%sdata%s%s", prefix, suffix,
-          "".equals(suffix) ? "" : String.format(java.util.Locale.ROOT, "%s%d%s", containerPrefix, i, containerSuffix))));
-        }
-      }
+      joiner.add(getData().toUrlQueryString(prefix + "data" + suffix));
     }
 
     return joiner.toString();

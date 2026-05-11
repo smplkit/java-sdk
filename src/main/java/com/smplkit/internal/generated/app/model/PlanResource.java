@@ -35,7 +35,7 @@ import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 
 import com.smplkit.internal.generated.app.ApiClient;
 /**
- * PlanResource
+ * JSON:API resource envelope for a plan tier.
  */
 @JsonPropertyOrder({
   PlanResource.JSON_PROPERTY_ID,

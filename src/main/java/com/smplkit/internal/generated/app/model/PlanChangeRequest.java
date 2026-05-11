@@ -30,7 +30,7 @@ import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 
 import com.smplkit.internal.generated.app.ApiClient;
 /**
- * PlanChangeRequest
+ * Body for the subscription upgrade and downgrade actions.
  */
 @JsonPropertyOrder({
   PlanChangeRequest.JSON_PROPERTY_PLAN
@@ -50,7 +50,7 @@ public class PlanChangeRequest {
   }
 
   /**
-   * Get plan
+   * Plan key to change the subscription to.
    * @return plan
    */
   @jakarta.annotation.Nonnull

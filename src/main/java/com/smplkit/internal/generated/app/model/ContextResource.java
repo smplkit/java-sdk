@@ -35,7 +35,7 @@ import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 
 import com.smplkit.internal.generated.app.ApiClient;
 /**
- * ContextResource
+ * JSON:API resource envelope for a context instance.  &#x60;id&#x60; is the composite identifier &#x60;context_type:key&#x60;. It must not be specified for create requests (the server assigns it).
  */
 @JsonPropertyOrder({
   ContextResource.JSON_PROPERTY_ID,

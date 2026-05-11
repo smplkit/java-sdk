@@ -31,7 +31,7 @@ import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 
 import com.smplkit.internal.generated.app.ApiClient;
 /**
- * AddPaymentMethodData
+ * Resource object for the add-payment-method request.
  */
 @JsonPropertyOrder({
   AddPaymentMethodData.JSON_PROPERTY_TYPE,

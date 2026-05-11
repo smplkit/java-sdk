@@ -19,6 +19,7 @@ import com.smplkit.internal.generated.app.Configuration;
 import com.smplkit.internal.generated.app.Pair;
 
 import com.smplkit.internal.generated.app.model.ContextTypeListResponse;
+import com.smplkit.internal.generated.app.model.ContextTypeRequest;
 import com.smplkit.internal.generated.app.model.ContextTypeResponse;
 import com.smplkit.internal.generated.app.model.ErrorResponse;
 
@@ -167,48 +168,48 @@ public class ContextTypesApi {
   /**
    * Create Context Type
    * Create a new context type. The caller provides the id (key) in the request body.
-   * @param contextTypeResponse  (required)
+   * @param contextTypeRequest  (required)
    * @return ContextTypeResponse
    * @throws ApiException if fails to make API call
    */
-  public ContextTypeResponse createContextType(@jakarta.annotation.Nonnull ContextTypeResponse contextTypeResponse) throws ApiException {
-    return createContextType(contextTypeResponse, null);
+  public ContextTypeResponse createContextType(@jakarta.annotation.Nonnull ContextTypeRequest contextTypeRequest) throws ApiException {
+    return createContextType(contextTypeRequest, null);
   }
 
   /**
    * Create Context Type
    * Create a new context type. The caller provides the id (key) in the request body.
-   * @param contextTypeResponse  (required)
+   * @param contextTypeRequest  (required)
    * @param headers Optional headers to include in the request
    * @return ContextTypeResponse
    * @throws ApiException if fails to make API call
    */
-  public ContextTypeResponse createContextType(@jakarta.annotation.Nonnull ContextTypeResponse contextTypeResponse, Map<String, String> headers) throws ApiException {
-    ApiResponse<ContextTypeResponse> localVarResponse = createContextTypeWithHttpInfo(contextTypeResponse, headers);
+  public ContextTypeResponse createContextType(@jakarta.annotation.Nonnull ContextTypeRequest contextTypeRequest, Map<String, String> headers) throws ApiException {
+    ApiResponse<ContextTypeResponse> localVarResponse = createContextTypeWithHttpInfo(contextTypeRequest, headers);
     return localVarResponse.getData();
   }
 
   /**
    * Create Context Type
    * Create a new context type. The caller provides the id (key) in the request body.
-   * @param contextTypeResponse  (required)
+   * @param contextTypeRequest  (required)
    * @return ApiResponse&lt;ContextTypeResponse&gt;
    * @throws ApiException if fails to make API call
    */
-  public ApiResponse<ContextTypeResponse> createContextTypeWithHttpInfo(@jakarta.annotation.Nonnull ContextTypeResponse contextTypeResponse) throws ApiException {
-    return createContextTypeWithHttpInfo(contextTypeResponse, null);
+  public ApiResponse<ContextTypeResponse> createContextTypeWithHttpInfo(@jakarta.annotation.Nonnull ContextTypeRequest contextTypeRequest) throws ApiException {
+    return createContextTypeWithHttpInfo(contextTypeRequest, null);
   }
 
   /**
    * Create Context Type
    * Create a new context type. The caller provides the id (key) in the request body.
-   * @param contextTypeResponse  (required)
+   * @param contextTypeRequest  (required)
    * @param headers Optional headers to include in the request
    * @return ApiResponse&lt;ContextTypeResponse&gt;
    * @throws ApiException if fails to make API call
    */
-  public ApiResponse<ContextTypeResponse> createContextTypeWithHttpInfo(@jakarta.annotation.Nonnull ContextTypeResponse contextTypeResponse, Map<String, String> headers) throws ApiException {
-    HttpRequest.Builder localVarRequestBuilder = createContextTypeRequestBuilder(contextTypeResponse, headers);
+  public ApiResponse<ContextTypeResponse> createContextTypeWithHttpInfo(@jakarta.annotation.Nonnull ContextTypeRequest contextTypeRequest, Map<String, String> headers) throws ApiException {
+    HttpRequest.Builder localVarRequestBuilder = createContextTypeRequestBuilder(contextTypeRequest, headers);
     try {
       HttpResponse<InputStream> localVarResponse = memberVarHttpClient.send(
           localVarRequestBuilder.build(),
@@ -255,10 +256,10 @@ public class ContextTypesApi {
     }
   }
 
-  private HttpRequest.Builder createContextTypeRequestBuilder(@jakarta.annotation.Nonnull ContextTypeResponse contextTypeResponse, Map<String, String> headers) throws ApiException {
-    // verify the required parameter 'contextTypeResponse' is set
-    if (contextTypeResponse == null) {
-      throw new ApiException(400, "Missing the required parameter 'contextTypeResponse' when calling createContextType");
+  private HttpRequest.Builder createContextTypeRequestBuilder(@jakarta.annotation.Nonnull ContextTypeRequest contextTypeRequest, Map<String, String> headers) throws ApiException {
+    // verify the required parameter 'contextTypeRequest' is set
+    if (contextTypeRequest == null) {
+      throw new ApiException(400, "Missing the required parameter 'contextTypeRequest' when calling createContextType");
     }
 
     HttpRequest.Builder localVarRequestBuilder = HttpRequest.newBuilder();
@@ -271,7 +272,7 @@ public class ContextTypesApi {
     localVarRequestBuilder.header("Accept", "application/vnd.api+json");
 
     try {
-      byte[] localVarPostBody = memberVarObjectMapper.writeValueAsBytes(contextTypeResponse);
+      byte[] localVarPostBody = memberVarObjectMapper.writeValueAsBytes(contextTypeRequest);
       localVarRequestBuilder.method("POST", HttpRequest.BodyPublishers.ofByteArray(localVarPostBody));
     } catch (IOException e) {
       throw new ApiException(e);
@@ -622,25 +623,25 @@ public class ContextTypesApi {
    * Update Context Type
    * Update a context type by id.
    * @param id  (required)
-   * @param contextTypeResponse  (required)
+   * @param contextTypeRequest  (required)
    * @return ContextTypeResponse
    * @throws ApiException if fails to make API call
    */
-  public ContextTypeResponse updateContextType(@jakarta.annotation.Nonnull String id, @jakarta.annotation.Nonnull ContextTypeResponse contextTypeResponse) throws ApiException {
-    return updateContextType(id, contextTypeResponse, null);
+  public ContextTypeResponse updateContextType(@jakarta.annotation.Nonnull String id, @jakarta.annotation.Nonnull ContextTypeRequest contextTypeRequest) throws ApiException {
+    return updateContextType(id, contextTypeRequest, null);
   }
 
   /**
    * Update Context Type
    * Update a context type by id.
    * @param id  (required)
-   * @param contextTypeResponse  (required)
+   * @param contextTypeRequest  (required)
    * @param headers Optional headers to include in the request
    * @return ContextTypeResponse
    * @throws ApiException if fails to make API call
    */
-  public ContextTypeResponse updateContextType(@jakarta.annotation.Nonnull String id, @jakarta.annotation.Nonnull ContextTypeResponse contextTypeResponse, Map<String, String> headers) throws ApiException {
-    ApiResponse<ContextTypeResponse> localVarResponse = updateContextTypeWithHttpInfo(id, contextTypeResponse, headers);
+  public ContextTypeResponse updateContextType(@jakarta.annotation.Nonnull String id, @jakarta.annotation.Nonnull ContextTypeRequest contextTypeRequest, Map<String, String> headers) throws ApiException {
+    ApiResponse<ContextTypeResponse> localVarResponse = updateContextTypeWithHttpInfo(id, contextTypeRequest, headers);
     return localVarResponse.getData();
   }
 
@@ -648,25 +649,25 @@ public class ContextTypesApi {
    * Update Context Type
    * Update a context type by id.
    * @param id  (required)
-   * @param contextTypeResponse  (required)
+   * @param contextTypeRequest  (required)
    * @return ApiResponse&lt;ContextTypeResponse&gt;
    * @throws ApiException if fails to make API call
    */
-  public ApiResponse<ContextTypeResponse> updateContextTypeWithHttpInfo(@jakarta.annotation.Nonnull String id, @jakarta.annotation.Nonnull ContextTypeResponse contextTypeResponse) throws ApiException {
-    return updateContextTypeWithHttpInfo(id, contextTypeResponse, null);
+  public ApiResponse<ContextTypeResponse> updateContextTypeWithHttpInfo(@jakarta.annotation.Nonnull String id, @jakarta.annotation.Nonnull ContextTypeRequest contextTypeRequest) throws ApiException {
+    return updateContextTypeWithHttpInfo(id, contextTypeRequest, null);
   }
 
   /**
    * Update Context Type
    * Update a context type by id.
    * @param id  (required)
-   * @param contextTypeResponse  (required)
+   * @param contextTypeRequest  (required)
    * @param headers Optional headers to include in the request
    * @return ApiResponse&lt;ContextTypeResponse&gt;
    * @throws ApiException if fails to make API call
    */
-  public ApiResponse<ContextTypeResponse> updateContextTypeWithHttpInfo(@jakarta.annotation.Nonnull String id, @jakarta.annotation.Nonnull ContextTypeResponse contextTypeResponse, Map<String, String> headers) throws ApiException {
-    HttpRequest.Builder localVarRequestBuilder = updateContextTypeRequestBuilder(id, contextTypeResponse, headers);
+  public ApiResponse<ContextTypeResponse> updateContextTypeWithHttpInfo(@jakarta.annotation.Nonnull String id, @jakarta.annotation.Nonnull ContextTypeRequest contextTypeRequest, Map<String, String> headers) throws ApiException {
+    HttpRequest.Builder localVarRequestBuilder = updateContextTypeRequestBuilder(id, contextTypeRequest, headers);
     try {
       HttpResponse<InputStream> localVarResponse = memberVarHttpClient.send(
           localVarRequestBuilder.build(),
@@ -713,14 +714,14 @@ public class ContextTypesApi {
     }
   }
 
-  private HttpRequest.Builder updateContextTypeRequestBuilder(@jakarta.annotation.Nonnull String id, @jakarta.annotation.Nonnull ContextTypeResponse contextTypeResponse, Map<String, String> headers) throws ApiException {
+  private HttpRequest.Builder updateContextTypeRequestBuilder(@jakarta.annotation.Nonnull String id, @jakarta.annotation.Nonnull ContextTypeRequest contextTypeRequest, Map<String, String> headers) throws ApiException {
     // verify the required parameter 'id' is set
     if (id == null) {
       throw new ApiException(400, "Missing the required parameter 'id' when calling updateContextType");
     }
-    // verify the required parameter 'contextTypeResponse' is set
-    if (contextTypeResponse == null) {
-      throw new ApiException(400, "Missing the required parameter 'contextTypeResponse' when calling updateContextType");
+    // verify the required parameter 'contextTypeRequest' is set
+    if (contextTypeRequest == null) {
+      throw new ApiException(400, "Missing the required parameter 'contextTypeRequest' when calling updateContextType");
     }
 
     HttpRequest.Builder localVarRequestBuilder = HttpRequest.newBuilder();
@@ -734,7 +735,7 @@ public class ContextTypesApi {
     localVarRequestBuilder.header("Accept", "application/vnd.api+json");
 
     try {
-      byte[] localVarPostBody = memberVarObjectMapper.writeValueAsBytes(contextTypeResponse);
+      byte[] localVarPostBody = memberVarObjectMapper.writeValueAsBytes(contextTypeRequest);
       localVarRequestBuilder.method("PUT", HttpRequest.BodyPublishers.ofByteArray(localVarPostBody));
     } catch (IOException e) {
       throw new ApiException(e);

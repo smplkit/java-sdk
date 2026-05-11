@@ -30,7 +30,7 @@ import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 
 import com.smplkit.internal.generated.app.ApiClient;
 /**
- * Plan
+ * A plan tier offered across smplkit products.
  */
 @JsonPropertyOrder({
   Plan.JSON_PROPERTY_DISPLAY_NAME,
@@ -60,7 +60,7 @@ public class Plan {
   }
 
   /**
-   * Get displayName
+   * Human-readable plan name.
    * @return displayName
    */
   @jakarta.annotation.Nonnull
@@ -84,7 +84,7 @@ public class Plan {
   }
 
   /**
-   * Get description
+   * Long-form plan description.
    * @return description
    */
   @jakarta.annotation.Nonnull
@@ -108,7 +108,7 @@ public class Plan {
   }
 
   /**
-   * Get sortOrder
+   * Order in which the plan should be shown in customer-facing lists. Lower values sort first.
    * @return sortOrder
    */
   @jakarta.annotation.Nonnull

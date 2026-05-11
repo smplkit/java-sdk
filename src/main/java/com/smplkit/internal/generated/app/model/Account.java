@@ -37,7 +37,7 @@ import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 
 import com.smplkit.internal.generated.app.ApiClient;
 /**
- * Account
+ * A tenant of smplkit — the unit of isolation that owns all of a customer&#39;s resources (environments, contexts, API keys, and so on).
  */
 @JsonPropertyOrder({
   Account.JSON_PROPERTY_NAME,
@@ -61,8 +61,7 @@ public class Account {
   private String name;
 
   public static final String JSON_PROPERTY_KEY = "key";
-  @jakarta.annotation.Nonnull
-  private String key;
+  private JsonNullable<String> key = JsonNullable.<String>undefined();
 
   public static final String JSON_PROPERTY_HAS_STRIPE_CUSTOMER = "has_stripe_customer";
   @jakarta.annotation.Nullable
@@ -103,6 +102,7 @@ public class Account {
 
   @JsonCreator
   public Account(
+    @JsonProperty(JSON_PROPERTY_KEY) String key, 
     @JsonProperty(JSON_PROPERTY_HAS_STRIPE_CUSTOMER) Boolean hasStripeCustomer, 
     @JsonProperty(JSON_PROPERTY_EXPIRES_AT) OffsetDateTime expiresAt, 
     @JsonProperty(JSON_PROPERTY_CREATED_AT) OffsetDateTime createdAt, 
@@ -116,6 +116,7 @@ public class Account {
     @JsonProperty(JSON_PROPERTY_DISCOUNT_OVERRIDE_SET_AT) OffsetDateTime discountOverrideSetAt
   ) {
   this();
+    this.key = key == null ? JsonNullable.<String>undefined() : JsonNullable.of(key);
     this.hasStripeCustomer = hasStripeCustomer;
     this.expiresAt = expiresAt == null ? JsonNullable.<OffsetDateTime>undefined() : JsonNullable.of(expiresAt);
     this.createdAt = createdAt == null ? JsonNullable.<OffsetDateTime>undefined() : JsonNullable.of(createdAt);
@@ -135,7 +136,7 @@ public class Account {
   }
 
   /**
-   * Get name
+   * Human-readable name for the account.
    * @return name
    */
   @jakarta.annotation.Nonnull
@@ -153,32 +154,36 @@ public class Account {
   }
 
 
-  public Account key(@jakarta.annotation.Nonnull String key) {
-    this.key = key;
-    return this;
-  }
-
   /**
-   * Get key
+   * Stable URL-safe identifier for the account, derived from the account name at creation. Used in console URLs and other places that prefer a human-readable handle.
    * @return key
    */
-  @jakarta.annotation.Nonnull
-  @JsonProperty(value = JSON_PROPERTY_KEY, required = true)
-  @JsonInclude(value = JsonInclude.Include.ALWAYS)
+  @jakarta.annotation.Nullable
+  @JsonIgnore
   public String getKey() {
-    return key;
+    
+    if (key == null) {
+      key = JsonNullable.<String>undefined();
+    }
+    return key.orElse(null);
   }
 
+  @JsonProperty(value = JSON_PROPERTY_KEY, required = false)
+  @JsonInclude(value = JsonInclude.Include.USE_DEFAULTS)
 
-  @JsonProperty(value = JSON_PROPERTY_KEY, required = true)
-  @JsonInclude(value = JsonInclude.Include.ALWAYS)
-  public void setKey(@jakarta.annotation.Nonnull String key) {
+  public JsonNullable<String> getKey_JsonNullable() {
+    return key;
+  }
+  
+  @JsonProperty(JSON_PROPERTY_KEY)
+  private void setKey_JsonNullable(JsonNullable<String> key) {
     this.key = key;
   }
 
 
+
   /**
-   * Get hasStripeCustomer
+   * &#x60;true&#x60; once the account has been linked to a billing provider customer record.
    * @return hasStripeCustomer
    */
   @jakarta.annotation.Nullable
@@ -192,7 +197,7 @@ public class Account {
 
 
   /**
-   * Get expiresAt
+   * When the account is scheduled to expire. &#x60;null&#x60; for accounts with no expiry.
    * @return expiresAt
    */
   @jakarta.annotation.Nullable
@@ -220,7 +225,7 @@ public class Account {
 
 
   /**
-   * Get createdAt
+   * When the account was created.
    * @return createdAt
    */
   @jakarta.annotation.Nullable
@@ -248,7 +253,7 @@ public class Account {
 
 
   /**
-   * Get deletedAt
+   * When the account was deleted. &#x60;null&#x60; for active accounts.
    * @return deletedAt
    */
   @jakarta.annotation.Nullable
@@ -276,7 +281,7 @@ public class Account {
 
 
   /**
-   * Get productSubscriptions
+   * Map of product key to the account&#39;s subscription summary for that product, including plan, status, and entitlement limits.
    * @return productSubscriptions
    */
   @jakarta.annotation.Nullable
@@ -304,7 +309,7 @@ public class Account {
 
 
   /**
-   * Registration entry point (from account.data)
+   * How the account first reached smplkit (e.g. &#x60;LOGIN&#x60;, &#x60;GET_STARTED&#x60;, &#x60;LIVE_DEMO&#x60;).
    * @return entryPoint
    */
   @jakarta.annotation.Nullable
@@ -332,7 +337,7 @@ public class Account {
 
 
   /**
-   * Whether sample data is active (from account.settings)
+   * Whether the account is currently configured to display the sample dataset alongside the customer&#39;s own resources.
    * @return showSampleData
    */
   @jakarta.annotation.Nullable
@@ -360,7 +365,7 @@ public class Account {
 
 
   /**
-   * Custom discount percentage that overrides the volume schedule. Null means the volume schedule applies.
+   * Custom discount percentage applied to the account in place of the volume-based discount schedule. &#x60;null&#x60; means the volume schedule applies.
    * @return discountOverridePct
    */
   @jakarta.annotation.Nullable
@@ -416,7 +421,7 @@ public class Account {
 
 
   /**
-   * UUID of the admin user who set the override.
+   * UUID of the user who set the override.
    * @return discountOverrideSetByUserId
    */
   @jakarta.annotation.Nullable
@@ -444,7 +449,7 @@ public class Account {
 
 
   /**
-   * Timestamp when the override was last changed.
+   * When the override was last changed.
    * @return discountOverrideSetAt
    */
   @jakarta.annotation.Nullable
@@ -484,7 +489,7 @@ public class Account {
     }
     Account account = (Account) o;
     return Objects.equals(this.name, account.name) &&
-        Objects.equals(this.key, account.key) &&
+        equalsNullable(this.key, account.key) &&
         Objects.equals(this.hasStripeCustomer, account.hasStripeCustomer) &&
         equalsNullable(this.expiresAt, account.expiresAt) &&
         equalsNullable(this.createdAt, account.createdAt) &&
@@ -504,7 +509,7 @@ public class Account {
 
   @Override
   public int hashCode() {
-    return Objects.hash(name, key, hasStripeCustomer, hashCodeNullable(expiresAt), hashCodeNullable(createdAt), hashCodeNullable(deletedAt), hashCodeNullable(productSubscriptions), hashCodeNullable(entryPoint), hashCodeNullable(showSampleData), hashCodeNullable(discountOverridePct), hashCodeNullable(discountOverrideReason), hashCodeNullable(discountOverrideSetByUserId), hashCodeNullable(discountOverrideSetAt));
+    return Objects.hash(name, hashCodeNullable(key), hasStripeCustomer, hashCodeNullable(expiresAt), hashCodeNullable(createdAt), hashCodeNullable(deletedAt), hashCodeNullable(productSubscriptions), hashCodeNullable(entryPoint), hashCodeNullable(showSampleData), hashCodeNullable(discountOverridePct), hashCodeNullable(discountOverrideReason), hashCodeNullable(discountOverrideSetByUserId), hashCodeNullable(discountOverrideSetAt));
   }
 
   private static <T> int hashCodeNullable(JsonNullable<T> a) {

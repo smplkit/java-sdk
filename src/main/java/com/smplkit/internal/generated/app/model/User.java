@@ -35,7 +35,7 @@ import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 
 import com.smplkit.internal.generated.app.ApiClient;
 /**
- * User
+ * A person with access to one or more accounts in smplkit.
  */
 @JsonPropertyOrder({
   User.JSON_PROPERTY_EMAIL,
@@ -51,8 +51,7 @@ import com.smplkit.internal.generated.app.ApiClient;
 @jakarta.annotation.Generated(value = "org.openapitools.codegen.languages.JavaClientCodegen", comments = "Generator version: 7.21.0")
 public class User {
   public static final String JSON_PROPERTY_EMAIL = "email";
-  @jakarta.annotation.Nonnull
-  private String email;
+  private JsonNullable<String> email = JsonNullable.<String>undefined();
 
   public static final String JSON_PROPERTY_DISPLAY_NAME = "display_name";
   @jakarta.annotation.Nonnull
@@ -85,6 +84,7 @@ public class User {
 
   @JsonCreator
   public User(
+    @JsonProperty(JSON_PROPERTY_EMAIL) String email, 
     @JsonProperty(JSON_PROPERTY_AVATAR_URL) String avatarUrl, 
     @JsonProperty(JSON_PROPERTY_AUTH_PROVIDER) String authProvider, 
     @JsonProperty(JSON_PROPERTY_EMAIL_VERIFIED) Boolean emailVerified, 
@@ -92,6 +92,7 @@ public class User {
     @JsonProperty(JSON_PROPERTY_CREATED_AT) OffsetDateTime createdAt
   ) {
   this();
+    this.email = email == null ? JsonNullable.<String>undefined() : JsonNullable.of(email);
     this.avatarUrl = avatarUrl == null ? JsonNullable.<String>undefined() : JsonNullable.of(avatarUrl);
     this.authProvider = authProvider == null ? JsonNullable.<String>undefined() : JsonNullable.of(authProvider);
     this.emailVerified = emailVerified;
@@ -99,28 +100,32 @@ public class User {
     this.createdAt = createdAt == null ? JsonNullable.<OffsetDateTime>undefined() : JsonNullable.of(createdAt);
   }
 
-  public User email(@jakarta.annotation.Nonnull String email) {
-    this.email = email;
-    return this;
-  }
-
   /**
-   * User&#39;s email address
+   * Email address used to sign in to the user account.
    * @return email
    */
-  @jakarta.annotation.Nonnull
-  @JsonProperty(value = JSON_PROPERTY_EMAIL, required = true)
-  @JsonInclude(value = JsonInclude.Include.ALWAYS)
+  @jakarta.annotation.Nullable
+  @JsonIgnore
   public String getEmail() {
+    
+    if (email == null) {
+      email = JsonNullable.<String>undefined();
+    }
+    return email.orElse(null);
+  }
+
+  @JsonProperty(value = JSON_PROPERTY_EMAIL, required = false)
+  @JsonInclude(value = JsonInclude.Include.USE_DEFAULTS)
+
+  public JsonNullable<String> getEmail_JsonNullable() {
     return email;
   }
-
-
-  @JsonProperty(value = JSON_PROPERTY_EMAIL, required = true)
-  @JsonInclude(value = JsonInclude.Include.ALWAYS)
-  public void setEmail(@jakarta.annotation.Nonnull String email) {
+  
+  @JsonProperty(JSON_PROPERTY_EMAIL)
+  private void setEmail_JsonNullable(JsonNullable<String> email) {
     this.email = email;
   }
+
 
 
   public User displayName(@jakarta.annotation.Nonnull String displayName) {
@@ -129,7 +134,7 @@ public class User {
   }
 
   /**
-   * Get displayName
+   * Human-readable display name shown in the console and on shared resources.
    * @return displayName
    */
   @jakarta.annotation.Nonnull
@@ -153,7 +158,7 @@ public class User {
   }
 
   /**
-   * Get profilePic
+   * URL of an external profile picture (e.g. the value supplied by the user&#39;s identity provider).
    * @return profilePic
    */
   @jakarta.annotation.Nullable
@@ -180,7 +185,7 @@ public class User {
 
 
   /**
-   * Server-computed &#x60;&#x60;data:&#x60;&#x60; URL when an OIDC provider supplied a profile picture. Null otherwise — callers should fall back to Gravatar or initials.
+   * Server-generated &#x60;data:&#x60; URL containing the user&#39;s avatar image bytes when one has been captured. &#x60;null&#x60; when no avatar is available — callers should fall back to Gravatar or initials.
    * @return avatarUrl
    */
   @jakarta.annotation.Nullable
@@ -208,7 +213,7 @@ public class User {
 
 
   /**
-   * Get authProvider
+   * Identity provider that authenticates the user, e.g. &#x60;google&#x60;, &#x60;microsoft&#x60;, or &#x60;email&#x60;.
    * @return authProvider
    */
   @jakarta.annotation.Nullable
@@ -236,7 +241,7 @@ public class User {
 
 
   /**
-   * Get emailVerified
+   * Whether the user has completed email verification.
    * @return emailVerified
    */
   @jakarta.annotation.Nullable
@@ -255,7 +260,7 @@ public class User {
   }
 
   /**
-   * Role in current account context
+   * Role the user holds in the current account context. One of &#x60;OWNER&#x60;, &#x60;ADMIN&#x60;, &#x60;MEMBER&#x60;, or &#x60;VIEWER&#x60;.
    * @return role
    */
   @jakarta.annotation.Nullable
@@ -282,7 +287,7 @@ public class User {
 
 
   /**
-   * Account UUID
+   * UUID of the account the user is acting within.
    * @return account
    */
   @jakarta.annotation.Nullable
@@ -310,7 +315,7 @@ public class User {
 
 
   /**
-   * Get createdAt
+   * When the user record was created.
    * @return createdAt
    */
   @jakarta.annotation.Nullable
@@ -349,7 +354,7 @@ public class User {
       return false;
     }
     User user = (User) o;
-    return Objects.equals(this.email, user.email) &&
+    return equalsNullable(this.email, user.email) &&
         Objects.equals(this.displayName, user.displayName) &&
         equalsNullable(this.profilePic, user.profilePic) &&
         equalsNullable(this.avatarUrl, user.avatarUrl) &&
@@ -366,7 +371,7 @@ public class User {
 
   @Override
   public int hashCode() {
-    return Objects.hash(email, displayName, hashCodeNullable(profilePic), hashCodeNullable(avatarUrl), hashCodeNullable(authProvider), emailVerified, hashCodeNullable(role), hashCodeNullable(account), hashCodeNullable(createdAt));
+    return Objects.hash(hashCodeNullable(email), displayName, hashCodeNullable(profilePic), hashCodeNullable(avatarUrl), hashCodeNullable(authProvider), emailVerified, hashCodeNullable(role), hashCodeNullable(account), hashCodeNullable(createdAt));
   }
 
   private static <T> int hashCodeNullable(JsonNullable<T> a) {

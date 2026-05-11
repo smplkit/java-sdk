@@ -26,7 +26,7 @@ import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonValue;
 
 /**
- * Server-validated contact-us topics. Frontend dropdown values must match.
+ * Topic options accepted on contact-us submissions.
  */
 public enum ContactTopic {
   

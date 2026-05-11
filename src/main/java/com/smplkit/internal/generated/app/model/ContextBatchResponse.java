@@ -30,7 +30,7 @@ import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 
 import com.smplkit.internal.generated.app.ApiClient;
 /**
- * ContextBatchResponse
+ * Summary returned by the bulk context registration endpoint.
  */
 @JsonPropertyOrder({
   ContextBatchResponse.JSON_PROPERTY_REGISTERED
@@ -50,7 +50,7 @@ public class ContextBatchResponse {
   }
 
   /**
-   * Get registered
+   * Number of context instances that were created or updated.
    * @return registered
    */
   @jakarta.annotation.Nonnull

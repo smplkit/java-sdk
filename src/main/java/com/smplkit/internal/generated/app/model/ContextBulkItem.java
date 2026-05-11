@@ -32,7 +32,7 @@ import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 
 import com.smplkit.internal.generated.app.ApiClient;
 /**
- * ContextBulkItem
+ * One context instance in a bulk registration payload.
  */
 @JsonPropertyOrder({
   ContextBulkItem.JSON_PROPERTY_TYPE,
@@ -62,7 +62,7 @@ public class ContextBulkItem {
   }
 
   /**
-   * Context type key: &#39;user&#39;, &#39;account&#39;, &#39;device&#39;
+   * Key of the context type this instance belongs to (e.g. &#x60;user&#x60;, &#x60;account&#x60;, &#x60;device&#x60;).
    * @return type
    */
   @jakarta.annotation.Nonnull
@@ -86,7 +86,7 @@ public class ContextBulkItem {
   }
 
   /**
-   * Entity identifier: &#39;user-123&#39;, &#39;acme-corp&#39;
+   * Entity identifier within the context type, e.g. &#x60;user-123&#x60;.
    * @return key
    */
   @jakarta.annotation.Nonnull
@@ -118,7 +118,7 @@ public class ContextBulkItem {
   }
 
   /**
-   * Get attributes
+   * Observed attribute values for this context instance.
    * @return attributes
    */
   @jakarta.annotation.Nullable

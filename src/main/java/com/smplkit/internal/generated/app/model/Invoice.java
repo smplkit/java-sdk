@@ -30,7 +30,7 @@ import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 
 import com.smplkit.internal.generated.app.ApiClient;
 /**
- * Invoice
+ * A billing invoice issued for the account.
  */
 @JsonPropertyOrder({
   Invoice.JSON_PROPERTY_NUMBER,
@@ -105,7 +105,7 @@ public class Invoice {
   }
 
   /**
-   * Get number
+   * Invoice number assigned by the billing provider.
    * @return number
    */
   @jakarta.annotation.Nullable
@@ -129,7 +129,7 @@ public class Invoice {
   }
 
   /**
-   * Get status
+   * Invoice lifecycle state, e.g. &#x60;draft&#x60;, &#x60;open&#x60;, &#x60;paid&#x60;, &#x60;uncollectible&#x60;, &#x60;void&#x60;.
    * @return status
    */
   @jakarta.annotation.Nonnull
@@ -153,7 +153,7 @@ public class Invoice {
   }
 
   /**
-   * Get amountDue
+   * Amount owed on the invoice in the smallest currency unit (e.g. cents).
    * @return amountDue
    */
   @jakarta.annotation.Nonnull
@@ -177,7 +177,7 @@ public class Invoice {
   }
 
   /**
-   * Get amountPaid
+   * Amount paid against the invoice in the smallest currency unit.
    * @return amountPaid
    */
   @jakarta.annotation.Nonnull
@@ -201,7 +201,7 @@ public class Invoice {
   }
 
   /**
-   * Get currency
+   * ISO 4217 currency code, e.g. &#x60;usd&#x60;.
    * @return currency
    */
   @jakarta.annotation.Nonnull
@@ -225,7 +225,7 @@ public class Invoice {
   }
 
   /**
-   * Get description
+   * Human-readable summary of the invoice&#39;s line items.
    * @return description
    */
   @jakarta.annotation.Nullable
@@ -249,7 +249,7 @@ public class Invoice {
   }
 
   /**
-   * Get periodStart
+   * Start of the service period the invoice covers (ISO 8601).
    * @return periodStart
    */
   @jakarta.annotation.Nullable
@@ -273,7 +273,7 @@ public class Invoice {
   }
 
   /**
-   * Get periodEnd
+   * End of the service period the invoice covers (ISO 8601).
    * @return periodEnd
    */
   @jakarta.annotation.Nullable
@@ -297,7 +297,7 @@ public class Invoice {
   }
 
   /**
-   * Get createdAt
+   * When the invoice was created (ISO 8601).
    * @return createdAt
    */
   @jakarta.annotation.Nullable
@@ -321,7 +321,7 @@ public class Invoice {
   }
 
   /**
-   * Get paidAt
+   * When the invoice was paid in full (ISO 8601), or &#x60;null&#x60; if unpaid.
    * @return paidAt
    */
   @jakarta.annotation.Nullable
@@ -345,7 +345,7 @@ public class Invoice {
   }
 
   /**
-   * Get hostedInvoiceUrl
+   * Link to the hosted invoice page.
    * @return hostedInvoiceUrl
    */
   @jakarta.annotation.Nullable
@@ -369,7 +369,7 @@ public class Invoice {
   }
 
   /**
-   * Get invoicePdf
+   * Link to the PDF rendering of the invoice.
    * @return invoicePdf
    */
   @jakarta.annotation.Nullable

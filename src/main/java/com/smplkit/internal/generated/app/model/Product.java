@@ -40,7 +40,7 @@ import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 
 import com.smplkit.internal.generated.app.ApiClient;
 /**
- * Product
+ * A smplkit product, with its plans, metered limits, and marketing copy.
  */
 @JsonPropertyOrder({
   Product.JSON_PROPERTY_DISPLAY_NAME,
@@ -89,7 +89,7 @@ public class Product {
   }
 
   /**
-   * Get displayName
+   * Human-readable product name.
    * @return displayName
    */
   @jakarta.annotation.Nonnull
@@ -113,7 +113,7 @@ public class Product {
   }
 
   /**
-   * Get description
+   * Long-form product description.
    * @return description
    */
   @jakarta.annotation.Nonnull
@@ -137,7 +137,7 @@ public class Product {
   }
 
   /**
-   * Get tagline
+   * Short marketing tagline shown on plan-selection surfaces.
    * @return tagline
    */
   @jakarta.annotation.Nullable
@@ -177,7 +177,7 @@ public class Product {
   }
 
   /**
-   * Get features
+   * Bullet-list feature highlights for the product.
    * @return features
    */
   @jakarta.annotation.Nullable
@@ -201,7 +201,7 @@ public class Product {
   }
 
   /**
-   * Get comingSoon
+   * When &#x60;true&#x60;, the product is listed but not yet available for subscription.
    * @return comingSoon
    */
   @jakarta.annotation.Nullable
@@ -233,7 +233,7 @@ public class Product {
   }
 
   /**
-   * Get limits
+   * Map of limit key to limit definition for this product.
    * @return limits
    */
   @jakarta.annotation.Nonnull
@@ -265,7 +265,7 @@ public class Product {
   }
 
   /**
-   * Get plans
+   * Map of plan key to plan definition for this product.
    * @return plans
    */
   @jakarta.annotation.Nonnull

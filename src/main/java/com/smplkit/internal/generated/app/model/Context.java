@@ -37,7 +37,7 @@ import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 
 import com.smplkit.internal.generated.app.ApiClient;
 /**
- * Context
+ * A specific instance of a context type — for example, a particular user, account, or device — together with the attributes observed on it.  Context instances are addressed by a composite identifier of the form &#x60;context_type:key&#x60; (e.g. &#x60;user:alice-123&#x60;).
  */
 @JsonPropertyOrder({
   Context.JSON_PROPERTY_NAME,
@@ -84,7 +84,7 @@ public class Context {
   }
 
   /**
-   * Human-readable display name
+   * Human-readable display name for the context instance.
    * @return name
    */
   @jakarta.annotation.Nullable
@@ -116,7 +116,7 @@ public class Context {
   }
 
   /**
-   * Context type key (e.g., &#39;user&#39;, &#39;account&#39;)
+   * Key of the context type this instance belongs to (e.g. &#x60;user&#x60;, &#x60;account&#x60;).
    * @return contextType
    */
   @jakarta.annotation.Nonnull
@@ -148,7 +148,7 @@ public class Context {
   }
 
   /**
-   * Observed attributes
+   * Observed attribute values for this context instance. The key set is conventionally aligned with the parent context type&#39;s known attribute keys, but additional keys are accepted.
    * @return attributes
    */
   @jakarta.annotation.Nullable
@@ -167,7 +167,7 @@ public class Context {
 
 
   /**
-   * Get createdAt
+   * When the context instance was first registered.
    * @return createdAt
    */
   @jakarta.annotation.Nullable
@@ -195,7 +195,7 @@ public class Context {
 
 
   /**
-   * Get updatedAt
+   * When the context instance was last modified.
    * @return updatedAt
    */
   @jakarta.annotation.Nullable

@@ -30,7 +30,7 @@ import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 
 import com.smplkit.internal.generated.app.ApiClient;
 /**
- * SetupIntentAttributes
+ * Result of executing the setup-intent function.
  */
 @JsonPropertyOrder({
   SetupIntentAttributes.JSON_PROPERTY_CLIENT_SECRET
@@ -50,7 +50,7 @@ public class SetupIntentAttributes {
   }
 
   /**
-   * Get clientSecret
+   * Client secret to pass to Stripe Elements so the customer can complete payment-method setup in the browser.
    * @return clientSecret
    */
   @jakarta.annotation.Nonnull

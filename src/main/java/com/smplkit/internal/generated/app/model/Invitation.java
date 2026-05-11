@@ -35,7 +35,7 @@ import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 
 import com.smplkit.internal.generated.app.ApiClient;
 /**
- * Invitation
+ * An invitation for a person to join an account.  Invitations carry a time-limited token; the recipient redeems the token to become a member of the inviting account at the assigned role.
  */
 @JsonPropertyOrder({
   Invitation.JSON_PROPERTY_EMAIL,
@@ -111,7 +111,7 @@ public class Invitation {
   }
 
   /**
-   * Get email
+   * Email address the invitation was sent to.
    * @return email
    */
   @jakarta.annotation.Nullable
@@ -139,7 +139,7 @@ public class Invitation {
 
 
   /**
-   * Get role
+   * Role to assign on acceptance. One of &#x60;ADMIN&#x60;, &#x60;MEMBER&#x60;, or &#x60;VIEWER&#x60;.
    * @return role
    */
   @jakarta.annotation.Nullable
@@ -167,7 +167,7 @@ public class Invitation {
 
 
   /**
-   * Get status
+   * Lifecycle state of the invitation. One of &#x60;PENDING&#x60;, &#x60;ACCEPTED&#x60;, &#x60;REVOKED&#x60;, or &#x60;EXPIRED&#x60;.
    * @return status
    */
   @jakarta.annotation.Nullable
@@ -195,7 +195,7 @@ public class Invitation {
 
 
   /**
-   * Get invitedBy
+   * UUID of the user who sent the invitation.
    * @return invitedBy
    */
   @jakarta.annotation.Nullable
@@ -223,7 +223,7 @@ public class Invitation {
 
 
   /**
-   * Get accountName
+   * Name of the account the recipient is being invited to join.
    * @return accountName
    */
   @jakarta.annotation.Nullable
@@ -251,7 +251,7 @@ public class Invitation {
 
 
   /**
-   * Get inviterDisplayName
+   * Display name of the user who sent the invitation.
    * @return inviterDisplayName
    */
   @jakarta.annotation.Nullable
@@ -279,7 +279,7 @@ public class Invitation {
 
 
   /**
-   * Get token
+   * Single-use token that the recipient redeems to accept the invitation. Echoed on responses so the inviting client can construct the acceptance link.
    * @return token
    */
   @jakarta.annotation.Nullable
@@ -307,7 +307,7 @@ public class Invitation {
 
 
   /**
-   * Get expiresAt
+   * When the invitation token stops being redeemable.
    * @return expiresAt
    */
   @jakarta.annotation.Nullable
@@ -335,7 +335,7 @@ public class Invitation {
 
 
   /**
-   * Get createdAt
+   * When the invitation was issued.
    * @return createdAt
    */
   @jakarta.annotation.Nullable
@@ -363,7 +363,7 @@ public class Invitation {
 
 
   /**
-   * Get updatedAt
+   * When the invitation record was last modified.
    * @return updatedAt
    */
   @jakarta.annotation.Nullable

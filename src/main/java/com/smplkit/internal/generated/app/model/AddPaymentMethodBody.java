@@ -31,7 +31,7 @@ import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 
 import com.smplkit.internal.generated.app.ApiClient;
 /**
- * AddPaymentMethodBody
+ * JSON:API request envelope for registering a new payment method.
  */
 @JsonPropertyOrder({
   AddPaymentMethodBody.JSON_PROPERTY_DATA

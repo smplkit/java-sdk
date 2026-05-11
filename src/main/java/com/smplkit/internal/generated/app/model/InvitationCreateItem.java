@@ -30,7 +30,7 @@ import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 
 import com.smplkit.internal.generated.app.ApiClient;
 /**
- * InvitationCreateItem
+ * One invitation in a bulk-create request.
  */
 @JsonPropertyOrder({
   InvitationCreateItem.JSON_PROPERTY_EMAIL,
@@ -55,7 +55,7 @@ public class InvitationCreateItem {
   }
 
   /**
-   * Get email
+   * Email address to send the invitation to.
    * @return email
    */
   @jakarta.annotation.Nonnull
@@ -79,7 +79,7 @@ public class InvitationCreateItem {
   }
 
   /**
-   * Get role
+   * Role to assign on acceptance. One of &#x60;ADMIN&#x60;, &#x60;MEMBER&#x60;, or &#x60;VIEWER&#x60;. &#x60;OWNER&#x60; cannot be assigned via invitation. Case-insensitive on input.
    * @return role
    */
   @jakarta.annotation.Nullable

@@ -35,7 +35,7 @@ import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 
 import com.smplkit.internal.generated.app.ApiClient;
 /**
- * Environment
+ * A named deployment context — for example, &#x60;production&#x60;, &#x60;staging&#x60;, or &#x60;development&#x60;. Resources scoped to an environment (such as config items and feature flags) are evaluated against environment-specific values.
  */
 @JsonPropertyOrder({
   Environment.JSON_PROPERTY_NAME,
@@ -54,7 +54,7 @@ public class Environment {
   private JsonNullable<String> color = JsonNullable.<String>undefined();
 
   /**
-   * Gets or Sets classification
+   * &#x60;STANDARD&#x60; for environments the customer explicitly manages; &#x60;AD_HOC&#x60; for environments auto-created from SDK traffic. Case-insensitive on input.
    */
   public enum ClassificationEnum {
     STANDARD(String.valueOf("STANDARD")),
@@ -117,7 +117,7 @@ public class Environment {
   }
 
   /**
-   * Get name
+   * Human-readable name for the environment.
    * @return name
    */
   @jakarta.annotation.Nonnull
@@ -141,7 +141,7 @@ public class Environment {
   }
 
   /**
-   * Get color
+   * Display color used by the console to badge the environment. Accepts any CSS color string.
    * @return color
    */
   @jakarta.annotation.Nullable
@@ -173,7 +173,7 @@ public class Environment {
   }
 
   /**
-   * Get classification
+   * &#x60;STANDARD&#x60; for environments the customer explicitly manages; &#x60;AD_HOC&#x60; for environments auto-created from SDK traffic. Case-insensitive on input.
    * @return classification
    */
   @jakarta.annotation.Nullable
@@ -192,7 +192,7 @@ public class Environment {
 
 
   /**
-   * Get createdAt
+   * When the environment was created.
    * @return createdAt
    */
   @jakarta.annotation.Nullable
@@ -220,7 +220,7 @@ public class Environment {
 
 
   /**
-   * Get updatedAt
+   * When the environment was last modified.
    * @return updatedAt
    */
   @jakarta.annotation.Nullable

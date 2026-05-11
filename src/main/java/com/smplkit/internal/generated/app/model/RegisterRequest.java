@@ -34,7 +34,7 @@ import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 
 import com.smplkit.internal.generated.app.ApiClient;
 /**
- * RegisterRequest
+ * Body for the email + password registration endpoint.
  */
 @JsonPropertyOrder({
   RegisterRequest.JSON_PROPERTY_EMAIL,
@@ -52,7 +52,7 @@ public class RegisterRequest {
   private String password;
 
   /**
-   * Registration entry point. Allowed: LOGIN, GET_STARTED, LIVE_DEMO, UNKNOWN. Defaults to UNKNOWN when omitted. Case-insensitive.
+   * How the customer arrived at the registration page. Allowed values: &#x60;LOGIN&#x60;, &#x60;GET_STARTED&#x60;, &#x60;LIVE_DEMO&#x60;, &#x60;UNKNOWN&#x60;. Defaults to &#x60;UNKNOWN&#x60; when omitted. Case-insensitive on input.
    */
   public enum EntryPointEnum {
     LOGIN(String.valueOf("LOGIN")),
@@ -102,7 +102,7 @@ public class RegisterRequest {
   }
 
   /**
-   * Get email
+   * Email address that becomes the new user&#39;s login identifier.
    * @return email
    */
   @jakarta.annotation.Nonnull
@@ -126,7 +126,7 @@ public class RegisterRequest {
   }
 
   /**
-   * Get password
+   * Password for the new account. Must be at least 8 characters.
    * @return password
    */
   @jakarta.annotation.Nonnull
@@ -150,7 +150,7 @@ public class RegisterRequest {
   }
 
   /**
-   * Registration entry point. Allowed: LOGIN, GET_STARTED, LIVE_DEMO, UNKNOWN. Defaults to UNKNOWN when omitted. Case-insensitive.
+   * How the customer arrived at the registration page. Allowed values: &#x60;LOGIN&#x60;, &#x60;GET_STARTED&#x60;, &#x60;LIVE_DEMO&#x60;, &#x60;UNKNOWN&#x60;. Defaults to &#x60;UNKNOWN&#x60; when omitted. Case-insensitive on input.
    * @return entryPoint
    */
   @jakarta.annotation.Nullable

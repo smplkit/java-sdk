@@ -35,7 +35,7 @@ import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 
 import com.smplkit.internal.generated.app.ApiClient;
 /**
- * ProductResource
+ * JSON:API resource envelope for a product catalog entry.
  */
 @JsonPropertyOrder({
   ProductResource.JSON_PROPERTY_ID,

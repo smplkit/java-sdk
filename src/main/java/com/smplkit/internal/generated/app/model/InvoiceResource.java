@@ -35,7 +35,7 @@ import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 
 import com.smplkit.internal.generated.app.ApiClient;
 /**
- * InvoiceResource
+ * JSON:API resource envelope for an invoice.
  */
 @JsonPropertyOrder({
   InvoiceResource.JSON_PROPERTY_ID,

@@ -34,7 +34,7 @@ import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 
 import com.smplkit.internal.generated.app.ApiClient;
 /**
- * CreateSubscriptionAttributes
+ * Attributes accepted when creating a new subscription.
  */
 @JsonPropertyOrder({
   CreateSubscriptionAttributes.JSON_PROPERTY_PRODUCT,
@@ -63,7 +63,7 @@ public class CreateSubscriptionAttributes {
   }
 
   /**
-   * Get product
+   * Product key to subscribe to, e.g. &#x60;flags&#x60;.
    * @return product
    */
   @jakarta.annotation.Nonnull
@@ -87,7 +87,7 @@ public class CreateSubscriptionAttributes {
   }
 
   /**
-   * Get plan
+   * Plan key to subscribe on, e.g. &#x60;pro&#x60;.
    * @return plan
    */
   @jakarta.annotation.Nonnull
@@ -111,7 +111,7 @@ public class CreateSubscriptionAttributes {
   }
 
   /**
-   * Get paymentMethod
+   * UUID of a payment method on file to bill against. If omitted, the account&#39;s default payment method is used.
    * @return paymentMethod
    */
   @jakarta.annotation.Nullable

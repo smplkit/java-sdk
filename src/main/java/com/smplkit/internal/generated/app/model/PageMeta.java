@@ -30,7 +30,7 @@ import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 
 import com.smplkit.internal.generated.app.ApiClient;
 /**
- * PageMeta
+ * Pagination metadata returned with a collection response.
  */
 @JsonPropertyOrder({
   PageMeta.JSON_PROPERTY_SIZE,
@@ -65,7 +65,7 @@ public class PageMeta {
   }
 
   /**
-   * Page size used for this response
+   * Page size used for this response.
    * @return size
    */
   @jakarta.annotation.Nonnull
@@ -89,7 +89,7 @@ public class PageMeta {
   }
 
   /**
-   * 1-based page number returned
+   * 1-based page number returned.
    * @return number
    */
   @jakarta.annotation.Nonnull
@@ -113,7 +113,7 @@ public class PageMeta {
   }
 
   /**
-   * Total number of matching items across all pages
+   * Total number of matching items across all pages.
    * @return totalItems
    */
   @jakarta.annotation.Nonnull
@@ -137,7 +137,7 @@ public class PageMeta {
   }
 
   /**
-   * Total number of pages at the current page size
+   * Total number of pages at the current page size.
    * @return totalPages
    */
   @jakarta.annotation.Nonnull

@@ -33,7 +33,7 @@ import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 
 import com.smplkit.internal.generated.app.ApiClient;
 /**
- * InvitationListResponse
+ * JSON:API collection response for invitations.
  */
 @JsonPropertyOrder({
   InvitationListResponse.JSON_PROPERTY_DATA

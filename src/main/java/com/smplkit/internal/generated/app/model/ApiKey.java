@@ -37,7 +37,7 @@ import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 
 import com.smplkit.internal.generated.app.ApiClient;
 /**
- * ApiKey
+ * An API key used by SDKs, scripts, and other programmatic clients to authenticate with the smplkit API on behalf of the account.  The full key value is returned in plaintext on the create response and is otherwise unavailable — record it somewhere safe immediately after creation.
  */
 @JsonPropertyOrder({
   ApiKey.JSON_PROPERTY_NAME,
@@ -48,8 +48,7 @@ import com.smplkit.internal.generated.app.ApiClient;
   ApiKey.JSON_PROPERTY_EXPIRES_AT,
   ApiKey.JSON_PROPERTY_LAST_USED_AT,
   ApiKey.JSON_PROPERTY_CREATED_AT,
-  ApiKey.JSON_PROPERTY_UPDATED_AT,
-  ApiKey.JSON_PROPERTY_DATA
+  ApiKey.JSON_PROPERTY_UPDATED_AT
 })
 @jakarta.annotation.Generated(value = "org.openapitools.codegen.languages.JavaClientCodegen", comments = "Generator version: 7.21.0")
 public class ApiKey {
@@ -82,10 +81,6 @@ public class ApiKey {
   public static final String JSON_PROPERTY_UPDATED_AT = "updated_at";
   private JsonNullable<OffsetDateTime> updatedAt = JsonNullable.<OffsetDateTime>undefined();
 
-  public static final String JSON_PROPERTY_DATA = "data";
-  @jakarta.annotation.Nullable
-  private Map<String, Object> data = new HashMap<>();
-
   public ApiKey() { 
   }
 
@@ -96,8 +91,7 @@ public class ApiKey {
     @JsonProperty(JSON_PROPERTY_CREATED_BY) String createdBy, 
     @JsonProperty(JSON_PROPERTY_LAST_USED_AT) OffsetDateTime lastUsedAt, 
     @JsonProperty(JSON_PROPERTY_CREATED_AT) OffsetDateTime createdAt, 
-    @JsonProperty(JSON_PROPERTY_UPDATED_AT) OffsetDateTime updatedAt, 
-    @JsonProperty(JSON_PROPERTY_DATA) Map<String, Object> data
+    @JsonProperty(JSON_PROPERTY_UPDATED_AT) OffsetDateTime updatedAt
   ) {
   this();
     this.status = status == null ? JsonNullable.<String>undefined() : JsonNullable.of(status);
@@ -106,7 +100,6 @@ public class ApiKey {
     this.lastUsedAt = lastUsedAt == null ? JsonNullable.<OffsetDateTime>undefined() : JsonNullable.of(lastUsedAt);
     this.createdAt = createdAt == null ? JsonNullable.<OffsetDateTime>undefined() : JsonNullable.of(createdAt);
     this.updatedAt = updatedAt == null ? JsonNullable.<OffsetDateTime>undefined() : JsonNullable.of(updatedAt);
-    this.data = data;
   }
 
   public ApiKey name(@jakarta.annotation.Nonnull String name) {
@@ -115,7 +108,7 @@ public class ApiKey {
   }
 
   /**
-   * Get name
+   * Human-readable name for the key.
    * @return name
    */
   @jakarta.annotation.Nonnull
@@ -134,7 +127,7 @@ public class ApiKey {
 
 
   /**
-   * Get status
+   * Lifecycle state of the key. &#x60;ACTIVE&#x60; keys may be used to authenticate; &#x60;REVOKED&#x60; keys are rejected.
    * @return status
    */
   @jakarta.annotation.Nullable
@@ -162,7 +155,7 @@ public class ApiKey {
 
 
   /**
-   * Get key
+   * The bearer token value. Returned in plaintext on the create response so the caller can capture it; subsequent reads return the same value for round-tripping.
    * @return key
    */
   @jakarta.annotation.Nullable
@@ -203,7 +196,7 @@ public class ApiKey {
   }
 
   /**
-   * Get scopes
+   * Scope restrictions applied to the key. Empty object grants full account access; populated forms are reserved for future scope syntax.
    * @return scopes
    */
   @jakarta.annotation.Nullable
@@ -222,7 +215,7 @@ public class ApiKey {
 
 
   /**
-   * Get createdBy
+   * UUID of the user who created the key.
    * @return createdBy
    */
   @jakarta.annotation.Nullable
@@ -255,7 +248,7 @@ public class ApiKey {
   }
 
   /**
-   * Get expiresAt
+   * Optional expiry timestamp. After this time, the key is rejected. Omit for keys that do not expire.
    * @return expiresAt
    */
   @jakarta.annotation.Nullable
@@ -282,7 +275,7 @@ public class ApiKey {
 
 
   /**
-   * Get lastUsedAt
+   * When the key was most recently used to authenticate.
    * @return lastUsedAt
    */
   @jakarta.annotation.Nullable
@@ -310,7 +303,7 @@ public class ApiKey {
 
 
   /**
-   * Get createdAt
+   * When the key was created.
    * @return createdAt
    */
   @jakarta.annotation.Nullable
@@ -338,7 +331,7 @@ public class ApiKey {
 
 
   /**
-   * Get updatedAt
+   * When the key was last modified.
    * @return updatedAt
    */
   @jakarta.annotation.Nullable
@@ -366,20 +359,6 @@ public class ApiKey {
 
 
   /**
-   * Get data
-   * @return data
-   */
-  @jakarta.annotation.Nullable
-  @JsonProperty(value = JSON_PROPERTY_DATA, required = false)
-  @JsonInclude(content = JsonInclude.Include.ALWAYS, value = JsonInclude.Include.USE_DEFAULTS)
-  public Map<String, Object> getData() {
-    return data;
-  }
-
-
-
-
-  /**
    * Return true if this ApiKey object is equal to o.
    */
   @Override
@@ -399,8 +378,7 @@ public class ApiKey {
         equalsNullable(this.expiresAt, apiKey.expiresAt) &&
         equalsNullable(this.lastUsedAt, apiKey.lastUsedAt) &&
         equalsNullable(this.createdAt, apiKey.createdAt) &&
-        equalsNullable(this.updatedAt, apiKey.updatedAt) &&
-        Objects.equals(this.data, apiKey.data);
+        equalsNullable(this.updatedAt, apiKey.updatedAt);
   }
 
   private static <T> boolean equalsNullable(JsonNullable<T> a, JsonNullable<T> b) {
@@ -409,7 +387,7 @@ public class ApiKey {
 
   @Override
   public int hashCode() {
-    return Objects.hash(name, hashCodeNullable(status), hashCodeNullable(key), scopes, hashCodeNullable(createdBy), hashCodeNullable(expiresAt), hashCodeNullable(lastUsedAt), hashCodeNullable(createdAt), hashCodeNullable(updatedAt), data);
+    return Objects.hash(name, hashCodeNullable(status), hashCodeNullable(key), scopes, hashCodeNullable(createdBy), hashCodeNullable(expiresAt), hashCodeNullable(lastUsedAt), hashCodeNullable(createdAt), hashCodeNullable(updatedAt));
   }
 
   private static <T> int hashCodeNullable(JsonNullable<T> a) {
@@ -432,7 +410,6 @@ public class ApiKey {
     sb.append("    lastUsedAt: ").append(toIndentedString(lastUsedAt)).append("\n");
     sb.append("    createdAt: ").append(toIndentedString(createdAt)).append("\n");
     sb.append("    updatedAt: ").append(toIndentedString(updatedAt)).append("\n");
-    sb.append("    data: ").append(toIndentedString(data)).append("\n");
     sb.append("}");
     return sb.toString();
   }
@@ -524,15 +501,6 @@ public class ApiKey {
     // add `updated_at` to the URL query string
     if (getUpdatedAt() != null) {
       joiner.add(String.format(java.util.Locale.ROOT, "%supdated_at%s=%s", prefix, suffix, ApiClient.urlEncode(ApiClient.valueToString(getUpdatedAt()))));
-    }
-
-    // add `data` to the URL query string
-    if (getData() != null) {
-      for (String _key : getData().keySet()) {
-        joiner.add(String.format(java.util.Locale.ROOT, "%sdata%s%s=%s", prefix, suffix,
-            "".equals(suffix) ? "" : String.format(java.util.Locale.ROOT, "%s%d%s", containerPrefix, _key, containerSuffix),
-            getData().get(_key), ApiClient.urlEncode(ApiClient.valueToString(getData().get(_key)))));
-      }
     }
 
     return joiner.toString();

@@ -35,7 +35,7 @@ import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 
 import com.smplkit.internal.generated.app.ApiClient;
 /**
- * Service
+ * A service that contexts can be evaluated against — for example, a backend application or microservice in the customer&#39;s stack.
  */
 @JsonPropertyOrder({
   Service.JSON_PROPERTY_NAME,
@@ -73,7 +73,7 @@ public class Service {
   }
 
   /**
-   * Get name
+   * Human-readable name for the service.
    * @return name
    */
   @jakarta.annotation.Nonnull
@@ -92,7 +92,7 @@ public class Service {
 
 
   /**
-   * Get createdAt
+   * When the service was created.
    * @return createdAt
    */
   @jakarta.annotation.Nullable
@@ -120,7 +120,7 @@ public class Service {
 
 
   /**
-   * Get updatedAt
+   * When the service was last modified.
    * @return updatedAt
    */
   @jakarta.annotation.Nullable

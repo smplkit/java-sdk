@@ -34,7 +34,7 @@ import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 
 import com.smplkit.internal.generated.app.ApiClient;
 /**
- * MetricNameItem
+ * One distinct metric name with a representative unit.
  */
 @JsonPropertyOrder({
   MetricNameItem.JSON_PROPERTY_NAME,
@@ -58,7 +58,7 @@ public class MetricNameItem {
   }
 
   /**
-   * Get name
+   * Distinct metric series name.
    * @return name
    */
   @jakarta.annotation.Nonnull
@@ -82,7 +82,7 @@ public class MetricNameItem {
   }
 
   /**
-   * Get unit
+   * Representative unit observed for this series.
    * @return unit
    */
   @jakarta.annotation.Nullable

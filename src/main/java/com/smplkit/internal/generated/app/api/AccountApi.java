@@ -18,6 +18,7 @@ import com.smplkit.internal.generated.app.ApiResponse;
 import com.smplkit.internal.generated.app.Configuration;
 import com.smplkit.internal.generated.app.Pair;
 
+import com.smplkit.internal.generated.app.model.AccountRequest;
 import com.smplkit.internal.generated.app.model.AccountResponse;
 import com.smplkit.internal.generated.app.model.AccountWipeRequest;
 import com.smplkit.internal.generated.app.model.ErrorResponse;
@@ -589,48 +590,48 @@ public class AccountApi {
   /**
    * Update Current Account
    * Update the current account&#39;s settings.
-   * @param accountResponse  (required)
+   * @param accountRequest  (required)
    * @return AccountResponse
    * @throws ApiException if fails to make API call
    */
-  public AccountResponse updateAccount(@jakarta.annotation.Nonnull AccountResponse accountResponse) throws ApiException {
-    return updateAccount(accountResponse, null);
+  public AccountResponse updateAccount(@jakarta.annotation.Nonnull AccountRequest accountRequest) throws ApiException {
+    return updateAccount(accountRequest, null);
   }
 
   /**
    * Update Current Account
    * Update the current account&#39;s settings.
-   * @param accountResponse  (required)
+   * @param accountRequest  (required)
    * @param headers Optional headers to include in the request
    * @return AccountResponse
    * @throws ApiException if fails to make API call
    */
-  public AccountResponse updateAccount(@jakarta.annotation.Nonnull AccountResponse accountResponse, Map<String, String> headers) throws ApiException {
-    ApiResponse<AccountResponse> localVarResponse = updateAccountWithHttpInfo(accountResponse, headers);
+  public AccountResponse updateAccount(@jakarta.annotation.Nonnull AccountRequest accountRequest, Map<String, String> headers) throws ApiException {
+    ApiResponse<AccountResponse> localVarResponse = updateAccountWithHttpInfo(accountRequest, headers);
     return localVarResponse.getData();
   }
 
   /**
    * Update Current Account
    * Update the current account&#39;s settings.
-   * @param accountResponse  (required)
+   * @param accountRequest  (required)
    * @return ApiResponse&lt;AccountResponse&gt;
    * @throws ApiException if fails to make API call
    */
-  public ApiResponse<AccountResponse> updateAccountWithHttpInfo(@jakarta.annotation.Nonnull AccountResponse accountResponse) throws ApiException {
-    return updateAccountWithHttpInfo(accountResponse, null);
+  public ApiResponse<AccountResponse> updateAccountWithHttpInfo(@jakarta.annotation.Nonnull AccountRequest accountRequest) throws ApiException {
+    return updateAccountWithHttpInfo(accountRequest, null);
   }
 
   /**
    * Update Current Account
    * Update the current account&#39;s settings.
-   * @param accountResponse  (required)
+   * @param accountRequest  (required)
    * @param headers Optional headers to include in the request
    * @return ApiResponse&lt;AccountResponse&gt;
    * @throws ApiException if fails to make API call
    */
-  public ApiResponse<AccountResponse> updateAccountWithHttpInfo(@jakarta.annotation.Nonnull AccountResponse accountResponse, Map<String, String> headers) throws ApiException {
-    HttpRequest.Builder localVarRequestBuilder = updateAccountRequestBuilder(accountResponse, headers);
+  public ApiResponse<AccountResponse> updateAccountWithHttpInfo(@jakarta.annotation.Nonnull AccountRequest accountRequest, Map<String, String> headers) throws ApiException {
+    HttpRequest.Builder localVarRequestBuilder = updateAccountRequestBuilder(accountRequest, headers);
     try {
       HttpResponse<InputStream> localVarResponse = memberVarHttpClient.send(
           localVarRequestBuilder.build(),
@@ -677,10 +678,10 @@ public class AccountApi {
     }
   }
 
-  private HttpRequest.Builder updateAccountRequestBuilder(@jakarta.annotation.Nonnull AccountResponse accountResponse, Map<String, String> headers) throws ApiException {
-    // verify the required parameter 'accountResponse' is set
-    if (accountResponse == null) {
-      throw new ApiException(400, "Missing the required parameter 'accountResponse' when calling updateAccount");
+  private HttpRequest.Builder updateAccountRequestBuilder(@jakarta.annotation.Nonnull AccountRequest accountRequest, Map<String, String> headers) throws ApiException {
+    // verify the required parameter 'accountRequest' is set
+    if (accountRequest == null) {
+      throw new ApiException(400, "Missing the required parameter 'accountRequest' when calling updateAccount");
     }
 
     HttpRequest.Builder localVarRequestBuilder = HttpRequest.newBuilder();
@@ -693,7 +694,7 @@ public class AccountApi {
     localVarRequestBuilder.header("Accept", "application/vnd.api+json");
 
     try {
-      byte[] localVarPostBody = memberVarObjectMapper.writeValueAsBytes(accountResponse);
+      byte[] localVarPostBody = memberVarObjectMapper.writeValueAsBytes(accountRequest);
       localVarRequestBuilder.method("PUT", HttpRequest.BodyPublishers.ofByteArray(localVarPostBody));
     } catch (IOException e) {
       throw new ApiException(e);
@@ -711,7 +712,7 @@ public class AccountApi {
 
   /**
    * Wipe Account Data
-   * Delete every config, flag, logger, log group, context, context type, environment, and customer API key (except the caller&#39;s current key) on the account. The &#x60;&#x60;common&#x60;&#x60; config is preserved as a structural anchor but its items are reset. Requires &#x60;&#x60;OWNER&#x60;&#x60; role and a &#x60;&#x60;{\&quot;confirm\&quot;: true}&#x60;&#x60; body — anything else returns 400. Pass &#x60;&#x60;\&quot;generate_sample_data\&quot;: true&#x60;&#x60; to re-seed the account with the standard sample dataset after the wipe completes (best-effort; seed failures are logged but do not fail the wipe). Returns 204 on success; if any sub-delete fails the response is 500.
+   * Delete every config, flag, logger, log group, context, context type, environment, and customer API key (except the caller&#39;s current key) on the account. The &#x60;common&#x60; config is preserved as a structural anchor but its items are reset. Requires &#x60;OWNER&#x60; role and a body of &#x60;{\&quot;confirm\&quot;: true}&#x60; — any other value returns 400. Pass &#x60;\&quot;generate_sample_data\&quot;: true&#x60; to re-seed the account with the standard sample dataset after the wipe (best-effort; seeding failures are logged but do not fail the wipe). Returns 204 on success; 500 if any sub-delete fails.
    * @param accountWipeRequest  (required)
    * @throws ApiException if fails to make API call
    */
@@ -721,7 +722,7 @@ public class AccountApi {
 
   /**
    * Wipe Account Data
-   * Delete every config, flag, logger, log group, context, context type, environment, and customer API key (except the caller&#39;s current key) on the account. The &#x60;&#x60;common&#x60;&#x60; config is preserved as a structural anchor but its items are reset. Requires &#x60;&#x60;OWNER&#x60;&#x60; role and a &#x60;&#x60;{\&quot;confirm\&quot;: true}&#x60;&#x60; body — anything else returns 400. Pass &#x60;&#x60;\&quot;generate_sample_data\&quot;: true&#x60;&#x60; to re-seed the account with the standard sample dataset after the wipe completes (best-effort; seed failures are logged but do not fail the wipe). Returns 204 on success; if any sub-delete fails the response is 500.
+   * Delete every config, flag, logger, log group, context, context type, environment, and customer API key (except the caller&#39;s current key) on the account. The &#x60;common&#x60; config is preserved as a structural anchor but its items are reset. Requires &#x60;OWNER&#x60; role and a body of &#x60;{\&quot;confirm\&quot;: true}&#x60; — any other value returns 400. Pass &#x60;\&quot;generate_sample_data\&quot;: true&#x60; to re-seed the account with the standard sample dataset after the wipe (best-effort; seeding failures are logged but do not fail the wipe). Returns 204 on success; 500 if any sub-delete fails.
    * @param accountWipeRequest  (required)
    * @param headers Optional headers to include in the request
    * @throws ApiException if fails to make API call
@@ -732,7 +733,7 @@ public class AccountApi {
 
   /**
    * Wipe Account Data
-   * Delete every config, flag, logger, log group, context, context type, environment, and customer API key (except the caller&#39;s current key) on the account. The &#x60;&#x60;common&#x60;&#x60; config is preserved as a structural anchor but its items are reset. Requires &#x60;&#x60;OWNER&#x60;&#x60; role and a &#x60;&#x60;{\&quot;confirm\&quot;: true}&#x60;&#x60; body — anything else returns 400. Pass &#x60;&#x60;\&quot;generate_sample_data\&quot;: true&#x60;&#x60; to re-seed the account with the standard sample dataset after the wipe completes (best-effort; seed failures are logged but do not fail the wipe). Returns 204 on success; if any sub-delete fails the response is 500.
+   * Delete every config, flag, logger, log group, context, context type, environment, and customer API key (except the caller&#39;s current key) on the account. The &#x60;common&#x60; config is preserved as a structural anchor but its items are reset. Requires &#x60;OWNER&#x60; role and a body of &#x60;{\&quot;confirm\&quot;: true}&#x60; — any other value returns 400. Pass &#x60;\&quot;generate_sample_data\&quot;: true&#x60; to re-seed the account with the standard sample dataset after the wipe (best-effort; seeding failures are logged but do not fail the wipe). Returns 204 on success; 500 if any sub-delete fails.
    * @param accountWipeRequest  (required)
    * @return ApiResponse&lt;Void&gt;
    * @throws ApiException if fails to make API call
@@ -743,7 +744,7 @@ public class AccountApi {
 
   /**
    * Wipe Account Data
-   * Delete every config, flag, logger, log group, context, context type, environment, and customer API key (except the caller&#39;s current key) on the account. The &#x60;&#x60;common&#x60;&#x60; config is preserved as a structural anchor but its items are reset. Requires &#x60;&#x60;OWNER&#x60;&#x60; role and a &#x60;&#x60;{\&quot;confirm\&quot;: true}&#x60;&#x60; body — anything else returns 400. Pass &#x60;&#x60;\&quot;generate_sample_data\&quot;: true&#x60;&#x60; to re-seed the account with the standard sample dataset after the wipe completes (best-effort; seed failures are logged but do not fail the wipe). Returns 204 on success; if any sub-delete fails the response is 500.
+   * Delete every config, flag, logger, log group, context, context type, environment, and customer API key (except the caller&#39;s current key) on the account. The &#x60;common&#x60; config is preserved as a structural anchor but its items are reset. Requires &#x60;OWNER&#x60; role and a body of &#x60;{\&quot;confirm\&quot;: true}&#x60; — any other value returns 400. Pass &#x60;\&quot;generate_sample_data\&quot;: true&#x60; to re-seed the account with the standard sample dataset after the wipe (best-effort; seeding failures are logged but do not fail the wipe). Returns 204 on success; 500 if any sub-delete fails.
    * @param accountWipeRequest  (required)
    * @param headers Optional headers to include in the request
    * @return ApiResponse&lt;Void&gt;
