@@ -35,7 +35,7 @@ import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 
 import com.smplkit.internal.generated.logging.ApiClient;
 /**
- * LoggerSource
+ * A single service / environment observation of a logger.  A source row exists for every (service, environment) pair that has reported the logger via the bulk registration endpoint. The row&#39;s levels reflect what the SDK saw on the most recent report.
  */
 @JsonPropertyOrder({
   LoggerSource.JSON_PROPERTY_SERVICE,
@@ -102,7 +102,7 @@ public class LoggerSource {
   }
 
   /**
-   * Get service
+   * Service that reported the logger.
    * @return service
    */
   @jakarta.annotation.Nullable
@@ -116,7 +116,7 @@ public class LoggerSource {
 
 
   /**
-   * Get environment
+   * Environment the service was running in when it reported the logger.
    * @return environment
    */
   @jakarta.annotation.Nullable
@@ -130,7 +130,7 @@ public class LoggerSource {
 
 
   /**
-   * Get level
+   * Level explicitly set on the logger in the source runtime. &#x60;null&#x60; when the runtime inherits its level.
    * @return level
    */
   @jakarta.annotation.Nullable
@@ -158,7 +158,7 @@ public class LoggerSource {
 
 
   /**
-   * Get resolvedLevel
+   * Effective level the runtime resolved for the logger.
    * @return resolvedLevel
    */
   @jakarta.annotation.Nullable
@@ -172,7 +172,7 @@ public class LoggerSource {
 
 
   /**
-   * Get firstObserved
+   * When this service / environment combination first reported the logger.
    * @return firstObserved
    */
   @jakarta.annotation.Nullable
@@ -200,7 +200,7 @@ public class LoggerSource {
 
 
   /**
-   * Get lastSeen
+   * Most recent report received for this service / environment combination.
    * @return lastSeen
    */
   @jakarta.annotation.Nullable
@@ -228,7 +228,7 @@ public class LoggerSource {
 
 
   /**
-   * Get createdAt
+   * When the source row was created.
    * @return createdAt
    */
   @jakarta.annotation.Nullable
@@ -256,7 +256,7 @@ public class LoggerSource {
 
 
   /**
-   * Get updatedAt
+   * When the source row was last refreshed.
    * @return updatedAt
    */
   @jakarta.annotation.Nullable

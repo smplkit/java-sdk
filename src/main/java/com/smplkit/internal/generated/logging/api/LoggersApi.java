@@ -22,6 +22,7 @@ import com.smplkit.internal.generated.logging.model.ErrorResponse;
 import com.smplkit.internal.generated.logging.model.LoggerBulkRequest;
 import com.smplkit.internal.generated.logging.model.LoggerBulkResponse;
 import com.smplkit.internal.generated.logging.model.LoggerListResponse;
+import com.smplkit.internal.generated.logging.model.LoggerRequest;
 import com.smplkit.internal.generated.logging.model.LoggerResponse;
 
 import com.fasterxml.jackson.core.type.TypeReference;
@@ -168,7 +169,7 @@ public class LoggersApi {
 
   /**
    * Bulk Register Loggers
-   * Register loggers discovered by an SDK. Creates new loggers or updates source observations on existing ones.
+   * Register loggers discovered by an SDK.  Creates new logger entries for previously unseen keys and refreshes the per-(service, environment) observation for keys already known. Returns the number of items processed.
    * @param loggerBulkRequest  (required)
    * @return LoggerBulkResponse
    * @throws ApiException if fails to make API call
@@ -179,7 +180,7 @@ public class LoggersApi {
 
   /**
    * Bulk Register Loggers
-   * Register loggers discovered by an SDK. Creates new loggers or updates source observations on existing ones.
+   * Register loggers discovered by an SDK.  Creates new logger entries for previously unseen keys and refreshes the per-(service, environment) observation for keys already known. Returns the number of items processed.
    * @param loggerBulkRequest  (required)
    * @param headers Optional headers to include in the request
    * @return LoggerBulkResponse
@@ -192,7 +193,7 @@ public class LoggersApi {
 
   /**
    * Bulk Register Loggers
-   * Register loggers discovered by an SDK. Creates new loggers or updates source observations on existing ones.
+   * Register loggers discovered by an SDK.  Creates new logger entries for previously unseen keys and refreshes the per-(service, environment) observation for keys already known. Returns the number of items processed.
    * @param loggerBulkRequest  (required)
    * @return ApiResponse&lt;LoggerBulkResponse&gt;
    * @throws ApiException if fails to make API call
@@ -203,7 +204,7 @@ public class LoggersApi {
 
   /**
    * Bulk Register Loggers
-   * Register loggers discovered by an SDK. Creates new loggers or updates source observations on existing ones.
+   * Register loggers discovered by an SDK.  Creates new logger entries for previously unseen keys and refreshes the per-(service, environment) observation for keys already known. Returns the number of items processed.
    * @param loggerBulkRequest  (required)
    * @param headers Optional headers to include in the request
    * @return ApiResponse&lt;LoggerBulkResponse&gt;
@@ -291,7 +292,7 @@ public class LoggersApi {
 
   /**
    * Delete Logger
-   * Delete a logger by its key.
+   * Delete a logger.
    * @param id  (required)
    * @throws ApiException if fails to make API call
    */
@@ -301,7 +302,7 @@ public class LoggersApi {
 
   /**
    * Delete Logger
-   * Delete a logger by its key.
+   * Delete a logger.
    * @param id  (required)
    * @param headers Optional headers to include in the request
    * @throws ApiException if fails to make API call
@@ -312,7 +313,7 @@ public class LoggersApi {
 
   /**
    * Delete Logger
-   * Delete a logger by its key.
+   * Delete a logger.
    * @param id  (required)
    * @return ApiResponse&lt;Void&gt;
    * @throws ApiException if fails to make API call
@@ -323,7 +324,7 @@ public class LoggersApi {
 
   /**
    * Delete Logger
-   * Delete a logger by its key.
+   * Delete a logger.
    * @param id  (required)
    * @param headers Optional headers to include in the request
    * @return ApiResponse&lt;Void&gt;
@@ -395,7 +396,7 @@ public class LoggersApi {
 
   /**
    * Get Logger
-   * Return a logger by its key.
+   * Retrieve a logger by its key.
    * @param id  (required)
    * @return LoggerResponse
    * @throws ApiException if fails to make API call
@@ -406,7 +407,7 @@ public class LoggersApi {
 
   /**
    * Get Logger
-   * Return a logger by its key.
+   * Retrieve a logger by its key.
    * @param id  (required)
    * @param headers Optional headers to include in the request
    * @return LoggerResponse
@@ -419,7 +420,7 @@ public class LoggersApi {
 
   /**
    * Get Logger
-   * Return a logger by its key.
+   * Retrieve a logger by its key.
    * @param id  (required)
    * @return ApiResponse&lt;LoggerResponse&gt;
    * @throws ApiException if fails to make API call
@@ -430,7 +431,7 @@ public class LoggersApi {
 
   /**
    * Get Logger
-   * Return a logger by its key.
+   * Retrieve a logger by its key.
    * @param id  (required)
    * @param headers Optional headers to include in the request
    * @return ApiResponse&lt;LoggerResponse&gt;
@@ -513,7 +514,7 @@ public class LoggersApi {
 
   /**
    * List Loggers
-   * List all loggers for the authenticated account. Optionally filter by managed status, service, or last-seen time window.
+   * List loggers for this account.  Supports &#x60;filter[managed]&#x60; to narrow to managed (or unmanaged) loggers, &#x60;filter[service]&#x60; to keep only loggers observed in a specific service, and &#x60;filter[last_seen]&#x60; (interval notation &#x60;[&lt;from&gt;,*)&#x60;) to keep only loggers with a source observation at or after the given timestamp.
    * @param filterManaged  (optional)
    * @param filterService  (optional)
    * @param filterLastSeen  (optional)
@@ -526,7 +527,7 @@ public class LoggersApi {
 
   /**
    * List Loggers
-   * List all loggers for the authenticated account. Optionally filter by managed status, service, or last-seen time window.
+   * List loggers for this account.  Supports &#x60;filter[managed]&#x60; to narrow to managed (or unmanaged) loggers, &#x60;filter[service]&#x60; to keep only loggers observed in a specific service, and &#x60;filter[last_seen]&#x60; (interval notation &#x60;[&lt;from&gt;,*)&#x60;) to keep only loggers with a source observation at or after the given timestamp.
    * @param filterManaged  (optional)
    * @param filterService  (optional)
    * @param filterLastSeen  (optional)
@@ -541,7 +542,7 @@ public class LoggersApi {
 
   /**
    * List Loggers
-   * List all loggers for the authenticated account. Optionally filter by managed status, service, or last-seen time window.
+   * List loggers for this account.  Supports &#x60;filter[managed]&#x60; to narrow to managed (or unmanaged) loggers, &#x60;filter[service]&#x60; to keep only loggers observed in a specific service, and &#x60;filter[last_seen]&#x60; (interval notation &#x60;[&lt;from&gt;,*)&#x60;) to keep only loggers with a source observation at or after the given timestamp.
    * @param filterManaged  (optional)
    * @param filterService  (optional)
    * @param filterLastSeen  (optional)
@@ -554,7 +555,7 @@ public class LoggersApi {
 
   /**
    * List Loggers
-   * List all loggers for the authenticated account. Optionally filter by managed status, service, or last-seen time window.
+   * List loggers for this account.  Supports &#x60;filter[managed]&#x60; to narrow to managed (or unmanaged) loggers, &#x60;filter[service]&#x60; to keep only loggers observed in a specific service, and &#x60;filter[last_seen]&#x60; (interval notation &#x60;[&lt;from&gt;,*)&#x60;) to keep only loggers with a source observation at or after the given timestamp.
    * @param filterManaged  (optional)
    * @param filterService  (optional)
    * @param filterLastSeen  (optional)
@@ -653,53 +654,53 @@ public class LoggersApi {
 
   /**
    * Update or Create Logger
-   * Create or update a logger (upsert). If the logger does not exist it is created. Fields absent from the body are preserved on update; explicit null clears them.
+   * Create or replace a logger at the given key.  If the logger does not yet exist, it is created. Fields omitted from the request body are preserved; explicit &#x60;null&#x60; clears them. Setting &#x60;level&#x60;, &#x60;group&#x60;, or &#x60;environments&#x60; on an unmanaged logger promotes it to managed automatically.
    * @param id  (required)
-   * @param loggerResponse  (required)
+   * @param loggerRequest  (required)
    * @return LoggerResponse
    * @throws ApiException if fails to make API call
    */
-  public LoggerResponse updateLogger(@jakarta.annotation.Nonnull String id, @jakarta.annotation.Nonnull LoggerResponse loggerResponse) throws ApiException {
-    return updateLogger(id, loggerResponse, null);
+  public LoggerResponse updateLogger(@jakarta.annotation.Nonnull String id, @jakarta.annotation.Nonnull LoggerRequest loggerRequest) throws ApiException {
+    return updateLogger(id, loggerRequest, null);
   }
 
   /**
    * Update or Create Logger
-   * Create or update a logger (upsert). If the logger does not exist it is created. Fields absent from the body are preserved on update; explicit null clears them.
+   * Create or replace a logger at the given key.  If the logger does not yet exist, it is created. Fields omitted from the request body are preserved; explicit &#x60;null&#x60; clears them. Setting &#x60;level&#x60;, &#x60;group&#x60;, or &#x60;environments&#x60; on an unmanaged logger promotes it to managed automatically.
    * @param id  (required)
-   * @param loggerResponse  (required)
+   * @param loggerRequest  (required)
    * @param headers Optional headers to include in the request
    * @return LoggerResponse
    * @throws ApiException if fails to make API call
    */
-  public LoggerResponse updateLogger(@jakarta.annotation.Nonnull String id, @jakarta.annotation.Nonnull LoggerResponse loggerResponse, Map<String, String> headers) throws ApiException {
-    ApiResponse<LoggerResponse> localVarResponse = updateLoggerWithHttpInfo(id, loggerResponse, headers);
+  public LoggerResponse updateLogger(@jakarta.annotation.Nonnull String id, @jakarta.annotation.Nonnull LoggerRequest loggerRequest, Map<String, String> headers) throws ApiException {
+    ApiResponse<LoggerResponse> localVarResponse = updateLoggerWithHttpInfo(id, loggerRequest, headers);
     return localVarResponse.getData();
   }
 
   /**
    * Update or Create Logger
-   * Create or update a logger (upsert). If the logger does not exist it is created. Fields absent from the body are preserved on update; explicit null clears them.
+   * Create or replace a logger at the given key.  If the logger does not yet exist, it is created. Fields omitted from the request body are preserved; explicit &#x60;null&#x60; clears them. Setting &#x60;level&#x60;, &#x60;group&#x60;, or &#x60;environments&#x60; on an unmanaged logger promotes it to managed automatically.
    * @param id  (required)
-   * @param loggerResponse  (required)
+   * @param loggerRequest  (required)
    * @return ApiResponse&lt;LoggerResponse&gt;
    * @throws ApiException if fails to make API call
    */
-  public ApiResponse<LoggerResponse> updateLoggerWithHttpInfo(@jakarta.annotation.Nonnull String id, @jakarta.annotation.Nonnull LoggerResponse loggerResponse) throws ApiException {
-    return updateLoggerWithHttpInfo(id, loggerResponse, null);
+  public ApiResponse<LoggerResponse> updateLoggerWithHttpInfo(@jakarta.annotation.Nonnull String id, @jakarta.annotation.Nonnull LoggerRequest loggerRequest) throws ApiException {
+    return updateLoggerWithHttpInfo(id, loggerRequest, null);
   }
 
   /**
    * Update or Create Logger
-   * Create or update a logger (upsert). If the logger does not exist it is created. Fields absent from the body are preserved on update; explicit null clears them.
+   * Create or replace a logger at the given key.  If the logger does not yet exist, it is created. Fields omitted from the request body are preserved; explicit &#x60;null&#x60; clears them. Setting &#x60;level&#x60;, &#x60;group&#x60;, or &#x60;environments&#x60; on an unmanaged logger promotes it to managed automatically.
    * @param id  (required)
-   * @param loggerResponse  (required)
+   * @param loggerRequest  (required)
    * @param headers Optional headers to include in the request
    * @return ApiResponse&lt;LoggerResponse&gt;
    * @throws ApiException if fails to make API call
    */
-  public ApiResponse<LoggerResponse> updateLoggerWithHttpInfo(@jakarta.annotation.Nonnull String id, @jakarta.annotation.Nonnull LoggerResponse loggerResponse, Map<String, String> headers) throws ApiException {
-    HttpRequest.Builder localVarRequestBuilder = updateLoggerRequestBuilder(id, loggerResponse, headers);
+  public ApiResponse<LoggerResponse> updateLoggerWithHttpInfo(@jakarta.annotation.Nonnull String id, @jakarta.annotation.Nonnull LoggerRequest loggerRequest, Map<String, String> headers) throws ApiException {
+    HttpRequest.Builder localVarRequestBuilder = updateLoggerRequestBuilder(id, loggerRequest, headers);
     try {
       HttpResponse<InputStream> localVarResponse = memberVarHttpClient.send(
           localVarRequestBuilder.build(),
@@ -746,14 +747,14 @@ public class LoggersApi {
     }
   }
 
-  private HttpRequest.Builder updateLoggerRequestBuilder(@jakarta.annotation.Nonnull String id, @jakarta.annotation.Nonnull LoggerResponse loggerResponse, Map<String, String> headers) throws ApiException {
+  private HttpRequest.Builder updateLoggerRequestBuilder(@jakarta.annotation.Nonnull String id, @jakarta.annotation.Nonnull LoggerRequest loggerRequest, Map<String, String> headers) throws ApiException {
     // verify the required parameter 'id' is set
     if (id == null) {
       throw new ApiException(400, "Missing the required parameter 'id' when calling updateLogger");
     }
-    // verify the required parameter 'loggerResponse' is set
-    if (loggerResponse == null) {
-      throw new ApiException(400, "Missing the required parameter 'loggerResponse' when calling updateLogger");
+    // verify the required parameter 'loggerRequest' is set
+    if (loggerRequest == null) {
+      throw new ApiException(400, "Missing the required parameter 'loggerRequest' when calling updateLogger");
     }
 
     HttpRequest.Builder localVarRequestBuilder = HttpRequest.newBuilder();
@@ -767,7 +768,7 @@ public class LoggersApi {
     localVarRequestBuilder.header("Accept", "application/vnd.api+json");
 
     try {
-      byte[] localVarPostBody = memberVarObjectMapper.writeValueAsBytes(loggerResponse);
+      byte[] localVarPostBody = memberVarObjectMapper.writeValueAsBytes(loggerRequest);
       localVarRequestBuilder.method("PUT", HttpRequest.BodyPublishers.ofByteArray(localVarPostBody));
     } catch (IOException e) {
       throw new ApiException(e);

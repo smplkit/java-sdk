@@ -34,7 +34,7 @@ import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 
 import com.smplkit.internal.generated.logging.ApiClient;
 /**
- * LoggerBulkItem
+ * One logger discovered by an SDK during a bulk registration call.
  */
 @JsonPropertyOrder({
   LoggerBulkItem.JSON_PROPERTY_ID,
@@ -70,7 +70,7 @@ public class LoggerBulkItem {
   }
 
   /**
-   * Normalized logger name
+   * Dot-separated logger key as the SDK saw it.
    * @return id
    */
   @jakarta.annotation.Nonnull
@@ -94,7 +94,7 @@ public class LoggerBulkItem {
   }
 
   /**
-   * The explicitly-set level on this logger. Null if inherited.
+   * Level explicitly set on the logger by application code. &#x60;null&#x60; when the level is inherited.
    * @return level
    */
   @jakarta.annotation.Nullable
@@ -126,7 +126,7 @@ public class LoggerBulkItem {
   }
 
   /**
-   * The effective level after framework inheritance. Never null in compliant SDKs.
+   * Effective level after framework inheritance. SDKs should always report this; the server falls back to &#x60;level&#x60; when &#x60;resolved_level&#x60; is missing.
    * @return resolvedLevel
    */
   @jakarta.annotation.Nullable
@@ -158,7 +158,7 @@ public class LoggerBulkItem {
   }
 
   /**
-   * Service name that discovered this logger
+   * Service name that observed the logger.
    * @return service
    */
   @jakarta.annotation.Nullable
@@ -190,7 +190,7 @@ public class LoggerBulkItem {
   }
 
   /**
-   * Environment where this logger was observed
+   * Environment where the logger was observed.
    * @return environment
    */
   @jakarta.annotation.Nullable

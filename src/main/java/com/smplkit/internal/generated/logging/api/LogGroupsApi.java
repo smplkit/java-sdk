@@ -20,6 +20,7 @@ import com.smplkit.internal.generated.logging.Pair;
 
 import com.smplkit.internal.generated.logging.model.ErrorResponse;
 import com.smplkit.internal.generated.logging.model.LogGroupListResponse;
+import com.smplkit.internal.generated.logging.model.LogGroupRequest;
 import com.smplkit.internal.generated.logging.model.LogGroupResponse;
 
 import com.fasterxml.jackson.core.type.TypeReference;
@@ -166,49 +167,49 @@ public class LogGroupsApi {
 
   /**
    * Create Log Group
-   * Create a new log group. The caller provides the key in data.id, or it is auto-generated from name.
-   * @param logGroupResponse  (required)
+   * Create a log group.  The caller may supply a key in &#x60;data.id&#x60;; if omitted, the server generates one from &#x60;name&#x60;.
+   * @param logGroupRequest  (required)
    * @return LogGroupResponse
    * @throws ApiException if fails to make API call
    */
-  public LogGroupResponse createLogGroup(@jakarta.annotation.Nonnull LogGroupResponse logGroupResponse) throws ApiException {
-    return createLogGroup(logGroupResponse, null);
+  public LogGroupResponse createLogGroup(@jakarta.annotation.Nonnull LogGroupRequest logGroupRequest) throws ApiException {
+    return createLogGroup(logGroupRequest, null);
   }
 
   /**
    * Create Log Group
-   * Create a new log group. The caller provides the key in data.id, or it is auto-generated from name.
-   * @param logGroupResponse  (required)
+   * Create a log group.  The caller may supply a key in &#x60;data.id&#x60;; if omitted, the server generates one from &#x60;name&#x60;.
+   * @param logGroupRequest  (required)
    * @param headers Optional headers to include in the request
    * @return LogGroupResponse
    * @throws ApiException if fails to make API call
    */
-  public LogGroupResponse createLogGroup(@jakarta.annotation.Nonnull LogGroupResponse logGroupResponse, Map<String, String> headers) throws ApiException {
-    ApiResponse<LogGroupResponse> localVarResponse = createLogGroupWithHttpInfo(logGroupResponse, headers);
+  public LogGroupResponse createLogGroup(@jakarta.annotation.Nonnull LogGroupRequest logGroupRequest, Map<String, String> headers) throws ApiException {
+    ApiResponse<LogGroupResponse> localVarResponse = createLogGroupWithHttpInfo(logGroupRequest, headers);
     return localVarResponse.getData();
   }
 
   /**
    * Create Log Group
-   * Create a new log group. The caller provides the key in data.id, or it is auto-generated from name.
-   * @param logGroupResponse  (required)
+   * Create a log group.  The caller may supply a key in &#x60;data.id&#x60;; if omitted, the server generates one from &#x60;name&#x60;.
+   * @param logGroupRequest  (required)
    * @return ApiResponse&lt;LogGroupResponse&gt;
    * @throws ApiException if fails to make API call
    */
-  public ApiResponse<LogGroupResponse> createLogGroupWithHttpInfo(@jakarta.annotation.Nonnull LogGroupResponse logGroupResponse) throws ApiException {
-    return createLogGroupWithHttpInfo(logGroupResponse, null);
+  public ApiResponse<LogGroupResponse> createLogGroupWithHttpInfo(@jakarta.annotation.Nonnull LogGroupRequest logGroupRequest) throws ApiException {
+    return createLogGroupWithHttpInfo(logGroupRequest, null);
   }
 
   /**
    * Create Log Group
-   * Create a new log group. The caller provides the key in data.id, or it is auto-generated from name.
-   * @param logGroupResponse  (required)
+   * Create a log group.  The caller may supply a key in &#x60;data.id&#x60;; if omitted, the server generates one from &#x60;name&#x60;.
+   * @param logGroupRequest  (required)
    * @param headers Optional headers to include in the request
    * @return ApiResponse&lt;LogGroupResponse&gt;
    * @throws ApiException if fails to make API call
    */
-  public ApiResponse<LogGroupResponse> createLogGroupWithHttpInfo(@jakarta.annotation.Nonnull LogGroupResponse logGroupResponse, Map<String, String> headers) throws ApiException {
-    HttpRequest.Builder localVarRequestBuilder = createLogGroupRequestBuilder(logGroupResponse, headers);
+  public ApiResponse<LogGroupResponse> createLogGroupWithHttpInfo(@jakarta.annotation.Nonnull LogGroupRequest logGroupRequest, Map<String, String> headers) throws ApiException {
+    HttpRequest.Builder localVarRequestBuilder = createLogGroupRequestBuilder(logGroupRequest, headers);
     try {
       HttpResponse<InputStream> localVarResponse = memberVarHttpClient.send(
           localVarRequestBuilder.build(),
@@ -255,10 +256,10 @@ public class LogGroupsApi {
     }
   }
 
-  private HttpRequest.Builder createLogGroupRequestBuilder(@jakarta.annotation.Nonnull LogGroupResponse logGroupResponse, Map<String, String> headers) throws ApiException {
-    // verify the required parameter 'logGroupResponse' is set
-    if (logGroupResponse == null) {
-      throw new ApiException(400, "Missing the required parameter 'logGroupResponse' when calling createLogGroup");
+  private HttpRequest.Builder createLogGroupRequestBuilder(@jakarta.annotation.Nonnull LogGroupRequest logGroupRequest, Map<String, String> headers) throws ApiException {
+    // verify the required parameter 'logGroupRequest' is set
+    if (logGroupRequest == null) {
+      throw new ApiException(400, "Missing the required parameter 'logGroupRequest' when calling createLogGroup");
     }
 
     HttpRequest.Builder localVarRequestBuilder = HttpRequest.newBuilder();
@@ -271,7 +272,7 @@ public class LogGroupsApi {
     localVarRequestBuilder.header("Accept", "application/vnd.api+json");
 
     try {
-      byte[] localVarPostBody = memberVarObjectMapper.writeValueAsBytes(logGroupResponse);
+      byte[] localVarPostBody = memberVarObjectMapper.writeValueAsBytes(logGroupRequest);
       localVarRequestBuilder.method("POST", HttpRequest.BodyPublishers.ofByteArray(localVarPostBody));
     } catch (IOException e) {
       throw new ApiException(e);
@@ -289,7 +290,7 @@ public class LogGroupsApi {
 
   /**
    * Delete Log Group
-   * Delete a log group by its key.
+   * Delete a log group.  Loggers that referenced this group are detached; they remain in the account with no group assignment.
    * @param id  (required)
    * @throws ApiException if fails to make API call
    */
@@ -299,7 +300,7 @@ public class LogGroupsApi {
 
   /**
    * Delete Log Group
-   * Delete a log group by its key.
+   * Delete a log group.  Loggers that referenced this group are detached; they remain in the account with no group assignment.
    * @param id  (required)
    * @param headers Optional headers to include in the request
    * @throws ApiException if fails to make API call
@@ -310,7 +311,7 @@ public class LogGroupsApi {
 
   /**
    * Delete Log Group
-   * Delete a log group by its key.
+   * Delete a log group.  Loggers that referenced this group are detached; they remain in the account with no group assignment.
    * @param id  (required)
    * @return ApiResponse&lt;Void&gt;
    * @throws ApiException if fails to make API call
@@ -321,7 +322,7 @@ public class LogGroupsApi {
 
   /**
    * Delete Log Group
-   * Delete a log group by its key.
+   * Delete a log group.  Loggers that referenced this group are detached; they remain in the account with no group assignment.
    * @param id  (required)
    * @param headers Optional headers to include in the request
    * @return ApiResponse&lt;Void&gt;
@@ -393,7 +394,7 @@ public class LogGroupsApi {
 
   /**
    * Get Log Group
-   * Return a log group by its key.
+   * Retrieve a log group by its key.
    * @param id  (required)
    * @return LogGroupResponse
    * @throws ApiException if fails to make API call
@@ -404,7 +405,7 @@ public class LogGroupsApi {
 
   /**
    * Get Log Group
-   * Return a log group by its key.
+   * Retrieve a log group by its key.
    * @param id  (required)
    * @param headers Optional headers to include in the request
    * @return LogGroupResponse
@@ -417,7 +418,7 @@ public class LogGroupsApi {
 
   /**
    * Get Log Group
-   * Return a log group by its key.
+   * Retrieve a log group by its key.
    * @param id  (required)
    * @return ApiResponse&lt;LogGroupResponse&gt;
    * @throws ApiException if fails to make API call
@@ -428,7 +429,7 @@ public class LogGroupsApi {
 
   /**
    * Get Log Group
-   * Return a log group by its key.
+   * Retrieve a log group by its key.
    * @param id  (required)
    * @param headers Optional headers to include in the request
    * @return ApiResponse&lt;LogGroupResponse&gt;
@@ -511,7 +512,7 @@ public class LogGroupsApi {
 
   /**
    * List Log Groups
-   * List all log groups for the authenticated account.
+   * List log groups for this account.
    * @return LogGroupListResponse
    * @throws ApiException if fails to make API call
    */
@@ -521,7 +522,7 @@ public class LogGroupsApi {
 
   /**
    * List Log Groups
-   * List all log groups for the authenticated account.
+   * List log groups for this account.
    * @param headers Optional headers to include in the request
    * @return LogGroupListResponse
    * @throws ApiException if fails to make API call
@@ -533,7 +534,7 @@ public class LogGroupsApi {
 
   /**
    * List Log Groups
-   * List all log groups for the authenticated account.
+   * List log groups for this account.
    * @return ApiResponse&lt;LogGroupListResponse&gt;
    * @throws ApiException if fails to make API call
    */
@@ -543,7 +544,7 @@ public class LogGroupsApi {
 
   /**
    * List Log Groups
-   * List all log groups for the authenticated account.
+   * List log groups for this account.
    * @param headers Optional headers to include in the request
    * @return ApiResponse&lt;LogGroupListResponse&gt;
    * @throws ApiException if fails to make API call
@@ -620,53 +621,53 @@ public class LogGroupsApi {
 
   /**
    * Update Log Group
-   * Replace a log group entirely.
+   * Replace a log group. Every writable field is overwritten.
    * @param id  (required)
-   * @param logGroupResponse  (required)
+   * @param logGroupRequest  (required)
    * @return LogGroupResponse
    * @throws ApiException if fails to make API call
    */
-  public LogGroupResponse updateLogGroup(@jakarta.annotation.Nonnull String id, @jakarta.annotation.Nonnull LogGroupResponse logGroupResponse) throws ApiException {
-    return updateLogGroup(id, logGroupResponse, null);
+  public LogGroupResponse updateLogGroup(@jakarta.annotation.Nonnull String id, @jakarta.annotation.Nonnull LogGroupRequest logGroupRequest) throws ApiException {
+    return updateLogGroup(id, logGroupRequest, null);
   }
 
   /**
    * Update Log Group
-   * Replace a log group entirely.
+   * Replace a log group. Every writable field is overwritten.
    * @param id  (required)
-   * @param logGroupResponse  (required)
+   * @param logGroupRequest  (required)
    * @param headers Optional headers to include in the request
    * @return LogGroupResponse
    * @throws ApiException if fails to make API call
    */
-  public LogGroupResponse updateLogGroup(@jakarta.annotation.Nonnull String id, @jakarta.annotation.Nonnull LogGroupResponse logGroupResponse, Map<String, String> headers) throws ApiException {
-    ApiResponse<LogGroupResponse> localVarResponse = updateLogGroupWithHttpInfo(id, logGroupResponse, headers);
+  public LogGroupResponse updateLogGroup(@jakarta.annotation.Nonnull String id, @jakarta.annotation.Nonnull LogGroupRequest logGroupRequest, Map<String, String> headers) throws ApiException {
+    ApiResponse<LogGroupResponse> localVarResponse = updateLogGroupWithHttpInfo(id, logGroupRequest, headers);
     return localVarResponse.getData();
   }
 
   /**
    * Update Log Group
-   * Replace a log group entirely.
+   * Replace a log group. Every writable field is overwritten.
    * @param id  (required)
-   * @param logGroupResponse  (required)
+   * @param logGroupRequest  (required)
    * @return ApiResponse&lt;LogGroupResponse&gt;
    * @throws ApiException if fails to make API call
    */
-  public ApiResponse<LogGroupResponse> updateLogGroupWithHttpInfo(@jakarta.annotation.Nonnull String id, @jakarta.annotation.Nonnull LogGroupResponse logGroupResponse) throws ApiException {
-    return updateLogGroupWithHttpInfo(id, logGroupResponse, null);
+  public ApiResponse<LogGroupResponse> updateLogGroupWithHttpInfo(@jakarta.annotation.Nonnull String id, @jakarta.annotation.Nonnull LogGroupRequest logGroupRequest) throws ApiException {
+    return updateLogGroupWithHttpInfo(id, logGroupRequest, null);
   }
 
   /**
    * Update Log Group
-   * Replace a log group entirely.
+   * Replace a log group. Every writable field is overwritten.
    * @param id  (required)
-   * @param logGroupResponse  (required)
+   * @param logGroupRequest  (required)
    * @param headers Optional headers to include in the request
    * @return ApiResponse&lt;LogGroupResponse&gt;
    * @throws ApiException if fails to make API call
    */
-  public ApiResponse<LogGroupResponse> updateLogGroupWithHttpInfo(@jakarta.annotation.Nonnull String id, @jakarta.annotation.Nonnull LogGroupResponse logGroupResponse, Map<String, String> headers) throws ApiException {
-    HttpRequest.Builder localVarRequestBuilder = updateLogGroupRequestBuilder(id, logGroupResponse, headers);
+  public ApiResponse<LogGroupResponse> updateLogGroupWithHttpInfo(@jakarta.annotation.Nonnull String id, @jakarta.annotation.Nonnull LogGroupRequest logGroupRequest, Map<String, String> headers) throws ApiException {
+    HttpRequest.Builder localVarRequestBuilder = updateLogGroupRequestBuilder(id, logGroupRequest, headers);
     try {
       HttpResponse<InputStream> localVarResponse = memberVarHttpClient.send(
           localVarRequestBuilder.build(),
@@ -713,14 +714,14 @@ public class LogGroupsApi {
     }
   }
 
-  private HttpRequest.Builder updateLogGroupRequestBuilder(@jakarta.annotation.Nonnull String id, @jakarta.annotation.Nonnull LogGroupResponse logGroupResponse, Map<String, String> headers) throws ApiException {
+  private HttpRequest.Builder updateLogGroupRequestBuilder(@jakarta.annotation.Nonnull String id, @jakarta.annotation.Nonnull LogGroupRequest logGroupRequest, Map<String, String> headers) throws ApiException {
     // verify the required parameter 'id' is set
     if (id == null) {
       throw new ApiException(400, "Missing the required parameter 'id' when calling updateLogGroup");
     }
-    // verify the required parameter 'logGroupResponse' is set
-    if (logGroupResponse == null) {
-      throw new ApiException(400, "Missing the required parameter 'logGroupResponse' when calling updateLogGroup");
+    // verify the required parameter 'logGroupRequest' is set
+    if (logGroupRequest == null) {
+      throw new ApiException(400, "Missing the required parameter 'logGroupRequest' when calling updateLogGroup");
     }
 
     HttpRequest.Builder localVarRequestBuilder = HttpRequest.newBuilder();
@@ -734,7 +735,7 @@ public class LogGroupsApi {
     localVarRequestBuilder.header("Accept", "application/vnd.api+json");
 
     try {
-      byte[] localVarPostBody = memberVarObjectMapper.writeValueAsBytes(logGroupResponse);
+      byte[] localVarPostBody = memberVarObjectMapper.writeValueAsBytes(logGroupRequest);
       localVarRequestBuilder.method("PUT", HttpRequest.BodyPublishers.ofByteArray(localVarPostBody));
     } catch (IOException e) {
       throw new ApiException(e);

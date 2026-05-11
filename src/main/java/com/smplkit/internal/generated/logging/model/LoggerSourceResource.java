@@ -35,7 +35,7 @@ import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 
 import com.smplkit.internal.generated.logging.ApiClient;
 /**
- * LoggerSourceResource
+ * JSON:API resource envelope for a logger source observation.
  */
 @JsonPropertyOrder({
   LoggerSourceResource.JSON_PROPERTY_ID,

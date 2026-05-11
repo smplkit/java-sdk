@@ -30,7 +30,7 @@ import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 
 import com.smplkit.internal.generated.logging.ApiClient;
 /**
- * ServiceResource
+ * JSON:API resource envelope for a discovered service.  &#x60;id&#x60; is the service name as reported by an SDK during bulk registration. The resource carries no additional attributes — it represents the existence of the service in the account&#39;s observations, nothing more.
  */
 @JsonPropertyOrder({
   ServiceResource.JSON_PROPERTY_ID,
@@ -141,7 +141,7 @@ public class ServiceResource {
   }
 
   /**
-   * Get attributes
+   * A discovered service has no attributes beyond its name (the &#x60;id&#x60;).
    * @return attributes
    */
   @jakarta.annotation.Nullable

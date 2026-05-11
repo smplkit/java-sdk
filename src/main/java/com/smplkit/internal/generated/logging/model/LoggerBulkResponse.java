@@ -30,7 +30,7 @@ import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 
 import com.smplkit.internal.generated.logging.ApiClient;
 /**
- * LoggerBulkResponse
+ * Result of a bulk registration call.
  */
 @JsonPropertyOrder({
   LoggerBulkResponse.JSON_PROPERTY_REGISTERED
@@ -50,7 +50,7 @@ public class LoggerBulkResponse {
   }
 
   /**
-   * Get registered
+   * Number of loggers that were created or had a source observation refreshed.
    * @return registered
    */
   @jakarta.annotation.Nonnull

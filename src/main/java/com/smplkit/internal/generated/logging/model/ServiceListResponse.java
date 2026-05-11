@@ -33,7 +33,7 @@ import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 
 import com.smplkit.internal.generated.logging.ApiClient;
 /**
- * ServiceListResponse
+ * JSON:API collection response for discovered services.
  */
 @JsonPropertyOrder({
   ServiceListResponse.JSON_PROPERTY_DATA

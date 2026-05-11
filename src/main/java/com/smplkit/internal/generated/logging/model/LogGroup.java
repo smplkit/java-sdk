@@ -37,7 +37,7 @@ import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 
 import com.smplkit.internal.generated.logging.ApiClient;
 /**
- * LogGroup
+ * A named collection of loggers that share a level configuration.  Assigning a logger to a group ties the logger&#39;s effective level to the group&#39;s level (and per-environment overrides). Loggers can move between groups or be detached from a group entirely.
  */
 @JsonPropertyOrder({
   LogGroup.JSON_PROPERTY_NAME,
@@ -53,8 +53,53 @@ public class LogGroup {
   @jakarta.annotation.Nonnull
   private String name;
 
+  /**
+   * Default level applied to every logger in the group. &#x60;null&#x60; leaves member loggers to inherit from elsewhere.
+   */
+  public enum LevelEnum {
+    TRACE(String.valueOf("TRACE")),
+    
+    DEBUG(String.valueOf("DEBUG")),
+    
+    INFO(String.valueOf("INFO")),
+    
+    WARN(String.valueOf("WARN")),
+    
+    ERROR(String.valueOf("ERROR")),
+    
+    FATAL(String.valueOf("FATAL")),
+    
+    SILENT(String.valueOf("SILENT"));
+
+    private String value;
+
+    LevelEnum(String value) {
+      this.value = value;
+    }
+
+    @JsonValue
+    public String getValue() {
+      return value;
+    }
+
+    @Override
+    public String toString() {
+      return String.valueOf(value);
+    }
+
+    @JsonCreator
+    public static LevelEnum fromValue(String value) {
+      for (LevelEnum b : LevelEnum.values()) {
+        if (b.value.equals(value)) {
+          return b;
+        }
+      }
+      return null;
+    }
+  }
+
   public static final String JSON_PROPERTY_LEVEL = "level";
-  private JsonNullable<String> level = JsonNullable.<String>undefined();
+  private JsonNullable<LevelEnum> level = JsonNullable.<LevelEnum>undefined();
 
   public static final String JSON_PROPERTY_PARENT_ID = "parent_id";
   private JsonNullable<String> parentId = JsonNullable.<String>undefined();
@@ -87,7 +132,7 @@ public class LogGroup {
   }
 
   /**
-   * Get name
+   * Human-readable label for the group.
    * @return name
    */
   @jakarta.annotation.Nonnull
@@ -105,35 +150,35 @@ public class LogGroup {
   }
 
 
-  public LogGroup level(@jakarta.annotation.Nullable String level) {
-    this.level = JsonNullable.<String>of(level);
+  public LogGroup level(@jakarta.annotation.Nullable LevelEnum level) {
+    this.level = JsonNullable.<LevelEnum>of(level);
     return this;
   }
 
   /**
-   * Get level
+   * Default level applied to every logger in the group. &#x60;null&#x60; leaves member loggers to inherit from elsewhere.
    * @return level
    */
   @jakarta.annotation.Nullable
   @JsonIgnore
-  public String getLevel() {
+  public LevelEnum getLevel() {
         return level.orElse(null);
   }
 
   @JsonProperty(value = JSON_PROPERTY_LEVEL, required = false)
   @JsonInclude(value = JsonInclude.Include.USE_DEFAULTS)
 
-  public JsonNullable<String> getLevel_JsonNullable() {
+  public JsonNullable<LevelEnum> getLevel_JsonNullable() {
     return level;
   }
   
   @JsonProperty(JSON_PROPERTY_LEVEL)
-  public void setLevel_JsonNullable(JsonNullable<String> level) {
+  public void setLevel_JsonNullable(JsonNullable<LevelEnum> level) {
     this.level = level;
   }
 
-  public void setLevel(@jakarta.annotation.Nullable String level) {
-    this.level = JsonNullable.<String>of(level);
+  public void setLevel(@jakarta.annotation.Nullable LevelEnum level) {
+    this.level = JsonNullable.<LevelEnum>of(level);
   }
 
 
@@ -143,7 +188,7 @@ public class LogGroup {
   }
 
   /**
-   * Get parentId
+   * Reserved for nested groups. Must be &#x60;null&#x60; in this version; nested groups are not yet supported.
    * @return parentId
    */
   @jakarta.annotation.Nullable
@@ -187,7 +232,7 @@ public class LogGroup {
   }
 
   /**
-   * Get environments
+   * Per-environment level overrides keyed by environment name. Each value is an object with an optional &#x60;level&#x60; field, e.g. &#x60;{\&quot;production\&quot;: {\&quot;level\&quot;: \&quot;ERROR\&quot;}}&#x60;. Member loggers inherit the per-environment level unless they set their own override.
    * @return environments
    */
   @jakarta.annotation.Nullable
@@ -214,7 +259,7 @@ public class LogGroup {
 
 
   /**
-   * Get createdAt
+   * When the group was created.
    * @return createdAt
    */
   @jakarta.annotation.Nullable
@@ -242,7 +287,7 @@ public class LogGroup {
 
 
   /**
-   * Get updatedAt
+   * When the group was last modified.
    * @return updatedAt
    */
   @jakarta.annotation.Nullable

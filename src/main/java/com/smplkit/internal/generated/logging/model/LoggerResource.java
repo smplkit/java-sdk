@@ -35,7 +35,7 @@ import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 
 import com.smplkit.internal.generated.logging.ApiClient;
 /**
- * LoggerResource
+ * JSON:API resource envelope for a logger.  &#x60;id&#x60; is the logger&#39;s dot-separated key (e.g. &#x60;sqlalchemy.engine&#x60;). On a &#x60;PUT /api/v1/loggers/{id}&#x60; create, the id is taken from the URL path; on update, an &#x60;id&#x60; in the body renames the logger.
  */
 @JsonPropertyOrder({
   LoggerResource.JSON_PROPERTY_ID,

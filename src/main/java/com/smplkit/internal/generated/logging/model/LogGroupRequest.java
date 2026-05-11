@@ -31,21 +31,21 @@ import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 
 import com.smplkit.internal.generated.logging.ApiClient;
 /**
- * JSON:API single-resource response envelope for a log group.
+ * JSON:API request envelope for creating or updating a log group.
  */
 @JsonPropertyOrder({
-  LogGroupResponse.JSON_PROPERTY_DATA
+  LogGroupRequest.JSON_PROPERTY_DATA
 })
 @jakarta.annotation.Generated(value = "org.openapitools.codegen.languages.JavaClientCodegen", comments = "Generator version: 7.21.0")
-public class LogGroupResponse {
+public class LogGroupRequest {
   public static final String JSON_PROPERTY_DATA = "data";
   @jakarta.annotation.Nonnull
   private LogGroupResource data;
 
-  public LogGroupResponse() { 
+  public LogGroupRequest() { 
   }
 
-  public LogGroupResponse data(@jakarta.annotation.Nonnull LogGroupResource data) {
+  public LogGroupRequest data(@jakarta.annotation.Nonnull LogGroupResource data) {
     this.data = data;
     return this;
   }
@@ -70,7 +70,7 @@ public class LogGroupResponse {
 
 
   /**
-   * Return true if this LogGroupResponse object is equal to o.
+   * Return true if this LogGroupRequest object is equal to o.
    */
   @Override
   public boolean equals(Object o) {
@@ -80,8 +80,8 @@ public class LogGroupResponse {
     if (o == null || getClass() != o.getClass()) {
       return false;
     }
-    LogGroupResponse logGroupResponse = (LogGroupResponse) o;
-    return Objects.equals(this.data, logGroupResponse.data);
+    LogGroupRequest logGroupRequest = (LogGroupRequest) o;
+    return Objects.equals(this.data, logGroupRequest.data);
   }
 
   @Override
@@ -92,7 +92,7 @@ public class LogGroupResponse {
   @Override
   public String toString() {
     StringBuilder sb = new StringBuilder();
-    sb.append("class LogGroupResponse {\n");
+    sb.append("class LogGroupRequest {\n");
     sb.append("    data: ").append(toIndentedString(data)).append("\n");
     sb.append("}");
     return sb.toString();
