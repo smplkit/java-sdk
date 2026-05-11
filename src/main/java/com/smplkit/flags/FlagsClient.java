@@ -17,6 +17,7 @@ import com.smplkit.internal.generated.flags.model.FlagBulkItem;
 import com.smplkit.internal.generated.flags.model.FlagBulkRequest;
 import com.smplkit.internal.generated.flags.model.FlagEnvironment;
 import com.smplkit.internal.generated.flags.model.FlagListResponse;
+import com.smplkit.internal.generated.flags.model.FlagRequest;
 import com.smplkit.internal.generated.flags.model.FlagResource;
 import com.smplkit.internal.generated.flags.model.FlagResponse;
 import com.smplkit.internal.generated.flags.model.FlagRule;
@@ -610,7 +611,7 @@ public final class FlagsClient {
             for (FlagRegistrationEntry entry : batch) {
                 FlagBulkItem item = new FlagBulkItem();
                 item.setId(entry.id());
-                item.setType(entry.type());
+                item.setType(FlagBulkItem.TypeEnum.fromValue(entry.type()));
                 item.setDefault(entry.defaultValue());
                 if (entry.service() != null) item.setService(entry.service());
                 if (entry.environment() != null) item.setEnvironment(entry.environment());
@@ -874,7 +875,7 @@ public final class FlagsClient {
         try {
             var attrs = new com.smplkit.internal.generated.flags.model.Flag();
             attrs.setName(flag.getName());
-            attrs.setType(flag.getType());
+            attrs.setType(com.smplkit.internal.generated.flags.model.Flag.TypeEnum.fromValue(flag.getType()));
             attrs.setDefault(flag.getDefault());
             if (flag.getDescription() != null) {
                 attrs.setDescription(flag.getDescription());
@@ -896,7 +897,7 @@ public final class FlagsClient {
             }
 
             FlagResource data = new FlagResource().id(flag.getId()).type(FlagResource.TypeEnum.FLAG).attributes(attrs);
-            FlagResponse body = new FlagResponse().data(data);
+            FlagRequest body = new FlagRequest().data(data);
             FlagResponse response = flagsApi.createFlag(body);
             Flag<?> result = parseSingleResponse(response);
             return (Flag<T>) result;
@@ -911,7 +912,7 @@ public final class FlagsClient {
         try {
             var attrs = new com.smplkit.internal.generated.flags.model.Flag();
             attrs.setName(flag.getName());
-            attrs.setType(flag.getType());
+            attrs.setType(com.smplkit.internal.generated.flags.model.Flag.TypeEnum.fromValue(flag.getType()));
             attrs.setDefault(flag.getDefault());
             if (flag.getDescription() != null) {
                 attrs.setDescription(flag.getDescription());
@@ -933,7 +934,7 @@ public final class FlagsClient {
             }
 
             FlagResource data = new FlagResource().id(flag.getId()).type(FlagResource.TypeEnum.FLAG).attributes(attrs);
-            FlagResponse body = new FlagResponse().data(data);
+            FlagRequest body = new FlagRequest().data(data);
             FlagResponse response = flagsApi.updateFlag(flag.getId(), body);
             Flag<?> result = parseSingleResponse(response);
             return (Flag<T>) result;

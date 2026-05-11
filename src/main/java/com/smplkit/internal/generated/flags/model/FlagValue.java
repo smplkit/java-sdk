@@ -30,7 +30,7 @@ import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 
 import com.smplkit.internal.generated.flags.ApiClient;
 /**
- * FlagValue
+ * A named value in a constrained flag&#39;s value set.
  */
 @JsonPropertyOrder({
   FlagValue.JSON_PROPERTY_NAME,
@@ -55,7 +55,7 @@ public class FlagValue {
   }
 
   /**
-   * Get name
+   * Human-readable label for the value.
    * @return name
    */
   @jakarta.annotation.Nonnull
@@ -79,7 +79,7 @@ public class FlagValue {
   }
 
   /**
-   * Get value
+   * The value itself. Must match the flag&#39;s &#x60;type&#x60;.
    * @return value
    */
   @jakarta.annotation.Nullable

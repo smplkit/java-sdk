@@ -30,7 +30,7 @@ import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 
 import com.smplkit.internal.generated.flags.ApiClient;
 /**
- * ManualReviewItem
+ * A flag rule that could not be safely modified by the bulk remove-references action.
  */
 @JsonPropertyOrder({
   ManualReviewItem.JSON_PROPERTY_FLAG,
@@ -65,7 +65,7 @@ public class ManualReviewItem {
   }
 
   /**
-   * Get flag
+   * Key of the flag containing the rule.
    * @return flag
    */
   @jakarta.annotation.Nonnull
@@ -89,7 +89,7 @@ public class ManualReviewItem {
   }
 
   /**
-   * Get environment
+   * Environment containing the rule.
    * @return environment
    */
   @jakarta.annotation.Nonnull
@@ -113,7 +113,7 @@ public class ManualReviewItem {
   }
 
   /**
-   * Get ruleIndex
+   * Position of the rule within the environment&#39;s &#x60;rules&#x60; array.
    * @return ruleIndex
    */
   @jakarta.annotation.Nonnull
@@ -137,7 +137,7 @@ public class ManualReviewItem {
   }
 
   /**
-   * Get reason
+   * Why the rule needs manual review.
    * @return reason
    */
   @jakarta.annotation.Nonnull

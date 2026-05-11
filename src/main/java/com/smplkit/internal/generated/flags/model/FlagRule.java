@@ -36,7 +36,7 @@ import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 
 import com.smplkit.internal.generated.flags.ApiClient;
 /**
- * FlagRule
+ * A targeting rule that overrides the default within an environment.
  */
 @JsonPropertyOrder({
   FlagRule.JSON_PROPERTY_DESCRIPTION,
@@ -65,7 +65,7 @@ public class FlagRule {
   }
 
   /**
-   * Get description
+   * Human-readable description of the rule.
    * @return description
    */
   @jakarta.annotation.Nullable
@@ -105,7 +105,7 @@ public class FlagRule {
   }
 
   /**
-   * Get logic
+   * JSON Logic expression evaluated against the evaluation context. The rule fires when the expression is truthy.
    * @return logic
    */
   @jakarta.annotation.Nonnull
@@ -129,7 +129,7 @@ public class FlagRule {
   }
 
   /**
-   * Get value
+   * Value returned when the rule fires. Must reference a value from the flag&#39;s &#x60;values&#x60; array (constrained flags) or match the flag&#39;s &#x60;type&#x60; (unconstrained flags).
    * @return value
    */
   @jakarta.annotation.Nullable

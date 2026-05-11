@@ -34,7 +34,7 @@ import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 
 import com.smplkit.internal.generated.flags.ApiClient;
 /**
- * FlagBulkItem
+ * One flag declaration reported by an SDK during bulk registration.
  */
 @JsonPropertyOrder({
   FlagBulkItem.JSON_PROPERTY_ID,
@@ -49,9 +49,48 @@ public class FlagBulkItem {
   @jakarta.annotation.Nonnull
   private String id;
 
+  /**
+   * Value type the SDK declared for the flag. Accepted case-insensitively.
+   */
+  public enum TypeEnum {
+    BOOLEAN(String.valueOf("BOOLEAN")),
+    
+    STRING(String.valueOf("STRING")),
+    
+    NUMERIC(String.valueOf("NUMERIC")),
+    
+    JSON(String.valueOf("JSON"));
+
+    private String value;
+
+    TypeEnum(String value) {
+      this.value = value;
+    }
+
+    @JsonValue
+    public String getValue() {
+      return value;
+    }
+
+    @Override
+    public String toString() {
+      return String.valueOf(value);
+    }
+
+    @JsonCreator
+    public static TypeEnum fromValue(String value) {
+      for (TypeEnum b : TypeEnum.values()) {
+        if (b.value.equals(value)) {
+          return b;
+        }
+      }
+      throw new IllegalArgumentException("Unexpected value '" + value + "'");
+    }
+  }
+
   public static final String JSON_PROPERTY_TYPE = "type";
   @jakarta.annotation.Nonnull
-  private String type;
+  private TypeEnum type;
 
   public static final String JSON_PROPERTY_DEFAULT = "default";
   @jakarta.annotation.Nullable
@@ -72,7 +111,7 @@ public class FlagBulkItem {
   }
 
   /**
-   * Flag key as declared in code
+   * Flag key as declared in code. URL-safe and stable for the lifetime of the flag.
    * @return id
    */
   @jakarta.annotation.Nonnull
@@ -90,26 +129,26 @@ public class FlagBulkItem {
   }
 
 
-  public FlagBulkItem type(@jakarta.annotation.Nonnull String type) {
+  public FlagBulkItem type(@jakarta.annotation.Nonnull TypeEnum type) {
     this.type = type;
     return this;
   }
 
   /**
-   * Flag type: BOOLEAN, STRING, NUMERIC, or JSON
+   * Value type the SDK declared for the flag. Accepted case-insensitively.
    * @return type
    */
   @jakarta.annotation.Nonnull
   @JsonProperty(value = JSON_PROPERTY_TYPE, required = true)
   @JsonInclude(value = JsonInclude.Include.ALWAYS)
-  public String getType() {
+  public TypeEnum getType() {
     return type;
   }
 
 
   @JsonProperty(value = JSON_PROPERTY_TYPE, required = true)
   @JsonInclude(value = JsonInclude.Include.ALWAYS)
-  public void setType(@jakarta.annotation.Nonnull String type) {
+  public void setType(@jakarta.annotation.Nonnull TypeEnum type) {
     this.type = type;
   }
 
@@ -120,7 +159,7 @@ public class FlagBulkItem {
   }
 
   /**
-   * Default value declared in code
+   * Default value the SDK declared for the flag. Used to create the flag if it does not already exist.
    * @return _default
    */
   @jakarta.annotation.Nullable
@@ -144,7 +183,7 @@ public class FlagBulkItem {
   }
 
   /**
-   * Service that declared this flag
+   * Service reporting the declaration. Defaults to &#x60;unknown&#x60;.
    * @return service
    */
   @jakarta.annotation.Nullable
@@ -176,7 +215,7 @@ public class FlagBulkItem {
   }
 
   /**
-   * Environment where observed
+   * Environment reporting the declaration. Defaults to &#x60;unknown&#x60;.
    * @return environment
    */
   @jakarta.annotation.Nullable

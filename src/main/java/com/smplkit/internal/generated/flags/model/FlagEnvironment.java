@@ -37,7 +37,7 @@ import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 
 import com.smplkit.internal.generated.flags.ApiClient;
 /**
- * FlagEnvironment
+ * Per-environment evaluation configuration for a flag.
  */
 @JsonPropertyOrder({
   FlagEnvironment.JSON_PROPERTY_ENABLED,
@@ -66,7 +66,7 @@ public class FlagEnvironment {
   }
 
   /**
-   * Get enabled
+   * Whether the flag is active in this environment. When &#x60;false&#x60;, evaluation skips rules and returns the flag&#39;s global &#x60;default&#x60;.
    * @return enabled
    */
   @jakarta.annotation.Nullable
@@ -90,7 +90,7 @@ public class FlagEnvironment {
   }
 
   /**
-   * Get _default
+   * Environment-level default returned when no rule fires. If &#x60;null&#x60;, evaluation falls back to the flag&#39;s global &#x60;default&#x60;.
    * @return _default
    */
   @jakarta.annotation.Nullable
@@ -130,7 +130,7 @@ public class FlagEnvironment {
   }
 
   /**
-   * Get rules
+   * Targeting rules evaluated top-down. The first rule whose logic returns truthy provides the result.
    * @return rules
    */
   @jakarta.annotation.Nullable

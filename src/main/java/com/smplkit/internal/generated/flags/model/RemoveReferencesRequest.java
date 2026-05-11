@@ -34,7 +34,7 @@ import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 
 import com.smplkit.internal.generated.flags.ApiClient;
 /**
- * RemoveReferencesRequest
+ * Inputs to the remove-references action.  Exactly one of &#x60;context&#x60; or &#x60;context_type&#x60; must be provided.
  */
 @JsonPropertyOrder({
   RemoveReferencesRequest.JSON_PROPERTY_CONTEXT,
@@ -57,7 +57,7 @@ public class RemoveReferencesRequest {
   }
 
   /**
-   * Get context
+   * Identifier of the context instance to remove references to, formatted as &#x60;{type}:{key}&#x60; (e.g. &#x60;customer:c-123&#x60;).
    * @return context
    */
   @jakarta.annotation.Nullable
@@ -89,7 +89,7 @@ public class RemoveReferencesRequest {
   }
 
   /**
-   * Get contextType
+   * Context type to remove all references to (any attribute of this type).
    * @return contextType
    */
   @jakarta.annotation.Nullable

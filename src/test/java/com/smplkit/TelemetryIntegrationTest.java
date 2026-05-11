@@ -586,7 +586,7 @@ class TelemetryIntegrationTest {
         resource.setId(key);
         var flagAttrs = new com.smplkit.internal.generated.flags.model.Flag();
         flagAttrs.setName("Test Flag");
-        flagAttrs.setType("BOOLEAN");
+        flagAttrs.setType(com.smplkit.internal.generated.flags.model.Flag.TypeEnum.BOOLEAN);
         flagAttrs.setDefault(true);
         var envMap = new HashMap<String, com.smplkit.internal.generated.flags.model.FlagEnvironment>();
         var flagEnv = new com.smplkit.internal.generated.flags.model.FlagEnvironment();

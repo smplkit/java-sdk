@@ -164,7 +164,7 @@ public class FlagSourcesApi {
 
   /**
    * List All Flag Sources
-   * List all flag sources across all flags. Optionally filter by environment or service.
+   * List service/environment observations across all flags for this account.  Filter by &#x60;environment&#x60; or &#x60;service&#x60; (or both) to narrow the result.
    * @param filterEnvironment  (optional)
    * @param filterService  (optional)
    * @return FlagSourceListResponse
@@ -176,7 +176,7 @@ public class FlagSourcesApi {
 
   /**
    * List All Flag Sources
-   * List all flag sources across all flags. Optionally filter by environment or service.
+   * List service/environment observations across all flags for this account.  Filter by &#x60;environment&#x60; or &#x60;service&#x60; (or both) to narrow the result.
    * @param filterEnvironment  (optional)
    * @param filterService  (optional)
    * @param headers Optional headers to include in the request
@@ -190,7 +190,7 @@ public class FlagSourcesApi {
 
   /**
    * List All Flag Sources
-   * List all flag sources across all flags. Optionally filter by environment or service.
+   * List service/environment observations across all flags for this account.  Filter by &#x60;environment&#x60; or &#x60;service&#x60; (or both) to narrow the result.
    * @param filterEnvironment  (optional)
    * @param filterService  (optional)
    * @return ApiResponse&lt;FlagSourceListResponse&gt;
@@ -202,7 +202,7 @@ public class FlagSourcesApi {
 
   /**
    * List All Flag Sources
-   * List all flag sources across all flags. Optionally filter by environment or service.
+   * List service/environment observations across all flags for this account.  Filter by &#x60;environment&#x60; or &#x60;service&#x60; (or both) to narrow the result.
    * @param filterEnvironment  (optional)
    * @param filterService  (optional)
    * @param headers Optional headers to include in the request
@@ -298,7 +298,7 @@ public class FlagSourcesApi {
 
   /**
    * List Flag Sources
-   * List all sources (service/environment observations) for a specific flag.
+   * List the service/environment observations recorded for a single flag.
    * @param id  (required)
    * @return FlagSourceListResponse
    * @throws ApiException if fails to make API call
@@ -309,7 +309,7 @@ public class FlagSourcesApi {
 
   /**
    * List Flag Sources
-   * List all sources (service/environment observations) for a specific flag.
+   * List the service/environment observations recorded for a single flag.
    * @param id  (required)
    * @param headers Optional headers to include in the request
    * @return FlagSourceListResponse
@@ -322,7 +322,7 @@ public class FlagSourcesApi {
 
   /**
    * List Flag Sources
-   * List all sources (service/environment observations) for a specific flag.
+   * List the service/environment observations recorded for a single flag.
    * @param id  (required)
    * @return ApiResponse&lt;FlagSourceListResponse&gt;
    * @throws ApiException if fails to make API call
@@ -333,7 +333,7 @@ public class FlagSourcesApi {
 
   /**
    * List Flag Sources
-   * List all sources (service/environment observations) for a specific flag.
+   * List the service/environment observations recorded for a single flag.
    * @param id  (required)
    * @param headers Optional headers to include in the request
    * @return ApiResponse&lt;FlagSourceListResponse&gt;
