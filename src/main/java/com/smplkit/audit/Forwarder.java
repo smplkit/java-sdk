@@ -20,7 +20,6 @@ public final class Forwarder {
     public final Map<String, Object> filter; // nullable
     public final String transform; // nullable
     public final ForwarderHttp http;
-    public final Map<String, Object> data;
     public final OffsetDateTime createdAt;
     public final OffsetDateTime updatedAt;
     public final OffsetDateTime deletedAt;
@@ -28,8 +27,8 @@ public final class Forwarder {
 
     public Forwarder(UUID id, String name, String slug, ForwarderType forwarderType, boolean enabled,
                      Map<String, Object> filter, String transform, ForwarderHttp http,
-                     Map<String, Object> data, OffsetDateTime createdAt,
-                     OffsetDateTime updatedAt, OffsetDateTime deletedAt, Integer version) {
+                     OffsetDateTime createdAt, OffsetDateTime updatedAt,
+                     OffsetDateTime deletedAt, Integer version) {
         this.id = id;
         this.name = name;
         this.slug = slug;
@@ -38,7 +37,6 @@ public final class Forwarder {
         this.filter = filter;
         this.transform = transform;
         this.http = http;
-        this.data = data;
         this.createdAt = createdAt;
         this.updatedAt = updatedAt;
         this.deletedAt = deletedAt;

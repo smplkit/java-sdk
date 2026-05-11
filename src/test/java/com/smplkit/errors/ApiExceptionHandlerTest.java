@@ -271,6 +271,34 @@ class ApiExceptionHandlerTest {
     }
 
     @Test
+    void error402_throwsPaymentRequiredError() {
+        String body = """
+                {
+                  "errors": [
+                    {
+                      "status": "402",
+                      "detail": "Account plan does not include this feature."
+                    }
+                  ]
+                }
+                """;
+
+        SmplError ex = ApiExceptionHandler.mapApiException(402, body);
+
+        assertInstanceOf(PaymentRequiredError.class, ex);
+        assertEquals("Account plan does not include this feature.", ex.getMessage());
+        assertEquals(402, ex.statusCode());
+        assertEquals(1, ex.getErrors().size());
+    }
+
+    @Test
+    void paymentRequiredError_twoArgConstructor() {
+        PaymentRequiredError err = new PaymentRequiredError("needs plan", "{\"errors\":[]}");
+        assertEquals("needs plan", err.getMessage());
+        assertEquals(402, err.statusCode());
+    }
+
+    @Test
     void error422_throwsValidationException() {
         String body = """
                 {

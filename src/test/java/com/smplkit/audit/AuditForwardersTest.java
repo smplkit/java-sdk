@@ -1,6 +1,10 @@
 package com.smplkit.audit;
 
+import com.smplkit.internal.generated.audit.ApiClient;
 import com.smplkit.internal.generated.audit.ApiException;
+import com.smplkit.internal.generated.audit.api.ActionsApi;
+import com.smplkit.internal.generated.audit.api.ForwardersApi;
+import com.smplkit.internal.generated.audit.api.ResourceTypesApi;
 import com.sun.net.httpserver.HttpExchange;
 import com.sun.net.httpserver.HttpHandler;
 import com.sun.net.httpserver.HttpServer;
@@ -10,7 +14,6 @@ import org.junit.jupiter.api.Test;
 
 import java.io.IOException;
 import java.net.InetSocketAddress;
-import java.net.http.HttpClient;
 import java.time.Duration;
 import java.util.Map;
 import java.util.UUID;
@@ -19,7 +22,8 @@ import java.util.concurrent.atomic.AtomicReference;
 import static org.junit.jupiter.api.Assertions.*;
 
 /**
- * Tests for the SIEM forwarders + functions wrapper surface.
+ * Tests for the SIEM forwarders management surface, resource types, and
+ * actions clients.
  *
  * <p>Stubs the audit service via the JDK's built-in HttpServer; no
  * real network. The wrapper layer here must reach 100% line coverage
@@ -28,10 +32,11 @@ import static org.junit.jupiter.api.Assertions.*;
 class AuditForwardersTest {
 
     private static final UUID FWD_ID = UUID.fromString("11111111-2222-3333-4444-555555555555");
-    private static final UUID DELIVERY_ID = UUID.fromString("22222222-3333-4444-5555-666666666666");
 
     private HttpServer server;
-    private AuditClient client;
+    private ForwardersApi forwardersApi;
+    private ResourceTypesApi resourceTypesApi;
+    private ActionsApi actionsApi;
     private final AtomicReference<HttpHandler> handler = new AtomicReference<>();
 
     @BeforeEach
@@ -48,20 +53,22 @@ class AuditForwardersTest {
         });
         server.start();
         String baseUrl = "http://127.0.0.1:" + server.getAddress().getPort();
-        client = new AuditClient(HttpClient.newHttpClient(), "sk_api_test",
-                Map.of(), Duration.ofSeconds(5), baseUrl);
+        ApiClient apiClient = new ApiClient();
+        apiClient.updateBaseUri(baseUrl);
+        apiClient.setReadTimeout(Duration.ofSeconds(5));
+        forwardersApi = new ForwardersApi(apiClient);
+        resourceTypesApi = new ResourceTypesApi(apiClient);
+        actionsApi = new ActionsApi(apiClient);
     }
 
     @AfterEach
-    void stop() throws Exception {
-        if (client != null) client.close();
+    void stop() {
         if (server != null) server.stop(0);
     }
 
-    private void respondJson(HttpExchange ex, int status, String contentType, String body)
-            throws IOException {
+    private void respondJson(HttpExchange ex, int status, String body) throws IOException {
         byte[] resp = body.getBytes();
-        ex.getResponseHeaders().add("Content-Type", contentType);
+        ex.getResponseHeaders().add("Content-Type", "application/vnd.api+json");
         if (status == 204) {
             ex.sendResponseHeaders(204, -1);
         } else {
@@ -82,45 +89,25 @@ class AuditForwardersTest {
                 + "\"updated_at\":\"2026-05-07T12:00:00Z\",\"version\":1}}";
     }
 
-    private static String deliveryResource(String status) {
-        return "{\"id\":\"" + DELIVERY_ID + "\",\"type\":\"forwarder_delivery\","
-                + "\"attributes\":{\"forwarder_id\":\"" + FWD_ID + "\","
-                + "\"event_id\":\"33333333-4444-5555-6666-777777777777\","
-                + "\"attempt_number\":1,\"status\":\"" + status + "\","
-                + "\"request\":{\"method\":\"POST\",\"url\":\"https://x\","
-                + "\"headers\":[{\"name\":\"X-K\",\"value\":\"<redacted>\"}]},"
-                + "\"response_status\":202,\"response_body\":\"ok\","
-                + "\"latency_ms\":42,\"created_at\":\"2026-05-07T12:00:01Z\"}}";
-    }
-
     // -----------------------------------------------------------------
-    // CRUD
+    // AuditForwarders CRUD
     // -----------------------------------------------------------------
 
     @Test
     void create_returnsForwarder() throws Exception {
-        handler.set(ex -> respondJson(ex, 201, "application/vnd.api+json",
+        handler.set(ex -> respondJson(ex, 201,
                 "{\"data\":" + forwarderResource("Datadog production", "datadog_production") + "}"));
+        AuditForwarders fwds = new AuditForwarders(forwardersApi);
         CreateForwarderInput input = new CreateForwarderInput(
                 "Datadog production", ForwarderType.DATADOG,
                 new ForwarderHttp("https://siem.example.com/in"));
         input.http.headers.add(new HttpHeader("DD-API-KEY", "real-secret"));
-        input.filter = java.util.Map.of("==", java.util.List.of(1, 1));
+        input.filter = Map.of("==", java.util.List.of(1, 1));
         input.transform = "$";
-        input.data = java.util.Map.of("team", "platform");
-        Forwarder fwd = client.forwarders().create(input);
+        Forwarder fwd = fwds.create(input);
         assertEquals("datadog_production", fwd.slug);
         assertEquals(1, fwd.http.headers.size());
         assertEquals("<redacted>", fwd.http.headers.get(0).value);
-    }
-
-    @Test
-    void create_402_throwsApiException() {
-        handler.set(ex -> respondJson(ex, 402, "application/vnd.api+json",
-                "{\"errors\":[{\"status\":\"402\"}]}"));
-        CreateForwarderInput input = new CreateForwarderInput("x", ForwarderType.HTTP,
-                new ForwarderHttp("https://x"));
-        assertThrows(ApiException.class, () -> client.forwarders().create(input));
     }
 
     @Test
@@ -134,233 +121,304 @@ class AuditForwardersTest {
                             + "\"meta\":{\"page_size\":1}}"
                     : "{\"data\":[" + forwarderResource("B", "b")
                             + "],\"meta\":{\"page_size\":1}}";
-            respondJson(ex, 200, "application/vnd.api+json", body);
+            respondJson(ex, 200, body);
         });
+        AuditForwarders fwds = new AuditForwarders(forwardersApi);
         ListForwardersInput in1 = new ListForwardersInput();
         in1.forwarderType = ForwarderType.DATADOG;
         in1.enabled = true;
         in1.pageSize = 1;
-        ListForwardersPage first = client.forwarders().list(in1);
+        ListForwardersPage first = fwds.list(in1);
         assertEquals("tok-2", first.nextCursor);
         ListForwardersInput in2 = new ListForwardersInput();
         in2.pageAfter = first.nextCursor;
-        ListForwardersPage second = client.forwarders().list(in2);
+        ListForwardersPage second = fwds.list(in2);
         assertNull(second.nextCursor);
     }
 
     @Test
     void get_success() throws Exception {
-        handler.set(ex -> respondJson(ex, 200, "application/vnd.api+json",
+        handler.set(ex -> respondJson(ex, 200,
                 "{\"data\":" + forwarderResource("x", "x") + "}"));
-        Forwarder fwd = client.forwarders().get(FWD_ID);
+        AuditForwarders fwds = new AuditForwarders(forwardersApi);
+        Forwarder fwd = fwds.get(FWD_ID);
         assertEquals("x", fwd.name);
     }
 
     @Test
     void update_success() throws Exception {
-        handler.set(ex -> respondJson(ex, 200, "application/vnd.api+json",
+        handler.set(ex -> respondJson(ex, 200,
                 "{\"data\":" + forwarderResource("Renamed", "renamed") + "}"));
+        AuditForwarders fwds = new AuditForwarders(forwardersApi);
         CreateForwarderInput in = new CreateForwarderInput("Renamed", ForwarderType.DATADOG,
                 new ForwarderHttp("https://x"));
-        Forwarder fwd = client.forwarders().update(FWD_ID, in);
+        Forwarder fwd = fwds.update(FWD_ID, in);
         assertEquals("Renamed", fwd.name);
     }
 
     @Test
     void delete_success() throws Exception {
-        handler.set(ex -> respondJson(ex, 204, "application/vnd.api+json", ""));
-        client.forwarders().delete(FWD_ID);
-    }
-
-    // -----------------------------------------------------------------
-    // Deliveries
-    // -----------------------------------------------------------------
-
-    @Test
-    void deliveries_list_filtersAndPaginates() throws Exception {
-        handler.set(ex -> respondJson(ex, 200, "application/vnd.api+json",
-                "{\"data\":[" + deliveryResource("SUCCEEDED") + "],"
-                        + "\"meta\":{\"page_size\":1}}"));
-        ListDeliveriesInput in = new ListDeliveriesInput();
-        in.status = "SUCCEEDED";
-        in.createdAtRange = "[2020-01-01T00:00:00Z,*)";
-        in.pageSize = 1;
-        ListDeliveriesPage page = client.forwarders().listDeliveries(FWD_ID, in);
-        assertEquals(1, page.deliveries.size());
-        assertEquals("SUCCEEDED", page.deliveries.get(0).status);
-    }
-
-    @Test
-    void retryDelivery_returnsNewRow() throws Exception {
-        handler.set(ex -> respondJson(ex, 200, "application/vnd.api+json",
-                "{\"data\":" + deliveryResource("SUCCEEDED") + "}"));
-        ForwarderDelivery row = client.forwarders().retryDelivery(FWD_ID, DELIVERY_ID);
-        assertEquals("SUCCEEDED", row.status);
-    }
-
-    @Test
-    void retryFailedDeliveries_summary() throws Exception {
-        handler.set(ex -> respondJson(ex, 200, "application/vnd.api+json",
-                "{\"attempted\":3,\"succeeded\":2,\"failed\":1}"));
-        RetryFailedDeliveriesSummary s = client.forwarders().retryFailedDeliveries(FWD_ID);
-        assertEquals(3, s.attempted);
-        assertEquals(2, s.succeeded);
-        assertEquals(1, s.failed);
-    }
-
-    // -----------------------------------------------------------------
-    // functions.test_forwarder.execute
-    // -----------------------------------------------------------------
-
-    @Test
-    void executeTestForwarder_success() throws Exception {
-        handler.set(ex -> respondJson(ex, 200, "application/json",
-                "{\"succeeded\":true,\"response_status\":202,"
-                        + "\"response_headers\":{\"X-Echo\":\"y\"},"
-                        + "\"response_body\":\"accepted\","
-                        + "\"latency_ms\":12,\"error\":null}"));
-        TestForwarderInput in = new TestForwarderInput("https://siem.example.com/in");
-        in.body = "{\"hello\":\"world\"}";
-        in.timeoutMs = 5000;
-        in.headers.add(new HttpHeader("X-K", "v"));
-        TestForwarderResult r = client.functions().executeTestForwarder(in);
-        assertTrue(r.succeeded);
-        assertEquals(Integer.valueOf(202), r.responseStatus);
-        assertEquals("accepted", r.responseBody);
-        assertEquals("y", r.responseHeaders.get("X-Echo"));
-    }
-
-    // -----------------------------------------------------------------
-    // do_not_forward
-    // -----------------------------------------------------------------
-
-    @Test
-    void modelDefaultConstructorsCoverable() {
-        // Exercise the no-arg ctors so coverage hits the empty-init paths.
-        CreateForwarderInput cfi = new CreateForwarderInput();
-        cfi.name = "x";
-        TestForwarderInput tfi = new TestForwarderInput();
-        tfi.url = "https://x";
-        ListForwardersInput lfi = new ListForwardersInput();
-        ListDeliveriesInput ldi = new ListDeliveriesInput();
-        ForwarderHttp fh = new ForwarderHttp();
-        assertEquals("x", cfi.name);
-        assertEquals("https://x", tfi.url);
-        assertNull(lfi.forwarderType);
-        assertNull(ldi.status);
-        assertEquals("POST", fh.method);
+        handler.set(ex -> respondJson(ex, 204, ""));
+        new AuditForwarders(forwardersApi).delete(FWD_ID);
     }
 
     @Test
     void list_emptyDataAndNoLinks() throws Exception {
-        // Covers the (resp.getData() == null) and (resp.getLinks() == null) branches.
-        handler.set(ex -> respondJson(ex, 200, "application/vnd.api+json",
-                "{\"meta\":{\"page_size\":1}}"));
-        ListForwardersPage page = client.forwarders().list(new ListForwardersInput());
+        handler.set(ex -> respondJson(ex, 200, "{\"meta\":{\"page_size\":1}}"));
+        ListForwardersPage page = new AuditForwarders(forwardersApi).list(new ListForwardersInput());
         assertEquals(0, page.forwarders.size());
         assertNull(page.nextCursor);
     }
 
     @Test
-    void deliveries_list_emptyDataAndNoLinks() throws Exception {
-        handler.set(ex -> respondJson(ex, 200, "application/vnd.api+json",
-                "{\"meta\":{\"page_size\":1}}"));
-        ListDeliveriesPage page = client.forwarders().listDeliveries(FWD_ID, new ListDeliveriesInput());
-        assertEquals(0, page.deliveries.size());
-        assertNull(page.nextCursor);
-    }
-
-    @Test
     void list_linkWithoutPageAfter_returnsNullCursor() throws Exception {
-        // Covers the nextCursor() branch where link exists but doesn't
-        // contain page[after]= (e.g. a server error in pagination shape).
-        handler.set(ex -> respondJson(ex, 200, "application/vnd.api+json",
+        handler.set(ex -> respondJson(ex, 200,
                 "{\"data\":[],\"links\":{\"next\":\"/api/v1/forwarders?other=v\"},\"meta\":{\"page_size\":1}}"));
-        ListForwardersPage page = client.forwarders().list(new ListForwardersInput());
+        ListForwardersPage page = new AuditForwarders(forwardersApi).list(new ListForwardersInput());
         assertNull(page.nextCursor);
-    }
-
-    @Test
-    void retryFailedDeliveries_handlesNullFields() throws Exception {
-        // The summary fields are non-nullable per the spec; the wrapper
-        // also defends against missing values. Send an empty object.
-        handler.set(ex -> respondJson(ex, 200, "application/vnd.api+json", "{}"));
-        RetryFailedDeliveriesSummary s = client.forwarders().retryFailedDeliveries(FWD_ID);
-        assertEquals(0, s.attempted);
-        assertEquals(0, s.succeeded);
-        assertEquals(0, s.failed);
-    }
-
-    @Test
-    void executeTestForwarder_nullResponseBody() throws Exception {
-        // Covers the (resp.getResponseBody() == null) branch.
-        handler.set(ex -> respondJson(ex, 200, "application/json",
-                "{\"succeeded\":false,\"response_status\":null,"
-                        + "\"response_headers\":{},\"latency_ms\":null,\"error\":\"x\"}"));
-        TestForwarderInput in = new TestForwarderInput("https://x");
-        TestForwarderResult r = client.functions().executeTestForwarder(in);
-        assertFalse(r.succeeded);
-        assertEquals("", r.responseBody);
-    }
-
-    @Test
-    void events_record_passesDoNotForward() throws Exception {
-        java.util.concurrent.atomic.AtomicReference<String> capturedBody = new java.util.concurrent.atomic.AtomicReference<>();
-        java.util.concurrent.CountDownLatch latch = new java.util.concurrent.CountDownLatch(1);
-        handler.set(ex -> {
-            byte[] body = ex.getRequestBody().readAllBytes();
-            capturedBody.set(new String(body));
-            latch.countDown();
-            String resp = "{\"data\":{\"id\":\"00000000-0000-0000-0000-000000000001\","
-                    + "\"type\":\"event\",\"attributes\":{\"action\":\"u.created\","
-                    + "\"resource_type\":\"u\",\"resource_id\":\"1\","
-                    + "\"do_not_forward\":true,"
-                    + "\"occurred_at\":\"2026-05-07T12:00:00Z\","
-                    + "\"created_at\":\"2026-05-07T12:00:01Z\","
-                    + "\"actor_type\":\"API_KEY\",\"actor_label\":\"\"}}}";
-            respondJson(ex, 201, "application/vnd.api+json", resp);
-        });
-        CreateEventInput in = new CreateEventInput("u.created", "u", "1");
-        in.doNotForward = true;
-        client.events().record(in);
-        client.events().flush(2000);
-        assertTrue(latch.await(2, java.util.concurrent.TimeUnit.SECONDS));
-        assertTrue(capturedBody.get().contains("\"do_not_forward\":true"),
-                "expected do_not_forward in body, got: " + capturedBody.get());
     }
 
     @Test
     void forwarderTypeFromValueRoundTripsAndRejectsUnknown() {
-        // Round-trips every published value — that mapping IS the wire
-        // contract with the audit service.
         for (ForwarderType t : ForwarderType.values()) {
             assertEquals(t, ForwarderType.fromValue(t.getValue()));
         }
-        // Unknown values fail at the call site, not deeper in the stack.
         assertThrows(IllegalArgumentException.class,
                 () -> ForwarderType.fromValue("definitely-not-a-real-type"));
     }
 
     @Test
-    void deliveries_list_filterByEventId() throws Exception {
-        // Verifies that setting ListDeliveriesInput.eventId is converted
-        // to a UUID string and forwarded as filter[event_id] to the API.
-        java.util.concurrent.atomic.AtomicReference<String> capturedQuery =
-                new java.util.concurrent.atomic.AtomicReference<>();
-        handler.set(ex -> {
-            capturedQuery.set(ex.getRequestURI().getQuery());
-            respondJson(ex, 200, "application/vnd.api+json",
-                    "{\"data\":[" + deliveryResource("SUCCEEDED") + "],"
-                            + "\"meta\":{\"page_size\":1}}");
-        });
-        UUID eventId = UUID.fromString("33333333-4444-5555-6666-777777777777");
-        ListDeliveriesInput in = new ListDeliveriesInput();
-        in.eventId = eventId;
-        ListDeliveriesPage page = client.forwarders().listDeliveries(FWD_ID, in);
-        assertEquals(1, page.deliveries.size());
-        String q = capturedQuery.get();
-        assertNotNull(q);
-        assertTrue(q.contains("33333333-4444-5555-6666-777777777777"),
-                "expected event_id in query, got: " + q);
+    void modelDefaultConstructorsCoverable() {
+        CreateForwarderInput cfi = new CreateForwarderInput();
+        cfi.name = "x";
+        ListForwardersInput lfi = new ListForwardersInput();
+        ForwarderHttp fh = new ForwarderHttp();
+        assertEquals("x", cfi.name);
+        assertNull(lfi.forwarderType);
+        assertEquals("POST", fh.method);
+    }
+
+    @Test
+    void create_nullForwarderType_passesNull() throws Exception {
+        handler.set(ex -> respondJson(ex, 201,
+                "{\"data\":{\"id\":\"" + FWD_ID + "\",\"type\":\"forwarder\","
+                + "\"attributes\":{\"name\":\"x\",\"slug\":\"x\","
+                + "\"enabled\":true,"
+                + "\"http\":{\"method\":\"POST\",\"url\":\"https://x\","
+                + "\"success_status\":\"2xx\"},"
+                + "\"created_at\":\"2026-05-07T12:00:00Z\","
+                + "\"updated_at\":\"2026-05-07T12:00:00Z\",\"version\":1}}}"));
+        AuditForwarders fwds = new AuditForwarders(forwardersApi);
+        CreateForwarderInput in = new CreateForwarderInput("x", null, new ForwarderHttp("https://x"));
+        Forwarder fwd = fwds.create(in);
+        assertNull(fwd.forwarderType);
+    }
+
+    @Test
+    void forwarder_httpFromGen_nullSrc() throws Exception {
+        // Create a forwarder response with null http — exercises httpFromGen(null).
+        handler.set(ex -> respondJson(ex, 200,
+                "{\"data\":{\"id\":\"" + FWD_ID + "\",\"type\":\"forwarder\","
+                + "\"attributes\":{\"name\":\"x\",\"slug\":\"x\","
+                + "\"enabled\":false,"
+                + "\"created_at\":\"2026-05-07T12:00:00Z\","
+                + "\"updated_at\":\"2026-05-07T12:00:00Z\",\"version\":1}}}"));
+        AuditForwarders fwds = new AuditForwarders(forwardersApi);
+        Forwarder fwd = fwds.get(FWD_ID);
+        assertNotNull(fwd.http);
+        assertFalse(fwd.enabled);
+    }
+
+    // -----------------------------------------------------------------
+    // AuditManagementClient
+    // -----------------------------------------------------------------
+
+    @Test
+    void auditManagementClient_exposesForwarders() {
+        AuditManagementClient mgmt = new AuditManagementClient(
+                "sk_test", Map.of(), Duration.ofSeconds(5),
+                "http://127.0.0.1:" + server.getAddress().getPort());
+        assertNotNull(mgmt.forwarders);
+    }
+
+    // -----------------------------------------------------------------
+    // AuditResourceTypesClient
+    // -----------------------------------------------------------------
+
+    @Test
+    void resourceTypes_list_returnsRows() throws Exception {
+        handler.set(ex -> respondJson(ex, 200,
+                "{\"data\":["
+                + "{\"id\":\"invoice\",\"type\":\"resource_type\","
+                + "\"attributes\":{\"resource_type\":\"invoice\",\"created_at\":\"2026-04-01T00:00:00Z\"}},"
+                + "{\"id\":\"user\",\"type\":\"resource_type\","
+                + "\"attributes\":{\"resource_type\":\"user\",\"created_at\":\"2026-04-02T00:00:00Z\"}}"
+                + "],\"meta\":{\"page_size\":25}}"));
+        AuditResourceTypesClient rt = new AuditResourceTypesClient(resourceTypesApi);
+        ListResourceTypesPage page = rt.list(new ListResourceTypesInput());
+        assertEquals(2, page.resourceTypes.size());
+        assertEquals("invoice", page.resourceTypes.get(0).id);
+        assertEquals("invoice", page.resourceTypes.get(0).resourceType);
+        assertNotNull(page.resourceTypes.get(0).createdAt);
+        assertNull(page.nextCursor);
+    }
+
+    @Test
+    void resourceTypes_list_emptyData() throws Exception {
+        handler.set(ex -> respondJson(ex, 200, "{\"meta\":{\"page_size\":25}}"));
+        AuditResourceTypesClient rt = new AuditResourceTypesClient(resourceTypesApi);
+        ListResourceTypesPage page = rt.list(new ListResourceTypesInput());
+        assertEquals(0, page.resourceTypes.size());
+        assertNull(page.nextCursor);
+    }
+
+    @Test
+    void resourceTypes_list_paginationCursor() throws Exception {
+        handler.set(ex -> respondJson(ex, 200,
+                "{\"data\":[],"
+                + "\"links\":{\"next\":\"/api/v1/resource_types?page[after]=tok-rt&page[size]=1\"},"
+                + "\"meta\":{\"page_size\":1}}"));
+        AuditResourceTypesClient rt = new AuditResourceTypesClient(resourceTypesApi);
+        ListResourceTypesInput in = new ListResourceTypesInput();
+        in.pageSize = 1;
+        ListResourceTypesPage page = rt.list(in);
+        assertEquals("tok-rt", page.nextCursor);
+    }
+
+    @Test
+    void resourceTypes_list_linkWithoutPageAfter_returnsNull() throws Exception {
+        handler.set(ex -> respondJson(ex, 200,
+                "{\"data\":[],\"links\":{\"next\":\"/api/v1/resource_types?other=v\"}}"));
+        AuditResourceTypesClient rt = new AuditResourceTypesClient(resourceTypesApi);
+        ListResourceTypesPage page = rt.list(new ListResourceTypesInput());
+        assertNull(page.nextCursor);
+    }
+
+    @Test
+    void resourceTypes_list_cursorWithAmpersand() throws Exception {
+        handler.set(ex -> respondJson(ex, 200,
+                "{\"data\":[],"
+                + "\"links\":{\"next\":\"/api/v1/resource_types?page[after]=tok-xyz&extra=junk\"}}"));
+        AuditResourceTypesClient rt = new AuditResourceTypesClient(resourceTypesApi);
+        ListResourceTypesPage page = rt.list(new ListResourceTypesInput());
+        assertEquals("tok-xyz", page.nextCursor);
+    }
+
+    @Test
+    void auditResourceType_constructorPopulatesFields() {
+        AuditResourceType rt = new AuditResourceType("invoice", "invoice",
+                java.time.OffsetDateTime.parse("2026-04-01T00:00:00Z"));
+        assertEquals("invoice", rt.id);
+        assertEquals("invoice", rt.resourceType);
+        assertNotNull(rt.createdAt);
+    }
+
+    @Test
+    void listResourceTypesInput_isInstantiable() {
+        ListResourceTypesInput in = new ListResourceTypesInput();
+        in.pageSize = 10;
+        in.pageAfter = "tok";
+        assertEquals(10, in.pageSize);
+        assertEquals("tok", in.pageAfter);
+    }
+
+    @Test
+    void listResourceTypesPage_constructorPopulatesFields() {
+        ListResourceTypesPage page = new ListResourceTypesPage(java.util.List.of(), "tok");
+        assertEquals(0, page.resourceTypes.size());
+        assertEquals("tok", page.nextCursor);
+    }
+
+    // -----------------------------------------------------------------
+    // AuditActionsClient
+    // -----------------------------------------------------------------
+
+    @Test
+    void actions_list_returnsRows() throws Exception {
+        handler.set(ex -> respondJson(ex, 200,
+                "{\"data\":["
+                + "{\"id\":\"invoice.created\",\"type\":\"action\","
+                + "\"attributes\":{\"action\":\"invoice.created\",\"created_at\":\"2026-04-01T00:00:00Z\"}},"
+                + "{\"id\":\"user.updated\",\"type\":\"action\","
+                + "\"attributes\":{\"action\":\"user.updated\",\"created_at\":\"2026-04-02T00:00:00Z\"}}"
+                + "],\"meta\":{\"page_size\":25}}"));
+        AuditActionsClient ac = new AuditActionsClient(actionsApi);
+        ListActionsInput in = new ListActionsInput();
+        in.filterResourceType = "invoice";
+        ListActionsPage page = ac.list(in);
+        assertEquals(2, page.actions.size());
+        assertEquals("invoice.created", page.actions.get(0).id);
+        assertEquals("invoice.created", page.actions.get(0).action);
+        assertNotNull(page.actions.get(0).createdAt);
+        assertNull(page.nextCursor);
+    }
+
+    @Test
+    void actions_list_emptyData() throws Exception {
+        handler.set(ex -> respondJson(ex, 200, "{\"meta\":{\"page_size\":25}}"));
+        AuditActionsClient ac = new AuditActionsClient(actionsApi);
+        ListActionsPage page = ac.list(new ListActionsInput());
+        assertEquals(0, page.actions.size());
+        assertNull(page.nextCursor);
+    }
+
+    @Test
+    void actions_list_paginationCursor() throws Exception {
+        handler.set(ex -> respondJson(ex, 200,
+                "{\"data\":[],"
+                + "\"links\":{\"next\":\"/api/v1/actions?page[after]=tok-ac&page[size]=1\"},"
+                + "\"meta\":{\"page_size\":1}}"));
+        AuditActionsClient ac = new AuditActionsClient(actionsApi);
+        ListActionsInput in = new ListActionsInput();
+        in.pageSize = 1;
+        in.pageAfter = "prev-tok";
+        ListActionsPage page = ac.list(in);
+        assertEquals("tok-ac", page.nextCursor);
+    }
+
+    @Test
+    void actions_list_linkWithoutPageAfter_returnsNull() throws Exception {
+        handler.set(ex -> respondJson(ex, 200,
+                "{\"data\":[],\"links\":{\"next\":\"/api/v1/actions?other=v\"}}"));
+        AuditActionsClient ac = new AuditActionsClient(actionsApi);
+        ListActionsPage page = ac.list(new ListActionsInput());
+        assertNull(page.nextCursor);
+    }
+
+    @Test
+    void actions_list_cursorWithAmpersand() throws Exception {
+        handler.set(ex -> respondJson(ex, 200,
+                "{\"data\":[],"
+                + "\"links\":{\"next\":\"/api/v1/actions?page[after]=tok-ac&extra=junk\"}}"));
+        AuditActionsClient ac = new AuditActionsClient(actionsApi);
+        ListActionsPage page = ac.list(new ListActionsInput());
+        assertEquals("tok-ac", page.nextCursor);
+    }
+
+    @Test
+    void auditAction_constructorPopulatesFields() {
+        AuditAction action = new AuditAction("invoice.created", "invoice.created",
+                java.time.OffsetDateTime.parse("2026-04-01T00:00:00Z"));
+        assertEquals("invoice.created", action.id);
+        assertEquals("invoice.created", action.action);
+        assertNotNull(action.createdAt);
+    }
+
+    @Test
+    void listActionsInput_isInstantiable() {
+        ListActionsInput in = new ListActionsInput();
+        in.filterResourceType = "invoice";
+        in.pageSize = 5;
+        in.pageAfter = "tok";
+        assertEquals("invoice", in.filterResourceType);
+        assertEquals(5, in.pageSize);
+        assertEquals("tok", in.pageAfter);
+    }
+
+    @Test
+    void listActionsPage_constructorPopulatesFields() {
+        ListActionsPage page = new ListActionsPage(java.util.List.of(), "tok-a");
+        assertEquals(0, page.actions.size());
+        assertEquals("tok-a", page.nextCursor);
     }
 }

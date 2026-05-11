@@ -16,7 +16,7 @@ import static org.junit.jupiter.api.Assertions.*;
 class AsyncSmplManagementClientTest {
 
     @Test
-    void create_buildsAllEightAsyncNamespaces() {
+    void create_buildsAllAsyncNamespaces() {
         try (AsyncSmplManagementClient mc = AsyncSmplManagementClient.create("test-key")) {
             assertNotNull(mc.contexts);
             assertNotNull(mc.contextTypes);
@@ -26,6 +26,7 @@ class AsyncSmplManagementClientTest {
             assertNotNull(mc.flags);
             assertNotNull(mc.loggers);
             assertNotNull(mc.logGroups);
+            assertNotNull(mc.audit);
         }
     }
 

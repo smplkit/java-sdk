@@ -4,10 +4,9 @@ import com.smplkit.internal.generated.audit.ApiException;
 import com.smplkit.internal.generated.audit.api.EventsApi;
 import com.smplkit.internal.generated.audit.model.Event;
 import com.smplkit.internal.generated.audit.model.EventListResponse;
+import com.smplkit.internal.generated.audit.model.EventRequest;
 import com.smplkit.internal.generated.audit.model.EventResource;
 import com.smplkit.internal.generated.audit.model.EventResponse;
-
-import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
@@ -64,7 +63,7 @@ public final class AuditEvents {
                 .id("") // server assigns
                 .type("event")
                 .attributes(attrs);
-        EventResponse body = new EventResponse().data(resource);
+        EventRequest body = new EventRequest().data(resource);
         buffer.enqueue(body, input.idempotencyKey);
     }
 

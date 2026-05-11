@@ -2,7 +2,7 @@
 	config_runtime_showcase config_management_showcase \
 	flags_runtime_showcase flags_management_showcase \
 	logging_runtime_showcase logging_management_showcase \
-	audit_runtime_showcase
+	audit_runtime_showcase audit_management_showcase
 
 install:
 	chmod +x gradlew
@@ -31,3 +31,6 @@ logging_management_showcase:
 
 audit_runtime_showcase:
 	./gradlew :examples:run -PmainClass=com.smplkit.examples.AuditRuntimeShowcase
+
+audit_management_showcase:
+	./gradlew :examples:run -PmainClass=com.smplkit.examples.AuditManagementShowcase

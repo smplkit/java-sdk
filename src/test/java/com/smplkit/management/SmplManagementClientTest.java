@@ -13,7 +13,7 @@ import static org.mockito.Mockito.verifyNoInteractions;
 class SmplManagementClientTest {
 
     @Test
-    void create_buildsAllEightNamespaces() {
+    void create_buildsAllNamespaces() {
         try (SmplManagementClient mc = SmplManagementClient.create("test-key")) {
             assertNotNull(mc.contexts);
             assertNotNull(mc.contextTypes);
@@ -23,6 +23,8 @@ class SmplManagementClientTest {
             assertNotNull(mc.flags);
             assertNotNull(mc.loggers);
             assertNotNull(mc.logGroups);
+            assertNotNull(mc.audit);
+            assertNotNull(mc.audit.forwarders);
         }
     }
 

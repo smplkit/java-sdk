@@ -1,12 +1,6 @@
 /*
  * Demonstrates the smplkit runtime SDK for Smpl Audit.
  *
- * Covers: event record / list / get, plus the SIEM forwarders surface
- * (create / list / delete + the test_forwarder/execute proxy + a
- * doNotForward event flow). The forwarders portion gracefully skips
- * on 402 (free / standard tier) so the showcase remains runnable in
- * any environment.
- *
  * Prerequisites:
  *     - smplkit-sdk on the classpath
  *     - A valid smplkit API key, provided via one of:
@@ -20,17 +14,15 @@ package com.smplkit.examples;
 
 import com.smplkit.SmplClient;
 import com.smplkit.audit.AuditEvent;
+import com.smplkit.audit.AuditResourceType;
+import com.smplkit.audit.AuditAction;
 import com.smplkit.audit.CreateEventInput;
-import com.smplkit.audit.CreateForwarderInput;
-import com.smplkit.audit.Forwarder;
-import com.smplkit.audit.ForwarderHttp;
-import com.smplkit.audit.ForwarderType;
-import com.smplkit.audit.HttpHeader;
+import com.smplkit.audit.ListActionsInput;
+import com.smplkit.audit.ListActionsPage;
 import com.smplkit.audit.ListEventsInput;
 import com.smplkit.audit.ListEventsPage;
-import com.smplkit.audit.TestForwarderInput;
-import com.smplkit.audit.TestForwarderResult;
-import com.smplkit.internal.generated.audit.ApiException;
+import com.smplkit.audit.ListResourceTypesInput;
+import com.smplkit.audit.ListResourceTypesPage;
 
 import java.time.OffsetDateTime;
 import java.util.Map;
@@ -40,79 +32,53 @@ public final class AuditRuntimeShowcase {
 
     public static void main(String[] args) throws Exception {
 
-        // create the client
+        // create the client (no equivalent of Python's AsyncSmplClient in Java
+        // today — SmplClient is the idiomatic entry point)
         try (SmplClient client = SmplClient.builder()
                 .environment("production").service("showcase-service").build()) {
 
-            // record an event
             String someResourceId = "showcase-" + UUID.randomUUID().toString().substring(0, 8);
+
+            // record an event
             CreateEventInput input = new CreateEventInput("invoice.created", "invoice", someResourceId);
             input.occurredAt = OffsetDateTime.now();
             input.data = Map.of(
                     "snapshot", Map.of("total_cents", 4900, "currency", "USD"),
                     "request_id", "req-abc");
             client.audit().events().record(input);
-
-            // force the event to be posted (normally happens automatically, in the
-            // background, but we want to force it to be written now for this demo)
+            // flush so the event is durable before we read it back
             client.audit().events().flush(2000);
+            System.out.println("Recorded events for invoice " + someResourceId);
 
             // list events
-            ListEventsInput list = new ListEventsInput();
-            list.resourceType = "invoice";
-            list.resourceId = someResourceId;
-            list.pageSize = 10;
-            ListEventsPage page = client.audit().events().list(list);
-            System.out.println("Found " + page.events.size() + " events for " + someResourceId + ":");
-            for (AuditEvent ev : page.events) {
-                System.out.println("  " + ev.action + "  id=" + ev.id + "  actor=" + ev.actorType);
-            }
+            ListEventsInput listInput = new ListEventsInput();
+            listInput.resourceId = someResourceId;
+            ListEventsPage page = client.audit().events().list(listInput);
+            assert page.events.stream().anyMatch(e -> e.resourceId.equals(someResourceId))
+                    : "expected event not found in list";
+            UUID recordedEventId = page.events.get(0).id;
+            System.out.println("Listed " + page.events.size() + " event(s) for invoice " + someResourceId);
 
-            assert page.events.size() == 1 : "Expected 1 event, got " + page.events.size();
+            // fetch an event
+            AuditEvent event = client.audit().events().get(recordedEventId);
+            assert event.id.equals(recordedEventId) : "event id mismatch";
+            assert event.resourceId.equals(someResourceId) : "resource_id mismatch";
+            assert "invoice.created".equals(event.action) : "action mismatch";
+            System.out.println("Fetched event " + event.id + ": " + event.action);
 
-            // fetch an event by ID
-            AuditEvent first = client.audit().events().get(page.events.get(0).id);
-            System.out.println("Round-tripped: " + first.action + " at " + first.occurredAt);
+            // list resource types observed
+            ListResourceTypesPage resourceTypes = client.audit().resourceTypes().list(new ListResourceTypesInput());
+            assert resourceTypes.resourceTypes.stream().anyMatch(rt -> "invoice".equals(rt.id))
+                    : "expected 'invoice' resource type not found";
+            System.out.println("Observed resource types: "
+                    + resourceTypes.resourceTypes.stream().map(rt -> rt.id).toList());
 
-            // Forwarders (Pro tier — gracefully skip on 402)
-            Forwarder fwd = null;
-            try {
-                ForwarderHttp http = new ForwarderHttp("https://httpbin.org/post");
-                http.headers.add(new HttpHeader("X-Showcase", "ok"));
-                CreateForwarderInput fwdInput = new CreateForwarderInput(
-                        "showcase-" + UUID.randomUUID().toString().substring(0, 6),
-                        ForwarderType.HTTP, http);
-                fwd = client.audit().forwarders().create(fwdInput);
-                System.out.println("Created forwarder: " + fwd.slug);
-            } catch (ApiException e) {
-                if (e.getCode() == 402) {
-                    System.out.println("Skipping forwarder showcase — account is not Pro tier");
-                    System.out.println("Done!");
-                    return;
-                }
-                throw e;
-            }
-
-            try {
-                // doNotForward suppresses the forward but still records the
-                // skip in the delivery log.
-                CreateEventInput skipped = new CreateEventInput(
-                        "invoice.created", "invoice", someResourceId + "-skipped");
-                skipped.doNotForward = true;
-                client.audit().events().record(skipped);
-                client.audit().events().flush(2000);
-
-                // Test the destination via the proxy
-                TestForwarderInput tfi = new TestForwarderInput("https://httpbin.org/post");
-                tfi.body = "{\"hello\":\"world\"}";
-                tfi.timeoutMs = 5000;
-                TestForwarderResult tr = client.audit().functions().executeTestForwarder(tfi);
-                System.out.println("test_forwarder: succeeded=" + tr.succeeded
-                        + " status=" + tr.responseStatus);
-            } finally {
-                client.audit().forwarders().delete(fwd.id);
-                System.out.println("Deleted forwarder: " + fwd.slug);
-            }
+            // list actions observed
+            ListActionsPage actions = client.audit().actions().list(new ListActionsInput());
+            assert actions.actions.stream().anyMatch(a -> "invoice.created".equals(a.id))
+                    : "expected 'invoice.created' action not found";
+            System.out.println("Observed actions: "
+                    + actions.actions.stream().map(a -> a.id).toList());
 
             System.out.println("Done!");
         }

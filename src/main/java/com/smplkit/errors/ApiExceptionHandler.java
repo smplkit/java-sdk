@@ -42,6 +42,7 @@ public final class ApiExceptionHandler {
 
         return switch (statusCode) {
             case 400, 422 -> new ValidationError(message, statusCode, responseBody, errors);
+            case 402 -> new PaymentRequiredError(message, responseBody, errors);
             case 404 -> new NotFoundError(message, responseBody, errors);
             case 409 -> new ConflictError(message, responseBody, errors);
             default -> new SmplError(message, statusCode, responseBody, errors);

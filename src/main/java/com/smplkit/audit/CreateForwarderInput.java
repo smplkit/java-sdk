@@ -13,7 +13,6 @@ public final class CreateForwarderInput {
     public boolean enabled = true;
     public Map<String, Object> filter; // nullable, JSON Logic
     public String transform; // nullable, JSONata
-    public Map<String, Object> data; // nullable
 
     public CreateForwarderInput() {}
 

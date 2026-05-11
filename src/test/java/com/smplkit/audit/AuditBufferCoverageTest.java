@@ -4,8 +4,8 @@ import com.smplkit.internal.generated.audit.ApiClient;
 import com.smplkit.internal.generated.audit.ApiException;
 import com.smplkit.internal.generated.audit.api.EventsApi;
 import com.smplkit.internal.generated.audit.model.Event;
+import com.smplkit.internal.generated.audit.model.EventRequest;
 import com.smplkit.internal.generated.audit.model.EventResource;
-import com.smplkit.internal.generated.audit.model.EventResponse;
 import com.sun.net.httpserver.HttpServer;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
@@ -48,8 +48,8 @@ class AuditBufferCoverageTest {
         if (server != null) server.stop(0);
     }
 
-    private static EventResponse simpleBody() {
-        return new EventResponse().data(new EventResource()
+    private static EventRequest simpleBody() {
+        return new EventRequest().data(new EventResource()
                 .id("")
                 .type("event")
                 .attributes(new Event()

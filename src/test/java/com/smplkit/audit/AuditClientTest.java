@@ -166,4 +166,19 @@ class AuditClientTest {
         client.events().flush(2_000);
         assertTrue(postCount.get() >= 1);
     }
+
+    @Test
+    void create_setsDoNotForward() throws Exception {
+        CreateEventInput input = new CreateEventInput("user.created", "user", "u-1");
+        input.doNotForward = true;
+        client.events().record(input);
+        client.events().flush(2_000);
+        assertTrue(postCount.get() >= 1);
+    }
+
+    @Test
+    void client_exposesResourceTypesAndActionsAccessors() {
+        assertNotNull(client.resourceTypes());
+        assertNotNull(client.actions());
+    }
 }

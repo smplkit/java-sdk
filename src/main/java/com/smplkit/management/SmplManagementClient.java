@@ -71,6 +71,8 @@ public final class SmplManagementClient implements AutoCloseable {
     public final LoggersClient loggers;
     /** Log-group CRUD ({@code mgmt.log_groups}). */
     public final LogGroupsClient logGroups;
+    /** Audit SIEM forwarder CRUD ({@code mgmt.audit}). */
+    public final com.smplkit.audit.AuditManagementClient audit;
 
     // --- Internal state (encapsulated; not part of the public contract) ---
 
@@ -107,6 +109,7 @@ public final class SmplManagementClient implements AutoCloseable {
         String configBaseUrl = ConfigResolver.serviceUrl(cfg.scheme, "config", cfg.baseDomain);
         String flagsBaseUrl = ConfigResolver.serviceUrl(cfg.scheme, "flags", cfg.baseDomain);
         String loggingBaseUrl = ConfigResolver.serviceUrl(cfg.scheme, "logging", cfg.baseDomain);
+        String auditBaseUrl = ConfigResolver.serviceUrl(cfg.scheme, "audit", cfg.baseDomain);
 
         // Build generated API clients privately (one per service).
         ApiClient appApiClient = buildAppApiClient(appBaseUrl, cfg.apiKey, timeout);
@@ -151,6 +154,10 @@ public final class SmplManagementClient implements AutoCloseable {
         this.loggingHeadless = new LoggingClient(loggersApi, logGroupsApi, httpClient, cfg.apiKey);
         this.loggers = new LoggersClient(loggingHeadless);
         this.logGroups = new LogGroupsClient(loggingHeadless);
+
+        // Audit management client — forwarder CRUD only.
+        this.audit = new com.smplkit.audit.AuditManagementClient(
+                cfg.apiKey, java.util.Map.of(), timeout, auditBaseUrl);
     }
 
     /** Build an ApiClient for the app service. */

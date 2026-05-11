@@ -3,7 +3,7 @@ package com.smplkit.audit;
 import com.smplkit.internal.Debug;
 import com.smplkit.internal.generated.audit.ApiException;
 import com.smplkit.internal.generated.audit.api.EventsApi;
-import com.smplkit.internal.generated.audit.model.EventResponse;
+import com.smplkit.internal.generated.audit.model.EventRequest;
 
 import java.util.ArrayDeque;
 import java.util.Deque;
@@ -62,7 +62,7 @@ final class AuditEventBuffer {
     }
 
     /** Add an event to the queue. May evict the oldest item under overflow. */
-    void enqueue(EventResponse body, String idempotencyKey) {
+    void enqueue(EventRequest body, String idempotencyKey) {
         lock.lock();
         try {
             if (closed.get()) {
@@ -236,12 +236,12 @@ final class AuditEventBuffer {
     }
 
     private static final class PendingEvent {
-        final EventResponse body;
+        final EventRequest body;
         final String idempotencyKey;
         int attempts = 0;
         long nextRetryAtMs = 0L;
 
-        PendingEvent(EventResponse body, String idempotencyKey) {
+        PendingEvent(EventRequest body, String idempotencyKey) {
             this.body = body;
             this.idempotencyKey = idempotencyKey;
         }
