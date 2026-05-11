@@ -30,7 +30,7 @@ import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 
 import com.smplkit.internal.generated.audit.ApiClient;
 /**
- * RetryFailedDeliveriesSummary
+ * Counts returned by the retry-failed-deliveries action.
  */
 @JsonPropertyOrder({
   RetryFailedDeliveriesSummary.JSON_PROPERTY_ATTEMPTED,
@@ -60,7 +60,7 @@ public class RetryFailedDeliveriesSummary {
   }
 
   /**
-   * Get attempted
+   * Number of failed deliveries that were re-attempted.
    * @return attempted
    */
   @jakarta.annotation.Nonnull
@@ -84,7 +84,7 @@ public class RetryFailedDeliveriesSummary {
   }
 
   /**
-   * Get succeeded
+   * Number of re-attempts that succeeded.
    * @return succeeded
    */
   @jakarta.annotation.Nonnull
@@ -108,7 +108,7 @@ public class RetryFailedDeliveriesSummary {
   }
 
   /**
-   * Get failed
+   * Number of re-attempts that failed again.
    * @return failed
    */
   @jakarta.annotation.Nonnull

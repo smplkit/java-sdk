@@ -26,12 +26,16 @@ import com.fasterxml.jackson.annotation.JsonTypeName;
 import com.fasterxml.jackson.annotation.JsonValue;
 import com.smplkit.internal.generated.audit.model.Forwarder;
 import java.util.Arrays;
+import org.openapitools.jackson.nullable.JsonNullable;
+import com.fasterxml.jackson.annotation.JsonIgnore;
+import org.openapitools.jackson.nullable.JsonNullable;
+import java.util.NoSuchElementException;
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 
 
 import com.smplkit.internal.generated.audit.ApiClient;
 /**
- * ForwarderResource
+ * JSON:API resource envelope for a forwarder.  &#x60;id&#x60; must not be specified for create requests (the server assigns it).
  */
 @JsonPropertyOrder({
   ForwarderResource.JSON_PROPERTY_ID,
@@ -41,8 +45,7 @@ import com.smplkit.internal.generated.audit.ApiClient;
 @jakarta.annotation.Generated(value = "org.openapitools.codegen.languages.JavaClientCodegen", comments = "Generator version: 7.21.0")
 public class ForwarderResource {
   public static final String JSON_PROPERTY_ID = "id";
-  @jakarta.annotation.Nonnull
-  private String id;
+  private JsonNullable<String> id = JsonNullable.<String>undefined();
 
   public static final String JSON_PROPERTY_TYPE = "type";
   @jakarta.annotation.Nullable
@@ -55,8 +58,8 @@ public class ForwarderResource {
   public ForwarderResource() { 
   }
 
-  public ForwarderResource id(@jakarta.annotation.Nonnull String id) {
-    this.id = id;
+  public ForwarderResource id(@jakarta.annotation.Nullable String id) {
+    this.id = JsonNullable.<String>of(id);
     return this;
   }
 
@@ -64,18 +67,26 @@ public class ForwarderResource {
    * Get id
    * @return id
    */
-  @jakarta.annotation.Nonnull
-  @JsonProperty(value = JSON_PROPERTY_ID, required = true)
-  @JsonInclude(value = JsonInclude.Include.ALWAYS)
+  @jakarta.annotation.Nullable
+  @JsonIgnore
   public String getId() {
-    return id;
+        return id.orElse(null);
   }
 
+  @JsonProperty(value = JSON_PROPERTY_ID, required = false)
+  @JsonInclude(value = JsonInclude.Include.USE_DEFAULTS)
 
-  @JsonProperty(value = JSON_PROPERTY_ID, required = true)
-  @JsonInclude(value = JsonInclude.Include.ALWAYS)
-  public void setId(@jakarta.annotation.Nonnull String id) {
+  public JsonNullable<String> getId_JsonNullable() {
+    return id;
+  }
+  
+  @JsonProperty(JSON_PROPERTY_ID)
+  public void setId_JsonNullable(JsonNullable<String> id) {
     this.id = id;
+  }
+
+  public void setId(@jakarta.annotation.Nullable String id) {
+    this.id = JsonNullable.<String>of(id);
   }
 
 
@@ -139,14 +150,25 @@ public class ForwarderResource {
       return false;
     }
     ForwarderResource forwarderResource = (ForwarderResource) o;
-    return Objects.equals(this.id, forwarderResource.id) &&
+    return equalsNullable(this.id, forwarderResource.id) &&
         Objects.equals(this.type, forwarderResource.type) &&
         Objects.equals(this.attributes, forwarderResource.attributes);
   }
 
+  private static <T> boolean equalsNullable(JsonNullable<T> a, JsonNullable<T> b) {
+    return a == b || (a != null && b != null && a.isPresent() && b.isPresent() && Objects.deepEquals(a.get(), b.get()));
+  }
+
   @Override
   public int hashCode() {
-    return Objects.hash(id, type, attributes);
+    return Objects.hash(hashCodeNullable(id), type, attributes);
+  }
+
+  private static <T> int hashCodeNullable(JsonNullable<T> a) {
+    if (a == null) {
+      return 1;
+    }
+    return a.isPresent() ? Arrays.deepHashCode(new Object[]{a.get()}) : 31;
   }
 
   @Override

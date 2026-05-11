@@ -36,7 +36,7 @@ import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 
 import com.smplkit.internal.generated.audit.ApiClient;
 /**
- * Plain-JSON response body. Headers are echoed back unredacted because the caller already supplied them — the response is for the caller, not persisted into the delivery log.
+ * Result of a test-forwarder execution.
  */
 @JsonPropertyOrder({
   TestForwarderResponse.JSON_PROPERTY_SUCCEEDED,
@@ -79,7 +79,7 @@ public class TestForwarderResponse {
   }
 
   /**
-   * Get succeeded
+   * True if the destination responded with a status matching &#x60;success_status&#x60;.
    * @return succeeded
    */
   @jakarta.annotation.Nonnull
@@ -103,7 +103,7 @@ public class TestForwarderResponse {
   }
 
   /**
-   * Get responseStatus
+   * HTTP status code returned by the destination.
    * @return responseStatus
    */
   @jakarta.annotation.Nullable
@@ -135,7 +135,7 @@ public class TestForwarderResponse {
   }
 
   /**
-   * Get responseHeaders
+   * Headers returned by the destination.
    * @return responseHeaders
    */
   @jakarta.annotation.Nullable
@@ -159,7 +159,7 @@ public class TestForwarderResponse {
   }
 
   /**
-   * Get responseBody
+   * Response body returned by the destination.
    * @return responseBody
    */
   @jakarta.annotation.Nullable
@@ -191,7 +191,7 @@ public class TestForwarderResponse {
   }
 
   /**
-   * Get latencyMs
+   * Elapsed time of the request in milliseconds.
    * @return latencyMs
    */
   @jakarta.annotation.Nullable
@@ -215,7 +215,7 @@ public class TestForwarderResponse {
   }
 
   /**
-   * Get error
+   * Error message if the request did not complete.
    * @return error
    */
   @jakarta.annotation.Nullable

@@ -18,7 +18,6 @@ import com.smplkit.internal.generated.audit.ApiResponse;
 import com.smplkit.internal.generated.audit.Configuration;
 import com.smplkit.internal.generated.audit.Pair;
 
-import com.smplkit.internal.generated.audit.model.ActionListResponse;
 import com.smplkit.internal.generated.audit.model.ResourceTypeListResponse;
 
 import com.fasterxml.jackson.core.type.TypeReference;
@@ -164,148 +163,8 @@ public class ResourceTypesApi {
   }
 
   /**
-   * List Actions
-   * List the distinct &#x60;&#x60;action&#x60;&#x60; slugs seen in the account.  Without &#x60;&#x60;filter[resource_type]&#x60;&#x60;, returns one row per distinct action — the same action may have been recorded with multiple resource types and the unfiltered dropdown shows it once.  With &#x60;&#x60;filter[resource_type]&#x60;&#x60;, returns the actions seen with that specific resource type, powering the Activity tab&#39;s cascading filter behavior.
-   * @param filterResourceType  (optional)
-   * @param pageSize  (optional)
-   * @param pageAfter  (optional)
-   * @return ActionListResponse
-   * @throws ApiException if fails to make API call
-   */
-  public ActionListResponse listActions(@jakarta.annotation.Nullable String filterResourceType, @jakarta.annotation.Nullable Integer pageSize, @jakarta.annotation.Nullable String pageAfter) throws ApiException {
-    return listActions(filterResourceType, pageSize, pageAfter, null);
-  }
-
-  /**
-   * List Actions
-   * List the distinct &#x60;&#x60;action&#x60;&#x60; slugs seen in the account.  Without &#x60;&#x60;filter[resource_type]&#x60;&#x60;, returns one row per distinct action — the same action may have been recorded with multiple resource types and the unfiltered dropdown shows it once.  With &#x60;&#x60;filter[resource_type]&#x60;&#x60;, returns the actions seen with that specific resource type, powering the Activity tab&#39;s cascading filter behavior.
-   * @param filterResourceType  (optional)
-   * @param pageSize  (optional)
-   * @param pageAfter  (optional)
-   * @param headers Optional headers to include in the request
-   * @return ActionListResponse
-   * @throws ApiException if fails to make API call
-   */
-  public ActionListResponse listActions(@jakarta.annotation.Nullable String filterResourceType, @jakarta.annotation.Nullable Integer pageSize, @jakarta.annotation.Nullable String pageAfter, Map<String, String> headers) throws ApiException {
-    ApiResponse<ActionListResponse> localVarResponse = listActionsWithHttpInfo(filterResourceType, pageSize, pageAfter, headers);
-    return localVarResponse.getData();
-  }
-
-  /**
-   * List Actions
-   * List the distinct &#x60;&#x60;action&#x60;&#x60; slugs seen in the account.  Without &#x60;&#x60;filter[resource_type]&#x60;&#x60;, returns one row per distinct action — the same action may have been recorded with multiple resource types and the unfiltered dropdown shows it once.  With &#x60;&#x60;filter[resource_type]&#x60;&#x60;, returns the actions seen with that specific resource type, powering the Activity tab&#39;s cascading filter behavior.
-   * @param filterResourceType  (optional)
-   * @param pageSize  (optional)
-   * @param pageAfter  (optional)
-   * @return ApiResponse&lt;ActionListResponse&gt;
-   * @throws ApiException if fails to make API call
-   */
-  public ApiResponse<ActionListResponse> listActionsWithHttpInfo(@jakarta.annotation.Nullable String filterResourceType, @jakarta.annotation.Nullable Integer pageSize, @jakarta.annotation.Nullable String pageAfter) throws ApiException {
-    return listActionsWithHttpInfo(filterResourceType, pageSize, pageAfter, null);
-  }
-
-  /**
-   * List Actions
-   * List the distinct &#x60;&#x60;action&#x60;&#x60; slugs seen in the account.  Without &#x60;&#x60;filter[resource_type]&#x60;&#x60;, returns one row per distinct action — the same action may have been recorded with multiple resource types and the unfiltered dropdown shows it once.  With &#x60;&#x60;filter[resource_type]&#x60;&#x60;, returns the actions seen with that specific resource type, powering the Activity tab&#39;s cascading filter behavior.
-   * @param filterResourceType  (optional)
-   * @param pageSize  (optional)
-   * @param pageAfter  (optional)
-   * @param headers Optional headers to include in the request
-   * @return ApiResponse&lt;ActionListResponse&gt;
-   * @throws ApiException if fails to make API call
-   */
-  public ApiResponse<ActionListResponse> listActionsWithHttpInfo(@jakarta.annotation.Nullable String filterResourceType, @jakarta.annotation.Nullable Integer pageSize, @jakarta.annotation.Nullable String pageAfter, Map<String, String> headers) throws ApiException {
-    HttpRequest.Builder localVarRequestBuilder = listActionsRequestBuilder(filterResourceType, pageSize, pageAfter, headers);
-    try {
-      HttpResponse<InputStream> localVarResponse = memberVarHttpClient.send(
-          localVarRequestBuilder.build(),
-          HttpResponse.BodyHandlers.ofInputStream());
-      if (memberVarResponseInterceptor != null) {
-        memberVarResponseInterceptor.accept(localVarResponse);
-      }
-      InputStream localVarResponseBody = null;
-      try {
-        if (localVarResponse.statusCode()/ 100 != 2) {
-          throw getApiException("listActions", localVarResponse);
-        }
-        localVarResponseBody = ApiClient.getResponseBody(localVarResponse);
-        if (localVarResponseBody == null) {
-          return new ApiResponse<ActionListResponse>(
-              localVarResponse.statusCode(),
-              localVarResponse.headers().map(),
-              null
-          );
-        }
-
-        
-        
-        String responseBody = new String(localVarResponseBody.readAllBytes());
-        ActionListResponse responseValue = responseBody.isBlank()? null: memberVarObjectMapper.readValue(responseBody, new TypeReference<ActionListResponse>() {});
-        
-
-        return new ApiResponse<ActionListResponse>(
-            localVarResponse.statusCode(),
-            localVarResponse.headers().map(),
-            responseValue
-        );
-      } finally {
-        if (localVarResponseBody != null) {
-          localVarResponseBody.close();
-        }
-      }
-    } catch (IOException e) {
-      throw new ApiException(e);
-    }
-    catch (InterruptedException e) {
-      Thread.currentThread().interrupt();
-      throw new ApiException(e);
-    }
-  }
-
-  private HttpRequest.Builder listActionsRequestBuilder(@jakarta.annotation.Nullable String filterResourceType, @jakarta.annotation.Nullable Integer pageSize, @jakarta.annotation.Nullable String pageAfter, Map<String, String> headers) throws ApiException {
-
-    HttpRequest.Builder localVarRequestBuilder = HttpRequest.newBuilder();
-
-    String localVarPath = "/api/v1/actions";
-
-    List<Pair> localVarQueryParams = new ArrayList<>();
-    StringJoiner localVarQueryStringJoiner = new StringJoiner("&");
-    String localVarQueryParameterBaseName;
-    localVarQueryParameterBaseName = "filter[resource_type]";
-    localVarQueryParams.addAll(ApiClient.parameterToPairs("filter[resource_type]", filterResourceType));
-    localVarQueryParameterBaseName = "page[size]";
-    localVarQueryParams.addAll(ApiClient.parameterToPairs("page[size]", pageSize));
-    localVarQueryParameterBaseName = "page[after]";
-    localVarQueryParams.addAll(ApiClient.parameterToPairs("page[after]", pageAfter));
-
-    if (!localVarQueryParams.isEmpty() || localVarQueryStringJoiner.length() != 0) {
-      StringJoiner queryJoiner = new StringJoiner("&");
-      localVarQueryParams.forEach(p -> queryJoiner.add(p.getName() + '=' + p.getValue()));
-      if (localVarQueryStringJoiner.length() != 0) {
-        queryJoiner.add(localVarQueryStringJoiner.toString());
-      }
-      localVarRequestBuilder.uri(URI.create(memberVarBaseUri + localVarPath + '?' + queryJoiner.toString()));
-    } else {
-      localVarRequestBuilder.uri(URI.create(memberVarBaseUri + localVarPath));
-    }
-
-    localVarRequestBuilder.header("Accept", "application/vnd.api+json");
-
-    localVarRequestBuilder.method("GET", HttpRequest.BodyPublishers.noBody());
-    if (memberVarReadTimeout != null) {
-      localVarRequestBuilder.timeout(memberVarReadTimeout);
-    }
-    // Add custom headers if provided
-    localVarRequestBuilder = HttpRequestBuilderExtensions.withAdditionalHeaders(localVarRequestBuilder, headers);
-    if (memberVarInterceptor != null) {
-      memberVarInterceptor.accept(localVarRequestBuilder);
-    }
-    return localVarRequestBuilder;
-  }
-
-  /**
    * List Resource Types
-   * List the distinct &#x60;&#x60;resource_type&#x60;&#x60; slugs seen in the account.  Each row&#39;s &#x60;&#x60;id&#x60;&#x60; is the slug itself, mirroring the smplkit convention of using customer-provided identifiers as the public-facing resource id (ADR-014).
+   * List the distinct &#x60;resource_type&#x60; slugs recorded for this account.  The resource &#x60;id&#x60; is the slug itself. Useful for populating filter dropdowns in a UI.
    * @param pageSize  (optional)
    * @param pageAfter  (optional)
    * @return ResourceTypeListResponse
@@ -317,7 +176,7 @@ public class ResourceTypesApi {
 
   /**
    * List Resource Types
-   * List the distinct &#x60;&#x60;resource_type&#x60;&#x60; slugs seen in the account.  Each row&#39;s &#x60;&#x60;id&#x60;&#x60; is the slug itself, mirroring the smplkit convention of using customer-provided identifiers as the public-facing resource id (ADR-014).
+   * List the distinct &#x60;resource_type&#x60; slugs recorded for this account.  The resource &#x60;id&#x60; is the slug itself. Useful for populating filter dropdowns in a UI.
    * @param pageSize  (optional)
    * @param pageAfter  (optional)
    * @param headers Optional headers to include in the request
@@ -331,7 +190,7 @@ public class ResourceTypesApi {
 
   /**
    * List Resource Types
-   * List the distinct &#x60;&#x60;resource_type&#x60;&#x60; slugs seen in the account.  Each row&#39;s &#x60;&#x60;id&#x60;&#x60; is the slug itself, mirroring the smplkit convention of using customer-provided identifiers as the public-facing resource id (ADR-014).
+   * List the distinct &#x60;resource_type&#x60; slugs recorded for this account.  The resource &#x60;id&#x60; is the slug itself. Useful for populating filter dropdowns in a UI.
    * @param pageSize  (optional)
    * @param pageAfter  (optional)
    * @return ApiResponse&lt;ResourceTypeListResponse&gt;
@@ -343,7 +202,7 @@ public class ResourceTypesApi {
 
   /**
    * List Resource Types
-   * List the distinct &#x60;&#x60;resource_type&#x60;&#x60; slugs seen in the account.  Each row&#39;s &#x60;&#x60;id&#x60;&#x60; is the slug itself, mirroring the smplkit convention of using customer-provided identifiers as the public-facing resource id (ADR-014).
+   * List the distinct &#x60;resource_type&#x60; slugs recorded for this account.  The resource &#x60;id&#x60; is the slug itself. Useful for populating filter dropdowns in a UI.
    * @param pageSize  (optional)
    * @param pageAfter  (optional)
    * @param headers Optional headers to include in the request
