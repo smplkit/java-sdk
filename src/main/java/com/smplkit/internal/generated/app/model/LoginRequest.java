@@ -30,7 +30,7 @@ import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 
 import com.smplkit.internal.generated.app.ApiClient;
 /**
- * LoginRequest
+ * Body for the email + password login endpoint.
  */
 @JsonPropertyOrder({
   LoginRequest.JSON_PROPERTY_EMAIL,
@@ -55,7 +55,7 @@ public class LoginRequest {
   }
 
   /**
-   * Get email
+   * Email address of the user signing in.
    * @return email
    */
   @jakarta.annotation.Nonnull
@@ -79,7 +79,7 @@ public class LoginRequest {
   }
 
   /**
-   * Get password
+   * Password supplied for authentication.
    * @return password
    */
   @jakarta.annotation.Nonnull

@@ -30,7 +30,7 @@ import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 
 import com.smplkit.internal.generated.app.ApiClient;
 /**
- * NextTierMeta
+ * Information about the next volume-discount tier.
  */
 @JsonPropertyOrder({
   NextTierMeta.JSON_PROPERTY_PRODUCTS_NEEDED,
@@ -60,7 +60,7 @@ public class NextTierMeta {
   }
 
   /**
-   * Get productsNeeded
+   * Number of additional subscribed products needed to reach the next tier.
    * @return productsNeeded
    */
   @jakarta.annotation.Nonnull
@@ -84,7 +84,7 @@ public class NextTierMeta {
   }
 
   /**
-   * Get discountPct
+   * Discount percentage that would apply at the next tier.
    * @return discountPct
    */
   @jakarta.annotation.Nonnull
@@ -108,7 +108,7 @@ public class NextTierMeta {
   }
 
   /**
-   * Get additionalSavingsCents
+   * Additional monthly savings in cents at the next tier.
    * @return additionalSavingsCents
    */
   @jakarta.annotation.Nonnull

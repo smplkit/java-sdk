@@ -24,6 +24,7 @@ import com.smplkit.internal.generated.app.model.ErrorResponse;
 import com.smplkit.internal.generated.app.model.InvoiceListResponse;
 import com.smplkit.internal.generated.app.model.InvoiceSingleResponse;
 import com.smplkit.internal.generated.app.model.PaymentMethodListResponse;
+import com.smplkit.internal.generated.app.model.PaymentMethodRequest;
 import com.smplkit.internal.generated.app.model.PaymentMethodResponse;
 import com.smplkit.internal.generated.app.model.PlanChangeRequest;
 import com.smplkit.internal.generated.app.model.SetupIntentResponse;
@@ -293,7 +294,7 @@ public class BillingApi {
 
   /**
    * Add Payment Method
-   * Register a Stripe payment method (&#x60;&#x60;pm_...&#x60;&#x60;) as a persistent resource. The frontend obtains the Stripe ID via SetupIntent + Stripe Elements, then POSTs it here. Body shape and server behavior per ADR-044 §5.1.
+   * Register a Stripe payment method (&#x60;pm_...&#x60;) on the account. The client first creates the Stripe payment method using a SetupIntent and Stripe Elements, then submits its identifier here to persist it.
    * @param addPaymentMethodBody  (required)
    * @return PaymentMethodResponse
    * @throws ApiException if fails to make API call
@@ -304,7 +305,7 @@ public class BillingApi {
 
   /**
    * Add Payment Method
-   * Register a Stripe payment method (&#x60;&#x60;pm_...&#x60;&#x60;) as a persistent resource. The frontend obtains the Stripe ID via SetupIntent + Stripe Elements, then POSTs it here. Body shape and server behavior per ADR-044 §5.1.
+   * Register a Stripe payment method (&#x60;pm_...&#x60;) on the account. The client first creates the Stripe payment method using a SetupIntent and Stripe Elements, then submits its identifier here to persist it.
    * @param addPaymentMethodBody  (required)
    * @param headers Optional headers to include in the request
    * @return PaymentMethodResponse
@@ -317,7 +318,7 @@ public class BillingApi {
 
   /**
    * Add Payment Method
-   * Register a Stripe payment method (&#x60;&#x60;pm_...&#x60;&#x60;) as a persistent resource. The frontend obtains the Stripe ID via SetupIntent + Stripe Elements, then POSTs it here. Body shape and server behavior per ADR-044 §5.1.
+   * Register a Stripe payment method (&#x60;pm_...&#x60;) on the account. The client first creates the Stripe payment method using a SetupIntent and Stripe Elements, then submits its identifier here to persist it.
    * @param addPaymentMethodBody  (required)
    * @return ApiResponse&lt;PaymentMethodResponse&gt;
    * @throws ApiException if fails to make API call
@@ -328,7 +329,7 @@ public class BillingApi {
 
   /**
    * Add Payment Method
-   * Register a Stripe payment method (&#x60;&#x60;pm_...&#x60;&#x60;) as a persistent resource. The frontend obtains the Stripe ID via SetupIntent + Stripe Elements, then POSTs it here. Body shape and server behavior per ADR-044 §5.1.
+   * Register a Stripe payment method (&#x60;pm_...&#x60;) on the account. The client first creates the Stripe payment method using a SetupIntent and Stripe Elements, then submits its identifier here to persist it.
    * @param addPaymentMethodBody  (required)
    * @param headers Optional headers to include in the request
    * @return ApiResponse&lt;PaymentMethodResponse&gt;
@@ -539,7 +540,7 @@ public class BillingApi {
 
   /**
    * Delete Payment Method
-   * Detach the payment method from Stripe and soft-delete the local row. Returns 409 if this is the only PM and the account has an active paid subscription. If the deleted row was default, the oldest remaining row is promoted.
+   * Delete a payment method. Returns 409 if this is the only payment method on file and the account has an active paid subscription. If the deleted payment method was the default, the oldest remaining payment method is promoted to default.
    * @param id  (required)
    * @throws ApiException if fails to make API call
    */
@@ -549,7 +550,7 @@ public class BillingApi {
 
   /**
    * Delete Payment Method
-   * Detach the payment method from Stripe and soft-delete the local row. Returns 409 if this is the only PM and the account has an active paid subscription. If the deleted row was default, the oldest remaining row is promoted.
+   * Delete a payment method. Returns 409 if this is the only payment method on file and the account has an active paid subscription. If the deleted payment method was the default, the oldest remaining payment method is promoted to default.
    * @param id  (required)
    * @param headers Optional headers to include in the request
    * @throws ApiException if fails to make API call
@@ -560,7 +561,7 @@ public class BillingApi {
 
   /**
    * Delete Payment Method
-   * Detach the payment method from Stripe and soft-delete the local row. Returns 409 if this is the only PM and the account has an active paid subscription. If the deleted row was default, the oldest remaining row is promoted.
+   * Delete a payment method. Returns 409 if this is the only payment method on file and the account has an active paid subscription. If the deleted payment method was the default, the oldest remaining payment method is promoted to default.
    * @param id  (required)
    * @return ApiResponse&lt;Void&gt;
    * @throws ApiException if fails to make API call
@@ -571,7 +572,7 @@ public class BillingApi {
 
   /**
    * Delete Payment Method
-   * Detach the payment method from Stripe and soft-delete the local row. Returns 409 if this is the only PM and the account has an active paid subscription. If the deleted row was default, the oldest remaining row is promoted.
+   * Delete a payment method. Returns 409 if this is the only payment method on file and the account has an active paid subscription. If the deleted payment method was the default, the oldest remaining payment method is promoted to default.
    * @param id  (required)
    * @param headers Optional headers to include in the request
    * @return ApiResponse&lt;Void&gt;
@@ -775,7 +776,7 @@ public class BillingApi {
 
   /**
    * Execute Setup Intent
-   * Create a Stripe SetupIntent for saving a payment method.  Returns a &#x60;&#x60;client_secret&#x60;&#x60; that the frontend passes to Stripe&#39;s Payment Element so the customer can securely enter card details without an immediate charge.
+   * Create a Stripe SetupIntent for adding a payment method without an immediate charge. Returns the &#x60;client_secret&#x60; to pass to Stripe Elements in the browser.
    * @return SetupIntentResponse
    * @throws ApiException if fails to make API call
    */
@@ -785,7 +786,7 @@ public class BillingApi {
 
   /**
    * Execute Setup Intent
-   * Create a Stripe SetupIntent for saving a payment method.  Returns a &#x60;&#x60;client_secret&#x60;&#x60; that the frontend passes to Stripe&#39;s Payment Element so the customer can securely enter card details without an immediate charge.
+   * Create a Stripe SetupIntent for adding a payment method without an immediate charge. Returns the &#x60;client_secret&#x60; to pass to Stripe Elements in the browser.
    * @param headers Optional headers to include in the request
    * @return SetupIntentResponse
    * @throws ApiException if fails to make API call
@@ -797,7 +798,7 @@ public class BillingApi {
 
   /**
    * Execute Setup Intent
-   * Create a Stripe SetupIntent for saving a payment method.  Returns a &#x60;&#x60;client_secret&#x60;&#x60; that the frontend passes to Stripe&#39;s Payment Element so the customer can securely enter card details without an immediate charge.
+   * Create a Stripe SetupIntent for adding a payment method without an immediate charge. Returns the &#x60;client_secret&#x60; to pass to Stripe Elements in the browser.
    * @return ApiResponse&lt;SetupIntentResponse&gt;
    * @throws ApiException if fails to make API call
    */
@@ -807,7 +808,7 @@ public class BillingApi {
 
   /**
    * Execute Setup Intent
-   * Create a Stripe SetupIntent for saving a payment method.  Returns a &#x60;&#x60;client_secret&#x60;&#x60; that the frontend passes to Stripe&#39;s Payment Element so the customer can securely enter card details without an immediate charge.
+   * Create a Stripe SetupIntent for adding a payment method without an immediate charge. Returns the &#x60;client_secret&#x60; to pass to Stripe Elements in the browser.
    * @param headers Optional headers to include in the request
    * @return ApiResponse&lt;SetupIntentResponse&gt;
    * @throws ApiException if fails to make API call
@@ -884,7 +885,7 @@ public class BillingApi {
 
   /**
    * Get Invoice
-   * Return a single invoice by ID. Supports content negotiation via Accept header:  - &#x60;&#x60;application/pdf&#x60;&#x60; — PDF bytes proxy-streamed from Stripe - &#x60;&#x60;application/vnd.api+json&#x60;&#x60; / &#x60;&#x60;application/json&#x60;&#x60; / absent — JSON:API resource - Any other value — 406 Not Acceptable
+   * Return a single invoice by id. Supports content negotiation via the &#x60;Accept&#x60; header:  - &#x60;application/pdf&#x60; — streams the invoice PDF. - &#x60;application/vnd.api+json&#x60;, &#x60;application/json&#x60;, or absent — returns   the JSON:API invoice resource. - Any other value — &#x60;406 Not Acceptable&#x60;.
    * @param invoiceId  (required)
    * @return InvoiceSingleResponse
    * @throws ApiException if fails to make API call
@@ -895,7 +896,7 @@ public class BillingApi {
 
   /**
    * Get Invoice
-   * Return a single invoice by ID. Supports content negotiation via Accept header:  - &#x60;&#x60;application/pdf&#x60;&#x60; — PDF bytes proxy-streamed from Stripe - &#x60;&#x60;application/vnd.api+json&#x60;&#x60; / &#x60;&#x60;application/json&#x60;&#x60; / absent — JSON:API resource - Any other value — 406 Not Acceptable
+   * Return a single invoice by id. Supports content negotiation via the &#x60;Accept&#x60; header:  - &#x60;application/pdf&#x60; — streams the invoice PDF. - &#x60;application/vnd.api+json&#x60;, &#x60;application/json&#x60;, or absent — returns   the JSON:API invoice resource. - Any other value — &#x60;406 Not Acceptable&#x60;.
    * @param invoiceId  (required)
    * @param headers Optional headers to include in the request
    * @return InvoiceSingleResponse
@@ -908,7 +909,7 @@ public class BillingApi {
 
   /**
    * Get Invoice
-   * Return a single invoice by ID. Supports content negotiation via Accept header:  - &#x60;&#x60;application/pdf&#x60;&#x60; — PDF bytes proxy-streamed from Stripe - &#x60;&#x60;application/vnd.api+json&#x60;&#x60; / &#x60;&#x60;application/json&#x60;&#x60; / absent — JSON:API resource - Any other value — 406 Not Acceptable
+   * Return a single invoice by id. Supports content negotiation via the &#x60;Accept&#x60; header:  - &#x60;application/pdf&#x60; — streams the invoice PDF. - &#x60;application/vnd.api+json&#x60;, &#x60;application/json&#x60;, or absent — returns   the JSON:API invoice resource. - Any other value — &#x60;406 Not Acceptable&#x60;.
    * @param invoiceId  (required)
    * @return ApiResponse&lt;InvoiceSingleResponse&gt;
    * @throws ApiException if fails to make API call
@@ -919,7 +920,7 @@ public class BillingApi {
 
   /**
    * Get Invoice
-   * Return a single invoice by ID. Supports content negotiation via Accept header:  - &#x60;&#x60;application/pdf&#x60;&#x60; — PDF bytes proxy-streamed from Stripe - &#x60;&#x60;application/vnd.api+json&#x60;&#x60; / &#x60;&#x60;application/json&#x60;&#x60; / absent — JSON:API resource - Any other value — 406 Not Acceptable
+   * Return a single invoice by id. Supports content negotiation via the &#x60;Accept&#x60; header:  - &#x60;application/pdf&#x60; — streams the invoice PDF. - &#x60;application/vnd.api+json&#x60;, &#x60;application/json&#x60;, or absent — returns   the JSON:API invoice resource. - Any other value — &#x60;406 Not Acceptable&#x60;.
    * @param invoiceId  (required)
    * @param headers Optional headers to include in the request
    * @return ApiResponse&lt;InvoiceSingleResponse&gt;
@@ -1447,7 +1448,7 @@ public class BillingApi {
 
   /**
    * Set Default Payment Method
-   * Mark this payment method as the account&#39;s default. Idempotent — a no-op 200 if already default.
+   * Mark this payment method as the account&#39;s default. Idempotent: returns 200 with no changes when the payment method is already the default.
    * @param id  (required)
    * @return PaymentMethodResponse
    * @throws ApiException if fails to make API call
@@ -1458,7 +1459,7 @@ public class BillingApi {
 
   /**
    * Set Default Payment Method
-   * Mark this payment method as the account&#39;s default. Idempotent — a no-op 200 if already default.
+   * Mark this payment method as the account&#39;s default. Idempotent: returns 200 with no changes when the payment method is already the default.
    * @param id  (required)
    * @param headers Optional headers to include in the request
    * @return PaymentMethodResponse
@@ -1471,7 +1472,7 @@ public class BillingApi {
 
   /**
    * Set Default Payment Method
-   * Mark this payment method as the account&#39;s default. Idempotent — a no-op 200 if already default.
+   * Mark this payment method as the account&#39;s default. Idempotent: returns 200 with no changes when the payment method is already the default.
    * @param id  (required)
    * @return ApiResponse&lt;PaymentMethodResponse&gt;
    * @throws ApiException if fails to make API call
@@ -1482,7 +1483,7 @@ public class BillingApi {
 
   /**
    * Set Default Payment Method
-   * Mark this payment method as the account&#39;s default. Idempotent — a no-op 200 if already default.
+   * Mark this payment method as the account&#39;s default. Idempotent: returns 200 with no changes when the payment method is already the default.
    * @param id  (required)
    * @param headers Optional headers to include in the request
    * @return ApiResponse&lt;PaymentMethodResponse&gt;
@@ -1801,53 +1802,53 @@ public class BillingApi {
 
   /**
    * Update Payment Method
-   * Update the mutable fields (&#x60;&#x60;billing_details&#x60;&#x60;, &#x60;&#x60;exp_month&#x60;&#x60;, &#x60;&#x60;exp_year&#x60;&#x60;). The &#x60;&#x60;default&#x60;&#x60; field is not mutable via PUT — see ADR-044 §5.2; use the &#x60;&#x60;set_default&#x60;&#x60; action instead.
+   * Update the mutable fields of a payment method (&#x60;billing_details&#x60;, &#x60;exp_month&#x60;, &#x60;exp_year&#x60;). The &#x60;default&#x60; flag is not mutable via PUT — use the &#x60;set_default&#x60; action instead.
    * @param id  (required)
-   * @param paymentMethodResponse  (required)
+   * @param paymentMethodRequest  (required)
    * @return PaymentMethodResponse
    * @throws ApiException if fails to make API call
    */
-  public PaymentMethodResponse updatePaymentMethod(@jakarta.annotation.Nonnull UUID id, @jakarta.annotation.Nonnull PaymentMethodResponse paymentMethodResponse) throws ApiException {
-    return updatePaymentMethod(id, paymentMethodResponse, null);
+  public PaymentMethodResponse updatePaymentMethod(@jakarta.annotation.Nonnull UUID id, @jakarta.annotation.Nonnull PaymentMethodRequest paymentMethodRequest) throws ApiException {
+    return updatePaymentMethod(id, paymentMethodRequest, null);
   }
 
   /**
    * Update Payment Method
-   * Update the mutable fields (&#x60;&#x60;billing_details&#x60;&#x60;, &#x60;&#x60;exp_month&#x60;&#x60;, &#x60;&#x60;exp_year&#x60;&#x60;). The &#x60;&#x60;default&#x60;&#x60; field is not mutable via PUT — see ADR-044 §5.2; use the &#x60;&#x60;set_default&#x60;&#x60; action instead.
+   * Update the mutable fields of a payment method (&#x60;billing_details&#x60;, &#x60;exp_month&#x60;, &#x60;exp_year&#x60;). The &#x60;default&#x60; flag is not mutable via PUT — use the &#x60;set_default&#x60; action instead.
    * @param id  (required)
-   * @param paymentMethodResponse  (required)
+   * @param paymentMethodRequest  (required)
    * @param headers Optional headers to include in the request
    * @return PaymentMethodResponse
    * @throws ApiException if fails to make API call
    */
-  public PaymentMethodResponse updatePaymentMethod(@jakarta.annotation.Nonnull UUID id, @jakarta.annotation.Nonnull PaymentMethodResponse paymentMethodResponse, Map<String, String> headers) throws ApiException {
-    ApiResponse<PaymentMethodResponse> localVarResponse = updatePaymentMethodWithHttpInfo(id, paymentMethodResponse, headers);
+  public PaymentMethodResponse updatePaymentMethod(@jakarta.annotation.Nonnull UUID id, @jakarta.annotation.Nonnull PaymentMethodRequest paymentMethodRequest, Map<String, String> headers) throws ApiException {
+    ApiResponse<PaymentMethodResponse> localVarResponse = updatePaymentMethodWithHttpInfo(id, paymentMethodRequest, headers);
     return localVarResponse.getData();
   }
 
   /**
    * Update Payment Method
-   * Update the mutable fields (&#x60;&#x60;billing_details&#x60;&#x60;, &#x60;&#x60;exp_month&#x60;&#x60;, &#x60;&#x60;exp_year&#x60;&#x60;). The &#x60;&#x60;default&#x60;&#x60; field is not mutable via PUT — see ADR-044 §5.2; use the &#x60;&#x60;set_default&#x60;&#x60; action instead.
+   * Update the mutable fields of a payment method (&#x60;billing_details&#x60;, &#x60;exp_month&#x60;, &#x60;exp_year&#x60;). The &#x60;default&#x60; flag is not mutable via PUT — use the &#x60;set_default&#x60; action instead.
    * @param id  (required)
-   * @param paymentMethodResponse  (required)
+   * @param paymentMethodRequest  (required)
    * @return ApiResponse&lt;PaymentMethodResponse&gt;
    * @throws ApiException if fails to make API call
    */
-  public ApiResponse<PaymentMethodResponse> updatePaymentMethodWithHttpInfo(@jakarta.annotation.Nonnull UUID id, @jakarta.annotation.Nonnull PaymentMethodResponse paymentMethodResponse) throws ApiException {
-    return updatePaymentMethodWithHttpInfo(id, paymentMethodResponse, null);
+  public ApiResponse<PaymentMethodResponse> updatePaymentMethodWithHttpInfo(@jakarta.annotation.Nonnull UUID id, @jakarta.annotation.Nonnull PaymentMethodRequest paymentMethodRequest) throws ApiException {
+    return updatePaymentMethodWithHttpInfo(id, paymentMethodRequest, null);
   }
 
   /**
    * Update Payment Method
-   * Update the mutable fields (&#x60;&#x60;billing_details&#x60;&#x60;, &#x60;&#x60;exp_month&#x60;&#x60;, &#x60;&#x60;exp_year&#x60;&#x60;). The &#x60;&#x60;default&#x60;&#x60; field is not mutable via PUT — see ADR-044 §5.2; use the &#x60;&#x60;set_default&#x60;&#x60; action instead.
+   * Update the mutable fields of a payment method (&#x60;billing_details&#x60;, &#x60;exp_month&#x60;, &#x60;exp_year&#x60;). The &#x60;default&#x60; flag is not mutable via PUT — use the &#x60;set_default&#x60; action instead.
    * @param id  (required)
-   * @param paymentMethodResponse  (required)
+   * @param paymentMethodRequest  (required)
    * @param headers Optional headers to include in the request
    * @return ApiResponse&lt;PaymentMethodResponse&gt;
    * @throws ApiException if fails to make API call
    */
-  public ApiResponse<PaymentMethodResponse> updatePaymentMethodWithHttpInfo(@jakarta.annotation.Nonnull UUID id, @jakarta.annotation.Nonnull PaymentMethodResponse paymentMethodResponse, Map<String, String> headers) throws ApiException {
-    HttpRequest.Builder localVarRequestBuilder = updatePaymentMethodRequestBuilder(id, paymentMethodResponse, headers);
+  public ApiResponse<PaymentMethodResponse> updatePaymentMethodWithHttpInfo(@jakarta.annotation.Nonnull UUID id, @jakarta.annotation.Nonnull PaymentMethodRequest paymentMethodRequest, Map<String, String> headers) throws ApiException {
+    HttpRequest.Builder localVarRequestBuilder = updatePaymentMethodRequestBuilder(id, paymentMethodRequest, headers);
     try {
       HttpResponse<InputStream> localVarResponse = memberVarHttpClient.send(
           localVarRequestBuilder.build(),
@@ -1894,14 +1895,14 @@ public class BillingApi {
     }
   }
 
-  private HttpRequest.Builder updatePaymentMethodRequestBuilder(@jakarta.annotation.Nonnull UUID id, @jakarta.annotation.Nonnull PaymentMethodResponse paymentMethodResponse, Map<String, String> headers) throws ApiException {
+  private HttpRequest.Builder updatePaymentMethodRequestBuilder(@jakarta.annotation.Nonnull UUID id, @jakarta.annotation.Nonnull PaymentMethodRequest paymentMethodRequest, Map<String, String> headers) throws ApiException {
     // verify the required parameter 'id' is set
     if (id == null) {
       throw new ApiException(400, "Missing the required parameter 'id' when calling updatePaymentMethod");
     }
-    // verify the required parameter 'paymentMethodResponse' is set
-    if (paymentMethodResponse == null) {
-      throw new ApiException(400, "Missing the required parameter 'paymentMethodResponse' when calling updatePaymentMethod");
+    // verify the required parameter 'paymentMethodRequest' is set
+    if (paymentMethodRequest == null) {
+      throw new ApiException(400, "Missing the required parameter 'paymentMethodRequest' when calling updatePaymentMethod");
     }
 
     HttpRequest.Builder localVarRequestBuilder = HttpRequest.newBuilder();
@@ -1915,7 +1916,7 @@ public class BillingApi {
     localVarRequestBuilder.header("Accept", "application/vnd.api+json");
 
     try {
-      byte[] localVarPostBody = memberVarObjectMapper.writeValueAsBytes(paymentMethodResponse);
+      byte[] localVarPostBody = memberVarObjectMapper.writeValueAsBytes(paymentMethodRequest);
       localVarRequestBuilder.method("PUT", HttpRequest.BodyPublishers.ofByteArray(localVarPostBody));
     } catch (IOException e) {
       throw new ApiException(e);

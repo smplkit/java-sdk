@@ -34,7 +34,7 @@ import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 
 import com.smplkit.internal.generated.app.ApiClient;
 /**
- * SubscriptionListResponse
+ * JSON:API collection response for subscriptions.
  */
 @JsonPropertyOrder({
   SubscriptionListResponse.JSON_PROPERTY_DATA,

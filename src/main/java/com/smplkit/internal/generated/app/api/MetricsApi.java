@@ -277,7 +277,7 @@ public class MetricsApi {
 
   /**
    * List Metric Names
-   * Return distinct metric names (with a representative unit) for this account.  Used by the dashboard to discover which product sections to render. Plain JSON response (not JSON:API) — this is metadata, not a metric resource.
+   * Return distinct metric names recorded for the account, each with a representative unit. Plain-JSON response (not JSON:API) — this is metadata for discovery, not a metric resource.
    * @return MetricNamesResponse
    * @throws ApiException if fails to make API call
    */
@@ -287,7 +287,7 @@ public class MetricsApi {
 
   /**
    * List Metric Names
-   * Return distinct metric names (with a representative unit) for this account.  Used by the dashboard to discover which product sections to render. Plain JSON response (not JSON:API) — this is metadata, not a metric resource.
+   * Return distinct metric names recorded for the account, each with a representative unit. Plain-JSON response (not JSON:API) — this is metadata for discovery, not a metric resource.
    * @param headers Optional headers to include in the request
    * @return MetricNamesResponse
    * @throws ApiException if fails to make API call
@@ -299,7 +299,7 @@ public class MetricsApi {
 
   /**
    * List Metric Names
-   * Return distinct metric names (with a representative unit) for this account.  Used by the dashboard to discover which product sections to render. Plain JSON response (not JSON:API) — this is metadata, not a metric resource.
+   * Return distinct metric names recorded for the account, each with a representative unit. Plain-JSON response (not JSON:API) — this is metadata for discovery, not a metric resource.
    * @return ApiResponse&lt;MetricNamesResponse&gt;
    * @throws ApiException if fails to make API call
    */
@@ -309,7 +309,7 @@ public class MetricsApi {
 
   /**
    * List Metric Names
-   * Return distinct metric names (with a representative unit) for this account.  Used by the dashboard to discover which product sections to render. Plain JSON response (not JSON:API) — this is metadata, not a metric resource.
+   * Return distinct metric names recorded for the account, each with a representative unit. Plain-JSON response (not JSON:API) — this is metadata for discovery, not a metric resource.
    * @param headers Optional headers to include in the request
    * @return ApiResponse&lt;MetricNamesResponse&gt;
    * @throws ApiException if fails to make API call

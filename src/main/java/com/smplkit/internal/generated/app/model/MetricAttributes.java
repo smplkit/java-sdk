@@ -38,7 +38,7 @@ import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 
 import com.smplkit.internal.generated.app.ApiClient;
 /**
- * MetricAttributes
+ * A pre-aggregated metric data point recorded for the account.
  */
 @JsonPropertyOrder({
   MetricAttributes.JSON_PROPERTY_NAME,
@@ -94,7 +94,7 @@ public class MetricAttributes {
   }
 
   /**
-   * Get name
+   * Metric series name, e.g. &#x60;flags.evaluations&#x60;. Dot-separated.
    * @return name
    */
   @jakarta.annotation.Nonnull
@@ -142,7 +142,7 @@ public class MetricAttributes {
   }
 
   /**
-   * Get unit
+   * Unit the value is expressed in, e.g. &#x60;evaluations&#x60;, &#x60;ms&#x60;, &#x60;bytes&#x60;.
    * @return unit
    */
   @jakarta.annotation.Nullable
@@ -174,7 +174,7 @@ public class MetricAttributes {
   }
 
   /**
-   * Get periodSeconds
+   * Length of the aggregation window in seconds (e.g. &#x60;60&#x60; for a one-minute roll-up).
    * @return periodSeconds
    */
   @jakarta.annotation.Nonnull
@@ -206,7 +206,7 @@ public class MetricAttributes {
   }
 
   /**
-   * Get dimensions
+   * Optional dimension keys that scope the data point, e.g. &#x60;environment&#x60;, &#x60;service&#x60;. Used as filter targets on the list endpoint via &#x60;filter[dimensions.&lt;key&gt;]&#x3D;...&#x60;.
    * @return dimensions
    */
   @jakarta.annotation.Nullable
@@ -230,7 +230,7 @@ public class MetricAttributes {
   }
 
   /**
-   * Get recordedAt
+   * Start of the aggregation window this data point covers.
    * @return recordedAt
    */
   @jakarta.annotation.Nonnull
@@ -249,7 +249,7 @@ public class MetricAttributes {
 
 
   /**
-   * Get createdAt
+   * When the data point was ingested.
    * @return createdAt
    */
   @jakarta.annotation.Nullable

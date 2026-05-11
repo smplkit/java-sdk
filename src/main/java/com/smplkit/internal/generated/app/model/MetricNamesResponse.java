@@ -33,7 +33,7 @@ import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 
 import com.smplkit.internal.generated.app.ApiClient;
 /**
- * MetricNamesResponse
+ * Plain-JSON response listing distinct metric names for the account.
  */
 @JsonPropertyOrder({
   MetricNamesResponse.JSON_PROPERTY_DATA

@@ -35,7 +35,7 @@ import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 
 import com.smplkit.internal.generated.app.ApiClient;
 /**
- * MetricResource
+ * JSON:API resource envelope for a metric data point.  &#x60;id&#x60; must not be specified for create requests (the server assigns it).
  */
 @JsonPropertyOrder({
   MetricResource.JSON_PROPERTY_ID,

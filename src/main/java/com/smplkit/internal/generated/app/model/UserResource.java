@@ -35,7 +35,7 @@ import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 
 import com.smplkit.internal.generated.app.ApiClient;
 /**
- * UserResource
+ * JSON:API resource envelope for a user.  &#x60;id&#x60; must not be specified for create requests (the server assigns it).
  */
 @JsonPropertyOrder({
   UserResource.JSON_PROPERTY_ID,

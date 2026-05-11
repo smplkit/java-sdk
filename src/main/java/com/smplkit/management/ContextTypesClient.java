@@ -8,6 +8,7 @@ import com.smplkit.internal.generated.app.api.ContextTypesApi;
 import com.smplkit.internal.generated.app.model.ContextType;
 import com.smplkit.internal.generated.app.model.ContextTypeListResponse;
 import com.smplkit.internal.generated.app.model.ContextTypeResource;
+import com.smplkit.internal.generated.app.model.ContextTypeRequest;
 import com.smplkit.internal.generated.app.model.ContextTypeResponse;
 
 import java.time.Instant;
@@ -77,7 +78,7 @@ public final class ContextTypesClient {
 
     com.smplkit.management.ContextType _create(com.smplkit.management.ContextType ct) {
         try {
-            ContextTypeResponse body = buildRequest(ct);
+            ContextTypeRequest body = buildRequest(ct);
             ContextTypeResponse resp = api.createContextType(body);
             return responseToModel(resp);
         } catch (ApiException e) {
@@ -87,7 +88,7 @@ public final class ContextTypesClient {
 
     com.smplkit.management.ContextType _update(com.smplkit.management.ContextType ct) {
         try {
-            ContextTypeResponse body = buildRequest(ct);
+            ContextTypeRequest body = buildRequest(ct);
             ContextTypeResponse resp = api.updateContextType(ct.getId(), body);
             return responseToModel(resp);
         } catch (ApiException e) {
@@ -95,7 +96,7 @@ public final class ContextTypesClient {
         }
     }
 
-    private ContextTypeResponse buildRequest(com.smplkit.management.ContextType ct) {
+    private ContextTypeRequest buildRequest(com.smplkit.management.ContextType ct) {
         ContextType attrs = new ContextType();
         attrs.setName(ct.getName());
         // attributes is Map<String, Map<String, Object>> — cast to Map<String, Object> for the generated model
@@ -110,7 +111,7 @@ public final class ContextTypesClient {
                 .id(ct.getId())
                 .type(ContextTypeResource.TypeEnum.CONTEXT_TYPE)
                 .attributes(attrs);
-        return new ContextTypeResponse().data(data);
+        return new ContextTypeRequest().data(data);
     }
 
     private com.smplkit.management.ContextType responseToModel(ContextTypeResponse resp) {

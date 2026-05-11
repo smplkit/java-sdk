@@ -31,7 +31,7 @@ import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 
 import com.smplkit.internal.generated.app.ApiClient;
 /**
- * CreateSubscriptionData
+ * Resource object for the create-subscription request.
  */
 @JsonPropertyOrder({
   CreateSubscriptionData.JSON_PROPERTY_TYPE,
@@ -56,7 +56,7 @@ public class CreateSubscriptionData {
   }
 
   /**
-   * Get type
+   * Resource type; must be &#x60;subscription&#x60;.
    * @return type
    */
   @jakarta.annotation.Nonnull

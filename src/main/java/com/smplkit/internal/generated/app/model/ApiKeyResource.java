@@ -35,7 +35,7 @@ import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 
 import com.smplkit.internal.generated.app.ApiClient;
 /**
- * ApiKeyResource
+ * JSON:API resource envelope for an API key.  &#x60;id&#x60; must not be specified for create requests (the server assigns it).
  */
 @JsonPropertyOrder({
   ApiKeyResource.JSON_PROPERTY_ID,

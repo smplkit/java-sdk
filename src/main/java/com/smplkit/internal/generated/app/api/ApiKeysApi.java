@@ -19,6 +19,7 @@ import com.smplkit.internal.generated.app.Configuration;
 import com.smplkit.internal.generated.app.Pair;
 
 import com.smplkit.internal.generated.app.model.ApiKeyListResponse;
+import com.smplkit.internal.generated.app.model.ApiKeyRequest;
 import com.smplkit.internal.generated.app.model.ApiKeyResponse;
 import com.smplkit.internal.generated.app.model.ErrorResponse;
 import java.util.UUID;
@@ -168,48 +169,48 @@ public class ApiKeysApi {
   /**
    * Create API Key
    * Create a new API key. The id and key value are server-generated.
-   * @param apiKeyResponse  (required)
+   * @param apiKeyRequest  (required)
    * @return ApiKeyResponse
    * @throws ApiException if fails to make API call
    */
-  public ApiKeyResponse createApiKey(@jakarta.annotation.Nonnull ApiKeyResponse apiKeyResponse) throws ApiException {
-    return createApiKey(apiKeyResponse, null);
+  public ApiKeyResponse createApiKey(@jakarta.annotation.Nonnull ApiKeyRequest apiKeyRequest) throws ApiException {
+    return createApiKey(apiKeyRequest, null);
   }
 
   /**
    * Create API Key
    * Create a new API key. The id and key value are server-generated.
-   * @param apiKeyResponse  (required)
+   * @param apiKeyRequest  (required)
    * @param headers Optional headers to include in the request
    * @return ApiKeyResponse
    * @throws ApiException if fails to make API call
    */
-  public ApiKeyResponse createApiKey(@jakarta.annotation.Nonnull ApiKeyResponse apiKeyResponse, Map<String, String> headers) throws ApiException {
-    ApiResponse<ApiKeyResponse> localVarResponse = createApiKeyWithHttpInfo(apiKeyResponse, headers);
+  public ApiKeyResponse createApiKey(@jakarta.annotation.Nonnull ApiKeyRequest apiKeyRequest, Map<String, String> headers) throws ApiException {
+    ApiResponse<ApiKeyResponse> localVarResponse = createApiKeyWithHttpInfo(apiKeyRequest, headers);
     return localVarResponse.getData();
   }
 
   /**
    * Create API Key
    * Create a new API key. The id and key value are server-generated.
-   * @param apiKeyResponse  (required)
+   * @param apiKeyRequest  (required)
    * @return ApiResponse&lt;ApiKeyResponse&gt;
    * @throws ApiException if fails to make API call
    */
-  public ApiResponse<ApiKeyResponse> createApiKeyWithHttpInfo(@jakarta.annotation.Nonnull ApiKeyResponse apiKeyResponse) throws ApiException {
-    return createApiKeyWithHttpInfo(apiKeyResponse, null);
+  public ApiResponse<ApiKeyResponse> createApiKeyWithHttpInfo(@jakarta.annotation.Nonnull ApiKeyRequest apiKeyRequest) throws ApiException {
+    return createApiKeyWithHttpInfo(apiKeyRequest, null);
   }
 
   /**
    * Create API Key
    * Create a new API key. The id and key value are server-generated.
-   * @param apiKeyResponse  (required)
+   * @param apiKeyRequest  (required)
    * @param headers Optional headers to include in the request
    * @return ApiResponse&lt;ApiKeyResponse&gt;
    * @throws ApiException if fails to make API call
    */
-  public ApiResponse<ApiKeyResponse> createApiKeyWithHttpInfo(@jakarta.annotation.Nonnull ApiKeyResponse apiKeyResponse, Map<String, String> headers) throws ApiException {
-    HttpRequest.Builder localVarRequestBuilder = createApiKeyRequestBuilder(apiKeyResponse, headers);
+  public ApiResponse<ApiKeyResponse> createApiKeyWithHttpInfo(@jakarta.annotation.Nonnull ApiKeyRequest apiKeyRequest, Map<String, String> headers) throws ApiException {
+    HttpRequest.Builder localVarRequestBuilder = createApiKeyRequestBuilder(apiKeyRequest, headers);
     try {
       HttpResponse<InputStream> localVarResponse = memberVarHttpClient.send(
           localVarRequestBuilder.build(),
@@ -256,10 +257,10 @@ public class ApiKeysApi {
     }
   }
 
-  private HttpRequest.Builder createApiKeyRequestBuilder(@jakarta.annotation.Nonnull ApiKeyResponse apiKeyResponse, Map<String, String> headers) throws ApiException {
-    // verify the required parameter 'apiKeyResponse' is set
-    if (apiKeyResponse == null) {
-      throw new ApiException(400, "Missing the required parameter 'apiKeyResponse' when calling createApiKey");
+  private HttpRequest.Builder createApiKeyRequestBuilder(@jakarta.annotation.Nonnull ApiKeyRequest apiKeyRequest, Map<String, String> headers) throws ApiException {
+    // verify the required parameter 'apiKeyRequest' is set
+    if (apiKeyRequest == null) {
+      throw new ApiException(400, "Missing the required parameter 'apiKeyRequest' when calling createApiKey");
     }
 
     HttpRequest.Builder localVarRequestBuilder = HttpRequest.newBuilder();
@@ -272,7 +273,7 @@ public class ApiKeysApi {
     localVarRequestBuilder.header("Accept", "application/vnd.api+json");
 
     try {
-      byte[] localVarPostBody = memberVarObjectMapper.writeValueAsBytes(apiKeyResponse);
+      byte[] localVarPostBody = memberVarObjectMapper.writeValueAsBytes(apiKeyRequest);
       localVarRequestBuilder.method("POST", HttpRequest.BodyPublishers.ofByteArray(localVarPostBody));
     } catch (IOException e) {
       throw new ApiException(e);
@@ -760,25 +761,25 @@ public class ApiKeysApi {
    * Update API Key
    * Update an API key by id.
    * @param id  (required)
-   * @param apiKeyResponse  (required)
+   * @param apiKeyRequest  (required)
    * @return ApiKeyResponse
    * @throws ApiException if fails to make API call
    */
-  public ApiKeyResponse updateApiKey(@jakarta.annotation.Nonnull UUID id, @jakarta.annotation.Nonnull ApiKeyResponse apiKeyResponse) throws ApiException {
-    return updateApiKey(id, apiKeyResponse, null);
+  public ApiKeyResponse updateApiKey(@jakarta.annotation.Nonnull UUID id, @jakarta.annotation.Nonnull ApiKeyRequest apiKeyRequest) throws ApiException {
+    return updateApiKey(id, apiKeyRequest, null);
   }
 
   /**
    * Update API Key
    * Update an API key by id.
    * @param id  (required)
-   * @param apiKeyResponse  (required)
+   * @param apiKeyRequest  (required)
    * @param headers Optional headers to include in the request
    * @return ApiKeyResponse
    * @throws ApiException if fails to make API call
    */
-  public ApiKeyResponse updateApiKey(@jakarta.annotation.Nonnull UUID id, @jakarta.annotation.Nonnull ApiKeyResponse apiKeyResponse, Map<String, String> headers) throws ApiException {
-    ApiResponse<ApiKeyResponse> localVarResponse = updateApiKeyWithHttpInfo(id, apiKeyResponse, headers);
+  public ApiKeyResponse updateApiKey(@jakarta.annotation.Nonnull UUID id, @jakarta.annotation.Nonnull ApiKeyRequest apiKeyRequest, Map<String, String> headers) throws ApiException {
+    ApiResponse<ApiKeyResponse> localVarResponse = updateApiKeyWithHttpInfo(id, apiKeyRequest, headers);
     return localVarResponse.getData();
   }
 
@@ -786,25 +787,25 @@ public class ApiKeysApi {
    * Update API Key
    * Update an API key by id.
    * @param id  (required)
-   * @param apiKeyResponse  (required)
+   * @param apiKeyRequest  (required)
    * @return ApiResponse&lt;ApiKeyResponse&gt;
    * @throws ApiException if fails to make API call
    */
-  public ApiResponse<ApiKeyResponse> updateApiKeyWithHttpInfo(@jakarta.annotation.Nonnull UUID id, @jakarta.annotation.Nonnull ApiKeyResponse apiKeyResponse) throws ApiException {
-    return updateApiKeyWithHttpInfo(id, apiKeyResponse, null);
+  public ApiResponse<ApiKeyResponse> updateApiKeyWithHttpInfo(@jakarta.annotation.Nonnull UUID id, @jakarta.annotation.Nonnull ApiKeyRequest apiKeyRequest) throws ApiException {
+    return updateApiKeyWithHttpInfo(id, apiKeyRequest, null);
   }
 
   /**
    * Update API Key
    * Update an API key by id.
    * @param id  (required)
-   * @param apiKeyResponse  (required)
+   * @param apiKeyRequest  (required)
    * @param headers Optional headers to include in the request
    * @return ApiResponse&lt;ApiKeyResponse&gt;
    * @throws ApiException if fails to make API call
    */
-  public ApiResponse<ApiKeyResponse> updateApiKeyWithHttpInfo(@jakarta.annotation.Nonnull UUID id, @jakarta.annotation.Nonnull ApiKeyResponse apiKeyResponse, Map<String, String> headers) throws ApiException {
-    HttpRequest.Builder localVarRequestBuilder = updateApiKeyRequestBuilder(id, apiKeyResponse, headers);
+  public ApiResponse<ApiKeyResponse> updateApiKeyWithHttpInfo(@jakarta.annotation.Nonnull UUID id, @jakarta.annotation.Nonnull ApiKeyRequest apiKeyRequest, Map<String, String> headers) throws ApiException {
+    HttpRequest.Builder localVarRequestBuilder = updateApiKeyRequestBuilder(id, apiKeyRequest, headers);
     try {
       HttpResponse<InputStream> localVarResponse = memberVarHttpClient.send(
           localVarRequestBuilder.build(),
@@ -851,14 +852,14 @@ public class ApiKeysApi {
     }
   }
 
-  private HttpRequest.Builder updateApiKeyRequestBuilder(@jakarta.annotation.Nonnull UUID id, @jakarta.annotation.Nonnull ApiKeyResponse apiKeyResponse, Map<String, String> headers) throws ApiException {
+  private HttpRequest.Builder updateApiKeyRequestBuilder(@jakarta.annotation.Nonnull UUID id, @jakarta.annotation.Nonnull ApiKeyRequest apiKeyRequest, Map<String, String> headers) throws ApiException {
     // verify the required parameter 'id' is set
     if (id == null) {
       throw new ApiException(400, "Missing the required parameter 'id' when calling updateApiKey");
     }
-    // verify the required parameter 'apiKeyResponse' is set
-    if (apiKeyResponse == null) {
-      throw new ApiException(400, "Missing the required parameter 'apiKeyResponse' when calling updateApiKey");
+    // verify the required parameter 'apiKeyRequest' is set
+    if (apiKeyRequest == null) {
+      throw new ApiException(400, "Missing the required parameter 'apiKeyRequest' when calling updateApiKey");
     }
 
     HttpRequest.Builder localVarRequestBuilder = HttpRequest.newBuilder();
@@ -872,7 +873,7 @@ public class ApiKeysApi {
     localVarRequestBuilder.header("Accept", "application/vnd.api+json");
 
     try {
-      byte[] localVarPostBody = memberVarObjectMapper.writeValueAsBytes(apiKeyResponse);
+      byte[] localVarPostBody = memberVarObjectMapper.writeValueAsBytes(apiKeyRequest);
       localVarRequestBuilder.method("PUT", HttpRequest.BodyPublishers.ofByteArray(localVarPostBody));
     } catch (IOException e) {
       throw new ApiException(e);

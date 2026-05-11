@@ -35,7 +35,7 @@ import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 
 import com.smplkit.internal.generated.app.ApiClient;
 /**
- * MetricRollupAttributes
+ * An aggregated metric value over a fixed-size time bucket.
  */
 @JsonPropertyOrder({
   MetricRollupAttributes.JSON_PROPERTY_NAME,
@@ -74,7 +74,7 @@ public class MetricRollupAttributes {
   }
 
   /**
-   * Get name
+   * Metric series name the rollup is computed from.
    * @return name
    */
   @jakarta.annotation.Nonnull
@@ -98,7 +98,7 @@ public class MetricRollupAttributes {
   }
 
   /**
-   * Get value
+   * Sum of the underlying metric values over the bucket.
    * @return value
    */
   @jakarta.annotation.Nonnull
@@ -122,7 +122,7 @@ public class MetricRollupAttributes {
   }
 
   /**
-   * Get unit
+   * Unit the value is expressed in.
    * @return unit
    */
   @jakarta.annotation.Nullable
@@ -154,7 +154,7 @@ public class MetricRollupAttributes {
   }
 
   /**
-   * Get bucket
+   * Start of the time bucket this rollup covers.
    * @return bucket
    */
   @jakarta.annotation.Nonnull
@@ -178,7 +178,7 @@ public class MetricRollupAttributes {
   }
 
   /**
-   * Get rollup
+   * Rollup interval. One of &#x60;1m&#x60;, &#x60;5m&#x60;, &#x60;15m&#x60;, &#x60;1h&#x60;, &#x60;6h&#x60;, &#x60;1d&#x60;.
    * @return rollup
    */
   @jakarta.annotation.Nonnull

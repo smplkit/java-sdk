@@ -33,7 +33,7 @@ import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 
 import com.smplkit.internal.generated.app.ApiClient;
 /**
- * ContextBulkRegister
+ * Bulk registration request body for the contexts endpoint.
  */
 @JsonPropertyOrder({
   ContextBulkRegister.JSON_PROPERTY_CONTEXTS
@@ -61,7 +61,7 @@ public class ContextBulkRegister {
   }
 
   /**
-   * Get contexts
+   * One context instance per entry.
    * @return contexts
    */
   @jakarta.annotation.Nonnull

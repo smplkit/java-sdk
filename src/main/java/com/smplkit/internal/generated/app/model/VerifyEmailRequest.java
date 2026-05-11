@@ -30,7 +30,7 @@ import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 
 import com.smplkit.internal.generated.app.ApiClient;
 /**
- * VerifyEmailRequest
+ * Body for the email-verification endpoint.
  */
 @JsonPropertyOrder({
   VerifyEmailRequest.JSON_PROPERTY_TOKEN
@@ -50,7 +50,7 @@ public class VerifyEmailRequest {
   }
 
   /**
-   * Get token
+   * Verification token previously delivered to the user&#39;s email.
    * @return token
    */
   @jakarta.annotation.Nonnull

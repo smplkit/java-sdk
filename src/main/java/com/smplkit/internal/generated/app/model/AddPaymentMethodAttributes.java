@@ -30,7 +30,7 @@ import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 
 import com.smplkit.internal.generated.app.ApiClient;
 /**
- * Attributes for POST /api/v1/payment_methods.  Distinct from &#x60;&#x60;PaymentMethod&#x60;&#x60; because this shape takes the Stripe &#x60;&#x60;pm_...&#x60;&#x60; ID at registration time; the persistent resource does not expose that ID.
+ * Attributes accepted when registering a new payment method.  The customer first creates a Stripe payment method client-side using Stripe Elements, then submits its &#x60;pm_...&#x60; identifier here to persist it on the account.
  */
 @JsonPropertyOrder({
   AddPaymentMethodAttributes.JSON_PROPERTY_STRIPE_PAYMENT_METHOD_ID,
@@ -55,7 +55,7 @@ public class AddPaymentMethodAttributes {
   }
 
   /**
-   * Get stripePaymentMethodId
+   * Identifier of the Stripe payment method to register on the account, e.g. &#x60;pm_1234567890abcdef&#x60;.
    * @return stripePaymentMethodId
    */
   @jakarta.annotation.Nonnull
@@ -79,7 +79,7 @@ public class AddPaymentMethodAttributes {
   }
 
   /**
-   * Get _default
+   * When &#x60;true&#x60;, make the newly registered payment method the account&#39;s default. The first payment method on an account is always set as default regardless of this field.
    * @return _default
    */
   @jakarta.annotation.Nullable

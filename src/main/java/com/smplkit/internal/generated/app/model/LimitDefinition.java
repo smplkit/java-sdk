@@ -34,7 +34,7 @@ import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 
 import com.smplkit.internal.generated.app.ApiClient;
 /**
- * LimitDefinition
+ * Description of a single metered limit on a product.
  */
 @JsonPropertyOrder({
   LimitDefinition.JSON_PROPERTY_DISPLAY_NAME,
@@ -68,7 +68,7 @@ public class LimitDefinition {
   }
 
   /**
-   * Get displayName
+   * Human-readable name for the limit.
    * @return displayName
    */
   @jakarta.annotation.Nonnull
@@ -92,7 +92,7 @@ public class LimitDefinition {
   }
 
   /**
-   * Get description
+   * Long-form description of what the limit controls.
    * @return description
    */
   @jakarta.annotation.Nonnull
@@ -116,7 +116,7 @@ public class LimitDefinition {
   }
 
   /**
-   * Get unit
+   * Unit the limit is measured in, e.g. &#x60;flags&#x60;, &#x60;events&#x60;.
    * @return unit
    */
   @jakarta.annotation.Nonnull
@@ -140,7 +140,7 @@ public class LimitDefinition {
   }
 
   /**
-   * Get displayFormat
+   * Optional formatter hint for rendering the limit value in customer-facing UI.
    * @return displayFormat
    */
   @jakarta.annotation.Nullable

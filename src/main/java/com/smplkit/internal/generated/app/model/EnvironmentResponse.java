@@ -31,7 +31,7 @@ import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 
 import com.smplkit.internal.generated.app.ApiClient;
 /**
- * EnvironmentResponse
+ * JSON:API single-resource response envelope for an environment.
  */
 @JsonPropertyOrder({
   EnvironmentResponse.JSON_PROPERTY_DATA

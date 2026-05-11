@@ -37,7 +37,7 @@ import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 
 import com.smplkit.internal.generated.app.ApiClient;
 /**
- * ContextType
+ * A kind of context — for example, &#x60;user&#x60;, &#x60;account&#x60;, or &#x60;device&#x60; — that groups together context instances sharing a common set of attributes.  The known attribute keys for the type accumulate as instances are registered; each key carries an optional metadata object describing it.
  */
 @JsonPropertyOrder({
   ContextType.JSON_PROPERTY_NAME,
@@ -80,7 +80,7 @@ public class ContextType {
   }
 
   /**
-   * Display label: User, Account, Device
+   * Display label for the context type, e.g. &#x60;User&#x60;, &#x60;Account&#x60;, or &#x60;Device&#x60;.
    * @return name
    */
   @jakarta.annotation.Nonnull
@@ -112,7 +112,7 @@ public class ContextType {
   }
 
   /**
-   * Known attribute keys with metadata objects
+   * Map of known attribute key to per-attribute metadata. The metadata object is free-form and may be empty. Keys grow as new attributes are observed on context instances of this type.
    * @return attributes
    */
   @jakarta.annotation.Nullable
@@ -131,7 +131,7 @@ public class ContextType {
 
 
   /**
-   * Get createdAt
+   * When the context type was created.
    * @return createdAt
    */
   @jakarta.annotation.Nullable
@@ -159,7 +159,7 @@ public class ContextType {
 
 
   /**
-   * Get updatedAt
+   * When the context type was last modified.
    * @return updatedAt
    */
   @jakarta.annotation.Nullable

@@ -33,7 +33,7 @@ import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 
 import com.smplkit.internal.generated.app.ApiClient;
 /**
- * MetricBulkRequest
+ * Bulk-ingest request envelope for metric data points.
  */
 @JsonPropertyOrder({
   MetricBulkRequest.JSON_PROPERTY_DATA
@@ -61,7 +61,7 @@ public class MetricBulkRequest {
   }
 
   /**
-   * Get data
+   * Metric data points to ingest in a single request.
    * @return data
    */
   @jakarta.annotation.Nonnull

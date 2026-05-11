@@ -34,7 +34,7 @@ import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 
 import com.smplkit.internal.generated.app.ApiClient;
 /**
- * SubscriptionAttributes
+ * A subscription that grants the account access to a product on a plan.
  */
 @JsonPropertyOrder({
   SubscriptionAttributes.JSON_PROPERTY_PRODUCT,
@@ -81,7 +81,7 @@ public class SubscriptionAttributes {
   }
 
   /**
-   * Get product
+   * Product key the subscription is for, e.g. &#x60;flags&#x60;.
    * @return product
    */
   @jakarta.annotation.Nonnull
@@ -105,7 +105,7 @@ public class SubscriptionAttributes {
   }
 
   /**
-   * Get plan
+   * Plan key the subscription is on, e.g. &#x60;pro&#x60;.
    * @return plan
    */
   @jakarta.annotation.Nonnull
@@ -129,7 +129,7 @@ public class SubscriptionAttributes {
   }
 
   /**
-   * Get status
+   * Lifecycle state of the subscription, e.g. &#x60;active&#x60;, &#x60;trialing&#x60;, &#x60;past_due&#x60;, &#x60;canceled&#x60;.
    * @return status
    */
   @jakarta.annotation.Nullable
@@ -161,7 +161,7 @@ public class SubscriptionAttributes {
   }
 
   /**
-   * Get comped
+   * When &#x60;true&#x60;, the subscription is complimentary and is not billed through the billing provider.
    * @return comped
    */
   @jakarta.annotation.Nonnull
@@ -185,7 +185,7 @@ public class SubscriptionAttributes {
   }
 
   /**
-   * Get stripeManaged
+   * When &#x60;true&#x60;, the subscription is billed through Stripe; otherwise it is a free or complimentary subscription that does not produce invoices.
    * @return stripeManaged
    */
   @jakarta.annotation.Nonnull
@@ -209,7 +209,7 @@ public class SubscriptionAttributes {
   }
 
   /**
-   * Get currentPeriodEnd
+   * End of the current billing period (ISO 8601 timestamp).
    * @return currentPeriodEnd
    */
   @jakarta.annotation.Nullable
@@ -241,7 +241,7 @@ public class SubscriptionAttributes {
   }
 
   /**
-   * Get clientSecret
+   * Stripe payment intent client secret returned when a subscription create requires additional authentication (3DS). Returned only on create.
    * @return clientSecret
    */
   @jakarta.annotation.Nullable

@@ -33,7 +33,7 @@ import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 
 import com.smplkit.internal.generated.app.ApiClient;
 /**
- * MetricRollupListResponse
+ * JSON:API collection response for metric rollups.
  */
 @JsonPropertyOrder({
   MetricRollupListResponse.JSON_PROPERTY_DATA

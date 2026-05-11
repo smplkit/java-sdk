@@ -21,6 +21,7 @@ import com.smplkit.internal.generated.app.Pair;
 import com.smplkit.internal.generated.app.model.ContextBatchResponse;
 import com.smplkit.internal.generated.app.model.ContextBulkRegister;
 import com.smplkit.internal.generated.app.model.ContextListResponse;
+import com.smplkit.internal.generated.app.model.ContextRequest;
 import com.smplkit.internal.generated.app.model.ContextResponse;
 import com.smplkit.internal.generated.app.model.ErrorResponse;
 
@@ -641,53 +642,53 @@ public class ContextsApi {
 
   /**
    * Update Context
-   * Update a context instance by composite id (type:key). Only the human-readable display name is mutable through this endpoint; context_type and observed attributes are written by the SDK ingestion path.
+   * Update a context instance by composite id (type:key). Only the human-readable display name is mutable here; &#x60;context_type&#x60; and observed &#x60;attributes&#x60; are written by SDK registration and ignored on this endpoint.
    * @param id  (required)
-   * @param contextResponse  (required)
+   * @param contextRequest  (required)
    * @return ContextResponse
    * @throws ApiException if fails to make API call
    */
-  public ContextResponse updateContext(@jakarta.annotation.Nonnull String id, @jakarta.annotation.Nonnull ContextResponse contextResponse) throws ApiException {
-    return updateContext(id, contextResponse, null);
+  public ContextResponse updateContext(@jakarta.annotation.Nonnull String id, @jakarta.annotation.Nonnull ContextRequest contextRequest) throws ApiException {
+    return updateContext(id, contextRequest, null);
   }
 
   /**
    * Update Context
-   * Update a context instance by composite id (type:key). Only the human-readable display name is mutable through this endpoint; context_type and observed attributes are written by the SDK ingestion path.
+   * Update a context instance by composite id (type:key). Only the human-readable display name is mutable here; &#x60;context_type&#x60; and observed &#x60;attributes&#x60; are written by SDK registration and ignored on this endpoint.
    * @param id  (required)
-   * @param contextResponse  (required)
+   * @param contextRequest  (required)
    * @param headers Optional headers to include in the request
    * @return ContextResponse
    * @throws ApiException if fails to make API call
    */
-  public ContextResponse updateContext(@jakarta.annotation.Nonnull String id, @jakarta.annotation.Nonnull ContextResponse contextResponse, Map<String, String> headers) throws ApiException {
-    ApiResponse<ContextResponse> localVarResponse = updateContextWithHttpInfo(id, contextResponse, headers);
+  public ContextResponse updateContext(@jakarta.annotation.Nonnull String id, @jakarta.annotation.Nonnull ContextRequest contextRequest, Map<String, String> headers) throws ApiException {
+    ApiResponse<ContextResponse> localVarResponse = updateContextWithHttpInfo(id, contextRequest, headers);
     return localVarResponse.getData();
   }
 
   /**
    * Update Context
-   * Update a context instance by composite id (type:key). Only the human-readable display name is mutable through this endpoint; context_type and observed attributes are written by the SDK ingestion path.
+   * Update a context instance by composite id (type:key). Only the human-readable display name is mutable here; &#x60;context_type&#x60; and observed &#x60;attributes&#x60; are written by SDK registration and ignored on this endpoint.
    * @param id  (required)
-   * @param contextResponse  (required)
+   * @param contextRequest  (required)
    * @return ApiResponse&lt;ContextResponse&gt;
    * @throws ApiException if fails to make API call
    */
-  public ApiResponse<ContextResponse> updateContextWithHttpInfo(@jakarta.annotation.Nonnull String id, @jakarta.annotation.Nonnull ContextResponse contextResponse) throws ApiException {
-    return updateContextWithHttpInfo(id, contextResponse, null);
+  public ApiResponse<ContextResponse> updateContextWithHttpInfo(@jakarta.annotation.Nonnull String id, @jakarta.annotation.Nonnull ContextRequest contextRequest) throws ApiException {
+    return updateContextWithHttpInfo(id, contextRequest, null);
   }
 
   /**
    * Update Context
-   * Update a context instance by composite id (type:key). Only the human-readable display name is mutable through this endpoint; context_type and observed attributes are written by the SDK ingestion path.
+   * Update a context instance by composite id (type:key). Only the human-readable display name is mutable here; &#x60;context_type&#x60; and observed &#x60;attributes&#x60; are written by SDK registration and ignored on this endpoint.
    * @param id  (required)
-   * @param contextResponse  (required)
+   * @param contextRequest  (required)
    * @param headers Optional headers to include in the request
    * @return ApiResponse&lt;ContextResponse&gt;
    * @throws ApiException if fails to make API call
    */
-  public ApiResponse<ContextResponse> updateContextWithHttpInfo(@jakarta.annotation.Nonnull String id, @jakarta.annotation.Nonnull ContextResponse contextResponse, Map<String, String> headers) throws ApiException {
-    HttpRequest.Builder localVarRequestBuilder = updateContextRequestBuilder(id, contextResponse, headers);
+  public ApiResponse<ContextResponse> updateContextWithHttpInfo(@jakarta.annotation.Nonnull String id, @jakarta.annotation.Nonnull ContextRequest contextRequest, Map<String, String> headers) throws ApiException {
+    HttpRequest.Builder localVarRequestBuilder = updateContextRequestBuilder(id, contextRequest, headers);
     try {
       HttpResponse<InputStream> localVarResponse = memberVarHttpClient.send(
           localVarRequestBuilder.build(),
@@ -734,14 +735,14 @@ public class ContextsApi {
     }
   }
 
-  private HttpRequest.Builder updateContextRequestBuilder(@jakarta.annotation.Nonnull String id, @jakarta.annotation.Nonnull ContextResponse contextResponse, Map<String, String> headers) throws ApiException {
+  private HttpRequest.Builder updateContextRequestBuilder(@jakarta.annotation.Nonnull String id, @jakarta.annotation.Nonnull ContextRequest contextRequest, Map<String, String> headers) throws ApiException {
     // verify the required parameter 'id' is set
     if (id == null) {
       throw new ApiException(400, "Missing the required parameter 'id' when calling updateContext");
     }
-    // verify the required parameter 'contextResponse' is set
-    if (contextResponse == null) {
-      throw new ApiException(400, "Missing the required parameter 'contextResponse' when calling updateContext");
+    // verify the required parameter 'contextRequest' is set
+    if (contextRequest == null) {
+      throw new ApiException(400, "Missing the required parameter 'contextRequest' when calling updateContext");
     }
 
     HttpRequest.Builder localVarRequestBuilder = HttpRequest.newBuilder();
@@ -755,7 +756,7 @@ public class ContextsApi {
     localVarRequestBuilder.header("Accept", "application/vnd.api+json");
 
     try {
-      byte[] localVarPostBody = memberVarObjectMapper.writeValueAsBytes(contextResponse);
+      byte[] localVarPostBody = memberVarObjectMapper.writeValueAsBytes(contextRequest);
       localVarRequestBuilder.method("PUT", HttpRequest.BodyPublishers.ofByteArray(localVarPostBody));
     } catch (IOException e) {
       throw new ApiException(e);

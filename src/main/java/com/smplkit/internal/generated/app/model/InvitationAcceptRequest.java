@@ -30,7 +30,7 @@ import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 
 import com.smplkit.internal.generated.app.ApiClient;
 /**
- * InvitationAcceptRequest
+ * Body for the invitation-accept endpoint.
  */
 @JsonPropertyOrder({
   InvitationAcceptRequest.JSON_PROPERTY_TOKEN
@@ -50,7 +50,7 @@ public class InvitationAcceptRequest {
   }
 
   /**
-   * Get token
+   * Invitation token from the email link.
    * @return token
    */
   @jakarta.annotation.Nonnull

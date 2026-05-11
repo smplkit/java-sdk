@@ -33,7 +33,7 @@ import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 
 import com.smplkit.internal.generated.app.ApiClient;
 /**
- * InvitationBulkCreateRequest
+ * Bulk-create request body for the invitations endpoint.
  */
 @JsonPropertyOrder({
   InvitationBulkCreateRequest.JSON_PROPERTY_INVITATIONS
@@ -61,7 +61,7 @@ public class InvitationBulkCreateRequest {
   }
 
   /**
-   * Get invitations
+   * One to fifty invitations to send in a single request.
    * @return invitations
    */
   @jakarta.annotation.Nonnull

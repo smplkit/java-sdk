@@ -33,7 +33,7 @@ import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 
 import com.smplkit.internal.generated.app.ApiClient;
 /**
- * PaymentMethodListResponse
+ * JSON:API collection response for payment methods.
  */
 @JsonPropertyOrder({
   PaymentMethodListResponse.JSON_PROPERTY_DATA

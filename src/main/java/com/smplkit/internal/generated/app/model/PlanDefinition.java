@@ -32,7 +32,7 @@ import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 
 import com.smplkit.internal.generated.app.ApiClient;
 /**
- * PlanDefinition
+ * Per-plan pricing and limits for a product.
  */
 @JsonPropertyOrder({
   PlanDefinition.JSON_PROPERTY_PRICE_MONTHLY_CENTS,
@@ -57,7 +57,7 @@ public class PlanDefinition {
   }
 
   /**
-   * Get priceMonthlyCents
+   * Monthly list price in cents. &#x60;0&#x60; for free plans.
    * @return priceMonthlyCents
    */
   @jakarta.annotation.Nonnull
@@ -89,7 +89,7 @@ public class PlanDefinition {
   }
 
   /**
-   * Get limits
+   * Map of limit key to the cap that applies on this plan. &#x60;-1&#x60; indicates an unlimited cap.
    * @return limits
    */
   @jakarta.annotation.Nonnull

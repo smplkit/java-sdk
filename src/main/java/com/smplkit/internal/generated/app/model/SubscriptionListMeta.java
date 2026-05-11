@@ -31,7 +31,7 @@ import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 
 import com.smplkit.internal.generated.app.ApiClient;
 /**
- * Discount and totals summary attached to GET /api/v1/subscriptions.
+ * Discount and totals summary attached to a subscription collection response.
  */
 @JsonPropertyOrder({
   SubscriptionListMeta.JSON_PROPERTY_SUBTOTAL_CENTS,
@@ -56,7 +56,7 @@ public class SubscriptionListMeta {
   private Integer discountAmountCents;
 
   /**
-   * Gets or Sets discountSource
+   * Source of the discount. &#x60;VOLUME&#x60; indicates the standard volume-discount schedule; &#x60;OVERRIDE&#x60; indicates a custom discount set on the account.
    */
   public enum DiscountSourceEnum {
     VOLUME(String.valueOf("VOLUME")),
@@ -111,7 +111,7 @@ public class SubscriptionListMeta {
   }
 
   /**
-   * Get subtotalCents
+   * Sum of list prices across all subscriptions in cents.
    * @return subtotalCents
    */
   @jakarta.annotation.Nonnull
@@ -135,7 +135,7 @@ public class SubscriptionListMeta {
   }
 
   /**
-   * Get discountPct
+   * Effective discount percentage applied.
    * @return discountPct
    */
   @jakarta.annotation.Nonnull
@@ -159,7 +159,7 @@ public class SubscriptionListMeta {
   }
 
   /**
-   * Get discountAmountCents
+   * Discount amount in cents.
    * @return discountAmountCents
    */
   @jakarta.annotation.Nonnull
@@ -183,7 +183,7 @@ public class SubscriptionListMeta {
   }
 
   /**
-   * Get discountSource
+   * Source of the discount. &#x60;VOLUME&#x60; indicates the standard volume-discount schedule; &#x60;OVERRIDE&#x60; indicates a custom discount set on the account.
    * @return discountSource
    */
   @jakarta.annotation.Nonnull
@@ -207,7 +207,7 @@ public class SubscriptionListMeta {
   }
 
   /**
-   * Get totalCents
+   * Final monthly total in cents after the discount.
    * @return totalCents
    */
   @jakarta.annotation.Nonnull

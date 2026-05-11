@@ -33,7 +33,7 @@ import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 
 import com.smplkit.internal.generated.app.ApiClient;
 /**
- * PlanListResponse
+ * JSON:API collection response for plan tiers.
  */
 @JsonPropertyOrder({
   PlanListResponse.JSON_PROPERTY_DATA

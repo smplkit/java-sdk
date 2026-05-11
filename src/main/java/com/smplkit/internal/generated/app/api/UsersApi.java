@@ -21,6 +21,7 @@ import com.smplkit.internal.generated.app.Pair;
 import com.smplkit.internal.generated.app.model.ErrorResponse;
 import java.util.UUID;
 import com.smplkit.internal.generated.app.model.UserListResponse;
+import com.smplkit.internal.generated.app.model.UserRequest;
 import com.smplkit.internal.generated.app.model.UserResponse;
 
 import com.fasterxml.jackson.core.type.TypeReference;
@@ -987,48 +988,48 @@ public class UsersApi {
   /**
    * Update Current User
    * Update the currently authenticated user&#39;s profile.
-   * @param userResponse  (required)
+   * @param userRequest  (required)
    * @return UserResponse
    * @throws ApiException if fails to make API call
    */
-  public UserResponse updateCurrentUser(@jakarta.annotation.Nonnull UserResponse userResponse) throws ApiException {
-    return updateCurrentUser(userResponse, null);
+  public UserResponse updateCurrentUser(@jakarta.annotation.Nonnull UserRequest userRequest) throws ApiException {
+    return updateCurrentUser(userRequest, null);
   }
 
   /**
    * Update Current User
    * Update the currently authenticated user&#39;s profile.
-   * @param userResponse  (required)
+   * @param userRequest  (required)
    * @param headers Optional headers to include in the request
    * @return UserResponse
    * @throws ApiException if fails to make API call
    */
-  public UserResponse updateCurrentUser(@jakarta.annotation.Nonnull UserResponse userResponse, Map<String, String> headers) throws ApiException {
-    ApiResponse<UserResponse> localVarResponse = updateCurrentUserWithHttpInfo(userResponse, headers);
+  public UserResponse updateCurrentUser(@jakarta.annotation.Nonnull UserRequest userRequest, Map<String, String> headers) throws ApiException {
+    ApiResponse<UserResponse> localVarResponse = updateCurrentUserWithHttpInfo(userRequest, headers);
     return localVarResponse.getData();
   }
 
   /**
    * Update Current User
    * Update the currently authenticated user&#39;s profile.
-   * @param userResponse  (required)
+   * @param userRequest  (required)
    * @return ApiResponse&lt;UserResponse&gt;
    * @throws ApiException if fails to make API call
    */
-  public ApiResponse<UserResponse> updateCurrentUserWithHttpInfo(@jakarta.annotation.Nonnull UserResponse userResponse) throws ApiException {
-    return updateCurrentUserWithHttpInfo(userResponse, null);
+  public ApiResponse<UserResponse> updateCurrentUserWithHttpInfo(@jakarta.annotation.Nonnull UserRequest userRequest) throws ApiException {
+    return updateCurrentUserWithHttpInfo(userRequest, null);
   }
 
   /**
    * Update Current User
    * Update the currently authenticated user&#39;s profile.
-   * @param userResponse  (required)
+   * @param userRequest  (required)
    * @param headers Optional headers to include in the request
    * @return ApiResponse&lt;UserResponse&gt;
    * @throws ApiException if fails to make API call
    */
-  public ApiResponse<UserResponse> updateCurrentUserWithHttpInfo(@jakarta.annotation.Nonnull UserResponse userResponse, Map<String, String> headers) throws ApiException {
-    HttpRequest.Builder localVarRequestBuilder = updateCurrentUserRequestBuilder(userResponse, headers);
+  public ApiResponse<UserResponse> updateCurrentUserWithHttpInfo(@jakarta.annotation.Nonnull UserRequest userRequest, Map<String, String> headers) throws ApiException {
+    HttpRequest.Builder localVarRequestBuilder = updateCurrentUserRequestBuilder(userRequest, headers);
     try {
       HttpResponse<InputStream> localVarResponse = memberVarHttpClient.send(
           localVarRequestBuilder.build(),
@@ -1075,10 +1076,10 @@ public class UsersApi {
     }
   }
 
-  private HttpRequest.Builder updateCurrentUserRequestBuilder(@jakarta.annotation.Nonnull UserResponse userResponse, Map<String, String> headers) throws ApiException {
-    // verify the required parameter 'userResponse' is set
-    if (userResponse == null) {
-      throw new ApiException(400, "Missing the required parameter 'userResponse' when calling updateCurrentUser");
+  private HttpRequest.Builder updateCurrentUserRequestBuilder(@jakarta.annotation.Nonnull UserRequest userRequest, Map<String, String> headers) throws ApiException {
+    // verify the required parameter 'userRequest' is set
+    if (userRequest == null) {
+      throw new ApiException(400, "Missing the required parameter 'userRequest' when calling updateCurrentUser");
     }
 
     HttpRequest.Builder localVarRequestBuilder = HttpRequest.newBuilder();
@@ -1091,7 +1092,7 @@ public class UsersApi {
     localVarRequestBuilder.header("Accept", "application/vnd.api+json");
 
     try {
-      byte[] localVarPostBody = memberVarObjectMapper.writeValueAsBytes(userResponse);
+      byte[] localVarPostBody = memberVarObjectMapper.writeValueAsBytes(userRequest);
       localVarRequestBuilder.method("PUT", HttpRequest.BodyPublishers.ofByteArray(localVarPostBody));
     } catch (IOException e) {
       throw new ApiException(e);
@@ -1111,25 +1112,25 @@ public class UsersApi {
    * Update User Role
    * Update a user&#39;s role in the account.
    * @param id  (required)
-   * @param userResponse  (required)
+   * @param userRequest  (required)
    * @return UserResponse
    * @throws ApiException if fails to make API call
    */
-  public UserResponse updateUserRole(@jakarta.annotation.Nonnull UUID id, @jakarta.annotation.Nonnull UserResponse userResponse) throws ApiException {
-    return updateUserRole(id, userResponse, null);
+  public UserResponse updateUserRole(@jakarta.annotation.Nonnull UUID id, @jakarta.annotation.Nonnull UserRequest userRequest) throws ApiException {
+    return updateUserRole(id, userRequest, null);
   }
 
   /**
    * Update User Role
    * Update a user&#39;s role in the account.
    * @param id  (required)
-   * @param userResponse  (required)
+   * @param userRequest  (required)
    * @param headers Optional headers to include in the request
    * @return UserResponse
    * @throws ApiException if fails to make API call
    */
-  public UserResponse updateUserRole(@jakarta.annotation.Nonnull UUID id, @jakarta.annotation.Nonnull UserResponse userResponse, Map<String, String> headers) throws ApiException {
-    ApiResponse<UserResponse> localVarResponse = updateUserRoleWithHttpInfo(id, userResponse, headers);
+  public UserResponse updateUserRole(@jakarta.annotation.Nonnull UUID id, @jakarta.annotation.Nonnull UserRequest userRequest, Map<String, String> headers) throws ApiException {
+    ApiResponse<UserResponse> localVarResponse = updateUserRoleWithHttpInfo(id, userRequest, headers);
     return localVarResponse.getData();
   }
 
@@ -1137,25 +1138,25 @@ public class UsersApi {
    * Update User Role
    * Update a user&#39;s role in the account.
    * @param id  (required)
-   * @param userResponse  (required)
+   * @param userRequest  (required)
    * @return ApiResponse&lt;UserResponse&gt;
    * @throws ApiException if fails to make API call
    */
-  public ApiResponse<UserResponse> updateUserRoleWithHttpInfo(@jakarta.annotation.Nonnull UUID id, @jakarta.annotation.Nonnull UserResponse userResponse) throws ApiException {
-    return updateUserRoleWithHttpInfo(id, userResponse, null);
+  public ApiResponse<UserResponse> updateUserRoleWithHttpInfo(@jakarta.annotation.Nonnull UUID id, @jakarta.annotation.Nonnull UserRequest userRequest) throws ApiException {
+    return updateUserRoleWithHttpInfo(id, userRequest, null);
   }
 
   /**
    * Update User Role
    * Update a user&#39;s role in the account.
    * @param id  (required)
-   * @param userResponse  (required)
+   * @param userRequest  (required)
    * @param headers Optional headers to include in the request
    * @return ApiResponse&lt;UserResponse&gt;
    * @throws ApiException if fails to make API call
    */
-  public ApiResponse<UserResponse> updateUserRoleWithHttpInfo(@jakarta.annotation.Nonnull UUID id, @jakarta.annotation.Nonnull UserResponse userResponse, Map<String, String> headers) throws ApiException {
-    HttpRequest.Builder localVarRequestBuilder = updateUserRoleRequestBuilder(id, userResponse, headers);
+  public ApiResponse<UserResponse> updateUserRoleWithHttpInfo(@jakarta.annotation.Nonnull UUID id, @jakarta.annotation.Nonnull UserRequest userRequest, Map<String, String> headers) throws ApiException {
+    HttpRequest.Builder localVarRequestBuilder = updateUserRoleRequestBuilder(id, userRequest, headers);
     try {
       HttpResponse<InputStream> localVarResponse = memberVarHttpClient.send(
           localVarRequestBuilder.build(),
@@ -1202,14 +1203,14 @@ public class UsersApi {
     }
   }
 
-  private HttpRequest.Builder updateUserRoleRequestBuilder(@jakarta.annotation.Nonnull UUID id, @jakarta.annotation.Nonnull UserResponse userResponse, Map<String, String> headers) throws ApiException {
+  private HttpRequest.Builder updateUserRoleRequestBuilder(@jakarta.annotation.Nonnull UUID id, @jakarta.annotation.Nonnull UserRequest userRequest, Map<String, String> headers) throws ApiException {
     // verify the required parameter 'id' is set
     if (id == null) {
       throw new ApiException(400, "Missing the required parameter 'id' when calling updateUserRole");
     }
-    // verify the required parameter 'userResponse' is set
-    if (userResponse == null) {
-      throw new ApiException(400, "Missing the required parameter 'userResponse' when calling updateUserRole");
+    // verify the required parameter 'userRequest' is set
+    if (userRequest == null) {
+      throw new ApiException(400, "Missing the required parameter 'userRequest' when calling updateUserRole");
     }
 
     HttpRequest.Builder localVarRequestBuilder = HttpRequest.newBuilder();
@@ -1223,7 +1224,7 @@ public class UsersApi {
     localVarRequestBuilder.header("Accept", "application/vnd.api+json");
 
     try {
-      byte[] localVarPostBody = memberVarObjectMapper.writeValueAsBytes(userResponse);
+      byte[] localVarPostBody = memberVarObjectMapper.writeValueAsBytes(userRequest);
       localVarRequestBuilder.method("PUT", HttpRequest.BodyPublishers.ofByteArray(localVarPostBody));
     } catch (IOException e) {
       throw new ApiException(e);
