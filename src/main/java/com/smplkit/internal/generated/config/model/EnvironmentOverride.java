@@ -37,7 +37,7 @@ import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 
 import com.smplkit.internal.generated.config.ApiClient;
 /**
- * Schema for per-environment overrides.
+ * Per-environment override set for a config.
  */
 @JsonPropertyOrder({
   EnvironmentOverride.JSON_PROPERTY_VALUES
@@ -68,7 +68,7 @@ public class EnvironmentOverride {
   }
 
   /**
-   * Get values
+   * Map of item keys to override values that apply when this environment is resolved. Each key must already be declared (with a type) on this config or one of its ancestors.
    * @return values
    */
   @jakarta.annotation.Nullable

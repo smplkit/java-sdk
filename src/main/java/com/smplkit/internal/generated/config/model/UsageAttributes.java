@@ -30,7 +30,7 @@ import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 
 import com.smplkit.internal.generated.config.ApiClient;
 /**
- * UsageAttributes
+ * Usage counter for a single metered limit.
  */
 @JsonPropertyOrder({
   UsageAttributes.JSON_PROPERTY_LIMIT_KEY,
@@ -60,7 +60,7 @@ public class UsageAttributes {
   }
 
   /**
-   * Get limitKey
+   * Identifier of the metered limit, e.g. &#x60;config.items&#x60; or &#x60;config.inheritance_depth&#x60;.
    * @return limitKey
    */
   @jakarta.annotation.Nonnull
@@ -84,7 +84,7 @@ public class UsageAttributes {
   }
 
   /**
-   * Get period
+   * Period the counter covers. &#x60;current&#x60; is the only supported value.
    * @return period
    */
   @jakarta.annotation.Nonnull
@@ -108,7 +108,7 @@ public class UsageAttributes {
   }
 
   /**
-   * Get value
+   * Count for the period.
    * @return value
    */
   @jakarta.annotation.Nonnull

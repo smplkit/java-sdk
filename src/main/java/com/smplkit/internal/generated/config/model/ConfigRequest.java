@@ -25,38 +25,28 @@ import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonTypeName;
 import com.fasterxml.jackson.annotation.JsonValue;
 import com.smplkit.internal.generated.config.model.ConfigResource;
-import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.List;
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 
 
 import com.smplkit.internal.generated.config.ApiClient;
 /**
- * JSON:API collection response for configs.
+ * JSON:API request envelope for creating or updating a config.
  */
 @JsonPropertyOrder({
-  ConfigListResponse.JSON_PROPERTY_DATA
+  ConfigRequest.JSON_PROPERTY_DATA
 })
 @jakarta.annotation.Generated(value = "org.openapitools.codegen.languages.JavaClientCodegen", comments = "Generator version: 7.21.0")
-public class ConfigListResponse {
+public class ConfigRequest {
   public static final String JSON_PROPERTY_DATA = "data";
   @jakarta.annotation.Nonnull
-  private List<ConfigResource> data = new ArrayList<>();
+  private ConfigResource data;
 
-  public ConfigListResponse() { 
+  public ConfigRequest() { 
   }
 
-  public ConfigListResponse data(@jakarta.annotation.Nonnull List<ConfigResource> data) {
+  public ConfigRequest data(@jakarta.annotation.Nonnull ConfigResource data) {
     this.data = data;
-    return this;
-  }
-
-  public ConfigListResponse addDataItem(ConfigResource dataItem) {
-    if (this.data == null) {
-      this.data = new ArrayList<>();
-    }
-    this.data.add(dataItem);
     return this;
   }
 
@@ -67,20 +57,20 @@ public class ConfigListResponse {
   @jakarta.annotation.Nonnull
   @JsonProperty(value = JSON_PROPERTY_DATA, required = true)
   @JsonInclude(value = JsonInclude.Include.ALWAYS)
-  public List<ConfigResource> getData() {
+  public ConfigResource getData() {
     return data;
   }
 
 
   @JsonProperty(value = JSON_PROPERTY_DATA, required = true)
   @JsonInclude(value = JsonInclude.Include.ALWAYS)
-  public void setData(@jakarta.annotation.Nonnull List<ConfigResource> data) {
+  public void setData(@jakarta.annotation.Nonnull ConfigResource data) {
     this.data = data;
   }
 
 
   /**
-   * Return true if this ConfigListResponse object is equal to o.
+   * Return true if this ConfigRequest object is equal to o.
    */
   @Override
   public boolean equals(Object o) {
@@ -90,8 +80,8 @@ public class ConfigListResponse {
     if (o == null || getClass() != o.getClass()) {
       return false;
     }
-    ConfigListResponse configListResponse = (ConfigListResponse) o;
-    return Objects.equals(this.data, configListResponse.data);
+    ConfigRequest configRequest = (ConfigRequest) o;
+    return Objects.equals(this.data, configRequest.data);
   }
 
   @Override
@@ -102,7 +92,7 @@ public class ConfigListResponse {
   @Override
   public String toString() {
     StringBuilder sb = new StringBuilder();
-    sb.append("class ConfigListResponse {\n");
+    sb.append("class ConfigRequest {\n");
     sb.append("    data: ").append(toIndentedString(data)).append("\n");
     sb.append("}");
     return sb.toString();
@@ -150,12 +140,7 @@ public class ConfigListResponse {
 
     // add `data` to the URL query string
     if (getData() != null) {
-      for (int i = 0; i < getData().size(); i++) {
-        if (getData().get(i) != null) {
-          joiner.add(getData().get(i).toUrlQueryString(String.format(java.util.Locale.ROOT, "%sdata%s%s", prefix, suffix,
-          "".equals(suffix) ? "" : String.format(java.util.Locale.ROOT, "%s%d%s", containerPrefix, i, containerSuffix))));
-        }
-      }
+      joiner.add(getData().toUrlQueryString(prefix + "data" + suffix));
     }
 
     return joiner.toString();

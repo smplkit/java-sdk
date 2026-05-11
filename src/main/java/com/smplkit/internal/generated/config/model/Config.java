@@ -39,7 +39,7 @@ import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 
 import com.smplkit.internal.generated.config.ApiClient;
 /**
- * Config
+ * A named bag of configuration items, optionally inheriting from another config.  Items are typed key/value pairs (&#x60;STRING&#x60;, &#x60;NUMBER&#x60;, &#x60;BOOLEAN&#x60;, &#x60;JSON&#x60;). Configs may declare per-environment overrides for any item declared on the config itself or anywhere in its inheritance chain; resolving a config against an environment merges the chain top-down and then applies the matching overrides.
  */
 @JsonPropertyOrder({
   Config.JSON_PROPERTY_NAME,
@@ -93,7 +93,7 @@ public class Config {
   }
 
   /**
-   * Get name
+   * Human-readable name for the config.
    * @return name
    */
   @jakarta.annotation.Nonnull
@@ -117,7 +117,7 @@ public class Config {
   }
 
   /**
-   * Get description
+   * Optional human-readable description of what this config holds.
    * @return description
    */
   @jakarta.annotation.Nullable
@@ -149,7 +149,7 @@ public class Config {
   }
 
   /**
-   * Get parent
+   * Key of another config to inherit items from. Inherited items appear as if declared on this config; locally declared items with the same key shadow them. Omit or set to &#x60;null&#x60; for a standalone config with no parent.
    * @return parent
    */
   @jakarta.annotation.Nullable
@@ -193,7 +193,7 @@ public class Config {
   }
 
   /**
-   * Get items
+   * Map of item keys to item definitions declared on this config. Keys must be unique within the config; declared types are immutable once set and must match any type declared for the same key on an ancestor.
    * @return items
    */
   @jakarta.annotation.Nullable
@@ -237,7 +237,7 @@ public class Config {
   }
 
   /**
-   * Get environments
+   * Map of environment keys to per-environment override sets. An environment override applies when this config is resolved against that environment.
    * @return environments
    */
   @jakarta.annotation.Nullable
@@ -264,7 +264,7 @@ public class Config {
 
 
   /**
-   * Get createdAt
+   * When the config was created.
    * @return createdAt
    */
   @jakarta.annotation.Nullable
@@ -292,7 +292,7 @@ public class Config {
 
 
   /**
-   * Get updatedAt
+   * When the config was last modified.
    * @return updatedAt
    */
   @jakarta.annotation.Nullable
