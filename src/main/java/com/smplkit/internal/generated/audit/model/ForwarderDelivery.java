@@ -70,13 +70,13 @@ public class ForwarderDelivery {
    * Gets or Sets status
    */
   public enum StatusEnum {
-    SUCCEEDED(String.valueOf("succeeded")),
+    SUCCEEDED(String.valueOf("SUCCEEDED")),
     
-    FAILED(String.valueOf("failed")),
+    FAILED(String.valueOf("FAILED")),
     
-    FILTERED_OUT(String.valueOf("filtered_out")),
+    FILTERED_OUT(String.valueOf("FILTERED_OUT")),
     
-    SKIPPED_DO_NOT_FORWARD(String.valueOf("skipped_do_not_forward"));
+    SKIPPED_DO_NOT_FORWARD(String.valueOf("SKIPPED_DO_NOT_FORWARD"));
 
     private String value;
 

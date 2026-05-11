@@ -639,65 +639,69 @@ public class ForwardersApi {
 
   /**
    * List Forwarder Deliveries
-   * List delivery rows for a forwarder.  Default sort is &#x60;&#x60;-created_at&#x60;&#x60;. Cursor pagination via &#x60;&#x60;page[after]&#x60;&#x60;. Filter by status (&#x60;&#x60;succeeded&#x60;&#x60; / &#x60;&#x60;failed&#x60;&#x60; / &#x60;&#x60;filtered_out&#x60;&#x60; / &#x60;&#x60;skipped_do_not_forward&#x60;&#x60;) or by a &#x60;&#x60;created_at&#x60;&#x60; range using the platform&#39;s interval notation (&#x60;&#x60;[2026-01-01T00:00:00Z,*)&#x60;&#x60;). Reads do not require the entitlement — a downgraded account can still inspect historical deliveries from when the forwarder was active.
+   * List delivery rows for a forwarder.  Default sort is &#x60;&#x60;-created_at&#x60;&#x60;. Cursor pagination via &#x60;&#x60;page[after]&#x60;&#x60;. Filter by status (&#x60;&#x60;SUCCEEDED&#x60;&#x60; / &#x60;&#x60;FAILED&#x60;&#x60; / &#x60;&#x60;FILTERED_OUT&#x60;&#x60; / &#x60;&#x60;SKIPPED_DO_NOT_FORWARD&#x60;&#x60;, case-insensitive) or by a &#x60;&#x60;created_at&#x60;&#x60; range using the platform&#39;s interval notation (&#x60;&#x60;[2026-01-01T00:00:00Z,*)&#x60;&#x60;). Reads do not require the entitlement — a downgraded account can still inspect historical deliveries from when the forwarder was active.
    * @param forwarderId  (required)
    * @param filterStatus  (optional)
    * @param filterCreatedAt  (optional)
+   * @param filterEventId  (optional)
    * @param pageSize  (optional)
    * @param pageAfter  (optional)
    * @return ForwarderDeliveryListResponse
    * @throws ApiException if fails to make API call
    */
-  public ForwarderDeliveryListResponse listForwarderDeliveries(@jakarta.annotation.Nonnull UUID forwarderId, @jakarta.annotation.Nullable String filterStatus, @jakarta.annotation.Nullable String filterCreatedAt, @jakarta.annotation.Nullable Integer pageSize, @jakarta.annotation.Nullable String pageAfter) throws ApiException {
-    return listForwarderDeliveries(forwarderId, filterStatus, filterCreatedAt, pageSize, pageAfter, null);
+  public ForwarderDeliveryListResponse listForwarderDeliveries(@jakarta.annotation.Nonnull UUID forwarderId, @jakarta.annotation.Nullable String filterStatus, @jakarta.annotation.Nullable String filterCreatedAt, @jakarta.annotation.Nullable String filterEventId, @jakarta.annotation.Nullable Integer pageSize, @jakarta.annotation.Nullable String pageAfter) throws ApiException {
+    return listForwarderDeliveries(forwarderId, filterStatus, filterCreatedAt, filterEventId, pageSize, pageAfter, null);
   }
 
   /**
    * List Forwarder Deliveries
-   * List delivery rows for a forwarder.  Default sort is &#x60;&#x60;-created_at&#x60;&#x60;. Cursor pagination via &#x60;&#x60;page[after]&#x60;&#x60;. Filter by status (&#x60;&#x60;succeeded&#x60;&#x60; / &#x60;&#x60;failed&#x60;&#x60; / &#x60;&#x60;filtered_out&#x60;&#x60; / &#x60;&#x60;skipped_do_not_forward&#x60;&#x60;) or by a &#x60;&#x60;created_at&#x60;&#x60; range using the platform&#39;s interval notation (&#x60;&#x60;[2026-01-01T00:00:00Z,*)&#x60;&#x60;). Reads do not require the entitlement — a downgraded account can still inspect historical deliveries from when the forwarder was active.
+   * List delivery rows for a forwarder.  Default sort is &#x60;&#x60;-created_at&#x60;&#x60;. Cursor pagination via &#x60;&#x60;page[after]&#x60;&#x60;. Filter by status (&#x60;&#x60;SUCCEEDED&#x60;&#x60; / &#x60;&#x60;FAILED&#x60;&#x60; / &#x60;&#x60;FILTERED_OUT&#x60;&#x60; / &#x60;&#x60;SKIPPED_DO_NOT_FORWARD&#x60;&#x60;, case-insensitive) or by a &#x60;&#x60;created_at&#x60;&#x60; range using the platform&#39;s interval notation (&#x60;&#x60;[2026-01-01T00:00:00Z,*)&#x60;&#x60;). Reads do not require the entitlement — a downgraded account can still inspect historical deliveries from when the forwarder was active.
    * @param forwarderId  (required)
    * @param filterStatus  (optional)
    * @param filterCreatedAt  (optional)
+   * @param filterEventId  (optional)
    * @param pageSize  (optional)
    * @param pageAfter  (optional)
    * @param headers Optional headers to include in the request
    * @return ForwarderDeliveryListResponse
    * @throws ApiException if fails to make API call
    */
-  public ForwarderDeliveryListResponse listForwarderDeliveries(@jakarta.annotation.Nonnull UUID forwarderId, @jakarta.annotation.Nullable String filterStatus, @jakarta.annotation.Nullable String filterCreatedAt, @jakarta.annotation.Nullable Integer pageSize, @jakarta.annotation.Nullable String pageAfter, Map<String, String> headers) throws ApiException {
-    ApiResponse<ForwarderDeliveryListResponse> localVarResponse = listForwarderDeliveriesWithHttpInfo(forwarderId, filterStatus, filterCreatedAt, pageSize, pageAfter, headers);
+  public ForwarderDeliveryListResponse listForwarderDeliveries(@jakarta.annotation.Nonnull UUID forwarderId, @jakarta.annotation.Nullable String filterStatus, @jakarta.annotation.Nullable String filterCreatedAt, @jakarta.annotation.Nullable String filterEventId, @jakarta.annotation.Nullable Integer pageSize, @jakarta.annotation.Nullable String pageAfter, Map<String, String> headers) throws ApiException {
+    ApiResponse<ForwarderDeliveryListResponse> localVarResponse = listForwarderDeliveriesWithHttpInfo(forwarderId, filterStatus, filterCreatedAt, filterEventId, pageSize, pageAfter, headers);
     return localVarResponse.getData();
   }
 
   /**
    * List Forwarder Deliveries
-   * List delivery rows for a forwarder.  Default sort is &#x60;&#x60;-created_at&#x60;&#x60;. Cursor pagination via &#x60;&#x60;page[after]&#x60;&#x60;. Filter by status (&#x60;&#x60;succeeded&#x60;&#x60; / &#x60;&#x60;failed&#x60;&#x60; / &#x60;&#x60;filtered_out&#x60;&#x60; / &#x60;&#x60;skipped_do_not_forward&#x60;&#x60;) or by a &#x60;&#x60;created_at&#x60;&#x60; range using the platform&#39;s interval notation (&#x60;&#x60;[2026-01-01T00:00:00Z,*)&#x60;&#x60;). Reads do not require the entitlement — a downgraded account can still inspect historical deliveries from when the forwarder was active.
+   * List delivery rows for a forwarder.  Default sort is &#x60;&#x60;-created_at&#x60;&#x60;. Cursor pagination via &#x60;&#x60;page[after]&#x60;&#x60;. Filter by status (&#x60;&#x60;SUCCEEDED&#x60;&#x60; / &#x60;&#x60;FAILED&#x60;&#x60; / &#x60;&#x60;FILTERED_OUT&#x60;&#x60; / &#x60;&#x60;SKIPPED_DO_NOT_FORWARD&#x60;&#x60;, case-insensitive) or by a &#x60;&#x60;created_at&#x60;&#x60; range using the platform&#39;s interval notation (&#x60;&#x60;[2026-01-01T00:00:00Z,*)&#x60;&#x60;). Reads do not require the entitlement — a downgraded account can still inspect historical deliveries from when the forwarder was active.
    * @param forwarderId  (required)
    * @param filterStatus  (optional)
    * @param filterCreatedAt  (optional)
+   * @param filterEventId  (optional)
    * @param pageSize  (optional)
    * @param pageAfter  (optional)
    * @return ApiResponse&lt;ForwarderDeliveryListResponse&gt;
    * @throws ApiException if fails to make API call
    */
-  public ApiResponse<ForwarderDeliveryListResponse> listForwarderDeliveriesWithHttpInfo(@jakarta.annotation.Nonnull UUID forwarderId, @jakarta.annotation.Nullable String filterStatus, @jakarta.annotation.Nullable String filterCreatedAt, @jakarta.annotation.Nullable Integer pageSize, @jakarta.annotation.Nullable String pageAfter) throws ApiException {
-    return listForwarderDeliveriesWithHttpInfo(forwarderId, filterStatus, filterCreatedAt, pageSize, pageAfter, null);
+  public ApiResponse<ForwarderDeliveryListResponse> listForwarderDeliveriesWithHttpInfo(@jakarta.annotation.Nonnull UUID forwarderId, @jakarta.annotation.Nullable String filterStatus, @jakarta.annotation.Nullable String filterCreatedAt, @jakarta.annotation.Nullable String filterEventId, @jakarta.annotation.Nullable Integer pageSize, @jakarta.annotation.Nullable String pageAfter) throws ApiException {
+    return listForwarderDeliveriesWithHttpInfo(forwarderId, filterStatus, filterCreatedAt, filterEventId, pageSize, pageAfter, null);
   }
 
   /**
    * List Forwarder Deliveries
-   * List delivery rows for a forwarder.  Default sort is &#x60;&#x60;-created_at&#x60;&#x60;. Cursor pagination via &#x60;&#x60;page[after]&#x60;&#x60;. Filter by status (&#x60;&#x60;succeeded&#x60;&#x60; / &#x60;&#x60;failed&#x60;&#x60; / &#x60;&#x60;filtered_out&#x60;&#x60; / &#x60;&#x60;skipped_do_not_forward&#x60;&#x60;) or by a &#x60;&#x60;created_at&#x60;&#x60; range using the platform&#39;s interval notation (&#x60;&#x60;[2026-01-01T00:00:00Z,*)&#x60;&#x60;). Reads do not require the entitlement — a downgraded account can still inspect historical deliveries from when the forwarder was active.
+   * List delivery rows for a forwarder.  Default sort is &#x60;&#x60;-created_at&#x60;&#x60;. Cursor pagination via &#x60;&#x60;page[after]&#x60;&#x60;. Filter by status (&#x60;&#x60;SUCCEEDED&#x60;&#x60; / &#x60;&#x60;FAILED&#x60;&#x60; / &#x60;&#x60;FILTERED_OUT&#x60;&#x60; / &#x60;&#x60;SKIPPED_DO_NOT_FORWARD&#x60;&#x60;, case-insensitive) or by a &#x60;&#x60;created_at&#x60;&#x60; range using the platform&#39;s interval notation (&#x60;&#x60;[2026-01-01T00:00:00Z,*)&#x60;&#x60;). Reads do not require the entitlement — a downgraded account can still inspect historical deliveries from when the forwarder was active.
    * @param forwarderId  (required)
    * @param filterStatus  (optional)
    * @param filterCreatedAt  (optional)
+   * @param filterEventId  (optional)
    * @param pageSize  (optional)
    * @param pageAfter  (optional)
    * @param headers Optional headers to include in the request
    * @return ApiResponse&lt;ForwarderDeliveryListResponse&gt;
    * @throws ApiException if fails to make API call
    */
-  public ApiResponse<ForwarderDeliveryListResponse> listForwarderDeliveriesWithHttpInfo(@jakarta.annotation.Nonnull UUID forwarderId, @jakarta.annotation.Nullable String filterStatus, @jakarta.annotation.Nullable String filterCreatedAt, @jakarta.annotation.Nullable Integer pageSize, @jakarta.annotation.Nullable String pageAfter, Map<String, String> headers) throws ApiException {
-    HttpRequest.Builder localVarRequestBuilder = listForwarderDeliveriesRequestBuilder(forwarderId, filterStatus, filterCreatedAt, pageSize, pageAfter, headers);
+  public ApiResponse<ForwarderDeliveryListResponse> listForwarderDeliveriesWithHttpInfo(@jakarta.annotation.Nonnull UUID forwarderId, @jakarta.annotation.Nullable String filterStatus, @jakarta.annotation.Nullable String filterCreatedAt, @jakarta.annotation.Nullable String filterEventId, @jakarta.annotation.Nullable Integer pageSize, @jakarta.annotation.Nullable String pageAfter, Map<String, String> headers) throws ApiException {
+    HttpRequest.Builder localVarRequestBuilder = listForwarderDeliveriesRequestBuilder(forwarderId, filterStatus, filterCreatedAt, filterEventId, pageSize, pageAfter, headers);
     try {
       HttpResponse<InputStream> localVarResponse = memberVarHttpClient.send(
           localVarRequestBuilder.build(),
@@ -744,7 +748,7 @@ public class ForwardersApi {
     }
   }
 
-  private HttpRequest.Builder listForwarderDeliveriesRequestBuilder(@jakarta.annotation.Nonnull UUID forwarderId, @jakarta.annotation.Nullable String filterStatus, @jakarta.annotation.Nullable String filterCreatedAt, @jakarta.annotation.Nullable Integer pageSize, @jakarta.annotation.Nullable String pageAfter, Map<String, String> headers) throws ApiException {
+  private HttpRequest.Builder listForwarderDeliveriesRequestBuilder(@jakarta.annotation.Nonnull UUID forwarderId, @jakarta.annotation.Nullable String filterStatus, @jakarta.annotation.Nullable String filterCreatedAt, @jakarta.annotation.Nullable String filterEventId, @jakarta.annotation.Nullable Integer pageSize, @jakarta.annotation.Nullable String pageAfter, Map<String, String> headers) throws ApiException {
     // verify the required parameter 'forwarderId' is set
     if (forwarderId == null) {
       throw new ApiException(400, "Missing the required parameter 'forwarderId' when calling listForwarderDeliveries");
@@ -762,6 +766,8 @@ public class ForwardersApi {
     localVarQueryParams.addAll(ApiClient.parameterToPairs("filter[status]", filterStatus));
     localVarQueryParameterBaseName = "filter[created_at]";
     localVarQueryParams.addAll(ApiClient.parameterToPairs("filter[created_at]", filterCreatedAt));
+    localVarQueryParameterBaseName = "filter[event_id]";
+    localVarQueryParams.addAll(ApiClient.parameterToPairs("filter[event_id]", filterEventId));
     localVarQueryParameterBaseName = "page[size]";
     localVarQueryParams.addAll(ApiClient.parameterToPairs("page[size]", pageSize));
     localVarQueryParameterBaseName = "page[after]";
