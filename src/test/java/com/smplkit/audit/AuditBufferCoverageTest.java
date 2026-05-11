@@ -221,6 +221,7 @@ class AuditBufferCoverageTest {
         input.actorType = "USER";
         input.actorId = "11111111-2222-3333-4444-555555555555";
         input.occurredAtRange = "[2026-04-01T00:00:00Z,*)";
+        input.search = "user_workflows";
         input.pageSize = 25;
         input.pageAfter = "cursor-abc";
         var page = events.list(input);
@@ -228,6 +229,9 @@ class AuditBufferCoverageTest {
         assertNotNull(capturedQuery.get());
         assertTrue(capturedQuery.get().contains("filter%5Baction%5D=user.created")
                 || capturedQuery.get().contains("filter[action]=user.created"));
+        // ADR-014 filter[search] companion is forwarded as a query param.
+        assertTrue(capturedQuery.get().contains("filter%5Bsearch%5D=user_workflows")
+                || capturedQuery.get().contains("filter[search]=user_workflows"));
         events.close();
     }
 

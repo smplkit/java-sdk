@@ -13,6 +13,13 @@ public final class ListEventsInput {
     public String actorType;
     public String actorId; // UUID string
     public String occurredAtRange;
+    /**
+     * Freeform substring search ({@code filter[search]}, ADR-014).
+     * Case-insensitive substring match against {@code resource_id} on the
+     * audit service at this revision; future expansion is non-breaking
+     * under the ADR. Use {@link #resourceId} for exact-match instead.
+     */
+    public String search;
     public Integer pageSize;
     public String pageAfter;
 
