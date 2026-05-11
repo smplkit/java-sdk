@@ -684,39 +684,52 @@ public final class LoggingClient {
 
     /** Applies a resolved level to adapters and fires key-scoped listeners. */
     private void applyLevelForKey(String normalizedKey, String level, String source) {
+        LogLevel logLevel = tryParseLogLevel(level, normalizedKey);
+        if (logLevel == null) return;
         // Apply through all adapters for loggers with this key
         for (Map.Entry<String, String> mapping : nameMap.entrySet()) {
             if (!normalizedKey.equals(mapping.getValue())) continue;
             String originalName = mapping.getKey();
-            try {
-                LogLevel logLevel = LogLevel.valueOf(level);
-                for (LoggingAdapter adapter : adapters) {
-                    try {
-                        adapter.applyLevel(originalName, level);
-                    } catch (Exception e) {
-                        Debug.log("adapter", "Adapter " + adapter.name()
-                                + " applyLevel failed for " + originalName + ": " + e);
-                    }
+            for (LoggingAdapter adapter : adapters) {
+                try {
+                    adapter.applyLevel(originalName, level);
+                } catch (Exception e) {
+                    Debug.log("adapter", "Adapter " + adapter.name()
+                            + " applyLevel failed for " + originalName + ": " + e);
                 }
-                if (metrics != null) {
-                    metrics.record("logging.level_changes", "changes",
-                            java.util.Map.of("logger", normalizedKey));
-                }
-                LoggerChangeEvent event = new LoggerChangeEvent(normalizedKey, logLevel, source);
-                // Only key-scoped listeners
-                List<Consumer<LoggerChangeEvent>> scoped = keyListeners.get(normalizedKey);
-                if (scoped != null) {
-                    for (Consumer<LoggerChangeEvent> listener : scoped) {
-                        try {
-                            listener.accept(event);
-                        } catch (Exception e) {
-                            LOG.log(Level.WARNING, "Key-scoped change listener threw exception", e);
-                        }
-                    }
-                }
-            } catch (IllegalArgumentException e) {
-                Debug.log("resolution", "Unknown level '" + level + "' for logger '" + normalizedKey + "'");
             }
+            if (metrics != null) {
+                metrics.record("logging.level_changes", "changes",
+                        java.util.Map.of("logger", normalizedKey));
+            }
+            LoggerChangeEvent event = new LoggerChangeEvent(normalizedKey, logLevel, source);
+            // Only key-scoped listeners
+            List<Consumer<LoggerChangeEvent>> scoped = keyListeners.get(normalizedKey);
+            if (scoped != null) {
+                for (Consumer<LoggerChangeEvent> listener : scoped) {
+                    try {
+                        listener.accept(event);
+                    } catch (Exception e) {
+                        LOG.log(Level.WARNING, "Key-scoped change listener threw exception", e);
+                    }
+                }
+            }
+        }
+    }
+
+    /** Parse a resolved level string into a typed LogLevel, returning null if
+     * the string isn't one of the known enum values. Generated logger / log-group
+     * model bindings reject unknown values during deserialization, so production
+     * traffic never reaches this fallback, but defensive guarding lets a stray
+     * cache injection (test harnesses, hot-patched memory) degrade gracefully
+     * instead of throwing out of the apply loop.
+     */
+    LogLevel tryParseLogLevel(String level, String contextKey) {
+        try {
+            return LogLevel.valueOf(level);
+        } catch (IllegalArgumentException e) {
+            Debug.log("resolution", "Unknown level '" + level + "' for logger '" + contextKey + "'");
+            return null;
         }
     }
 
@@ -880,32 +893,28 @@ public final class LoggingClient {
 
             String resolved = resolveLevel(normalizedKey, environment, loggersCache, groupsCache);
             Debug.log("resolution", "resolved " + normalizedKey + " → " + resolved);
-            try {
-                // Validate the level string
-                LogLevel logLevel = LogLevel.valueOf(resolved);
+            LogLevel logLevel = tryParseLogLevel(resolved, normalizedKey);
+            if (logLevel == null) continue;
 
-                // Apply through all adapters
-                for (LoggingAdapter adapter : adapters) {
-                    try {
-                        adapter.applyLevel(originalName, resolved);
-                        Debug.log("adapter", "applied level " + resolved + " to logger " + originalName);
-                    } catch (Exception e) {
-                        Debug.log("adapter", "Adapter " + adapter.name()
-                                + " applyLevel failed for " + originalName + ": " + e);
-                    }
+            // Apply through all adapters
+            for (LoggingAdapter adapter : adapters) {
+                try {
+                    adapter.applyLevel(originalName, resolved);
+                    Debug.log("adapter", "applied level " + resolved + " to logger " + originalName);
+                } catch (Exception e) {
+                    Debug.log("adapter", "Adapter " + adapter.name()
+                            + " applyLevel failed for " + originalName + ": " + e);
                 }
-
-                if (metrics != null) {
-                    metrics.record("logging.level_changes", "changes",
-                            java.util.Map.of("logger", normalizedKey));
-                }
-
-                // Fire change listeners
-                LoggerChangeEvent event = new LoggerChangeEvent(normalizedKey, logLevel, source);
-                fireChangeListeners(normalizedKey, event);
-            } catch (IllegalArgumentException e) {
-                Debug.log("resolution", "Unknown level '" + resolved + "' for logger '" + normalizedKey + "'");
             }
+
+            if (metrics != null) {
+                metrics.record("logging.level_changes", "changes",
+                        java.util.Map.of("logger", normalizedKey));
+            }
+
+            // Fire change listeners
+            LoggerChangeEvent event = new LoggerChangeEvent(normalizedKey, logLevel, source);
+            fireChangeListeners(normalizedKey, event);
         }
     }
 

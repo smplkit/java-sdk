@@ -1208,6 +1208,18 @@ class LoggingClientTest {
         assertTrue(client.isInstalled());
     }
 
+    @Test
+    void tryParseLogLevel_returnsEnumForKnownValue() {
+        assertEquals(com.smplkit.LogLevel.INFO, client.tryParseLogLevel("INFO", "any-key"));
+        assertEquals(com.smplkit.LogLevel.WARN, client.tryParseLogLevel("WARN", "any-key"));
+    }
+
+    @Test
+    void tryParseLogLevel_returnsNullForUnknownValue() {
+        assertNull(client.tryParseLogLevel("CUSTOM_INVALID", "any-key"));
+        assertNull(client.tryParseLogLevel("", "any-key"));
+    }
+
     // -----------------------------------------------------------------------
     // WebSocket event handler coverage
     // -----------------------------------------------------------------------
