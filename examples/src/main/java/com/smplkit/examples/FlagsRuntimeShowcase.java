@@ -148,8 +148,10 @@ public final class FlagsRuntimeShowcase {
             // simulate someone making changes to a flag to trigger listeners
             updateRules(client);
 
-            // wait a moment for the event to be delivered
-            Thread.sleep(200);
+            // wait a moment for the event to be delivered (typical WS
+            // round-trip is well under 200ms; 400ms is plenty of headroom
+            // and anything past that is a real signal, not noise to absorb).
+            Thread.sleep(400);
 
             // verify both listeners fired
             assert !allChanges.isEmpty() : "Expected at least one global change";
