@@ -70,8 +70,11 @@ public final class ConfigRuntimeShowcase {
             // simulate someone making a change to trigger listeners
             updateMaxRetries(client, 7);
 
-            // wait a moment for the event to be delivered
-            Thread.sleep(200);
+            // wait for the WebSocket change event to be delivered
+            long deadline = System.currentTimeMillis() + 3000;
+            while (changes.isEmpty() && System.currentTimeMillis() < deadline) {
+                Thread.sleep(50);
+            }
 
             // userSvcConfigDict always reflects the latest values
             System.out.println("max_retries after update = " + userSvcConfigDict.get("max_retries"));

@@ -9,13 +9,13 @@ package com.smplkit.audit;
  * a 400.
  */
 public enum ForwarderType {
-    HTTP("http"),
-    DATADOG("datadog"),
-    SPLUNK_HEC("splunk_hec"),
-    SUMO_LOGIC("sumo_logic"),
-    NEW_RELIC("new_relic"),
-    HONEYCOMB("honeycomb"),
-    ELASTIC("elastic");
+    HTTP("HTTP"),
+    DATADOG("DATADOG"),
+    SPLUNK_HEC("SPLUNK_HEC"),
+    SUMO_LOGIC("SUMO_LOGIC"),
+    NEW_RELIC("NEW_RELIC"),
+    HONEYCOMB("HONEYCOMB"),
+    ELASTIC("ELASTIC");
 
     private final String value;
 
@@ -23,7 +23,7 @@ public enum ForwarderType {
         this.value = value;
     }
 
-    /** The wire-format slug — e.g. {@code "splunk_hec"}. */
+    /** The wire-format slug — e.g. {@code "SPLUNK_HEC"}. */
     public String getValue() {
         return value;
     }
