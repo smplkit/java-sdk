@@ -52,16 +52,16 @@ public class RegisterRequest {
   private String password;
 
   /**
-   * Registration entry point. Allowed: login, get_started, live_demo, unknown. Defaults to unknown when omitted.
+   * Registration entry point. Allowed: LOGIN, GET_STARTED, LIVE_DEMO, UNKNOWN. Defaults to UNKNOWN when omitted. Case-insensitive.
    */
   public enum EntryPointEnum {
-    LOGIN(String.valueOf("login")),
+    LOGIN(String.valueOf("LOGIN")),
     
-    GET_STARTED(String.valueOf("get_started")),
+    GET_STARTED(String.valueOf("GET_STARTED")),
     
-    LIVE_DEMO(String.valueOf("live_demo")),
+    LIVE_DEMO(String.valueOf("LIVE_DEMO")),
     
-    UNKNOWN(String.valueOf("unknown"));
+    UNKNOWN(String.valueOf("UNKNOWN"));
 
     private String value;
 
@@ -150,7 +150,7 @@ public class RegisterRequest {
   }
 
   /**
-   * Registration entry point. Allowed: login, get_started, live_demo, unknown. Defaults to unknown when omitted.
+   * Registration entry point. Allowed: LOGIN, GET_STARTED, LIVE_DEMO, UNKNOWN. Defaults to UNKNOWN when omitted. Case-insensitive.
    * @return entryPoint
    */
   @jakarta.annotation.Nullable
