@@ -87,6 +87,7 @@ public final class AuditEvents {
                 input.action,
                 input.resourceType,
                 input.resourceId,
+                input.search,
                 input.pageSize,
                 input.pageAfter
         );

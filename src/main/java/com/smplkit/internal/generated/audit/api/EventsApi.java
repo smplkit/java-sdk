@@ -284,77 +284,81 @@ public class EventsApi {
 
   /**
    * List Events
-   * List audit events for the authenticated account.  Default sort is &#x60;&#x60;-created_at&#x60;&#x60;; cursor pagination via &#x60;&#x60;page[after]&#x60;&#x60; (the opaque cursor returned in &#x60;&#x60;links.next&#x60;&#x60;). Filters are exact-match except &#x60;&#x60;filter[occurred_at]&#x60;&#x60; which uses the platform&#39;s range notation (&#x60;&#x60;[2026-01-01T00:00:00Z,*)&#x60;&#x60;).
+   * List audit events for the authenticated account.  Default sort is &#x60;&#x60;-created_at&#x60;&#x60;; cursor pagination via &#x60;&#x60;page[after]&#x60;&#x60; (the opaque cursor returned in &#x60;&#x60;links.next&#x60;&#x60;). Filters are exact-match except &#x60;&#x60;filter[occurred_at]&#x60;&#x60; which uses the platform&#39;s range notation (&#x60;&#x60;[2026-01-01T00:00:00Z,*)&#x60;&#x60;) and &#x60;&#x60;filter[search]&#x60;&#x60; which is a case-insensitive substring match (per ADR-014; targets &#x60;&#x60;resource_id&#x60;&#x60; only at this revision).
    * @param filterOccurredAt  (optional)
    * @param filterActorType  (optional)
    * @param filterActorId  (optional)
    * @param filterAction  (optional)
    * @param filterResourceType  (optional)
    * @param filterResourceId  (optional)
+   * @param filterSearch Case-insensitive substring match. Searches against &#x60;&#x60;resource_id&#x60;&#x60; only — see ADR-014 for the platform-wide &#x60;&#x60;filter[search]&#x60;&#x60; convention. Use &#x60;&#x60;filter[resource_id]&#x60;&#x60; for an exact match. (optional)
    * @param pageSize  (optional)
    * @param pageAfter  (optional)
    * @return EventListResponse
    * @throws ApiException if fails to make API call
    */
-  public EventListResponse listEvents(@jakarta.annotation.Nullable String filterOccurredAt, @jakarta.annotation.Nullable String filterActorType, @jakarta.annotation.Nullable UUID filterActorId, @jakarta.annotation.Nullable String filterAction, @jakarta.annotation.Nullable String filterResourceType, @jakarta.annotation.Nullable String filterResourceId, @jakarta.annotation.Nullable Integer pageSize, @jakarta.annotation.Nullable String pageAfter) throws ApiException {
-    return listEvents(filterOccurredAt, filterActorType, filterActorId, filterAction, filterResourceType, filterResourceId, pageSize, pageAfter, null);
+  public EventListResponse listEvents(@jakarta.annotation.Nullable String filterOccurredAt, @jakarta.annotation.Nullable String filterActorType, @jakarta.annotation.Nullable UUID filterActorId, @jakarta.annotation.Nullable String filterAction, @jakarta.annotation.Nullable String filterResourceType, @jakarta.annotation.Nullable String filterResourceId, @jakarta.annotation.Nullable String filterSearch, @jakarta.annotation.Nullable Integer pageSize, @jakarta.annotation.Nullable String pageAfter) throws ApiException {
+    return listEvents(filterOccurredAt, filterActorType, filterActorId, filterAction, filterResourceType, filterResourceId, filterSearch, pageSize, pageAfter, null);
   }
 
   /**
    * List Events
-   * List audit events for the authenticated account.  Default sort is &#x60;&#x60;-created_at&#x60;&#x60;; cursor pagination via &#x60;&#x60;page[after]&#x60;&#x60; (the opaque cursor returned in &#x60;&#x60;links.next&#x60;&#x60;). Filters are exact-match except &#x60;&#x60;filter[occurred_at]&#x60;&#x60; which uses the platform&#39;s range notation (&#x60;&#x60;[2026-01-01T00:00:00Z,*)&#x60;&#x60;).
+   * List audit events for the authenticated account.  Default sort is &#x60;&#x60;-created_at&#x60;&#x60;; cursor pagination via &#x60;&#x60;page[after]&#x60;&#x60; (the opaque cursor returned in &#x60;&#x60;links.next&#x60;&#x60;). Filters are exact-match except &#x60;&#x60;filter[occurred_at]&#x60;&#x60; which uses the platform&#39;s range notation (&#x60;&#x60;[2026-01-01T00:00:00Z,*)&#x60;&#x60;) and &#x60;&#x60;filter[search]&#x60;&#x60; which is a case-insensitive substring match (per ADR-014; targets &#x60;&#x60;resource_id&#x60;&#x60; only at this revision).
    * @param filterOccurredAt  (optional)
    * @param filterActorType  (optional)
    * @param filterActorId  (optional)
    * @param filterAction  (optional)
    * @param filterResourceType  (optional)
    * @param filterResourceId  (optional)
+   * @param filterSearch Case-insensitive substring match. Searches against &#x60;&#x60;resource_id&#x60;&#x60; only — see ADR-014 for the platform-wide &#x60;&#x60;filter[search]&#x60;&#x60; convention. Use &#x60;&#x60;filter[resource_id]&#x60;&#x60; for an exact match. (optional)
    * @param pageSize  (optional)
    * @param pageAfter  (optional)
    * @param headers Optional headers to include in the request
    * @return EventListResponse
    * @throws ApiException if fails to make API call
    */
-  public EventListResponse listEvents(@jakarta.annotation.Nullable String filterOccurredAt, @jakarta.annotation.Nullable String filterActorType, @jakarta.annotation.Nullable UUID filterActorId, @jakarta.annotation.Nullable String filterAction, @jakarta.annotation.Nullable String filterResourceType, @jakarta.annotation.Nullable String filterResourceId, @jakarta.annotation.Nullable Integer pageSize, @jakarta.annotation.Nullable String pageAfter, Map<String, String> headers) throws ApiException {
-    ApiResponse<EventListResponse> localVarResponse = listEventsWithHttpInfo(filterOccurredAt, filterActorType, filterActorId, filterAction, filterResourceType, filterResourceId, pageSize, pageAfter, headers);
+  public EventListResponse listEvents(@jakarta.annotation.Nullable String filterOccurredAt, @jakarta.annotation.Nullable String filterActorType, @jakarta.annotation.Nullable UUID filterActorId, @jakarta.annotation.Nullable String filterAction, @jakarta.annotation.Nullable String filterResourceType, @jakarta.annotation.Nullable String filterResourceId, @jakarta.annotation.Nullable String filterSearch, @jakarta.annotation.Nullable Integer pageSize, @jakarta.annotation.Nullable String pageAfter, Map<String, String> headers) throws ApiException {
+    ApiResponse<EventListResponse> localVarResponse = listEventsWithHttpInfo(filterOccurredAt, filterActorType, filterActorId, filterAction, filterResourceType, filterResourceId, filterSearch, pageSize, pageAfter, headers);
     return localVarResponse.getData();
   }
 
   /**
    * List Events
-   * List audit events for the authenticated account.  Default sort is &#x60;&#x60;-created_at&#x60;&#x60;; cursor pagination via &#x60;&#x60;page[after]&#x60;&#x60; (the opaque cursor returned in &#x60;&#x60;links.next&#x60;&#x60;). Filters are exact-match except &#x60;&#x60;filter[occurred_at]&#x60;&#x60; which uses the platform&#39;s range notation (&#x60;&#x60;[2026-01-01T00:00:00Z,*)&#x60;&#x60;).
+   * List audit events for the authenticated account.  Default sort is &#x60;&#x60;-created_at&#x60;&#x60;; cursor pagination via &#x60;&#x60;page[after]&#x60;&#x60; (the opaque cursor returned in &#x60;&#x60;links.next&#x60;&#x60;). Filters are exact-match except &#x60;&#x60;filter[occurred_at]&#x60;&#x60; which uses the platform&#39;s range notation (&#x60;&#x60;[2026-01-01T00:00:00Z,*)&#x60;&#x60;) and &#x60;&#x60;filter[search]&#x60;&#x60; which is a case-insensitive substring match (per ADR-014; targets &#x60;&#x60;resource_id&#x60;&#x60; only at this revision).
    * @param filterOccurredAt  (optional)
    * @param filterActorType  (optional)
    * @param filterActorId  (optional)
    * @param filterAction  (optional)
    * @param filterResourceType  (optional)
    * @param filterResourceId  (optional)
+   * @param filterSearch Case-insensitive substring match. Searches against &#x60;&#x60;resource_id&#x60;&#x60; only — see ADR-014 for the platform-wide &#x60;&#x60;filter[search]&#x60;&#x60; convention. Use &#x60;&#x60;filter[resource_id]&#x60;&#x60; for an exact match. (optional)
    * @param pageSize  (optional)
    * @param pageAfter  (optional)
    * @return ApiResponse&lt;EventListResponse&gt;
    * @throws ApiException if fails to make API call
    */
-  public ApiResponse<EventListResponse> listEventsWithHttpInfo(@jakarta.annotation.Nullable String filterOccurredAt, @jakarta.annotation.Nullable String filterActorType, @jakarta.annotation.Nullable UUID filterActorId, @jakarta.annotation.Nullable String filterAction, @jakarta.annotation.Nullable String filterResourceType, @jakarta.annotation.Nullable String filterResourceId, @jakarta.annotation.Nullable Integer pageSize, @jakarta.annotation.Nullable String pageAfter) throws ApiException {
-    return listEventsWithHttpInfo(filterOccurredAt, filterActorType, filterActorId, filterAction, filterResourceType, filterResourceId, pageSize, pageAfter, null);
+  public ApiResponse<EventListResponse> listEventsWithHttpInfo(@jakarta.annotation.Nullable String filterOccurredAt, @jakarta.annotation.Nullable String filterActorType, @jakarta.annotation.Nullable UUID filterActorId, @jakarta.annotation.Nullable String filterAction, @jakarta.annotation.Nullable String filterResourceType, @jakarta.annotation.Nullable String filterResourceId, @jakarta.annotation.Nullable String filterSearch, @jakarta.annotation.Nullable Integer pageSize, @jakarta.annotation.Nullable String pageAfter) throws ApiException {
+    return listEventsWithHttpInfo(filterOccurredAt, filterActorType, filterActorId, filterAction, filterResourceType, filterResourceId, filterSearch, pageSize, pageAfter, null);
   }
 
   /**
    * List Events
-   * List audit events for the authenticated account.  Default sort is &#x60;&#x60;-created_at&#x60;&#x60;; cursor pagination via &#x60;&#x60;page[after]&#x60;&#x60; (the opaque cursor returned in &#x60;&#x60;links.next&#x60;&#x60;). Filters are exact-match except &#x60;&#x60;filter[occurred_at]&#x60;&#x60; which uses the platform&#39;s range notation (&#x60;&#x60;[2026-01-01T00:00:00Z,*)&#x60;&#x60;).
+   * List audit events for the authenticated account.  Default sort is &#x60;&#x60;-created_at&#x60;&#x60;; cursor pagination via &#x60;&#x60;page[after]&#x60;&#x60; (the opaque cursor returned in &#x60;&#x60;links.next&#x60;&#x60;). Filters are exact-match except &#x60;&#x60;filter[occurred_at]&#x60;&#x60; which uses the platform&#39;s range notation (&#x60;&#x60;[2026-01-01T00:00:00Z,*)&#x60;&#x60;) and &#x60;&#x60;filter[search]&#x60;&#x60; which is a case-insensitive substring match (per ADR-014; targets &#x60;&#x60;resource_id&#x60;&#x60; only at this revision).
    * @param filterOccurredAt  (optional)
    * @param filterActorType  (optional)
    * @param filterActorId  (optional)
    * @param filterAction  (optional)
    * @param filterResourceType  (optional)
    * @param filterResourceId  (optional)
+   * @param filterSearch Case-insensitive substring match. Searches against &#x60;&#x60;resource_id&#x60;&#x60; only — see ADR-014 for the platform-wide &#x60;&#x60;filter[search]&#x60;&#x60; convention. Use &#x60;&#x60;filter[resource_id]&#x60;&#x60; for an exact match. (optional)
    * @param pageSize  (optional)
    * @param pageAfter  (optional)
    * @param headers Optional headers to include in the request
    * @return ApiResponse&lt;EventListResponse&gt;
    * @throws ApiException if fails to make API call
    */
-  public ApiResponse<EventListResponse> listEventsWithHttpInfo(@jakarta.annotation.Nullable String filterOccurredAt, @jakarta.annotation.Nullable String filterActorType, @jakarta.annotation.Nullable UUID filterActorId, @jakarta.annotation.Nullable String filterAction, @jakarta.annotation.Nullable String filterResourceType, @jakarta.annotation.Nullable String filterResourceId, @jakarta.annotation.Nullable Integer pageSize, @jakarta.annotation.Nullable String pageAfter, Map<String, String> headers) throws ApiException {
-    HttpRequest.Builder localVarRequestBuilder = listEventsRequestBuilder(filterOccurredAt, filterActorType, filterActorId, filterAction, filterResourceType, filterResourceId, pageSize, pageAfter, headers);
+  public ApiResponse<EventListResponse> listEventsWithHttpInfo(@jakarta.annotation.Nullable String filterOccurredAt, @jakarta.annotation.Nullable String filterActorType, @jakarta.annotation.Nullable UUID filterActorId, @jakarta.annotation.Nullable String filterAction, @jakarta.annotation.Nullable String filterResourceType, @jakarta.annotation.Nullable String filterResourceId, @jakarta.annotation.Nullable String filterSearch, @jakarta.annotation.Nullable Integer pageSize, @jakarta.annotation.Nullable String pageAfter, Map<String, String> headers) throws ApiException {
+    HttpRequest.Builder localVarRequestBuilder = listEventsRequestBuilder(filterOccurredAt, filterActorType, filterActorId, filterAction, filterResourceType, filterResourceId, filterSearch, pageSize, pageAfter, headers);
     try {
       HttpResponse<InputStream> localVarResponse = memberVarHttpClient.send(
           localVarRequestBuilder.build(),
@@ -401,7 +405,7 @@ public class EventsApi {
     }
   }
 
-  private HttpRequest.Builder listEventsRequestBuilder(@jakarta.annotation.Nullable String filterOccurredAt, @jakarta.annotation.Nullable String filterActorType, @jakarta.annotation.Nullable UUID filterActorId, @jakarta.annotation.Nullable String filterAction, @jakarta.annotation.Nullable String filterResourceType, @jakarta.annotation.Nullable String filterResourceId, @jakarta.annotation.Nullable Integer pageSize, @jakarta.annotation.Nullable String pageAfter, Map<String, String> headers) throws ApiException {
+  private HttpRequest.Builder listEventsRequestBuilder(@jakarta.annotation.Nullable String filterOccurredAt, @jakarta.annotation.Nullable String filterActorType, @jakarta.annotation.Nullable UUID filterActorId, @jakarta.annotation.Nullable String filterAction, @jakarta.annotation.Nullable String filterResourceType, @jakarta.annotation.Nullable String filterResourceId, @jakarta.annotation.Nullable String filterSearch, @jakarta.annotation.Nullable Integer pageSize, @jakarta.annotation.Nullable String pageAfter, Map<String, String> headers) throws ApiException {
 
     HttpRequest.Builder localVarRequestBuilder = HttpRequest.newBuilder();
 
@@ -422,6 +426,8 @@ public class EventsApi {
     localVarQueryParams.addAll(ApiClient.parameterToPairs("filter[resource_type]", filterResourceType));
     localVarQueryParameterBaseName = "filter[resource_id]";
     localVarQueryParams.addAll(ApiClient.parameterToPairs("filter[resource_id]", filterResourceId));
+    localVarQueryParameterBaseName = "filter[search]";
+    localVarQueryParams.addAll(ApiClient.parameterToPairs("filter[search]", filterSearch));
     localVarQueryParameterBaseName = "page[size]";
     localVarQueryParams.addAll(ApiClient.parameterToPairs("page[size]", pageSize));
     localVarQueryParameterBaseName = "page[after]";
