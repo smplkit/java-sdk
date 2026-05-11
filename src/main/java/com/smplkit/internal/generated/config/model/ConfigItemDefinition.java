@@ -34,7 +34,7 @@ import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 
 import com.smplkit.internal.generated.config.ApiClient;
 /**
- * Schema for a single config item.  &#x60;&#x60;value&#x60;&#x60; may be &#x60;&#x60;None&#x60;&#x60; to represent a cleared (typed but unset) slot — e.g. after a type change that could not coerce the previous value. See ADR-024.
+ * Type-declared item within a config.  Each item carries a value plus a declared type that constrains the value and any per-environment overrides for the same key.
  */
 @JsonPropertyOrder({
   ConfigItemDefinition.JSON_PROPERTY_VALUE,
@@ -47,7 +47,7 @@ public class ConfigItemDefinition {
   private JsonNullable<Object> value = JsonNullable.<Object>of(null);
 
   /**
-   * Gets or Sets type
+   * Declared value type. Constrains the JSON shape of &#x60;value&#x60; and of every override of this key in the &#x60;environments&#x60; map.
    */
   public enum TypeEnum {
     STRING(String.valueOf("STRING")),
@@ -100,7 +100,7 @@ public class ConfigItemDefinition {
   }
 
   /**
-   * Get value
+   * Current value for the item. May be &#x60;null&#x60; to represent a cleared (typed but unset) slot — for example, after a type change where the prior value could not be coerced.
    * @return value
    */
   @jakarta.annotation.Nullable
@@ -132,7 +132,7 @@ public class ConfigItemDefinition {
   }
 
   /**
-   * Get type
+   * Declared value type. Constrains the JSON shape of &#x60;value&#x60; and of every override of this key in the &#x60;environments&#x60; map.
    * @return type
    */
   @jakarta.annotation.Nullable
@@ -164,7 +164,7 @@ public class ConfigItemDefinition {
   }
 
   /**
-   * Get description
+   * Optional human-readable explanation of what this item controls.
    * @return description
    */
   @jakarta.annotation.Nullable
