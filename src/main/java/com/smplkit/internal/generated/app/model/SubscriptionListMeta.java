@@ -59,9 +59,9 @@ public class SubscriptionListMeta {
    * Gets or Sets discountSource
    */
   public enum DiscountSourceEnum {
-    VOLUME(String.valueOf("volume")),
+    VOLUME(String.valueOf("VOLUME")),
     
-    OVERRIDE(String.valueOf("override"));
+    OVERRIDE(String.valueOf("OVERRIDE"));
 
     private String value;
 
