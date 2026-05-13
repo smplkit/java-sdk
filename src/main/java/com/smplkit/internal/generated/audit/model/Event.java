@@ -44,6 +44,7 @@ import com.smplkit.internal.generated.audit.ApiClient;
   Event.JSON_PROPERTY_ACTION,
   Event.JSON_PROPERTY_RESOURCE_TYPE,
   Event.JSON_PROPERTY_RESOURCE_ID,
+  Event.JSON_PROPERTY_DESCRIPTION,
   Event.JSON_PROPERTY_OCCURRED_AT,
   Event.JSON_PROPERTY_DATA,
   Event.JSON_PROPERTY_DO_NOT_FORWARD,
@@ -66,6 +67,9 @@ public class Event {
   public static final String JSON_PROPERTY_RESOURCE_ID = "resource_id";
   @jakarta.annotation.Nonnull
   private String resourceId;
+
+  public static final String JSON_PROPERTY_DESCRIPTION = "description";
+  private JsonNullable<String> description = JsonNullable.<String>undefined();
 
   public static final String JSON_PROPERTY_OCCURRED_AT = "occurred_at";
   private JsonNullable<OffsetDateTime> occurredAt = JsonNullable.<OffsetDateTime>undefined();
@@ -181,6 +185,38 @@ public class Event {
   @JsonInclude(value = JsonInclude.Include.ALWAYS)
   public void setResourceId(@jakarta.annotation.Nonnull String resourceId) {
     this.resourceId = resourceId;
+  }
+
+
+  public Event description(@jakarta.annotation.Nullable String description) {
+    this.description = JsonNullable.<String>of(description);
+    return this;
+  }
+
+  /**
+   * Free-text description of the event. Included alongside &#x60;resource_id&#x60; in the &#x60;filter[search]&#x60; substring target.
+   * @return description
+   */
+  @jakarta.annotation.Nullable
+  @JsonIgnore
+  public String getDescription() {
+        return description.orElse(null);
+  }
+
+  @JsonProperty(value = JSON_PROPERTY_DESCRIPTION, required = false)
+  @JsonInclude(value = JsonInclude.Include.USE_DEFAULTS)
+
+  public JsonNullable<String> getDescription_JsonNullable() {
+    return description;
+  }
+  
+  @JsonProperty(JSON_PROPERTY_DESCRIPTION)
+  public void setDescription_JsonNullable(JsonNullable<String> description) {
+    this.description = description;
+  }
+
+  public void setDescription(@jakarta.annotation.Nullable String description) {
+    this.description = JsonNullable.<String>of(description);
   }
 
 
@@ -427,6 +463,7 @@ public class Event {
     return Objects.equals(this.action, event.action) &&
         Objects.equals(this.resourceType, event.resourceType) &&
         Objects.equals(this.resourceId, event.resourceId) &&
+        equalsNullable(this.description, event.description) &&
         equalsNullable(this.occurredAt, event.occurredAt) &&
         Objects.equals(this.data, event.data) &&
         Objects.equals(this.doNotForward, event.doNotForward) &&
@@ -443,7 +480,7 @@ public class Event {
 
   @Override
   public int hashCode() {
-    return Objects.hash(action, resourceType, resourceId, hashCodeNullable(occurredAt), data, doNotForward, hashCodeNullable(createdAt), hashCodeNullable(actorType), hashCodeNullable(actorId), hashCodeNullable(actorLabel), hashCodeNullable(idempotencyKey));
+    return Objects.hash(action, resourceType, resourceId, hashCodeNullable(description), hashCodeNullable(occurredAt), data, doNotForward, hashCodeNullable(createdAt), hashCodeNullable(actorType), hashCodeNullable(actorId), hashCodeNullable(actorLabel), hashCodeNullable(idempotencyKey));
   }
 
   private static <T> int hashCodeNullable(JsonNullable<T> a) {
@@ -460,6 +497,7 @@ public class Event {
     sb.append("    action: ").append(toIndentedString(action)).append("\n");
     sb.append("    resourceType: ").append(toIndentedString(resourceType)).append("\n");
     sb.append("    resourceId: ").append(toIndentedString(resourceId)).append("\n");
+    sb.append("    description: ").append(toIndentedString(description)).append("\n");
     sb.append("    occurredAt: ").append(toIndentedString(occurredAt)).append("\n");
     sb.append("    data: ").append(toIndentedString(data)).append("\n");
     sb.append("    doNotForward: ").append(toIndentedString(doNotForward)).append("\n");
@@ -525,6 +563,11 @@ public class Event {
     // add `resource_id` to the URL query string
     if (getResourceId() != null) {
       joiner.add(String.format(java.util.Locale.ROOT, "%sresource_id%s=%s", prefix, suffix, ApiClient.urlEncode(ApiClient.valueToString(getResourceId()))));
+    }
+
+    // add `description` to the URL query string
+    if (getDescription() != null) {
+      joiner.add(String.format(java.util.Locale.ROOT, "%sdescription%s=%s", prefix, suffix, ApiClient.urlEncode(ApiClient.valueToString(getDescription()))));
     }
 
     // add `occurred_at` to the URL query string

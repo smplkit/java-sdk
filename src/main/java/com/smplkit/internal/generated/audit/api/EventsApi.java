@@ -285,14 +285,14 @@ public class EventsApi {
 
   /**
    * List Events
-   * List audit events for this account.  Default sort is newest first. Filters are exact-match except &#x60;filter[occurred_at]&#x60;, which uses interval notation (e.g. &#x60;[2026-01-01T00:00:00Z,*)&#x60;), and &#x60;filter[search]&#x60;, which is a case-insensitive substring match against &#x60;resource_id&#x60;.
+   * List audit events for this account.  Default sort is newest first. Filters are exact-match except &#x60;filter[occurred_at]&#x60;, which uses interval notation (e.g. &#x60;[2026-01-01T00:00:00Z,2026-01-31T00:00:00Z)&#x60;), and &#x60;filter[search]&#x60;, which is a case-insensitive substring match against &#x60;resource_id&#x60; or &#x60;description&#x60;.  To bound the rows scanned per request, the endpoint requires either:  - &#x60;filter[resource_id]&#x60; (which must be accompanied by   &#x60;filter[resource_type]&#x60;), or - &#x60;filter[occurred_at]&#x60; with a span no greater than 30 days.  &#x60;page[size]&#x60; defaults to 50 and must not exceed 1000.
    * @param filterOccurredAt  (optional)
    * @param filterActorType  (optional)
    * @param filterActorId  (optional)
    * @param filterAction  (optional)
    * @param filterResourceType  (optional)
    * @param filterResourceId  (optional)
-   * @param filterSearch Case-insensitive substring match against &#x60;resource_id&#x60;. Use &#x60;filter[resource_id]&#x60; for an exact match. (optional)
+   * @param filterSearch Case-insensitive substring match against &#x60;resource_id&#x60; or &#x60;description&#x60;. Use &#x60;filter[resource_id]&#x60; for an exact match on &#x60;resource_id&#x60;. (optional)
    * @param pageSize  (optional)
    * @param pageAfter  (optional)
    * @return EventListResponse
@@ -304,14 +304,14 @@ public class EventsApi {
 
   /**
    * List Events
-   * List audit events for this account.  Default sort is newest first. Filters are exact-match except &#x60;filter[occurred_at]&#x60;, which uses interval notation (e.g. &#x60;[2026-01-01T00:00:00Z,*)&#x60;), and &#x60;filter[search]&#x60;, which is a case-insensitive substring match against &#x60;resource_id&#x60;.
+   * List audit events for this account.  Default sort is newest first. Filters are exact-match except &#x60;filter[occurred_at]&#x60;, which uses interval notation (e.g. &#x60;[2026-01-01T00:00:00Z,2026-01-31T00:00:00Z)&#x60;), and &#x60;filter[search]&#x60;, which is a case-insensitive substring match against &#x60;resource_id&#x60; or &#x60;description&#x60;.  To bound the rows scanned per request, the endpoint requires either:  - &#x60;filter[resource_id]&#x60; (which must be accompanied by   &#x60;filter[resource_type]&#x60;), or - &#x60;filter[occurred_at]&#x60; with a span no greater than 30 days.  &#x60;page[size]&#x60; defaults to 50 and must not exceed 1000.
    * @param filterOccurredAt  (optional)
    * @param filterActorType  (optional)
    * @param filterActorId  (optional)
    * @param filterAction  (optional)
    * @param filterResourceType  (optional)
    * @param filterResourceId  (optional)
-   * @param filterSearch Case-insensitive substring match against &#x60;resource_id&#x60;. Use &#x60;filter[resource_id]&#x60; for an exact match. (optional)
+   * @param filterSearch Case-insensitive substring match against &#x60;resource_id&#x60; or &#x60;description&#x60;. Use &#x60;filter[resource_id]&#x60; for an exact match on &#x60;resource_id&#x60;. (optional)
    * @param pageSize  (optional)
    * @param pageAfter  (optional)
    * @param headers Optional headers to include in the request
@@ -325,14 +325,14 @@ public class EventsApi {
 
   /**
    * List Events
-   * List audit events for this account.  Default sort is newest first. Filters are exact-match except &#x60;filter[occurred_at]&#x60;, which uses interval notation (e.g. &#x60;[2026-01-01T00:00:00Z,*)&#x60;), and &#x60;filter[search]&#x60;, which is a case-insensitive substring match against &#x60;resource_id&#x60;.
+   * List audit events for this account.  Default sort is newest first. Filters are exact-match except &#x60;filter[occurred_at]&#x60;, which uses interval notation (e.g. &#x60;[2026-01-01T00:00:00Z,2026-01-31T00:00:00Z)&#x60;), and &#x60;filter[search]&#x60;, which is a case-insensitive substring match against &#x60;resource_id&#x60; or &#x60;description&#x60;.  To bound the rows scanned per request, the endpoint requires either:  - &#x60;filter[resource_id]&#x60; (which must be accompanied by   &#x60;filter[resource_type]&#x60;), or - &#x60;filter[occurred_at]&#x60; with a span no greater than 30 days.  &#x60;page[size]&#x60; defaults to 50 and must not exceed 1000.
    * @param filterOccurredAt  (optional)
    * @param filterActorType  (optional)
    * @param filterActorId  (optional)
    * @param filterAction  (optional)
    * @param filterResourceType  (optional)
    * @param filterResourceId  (optional)
-   * @param filterSearch Case-insensitive substring match against &#x60;resource_id&#x60;. Use &#x60;filter[resource_id]&#x60; for an exact match. (optional)
+   * @param filterSearch Case-insensitive substring match against &#x60;resource_id&#x60; or &#x60;description&#x60;. Use &#x60;filter[resource_id]&#x60; for an exact match on &#x60;resource_id&#x60;. (optional)
    * @param pageSize  (optional)
    * @param pageAfter  (optional)
    * @return ApiResponse&lt;EventListResponse&gt;
@@ -344,14 +344,14 @@ public class EventsApi {
 
   /**
    * List Events
-   * List audit events for this account.  Default sort is newest first. Filters are exact-match except &#x60;filter[occurred_at]&#x60;, which uses interval notation (e.g. &#x60;[2026-01-01T00:00:00Z,*)&#x60;), and &#x60;filter[search]&#x60;, which is a case-insensitive substring match against &#x60;resource_id&#x60;.
+   * List audit events for this account.  Default sort is newest first. Filters are exact-match except &#x60;filter[occurred_at]&#x60;, which uses interval notation (e.g. &#x60;[2026-01-01T00:00:00Z,2026-01-31T00:00:00Z)&#x60;), and &#x60;filter[search]&#x60;, which is a case-insensitive substring match against &#x60;resource_id&#x60; or &#x60;description&#x60;.  To bound the rows scanned per request, the endpoint requires either:  - &#x60;filter[resource_id]&#x60; (which must be accompanied by   &#x60;filter[resource_type]&#x60;), or - &#x60;filter[occurred_at]&#x60; with a span no greater than 30 days.  &#x60;page[size]&#x60; defaults to 50 and must not exceed 1000.
    * @param filterOccurredAt  (optional)
    * @param filterActorType  (optional)
    * @param filterActorId  (optional)
    * @param filterAction  (optional)
    * @param filterResourceType  (optional)
    * @param filterResourceId  (optional)
-   * @param filterSearch Case-insensitive substring match against &#x60;resource_id&#x60;. Use &#x60;filter[resource_id]&#x60; for an exact match. (optional)
+   * @param filterSearch Case-insensitive substring match against &#x60;resource_id&#x60; or &#x60;description&#x60;. Use &#x60;filter[resource_id]&#x60; for an exact match on &#x60;resource_id&#x60;. (optional)
    * @param pageSize  (optional)
    * @param pageAfter  (optional)
    * @param headers Optional headers to include in the request
