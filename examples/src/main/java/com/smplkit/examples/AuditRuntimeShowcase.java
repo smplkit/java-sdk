@@ -52,6 +52,7 @@ public final class AuditRuntimeShowcase {
 
             // list events
             ListEventsInput listInput = new ListEventsInput();
+            listInput.resourceType = "invoice";
             listInput.resourceId = someResourceId;
             ListEventsPage page = client.audit().events().list(listInput);
             assert page.events.stream().anyMatch(e -> e.resourceId.equals(someResourceId))
