@@ -21,6 +21,7 @@ import com.smplkit.internal.generated.app.Pair;
 import com.smplkit.internal.generated.app.model.EnvironmentListResponse;
 import com.smplkit.internal.generated.app.model.EnvironmentRequest;
 import com.smplkit.internal.generated.app.model.EnvironmentResponse;
+import com.smplkit.internal.generated.app.model.EnvironmentUsageResponse;
 import com.smplkit.internal.generated.app.model.ErrorResponse;
 
 import com.fasterxml.jackson.core.type.TypeReference;
@@ -290,46 +291,50 @@ public class EnvironmentsApi {
 
   /**
    * Delete Environment
-   * Delete an environment by id.
+   * Delete an environment by id. When &#x60;cascade&#x3D;true&#x60; is set, also remove every per-environment reference held by flags, configs, and loggers in the corresponding services before deleting the environment row. The default &#x60;cascade&#x3D;false&#x60; deletes only the environment row, leaving downstream references in place.
    * @param id  (required)
+   * @param cascade When &#x60;true&#x60;, remove every flag rule, env-level flag default, config override, and logger override scoped to this environment before deleting the environment row. (optional, default to false)
    * @throws ApiException if fails to make API call
    */
-  public void deleteEnvironment(@jakarta.annotation.Nonnull String id) throws ApiException {
-    deleteEnvironment(id, null);
+  public void deleteEnvironment(@jakarta.annotation.Nonnull String id, @jakarta.annotation.Nullable Boolean cascade) throws ApiException {
+    deleteEnvironment(id, cascade, null);
   }
 
   /**
    * Delete Environment
-   * Delete an environment by id.
+   * Delete an environment by id. When &#x60;cascade&#x3D;true&#x60; is set, also remove every per-environment reference held by flags, configs, and loggers in the corresponding services before deleting the environment row. The default &#x60;cascade&#x3D;false&#x60; deletes only the environment row, leaving downstream references in place.
    * @param id  (required)
+   * @param cascade When &#x60;true&#x60;, remove every flag rule, env-level flag default, config override, and logger override scoped to this environment before deleting the environment row. (optional, default to false)
    * @param headers Optional headers to include in the request
    * @throws ApiException if fails to make API call
    */
-  public void deleteEnvironment(@jakarta.annotation.Nonnull String id, Map<String, String> headers) throws ApiException {
-    deleteEnvironmentWithHttpInfo(id, headers);
+  public void deleteEnvironment(@jakarta.annotation.Nonnull String id, @jakarta.annotation.Nullable Boolean cascade, Map<String, String> headers) throws ApiException {
+    deleteEnvironmentWithHttpInfo(id, cascade, headers);
   }
 
   /**
    * Delete Environment
-   * Delete an environment by id.
+   * Delete an environment by id. When &#x60;cascade&#x3D;true&#x60; is set, also remove every per-environment reference held by flags, configs, and loggers in the corresponding services before deleting the environment row. The default &#x60;cascade&#x3D;false&#x60; deletes only the environment row, leaving downstream references in place.
    * @param id  (required)
+   * @param cascade When &#x60;true&#x60;, remove every flag rule, env-level flag default, config override, and logger override scoped to this environment before deleting the environment row. (optional, default to false)
    * @return ApiResponse&lt;Void&gt;
    * @throws ApiException if fails to make API call
    */
-  public ApiResponse<Void> deleteEnvironmentWithHttpInfo(@jakarta.annotation.Nonnull String id) throws ApiException {
-    return deleteEnvironmentWithHttpInfo(id, null);
+  public ApiResponse<Void> deleteEnvironmentWithHttpInfo(@jakarta.annotation.Nonnull String id, @jakarta.annotation.Nullable Boolean cascade) throws ApiException {
+    return deleteEnvironmentWithHttpInfo(id, cascade, null);
   }
 
   /**
    * Delete Environment
-   * Delete an environment by id.
+   * Delete an environment by id. When &#x60;cascade&#x3D;true&#x60; is set, also remove every per-environment reference held by flags, configs, and loggers in the corresponding services before deleting the environment row. The default &#x60;cascade&#x3D;false&#x60; deletes only the environment row, leaving downstream references in place.
    * @param id  (required)
+   * @param cascade When &#x60;true&#x60;, remove every flag rule, env-level flag default, config override, and logger override scoped to this environment before deleting the environment row. (optional, default to false)
    * @param headers Optional headers to include in the request
    * @return ApiResponse&lt;Void&gt;
    * @throws ApiException if fails to make API call
    */
-  public ApiResponse<Void> deleteEnvironmentWithHttpInfo(@jakarta.annotation.Nonnull String id, Map<String, String> headers) throws ApiException {
-    HttpRequest.Builder localVarRequestBuilder = deleteEnvironmentRequestBuilder(id, headers);
+  public ApiResponse<Void> deleteEnvironmentWithHttpInfo(@jakarta.annotation.Nonnull String id, @jakarta.annotation.Nullable Boolean cascade, Map<String, String> headers) throws ApiException {
+    HttpRequest.Builder localVarRequestBuilder = deleteEnvironmentRequestBuilder(id, cascade, headers);
     try {
       HttpResponse<InputStream> localVarResponse = memberVarHttpClient.send(
           localVarRequestBuilder.build(),
@@ -365,7 +370,7 @@ public class EnvironmentsApi {
     }
   }
 
-  private HttpRequest.Builder deleteEnvironmentRequestBuilder(@jakarta.annotation.Nonnull String id, Map<String, String> headers) throws ApiException {
+  private HttpRequest.Builder deleteEnvironmentRequestBuilder(@jakarta.annotation.Nonnull String id, @jakarta.annotation.Nullable Boolean cascade, Map<String, String> headers) throws ApiException {
     // verify the required parameter 'id' is set
     if (id == null) {
       throw new ApiException(400, "Missing the required parameter 'id' when calling deleteEnvironment");
@@ -376,7 +381,22 @@ public class EnvironmentsApi {
     String localVarPath = "/api/v1/environments/{id}"
         .replace("{id}", ApiClient.urlEncode(id.toString()));
 
-    localVarRequestBuilder.uri(URI.create(memberVarBaseUri + localVarPath));
+    List<Pair> localVarQueryParams = new ArrayList<>();
+    StringJoiner localVarQueryStringJoiner = new StringJoiner("&");
+    String localVarQueryParameterBaseName;
+    localVarQueryParameterBaseName = "cascade";
+    localVarQueryParams.addAll(ApiClient.parameterToPairs("cascade", cascade));
+
+    if (!localVarQueryParams.isEmpty() || localVarQueryStringJoiner.length() != 0) {
+      StringJoiner queryJoiner = new StringJoiner("&");
+      localVarQueryParams.forEach(p -> queryJoiner.add(p.getName() + '=' + p.getValue()));
+      if (localVarQueryStringJoiner.length() != 0) {
+        queryJoiner.add(localVarQueryStringJoiner.toString());
+      }
+      localVarRequestBuilder.uri(URI.create(memberVarBaseUri + localVarPath + '?' + queryJoiner.toString()));
+    } else {
+      localVarRequestBuilder.uri(URI.create(memberVarBaseUri + localVarPath));
+    }
 
     localVarRequestBuilder.header("Accept", "application/vnd.api+json");
 
@@ -492,6 +512,124 @@ public class EnvironmentsApi {
     HttpRequest.Builder localVarRequestBuilder = HttpRequest.newBuilder();
 
     String localVarPath = "/api/v1/environments/{id}"
+        .replace("{id}", ApiClient.urlEncode(id.toString()));
+
+    localVarRequestBuilder.uri(URI.create(memberVarBaseUri + localVarPath));
+
+    localVarRequestBuilder.header("Accept", "application/vnd.api+json");
+
+    localVarRequestBuilder.method("GET", HttpRequest.BodyPublishers.noBody());
+    if (memberVarReadTimeout != null) {
+      localVarRequestBuilder.timeout(memberVarReadTimeout);
+    }
+    // Add custom headers if provided
+    localVarRequestBuilder = HttpRequestBuilderExtensions.withAdditionalHeaders(localVarRequestBuilder, headers);
+    if (memberVarInterceptor != null) {
+      memberVarInterceptor.accept(localVarRequestBuilder);
+    }
+    return localVarRequestBuilder;
+  }
+
+  /**
+   * Report Environment Usage
+   * Report how many flag rules, env-level flag defaults, config overrides, and logger overrides reference this environment. Used by the console&#39;s delete dialog so the user can see what would survive a non-cascading delete.
+   * @param id  (required)
+   * @return EnvironmentUsageResponse
+   * @throws ApiException if fails to make API call
+   */
+  public EnvironmentUsageResponse getEnvironmentUsage(@jakarta.annotation.Nonnull String id) throws ApiException {
+    return getEnvironmentUsage(id, null);
+  }
+
+  /**
+   * Report Environment Usage
+   * Report how many flag rules, env-level flag defaults, config overrides, and logger overrides reference this environment. Used by the console&#39;s delete dialog so the user can see what would survive a non-cascading delete.
+   * @param id  (required)
+   * @param headers Optional headers to include in the request
+   * @return EnvironmentUsageResponse
+   * @throws ApiException if fails to make API call
+   */
+  public EnvironmentUsageResponse getEnvironmentUsage(@jakarta.annotation.Nonnull String id, Map<String, String> headers) throws ApiException {
+    ApiResponse<EnvironmentUsageResponse> localVarResponse = getEnvironmentUsageWithHttpInfo(id, headers);
+    return localVarResponse.getData();
+  }
+
+  /**
+   * Report Environment Usage
+   * Report how many flag rules, env-level flag defaults, config overrides, and logger overrides reference this environment. Used by the console&#39;s delete dialog so the user can see what would survive a non-cascading delete.
+   * @param id  (required)
+   * @return ApiResponse&lt;EnvironmentUsageResponse&gt;
+   * @throws ApiException if fails to make API call
+   */
+  public ApiResponse<EnvironmentUsageResponse> getEnvironmentUsageWithHttpInfo(@jakarta.annotation.Nonnull String id) throws ApiException {
+    return getEnvironmentUsageWithHttpInfo(id, null);
+  }
+
+  /**
+   * Report Environment Usage
+   * Report how many flag rules, env-level flag defaults, config overrides, and logger overrides reference this environment. Used by the console&#39;s delete dialog so the user can see what would survive a non-cascading delete.
+   * @param id  (required)
+   * @param headers Optional headers to include in the request
+   * @return ApiResponse&lt;EnvironmentUsageResponse&gt;
+   * @throws ApiException if fails to make API call
+   */
+  public ApiResponse<EnvironmentUsageResponse> getEnvironmentUsageWithHttpInfo(@jakarta.annotation.Nonnull String id, Map<String, String> headers) throws ApiException {
+    HttpRequest.Builder localVarRequestBuilder = getEnvironmentUsageRequestBuilder(id, headers);
+    try {
+      HttpResponse<InputStream> localVarResponse = memberVarHttpClient.send(
+          localVarRequestBuilder.build(),
+          HttpResponse.BodyHandlers.ofInputStream());
+      if (memberVarResponseInterceptor != null) {
+        memberVarResponseInterceptor.accept(localVarResponse);
+      }
+      InputStream localVarResponseBody = null;
+      try {
+        if (localVarResponse.statusCode()/ 100 != 2) {
+          throw getApiException("getEnvironmentUsage", localVarResponse);
+        }
+        localVarResponseBody = ApiClient.getResponseBody(localVarResponse);
+        if (localVarResponseBody == null) {
+          return new ApiResponse<EnvironmentUsageResponse>(
+              localVarResponse.statusCode(),
+              localVarResponse.headers().map(),
+              null
+          );
+        }
+
+        
+        
+        String responseBody = new String(localVarResponseBody.readAllBytes());
+        EnvironmentUsageResponse responseValue = responseBody.isBlank()? null: memberVarObjectMapper.readValue(responseBody, new TypeReference<EnvironmentUsageResponse>() {});
+        
+
+        return new ApiResponse<EnvironmentUsageResponse>(
+            localVarResponse.statusCode(),
+            localVarResponse.headers().map(),
+            responseValue
+        );
+      } finally {
+        if (localVarResponseBody != null) {
+          localVarResponseBody.close();
+        }
+      }
+    } catch (IOException e) {
+      throw new ApiException(e);
+    }
+    catch (InterruptedException e) {
+      Thread.currentThread().interrupt();
+      throw new ApiException(e);
+    }
+  }
+
+  private HttpRequest.Builder getEnvironmentUsageRequestBuilder(@jakarta.annotation.Nonnull String id, Map<String, String> headers) throws ApiException {
+    // verify the required parameter 'id' is set
+    if (id == null) {
+      throw new ApiException(400, "Missing the required parameter 'id' when calling getEnvironmentUsage");
+    }
+
+    HttpRequest.Builder localVarRequestBuilder = HttpRequest.newBuilder();
+
+    String localVarPath = "/api/v1/environments/{id}/usage"
         .replace("{id}", ApiClient.urlEncode(id.toString()));
 
     localVarRequestBuilder.uri(URI.create(memberVarBaseUri + localVarPath));

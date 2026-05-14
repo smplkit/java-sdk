@@ -463,9 +463,9 @@ class ManagementTest {
 
     @Test
     void envClient_delete() throws Exception {
-        doNothing().when(mockEnvApi).deleteEnvironment("prod");
+        doNothing().when(mockEnvApi).deleteEnvironment("prod", null);
         assertDoesNotThrow(() -> envClient.delete("prod"));
-        verify(mockEnvApi).deleteEnvironment("prod");
+        verify(mockEnvApi).deleteEnvironment("prod", null);
     }
 
     @Test
@@ -1034,7 +1034,7 @@ class ManagementTest {
 
     @Test
     void envClient_delete_apiException() throws Exception {
-        doThrow(new ApiException(500, "error")).when(mockEnvApi).deleteEnvironment(any());
+        doThrow(new ApiException(500, "error")).when(mockEnvApi).deleteEnvironment(any(), any());
         assertThrows(SmplError.class, () -> envClient.delete("prod"));
     }
 
