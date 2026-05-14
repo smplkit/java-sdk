@@ -29,7 +29,7 @@ public final class AuditActionsClient {
     /** List the distinct action slugs seen in the account. */
     public ListActionsPage list(ListActionsInput input) throws ApiException {
         ActionListResponse resp = api.listActions(
-                input.filterResourceType, input.pageSize, input.pageAfter);
+                input.filterResourceType, input.pageSize, input.pageAfter, null);
         List<AuditAction> rows = new ArrayList<>();
         if (resp.getData() != null) {
             for (ActionResource r : resp.getData()) {

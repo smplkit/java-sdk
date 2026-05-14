@@ -27,7 +27,7 @@ public final class AuditResourceTypesClient {
 
     /** List the distinct resource_type slugs seen in the account. */
     public ListResourceTypesPage list(ListResourceTypesInput input) throws ApiException {
-        ResourceTypeListResponse resp = api.listResourceTypes(input.pageSize, input.pageAfter);
+        ResourceTypeListResponse resp = api.listResourceTypes(input.pageSize, input.pageAfter, null);
         List<AuditResourceType> rows = new ArrayList<>();
         if (resp.getData() != null) {
             for (ResourceTypeResource r : resp.getData()) {
