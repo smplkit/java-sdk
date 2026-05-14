@@ -46,7 +46,7 @@ public final class LogGroupsClient {
     /** List all log groups. */
     public List<LogGroup> list() {
         try {
-            LogGroupListResponse response = inner.logGroupsApi.listLogGroups();
+            LogGroupListResponse response = inner.logGroupsApi.listLogGroups(null);
             List<LogGroup> result = new ArrayList<>();
             if (response.getData() != null) {
                 for (LogGroupResource r : response.getData()) {

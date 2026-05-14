@@ -60,7 +60,7 @@ public final class LoggersClient {
     /** List all loggers. */
     public List<Logger> list() {
         try {
-            LoggerListResponse response = inner.loggersApi.listLoggers(null, null, null);
+            LoggerListResponse response = inner.loggersApi.listLoggers(null, null, null, null);
             List<Logger> result = new ArrayList<>();
             if (response.getData() != null) {
                 for (LoggerResource r : response.getData()) {
