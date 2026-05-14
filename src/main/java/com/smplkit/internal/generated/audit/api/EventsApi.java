@@ -285,7 +285,7 @@ public class EventsApi {
 
   /**
    * List Events
-   * List audit events for this account.  Default sort is newest first. Filters are exact-match except &#x60;filter[occurred_at]&#x60;, which uses interval notation (e.g. &#x60;[2026-01-01T00:00:00Z,2026-01-31T00:00:00Z)&#x60;), and &#x60;filter[search]&#x60;, which is a case-insensitive substring match against &#x60;resource_id&#x60; or &#x60;description&#x60;.  To bound the rows scanned per request, the endpoint requires either:  - &#x60;filter[resource_id]&#x60; (which must be accompanied by   &#x60;filter[resource_type]&#x60;), or - &#x60;filter[occurred_at]&#x60; with a span no greater than 30 days.  &#x60;page[size]&#x60; defaults to 50 and must not exceed 1000.
+   * List audit events for this account.  Default sort is &#x60;-occurred_at&#x60; (newest occurrence first). Sort by &#x60;occurred_at&#x60; or &#x60;created_at&#x60;, ascending or descending — keep the same &#x60;sort&#x60; value across paginated requests so the cursor stays consistent. Filters are exact-match except &#x60;filter[occurred_at]&#x60;, which uses interval notation (e.g. &#x60;[2026-01-01T00:00:00Z,2026-01-31T00:00:00Z)&#x60;), and &#x60;filter[search]&#x60;, which is a case-insensitive substring match against &#x60;resource_id&#x60; or &#x60;description&#x60;.  To bound the rows scanned per request, the endpoint requires either:  - &#x60;filter[resource_id]&#x60; (which must be accompanied by   &#x60;filter[resource_type]&#x60;), or - &#x60;filter[occurred_at]&#x60; with a span no greater than 30 days.  &#x60;page[size]&#x60; defaults to 50 and must not exceed 1000.
    * @param filterOccurredAt  (optional)
    * @param filterActorType  (optional)
    * @param filterActorId  (optional)
@@ -295,16 +295,17 @@ public class EventsApi {
    * @param filterSearch Case-insensitive substring match against &#x60;resource_id&#x60; or &#x60;description&#x60;. Use &#x60;filter[resource_id]&#x60; for an exact match on &#x60;resource_id&#x60;. (optional)
    * @param pageSize  (optional)
    * @param pageAfter  (optional)
+   * @param sort Field to sort by. Prefix with &#x60;-&#x60; for descending order. Default: &#x60;-occurred_at&#x60;. Allowed values: &#x60;created_at&#x60;, &#x60;-created_at&#x60;, &#x60;occurred_at&#x60;, &#x60;-occurred_at&#x60;. (optional, default to -occurred_at)
    * @return EventListResponse
    * @throws ApiException if fails to make API call
    */
-  public EventListResponse listEvents(@jakarta.annotation.Nullable String filterOccurredAt, @jakarta.annotation.Nullable String filterActorType, @jakarta.annotation.Nullable UUID filterActorId, @jakarta.annotation.Nullable String filterAction, @jakarta.annotation.Nullable String filterResourceType, @jakarta.annotation.Nullable String filterResourceId, @jakarta.annotation.Nullable String filterSearch, @jakarta.annotation.Nullable Integer pageSize, @jakarta.annotation.Nullable String pageAfter) throws ApiException {
-    return listEvents(filterOccurredAt, filterActorType, filterActorId, filterAction, filterResourceType, filterResourceId, filterSearch, pageSize, pageAfter, null);
+  public EventListResponse listEvents(@jakarta.annotation.Nullable String filterOccurredAt, @jakarta.annotation.Nullable String filterActorType, @jakarta.annotation.Nullable UUID filterActorId, @jakarta.annotation.Nullable String filterAction, @jakarta.annotation.Nullable String filterResourceType, @jakarta.annotation.Nullable String filterResourceId, @jakarta.annotation.Nullable String filterSearch, @jakarta.annotation.Nullable Integer pageSize, @jakarta.annotation.Nullable String pageAfter, @jakarta.annotation.Nullable String sort) throws ApiException {
+    return listEvents(filterOccurredAt, filterActorType, filterActorId, filterAction, filterResourceType, filterResourceId, filterSearch, pageSize, pageAfter, sort, null);
   }
 
   /**
    * List Events
-   * List audit events for this account.  Default sort is newest first. Filters are exact-match except &#x60;filter[occurred_at]&#x60;, which uses interval notation (e.g. &#x60;[2026-01-01T00:00:00Z,2026-01-31T00:00:00Z)&#x60;), and &#x60;filter[search]&#x60;, which is a case-insensitive substring match against &#x60;resource_id&#x60; or &#x60;description&#x60;.  To bound the rows scanned per request, the endpoint requires either:  - &#x60;filter[resource_id]&#x60; (which must be accompanied by   &#x60;filter[resource_type]&#x60;), or - &#x60;filter[occurred_at]&#x60; with a span no greater than 30 days.  &#x60;page[size]&#x60; defaults to 50 and must not exceed 1000.
+   * List audit events for this account.  Default sort is &#x60;-occurred_at&#x60; (newest occurrence first). Sort by &#x60;occurred_at&#x60; or &#x60;created_at&#x60;, ascending or descending — keep the same &#x60;sort&#x60; value across paginated requests so the cursor stays consistent. Filters are exact-match except &#x60;filter[occurred_at]&#x60;, which uses interval notation (e.g. &#x60;[2026-01-01T00:00:00Z,2026-01-31T00:00:00Z)&#x60;), and &#x60;filter[search]&#x60;, which is a case-insensitive substring match against &#x60;resource_id&#x60; or &#x60;description&#x60;.  To bound the rows scanned per request, the endpoint requires either:  - &#x60;filter[resource_id]&#x60; (which must be accompanied by   &#x60;filter[resource_type]&#x60;), or - &#x60;filter[occurred_at]&#x60; with a span no greater than 30 days.  &#x60;page[size]&#x60; defaults to 50 and must not exceed 1000.
    * @param filterOccurredAt  (optional)
    * @param filterActorType  (optional)
    * @param filterActorId  (optional)
@@ -314,18 +315,19 @@ public class EventsApi {
    * @param filterSearch Case-insensitive substring match against &#x60;resource_id&#x60; or &#x60;description&#x60;. Use &#x60;filter[resource_id]&#x60; for an exact match on &#x60;resource_id&#x60;. (optional)
    * @param pageSize  (optional)
    * @param pageAfter  (optional)
+   * @param sort Field to sort by. Prefix with &#x60;-&#x60; for descending order. Default: &#x60;-occurred_at&#x60;. Allowed values: &#x60;created_at&#x60;, &#x60;-created_at&#x60;, &#x60;occurred_at&#x60;, &#x60;-occurred_at&#x60;. (optional, default to -occurred_at)
    * @param headers Optional headers to include in the request
    * @return EventListResponse
    * @throws ApiException if fails to make API call
    */
-  public EventListResponse listEvents(@jakarta.annotation.Nullable String filterOccurredAt, @jakarta.annotation.Nullable String filterActorType, @jakarta.annotation.Nullable UUID filterActorId, @jakarta.annotation.Nullable String filterAction, @jakarta.annotation.Nullable String filterResourceType, @jakarta.annotation.Nullable String filterResourceId, @jakarta.annotation.Nullable String filterSearch, @jakarta.annotation.Nullable Integer pageSize, @jakarta.annotation.Nullable String pageAfter, Map<String, String> headers) throws ApiException {
-    ApiResponse<EventListResponse> localVarResponse = listEventsWithHttpInfo(filterOccurredAt, filterActorType, filterActorId, filterAction, filterResourceType, filterResourceId, filterSearch, pageSize, pageAfter, headers);
+  public EventListResponse listEvents(@jakarta.annotation.Nullable String filterOccurredAt, @jakarta.annotation.Nullable String filterActorType, @jakarta.annotation.Nullable UUID filterActorId, @jakarta.annotation.Nullable String filterAction, @jakarta.annotation.Nullable String filterResourceType, @jakarta.annotation.Nullable String filterResourceId, @jakarta.annotation.Nullable String filterSearch, @jakarta.annotation.Nullable Integer pageSize, @jakarta.annotation.Nullable String pageAfter, @jakarta.annotation.Nullable String sort, Map<String, String> headers) throws ApiException {
+    ApiResponse<EventListResponse> localVarResponse = listEventsWithHttpInfo(filterOccurredAt, filterActorType, filterActorId, filterAction, filterResourceType, filterResourceId, filterSearch, pageSize, pageAfter, sort, headers);
     return localVarResponse.getData();
   }
 
   /**
    * List Events
-   * List audit events for this account.  Default sort is newest first. Filters are exact-match except &#x60;filter[occurred_at]&#x60;, which uses interval notation (e.g. &#x60;[2026-01-01T00:00:00Z,2026-01-31T00:00:00Z)&#x60;), and &#x60;filter[search]&#x60;, which is a case-insensitive substring match against &#x60;resource_id&#x60; or &#x60;description&#x60;.  To bound the rows scanned per request, the endpoint requires either:  - &#x60;filter[resource_id]&#x60; (which must be accompanied by   &#x60;filter[resource_type]&#x60;), or - &#x60;filter[occurred_at]&#x60; with a span no greater than 30 days.  &#x60;page[size]&#x60; defaults to 50 and must not exceed 1000.
+   * List audit events for this account.  Default sort is &#x60;-occurred_at&#x60; (newest occurrence first). Sort by &#x60;occurred_at&#x60; or &#x60;created_at&#x60;, ascending or descending — keep the same &#x60;sort&#x60; value across paginated requests so the cursor stays consistent. Filters are exact-match except &#x60;filter[occurred_at]&#x60;, which uses interval notation (e.g. &#x60;[2026-01-01T00:00:00Z,2026-01-31T00:00:00Z)&#x60;), and &#x60;filter[search]&#x60;, which is a case-insensitive substring match against &#x60;resource_id&#x60; or &#x60;description&#x60;.  To bound the rows scanned per request, the endpoint requires either:  - &#x60;filter[resource_id]&#x60; (which must be accompanied by   &#x60;filter[resource_type]&#x60;), or - &#x60;filter[occurred_at]&#x60; with a span no greater than 30 days.  &#x60;page[size]&#x60; defaults to 50 and must not exceed 1000.
    * @param filterOccurredAt  (optional)
    * @param filterActorType  (optional)
    * @param filterActorId  (optional)
@@ -335,16 +337,17 @@ public class EventsApi {
    * @param filterSearch Case-insensitive substring match against &#x60;resource_id&#x60; or &#x60;description&#x60;. Use &#x60;filter[resource_id]&#x60; for an exact match on &#x60;resource_id&#x60;. (optional)
    * @param pageSize  (optional)
    * @param pageAfter  (optional)
+   * @param sort Field to sort by. Prefix with &#x60;-&#x60; for descending order. Default: &#x60;-occurred_at&#x60;. Allowed values: &#x60;created_at&#x60;, &#x60;-created_at&#x60;, &#x60;occurred_at&#x60;, &#x60;-occurred_at&#x60;. (optional, default to -occurred_at)
    * @return ApiResponse&lt;EventListResponse&gt;
    * @throws ApiException if fails to make API call
    */
-  public ApiResponse<EventListResponse> listEventsWithHttpInfo(@jakarta.annotation.Nullable String filterOccurredAt, @jakarta.annotation.Nullable String filterActorType, @jakarta.annotation.Nullable UUID filterActorId, @jakarta.annotation.Nullable String filterAction, @jakarta.annotation.Nullable String filterResourceType, @jakarta.annotation.Nullable String filterResourceId, @jakarta.annotation.Nullable String filterSearch, @jakarta.annotation.Nullable Integer pageSize, @jakarta.annotation.Nullable String pageAfter) throws ApiException {
-    return listEventsWithHttpInfo(filterOccurredAt, filterActorType, filterActorId, filterAction, filterResourceType, filterResourceId, filterSearch, pageSize, pageAfter, null);
+  public ApiResponse<EventListResponse> listEventsWithHttpInfo(@jakarta.annotation.Nullable String filterOccurredAt, @jakarta.annotation.Nullable String filterActorType, @jakarta.annotation.Nullable UUID filterActorId, @jakarta.annotation.Nullable String filterAction, @jakarta.annotation.Nullable String filterResourceType, @jakarta.annotation.Nullable String filterResourceId, @jakarta.annotation.Nullable String filterSearch, @jakarta.annotation.Nullable Integer pageSize, @jakarta.annotation.Nullable String pageAfter, @jakarta.annotation.Nullable String sort) throws ApiException {
+    return listEventsWithHttpInfo(filterOccurredAt, filterActorType, filterActorId, filterAction, filterResourceType, filterResourceId, filterSearch, pageSize, pageAfter, sort, null);
   }
 
   /**
    * List Events
-   * List audit events for this account.  Default sort is newest first. Filters are exact-match except &#x60;filter[occurred_at]&#x60;, which uses interval notation (e.g. &#x60;[2026-01-01T00:00:00Z,2026-01-31T00:00:00Z)&#x60;), and &#x60;filter[search]&#x60;, which is a case-insensitive substring match against &#x60;resource_id&#x60; or &#x60;description&#x60;.  To bound the rows scanned per request, the endpoint requires either:  - &#x60;filter[resource_id]&#x60; (which must be accompanied by   &#x60;filter[resource_type]&#x60;), or - &#x60;filter[occurred_at]&#x60; with a span no greater than 30 days.  &#x60;page[size]&#x60; defaults to 50 and must not exceed 1000.
+   * List audit events for this account.  Default sort is &#x60;-occurred_at&#x60; (newest occurrence first). Sort by &#x60;occurred_at&#x60; or &#x60;created_at&#x60;, ascending or descending — keep the same &#x60;sort&#x60; value across paginated requests so the cursor stays consistent. Filters are exact-match except &#x60;filter[occurred_at]&#x60;, which uses interval notation (e.g. &#x60;[2026-01-01T00:00:00Z,2026-01-31T00:00:00Z)&#x60;), and &#x60;filter[search]&#x60;, which is a case-insensitive substring match against &#x60;resource_id&#x60; or &#x60;description&#x60;.  To bound the rows scanned per request, the endpoint requires either:  - &#x60;filter[resource_id]&#x60; (which must be accompanied by   &#x60;filter[resource_type]&#x60;), or - &#x60;filter[occurred_at]&#x60; with a span no greater than 30 days.  &#x60;page[size]&#x60; defaults to 50 and must not exceed 1000.
    * @param filterOccurredAt  (optional)
    * @param filterActorType  (optional)
    * @param filterActorId  (optional)
@@ -354,12 +357,13 @@ public class EventsApi {
    * @param filterSearch Case-insensitive substring match against &#x60;resource_id&#x60; or &#x60;description&#x60;. Use &#x60;filter[resource_id]&#x60; for an exact match on &#x60;resource_id&#x60;. (optional)
    * @param pageSize  (optional)
    * @param pageAfter  (optional)
+   * @param sort Field to sort by. Prefix with &#x60;-&#x60; for descending order. Default: &#x60;-occurred_at&#x60;. Allowed values: &#x60;created_at&#x60;, &#x60;-created_at&#x60;, &#x60;occurred_at&#x60;, &#x60;-occurred_at&#x60;. (optional, default to -occurred_at)
    * @param headers Optional headers to include in the request
    * @return ApiResponse&lt;EventListResponse&gt;
    * @throws ApiException if fails to make API call
    */
-  public ApiResponse<EventListResponse> listEventsWithHttpInfo(@jakarta.annotation.Nullable String filterOccurredAt, @jakarta.annotation.Nullable String filterActorType, @jakarta.annotation.Nullable UUID filterActorId, @jakarta.annotation.Nullable String filterAction, @jakarta.annotation.Nullable String filterResourceType, @jakarta.annotation.Nullable String filterResourceId, @jakarta.annotation.Nullable String filterSearch, @jakarta.annotation.Nullable Integer pageSize, @jakarta.annotation.Nullable String pageAfter, Map<String, String> headers) throws ApiException {
-    HttpRequest.Builder localVarRequestBuilder = listEventsRequestBuilder(filterOccurredAt, filterActorType, filterActorId, filterAction, filterResourceType, filterResourceId, filterSearch, pageSize, pageAfter, headers);
+  public ApiResponse<EventListResponse> listEventsWithHttpInfo(@jakarta.annotation.Nullable String filterOccurredAt, @jakarta.annotation.Nullable String filterActorType, @jakarta.annotation.Nullable UUID filterActorId, @jakarta.annotation.Nullable String filterAction, @jakarta.annotation.Nullable String filterResourceType, @jakarta.annotation.Nullable String filterResourceId, @jakarta.annotation.Nullable String filterSearch, @jakarta.annotation.Nullable Integer pageSize, @jakarta.annotation.Nullable String pageAfter, @jakarta.annotation.Nullable String sort, Map<String, String> headers) throws ApiException {
+    HttpRequest.Builder localVarRequestBuilder = listEventsRequestBuilder(filterOccurredAt, filterActorType, filterActorId, filterAction, filterResourceType, filterResourceId, filterSearch, pageSize, pageAfter, sort, headers);
     try {
       HttpResponse<InputStream> localVarResponse = memberVarHttpClient.send(
           localVarRequestBuilder.build(),
@@ -406,7 +410,7 @@ public class EventsApi {
     }
   }
 
-  private HttpRequest.Builder listEventsRequestBuilder(@jakarta.annotation.Nullable String filterOccurredAt, @jakarta.annotation.Nullable String filterActorType, @jakarta.annotation.Nullable UUID filterActorId, @jakarta.annotation.Nullable String filterAction, @jakarta.annotation.Nullable String filterResourceType, @jakarta.annotation.Nullable String filterResourceId, @jakarta.annotation.Nullable String filterSearch, @jakarta.annotation.Nullable Integer pageSize, @jakarta.annotation.Nullable String pageAfter, Map<String, String> headers) throws ApiException {
+  private HttpRequest.Builder listEventsRequestBuilder(@jakarta.annotation.Nullable String filterOccurredAt, @jakarta.annotation.Nullable String filterActorType, @jakarta.annotation.Nullable UUID filterActorId, @jakarta.annotation.Nullable String filterAction, @jakarta.annotation.Nullable String filterResourceType, @jakarta.annotation.Nullable String filterResourceId, @jakarta.annotation.Nullable String filterSearch, @jakarta.annotation.Nullable Integer pageSize, @jakarta.annotation.Nullable String pageAfter, @jakarta.annotation.Nullable String sort, Map<String, String> headers) throws ApiException {
 
     HttpRequest.Builder localVarRequestBuilder = HttpRequest.newBuilder();
 
@@ -433,6 +437,8 @@ public class EventsApi {
     localVarQueryParams.addAll(ApiClient.parameterToPairs("page[size]", pageSize));
     localVarQueryParameterBaseName = "page[after]";
     localVarQueryParams.addAll(ApiClient.parameterToPairs("page[after]", pageAfter));
+    localVarQueryParameterBaseName = "sort";
+    localVarQueryParams.addAll(ApiClient.parameterToPairs("sort", sort));
 
     if (!localVarQueryParams.isEmpty() || localVarQueryStringJoiner.length() != 0) {
       StringJoiner queryJoiner = new StringJoiner("&");
