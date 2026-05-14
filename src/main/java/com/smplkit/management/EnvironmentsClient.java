@@ -62,7 +62,7 @@ public final class EnvironmentsClient {
     /** Delete an environment by id. */
     public void delete(String id) {
         try {
-            api.deleteEnvironment(id);
+            api.deleteEnvironment(id, null);
         } catch (ApiException e) {
             throw mapException(e);
         }
