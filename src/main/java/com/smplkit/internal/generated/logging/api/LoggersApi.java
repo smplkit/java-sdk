@@ -514,57 +514,61 @@ public class LoggersApi {
 
   /**
    * List Loggers
-   * List loggers for this account.  Supports &#x60;filter[managed]&#x60; to narrow to managed (or unmanaged) loggers, &#x60;filter[service]&#x60; to keep only loggers observed in a specific service, and &#x60;filter[last_seen]&#x60; (interval notation &#x60;[&lt;from&gt;,*)&#x60;) to keep only loggers with a source observation at or after the given timestamp.
+   * List loggers for this account.  Default sort is &#x60;key&#x60; ascending. Supports &#x60;filter[managed]&#x60; to narrow to managed (or unmanaged) loggers, &#x60;filter[service]&#x60; to keep only loggers observed in a specific service, and &#x60;filter[last_seen]&#x60; (interval notation &#x60;[&lt;from&gt;,*)&#x60;) to keep only loggers with a source observation at or after the given timestamp.
    * @param filterManaged  (optional)
    * @param filterService  (optional)
    * @param filterLastSeen  (optional)
+   * @param sort Field to sort by. Prefix with &#x60;-&#x60; for descending order. Default: &#x60;key&#x60;. Allowed values: &#x60;created_at&#x60;, &#x60;-created_at&#x60;, &#x60;key&#x60;, &#x60;-key&#x60;, &#x60;name&#x60;, &#x60;-name&#x60;, &#x60;updated_at&#x60;, &#x60;-updated_at&#x60;. (optional, default to key)
    * @return LoggerListResponse
    * @throws ApiException if fails to make API call
    */
-  public LoggerListResponse listLoggers(@jakarta.annotation.Nullable Boolean filterManaged, @jakarta.annotation.Nullable String filterService, @jakarta.annotation.Nullable String filterLastSeen) throws ApiException {
-    return listLoggers(filterManaged, filterService, filterLastSeen, null);
+  public LoggerListResponse listLoggers(@jakarta.annotation.Nullable Boolean filterManaged, @jakarta.annotation.Nullable String filterService, @jakarta.annotation.Nullable String filterLastSeen, @jakarta.annotation.Nullable String sort) throws ApiException {
+    return listLoggers(filterManaged, filterService, filterLastSeen, sort, null);
   }
 
   /**
    * List Loggers
-   * List loggers for this account.  Supports &#x60;filter[managed]&#x60; to narrow to managed (or unmanaged) loggers, &#x60;filter[service]&#x60; to keep only loggers observed in a specific service, and &#x60;filter[last_seen]&#x60; (interval notation &#x60;[&lt;from&gt;,*)&#x60;) to keep only loggers with a source observation at or after the given timestamp.
+   * List loggers for this account.  Default sort is &#x60;key&#x60; ascending. Supports &#x60;filter[managed]&#x60; to narrow to managed (or unmanaged) loggers, &#x60;filter[service]&#x60; to keep only loggers observed in a specific service, and &#x60;filter[last_seen]&#x60; (interval notation &#x60;[&lt;from&gt;,*)&#x60;) to keep only loggers with a source observation at or after the given timestamp.
    * @param filterManaged  (optional)
    * @param filterService  (optional)
    * @param filterLastSeen  (optional)
+   * @param sort Field to sort by. Prefix with &#x60;-&#x60; for descending order. Default: &#x60;key&#x60;. Allowed values: &#x60;created_at&#x60;, &#x60;-created_at&#x60;, &#x60;key&#x60;, &#x60;-key&#x60;, &#x60;name&#x60;, &#x60;-name&#x60;, &#x60;updated_at&#x60;, &#x60;-updated_at&#x60;. (optional, default to key)
    * @param headers Optional headers to include in the request
    * @return LoggerListResponse
    * @throws ApiException if fails to make API call
    */
-  public LoggerListResponse listLoggers(@jakarta.annotation.Nullable Boolean filterManaged, @jakarta.annotation.Nullable String filterService, @jakarta.annotation.Nullable String filterLastSeen, Map<String, String> headers) throws ApiException {
-    ApiResponse<LoggerListResponse> localVarResponse = listLoggersWithHttpInfo(filterManaged, filterService, filterLastSeen, headers);
+  public LoggerListResponse listLoggers(@jakarta.annotation.Nullable Boolean filterManaged, @jakarta.annotation.Nullable String filterService, @jakarta.annotation.Nullable String filterLastSeen, @jakarta.annotation.Nullable String sort, Map<String, String> headers) throws ApiException {
+    ApiResponse<LoggerListResponse> localVarResponse = listLoggersWithHttpInfo(filterManaged, filterService, filterLastSeen, sort, headers);
     return localVarResponse.getData();
   }
 
   /**
    * List Loggers
-   * List loggers for this account.  Supports &#x60;filter[managed]&#x60; to narrow to managed (or unmanaged) loggers, &#x60;filter[service]&#x60; to keep only loggers observed in a specific service, and &#x60;filter[last_seen]&#x60; (interval notation &#x60;[&lt;from&gt;,*)&#x60;) to keep only loggers with a source observation at or after the given timestamp.
+   * List loggers for this account.  Default sort is &#x60;key&#x60; ascending. Supports &#x60;filter[managed]&#x60; to narrow to managed (or unmanaged) loggers, &#x60;filter[service]&#x60; to keep only loggers observed in a specific service, and &#x60;filter[last_seen]&#x60; (interval notation &#x60;[&lt;from&gt;,*)&#x60;) to keep only loggers with a source observation at or after the given timestamp.
    * @param filterManaged  (optional)
    * @param filterService  (optional)
    * @param filterLastSeen  (optional)
+   * @param sort Field to sort by. Prefix with &#x60;-&#x60; for descending order. Default: &#x60;key&#x60;. Allowed values: &#x60;created_at&#x60;, &#x60;-created_at&#x60;, &#x60;key&#x60;, &#x60;-key&#x60;, &#x60;name&#x60;, &#x60;-name&#x60;, &#x60;updated_at&#x60;, &#x60;-updated_at&#x60;. (optional, default to key)
    * @return ApiResponse&lt;LoggerListResponse&gt;
    * @throws ApiException if fails to make API call
    */
-  public ApiResponse<LoggerListResponse> listLoggersWithHttpInfo(@jakarta.annotation.Nullable Boolean filterManaged, @jakarta.annotation.Nullable String filterService, @jakarta.annotation.Nullable String filterLastSeen) throws ApiException {
-    return listLoggersWithHttpInfo(filterManaged, filterService, filterLastSeen, null);
+  public ApiResponse<LoggerListResponse> listLoggersWithHttpInfo(@jakarta.annotation.Nullable Boolean filterManaged, @jakarta.annotation.Nullable String filterService, @jakarta.annotation.Nullable String filterLastSeen, @jakarta.annotation.Nullable String sort) throws ApiException {
+    return listLoggersWithHttpInfo(filterManaged, filterService, filterLastSeen, sort, null);
   }
 
   /**
    * List Loggers
-   * List loggers for this account.  Supports &#x60;filter[managed]&#x60; to narrow to managed (or unmanaged) loggers, &#x60;filter[service]&#x60; to keep only loggers observed in a specific service, and &#x60;filter[last_seen]&#x60; (interval notation &#x60;[&lt;from&gt;,*)&#x60;) to keep only loggers with a source observation at or after the given timestamp.
+   * List loggers for this account.  Default sort is &#x60;key&#x60; ascending. Supports &#x60;filter[managed]&#x60; to narrow to managed (or unmanaged) loggers, &#x60;filter[service]&#x60; to keep only loggers observed in a specific service, and &#x60;filter[last_seen]&#x60; (interval notation &#x60;[&lt;from&gt;,*)&#x60;) to keep only loggers with a source observation at or after the given timestamp.
    * @param filterManaged  (optional)
    * @param filterService  (optional)
    * @param filterLastSeen  (optional)
+   * @param sort Field to sort by. Prefix with &#x60;-&#x60; for descending order. Default: &#x60;key&#x60;. Allowed values: &#x60;created_at&#x60;, &#x60;-created_at&#x60;, &#x60;key&#x60;, &#x60;-key&#x60;, &#x60;name&#x60;, &#x60;-name&#x60;, &#x60;updated_at&#x60;, &#x60;-updated_at&#x60;. (optional, default to key)
    * @param headers Optional headers to include in the request
    * @return ApiResponse&lt;LoggerListResponse&gt;
    * @throws ApiException if fails to make API call
    */
-  public ApiResponse<LoggerListResponse> listLoggersWithHttpInfo(@jakarta.annotation.Nullable Boolean filterManaged, @jakarta.annotation.Nullable String filterService, @jakarta.annotation.Nullable String filterLastSeen, Map<String, String> headers) throws ApiException {
-    HttpRequest.Builder localVarRequestBuilder = listLoggersRequestBuilder(filterManaged, filterService, filterLastSeen, headers);
+  public ApiResponse<LoggerListResponse> listLoggersWithHttpInfo(@jakarta.annotation.Nullable Boolean filterManaged, @jakarta.annotation.Nullable String filterService, @jakarta.annotation.Nullable String filterLastSeen, @jakarta.annotation.Nullable String sort, Map<String, String> headers) throws ApiException {
+    HttpRequest.Builder localVarRequestBuilder = listLoggersRequestBuilder(filterManaged, filterService, filterLastSeen, sort, headers);
     try {
       HttpResponse<InputStream> localVarResponse = memberVarHttpClient.send(
           localVarRequestBuilder.build(),
@@ -611,7 +615,7 @@ public class LoggersApi {
     }
   }
 
-  private HttpRequest.Builder listLoggersRequestBuilder(@jakarta.annotation.Nullable Boolean filterManaged, @jakarta.annotation.Nullable String filterService, @jakarta.annotation.Nullable String filterLastSeen, Map<String, String> headers) throws ApiException {
+  private HttpRequest.Builder listLoggersRequestBuilder(@jakarta.annotation.Nullable Boolean filterManaged, @jakarta.annotation.Nullable String filterService, @jakarta.annotation.Nullable String filterLastSeen, @jakarta.annotation.Nullable String sort, Map<String, String> headers) throws ApiException {
 
     HttpRequest.Builder localVarRequestBuilder = HttpRequest.newBuilder();
 
@@ -626,6 +630,8 @@ public class LoggersApi {
     localVarQueryParams.addAll(ApiClient.parameterToPairs("filter[service]", filterService));
     localVarQueryParameterBaseName = "filter[last_seen]";
     localVarQueryParams.addAll(ApiClient.parameterToPairs("filter[last_seen]", filterLastSeen));
+    localVarQueryParameterBaseName = "sort";
+    localVarQueryParams.addAll(ApiClient.parameterToPairs("sort", sort));
 
     if (!localVarQueryParams.isEmpty() || localVarQueryStringJoiner.length() != 0) {
       StringJoiner queryJoiner = new StringJoiner("&");
