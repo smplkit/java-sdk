@@ -164,53 +164,57 @@ public class FlagSourcesApi {
 
   /**
    * List All Flag Sources
-   * List service/environment observations across all flags for this account.  Filter by &#x60;environment&#x60; or &#x60;service&#x60; (or both) to narrow the result.
+   * List service/environment observations across all flags for this account.  Default sort is &#x60;-last_seen&#x60; (most recently seen first). Filter by &#x60;environment&#x60; or &#x60;service&#x60; (or both) to narrow the result.
    * @param filterEnvironment  (optional)
    * @param filterService  (optional)
+   * @param sort Field to sort by. Prefix with &#x60;-&#x60; for descending order. Default: &#x60;-last_seen&#x60;. Allowed values: &#x60;created_at&#x60;, &#x60;-created_at&#x60;, &#x60;environment&#x60;, &#x60;-environment&#x60;, &#x60;last_seen&#x60;, &#x60;-last_seen&#x60;, &#x60;service&#x60;, &#x60;-service&#x60;. (optional, default to -last_seen)
    * @return FlagSourceListResponse
    * @throws ApiException if fails to make API call
    */
-  public FlagSourceListResponse listAllFlagSources(@jakarta.annotation.Nullable String filterEnvironment, @jakarta.annotation.Nullable String filterService) throws ApiException {
-    return listAllFlagSources(filterEnvironment, filterService, null);
+  public FlagSourceListResponse listAllFlagSources(@jakarta.annotation.Nullable String filterEnvironment, @jakarta.annotation.Nullable String filterService, @jakarta.annotation.Nullable String sort) throws ApiException {
+    return listAllFlagSources(filterEnvironment, filterService, sort, null);
   }
 
   /**
    * List All Flag Sources
-   * List service/environment observations across all flags for this account.  Filter by &#x60;environment&#x60; or &#x60;service&#x60; (or both) to narrow the result.
+   * List service/environment observations across all flags for this account.  Default sort is &#x60;-last_seen&#x60; (most recently seen first). Filter by &#x60;environment&#x60; or &#x60;service&#x60; (or both) to narrow the result.
    * @param filterEnvironment  (optional)
    * @param filterService  (optional)
+   * @param sort Field to sort by. Prefix with &#x60;-&#x60; for descending order. Default: &#x60;-last_seen&#x60;. Allowed values: &#x60;created_at&#x60;, &#x60;-created_at&#x60;, &#x60;environment&#x60;, &#x60;-environment&#x60;, &#x60;last_seen&#x60;, &#x60;-last_seen&#x60;, &#x60;service&#x60;, &#x60;-service&#x60;. (optional, default to -last_seen)
    * @param headers Optional headers to include in the request
    * @return FlagSourceListResponse
    * @throws ApiException if fails to make API call
    */
-  public FlagSourceListResponse listAllFlagSources(@jakarta.annotation.Nullable String filterEnvironment, @jakarta.annotation.Nullable String filterService, Map<String, String> headers) throws ApiException {
-    ApiResponse<FlagSourceListResponse> localVarResponse = listAllFlagSourcesWithHttpInfo(filterEnvironment, filterService, headers);
+  public FlagSourceListResponse listAllFlagSources(@jakarta.annotation.Nullable String filterEnvironment, @jakarta.annotation.Nullable String filterService, @jakarta.annotation.Nullable String sort, Map<String, String> headers) throws ApiException {
+    ApiResponse<FlagSourceListResponse> localVarResponse = listAllFlagSourcesWithHttpInfo(filterEnvironment, filterService, sort, headers);
     return localVarResponse.getData();
   }
 
   /**
    * List All Flag Sources
-   * List service/environment observations across all flags for this account.  Filter by &#x60;environment&#x60; or &#x60;service&#x60; (or both) to narrow the result.
+   * List service/environment observations across all flags for this account.  Default sort is &#x60;-last_seen&#x60; (most recently seen first). Filter by &#x60;environment&#x60; or &#x60;service&#x60; (or both) to narrow the result.
    * @param filterEnvironment  (optional)
    * @param filterService  (optional)
+   * @param sort Field to sort by. Prefix with &#x60;-&#x60; for descending order. Default: &#x60;-last_seen&#x60;. Allowed values: &#x60;created_at&#x60;, &#x60;-created_at&#x60;, &#x60;environment&#x60;, &#x60;-environment&#x60;, &#x60;last_seen&#x60;, &#x60;-last_seen&#x60;, &#x60;service&#x60;, &#x60;-service&#x60;. (optional, default to -last_seen)
    * @return ApiResponse&lt;FlagSourceListResponse&gt;
    * @throws ApiException if fails to make API call
    */
-  public ApiResponse<FlagSourceListResponse> listAllFlagSourcesWithHttpInfo(@jakarta.annotation.Nullable String filterEnvironment, @jakarta.annotation.Nullable String filterService) throws ApiException {
-    return listAllFlagSourcesWithHttpInfo(filterEnvironment, filterService, null);
+  public ApiResponse<FlagSourceListResponse> listAllFlagSourcesWithHttpInfo(@jakarta.annotation.Nullable String filterEnvironment, @jakarta.annotation.Nullable String filterService, @jakarta.annotation.Nullable String sort) throws ApiException {
+    return listAllFlagSourcesWithHttpInfo(filterEnvironment, filterService, sort, null);
   }
 
   /**
    * List All Flag Sources
-   * List service/environment observations across all flags for this account.  Filter by &#x60;environment&#x60; or &#x60;service&#x60; (or both) to narrow the result.
+   * List service/environment observations across all flags for this account.  Default sort is &#x60;-last_seen&#x60; (most recently seen first). Filter by &#x60;environment&#x60; or &#x60;service&#x60; (or both) to narrow the result.
    * @param filterEnvironment  (optional)
    * @param filterService  (optional)
+   * @param sort Field to sort by. Prefix with &#x60;-&#x60; for descending order. Default: &#x60;-last_seen&#x60;. Allowed values: &#x60;created_at&#x60;, &#x60;-created_at&#x60;, &#x60;environment&#x60;, &#x60;-environment&#x60;, &#x60;last_seen&#x60;, &#x60;-last_seen&#x60;, &#x60;service&#x60;, &#x60;-service&#x60;. (optional, default to -last_seen)
    * @param headers Optional headers to include in the request
    * @return ApiResponse&lt;FlagSourceListResponse&gt;
    * @throws ApiException if fails to make API call
    */
-  public ApiResponse<FlagSourceListResponse> listAllFlagSourcesWithHttpInfo(@jakarta.annotation.Nullable String filterEnvironment, @jakarta.annotation.Nullable String filterService, Map<String, String> headers) throws ApiException {
-    HttpRequest.Builder localVarRequestBuilder = listAllFlagSourcesRequestBuilder(filterEnvironment, filterService, headers);
+  public ApiResponse<FlagSourceListResponse> listAllFlagSourcesWithHttpInfo(@jakarta.annotation.Nullable String filterEnvironment, @jakarta.annotation.Nullable String filterService, @jakarta.annotation.Nullable String sort, Map<String, String> headers) throws ApiException {
+    HttpRequest.Builder localVarRequestBuilder = listAllFlagSourcesRequestBuilder(filterEnvironment, filterService, sort, headers);
     try {
       HttpResponse<InputStream> localVarResponse = memberVarHttpClient.send(
           localVarRequestBuilder.build(),
@@ -257,7 +261,7 @@ public class FlagSourcesApi {
     }
   }
 
-  private HttpRequest.Builder listAllFlagSourcesRequestBuilder(@jakarta.annotation.Nullable String filterEnvironment, @jakarta.annotation.Nullable String filterService, Map<String, String> headers) throws ApiException {
+  private HttpRequest.Builder listAllFlagSourcesRequestBuilder(@jakarta.annotation.Nullable String filterEnvironment, @jakarta.annotation.Nullable String filterService, @jakarta.annotation.Nullable String sort, Map<String, String> headers) throws ApiException {
 
     HttpRequest.Builder localVarRequestBuilder = HttpRequest.newBuilder();
 
@@ -270,6 +274,8 @@ public class FlagSourcesApi {
     localVarQueryParams.addAll(ApiClient.parameterToPairs("filter[environment]", filterEnvironment));
     localVarQueryParameterBaseName = "filter[service]";
     localVarQueryParams.addAll(ApiClient.parameterToPairs("filter[service]", filterService));
+    localVarQueryParameterBaseName = "sort";
+    localVarQueryParams.addAll(ApiClient.parameterToPairs("sort", sort));
 
     if (!localVarQueryParams.isEmpty() || localVarQueryStringJoiner.length() != 0) {
       StringJoiner queryJoiner = new StringJoiner("&");
@@ -298,49 +304,53 @@ public class FlagSourcesApi {
 
   /**
    * List Flag Sources
-   * List the service/environment observations recorded for a single flag.
+   * List the service/environment observations recorded for a single flag.  Default sort is &#x60;-last_seen&#x60; (most recently seen first).
    * @param id  (required)
+   * @param sort Field to sort by. Prefix with &#x60;-&#x60; for descending order. Default: &#x60;-last_seen&#x60;. Allowed values: &#x60;created_at&#x60;, &#x60;-created_at&#x60;, &#x60;environment&#x60;, &#x60;-environment&#x60;, &#x60;last_seen&#x60;, &#x60;-last_seen&#x60;, &#x60;service&#x60;, &#x60;-service&#x60;. (optional, default to -last_seen)
    * @return FlagSourceListResponse
    * @throws ApiException if fails to make API call
    */
-  public FlagSourceListResponse listFlagSources(@jakarta.annotation.Nonnull String id) throws ApiException {
-    return listFlagSources(id, null);
+  public FlagSourceListResponse listFlagSources(@jakarta.annotation.Nonnull String id, @jakarta.annotation.Nullable String sort) throws ApiException {
+    return listFlagSources(id, sort, null);
   }
 
   /**
    * List Flag Sources
-   * List the service/environment observations recorded for a single flag.
+   * List the service/environment observations recorded for a single flag.  Default sort is &#x60;-last_seen&#x60; (most recently seen first).
    * @param id  (required)
+   * @param sort Field to sort by. Prefix with &#x60;-&#x60; for descending order. Default: &#x60;-last_seen&#x60;. Allowed values: &#x60;created_at&#x60;, &#x60;-created_at&#x60;, &#x60;environment&#x60;, &#x60;-environment&#x60;, &#x60;last_seen&#x60;, &#x60;-last_seen&#x60;, &#x60;service&#x60;, &#x60;-service&#x60;. (optional, default to -last_seen)
    * @param headers Optional headers to include in the request
    * @return FlagSourceListResponse
    * @throws ApiException if fails to make API call
    */
-  public FlagSourceListResponse listFlagSources(@jakarta.annotation.Nonnull String id, Map<String, String> headers) throws ApiException {
-    ApiResponse<FlagSourceListResponse> localVarResponse = listFlagSourcesWithHttpInfo(id, headers);
+  public FlagSourceListResponse listFlagSources(@jakarta.annotation.Nonnull String id, @jakarta.annotation.Nullable String sort, Map<String, String> headers) throws ApiException {
+    ApiResponse<FlagSourceListResponse> localVarResponse = listFlagSourcesWithHttpInfo(id, sort, headers);
     return localVarResponse.getData();
   }
 
   /**
    * List Flag Sources
-   * List the service/environment observations recorded for a single flag.
+   * List the service/environment observations recorded for a single flag.  Default sort is &#x60;-last_seen&#x60; (most recently seen first).
    * @param id  (required)
+   * @param sort Field to sort by. Prefix with &#x60;-&#x60; for descending order. Default: &#x60;-last_seen&#x60;. Allowed values: &#x60;created_at&#x60;, &#x60;-created_at&#x60;, &#x60;environment&#x60;, &#x60;-environment&#x60;, &#x60;last_seen&#x60;, &#x60;-last_seen&#x60;, &#x60;service&#x60;, &#x60;-service&#x60;. (optional, default to -last_seen)
    * @return ApiResponse&lt;FlagSourceListResponse&gt;
    * @throws ApiException if fails to make API call
    */
-  public ApiResponse<FlagSourceListResponse> listFlagSourcesWithHttpInfo(@jakarta.annotation.Nonnull String id) throws ApiException {
-    return listFlagSourcesWithHttpInfo(id, null);
+  public ApiResponse<FlagSourceListResponse> listFlagSourcesWithHttpInfo(@jakarta.annotation.Nonnull String id, @jakarta.annotation.Nullable String sort) throws ApiException {
+    return listFlagSourcesWithHttpInfo(id, sort, null);
   }
 
   /**
    * List Flag Sources
-   * List the service/environment observations recorded for a single flag.
+   * List the service/environment observations recorded for a single flag.  Default sort is &#x60;-last_seen&#x60; (most recently seen first).
    * @param id  (required)
+   * @param sort Field to sort by. Prefix with &#x60;-&#x60; for descending order. Default: &#x60;-last_seen&#x60;. Allowed values: &#x60;created_at&#x60;, &#x60;-created_at&#x60;, &#x60;environment&#x60;, &#x60;-environment&#x60;, &#x60;last_seen&#x60;, &#x60;-last_seen&#x60;, &#x60;service&#x60;, &#x60;-service&#x60;. (optional, default to -last_seen)
    * @param headers Optional headers to include in the request
    * @return ApiResponse&lt;FlagSourceListResponse&gt;
    * @throws ApiException if fails to make API call
    */
-  public ApiResponse<FlagSourceListResponse> listFlagSourcesWithHttpInfo(@jakarta.annotation.Nonnull String id, Map<String, String> headers) throws ApiException {
-    HttpRequest.Builder localVarRequestBuilder = listFlagSourcesRequestBuilder(id, headers);
+  public ApiResponse<FlagSourceListResponse> listFlagSourcesWithHttpInfo(@jakarta.annotation.Nonnull String id, @jakarta.annotation.Nullable String sort, Map<String, String> headers) throws ApiException {
+    HttpRequest.Builder localVarRequestBuilder = listFlagSourcesRequestBuilder(id, sort, headers);
     try {
       HttpResponse<InputStream> localVarResponse = memberVarHttpClient.send(
           localVarRequestBuilder.build(),
@@ -387,7 +397,7 @@ public class FlagSourcesApi {
     }
   }
 
-  private HttpRequest.Builder listFlagSourcesRequestBuilder(@jakarta.annotation.Nonnull String id, Map<String, String> headers) throws ApiException {
+  private HttpRequest.Builder listFlagSourcesRequestBuilder(@jakarta.annotation.Nonnull String id, @jakarta.annotation.Nullable String sort, Map<String, String> headers) throws ApiException {
     // verify the required parameter 'id' is set
     if (id == null) {
       throw new ApiException(400, "Missing the required parameter 'id' when calling listFlagSources");
@@ -398,7 +408,22 @@ public class FlagSourcesApi {
     String localVarPath = "/api/v1/flags/{id}/sources"
         .replace("{id}", ApiClient.urlEncode(id.toString()));
 
-    localVarRequestBuilder.uri(URI.create(memberVarBaseUri + localVarPath));
+    List<Pair> localVarQueryParams = new ArrayList<>();
+    StringJoiner localVarQueryStringJoiner = new StringJoiner("&");
+    String localVarQueryParameterBaseName;
+    localVarQueryParameterBaseName = "sort";
+    localVarQueryParams.addAll(ApiClient.parameterToPairs("sort", sort));
+
+    if (!localVarQueryParams.isEmpty() || localVarQueryStringJoiner.length() != 0) {
+      StringJoiner queryJoiner = new StringJoiner("&");
+      localVarQueryParams.forEach(p -> queryJoiner.add(p.getName() + '=' + p.getValue()));
+      if (localVarQueryStringJoiner.length() != 0) {
+        queryJoiner.add(localVarQueryStringJoiner.toString());
+      }
+      localVarRequestBuilder.uri(URI.create(memberVarBaseUri + localVarPath + '?' + queryJoiner.toString()));
+    } else {
+      localVarRequestBuilder.uri(URI.create(memberVarBaseUri + localVarPath));
+    }
 
     localVarRequestBuilder.header("Accept", "application/vnd.api+json");
 
