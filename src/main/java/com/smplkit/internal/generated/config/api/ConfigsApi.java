@@ -511,49 +511,53 @@ public class ConfigsApi {
 
   /**
    * List Configs
-   * List configs for this account.  Pass &#x60;filter[parent]&#x3D;&lt;parent_key&gt;&#x60; to return only the direct children of a specific config.
+   * List configs for this account.  Default sort is &#x60;key&#x60; ascending. Pass &#x60;filter[parent]&#x3D;&lt;parent_key&gt;&#x60; to return only the direct children of a specific config.
    * @param filterParent  (optional)
+   * @param sort Field to sort by. Prefix with &#x60;-&#x60; for descending order. Default: &#x60;key&#x60;. Allowed values: &#x60;created_at&#x60;, &#x60;-created_at&#x60;, &#x60;key&#x60;, &#x60;-key&#x60;, &#x60;name&#x60;, &#x60;-name&#x60;, &#x60;updated_at&#x60;, &#x60;-updated_at&#x60;. (optional, default to key)
    * @return ConfigListResponse
    * @throws ApiException if fails to make API call
    */
-  public ConfigListResponse listConfigs(@jakarta.annotation.Nullable String filterParent) throws ApiException {
-    return listConfigs(filterParent, null);
+  public ConfigListResponse listConfigs(@jakarta.annotation.Nullable String filterParent, @jakarta.annotation.Nullable String sort) throws ApiException {
+    return listConfigs(filterParent, sort, null);
   }
 
   /**
    * List Configs
-   * List configs for this account.  Pass &#x60;filter[parent]&#x3D;&lt;parent_key&gt;&#x60; to return only the direct children of a specific config.
+   * List configs for this account.  Default sort is &#x60;key&#x60; ascending. Pass &#x60;filter[parent]&#x3D;&lt;parent_key&gt;&#x60; to return only the direct children of a specific config.
    * @param filterParent  (optional)
+   * @param sort Field to sort by. Prefix with &#x60;-&#x60; for descending order. Default: &#x60;key&#x60;. Allowed values: &#x60;created_at&#x60;, &#x60;-created_at&#x60;, &#x60;key&#x60;, &#x60;-key&#x60;, &#x60;name&#x60;, &#x60;-name&#x60;, &#x60;updated_at&#x60;, &#x60;-updated_at&#x60;. (optional, default to key)
    * @param headers Optional headers to include in the request
    * @return ConfigListResponse
    * @throws ApiException if fails to make API call
    */
-  public ConfigListResponse listConfigs(@jakarta.annotation.Nullable String filterParent, Map<String, String> headers) throws ApiException {
-    ApiResponse<ConfigListResponse> localVarResponse = listConfigsWithHttpInfo(filterParent, headers);
+  public ConfigListResponse listConfigs(@jakarta.annotation.Nullable String filterParent, @jakarta.annotation.Nullable String sort, Map<String, String> headers) throws ApiException {
+    ApiResponse<ConfigListResponse> localVarResponse = listConfigsWithHttpInfo(filterParent, sort, headers);
     return localVarResponse.getData();
   }
 
   /**
    * List Configs
-   * List configs for this account.  Pass &#x60;filter[parent]&#x3D;&lt;parent_key&gt;&#x60; to return only the direct children of a specific config.
+   * List configs for this account.  Default sort is &#x60;key&#x60; ascending. Pass &#x60;filter[parent]&#x3D;&lt;parent_key&gt;&#x60; to return only the direct children of a specific config.
    * @param filterParent  (optional)
+   * @param sort Field to sort by. Prefix with &#x60;-&#x60; for descending order. Default: &#x60;key&#x60;. Allowed values: &#x60;created_at&#x60;, &#x60;-created_at&#x60;, &#x60;key&#x60;, &#x60;-key&#x60;, &#x60;name&#x60;, &#x60;-name&#x60;, &#x60;updated_at&#x60;, &#x60;-updated_at&#x60;. (optional, default to key)
    * @return ApiResponse&lt;ConfigListResponse&gt;
    * @throws ApiException if fails to make API call
    */
-  public ApiResponse<ConfigListResponse> listConfigsWithHttpInfo(@jakarta.annotation.Nullable String filterParent) throws ApiException {
-    return listConfigsWithHttpInfo(filterParent, null);
+  public ApiResponse<ConfigListResponse> listConfigsWithHttpInfo(@jakarta.annotation.Nullable String filterParent, @jakarta.annotation.Nullable String sort) throws ApiException {
+    return listConfigsWithHttpInfo(filterParent, sort, null);
   }
 
   /**
    * List Configs
-   * List configs for this account.  Pass &#x60;filter[parent]&#x3D;&lt;parent_key&gt;&#x60; to return only the direct children of a specific config.
+   * List configs for this account.  Default sort is &#x60;key&#x60; ascending. Pass &#x60;filter[parent]&#x3D;&lt;parent_key&gt;&#x60; to return only the direct children of a specific config.
    * @param filterParent  (optional)
+   * @param sort Field to sort by. Prefix with &#x60;-&#x60; for descending order. Default: &#x60;key&#x60;. Allowed values: &#x60;created_at&#x60;, &#x60;-created_at&#x60;, &#x60;key&#x60;, &#x60;-key&#x60;, &#x60;name&#x60;, &#x60;-name&#x60;, &#x60;updated_at&#x60;, &#x60;-updated_at&#x60;. (optional, default to key)
    * @param headers Optional headers to include in the request
    * @return ApiResponse&lt;ConfigListResponse&gt;
    * @throws ApiException if fails to make API call
    */
-  public ApiResponse<ConfigListResponse> listConfigsWithHttpInfo(@jakarta.annotation.Nullable String filterParent, Map<String, String> headers) throws ApiException {
-    HttpRequest.Builder localVarRequestBuilder = listConfigsRequestBuilder(filterParent, headers);
+  public ApiResponse<ConfigListResponse> listConfigsWithHttpInfo(@jakarta.annotation.Nullable String filterParent, @jakarta.annotation.Nullable String sort, Map<String, String> headers) throws ApiException {
+    HttpRequest.Builder localVarRequestBuilder = listConfigsRequestBuilder(filterParent, sort, headers);
     try {
       HttpResponse<InputStream> localVarResponse = memberVarHttpClient.send(
           localVarRequestBuilder.build(),
@@ -600,7 +604,7 @@ public class ConfigsApi {
     }
   }
 
-  private HttpRequest.Builder listConfigsRequestBuilder(@jakarta.annotation.Nullable String filterParent, Map<String, String> headers) throws ApiException {
+  private HttpRequest.Builder listConfigsRequestBuilder(@jakarta.annotation.Nullable String filterParent, @jakarta.annotation.Nullable String sort, Map<String, String> headers) throws ApiException {
 
     HttpRequest.Builder localVarRequestBuilder = HttpRequest.newBuilder();
 
@@ -611,6 +615,8 @@ public class ConfigsApi {
     String localVarQueryParameterBaseName;
     localVarQueryParameterBaseName = "filter[parent]";
     localVarQueryParams.addAll(ApiClient.parameterToPairs("filter[parent]", filterParent));
+    localVarQueryParameterBaseName = "sort";
+    localVarQueryParams.addAll(ApiClient.parameterToPairs("sort", sort));
 
     if (!localVarQueryParams.isEmpty() || localVarQueryStringJoiner.length() != 0) {
       StringJoiner queryJoiner = new StringJoiner("&");
