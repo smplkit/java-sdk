@@ -165,45 +165,49 @@ public class PlansApi {
 
   /**
    * List Plans
-   * Return all plan tier definitions as JSON:API resources.
+   * Return all plan tier definitions as JSON:API resources.  Default sort is &#x60;sort_order&#x60; ascending — the natural ladder defined in &#x60;plans.yaml&#x60;. Pass &#x60;sort&#x3D;display_name&#x60; for an alphabetical view.
+   * @param sort Field to sort by. Prefix with &#x60;-&#x60; for descending order. Default: &#x60;sort_order&#x60;. Allowed values: &#x60;display_name&#x60;, &#x60;-display_name&#x60;, &#x60;id&#x60;, &#x60;-id&#x60;, &#x60;sort_order&#x60;, &#x60;-sort_order&#x60;. (optional, default to sort_order)
    * @return PlanListResponse
    * @throws ApiException if fails to make API call
    */
-  public PlanListResponse listPlans() throws ApiException {
-    return listPlans(null);
+  public PlanListResponse listPlans(@jakarta.annotation.Nullable String sort) throws ApiException {
+    return listPlans(sort, null);
   }
 
   /**
    * List Plans
-   * Return all plan tier definitions as JSON:API resources.
+   * Return all plan tier definitions as JSON:API resources.  Default sort is &#x60;sort_order&#x60; ascending — the natural ladder defined in &#x60;plans.yaml&#x60;. Pass &#x60;sort&#x3D;display_name&#x60; for an alphabetical view.
+   * @param sort Field to sort by. Prefix with &#x60;-&#x60; for descending order. Default: &#x60;sort_order&#x60;. Allowed values: &#x60;display_name&#x60;, &#x60;-display_name&#x60;, &#x60;id&#x60;, &#x60;-id&#x60;, &#x60;sort_order&#x60;, &#x60;-sort_order&#x60;. (optional, default to sort_order)
    * @param headers Optional headers to include in the request
    * @return PlanListResponse
    * @throws ApiException if fails to make API call
    */
-  public PlanListResponse listPlans(Map<String, String> headers) throws ApiException {
-    ApiResponse<PlanListResponse> localVarResponse = listPlansWithHttpInfo(headers);
+  public PlanListResponse listPlans(@jakarta.annotation.Nullable String sort, Map<String, String> headers) throws ApiException {
+    ApiResponse<PlanListResponse> localVarResponse = listPlansWithHttpInfo(sort, headers);
     return localVarResponse.getData();
   }
 
   /**
    * List Plans
-   * Return all plan tier definitions as JSON:API resources.
+   * Return all plan tier definitions as JSON:API resources.  Default sort is &#x60;sort_order&#x60; ascending — the natural ladder defined in &#x60;plans.yaml&#x60;. Pass &#x60;sort&#x3D;display_name&#x60; for an alphabetical view.
+   * @param sort Field to sort by. Prefix with &#x60;-&#x60; for descending order. Default: &#x60;sort_order&#x60;. Allowed values: &#x60;display_name&#x60;, &#x60;-display_name&#x60;, &#x60;id&#x60;, &#x60;-id&#x60;, &#x60;sort_order&#x60;, &#x60;-sort_order&#x60;. (optional, default to sort_order)
    * @return ApiResponse&lt;PlanListResponse&gt;
    * @throws ApiException if fails to make API call
    */
-  public ApiResponse<PlanListResponse> listPlansWithHttpInfo() throws ApiException {
-    return listPlansWithHttpInfo(null);
+  public ApiResponse<PlanListResponse> listPlansWithHttpInfo(@jakarta.annotation.Nullable String sort) throws ApiException {
+    return listPlansWithHttpInfo(sort, null);
   }
 
   /**
    * List Plans
-   * Return all plan tier definitions as JSON:API resources.
+   * Return all plan tier definitions as JSON:API resources.  Default sort is &#x60;sort_order&#x60; ascending — the natural ladder defined in &#x60;plans.yaml&#x60;. Pass &#x60;sort&#x3D;display_name&#x60; for an alphabetical view.
+   * @param sort Field to sort by. Prefix with &#x60;-&#x60; for descending order. Default: &#x60;sort_order&#x60;. Allowed values: &#x60;display_name&#x60;, &#x60;-display_name&#x60;, &#x60;id&#x60;, &#x60;-id&#x60;, &#x60;sort_order&#x60;, &#x60;-sort_order&#x60;. (optional, default to sort_order)
    * @param headers Optional headers to include in the request
    * @return ApiResponse&lt;PlanListResponse&gt;
    * @throws ApiException if fails to make API call
    */
-  public ApiResponse<PlanListResponse> listPlansWithHttpInfo(Map<String, String> headers) throws ApiException {
-    HttpRequest.Builder localVarRequestBuilder = listPlansRequestBuilder(headers);
+  public ApiResponse<PlanListResponse> listPlansWithHttpInfo(@jakarta.annotation.Nullable String sort, Map<String, String> headers) throws ApiException {
+    HttpRequest.Builder localVarRequestBuilder = listPlansRequestBuilder(sort, headers);
     try {
       HttpResponse<InputStream> localVarResponse = memberVarHttpClient.send(
           localVarRequestBuilder.build(),
@@ -250,13 +254,28 @@ public class PlansApi {
     }
   }
 
-  private HttpRequest.Builder listPlansRequestBuilder(Map<String, String> headers) throws ApiException {
+  private HttpRequest.Builder listPlansRequestBuilder(@jakarta.annotation.Nullable String sort, Map<String, String> headers) throws ApiException {
 
     HttpRequest.Builder localVarRequestBuilder = HttpRequest.newBuilder();
 
     String localVarPath = "/api/v1/plans";
 
-    localVarRequestBuilder.uri(URI.create(memberVarBaseUri + localVarPath));
+    List<Pair> localVarQueryParams = new ArrayList<>();
+    StringJoiner localVarQueryStringJoiner = new StringJoiner("&");
+    String localVarQueryParameterBaseName;
+    localVarQueryParameterBaseName = "sort";
+    localVarQueryParams.addAll(ApiClient.parameterToPairs("sort", sort));
+
+    if (!localVarQueryParams.isEmpty() || localVarQueryStringJoiner.length() != 0) {
+      StringJoiner queryJoiner = new StringJoiner("&");
+      localVarQueryParams.forEach(p -> queryJoiner.add(p.getName() + '=' + p.getValue()));
+      if (localVarQueryStringJoiner.length() != 0) {
+        queryJoiner.add(localVarQueryStringJoiner.toString());
+      }
+      localVarRequestBuilder.uri(URI.create(memberVarBaseUri + localVarPath + '?' + queryJoiner.toString()));
+    } else {
+      localVarRequestBuilder.uri(URI.create(memberVarBaseUri + localVarPath));
+    }
 
     localVarRequestBuilder.header("Accept", "application/vnd.api+json");
 

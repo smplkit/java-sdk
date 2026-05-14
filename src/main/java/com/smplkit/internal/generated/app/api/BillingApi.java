@@ -1121,45 +1121,49 @@ public class BillingApi {
 
   /**
    * List Invoices
-   * Return invoice history for the account from Stripe.
+   * Return invoice history for the account from Stripe.  Default sort is &#x60;-created_at&#x60; (newest first).
+   * @param sort Field to sort by. Prefix with &#x60;-&#x60; for descending order. Default: &#x60;-created_at&#x60;. Allowed values: &#x60;created_at&#x60;, &#x60;-created_at&#x60;, &#x60;status&#x60;, &#x60;-status&#x60;, &#x60;total&#x60;, &#x60;-total&#x60;. (optional, default to -created_at)
    * @return InvoiceListResponse
    * @throws ApiException if fails to make API call
    */
-  public InvoiceListResponse listInvoices() throws ApiException {
-    return listInvoices(null);
+  public InvoiceListResponse listInvoices(@jakarta.annotation.Nullable String sort) throws ApiException {
+    return listInvoices(sort, null);
   }
 
   /**
    * List Invoices
-   * Return invoice history for the account from Stripe.
+   * Return invoice history for the account from Stripe.  Default sort is &#x60;-created_at&#x60; (newest first).
+   * @param sort Field to sort by. Prefix with &#x60;-&#x60; for descending order. Default: &#x60;-created_at&#x60;. Allowed values: &#x60;created_at&#x60;, &#x60;-created_at&#x60;, &#x60;status&#x60;, &#x60;-status&#x60;, &#x60;total&#x60;, &#x60;-total&#x60;. (optional, default to -created_at)
    * @param headers Optional headers to include in the request
    * @return InvoiceListResponse
    * @throws ApiException if fails to make API call
    */
-  public InvoiceListResponse listInvoices(Map<String, String> headers) throws ApiException {
-    ApiResponse<InvoiceListResponse> localVarResponse = listInvoicesWithHttpInfo(headers);
+  public InvoiceListResponse listInvoices(@jakarta.annotation.Nullable String sort, Map<String, String> headers) throws ApiException {
+    ApiResponse<InvoiceListResponse> localVarResponse = listInvoicesWithHttpInfo(sort, headers);
     return localVarResponse.getData();
   }
 
   /**
    * List Invoices
-   * Return invoice history for the account from Stripe.
+   * Return invoice history for the account from Stripe.  Default sort is &#x60;-created_at&#x60; (newest first).
+   * @param sort Field to sort by. Prefix with &#x60;-&#x60; for descending order. Default: &#x60;-created_at&#x60;. Allowed values: &#x60;created_at&#x60;, &#x60;-created_at&#x60;, &#x60;status&#x60;, &#x60;-status&#x60;, &#x60;total&#x60;, &#x60;-total&#x60;. (optional, default to -created_at)
    * @return ApiResponse&lt;InvoiceListResponse&gt;
    * @throws ApiException if fails to make API call
    */
-  public ApiResponse<InvoiceListResponse> listInvoicesWithHttpInfo() throws ApiException {
-    return listInvoicesWithHttpInfo(null);
+  public ApiResponse<InvoiceListResponse> listInvoicesWithHttpInfo(@jakarta.annotation.Nullable String sort) throws ApiException {
+    return listInvoicesWithHttpInfo(sort, null);
   }
 
   /**
    * List Invoices
-   * Return invoice history for the account from Stripe.
+   * Return invoice history for the account from Stripe.  Default sort is &#x60;-created_at&#x60; (newest first).
+   * @param sort Field to sort by. Prefix with &#x60;-&#x60; for descending order. Default: &#x60;-created_at&#x60;. Allowed values: &#x60;created_at&#x60;, &#x60;-created_at&#x60;, &#x60;status&#x60;, &#x60;-status&#x60;, &#x60;total&#x60;, &#x60;-total&#x60;. (optional, default to -created_at)
    * @param headers Optional headers to include in the request
    * @return ApiResponse&lt;InvoiceListResponse&gt;
    * @throws ApiException if fails to make API call
    */
-  public ApiResponse<InvoiceListResponse> listInvoicesWithHttpInfo(Map<String, String> headers) throws ApiException {
-    HttpRequest.Builder localVarRequestBuilder = listInvoicesRequestBuilder(headers);
+  public ApiResponse<InvoiceListResponse> listInvoicesWithHttpInfo(@jakarta.annotation.Nullable String sort, Map<String, String> headers) throws ApiException {
+    HttpRequest.Builder localVarRequestBuilder = listInvoicesRequestBuilder(sort, headers);
     try {
       HttpResponse<InputStream> localVarResponse = memberVarHttpClient.send(
           localVarRequestBuilder.build(),
@@ -1206,13 +1210,28 @@ public class BillingApi {
     }
   }
 
-  private HttpRequest.Builder listInvoicesRequestBuilder(Map<String, String> headers) throws ApiException {
+  private HttpRequest.Builder listInvoicesRequestBuilder(@jakarta.annotation.Nullable String sort, Map<String, String> headers) throws ApiException {
 
     HttpRequest.Builder localVarRequestBuilder = HttpRequest.newBuilder();
 
     String localVarPath = "/api/v1/invoices";
 
-    localVarRequestBuilder.uri(URI.create(memberVarBaseUri + localVarPath));
+    List<Pair> localVarQueryParams = new ArrayList<>();
+    StringJoiner localVarQueryStringJoiner = new StringJoiner("&");
+    String localVarQueryParameterBaseName;
+    localVarQueryParameterBaseName = "sort";
+    localVarQueryParams.addAll(ApiClient.parameterToPairs("sort", sort));
+
+    if (!localVarQueryParams.isEmpty() || localVarQueryStringJoiner.length() != 0) {
+      StringJoiner queryJoiner = new StringJoiner("&");
+      localVarQueryParams.forEach(p -> queryJoiner.add(p.getName() + '=' + p.getValue()));
+      if (localVarQueryStringJoiner.length() != 0) {
+        queryJoiner.add(localVarQueryStringJoiner.toString());
+      }
+      localVarRequestBuilder.uri(URI.create(memberVarBaseUri + localVarPath + '?' + queryJoiner.toString()));
+    } else {
+      localVarRequestBuilder.uri(URI.create(memberVarBaseUri + localVarPath));
+    }
 
     localVarRequestBuilder.header("Accept", "application/vnd.api+json");
 
@@ -1231,44 +1250,48 @@ public class BillingApi {
   /**
    * List Payment Methods
    * List all payment methods for the account. Default is returned first, then newest first.
+   * @param sort Field to sort by. Prefix with &#x60;-&#x60; for descending order. Default: &#x60;-created_at&#x60;. Allowed values: &#x60;created_at&#x60;, &#x60;-created_at&#x60;, &#x60;exp_year&#x60;, &#x60;-exp_year&#x60;, &#x60;is_default&#x60;, &#x60;-is_default&#x60;, &#x60;updated_at&#x60;, &#x60;-updated_at&#x60;. (optional, default to -created_at)
    * @return PaymentMethodListResponse
    * @throws ApiException if fails to make API call
    */
-  public PaymentMethodListResponse listPaymentMethods() throws ApiException {
-    return listPaymentMethods(null);
+  public PaymentMethodListResponse listPaymentMethods(@jakarta.annotation.Nullable String sort) throws ApiException {
+    return listPaymentMethods(sort, null);
   }
 
   /**
    * List Payment Methods
    * List all payment methods for the account. Default is returned first, then newest first.
+   * @param sort Field to sort by. Prefix with &#x60;-&#x60; for descending order. Default: &#x60;-created_at&#x60;. Allowed values: &#x60;created_at&#x60;, &#x60;-created_at&#x60;, &#x60;exp_year&#x60;, &#x60;-exp_year&#x60;, &#x60;is_default&#x60;, &#x60;-is_default&#x60;, &#x60;updated_at&#x60;, &#x60;-updated_at&#x60;. (optional, default to -created_at)
    * @param headers Optional headers to include in the request
    * @return PaymentMethodListResponse
    * @throws ApiException if fails to make API call
    */
-  public PaymentMethodListResponse listPaymentMethods(Map<String, String> headers) throws ApiException {
-    ApiResponse<PaymentMethodListResponse> localVarResponse = listPaymentMethodsWithHttpInfo(headers);
+  public PaymentMethodListResponse listPaymentMethods(@jakarta.annotation.Nullable String sort, Map<String, String> headers) throws ApiException {
+    ApiResponse<PaymentMethodListResponse> localVarResponse = listPaymentMethodsWithHttpInfo(sort, headers);
     return localVarResponse.getData();
   }
 
   /**
    * List Payment Methods
    * List all payment methods for the account. Default is returned first, then newest first.
+   * @param sort Field to sort by. Prefix with &#x60;-&#x60; for descending order. Default: &#x60;-created_at&#x60;. Allowed values: &#x60;created_at&#x60;, &#x60;-created_at&#x60;, &#x60;exp_year&#x60;, &#x60;-exp_year&#x60;, &#x60;is_default&#x60;, &#x60;-is_default&#x60;, &#x60;updated_at&#x60;, &#x60;-updated_at&#x60;. (optional, default to -created_at)
    * @return ApiResponse&lt;PaymentMethodListResponse&gt;
    * @throws ApiException if fails to make API call
    */
-  public ApiResponse<PaymentMethodListResponse> listPaymentMethodsWithHttpInfo() throws ApiException {
-    return listPaymentMethodsWithHttpInfo(null);
+  public ApiResponse<PaymentMethodListResponse> listPaymentMethodsWithHttpInfo(@jakarta.annotation.Nullable String sort) throws ApiException {
+    return listPaymentMethodsWithHttpInfo(sort, null);
   }
 
   /**
    * List Payment Methods
    * List all payment methods for the account. Default is returned first, then newest first.
+   * @param sort Field to sort by. Prefix with &#x60;-&#x60; for descending order. Default: &#x60;-created_at&#x60;. Allowed values: &#x60;created_at&#x60;, &#x60;-created_at&#x60;, &#x60;exp_year&#x60;, &#x60;-exp_year&#x60;, &#x60;is_default&#x60;, &#x60;-is_default&#x60;, &#x60;updated_at&#x60;, &#x60;-updated_at&#x60;. (optional, default to -created_at)
    * @param headers Optional headers to include in the request
    * @return ApiResponse&lt;PaymentMethodListResponse&gt;
    * @throws ApiException if fails to make API call
    */
-  public ApiResponse<PaymentMethodListResponse> listPaymentMethodsWithHttpInfo(Map<String, String> headers) throws ApiException {
-    HttpRequest.Builder localVarRequestBuilder = listPaymentMethodsRequestBuilder(headers);
+  public ApiResponse<PaymentMethodListResponse> listPaymentMethodsWithHttpInfo(@jakarta.annotation.Nullable String sort, Map<String, String> headers) throws ApiException {
+    HttpRequest.Builder localVarRequestBuilder = listPaymentMethodsRequestBuilder(sort, headers);
     try {
       HttpResponse<InputStream> localVarResponse = memberVarHttpClient.send(
           localVarRequestBuilder.build(),
@@ -1315,13 +1338,28 @@ public class BillingApi {
     }
   }
 
-  private HttpRequest.Builder listPaymentMethodsRequestBuilder(Map<String, String> headers) throws ApiException {
+  private HttpRequest.Builder listPaymentMethodsRequestBuilder(@jakarta.annotation.Nullable String sort, Map<String, String> headers) throws ApiException {
 
     HttpRequest.Builder localVarRequestBuilder = HttpRequest.newBuilder();
 
     String localVarPath = "/api/v1/payment_methods";
 
-    localVarRequestBuilder.uri(URI.create(memberVarBaseUri + localVarPath));
+    List<Pair> localVarQueryParams = new ArrayList<>();
+    StringJoiner localVarQueryStringJoiner = new StringJoiner("&");
+    String localVarQueryParameterBaseName;
+    localVarQueryParameterBaseName = "sort";
+    localVarQueryParams.addAll(ApiClient.parameterToPairs("sort", sort));
+
+    if (!localVarQueryParams.isEmpty() || localVarQueryStringJoiner.length() != 0) {
+      StringJoiner queryJoiner = new StringJoiner("&");
+      localVarQueryParams.forEach(p -> queryJoiner.add(p.getName() + '=' + p.getValue()));
+      if (localVarQueryStringJoiner.length() != 0) {
+        queryJoiner.add(localVarQueryStringJoiner.toString());
+      }
+      localVarRequestBuilder.uri(URI.create(memberVarBaseUri + localVarPath + '?' + queryJoiner.toString()));
+    } else {
+      localVarRequestBuilder.uri(URI.create(memberVarBaseUri + localVarPath));
+    }
 
     localVarRequestBuilder.header("Accept", "application/vnd.api+json");
 
@@ -1339,45 +1377,49 @@ public class BillingApi {
 
   /**
    * List Subscriptions
-   * Return subscription rows for the authenticated account.
+   * Return subscription rows for the authenticated account.  Default sort is &#x60;product&#x60; ascending.
+   * @param sort Field to sort by. Prefix with &#x60;-&#x60; for descending order. Default: &#x60;product&#x60;. Allowed values: &#x60;created_at&#x60;, &#x60;-created_at&#x60;, &#x60;plan&#x60;, &#x60;-plan&#x60;, &#x60;product&#x60;, &#x60;-product&#x60;, &#x60;status&#x60;, &#x60;-status&#x60;. (optional, default to product)
    * @return SubscriptionListResponse
    * @throws ApiException if fails to make API call
    */
-  public SubscriptionListResponse listSubscriptions() throws ApiException {
-    return listSubscriptions(null);
+  public SubscriptionListResponse listSubscriptions(@jakarta.annotation.Nullable String sort) throws ApiException {
+    return listSubscriptions(sort, null);
   }
 
   /**
    * List Subscriptions
-   * Return subscription rows for the authenticated account.
+   * Return subscription rows for the authenticated account.  Default sort is &#x60;product&#x60; ascending.
+   * @param sort Field to sort by. Prefix with &#x60;-&#x60; for descending order. Default: &#x60;product&#x60;. Allowed values: &#x60;created_at&#x60;, &#x60;-created_at&#x60;, &#x60;plan&#x60;, &#x60;-plan&#x60;, &#x60;product&#x60;, &#x60;-product&#x60;, &#x60;status&#x60;, &#x60;-status&#x60;. (optional, default to product)
    * @param headers Optional headers to include in the request
    * @return SubscriptionListResponse
    * @throws ApiException if fails to make API call
    */
-  public SubscriptionListResponse listSubscriptions(Map<String, String> headers) throws ApiException {
-    ApiResponse<SubscriptionListResponse> localVarResponse = listSubscriptionsWithHttpInfo(headers);
+  public SubscriptionListResponse listSubscriptions(@jakarta.annotation.Nullable String sort, Map<String, String> headers) throws ApiException {
+    ApiResponse<SubscriptionListResponse> localVarResponse = listSubscriptionsWithHttpInfo(sort, headers);
     return localVarResponse.getData();
   }
 
   /**
    * List Subscriptions
-   * Return subscription rows for the authenticated account.
+   * Return subscription rows for the authenticated account.  Default sort is &#x60;product&#x60; ascending.
+   * @param sort Field to sort by. Prefix with &#x60;-&#x60; for descending order. Default: &#x60;product&#x60;. Allowed values: &#x60;created_at&#x60;, &#x60;-created_at&#x60;, &#x60;plan&#x60;, &#x60;-plan&#x60;, &#x60;product&#x60;, &#x60;-product&#x60;, &#x60;status&#x60;, &#x60;-status&#x60;. (optional, default to product)
    * @return ApiResponse&lt;SubscriptionListResponse&gt;
    * @throws ApiException if fails to make API call
    */
-  public ApiResponse<SubscriptionListResponse> listSubscriptionsWithHttpInfo() throws ApiException {
-    return listSubscriptionsWithHttpInfo(null);
+  public ApiResponse<SubscriptionListResponse> listSubscriptionsWithHttpInfo(@jakarta.annotation.Nullable String sort) throws ApiException {
+    return listSubscriptionsWithHttpInfo(sort, null);
   }
 
   /**
    * List Subscriptions
-   * Return subscription rows for the authenticated account.
+   * Return subscription rows for the authenticated account.  Default sort is &#x60;product&#x60; ascending.
+   * @param sort Field to sort by. Prefix with &#x60;-&#x60; for descending order. Default: &#x60;product&#x60;. Allowed values: &#x60;created_at&#x60;, &#x60;-created_at&#x60;, &#x60;plan&#x60;, &#x60;-plan&#x60;, &#x60;product&#x60;, &#x60;-product&#x60;, &#x60;status&#x60;, &#x60;-status&#x60;. (optional, default to product)
    * @param headers Optional headers to include in the request
    * @return ApiResponse&lt;SubscriptionListResponse&gt;
    * @throws ApiException if fails to make API call
    */
-  public ApiResponse<SubscriptionListResponse> listSubscriptionsWithHttpInfo(Map<String, String> headers) throws ApiException {
-    HttpRequest.Builder localVarRequestBuilder = listSubscriptionsRequestBuilder(headers);
+  public ApiResponse<SubscriptionListResponse> listSubscriptionsWithHttpInfo(@jakarta.annotation.Nullable String sort, Map<String, String> headers) throws ApiException {
+    HttpRequest.Builder localVarRequestBuilder = listSubscriptionsRequestBuilder(sort, headers);
     try {
       HttpResponse<InputStream> localVarResponse = memberVarHttpClient.send(
           localVarRequestBuilder.build(),
@@ -1424,13 +1466,28 @@ public class BillingApi {
     }
   }
 
-  private HttpRequest.Builder listSubscriptionsRequestBuilder(Map<String, String> headers) throws ApiException {
+  private HttpRequest.Builder listSubscriptionsRequestBuilder(@jakarta.annotation.Nullable String sort, Map<String, String> headers) throws ApiException {
 
     HttpRequest.Builder localVarRequestBuilder = HttpRequest.newBuilder();
 
     String localVarPath = "/api/v1/subscriptions";
 
-    localVarRequestBuilder.uri(URI.create(memberVarBaseUri + localVarPath));
+    List<Pair> localVarQueryParams = new ArrayList<>();
+    StringJoiner localVarQueryStringJoiner = new StringJoiner("&");
+    String localVarQueryParameterBaseName;
+    localVarQueryParameterBaseName = "sort";
+    localVarQueryParams.addAll(ApiClient.parameterToPairs("sort", sort));
+
+    if (!localVarQueryParams.isEmpty() || localVarQueryStringJoiner.length() != 0) {
+      StringJoiner queryJoiner = new StringJoiner("&");
+      localVarQueryParams.forEach(p -> queryJoiner.add(p.getName() + '=' + p.getValue()));
+      if (localVarQueryStringJoiner.length() != 0) {
+        queryJoiner.add(localVarQueryStringJoiner.toString());
+      }
+      localVarRequestBuilder.uri(URI.create(memberVarBaseUri + localVarPath + '?' + queryJoiner.toString()));
+    } else {
+      localVarRequestBuilder.uri(URI.create(memberVarBaseUri + localVarPath));
+    }
 
     localVarRequestBuilder.header("Accept", "application/vnd.api+json");
 

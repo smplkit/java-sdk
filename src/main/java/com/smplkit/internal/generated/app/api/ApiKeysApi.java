@@ -515,23 +515,25 @@ public class ApiKeysApi {
    * List API Keys
    * List all API keys for the authenticated account.
    * @param filterStatus  (optional)
+   * @param sort Field to sort by. Prefix with &#x60;-&#x60; for descending order. Default: &#x60;name&#x60;. Allowed values: &#x60;created_at&#x60;, &#x60;-created_at&#x60;, &#x60;expires_at&#x60;, &#x60;-expires_at&#x60;, &#x60;last_used_at&#x60;, &#x60;-last_used_at&#x60;, &#x60;name&#x60;, &#x60;-name&#x60;, &#x60;status&#x60;, &#x60;-status&#x60;. (optional, default to name)
    * @return ApiKeyListResponse
    * @throws ApiException if fails to make API call
    */
-  public ApiKeyListResponse listApiKeys(@jakarta.annotation.Nullable String filterStatus) throws ApiException {
-    return listApiKeys(filterStatus, null);
+  public ApiKeyListResponse listApiKeys(@jakarta.annotation.Nullable String filterStatus, @jakarta.annotation.Nullable String sort) throws ApiException {
+    return listApiKeys(filterStatus, sort, null);
   }
 
   /**
    * List API Keys
    * List all API keys for the authenticated account.
    * @param filterStatus  (optional)
+   * @param sort Field to sort by. Prefix with &#x60;-&#x60; for descending order. Default: &#x60;name&#x60;. Allowed values: &#x60;created_at&#x60;, &#x60;-created_at&#x60;, &#x60;expires_at&#x60;, &#x60;-expires_at&#x60;, &#x60;last_used_at&#x60;, &#x60;-last_used_at&#x60;, &#x60;name&#x60;, &#x60;-name&#x60;, &#x60;status&#x60;, &#x60;-status&#x60;. (optional, default to name)
    * @param headers Optional headers to include in the request
    * @return ApiKeyListResponse
    * @throws ApiException if fails to make API call
    */
-  public ApiKeyListResponse listApiKeys(@jakarta.annotation.Nullable String filterStatus, Map<String, String> headers) throws ApiException {
-    ApiResponse<ApiKeyListResponse> localVarResponse = listApiKeysWithHttpInfo(filterStatus, headers);
+  public ApiKeyListResponse listApiKeys(@jakarta.annotation.Nullable String filterStatus, @jakarta.annotation.Nullable String sort, Map<String, String> headers) throws ApiException {
+    ApiResponse<ApiKeyListResponse> localVarResponse = listApiKeysWithHttpInfo(filterStatus, sort, headers);
     return localVarResponse.getData();
   }
 
@@ -539,23 +541,25 @@ public class ApiKeysApi {
    * List API Keys
    * List all API keys for the authenticated account.
    * @param filterStatus  (optional)
+   * @param sort Field to sort by. Prefix with &#x60;-&#x60; for descending order. Default: &#x60;name&#x60;. Allowed values: &#x60;created_at&#x60;, &#x60;-created_at&#x60;, &#x60;expires_at&#x60;, &#x60;-expires_at&#x60;, &#x60;last_used_at&#x60;, &#x60;-last_used_at&#x60;, &#x60;name&#x60;, &#x60;-name&#x60;, &#x60;status&#x60;, &#x60;-status&#x60;. (optional, default to name)
    * @return ApiResponse&lt;ApiKeyListResponse&gt;
    * @throws ApiException if fails to make API call
    */
-  public ApiResponse<ApiKeyListResponse> listApiKeysWithHttpInfo(@jakarta.annotation.Nullable String filterStatus) throws ApiException {
-    return listApiKeysWithHttpInfo(filterStatus, null);
+  public ApiResponse<ApiKeyListResponse> listApiKeysWithHttpInfo(@jakarta.annotation.Nullable String filterStatus, @jakarta.annotation.Nullable String sort) throws ApiException {
+    return listApiKeysWithHttpInfo(filterStatus, sort, null);
   }
 
   /**
    * List API Keys
    * List all API keys for the authenticated account.
    * @param filterStatus  (optional)
+   * @param sort Field to sort by. Prefix with &#x60;-&#x60; for descending order. Default: &#x60;name&#x60;. Allowed values: &#x60;created_at&#x60;, &#x60;-created_at&#x60;, &#x60;expires_at&#x60;, &#x60;-expires_at&#x60;, &#x60;last_used_at&#x60;, &#x60;-last_used_at&#x60;, &#x60;name&#x60;, &#x60;-name&#x60;, &#x60;status&#x60;, &#x60;-status&#x60;. (optional, default to name)
    * @param headers Optional headers to include in the request
    * @return ApiResponse&lt;ApiKeyListResponse&gt;
    * @throws ApiException if fails to make API call
    */
-  public ApiResponse<ApiKeyListResponse> listApiKeysWithHttpInfo(@jakarta.annotation.Nullable String filterStatus, Map<String, String> headers) throws ApiException {
-    HttpRequest.Builder localVarRequestBuilder = listApiKeysRequestBuilder(filterStatus, headers);
+  public ApiResponse<ApiKeyListResponse> listApiKeysWithHttpInfo(@jakarta.annotation.Nullable String filterStatus, @jakarta.annotation.Nullable String sort, Map<String, String> headers) throws ApiException {
+    HttpRequest.Builder localVarRequestBuilder = listApiKeysRequestBuilder(filterStatus, sort, headers);
     try {
       HttpResponse<InputStream> localVarResponse = memberVarHttpClient.send(
           localVarRequestBuilder.build(),
@@ -602,7 +606,7 @@ public class ApiKeysApi {
     }
   }
 
-  private HttpRequest.Builder listApiKeysRequestBuilder(@jakarta.annotation.Nullable String filterStatus, Map<String, String> headers) throws ApiException {
+  private HttpRequest.Builder listApiKeysRequestBuilder(@jakarta.annotation.Nullable String filterStatus, @jakarta.annotation.Nullable String sort, Map<String, String> headers) throws ApiException {
 
     HttpRequest.Builder localVarRequestBuilder = HttpRequest.newBuilder();
 
@@ -613,6 +617,8 @@ public class ApiKeysApi {
     String localVarQueryParameterBaseName;
     localVarQueryParameterBaseName = "filter[status]";
     localVarQueryParams.addAll(ApiClient.parameterToPairs("filter[status]", filterStatus));
+    localVarQueryParameterBaseName = "sort";
+    localVarQueryParams.addAll(ApiClient.parameterToPairs("sort", sort));
 
     if (!localVarQueryParams.isEmpty() || localVarQueryStringJoiner.length() != 0) {
       StringJoiner queryJoiner = new StringJoiner("&");

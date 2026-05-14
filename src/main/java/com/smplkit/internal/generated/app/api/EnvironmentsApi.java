@@ -651,44 +651,48 @@ public class EnvironmentsApi {
   /**
    * List Environments
    * List all environments for the authenticated account.
+   * @param sort Field to sort by. Prefix with &#x60;-&#x60; for descending order. Default: &#x60;name&#x60;. Allowed values: &#x60;created_at&#x60;, &#x60;-created_at&#x60;, &#x60;key&#x60;, &#x60;-key&#x60;, &#x60;name&#x60;, &#x60;-name&#x60;, &#x60;updated_at&#x60;, &#x60;-updated_at&#x60;. (optional, default to name)
    * @return EnvironmentListResponse
    * @throws ApiException if fails to make API call
    */
-  public EnvironmentListResponse listEnvironments() throws ApiException {
-    return listEnvironments(null);
+  public EnvironmentListResponse listEnvironments(@jakarta.annotation.Nullable String sort) throws ApiException {
+    return listEnvironments(sort, null);
   }
 
   /**
    * List Environments
    * List all environments for the authenticated account.
+   * @param sort Field to sort by. Prefix with &#x60;-&#x60; for descending order. Default: &#x60;name&#x60;. Allowed values: &#x60;created_at&#x60;, &#x60;-created_at&#x60;, &#x60;key&#x60;, &#x60;-key&#x60;, &#x60;name&#x60;, &#x60;-name&#x60;, &#x60;updated_at&#x60;, &#x60;-updated_at&#x60;. (optional, default to name)
    * @param headers Optional headers to include in the request
    * @return EnvironmentListResponse
    * @throws ApiException if fails to make API call
    */
-  public EnvironmentListResponse listEnvironments(Map<String, String> headers) throws ApiException {
-    ApiResponse<EnvironmentListResponse> localVarResponse = listEnvironmentsWithHttpInfo(headers);
+  public EnvironmentListResponse listEnvironments(@jakarta.annotation.Nullable String sort, Map<String, String> headers) throws ApiException {
+    ApiResponse<EnvironmentListResponse> localVarResponse = listEnvironmentsWithHttpInfo(sort, headers);
     return localVarResponse.getData();
   }
 
   /**
    * List Environments
    * List all environments for the authenticated account.
+   * @param sort Field to sort by. Prefix with &#x60;-&#x60; for descending order. Default: &#x60;name&#x60;. Allowed values: &#x60;created_at&#x60;, &#x60;-created_at&#x60;, &#x60;key&#x60;, &#x60;-key&#x60;, &#x60;name&#x60;, &#x60;-name&#x60;, &#x60;updated_at&#x60;, &#x60;-updated_at&#x60;. (optional, default to name)
    * @return ApiResponse&lt;EnvironmentListResponse&gt;
    * @throws ApiException if fails to make API call
    */
-  public ApiResponse<EnvironmentListResponse> listEnvironmentsWithHttpInfo() throws ApiException {
-    return listEnvironmentsWithHttpInfo(null);
+  public ApiResponse<EnvironmentListResponse> listEnvironmentsWithHttpInfo(@jakarta.annotation.Nullable String sort) throws ApiException {
+    return listEnvironmentsWithHttpInfo(sort, null);
   }
 
   /**
    * List Environments
    * List all environments for the authenticated account.
+   * @param sort Field to sort by. Prefix with &#x60;-&#x60; for descending order. Default: &#x60;name&#x60;. Allowed values: &#x60;created_at&#x60;, &#x60;-created_at&#x60;, &#x60;key&#x60;, &#x60;-key&#x60;, &#x60;name&#x60;, &#x60;-name&#x60;, &#x60;updated_at&#x60;, &#x60;-updated_at&#x60;. (optional, default to name)
    * @param headers Optional headers to include in the request
    * @return ApiResponse&lt;EnvironmentListResponse&gt;
    * @throws ApiException if fails to make API call
    */
-  public ApiResponse<EnvironmentListResponse> listEnvironmentsWithHttpInfo(Map<String, String> headers) throws ApiException {
-    HttpRequest.Builder localVarRequestBuilder = listEnvironmentsRequestBuilder(headers);
+  public ApiResponse<EnvironmentListResponse> listEnvironmentsWithHttpInfo(@jakarta.annotation.Nullable String sort, Map<String, String> headers) throws ApiException {
+    HttpRequest.Builder localVarRequestBuilder = listEnvironmentsRequestBuilder(sort, headers);
     try {
       HttpResponse<InputStream> localVarResponse = memberVarHttpClient.send(
           localVarRequestBuilder.build(),
@@ -735,13 +739,28 @@ public class EnvironmentsApi {
     }
   }
 
-  private HttpRequest.Builder listEnvironmentsRequestBuilder(Map<String, String> headers) throws ApiException {
+  private HttpRequest.Builder listEnvironmentsRequestBuilder(@jakarta.annotation.Nullable String sort, Map<String, String> headers) throws ApiException {
 
     HttpRequest.Builder localVarRequestBuilder = HttpRequest.newBuilder();
 
     String localVarPath = "/api/v1/environments";
 
-    localVarRequestBuilder.uri(URI.create(memberVarBaseUri + localVarPath));
+    List<Pair> localVarQueryParams = new ArrayList<>();
+    StringJoiner localVarQueryStringJoiner = new StringJoiner("&");
+    String localVarQueryParameterBaseName;
+    localVarQueryParameterBaseName = "sort";
+    localVarQueryParams.addAll(ApiClient.parameterToPairs("sort", sort));
+
+    if (!localVarQueryParams.isEmpty() || localVarQueryStringJoiner.length() != 0) {
+      StringJoiner queryJoiner = new StringJoiner("&");
+      localVarQueryParams.forEach(p -> queryJoiner.add(p.getName() + '=' + p.getValue()));
+      if (localVarQueryStringJoiner.length() != 0) {
+        queryJoiner.add(localVarQueryStringJoiner.toString());
+      }
+      localVarRequestBuilder.uri(URI.create(memberVarBaseUri + localVarPath + '?' + queryJoiner.toString()));
+    } else {
+      localVarRequestBuilder.uri(URI.create(memberVarBaseUri + localVarPath));
+    }
 
     localVarRequestBuilder.header("Accept", "application/vnd.api+json");
 

@@ -165,45 +165,49 @@ public class ProductsApi {
 
   /**
    * List Products
-   * Return all flag-enabled products with their plans, limits, and marketing content.
+   * Return all flag-enabled products with their plans, limits, and marketing content.  Default sort is &#x60;display_name&#x60; ascending.
+   * @param sort Field to sort by. Prefix with &#x60;-&#x60; for descending order. Default: &#x60;display_name&#x60;. Allowed values: &#x60;display_name&#x60;, &#x60;-display_name&#x60;, &#x60;id&#x60;, &#x60;-id&#x60;. (optional, default to display_name)
    * @return ProductListResponse
    * @throws ApiException if fails to make API call
    */
-  public ProductListResponse listProducts() throws ApiException {
-    return listProducts(null);
+  public ProductListResponse listProducts(@jakarta.annotation.Nullable String sort) throws ApiException {
+    return listProducts(sort, null);
   }
 
   /**
    * List Products
-   * Return all flag-enabled products with their plans, limits, and marketing content.
+   * Return all flag-enabled products with their plans, limits, and marketing content.  Default sort is &#x60;display_name&#x60; ascending.
+   * @param sort Field to sort by. Prefix with &#x60;-&#x60; for descending order. Default: &#x60;display_name&#x60;. Allowed values: &#x60;display_name&#x60;, &#x60;-display_name&#x60;, &#x60;id&#x60;, &#x60;-id&#x60;. (optional, default to display_name)
    * @param headers Optional headers to include in the request
    * @return ProductListResponse
    * @throws ApiException if fails to make API call
    */
-  public ProductListResponse listProducts(Map<String, String> headers) throws ApiException {
-    ApiResponse<ProductListResponse> localVarResponse = listProductsWithHttpInfo(headers);
+  public ProductListResponse listProducts(@jakarta.annotation.Nullable String sort, Map<String, String> headers) throws ApiException {
+    ApiResponse<ProductListResponse> localVarResponse = listProductsWithHttpInfo(sort, headers);
     return localVarResponse.getData();
   }
 
   /**
    * List Products
-   * Return all flag-enabled products with their plans, limits, and marketing content.
+   * Return all flag-enabled products with their plans, limits, and marketing content.  Default sort is &#x60;display_name&#x60; ascending.
+   * @param sort Field to sort by. Prefix with &#x60;-&#x60; for descending order. Default: &#x60;display_name&#x60;. Allowed values: &#x60;display_name&#x60;, &#x60;-display_name&#x60;, &#x60;id&#x60;, &#x60;-id&#x60;. (optional, default to display_name)
    * @return ApiResponse&lt;ProductListResponse&gt;
    * @throws ApiException if fails to make API call
    */
-  public ApiResponse<ProductListResponse> listProductsWithHttpInfo() throws ApiException {
-    return listProductsWithHttpInfo(null);
+  public ApiResponse<ProductListResponse> listProductsWithHttpInfo(@jakarta.annotation.Nullable String sort) throws ApiException {
+    return listProductsWithHttpInfo(sort, null);
   }
 
   /**
    * List Products
-   * Return all flag-enabled products with their plans, limits, and marketing content.
+   * Return all flag-enabled products with their plans, limits, and marketing content.  Default sort is &#x60;display_name&#x60; ascending.
+   * @param sort Field to sort by. Prefix with &#x60;-&#x60; for descending order. Default: &#x60;display_name&#x60;. Allowed values: &#x60;display_name&#x60;, &#x60;-display_name&#x60;, &#x60;id&#x60;, &#x60;-id&#x60;. (optional, default to display_name)
    * @param headers Optional headers to include in the request
    * @return ApiResponse&lt;ProductListResponse&gt;
    * @throws ApiException if fails to make API call
    */
-  public ApiResponse<ProductListResponse> listProductsWithHttpInfo(Map<String, String> headers) throws ApiException {
-    HttpRequest.Builder localVarRequestBuilder = listProductsRequestBuilder(headers);
+  public ApiResponse<ProductListResponse> listProductsWithHttpInfo(@jakarta.annotation.Nullable String sort, Map<String, String> headers) throws ApiException {
+    HttpRequest.Builder localVarRequestBuilder = listProductsRequestBuilder(sort, headers);
     try {
       HttpResponse<InputStream> localVarResponse = memberVarHttpClient.send(
           localVarRequestBuilder.build(),
@@ -250,13 +254,28 @@ public class ProductsApi {
     }
   }
 
-  private HttpRequest.Builder listProductsRequestBuilder(Map<String, String> headers) throws ApiException {
+  private HttpRequest.Builder listProductsRequestBuilder(@jakarta.annotation.Nullable String sort, Map<String, String> headers) throws ApiException {
 
     HttpRequest.Builder localVarRequestBuilder = HttpRequest.newBuilder();
 
     String localVarPath = "/api/v1/products";
 
-    localVarRequestBuilder.uri(URI.create(memberVarBaseUri + localVarPath));
+    List<Pair> localVarQueryParams = new ArrayList<>();
+    StringJoiner localVarQueryStringJoiner = new StringJoiner("&");
+    String localVarQueryParameterBaseName;
+    localVarQueryParameterBaseName = "sort";
+    localVarQueryParams.addAll(ApiClient.parameterToPairs("sort", sort));
+
+    if (!localVarQueryParams.isEmpty() || localVarQueryStringJoiner.length() != 0) {
+      StringJoiner queryJoiner = new StringJoiner("&");
+      localVarQueryParams.forEach(p -> queryJoiner.add(p.getName() + '=' + p.getValue()));
+      if (localVarQueryStringJoiner.length() != 0) {
+        queryJoiner.add(localVarQueryStringJoiner.toString());
+      }
+      localVarRequestBuilder.uri(URI.create(memberVarBaseUri + localVarPath + '?' + queryJoiner.toString()));
+    } else {
+      localVarRequestBuilder.uri(URI.create(memberVarBaseUri + localVarPath));
+    }
 
     localVarRequestBuilder.header("Accept", "application/vnd.api+json");
 
