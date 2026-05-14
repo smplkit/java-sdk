@@ -44,7 +44,7 @@ public final class ContextTypesClient {
     /** List all context types. */
     public List<com.smplkit.management.ContextType> list() {
         try {
-            ContextTypeListResponse resp = api.listContextTypes();
+            ContextTypeListResponse resp = api.listContextTypes(null);
             List<com.smplkit.management.ContextType> result = new ArrayList<>();
             if (resp.getData() != null) {
                 for (ContextTypeResource r : resp.getData()) {

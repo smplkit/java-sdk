@@ -36,7 +36,7 @@ public final class EnvironmentsClient {
     /** List all environments. */
     public List<com.smplkit.management.Environment> list() {
         try {
-            EnvironmentListResponse resp = api.listEnvironments();
+            EnvironmentListResponse resp = api.listEnvironments(null);
             List<com.smplkit.management.Environment> result = new ArrayList<>();
             if (resp.getData() != null) {
                 for (EnvironmentResource r : resp.getData()) {
