@@ -76,7 +76,7 @@ class LoggingClientWsEventsTest {
         assertEquals("websocket", received.get().source());
         assertFalse(received.get().isDeleted());
         verify(mockLoggersApi, times(1)).getLogger("com.acme.service");
-        verify(mockLoggersApi, times(1)).listLoggers((Boolean) null, null, null); // only start
+        verify(mockLoggersApi, times(1)).listLoggers((Boolean) null, null, null, null); // only start
     }
 
     @Test
@@ -194,7 +194,7 @@ class LoggingClientWsEventsTest {
         client.simulateGroupChanged(Map.of("id", "my-group"));
 
         verify(mockLogGroupsApi, times(1)).getLogGroup("my-group");
-        verify(mockLoggersApi, times(1)).listLoggers((Boolean) null, null, null); // only start
+        verify(mockLoggersApi, times(1)).listLoggers((Boolean) null, null, null, null); // only start
     }
 
     @Test
@@ -269,24 +269,24 @@ class LoggingClientWsEventsTest {
         // Second listLoggers call returns same empty list
         LoggerListResponse emptyLoggers = new LoggerListResponse();
         emptyLoggers.setData(new ArrayList<>());
-        when(mockLoggersApi.listLoggers((Boolean) null, null, null)).thenReturn(emptyLoggers);
+        when(mockLoggersApi.listLoggers((Boolean) null, null, null, null)).thenReturn(emptyLoggers);
         LogGroupListResponse emptyGroups = new LogGroupListResponse();
         emptyGroups.setData(new ArrayList<>());
-        when(mockLogGroupsApi.listLogGroups()).thenReturn(emptyGroups);
+        when(mockLogGroupsApi.listLogGroups(null)).thenReturn(emptyGroups);
 
         client.simulateLoggersChanged(Map.of());
 
         // listLoggers called once for start, once for loggers_changed
-        verify(mockLoggersApi, times(2)).listLoggers((Boolean) null, null, null);
+        verify(mockLoggersApi, times(2)).listLoggers((Boolean) null, null, null, null);
         // listLogGroups called once for start, once for loggers_changed
-        verify(mockLogGroupsApi, times(2)).listLogGroups();
+        verify(mockLogGroupsApi, times(2)).listLogGroups(null);
     }
 
     @Test
     void loggersChanged_beforeStart_isNoOp() throws ApiException {
         client.simulateLoggersChanged(Map.of());
 
-        verify(mockLoggersApi, never()).listLoggers(any(), any(), any());
+        verify(mockLoggersApi, never()).listLoggers(any(), any(), any(), any());
     }
 
     @Test
@@ -304,10 +304,10 @@ class LoggingClientWsEventsTest {
         LoggerResource lr = buildLoggerResource("com.acme.svc", "WARN", true);
         LoggerListResponse updatedLoggers = new LoggerListResponse();
         updatedLoggers.setData(new ArrayList<>(List.of(lr)));
-        when(mockLoggersApi.listLoggers((Boolean) null, null, null)).thenReturn(updatedLoggers);
+        when(mockLoggersApi.listLoggers((Boolean) null, null, null, null)).thenReturn(updatedLoggers);
         LogGroupListResponse emptyGroups = new LogGroupListResponse();
         emptyGroups.setData(new ArrayList<>());
-        when(mockLogGroupsApi.listLogGroups()).thenReturn(emptyGroups);
+        when(mockLogGroupsApi.listLogGroups(null)).thenReturn(emptyGroups);
 
         client.simulateLoggersChanged(Map.of());
 
@@ -353,7 +353,7 @@ class LoggingClientWsEventsTest {
         stubEmptyStart();
         client.install();
 
-        when(mockLoggersApi.listLoggers((Boolean) null, null, null))
+        when(mockLoggersApi.listLoggers((Boolean) null, null, null, null))
                 .thenThrow(new ApiException("API failure"));
 
         assertDoesNotThrow(() -> client.simulateLoggersChanged(Map.of()));
@@ -370,16 +370,16 @@ class LoggingClientWsEventsTest {
         LoggerResource lr = buildLoggerResource("com.acme.svc", "INFO", true);
         LoggerListResponse sameLoggers = new LoggerListResponse();
         sameLoggers.setData(new ArrayList<>(List.of(lr)));
-        when(mockLoggersApi.listLoggers((Boolean) null, null, null)).thenReturn(sameLoggers);
+        when(mockLoggersApi.listLoggers((Boolean) null, null, null, null)).thenReturn(sameLoggers);
 
         // Return a group with data to exercise the group loop in fetchOnly
         LogGroupListResponse groupsWithData = buildGroupListResponse("my-group", "DEBUG");
-        when(mockLogGroupsApi.listLogGroups()).thenReturn(groupsWithData);
+        when(mockLogGroupsApi.listLogGroups(null)).thenReturn(groupsWithData);
 
         client.simulateLoggersChanged(Map.of());
 
         // Both APIs called (for start + for loggersChanged)
-        verify(mockLogGroupsApi, times(2)).listLogGroups();
+        verify(mockLogGroupsApi, times(2)).listLogGroups(null);
     }
 
     @Test
@@ -390,8 +390,8 @@ class LoggingClientWsEventsTest {
         // listLoggers succeeds but listLogGroups throws
         LoggerListResponse emptyLoggers = new LoggerListResponse();
         emptyLoggers.setData(new ArrayList<>());
-        when(mockLoggersApi.listLoggers((Boolean) null, null, null)).thenReturn(emptyLoggers);
-        when(mockLogGroupsApi.listLogGroups()).thenThrow(new ApiException("group fetch failed"));
+        when(mockLoggersApi.listLoggers((Boolean) null, null, null, null)).thenReturn(emptyLoggers);
+        when(mockLogGroupsApi.listLogGroups(null)).thenThrow(new ApiException("group fetch failed"));
 
         assertDoesNotThrow(() -> client.simulateLoggersChanged(Map.of()));
     }
@@ -407,10 +407,10 @@ class LoggingClientWsEventsTest {
         LoggerResource lr = buildLoggerResource("com.acme.svc", "WARN", true);
         LoggerListResponse updated = new LoggerListResponse();
         updated.setData(new ArrayList<>(List.of(lr)));
-        when(mockLoggersApi.listLoggers((Boolean) null, null, null)).thenReturn(updated);
+        when(mockLoggersApi.listLoggers((Boolean) null, null, null, null)).thenReturn(updated);
         LogGroupListResponse emptyGroups = new LogGroupListResponse();
         emptyGroups.setData(new ArrayList<>());
-        when(mockLogGroupsApi.listLogGroups()).thenReturn(emptyGroups);
+        when(mockLogGroupsApi.listLogGroups(null)).thenReturn(emptyGroups);
 
         assertDoesNotThrow(() -> client.simulateLoggersChanged(Map.of()),
                 "Exception in global listener should not propagate");
@@ -429,10 +429,10 @@ class LoggingClientWsEventsTest {
         LoggerResource lr = buildLoggerResource("com.acme.svc", "WARN", true);
         LoggerListResponse updated = new LoggerListResponse();
         updated.setData(new ArrayList<>(List.of(lr)));
-        when(mockLoggersApi.listLoggers((Boolean) null, null, null)).thenReturn(updated);
+        when(mockLoggersApi.listLoggers((Boolean) null, null, null, null)).thenReturn(updated);
         LogGroupListResponse emptyGroups = new LogGroupListResponse();
         emptyGroups.setData(new ArrayList<>());
-        when(mockLogGroupsApi.listLogGroups()).thenReturn(emptyGroups);
+        when(mockLogGroupsApi.listLogGroups(null)).thenReturn(emptyGroups);
 
         assertDoesNotThrow(() -> client.simulateLoggersChanged(Map.of()),
                 "Exception in adapter.applyLevel should not propagate");
@@ -449,10 +449,10 @@ class LoggingClientWsEventsTest {
         LoggerResource lr = buildLoggerResource("com.acme.svc", "WARN", true);
         LoggerListResponse updated = new LoggerListResponse();
         updated.setData(new ArrayList<>(List.of(lr)));
-        when(mockLoggersApi.listLoggers((Boolean) null, null, null)).thenReturn(updated);
+        when(mockLoggersApi.listLoggers((Boolean) null, null, null, null)).thenReturn(updated);
         LogGroupListResponse emptyGroups = new LogGroupListResponse();
         emptyGroups.setData(new ArrayList<>());
-        when(mockLogGroupsApi.listLogGroups()).thenReturn(emptyGroups);
+        when(mockLogGroupsApi.listLogGroups(null)).thenReturn(emptyGroups);
 
         assertDoesNotThrow(() -> client.simulateLoggersChanged(Map.of()),
                 "Exception in key-scoped listener should not propagate");
@@ -472,10 +472,10 @@ class LoggingClientWsEventsTest {
         LoggerResource lr = buildLoggerResource("com.acme.svc", "INVALID_LEVEL", true);
         LoggerListResponse updated = new LoggerListResponse();
         updated.setData(new ArrayList<>(List.of(lr)));
-        when(mockLoggersApi.listLoggers((Boolean) null, null, null)).thenReturn(updated);
+        when(mockLoggersApi.listLoggers((Boolean) null, null, null, null)).thenReturn(updated);
         LogGroupListResponse emptyGroups = new LogGroupListResponse();
         emptyGroups.setData(new ArrayList<>());
-        when(mockLogGroupsApi.listLogGroups()).thenReturn(emptyGroups);
+        when(mockLogGroupsApi.listLogGroups(null)).thenReturn(emptyGroups);
 
         assertDoesNotThrow(() -> client.simulateLoggersChanged(Map.of()),
                 "Invalid level string should be handled gracefully");
@@ -509,8 +509,8 @@ class LoggingClientWsEventsTest {
     @Test
     void refresh_beforeInstall_isNoOp() throws ApiException {
         client.refresh();
-        verify(mockLoggersApi, never()).listLoggers(any(), any(), any());
-        verify(mockLogGroupsApi, never()).listLogGroups();
+        verify(mockLoggersApi, never()).listLoggers(any(), any(), any(), any());
+        verify(mockLogGroupsApi, never()).listLogGroups(null);
     }
 
     @Test
@@ -521,15 +521,15 @@ class LoggingClientWsEventsTest {
         // Reset stubs: refresh issues another listLoggers + listLogGroups.
         LoggerListResponse emptyLoggers = new LoggerListResponse();
         emptyLoggers.setData(new ArrayList<>());
-        when(mockLoggersApi.listLoggers((Boolean) null, null, null)).thenReturn(emptyLoggers);
+        when(mockLoggersApi.listLoggers((Boolean) null, null, null, null)).thenReturn(emptyLoggers);
         LogGroupListResponse emptyGroups = new LogGroupListResponse();
         emptyGroups.setData(new ArrayList<>());
-        when(mockLogGroupsApi.listLogGroups()).thenReturn(emptyGroups);
+        when(mockLogGroupsApi.listLogGroups(null)).thenReturn(emptyGroups);
 
         client.refresh();
 
-        verify(mockLoggersApi, times(2)).listLoggers((Boolean) null, null, null);
-        verify(mockLogGroupsApi, times(2)).listLogGroups();
+        verify(mockLoggersApi, times(2)).listLoggers((Boolean) null, null, null, null);
+        verify(mockLogGroupsApi, times(2)).listLogGroups(null);
     }
 
     @Test
@@ -549,10 +549,10 @@ class LoggingClientWsEventsTest {
         LoggerResource lr = buildLoggerResource("com.acme.svc", "WARN", true);
         LoggerListResponse changed = new LoggerListResponse();
         changed.setData(new ArrayList<>(List.of(lr)));
-        when(mockLoggersApi.listLoggers((Boolean) null, null, null)).thenReturn(changed);
+        when(mockLoggersApi.listLoggers((Boolean) null, null, null, null)).thenReturn(changed);
         LogGroupListResponse emptyGroups = new LogGroupListResponse();
         emptyGroups.setData(new ArrayList<>());
-        when(mockLogGroupsApi.listLogGroups()).thenReturn(emptyGroups);
+        when(mockLogGroupsApi.listLogGroups(null)).thenReturn(emptyGroups);
 
         client.refresh();
 
@@ -580,10 +580,10 @@ class LoggingClientWsEventsTest {
         LoggerResource lr = buildLoggerResource("com.acme.svc", "INFO", true);
         LoggerListResponse same = new LoggerListResponse();
         same.setData(new ArrayList<>(List.of(lr)));
-        when(mockLoggersApi.listLoggers((Boolean) null, null, null)).thenReturn(same);
+        when(mockLoggersApi.listLoggers((Boolean) null, null, null, null)).thenReturn(same);
         LogGroupListResponse emptyGroups = new LogGroupListResponse();
         emptyGroups.setData(new ArrayList<>());
-        when(mockLogGroupsApi.listLogGroups()).thenReturn(emptyGroups);
+        when(mockLogGroupsApi.listLogGroups(null)).thenReturn(emptyGroups);
 
         client.refresh();
 
@@ -596,7 +596,7 @@ class LoggingClientWsEventsTest {
         stubEmptyStart();
         client.install();
 
-        when(mockLoggersApi.listLoggers((Boolean) null, null, null))
+        when(mockLoggersApi.listLoggers((Boolean) null, null, null, null))
                 .thenThrow(new ApiException("API failure"));
 
         assertDoesNotThrow(() -> client.refresh());
@@ -607,11 +607,11 @@ class LoggingClientWsEventsTest {
     private void stubEmptyStart() throws ApiException {
         LoggerListResponse emptyLoggers = new LoggerListResponse();
         emptyLoggers.setData(new ArrayList<>());
-        when(mockLoggersApi.listLoggers((Boolean) null, null, null)).thenReturn(emptyLoggers);
+        when(mockLoggersApi.listLoggers((Boolean) null, null, null, null)).thenReturn(emptyLoggers);
 
         LogGroupListResponse emptyGroups = new LogGroupListResponse();
         emptyGroups.setData(new ArrayList<>());
-        when(mockLogGroupsApi.listLogGroups()).thenReturn(emptyGroups);
+        when(mockLogGroupsApi.listLogGroups(null)).thenReturn(emptyGroups);
 
         client.registerAdapter(noopAdapter(null, null));
     }
@@ -620,11 +620,11 @@ class LoggingClientWsEventsTest {
         LoggerResource lr = buildLoggerResource(key, level, true);
         LoggerListResponse loggerResp = new LoggerListResponse();
         loggerResp.setData(new ArrayList<>(List.of(lr)));
-        when(mockLoggersApi.listLoggers((Boolean) null, null, null)).thenReturn(loggerResp);
+        when(mockLoggersApi.listLoggers((Boolean) null, null, null, null)).thenReturn(loggerResp);
 
         LogGroupListResponse groupResp = new LogGroupListResponse();
         groupResp.setData(new ArrayList<>());
-        when(mockLogGroupsApi.listLogGroups()).thenReturn(groupResp);
+        when(mockLogGroupsApi.listLogGroups(null)).thenReturn(groupResp);
     }
 
     private LoggingAdapter noopAdapter(String loggerKey, String level) throws ApiException {

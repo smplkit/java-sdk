@@ -784,7 +784,7 @@ public final class LoggingClient {
         // Fetch loggers
         Map<String, Map<String, Object>> loggersData = new HashMap<>();
         try {
-            LoggerListResponse loggerResp = loggersApi.listLoggers(null, null, null);
+            LoggerListResponse loggerResp = loggersApi.listLoggers(null, null, null, null);
             if (loggerResp.getData() != null) {
                 for (LoggerResource r : loggerResp.getData()) {
                     var attrs = r.getAttributes();
@@ -806,7 +806,7 @@ public final class LoggingClient {
         // Fetch groups
         Map<String, Map<String, Object>> groupsData = new HashMap<>();
         try {
-            LogGroupListResponse groupResp = logGroupsApi.listLogGroups();
+            LogGroupListResponse groupResp = logGroupsApi.listLogGroups(null);
             if (groupResp.getData() != null) {
                 for (LogGroupResource r : groupResp.getData()) {
                     var attrs = r.getAttributes();
@@ -837,7 +837,7 @@ public final class LoggingClient {
         // Fetch loggers
         Map<String, Map<String, Object>> loggersData = new HashMap<>();
         try {
-            LoggerListResponse loggerResp = loggersApi.listLoggers(null, null, null);
+            LoggerListResponse loggerResp = loggersApi.listLoggers(null, null, null, null);
             if (loggerResp.getData() != null) {
                 for (LoggerResource r : loggerResp.getData()) {
                     var attrs = r.getAttributes();
@@ -859,7 +859,7 @@ public final class LoggingClient {
         // Fetch groups
         Map<String, Map<String, Object>> groupsData = new HashMap<>();
         try {
-            LogGroupListResponse groupResp = logGroupsApi.listLogGroups();
+            LogGroupListResponse groupResp = logGroupsApi.listLogGroups(null);
             if (groupResp.getData() != null) {
                 for (LogGroupResource r : groupResp.getData()) {
                     var attrs = r.getAttributes();

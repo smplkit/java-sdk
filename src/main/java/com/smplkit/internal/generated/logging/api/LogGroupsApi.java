@@ -512,45 +512,49 @@ public class LogGroupsApi {
 
   /**
    * List Log Groups
-   * List log groups for this account.
+   * List log groups for this account.  Default sort is &#x60;key&#x60; ascending.
+   * @param sort Field to sort by. Prefix with &#x60;-&#x60; for descending order. Default: &#x60;key&#x60;. Allowed values: &#x60;created_at&#x60;, &#x60;-created_at&#x60;, &#x60;key&#x60;, &#x60;-key&#x60;, &#x60;name&#x60;, &#x60;-name&#x60;, &#x60;updated_at&#x60;, &#x60;-updated_at&#x60;. (optional, default to key)
    * @return LogGroupListResponse
    * @throws ApiException if fails to make API call
    */
-  public LogGroupListResponse listLogGroups() throws ApiException {
-    return listLogGroups(null);
+  public LogGroupListResponse listLogGroups(@jakarta.annotation.Nullable String sort) throws ApiException {
+    return listLogGroups(sort, null);
   }
 
   /**
    * List Log Groups
-   * List log groups for this account.
+   * List log groups for this account.  Default sort is &#x60;key&#x60; ascending.
+   * @param sort Field to sort by. Prefix with &#x60;-&#x60; for descending order. Default: &#x60;key&#x60;. Allowed values: &#x60;created_at&#x60;, &#x60;-created_at&#x60;, &#x60;key&#x60;, &#x60;-key&#x60;, &#x60;name&#x60;, &#x60;-name&#x60;, &#x60;updated_at&#x60;, &#x60;-updated_at&#x60;. (optional, default to key)
    * @param headers Optional headers to include in the request
    * @return LogGroupListResponse
    * @throws ApiException if fails to make API call
    */
-  public LogGroupListResponse listLogGroups(Map<String, String> headers) throws ApiException {
-    ApiResponse<LogGroupListResponse> localVarResponse = listLogGroupsWithHttpInfo(headers);
+  public LogGroupListResponse listLogGroups(@jakarta.annotation.Nullable String sort, Map<String, String> headers) throws ApiException {
+    ApiResponse<LogGroupListResponse> localVarResponse = listLogGroupsWithHttpInfo(sort, headers);
     return localVarResponse.getData();
   }
 
   /**
    * List Log Groups
-   * List log groups for this account.
+   * List log groups for this account.  Default sort is &#x60;key&#x60; ascending.
+   * @param sort Field to sort by. Prefix with &#x60;-&#x60; for descending order. Default: &#x60;key&#x60;. Allowed values: &#x60;created_at&#x60;, &#x60;-created_at&#x60;, &#x60;key&#x60;, &#x60;-key&#x60;, &#x60;name&#x60;, &#x60;-name&#x60;, &#x60;updated_at&#x60;, &#x60;-updated_at&#x60;. (optional, default to key)
    * @return ApiResponse&lt;LogGroupListResponse&gt;
    * @throws ApiException if fails to make API call
    */
-  public ApiResponse<LogGroupListResponse> listLogGroupsWithHttpInfo() throws ApiException {
-    return listLogGroupsWithHttpInfo(null);
+  public ApiResponse<LogGroupListResponse> listLogGroupsWithHttpInfo(@jakarta.annotation.Nullable String sort) throws ApiException {
+    return listLogGroupsWithHttpInfo(sort, null);
   }
 
   /**
    * List Log Groups
-   * List log groups for this account.
+   * List log groups for this account.  Default sort is &#x60;key&#x60; ascending.
+   * @param sort Field to sort by. Prefix with &#x60;-&#x60; for descending order. Default: &#x60;key&#x60;. Allowed values: &#x60;created_at&#x60;, &#x60;-created_at&#x60;, &#x60;key&#x60;, &#x60;-key&#x60;, &#x60;name&#x60;, &#x60;-name&#x60;, &#x60;updated_at&#x60;, &#x60;-updated_at&#x60;. (optional, default to key)
    * @param headers Optional headers to include in the request
    * @return ApiResponse&lt;LogGroupListResponse&gt;
    * @throws ApiException if fails to make API call
    */
-  public ApiResponse<LogGroupListResponse> listLogGroupsWithHttpInfo(Map<String, String> headers) throws ApiException {
-    HttpRequest.Builder localVarRequestBuilder = listLogGroupsRequestBuilder(headers);
+  public ApiResponse<LogGroupListResponse> listLogGroupsWithHttpInfo(@jakarta.annotation.Nullable String sort, Map<String, String> headers) throws ApiException {
+    HttpRequest.Builder localVarRequestBuilder = listLogGroupsRequestBuilder(sort, headers);
     try {
       HttpResponse<InputStream> localVarResponse = memberVarHttpClient.send(
           localVarRequestBuilder.build(),
@@ -597,13 +601,28 @@ public class LogGroupsApi {
     }
   }
 
-  private HttpRequest.Builder listLogGroupsRequestBuilder(Map<String, String> headers) throws ApiException {
+  private HttpRequest.Builder listLogGroupsRequestBuilder(@jakarta.annotation.Nullable String sort, Map<String, String> headers) throws ApiException {
 
     HttpRequest.Builder localVarRequestBuilder = HttpRequest.newBuilder();
 
     String localVarPath = "/api/v1/log_groups";
 
-    localVarRequestBuilder.uri(URI.create(memberVarBaseUri + localVarPath));
+    List<Pair> localVarQueryParams = new ArrayList<>();
+    StringJoiner localVarQueryStringJoiner = new StringJoiner("&");
+    String localVarQueryParameterBaseName;
+    localVarQueryParameterBaseName = "sort";
+    localVarQueryParams.addAll(ApiClient.parameterToPairs("sort", sort));
+
+    if (!localVarQueryParams.isEmpty() || localVarQueryStringJoiner.length() != 0) {
+      StringJoiner queryJoiner = new StringJoiner("&");
+      localVarQueryParams.forEach(p -> queryJoiner.add(p.getName() + '=' + p.getValue()));
+      if (localVarQueryStringJoiner.length() != 0) {
+        queryJoiner.add(localVarQueryStringJoiner.toString());
+      }
+      localVarRequestBuilder.uri(URI.create(memberVarBaseUri + localVarPath + '?' + queryJoiner.toString()));
+    } else {
+      localVarRequestBuilder.uri(URI.create(memberVarBaseUri + localVarPath));
+    }
 
     localVarRequestBuilder.header("Accept", "application/vnd.api+json");
 

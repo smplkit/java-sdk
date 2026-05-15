@@ -165,53 +165,57 @@ public class LoggerSourcesApi {
 
   /**
    * List All Logger Sources
-   * List every logger source observation for this account.  Supports &#x60;filter[environment]&#x60; and &#x60;filter[service]&#x60; to narrow to a specific environment or service.
+   * List every logger source observation for this account.  Default sort is &#x60;-last_seen&#x60; (most recently observed first). Supports &#x60;filter[environment]&#x60; and &#x60;filter[service]&#x60; to narrow to a specific environment or service.
    * @param filterEnvironment  (optional)
    * @param filterService  (optional)
+   * @param sort Field to sort by. Prefix with &#x60;-&#x60; for descending order. Default: &#x60;-last_seen&#x60;. Allowed values: &#x60;created_at&#x60;, &#x60;-created_at&#x60;, &#x60;environment&#x60;, &#x60;-environment&#x60;, &#x60;last_seen&#x60;, &#x60;-last_seen&#x60;, &#x60;service&#x60;, &#x60;-service&#x60;. (optional, default to -last_seen)
    * @return LoggerSourceListResponse
    * @throws ApiException if fails to make API call
    */
-  public LoggerSourceListResponse listAllLoggerSources(@jakarta.annotation.Nullable String filterEnvironment, @jakarta.annotation.Nullable String filterService) throws ApiException {
-    return listAllLoggerSources(filterEnvironment, filterService, null);
+  public LoggerSourceListResponse listAllLoggerSources(@jakarta.annotation.Nullable String filterEnvironment, @jakarta.annotation.Nullable String filterService, @jakarta.annotation.Nullable String sort) throws ApiException {
+    return listAllLoggerSources(filterEnvironment, filterService, sort, null);
   }
 
   /**
    * List All Logger Sources
-   * List every logger source observation for this account.  Supports &#x60;filter[environment]&#x60; and &#x60;filter[service]&#x60; to narrow to a specific environment or service.
+   * List every logger source observation for this account.  Default sort is &#x60;-last_seen&#x60; (most recently observed first). Supports &#x60;filter[environment]&#x60; and &#x60;filter[service]&#x60; to narrow to a specific environment or service.
    * @param filterEnvironment  (optional)
    * @param filterService  (optional)
+   * @param sort Field to sort by. Prefix with &#x60;-&#x60; for descending order. Default: &#x60;-last_seen&#x60;. Allowed values: &#x60;created_at&#x60;, &#x60;-created_at&#x60;, &#x60;environment&#x60;, &#x60;-environment&#x60;, &#x60;last_seen&#x60;, &#x60;-last_seen&#x60;, &#x60;service&#x60;, &#x60;-service&#x60;. (optional, default to -last_seen)
    * @param headers Optional headers to include in the request
    * @return LoggerSourceListResponse
    * @throws ApiException if fails to make API call
    */
-  public LoggerSourceListResponse listAllLoggerSources(@jakarta.annotation.Nullable String filterEnvironment, @jakarta.annotation.Nullable String filterService, Map<String, String> headers) throws ApiException {
-    ApiResponse<LoggerSourceListResponse> localVarResponse = listAllLoggerSourcesWithHttpInfo(filterEnvironment, filterService, headers);
+  public LoggerSourceListResponse listAllLoggerSources(@jakarta.annotation.Nullable String filterEnvironment, @jakarta.annotation.Nullable String filterService, @jakarta.annotation.Nullable String sort, Map<String, String> headers) throws ApiException {
+    ApiResponse<LoggerSourceListResponse> localVarResponse = listAllLoggerSourcesWithHttpInfo(filterEnvironment, filterService, sort, headers);
     return localVarResponse.getData();
   }
 
   /**
    * List All Logger Sources
-   * List every logger source observation for this account.  Supports &#x60;filter[environment]&#x60; and &#x60;filter[service]&#x60; to narrow to a specific environment or service.
+   * List every logger source observation for this account.  Default sort is &#x60;-last_seen&#x60; (most recently observed first). Supports &#x60;filter[environment]&#x60; and &#x60;filter[service]&#x60; to narrow to a specific environment or service.
    * @param filterEnvironment  (optional)
    * @param filterService  (optional)
+   * @param sort Field to sort by. Prefix with &#x60;-&#x60; for descending order. Default: &#x60;-last_seen&#x60;. Allowed values: &#x60;created_at&#x60;, &#x60;-created_at&#x60;, &#x60;environment&#x60;, &#x60;-environment&#x60;, &#x60;last_seen&#x60;, &#x60;-last_seen&#x60;, &#x60;service&#x60;, &#x60;-service&#x60;. (optional, default to -last_seen)
    * @return ApiResponse&lt;LoggerSourceListResponse&gt;
    * @throws ApiException if fails to make API call
    */
-  public ApiResponse<LoggerSourceListResponse> listAllLoggerSourcesWithHttpInfo(@jakarta.annotation.Nullable String filterEnvironment, @jakarta.annotation.Nullable String filterService) throws ApiException {
-    return listAllLoggerSourcesWithHttpInfo(filterEnvironment, filterService, null);
+  public ApiResponse<LoggerSourceListResponse> listAllLoggerSourcesWithHttpInfo(@jakarta.annotation.Nullable String filterEnvironment, @jakarta.annotation.Nullable String filterService, @jakarta.annotation.Nullable String sort) throws ApiException {
+    return listAllLoggerSourcesWithHttpInfo(filterEnvironment, filterService, sort, null);
   }
 
   /**
    * List All Logger Sources
-   * List every logger source observation for this account.  Supports &#x60;filter[environment]&#x60; and &#x60;filter[service]&#x60; to narrow to a specific environment or service.
+   * List every logger source observation for this account.  Default sort is &#x60;-last_seen&#x60; (most recently observed first). Supports &#x60;filter[environment]&#x60; and &#x60;filter[service]&#x60; to narrow to a specific environment or service.
    * @param filterEnvironment  (optional)
    * @param filterService  (optional)
+   * @param sort Field to sort by. Prefix with &#x60;-&#x60; for descending order. Default: &#x60;-last_seen&#x60;. Allowed values: &#x60;created_at&#x60;, &#x60;-created_at&#x60;, &#x60;environment&#x60;, &#x60;-environment&#x60;, &#x60;last_seen&#x60;, &#x60;-last_seen&#x60;, &#x60;service&#x60;, &#x60;-service&#x60;. (optional, default to -last_seen)
    * @param headers Optional headers to include in the request
    * @return ApiResponse&lt;LoggerSourceListResponse&gt;
    * @throws ApiException if fails to make API call
    */
-  public ApiResponse<LoggerSourceListResponse> listAllLoggerSourcesWithHttpInfo(@jakarta.annotation.Nullable String filterEnvironment, @jakarta.annotation.Nullable String filterService, Map<String, String> headers) throws ApiException {
-    HttpRequest.Builder localVarRequestBuilder = listAllLoggerSourcesRequestBuilder(filterEnvironment, filterService, headers);
+  public ApiResponse<LoggerSourceListResponse> listAllLoggerSourcesWithHttpInfo(@jakarta.annotation.Nullable String filterEnvironment, @jakarta.annotation.Nullable String filterService, @jakarta.annotation.Nullable String sort, Map<String, String> headers) throws ApiException {
+    HttpRequest.Builder localVarRequestBuilder = listAllLoggerSourcesRequestBuilder(filterEnvironment, filterService, sort, headers);
     try {
       HttpResponse<InputStream> localVarResponse = memberVarHttpClient.send(
           localVarRequestBuilder.build(),
@@ -258,7 +262,7 @@ public class LoggerSourcesApi {
     }
   }
 
-  private HttpRequest.Builder listAllLoggerSourcesRequestBuilder(@jakarta.annotation.Nullable String filterEnvironment, @jakarta.annotation.Nullable String filterService, Map<String, String> headers) throws ApiException {
+  private HttpRequest.Builder listAllLoggerSourcesRequestBuilder(@jakarta.annotation.Nullable String filterEnvironment, @jakarta.annotation.Nullable String filterService, @jakarta.annotation.Nullable String sort, Map<String, String> headers) throws ApiException {
 
     HttpRequest.Builder localVarRequestBuilder = HttpRequest.newBuilder();
 
@@ -271,6 +275,8 @@ public class LoggerSourcesApi {
     localVarQueryParams.addAll(ApiClient.parameterToPairs("filter[environment]", filterEnvironment));
     localVarQueryParameterBaseName = "filter[service]";
     localVarQueryParams.addAll(ApiClient.parameterToPairs("filter[service]", filterService));
+    localVarQueryParameterBaseName = "sort";
+    localVarQueryParams.addAll(ApiClient.parameterToPairs("sort", sort));
 
     if (!localVarQueryParams.isEmpty() || localVarQueryStringJoiner.length() != 0) {
       StringJoiner queryJoiner = new StringJoiner("&");
@@ -299,49 +305,53 @@ public class LoggerSourcesApi {
 
   /**
    * List Logger Sources
-   * List the service / environment observations recorded for a logger.
+   * List the service / environment observations recorded for a logger.  Default sort is &#x60;-last_seen&#x60; (most recently observed first).
    * @param id  (required)
+   * @param sort Field to sort by. Prefix with &#x60;-&#x60; for descending order. Default: &#x60;-last_seen&#x60;. Allowed values: &#x60;created_at&#x60;, &#x60;-created_at&#x60;, &#x60;environment&#x60;, &#x60;-environment&#x60;, &#x60;last_seen&#x60;, &#x60;-last_seen&#x60;, &#x60;service&#x60;, &#x60;-service&#x60;. (optional, default to -last_seen)
    * @return LoggerSourceListResponse
    * @throws ApiException if fails to make API call
    */
-  public LoggerSourceListResponse listLoggerSources(@jakarta.annotation.Nonnull String id) throws ApiException {
-    return listLoggerSources(id, null);
+  public LoggerSourceListResponse listLoggerSources(@jakarta.annotation.Nonnull String id, @jakarta.annotation.Nullable String sort) throws ApiException {
+    return listLoggerSources(id, sort, null);
   }
 
   /**
    * List Logger Sources
-   * List the service / environment observations recorded for a logger.
+   * List the service / environment observations recorded for a logger.  Default sort is &#x60;-last_seen&#x60; (most recently observed first).
    * @param id  (required)
+   * @param sort Field to sort by. Prefix with &#x60;-&#x60; for descending order. Default: &#x60;-last_seen&#x60;. Allowed values: &#x60;created_at&#x60;, &#x60;-created_at&#x60;, &#x60;environment&#x60;, &#x60;-environment&#x60;, &#x60;last_seen&#x60;, &#x60;-last_seen&#x60;, &#x60;service&#x60;, &#x60;-service&#x60;. (optional, default to -last_seen)
    * @param headers Optional headers to include in the request
    * @return LoggerSourceListResponse
    * @throws ApiException if fails to make API call
    */
-  public LoggerSourceListResponse listLoggerSources(@jakarta.annotation.Nonnull String id, Map<String, String> headers) throws ApiException {
-    ApiResponse<LoggerSourceListResponse> localVarResponse = listLoggerSourcesWithHttpInfo(id, headers);
+  public LoggerSourceListResponse listLoggerSources(@jakarta.annotation.Nonnull String id, @jakarta.annotation.Nullable String sort, Map<String, String> headers) throws ApiException {
+    ApiResponse<LoggerSourceListResponse> localVarResponse = listLoggerSourcesWithHttpInfo(id, sort, headers);
     return localVarResponse.getData();
   }
 
   /**
    * List Logger Sources
-   * List the service / environment observations recorded for a logger.
+   * List the service / environment observations recorded for a logger.  Default sort is &#x60;-last_seen&#x60; (most recently observed first).
    * @param id  (required)
+   * @param sort Field to sort by. Prefix with &#x60;-&#x60; for descending order. Default: &#x60;-last_seen&#x60;. Allowed values: &#x60;created_at&#x60;, &#x60;-created_at&#x60;, &#x60;environment&#x60;, &#x60;-environment&#x60;, &#x60;last_seen&#x60;, &#x60;-last_seen&#x60;, &#x60;service&#x60;, &#x60;-service&#x60;. (optional, default to -last_seen)
    * @return ApiResponse&lt;LoggerSourceListResponse&gt;
    * @throws ApiException if fails to make API call
    */
-  public ApiResponse<LoggerSourceListResponse> listLoggerSourcesWithHttpInfo(@jakarta.annotation.Nonnull String id) throws ApiException {
-    return listLoggerSourcesWithHttpInfo(id, null);
+  public ApiResponse<LoggerSourceListResponse> listLoggerSourcesWithHttpInfo(@jakarta.annotation.Nonnull String id, @jakarta.annotation.Nullable String sort) throws ApiException {
+    return listLoggerSourcesWithHttpInfo(id, sort, null);
   }
 
   /**
    * List Logger Sources
-   * List the service / environment observations recorded for a logger.
+   * List the service / environment observations recorded for a logger.  Default sort is &#x60;-last_seen&#x60; (most recently observed first).
    * @param id  (required)
+   * @param sort Field to sort by. Prefix with &#x60;-&#x60; for descending order. Default: &#x60;-last_seen&#x60;. Allowed values: &#x60;created_at&#x60;, &#x60;-created_at&#x60;, &#x60;environment&#x60;, &#x60;-environment&#x60;, &#x60;last_seen&#x60;, &#x60;-last_seen&#x60;, &#x60;service&#x60;, &#x60;-service&#x60;. (optional, default to -last_seen)
    * @param headers Optional headers to include in the request
    * @return ApiResponse&lt;LoggerSourceListResponse&gt;
    * @throws ApiException if fails to make API call
    */
-  public ApiResponse<LoggerSourceListResponse> listLoggerSourcesWithHttpInfo(@jakarta.annotation.Nonnull String id, Map<String, String> headers) throws ApiException {
-    HttpRequest.Builder localVarRequestBuilder = listLoggerSourcesRequestBuilder(id, headers);
+  public ApiResponse<LoggerSourceListResponse> listLoggerSourcesWithHttpInfo(@jakarta.annotation.Nonnull String id, @jakarta.annotation.Nullable String sort, Map<String, String> headers) throws ApiException {
+    HttpRequest.Builder localVarRequestBuilder = listLoggerSourcesRequestBuilder(id, sort, headers);
     try {
       HttpResponse<InputStream> localVarResponse = memberVarHttpClient.send(
           localVarRequestBuilder.build(),
@@ -388,7 +398,7 @@ public class LoggerSourcesApi {
     }
   }
 
-  private HttpRequest.Builder listLoggerSourcesRequestBuilder(@jakarta.annotation.Nonnull String id, Map<String, String> headers) throws ApiException {
+  private HttpRequest.Builder listLoggerSourcesRequestBuilder(@jakarta.annotation.Nonnull String id, @jakarta.annotation.Nullable String sort, Map<String, String> headers) throws ApiException {
     // verify the required parameter 'id' is set
     if (id == null) {
       throw new ApiException(400, "Missing the required parameter 'id' when calling listLoggerSources");
@@ -399,7 +409,22 @@ public class LoggerSourcesApi {
     String localVarPath = "/api/v1/loggers/{id}/sources"
         .replace("{id}", ApiClient.urlEncode(id.toString()));
 
-    localVarRequestBuilder.uri(URI.create(memberVarBaseUri + localVarPath));
+    List<Pair> localVarQueryParams = new ArrayList<>();
+    StringJoiner localVarQueryStringJoiner = new StringJoiner("&");
+    String localVarQueryParameterBaseName;
+    localVarQueryParameterBaseName = "sort";
+    localVarQueryParams.addAll(ApiClient.parameterToPairs("sort", sort));
+
+    if (!localVarQueryParams.isEmpty() || localVarQueryStringJoiner.length() != 0) {
+      StringJoiner queryJoiner = new StringJoiner("&");
+      localVarQueryParams.forEach(p -> queryJoiner.add(p.getName() + '=' + p.getValue()));
+      if (localVarQueryStringJoiner.length() != 0) {
+        queryJoiner.add(localVarQueryStringJoiner.toString());
+      }
+      localVarRequestBuilder.uri(URI.create(memberVarBaseUri + localVarPath + '?' + queryJoiner.toString()));
+    } else {
+      localVarRequestBuilder.uri(URI.create(memberVarBaseUri + localVarPath));
+    }
 
     localVarRequestBuilder.header("Accept", "application/vnd.api+json");
 

@@ -325,11 +325,11 @@ class Phase2CoverageTest {
         lr.setAttributes(attrs);
         LoggerListResponse initialLoggers = new LoggerListResponse();
         initialLoggers.setData(new ArrayList<>(List.of(lr)));
-        when(mockLoggersApi.listLoggers(null, null, null)).thenReturn(initialLoggers);
+        when(mockLoggersApi.listLoggers(null, null, null, null)).thenReturn(initialLoggers);
 
         LogGroupListResponse emptyGroups = new LogGroupListResponse();
         emptyGroups.setData(new ArrayList<>());
-        when(mockGroupsApi.listLogGroups()).thenReturn(emptyGroups);
+        when(mockGroupsApi.listLogGroups(null)).thenReturn(emptyGroups);
 
         LoggingAdapter mockAdapter = mock(LoggingAdapter.class);
         when(mockAdapter.name()).thenReturn("test");
@@ -349,7 +349,7 @@ class Phase2CoverageTest {
         lrWarn.setAttributes(attrsWarn);
         LoggerListResponse warnLoggers = new LoggerListResponse();
         warnLoggers.setData(new ArrayList<>(List.of(lrWarn)));
-        when(mockLoggersApi.listLoggers(null, null, null)).thenReturn(warnLoggers);
+        when(mockLoggersApi.listLoggers(null, null, null, null)).thenReturn(warnLoggers);
 
         // Call simulateLoggersChanged via reflection (package-private test helper)
         assertDoesNotThrow(() -> {

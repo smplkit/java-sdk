@@ -165,45 +165,49 @@ public class ServicesApi {
 
   /**
    * List Services
-   * List the services that have reported a logger for this account.
+   * List the services that have reported a logger for this account.  Default sort is &#x60;name&#x60; ascending.
+   * @param sort Field to sort by. Prefix with &#x60;-&#x60; for descending order. Default: &#x60;name&#x60;. Allowed values: &#x60;name&#x60;, &#x60;-name&#x60;. (optional, default to name)
    * @return ServiceListResponse
    * @throws ApiException if fails to make API call
    */
-  public ServiceListResponse listServices() throws ApiException {
-    return listServices(null);
+  public ServiceListResponse listServices(@jakarta.annotation.Nullable String sort) throws ApiException {
+    return listServices(sort, null);
   }
 
   /**
    * List Services
-   * List the services that have reported a logger for this account.
+   * List the services that have reported a logger for this account.  Default sort is &#x60;name&#x60; ascending.
+   * @param sort Field to sort by. Prefix with &#x60;-&#x60; for descending order. Default: &#x60;name&#x60;. Allowed values: &#x60;name&#x60;, &#x60;-name&#x60;. (optional, default to name)
    * @param headers Optional headers to include in the request
    * @return ServiceListResponse
    * @throws ApiException if fails to make API call
    */
-  public ServiceListResponse listServices(Map<String, String> headers) throws ApiException {
-    ApiResponse<ServiceListResponse> localVarResponse = listServicesWithHttpInfo(headers);
+  public ServiceListResponse listServices(@jakarta.annotation.Nullable String sort, Map<String, String> headers) throws ApiException {
+    ApiResponse<ServiceListResponse> localVarResponse = listServicesWithHttpInfo(sort, headers);
     return localVarResponse.getData();
   }
 
   /**
    * List Services
-   * List the services that have reported a logger for this account.
+   * List the services that have reported a logger for this account.  Default sort is &#x60;name&#x60; ascending.
+   * @param sort Field to sort by. Prefix with &#x60;-&#x60; for descending order. Default: &#x60;name&#x60;. Allowed values: &#x60;name&#x60;, &#x60;-name&#x60;. (optional, default to name)
    * @return ApiResponse&lt;ServiceListResponse&gt;
    * @throws ApiException if fails to make API call
    */
-  public ApiResponse<ServiceListResponse> listServicesWithHttpInfo() throws ApiException {
-    return listServicesWithHttpInfo(null);
+  public ApiResponse<ServiceListResponse> listServicesWithHttpInfo(@jakarta.annotation.Nullable String sort) throws ApiException {
+    return listServicesWithHttpInfo(sort, null);
   }
 
   /**
    * List Services
-   * List the services that have reported a logger for this account.
+   * List the services that have reported a logger for this account.  Default sort is &#x60;name&#x60; ascending.
+   * @param sort Field to sort by. Prefix with &#x60;-&#x60; for descending order. Default: &#x60;name&#x60;. Allowed values: &#x60;name&#x60;, &#x60;-name&#x60;. (optional, default to name)
    * @param headers Optional headers to include in the request
    * @return ApiResponse&lt;ServiceListResponse&gt;
    * @throws ApiException if fails to make API call
    */
-  public ApiResponse<ServiceListResponse> listServicesWithHttpInfo(Map<String, String> headers) throws ApiException {
-    HttpRequest.Builder localVarRequestBuilder = listServicesRequestBuilder(headers);
+  public ApiResponse<ServiceListResponse> listServicesWithHttpInfo(@jakarta.annotation.Nullable String sort, Map<String, String> headers) throws ApiException {
+    HttpRequest.Builder localVarRequestBuilder = listServicesRequestBuilder(sort, headers);
     try {
       HttpResponse<InputStream> localVarResponse = memberVarHttpClient.send(
           localVarRequestBuilder.build(),
@@ -250,13 +254,28 @@ public class ServicesApi {
     }
   }
 
-  private HttpRequest.Builder listServicesRequestBuilder(Map<String, String> headers) throws ApiException {
+  private HttpRequest.Builder listServicesRequestBuilder(@jakarta.annotation.Nullable String sort, Map<String, String> headers) throws ApiException {
 
     HttpRequest.Builder localVarRequestBuilder = HttpRequest.newBuilder();
 
     String localVarPath = "/api/v1/services";
 
-    localVarRequestBuilder.uri(URI.create(memberVarBaseUri + localVarPath));
+    List<Pair> localVarQueryParams = new ArrayList<>();
+    StringJoiner localVarQueryStringJoiner = new StringJoiner("&");
+    String localVarQueryParameterBaseName;
+    localVarQueryParameterBaseName = "sort";
+    localVarQueryParams.addAll(ApiClient.parameterToPairs("sort", sort));
+
+    if (!localVarQueryParams.isEmpty() || localVarQueryStringJoiner.length() != 0) {
+      StringJoiner queryJoiner = new StringJoiner("&");
+      localVarQueryParams.forEach(p -> queryJoiner.add(p.getName() + '=' + p.getValue()));
+      if (localVarQueryStringJoiner.length() != 0) {
+        queryJoiner.add(localVarQueryStringJoiner.toString());
+      }
+      localVarRequestBuilder.uri(URI.create(memberVarBaseUri + localVarPath + '?' + queryJoiner.toString()));
+    } else {
+      localVarRequestBuilder.uri(URI.create(memberVarBaseUri + localVarPath));
+    }
 
     localVarRequestBuilder.header("Accept", "application/vnd.api+json");
 
