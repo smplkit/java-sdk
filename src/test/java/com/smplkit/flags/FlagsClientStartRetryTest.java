@@ -58,7 +58,7 @@ class FlagsClientStartRetryTest {
         when(mockApi.bulkRegisterFlags(any()))
                 .thenThrow(new ApiException(500, "Service Unavailable"))
                 .thenReturn(null);
-        when(mockApi.listFlags(isNull(), isNull(), isNull(), isNull()))
+        when(mockApi.listFlags(isNull(), isNull(), isNull(), isNull(), isNull()))
                 .thenReturn(emptyListResponse());
 
         client.booleanFlag("feature-x", false);
@@ -78,7 +78,7 @@ class FlagsClientStartRetryTest {
     void connectedFalseAfterFlushFailure() throws ApiException {
         when(mockApi.bulkRegisterFlags(any()))
                 .thenThrow(new ApiException(500, "Service Unavailable"));
-        when(mockApi.listFlags(isNull(), isNull(), isNull(), isNull()))
+        when(mockApi.listFlags(isNull(), isNull(), isNull(), isNull(), isNull()))
                 .thenReturn(emptyListResponse());
 
         client.booleanFlag("feature-x", false);
@@ -97,7 +97,7 @@ class FlagsClientStartRetryTest {
         when(mockApi.bulkRegisterFlags(any()))
                 .thenThrow(new ApiException(500, "Service Unavailable"))
                 .thenReturn(null);
-        when(mockApi.listFlags(isNull(), isNull(), isNull(), isNull()))
+        when(mockApi.listFlags(isNull(), isNull(), isNull(), isNull(), isNull()))
                 .thenReturn(emptyListResponse());
 
         client.booleanFlag("feature-x", false);
@@ -127,7 +127,7 @@ class FlagsClientStartRetryTest {
         when(mockApi.bulkRegisterFlags(any()))
                 .thenThrow(new ApiException(500, "Service Unavailable"))
                 .thenReturn(null);
-        when(mockApi.listFlags(isNull(), isNull(), isNull(), isNull()))
+        when(mockApi.listFlags(isNull(), isNull(), isNull(), isNull(), isNull()))
                 .thenReturn(emptyListResponse());
 
         client.booleanFlag("feature-x", false);
@@ -154,7 +154,7 @@ class FlagsClientStartRetryTest {
     void fetchAllFlagsFailure_preventsConnect_schedulesRetry() throws ApiException {
         // Flush succeeds but listFlags 500s
         when(mockApi.bulkRegisterFlags(any())).thenReturn(null);
-        when(mockApi.listFlags(isNull(), isNull(), isNull(), isNull()))
+        when(mockApi.listFlags(isNull(), isNull(), isNull(), isNull(), isNull()))
                 .thenThrow(new ApiException(500, "Service Unavailable"));
 
         client._connectInternal();
@@ -176,7 +176,7 @@ class FlagsClientStartRetryTest {
             }
             return null;
         });
-        when(mockApi.listFlags(isNull(), isNull(), isNull(), isNull()))
+        when(mockApi.listFlags(isNull(), isNull(), isNull(), isNull(), isNull()))
                 .thenReturn(emptyListResponse());
 
         client.booleanFlag("feature-x", false);
