@@ -88,7 +88,8 @@ public final class AuditEvents {
                 input.resourceId,
                 input.search,
                 input.pageSize,
-                input.pageAfter
+                input.pageAfter,
+                null
         );
 
         List<AuditEvent> events = new ArrayList<>();

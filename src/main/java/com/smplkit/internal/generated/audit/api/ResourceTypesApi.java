@@ -164,53 +164,57 @@ public class ResourceTypesApi {
 
   /**
    * List Resource Types
-   * List the distinct &#x60;resource_type&#x60; slugs recorded for this account.  The resource &#x60;id&#x60; is the slug itself. Useful for populating filter dropdowns in a UI.
+   * List the distinct &#x60;resource_type&#x60; slugs recorded for this account.  The resource &#x60;id&#x60; is the slug itself. Default sort is &#x60;key&#x60; ascending; pass &#x60;sort&#x3D;-key&#x60; for descending. Useful for populating filter dropdowns in a UI.
    * @param pageSize  (optional)
    * @param pageAfter  (optional)
+   * @param sort Field to sort by. Prefix with &#x60;-&#x60; for descending order. Default: &#x60;key&#x60;. Allowed values: &#x60;key&#x60;, &#x60;-key&#x60;. (optional, default to key)
    * @return ResourceTypeListResponse
    * @throws ApiException if fails to make API call
    */
-  public ResourceTypeListResponse listResourceTypes(@jakarta.annotation.Nullable Integer pageSize, @jakarta.annotation.Nullable String pageAfter) throws ApiException {
-    return listResourceTypes(pageSize, pageAfter, null);
+  public ResourceTypeListResponse listResourceTypes(@jakarta.annotation.Nullable Integer pageSize, @jakarta.annotation.Nullable String pageAfter, @jakarta.annotation.Nullable String sort) throws ApiException {
+    return listResourceTypes(pageSize, pageAfter, sort, null);
   }
 
   /**
    * List Resource Types
-   * List the distinct &#x60;resource_type&#x60; slugs recorded for this account.  The resource &#x60;id&#x60; is the slug itself. Useful for populating filter dropdowns in a UI.
+   * List the distinct &#x60;resource_type&#x60; slugs recorded for this account.  The resource &#x60;id&#x60; is the slug itself. Default sort is &#x60;key&#x60; ascending; pass &#x60;sort&#x3D;-key&#x60; for descending. Useful for populating filter dropdowns in a UI.
    * @param pageSize  (optional)
    * @param pageAfter  (optional)
+   * @param sort Field to sort by. Prefix with &#x60;-&#x60; for descending order. Default: &#x60;key&#x60;. Allowed values: &#x60;key&#x60;, &#x60;-key&#x60;. (optional, default to key)
    * @param headers Optional headers to include in the request
    * @return ResourceTypeListResponse
    * @throws ApiException if fails to make API call
    */
-  public ResourceTypeListResponse listResourceTypes(@jakarta.annotation.Nullable Integer pageSize, @jakarta.annotation.Nullable String pageAfter, Map<String, String> headers) throws ApiException {
-    ApiResponse<ResourceTypeListResponse> localVarResponse = listResourceTypesWithHttpInfo(pageSize, pageAfter, headers);
+  public ResourceTypeListResponse listResourceTypes(@jakarta.annotation.Nullable Integer pageSize, @jakarta.annotation.Nullable String pageAfter, @jakarta.annotation.Nullable String sort, Map<String, String> headers) throws ApiException {
+    ApiResponse<ResourceTypeListResponse> localVarResponse = listResourceTypesWithHttpInfo(pageSize, pageAfter, sort, headers);
     return localVarResponse.getData();
   }
 
   /**
    * List Resource Types
-   * List the distinct &#x60;resource_type&#x60; slugs recorded for this account.  The resource &#x60;id&#x60; is the slug itself. Useful for populating filter dropdowns in a UI.
+   * List the distinct &#x60;resource_type&#x60; slugs recorded for this account.  The resource &#x60;id&#x60; is the slug itself. Default sort is &#x60;key&#x60; ascending; pass &#x60;sort&#x3D;-key&#x60; for descending. Useful for populating filter dropdowns in a UI.
    * @param pageSize  (optional)
    * @param pageAfter  (optional)
+   * @param sort Field to sort by. Prefix with &#x60;-&#x60; for descending order. Default: &#x60;key&#x60;. Allowed values: &#x60;key&#x60;, &#x60;-key&#x60;. (optional, default to key)
    * @return ApiResponse&lt;ResourceTypeListResponse&gt;
    * @throws ApiException if fails to make API call
    */
-  public ApiResponse<ResourceTypeListResponse> listResourceTypesWithHttpInfo(@jakarta.annotation.Nullable Integer pageSize, @jakarta.annotation.Nullable String pageAfter) throws ApiException {
-    return listResourceTypesWithHttpInfo(pageSize, pageAfter, null);
+  public ApiResponse<ResourceTypeListResponse> listResourceTypesWithHttpInfo(@jakarta.annotation.Nullable Integer pageSize, @jakarta.annotation.Nullable String pageAfter, @jakarta.annotation.Nullable String sort) throws ApiException {
+    return listResourceTypesWithHttpInfo(pageSize, pageAfter, sort, null);
   }
 
   /**
    * List Resource Types
-   * List the distinct &#x60;resource_type&#x60; slugs recorded for this account.  The resource &#x60;id&#x60; is the slug itself. Useful for populating filter dropdowns in a UI.
+   * List the distinct &#x60;resource_type&#x60; slugs recorded for this account.  The resource &#x60;id&#x60; is the slug itself. Default sort is &#x60;key&#x60; ascending; pass &#x60;sort&#x3D;-key&#x60; for descending. Useful for populating filter dropdowns in a UI.
    * @param pageSize  (optional)
    * @param pageAfter  (optional)
+   * @param sort Field to sort by. Prefix with &#x60;-&#x60; for descending order. Default: &#x60;key&#x60;. Allowed values: &#x60;key&#x60;, &#x60;-key&#x60;. (optional, default to key)
    * @param headers Optional headers to include in the request
    * @return ApiResponse&lt;ResourceTypeListResponse&gt;
    * @throws ApiException if fails to make API call
    */
-  public ApiResponse<ResourceTypeListResponse> listResourceTypesWithHttpInfo(@jakarta.annotation.Nullable Integer pageSize, @jakarta.annotation.Nullable String pageAfter, Map<String, String> headers) throws ApiException {
-    HttpRequest.Builder localVarRequestBuilder = listResourceTypesRequestBuilder(pageSize, pageAfter, headers);
+  public ApiResponse<ResourceTypeListResponse> listResourceTypesWithHttpInfo(@jakarta.annotation.Nullable Integer pageSize, @jakarta.annotation.Nullable String pageAfter, @jakarta.annotation.Nullable String sort, Map<String, String> headers) throws ApiException {
+    HttpRequest.Builder localVarRequestBuilder = listResourceTypesRequestBuilder(pageSize, pageAfter, sort, headers);
     try {
       HttpResponse<InputStream> localVarResponse = memberVarHttpClient.send(
           localVarRequestBuilder.build(),
@@ -257,7 +261,7 @@ public class ResourceTypesApi {
     }
   }
 
-  private HttpRequest.Builder listResourceTypesRequestBuilder(@jakarta.annotation.Nullable Integer pageSize, @jakarta.annotation.Nullable String pageAfter, Map<String, String> headers) throws ApiException {
+  private HttpRequest.Builder listResourceTypesRequestBuilder(@jakarta.annotation.Nullable Integer pageSize, @jakarta.annotation.Nullable String pageAfter, @jakarta.annotation.Nullable String sort, Map<String, String> headers) throws ApiException {
 
     HttpRequest.Builder localVarRequestBuilder = HttpRequest.newBuilder();
 
@@ -270,6 +274,8 @@ public class ResourceTypesApi {
     localVarQueryParams.addAll(ApiClient.parameterToPairs("page[size]", pageSize));
     localVarQueryParameterBaseName = "page[after]";
     localVarQueryParams.addAll(ApiClient.parameterToPairs("page[after]", pageAfter));
+    localVarQueryParameterBaseName = "sort";
+    localVarQueryParams.addAll(ApiClient.parameterToPairs("sort", sort));
 
     if (!localVarQueryParams.isEmpty() || localVarQueryStringJoiner.length() != 0) {
       StringJoiner queryJoiner = new StringJoiner("&");

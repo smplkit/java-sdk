@@ -640,69 +640,73 @@ public class ForwardersApi {
 
   /**
    * List Forwarder Deliveries
-   * List delivery log entries for a forwarder.  Default sort is newest first. Filter by &#x60;status&#x60; (one of &#x60;SUCCEEDED&#x60;, &#x60;FAILED&#x60;, &#x60;FILTERED_OUT&#x60;, &#x60;SKIPPED_DO_NOT_FORWARD&#x60; — case-insensitive), by &#x60;event_id&#x60;, or by a &#x60;created_at&#x60; range using interval notation (e.g. &#x60;[2026-01-01T00:00:00Z,*)&#x60;).
+   * List delivery log entries for a forwarder.  Default sort is &#x60;-created_at&#x60; (newest first). Filter by &#x60;status&#x60; (one of &#x60;SUCCEEDED&#x60;, &#x60;FAILED&#x60;, &#x60;FILTERED_OUT&#x60;, &#x60;SKIPPED_DO_NOT_FORWARD&#x60; — case-insensitive), by &#x60;event_id&#x60;, or by a &#x60;created_at&#x60; range using interval notation (e.g. &#x60;[2026-01-01T00:00:00Z,*)&#x60;).
    * @param forwarderId  (required)
    * @param filterStatus  (optional)
    * @param filterCreatedAt  (optional)
    * @param filterEventId  (optional)
    * @param pageSize  (optional)
    * @param pageAfter  (optional)
+   * @param sort Field to sort by. Prefix with &#x60;-&#x60; for descending order. Default: &#x60;-created_at&#x60;. Allowed values: &#x60;created_at&#x60;, &#x60;-created_at&#x60;. (optional, default to -created_at)
    * @return ForwarderDeliveryListResponse
    * @throws ApiException if fails to make API call
    */
-  public ForwarderDeliveryListResponse listForwarderDeliveries(@jakarta.annotation.Nonnull UUID forwarderId, @jakarta.annotation.Nullable String filterStatus, @jakarta.annotation.Nullable String filterCreatedAt, @jakarta.annotation.Nullable String filterEventId, @jakarta.annotation.Nullable Integer pageSize, @jakarta.annotation.Nullable String pageAfter) throws ApiException {
-    return listForwarderDeliveries(forwarderId, filterStatus, filterCreatedAt, filterEventId, pageSize, pageAfter, null);
+  public ForwarderDeliveryListResponse listForwarderDeliveries(@jakarta.annotation.Nonnull UUID forwarderId, @jakarta.annotation.Nullable String filterStatus, @jakarta.annotation.Nullable String filterCreatedAt, @jakarta.annotation.Nullable String filterEventId, @jakarta.annotation.Nullable Integer pageSize, @jakarta.annotation.Nullable String pageAfter, @jakarta.annotation.Nullable String sort) throws ApiException {
+    return listForwarderDeliveries(forwarderId, filterStatus, filterCreatedAt, filterEventId, pageSize, pageAfter, sort, null);
   }
 
   /**
    * List Forwarder Deliveries
-   * List delivery log entries for a forwarder.  Default sort is newest first. Filter by &#x60;status&#x60; (one of &#x60;SUCCEEDED&#x60;, &#x60;FAILED&#x60;, &#x60;FILTERED_OUT&#x60;, &#x60;SKIPPED_DO_NOT_FORWARD&#x60; — case-insensitive), by &#x60;event_id&#x60;, or by a &#x60;created_at&#x60; range using interval notation (e.g. &#x60;[2026-01-01T00:00:00Z,*)&#x60;).
+   * List delivery log entries for a forwarder.  Default sort is &#x60;-created_at&#x60; (newest first). Filter by &#x60;status&#x60; (one of &#x60;SUCCEEDED&#x60;, &#x60;FAILED&#x60;, &#x60;FILTERED_OUT&#x60;, &#x60;SKIPPED_DO_NOT_FORWARD&#x60; — case-insensitive), by &#x60;event_id&#x60;, or by a &#x60;created_at&#x60; range using interval notation (e.g. &#x60;[2026-01-01T00:00:00Z,*)&#x60;).
    * @param forwarderId  (required)
    * @param filterStatus  (optional)
    * @param filterCreatedAt  (optional)
    * @param filterEventId  (optional)
    * @param pageSize  (optional)
    * @param pageAfter  (optional)
+   * @param sort Field to sort by. Prefix with &#x60;-&#x60; for descending order. Default: &#x60;-created_at&#x60;. Allowed values: &#x60;created_at&#x60;, &#x60;-created_at&#x60;. (optional, default to -created_at)
    * @param headers Optional headers to include in the request
    * @return ForwarderDeliveryListResponse
    * @throws ApiException if fails to make API call
    */
-  public ForwarderDeliveryListResponse listForwarderDeliveries(@jakarta.annotation.Nonnull UUID forwarderId, @jakarta.annotation.Nullable String filterStatus, @jakarta.annotation.Nullable String filterCreatedAt, @jakarta.annotation.Nullable String filterEventId, @jakarta.annotation.Nullable Integer pageSize, @jakarta.annotation.Nullable String pageAfter, Map<String, String> headers) throws ApiException {
-    ApiResponse<ForwarderDeliveryListResponse> localVarResponse = listForwarderDeliveriesWithHttpInfo(forwarderId, filterStatus, filterCreatedAt, filterEventId, pageSize, pageAfter, headers);
+  public ForwarderDeliveryListResponse listForwarderDeliveries(@jakarta.annotation.Nonnull UUID forwarderId, @jakarta.annotation.Nullable String filterStatus, @jakarta.annotation.Nullable String filterCreatedAt, @jakarta.annotation.Nullable String filterEventId, @jakarta.annotation.Nullable Integer pageSize, @jakarta.annotation.Nullable String pageAfter, @jakarta.annotation.Nullable String sort, Map<String, String> headers) throws ApiException {
+    ApiResponse<ForwarderDeliveryListResponse> localVarResponse = listForwarderDeliveriesWithHttpInfo(forwarderId, filterStatus, filterCreatedAt, filterEventId, pageSize, pageAfter, sort, headers);
     return localVarResponse.getData();
   }
 
   /**
    * List Forwarder Deliveries
-   * List delivery log entries for a forwarder.  Default sort is newest first. Filter by &#x60;status&#x60; (one of &#x60;SUCCEEDED&#x60;, &#x60;FAILED&#x60;, &#x60;FILTERED_OUT&#x60;, &#x60;SKIPPED_DO_NOT_FORWARD&#x60; — case-insensitive), by &#x60;event_id&#x60;, or by a &#x60;created_at&#x60; range using interval notation (e.g. &#x60;[2026-01-01T00:00:00Z,*)&#x60;).
+   * List delivery log entries for a forwarder.  Default sort is &#x60;-created_at&#x60; (newest first). Filter by &#x60;status&#x60; (one of &#x60;SUCCEEDED&#x60;, &#x60;FAILED&#x60;, &#x60;FILTERED_OUT&#x60;, &#x60;SKIPPED_DO_NOT_FORWARD&#x60; — case-insensitive), by &#x60;event_id&#x60;, or by a &#x60;created_at&#x60; range using interval notation (e.g. &#x60;[2026-01-01T00:00:00Z,*)&#x60;).
    * @param forwarderId  (required)
    * @param filterStatus  (optional)
    * @param filterCreatedAt  (optional)
    * @param filterEventId  (optional)
    * @param pageSize  (optional)
    * @param pageAfter  (optional)
+   * @param sort Field to sort by. Prefix with &#x60;-&#x60; for descending order. Default: &#x60;-created_at&#x60;. Allowed values: &#x60;created_at&#x60;, &#x60;-created_at&#x60;. (optional, default to -created_at)
    * @return ApiResponse&lt;ForwarderDeliveryListResponse&gt;
    * @throws ApiException if fails to make API call
    */
-  public ApiResponse<ForwarderDeliveryListResponse> listForwarderDeliveriesWithHttpInfo(@jakarta.annotation.Nonnull UUID forwarderId, @jakarta.annotation.Nullable String filterStatus, @jakarta.annotation.Nullable String filterCreatedAt, @jakarta.annotation.Nullable String filterEventId, @jakarta.annotation.Nullable Integer pageSize, @jakarta.annotation.Nullable String pageAfter) throws ApiException {
-    return listForwarderDeliveriesWithHttpInfo(forwarderId, filterStatus, filterCreatedAt, filterEventId, pageSize, pageAfter, null);
+  public ApiResponse<ForwarderDeliveryListResponse> listForwarderDeliveriesWithHttpInfo(@jakarta.annotation.Nonnull UUID forwarderId, @jakarta.annotation.Nullable String filterStatus, @jakarta.annotation.Nullable String filterCreatedAt, @jakarta.annotation.Nullable String filterEventId, @jakarta.annotation.Nullable Integer pageSize, @jakarta.annotation.Nullable String pageAfter, @jakarta.annotation.Nullable String sort) throws ApiException {
+    return listForwarderDeliveriesWithHttpInfo(forwarderId, filterStatus, filterCreatedAt, filterEventId, pageSize, pageAfter, sort, null);
   }
 
   /**
    * List Forwarder Deliveries
-   * List delivery log entries for a forwarder.  Default sort is newest first. Filter by &#x60;status&#x60; (one of &#x60;SUCCEEDED&#x60;, &#x60;FAILED&#x60;, &#x60;FILTERED_OUT&#x60;, &#x60;SKIPPED_DO_NOT_FORWARD&#x60; — case-insensitive), by &#x60;event_id&#x60;, or by a &#x60;created_at&#x60; range using interval notation (e.g. &#x60;[2026-01-01T00:00:00Z,*)&#x60;).
+   * List delivery log entries for a forwarder.  Default sort is &#x60;-created_at&#x60; (newest first). Filter by &#x60;status&#x60; (one of &#x60;SUCCEEDED&#x60;, &#x60;FAILED&#x60;, &#x60;FILTERED_OUT&#x60;, &#x60;SKIPPED_DO_NOT_FORWARD&#x60; — case-insensitive), by &#x60;event_id&#x60;, or by a &#x60;created_at&#x60; range using interval notation (e.g. &#x60;[2026-01-01T00:00:00Z,*)&#x60;).
    * @param forwarderId  (required)
    * @param filterStatus  (optional)
    * @param filterCreatedAt  (optional)
    * @param filterEventId  (optional)
    * @param pageSize  (optional)
    * @param pageAfter  (optional)
+   * @param sort Field to sort by. Prefix with &#x60;-&#x60; for descending order. Default: &#x60;-created_at&#x60;. Allowed values: &#x60;created_at&#x60;, &#x60;-created_at&#x60;. (optional, default to -created_at)
    * @param headers Optional headers to include in the request
    * @return ApiResponse&lt;ForwarderDeliveryListResponse&gt;
    * @throws ApiException if fails to make API call
    */
-  public ApiResponse<ForwarderDeliveryListResponse> listForwarderDeliveriesWithHttpInfo(@jakarta.annotation.Nonnull UUID forwarderId, @jakarta.annotation.Nullable String filterStatus, @jakarta.annotation.Nullable String filterCreatedAt, @jakarta.annotation.Nullable String filterEventId, @jakarta.annotation.Nullable Integer pageSize, @jakarta.annotation.Nullable String pageAfter, Map<String, String> headers) throws ApiException {
-    HttpRequest.Builder localVarRequestBuilder = listForwarderDeliveriesRequestBuilder(forwarderId, filterStatus, filterCreatedAt, filterEventId, pageSize, pageAfter, headers);
+  public ApiResponse<ForwarderDeliveryListResponse> listForwarderDeliveriesWithHttpInfo(@jakarta.annotation.Nonnull UUID forwarderId, @jakarta.annotation.Nullable String filterStatus, @jakarta.annotation.Nullable String filterCreatedAt, @jakarta.annotation.Nullable String filterEventId, @jakarta.annotation.Nullable Integer pageSize, @jakarta.annotation.Nullable String pageAfter, @jakarta.annotation.Nullable String sort, Map<String, String> headers) throws ApiException {
+    HttpRequest.Builder localVarRequestBuilder = listForwarderDeliveriesRequestBuilder(forwarderId, filterStatus, filterCreatedAt, filterEventId, pageSize, pageAfter, sort, headers);
     try {
       HttpResponse<InputStream> localVarResponse = memberVarHttpClient.send(
           localVarRequestBuilder.build(),
@@ -749,7 +753,7 @@ public class ForwardersApi {
     }
   }
 
-  private HttpRequest.Builder listForwarderDeliveriesRequestBuilder(@jakarta.annotation.Nonnull UUID forwarderId, @jakarta.annotation.Nullable String filterStatus, @jakarta.annotation.Nullable String filterCreatedAt, @jakarta.annotation.Nullable String filterEventId, @jakarta.annotation.Nullable Integer pageSize, @jakarta.annotation.Nullable String pageAfter, Map<String, String> headers) throws ApiException {
+  private HttpRequest.Builder listForwarderDeliveriesRequestBuilder(@jakarta.annotation.Nonnull UUID forwarderId, @jakarta.annotation.Nullable String filterStatus, @jakarta.annotation.Nullable String filterCreatedAt, @jakarta.annotation.Nullable String filterEventId, @jakarta.annotation.Nullable Integer pageSize, @jakarta.annotation.Nullable String pageAfter, @jakarta.annotation.Nullable String sort, Map<String, String> headers) throws ApiException {
     // verify the required parameter 'forwarderId' is set
     if (forwarderId == null) {
       throw new ApiException(400, "Missing the required parameter 'forwarderId' when calling listForwarderDeliveries");
@@ -773,6 +777,8 @@ public class ForwardersApi {
     localVarQueryParams.addAll(ApiClient.parameterToPairs("page[size]", pageSize));
     localVarQueryParameterBaseName = "page[after]";
     localVarQueryParams.addAll(ApiClient.parameterToPairs("page[after]", pageAfter));
+    localVarQueryParameterBaseName = "sort";
+    localVarQueryParams.addAll(ApiClient.parameterToPairs("sort", sort));
 
     if (!localVarQueryParams.isEmpty() || localVarQueryStringJoiner.length() != 0) {
       StringJoiner queryJoiner = new StringJoiner("&");
@@ -801,61 +807,65 @@ public class ForwardersApi {
 
   /**
    * List Forwarders
-   * List forwarders for this account.
+   * List forwarders for this account.  Default sort is &#x60;-created_at&#x60; (newest first). Pagination uses cursor tokens; keep the same &#x60;sort&#x60; value across paginated requests.
    * @param filterForwarderType  (optional)
    * @param filterEnabled  (optional)
    * @param pageSize  (optional)
    * @param pageAfter  (optional)
+   * @param sort Field to sort by. Prefix with &#x60;-&#x60; for descending order. Default: &#x60;-created_at&#x60;. Allowed values: &#x60;created_at&#x60;, &#x60;-created_at&#x60;, &#x60;updated_at&#x60;, &#x60;-updated_at&#x60;. (optional, default to -created_at)
    * @return ForwarderListResponse
    * @throws ApiException if fails to make API call
    */
-  public ForwarderListResponse listForwarders(@jakarta.annotation.Nullable String filterForwarderType, @jakarta.annotation.Nullable Boolean filterEnabled, @jakarta.annotation.Nullable Integer pageSize, @jakarta.annotation.Nullable String pageAfter) throws ApiException {
-    return listForwarders(filterForwarderType, filterEnabled, pageSize, pageAfter, null);
+  public ForwarderListResponse listForwarders(@jakarta.annotation.Nullable String filterForwarderType, @jakarta.annotation.Nullable Boolean filterEnabled, @jakarta.annotation.Nullable Integer pageSize, @jakarta.annotation.Nullable String pageAfter, @jakarta.annotation.Nullable String sort) throws ApiException {
+    return listForwarders(filterForwarderType, filterEnabled, pageSize, pageAfter, sort, null);
   }
 
   /**
    * List Forwarders
-   * List forwarders for this account.
+   * List forwarders for this account.  Default sort is &#x60;-created_at&#x60; (newest first). Pagination uses cursor tokens; keep the same &#x60;sort&#x60; value across paginated requests.
    * @param filterForwarderType  (optional)
    * @param filterEnabled  (optional)
    * @param pageSize  (optional)
    * @param pageAfter  (optional)
+   * @param sort Field to sort by. Prefix with &#x60;-&#x60; for descending order. Default: &#x60;-created_at&#x60;. Allowed values: &#x60;created_at&#x60;, &#x60;-created_at&#x60;, &#x60;updated_at&#x60;, &#x60;-updated_at&#x60;. (optional, default to -created_at)
    * @param headers Optional headers to include in the request
    * @return ForwarderListResponse
    * @throws ApiException if fails to make API call
    */
-  public ForwarderListResponse listForwarders(@jakarta.annotation.Nullable String filterForwarderType, @jakarta.annotation.Nullable Boolean filterEnabled, @jakarta.annotation.Nullable Integer pageSize, @jakarta.annotation.Nullable String pageAfter, Map<String, String> headers) throws ApiException {
-    ApiResponse<ForwarderListResponse> localVarResponse = listForwardersWithHttpInfo(filterForwarderType, filterEnabled, pageSize, pageAfter, headers);
+  public ForwarderListResponse listForwarders(@jakarta.annotation.Nullable String filterForwarderType, @jakarta.annotation.Nullable Boolean filterEnabled, @jakarta.annotation.Nullable Integer pageSize, @jakarta.annotation.Nullable String pageAfter, @jakarta.annotation.Nullable String sort, Map<String, String> headers) throws ApiException {
+    ApiResponse<ForwarderListResponse> localVarResponse = listForwardersWithHttpInfo(filterForwarderType, filterEnabled, pageSize, pageAfter, sort, headers);
     return localVarResponse.getData();
   }
 
   /**
    * List Forwarders
-   * List forwarders for this account.
+   * List forwarders for this account.  Default sort is &#x60;-created_at&#x60; (newest first). Pagination uses cursor tokens; keep the same &#x60;sort&#x60; value across paginated requests.
    * @param filterForwarderType  (optional)
    * @param filterEnabled  (optional)
    * @param pageSize  (optional)
    * @param pageAfter  (optional)
+   * @param sort Field to sort by. Prefix with &#x60;-&#x60; for descending order. Default: &#x60;-created_at&#x60;. Allowed values: &#x60;created_at&#x60;, &#x60;-created_at&#x60;, &#x60;updated_at&#x60;, &#x60;-updated_at&#x60;. (optional, default to -created_at)
    * @return ApiResponse&lt;ForwarderListResponse&gt;
    * @throws ApiException if fails to make API call
    */
-  public ApiResponse<ForwarderListResponse> listForwardersWithHttpInfo(@jakarta.annotation.Nullable String filterForwarderType, @jakarta.annotation.Nullable Boolean filterEnabled, @jakarta.annotation.Nullable Integer pageSize, @jakarta.annotation.Nullable String pageAfter) throws ApiException {
-    return listForwardersWithHttpInfo(filterForwarderType, filterEnabled, pageSize, pageAfter, null);
+  public ApiResponse<ForwarderListResponse> listForwardersWithHttpInfo(@jakarta.annotation.Nullable String filterForwarderType, @jakarta.annotation.Nullable Boolean filterEnabled, @jakarta.annotation.Nullable Integer pageSize, @jakarta.annotation.Nullable String pageAfter, @jakarta.annotation.Nullable String sort) throws ApiException {
+    return listForwardersWithHttpInfo(filterForwarderType, filterEnabled, pageSize, pageAfter, sort, null);
   }
 
   /**
    * List Forwarders
-   * List forwarders for this account.
+   * List forwarders for this account.  Default sort is &#x60;-created_at&#x60; (newest first). Pagination uses cursor tokens; keep the same &#x60;sort&#x60; value across paginated requests.
    * @param filterForwarderType  (optional)
    * @param filterEnabled  (optional)
    * @param pageSize  (optional)
    * @param pageAfter  (optional)
+   * @param sort Field to sort by. Prefix with &#x60;-&#x60; for descending order. Default: &#x60;-created_at&#x60;. Allowed values: &#x60;created_at&#x60;, &#x60;-created_at&#x60;, &#x60;updated_at&#x60;, &#x60;-updated_at&#x60;. (optional, default to -created_at)
    * @param headers Optional headers to include in the request
    * @return ApiResponse&lt;ForwarderListResponse&gt;
    * @throws ApiException if fails to make API call
    */
-  public ApiResponse<ForwarderListResponse> listForwardersWithHttpInfo(@jakarta.annotation.Nullable String filterForwarderType, @jakarta.annotation.Nullable Boolean filterEnabled, @jakarta.annotation.Nullable Integer pageSize, @jakarta.annotation.Nullable String pageAfter, Map<String, String> headers) throws ApiException {
-    HttpRequest.Builder localVarRequestBuilder = listForwardersRequestBuilder(filterForwarderType, filterEnabled, pageSize, pageAfter, headers);
+  public ApiResponse<ForwarderListResponse> listForwardersWithHttpInfo(@jakarta.annotation.Nullable String filterForwarderType, @jakarta.annotation.Nullable Boolean filterEnabled, @jakarta.annotation.Nullable Integer pageSize, @jakarta.annotation.Nullable String pageAfter, @jakarta.annotation.Nullable String sort, Map<String, String> headers) throws ApiException {
+    HttpRequest.Builder localVarRequestBuilder = listForwardersRequestBuilder(filterForwarderType, filterEnabled, pageSize, pageAfter, sort, headers);
     try {
       HttpResponse<InputStream> localVarResponse = memberVarHttpClient.send(
           localVarRequestBuilder.build(),
@@ -902,7 +912,7 @@ public class ForwardersApi {
     }
   }
 
-  private HttpRequest.Builder listForwardersRequestBuilder(@jakarta.annotation.Nullable String filterForwarderType, @jakarta.annotation.Nullable Boolean filterEnabled, @jakarta.annotation.Nullable Integer pageSize, @jakarta.annotation.Nullable String pageAfter, Map<String, String> headers) throws ApiException {
+  private HttpRequest.Builder listForwardersRequestBuilder(@jakarta.annotation.Nullable String filterForwarderType, @jakarta.annotation.Nullable Boolean filterEnabled, @jakarta.annotation.Nullable Integer pageSize, @jakarta.annotation.Nullable String pageAfter, @jakarta.annotation.Nullable String sort, Map<String, String> headers) throws ApiException {
 
     HttpRequest.Builder localVarRequestBuilder = HttpRequest.newBuilder();
 
@@ -919,6 +929,8 @@ public class ForwardersApi {
     localVarQueryParams.addAll(ApiClient.parameterToPairs("page[size]", pageSize));
     localVarQueryParameterBaseName = "page[after]";
     localVarQueryParams.addAll(ApiClient.parameterToPairs("page[after]", pageAfter));
+    localVarQueryParameterBaseName = "sort";
+    localVarQueryParams.addAll(ApiClient.parameterToPairs("sort", sort));
 
     if (!localVarQueryParams.isEmpty() || localVarQueryStringJoiner.length() != 0) {
       StringJoiner queryJoiner = new StringJoiner("&");
