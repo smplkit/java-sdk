@@ -277,45 +277,49 @@ public class MetricsApi {
 
   /**
    * List Metric Names
-   * Return distinct metric names recorded for the account, each with a representative unit. Plain-JSON response (not JSON:API) — this is metadata for discovery, not a metric resource.
+   * Return distinct metric names recorded for the account, each with a representative unit. Plain-JSON response (not JSON:API) — this is metadata for discovery, not a metric resource.  Default sort is &#x60;name&#x60; ascending.
+   * @param sort Field to sort by. Prefix with &#x60;-&#x60; for descending order. Default: &#x60;name&#x60;. Allowed values: &#x60;name&#x60;, &#x60;-name&#x60;. (optional, default to name)
    * @return MetricNamesResponse
    * @throws ApiException if fails to make API call
    */
-  public MetricNamesResponse listMetricNames() throws ApiException {
-    return listMetricNames(null);
+  public MetricNamesResponse listMetricNames(@jakarta.annotation.Nullable String sort) throws ApiException {
+    return listMetricNames(sort, null);
   }
 
   /**
    * List Metric Names
-   * Return distinct metric names recorded for the account, each with a representative unit. Plain-JSON response (not JSON:API) — this is metadata for discovery, not a metric resource.
+   * Return distinct metric names recorded for the account, each with a representative unit. Plain-JSON response (not JSON:API) — this is metadata for discovery, not a metric resource.  Default sort is &#x60;name&#x60; ascending.
+   * @param sort Field to sort by. Prefix with &#x60;-&#x60; for descending order. Default: &#x60;name&#x60;. Allowed values: &#x60;name&#x60;, &#x60;-name&#x60;. (optional, default to name)
    * @param headers Optional headers to include in the request
    * @return MetricNamesResponse
    * @throws ApiException if fails to make API call
    */
-  public MetricNamesResponse listMetricNames(Map<String, String> headers) throws ApiException {
-    ApiResponse<MetricNamesResponse> localVarResponse = listMetricNamesWithHttpInfo(headers);
+  public MetricNamesResponse listMetricNames(@jakarta.annotation.Nullable String sort, Map<String, String> headers) throws ApiException {
+    ApiResponse<MetricNamesResponse> localVarResponse = listMetricNamesWithHttpInfo(sort, headers);
     return localVarResponse.getData();
   }
 
   /**
    * List Metric Names
-   * Return distinct metric names recorded for the account, each with a representative unit. Plain-JSON response (not JSON:API) — this is metadata for discovery, not a metric resource.
+   * Return distinct metric names recorded for the account, each with a representative unit. Plain-JSON response (not JSON:API) — this is metadata for discovery, not a metric resource.  Default sort is &#x60;name&#x60; ascending.
+   * @param sort Field to sort by. Prefix with &#x60;-&#x60; for descending order. Default: &#x60;name&#x60;. Allowed values: &#x60;name&#x60;, &#x60;-name&#x60;. (optional, default to name)
    * @return ApiResponse&lt;MetricNamesResponse&gt;
    * @throws ApiException if fails to make API call
    */
-  public ApiResponse<MetricNamesResponse> listMetricNamesWithHttpInfo() throws ApiException {
-    return listMetricNamesWithHttpInfo(null);
+  public ApiResponse<MetricNamesResponse> listMetricNamesWithHttpInfo(@jakarta.annotation.Nullable String sort) throws ApiException {
+    return listMetricNamesWithHttpInfo(sort, null);
   }
 
   /**
    * List Metric Names
-   * Return distinct metric names recorded for the account, each with a representative unit. Plain-JSON response (not JSON:API) — this is metadata for discovery, not a metric resource.
+   * Return distinct metric names recorded for the account, each with a representative unit. Plain-JSON response (not JSON:API) — this is metadata for discovery, not a metric resource.  Default sort is &#x60;name&#x60; ascending.
+   * @param sort Field to sort by. Prefix with &#x60;-&#x60; for descending order. Default: &#x60;name&#x60;. Allowed values: &#x60;name&#x60;, &#x60;-name&#x60;. (optional, default to name)
    * @param headers Optional headers to include in the request
    * @return ApiResponse&lt;MetricNamesResponse&gt;
    * @throws ApiException if fails to make API call
    */
-  public ApiResponse<MetricNamesResponse> listMetricNamesWithHttpInfo(Map<String, String> headers) throws ApiException {
-    HttpRequest.Builder localVarRequestBuilder = listMetricNamesRequestBuilder(headers);
+  public ApiResponse<MetricNamesResponse> listMetricNamesWithHttpInfo(@jakarta.annotation.Nullable String sort, Map<String, String> headers) throws ApiException {
+    HttpRequest.Builder localVarRequestBuilder = listMetricNamesRequestBuilder(sort, headers);
     try {
       HttpResponse<InputStream> localVarResponse = memberVarHttpClient.send(
           localVarRequestBuilder.build(),
@@ -362,13 +366,28 @@ public class MetricsApi {
     }
   }
 
-  private HttpRequest.Builder listMetricNamesRequestBuilder(Map<String, String> headers) throws ApiException {
+  private HttpRequest.Builder listMetricNamesRequestBuilder(@jakarta.annotation.Nullable String sort, Map<String, String> headers) throws ApiException {
 
     HttpRequest.Builder localVarRequestBuilder = HttpRequest.newBuilder();
 
     String localVarPath = "/api/v1/metric_names";
 
-    localVarRequestBuilder.uri(URI.create(memberVarBaseUri + localVarPath));
+    List<Pair> localVarQueryParams = new ArrayList<>();
+    StringJoiner localVarQueryStringJoiner = new StringJoiner("&");
+    String localVarQueryParameterBaseName;
+    localVarQueryParameterBaseName = "sort";
+    localVarQueryParams.addAll(ApiClient.parameterToPairs("sort", sort));
+
+    if (!localVarQueryParams.isEmpty() || localVarQueryStringJoiner.length() != 0) {
+      StringJoiner queryJoiner = new StringJoiner("&");
+      localVarQueryParams.forEach(p -> queryJoiner.add(p.getName() + '=' + p.getValue()));
+      if (localVarQueryStringJoiner.length() != 0) {
+        queryJoiner.add(localVarQueryStringJoiner.toString());
+      }
+      localVarRequestBuilder.uri(URI.create(memberVarBaseUri + localVarPath + '?' + queryJoiner.toString()));
+    } else {
+      localVarRequestBuilder.uri(URI.create(memberVarBaseUri + localVarPath));
+    }
 
     localVarRequestBuilder.header("Accept", "application/vnd.api+json");
 
@@ -390,11 +409,12 @@ public class MetricsApi {
    * @param filterName  (required)
    * @param filterRollup  (required)
    * @param filterRecordedAt  (optional)
+   * @param sort Field to sort by. Prefix with &#x60;-&#x60; for descending order. Default: &#x60;bucket&#x60;. Allowed values: &#x60;bucket&#x60;, &#x60;-bucket&#x60;. (optional, default to bucket)
    * @return MetricRollupListResponse
    * @throws ApiException if fails to make API call
    */
-  public MetricRollupListResponse listMetricRollups(@jakarta.annotation.Nonnull String filterName, @jakarta.annotation.Nonnull String filterRollup, @jakarta.annotation.Nullable String filterRecordedAt) throws ApiException {
-    return listMetricRollups(filterName, filterRollup, filterRecordedAt, null);
+  public MetricRollupListResponse listMetricRollups(@jakarta.annotation.Nonnull String filterName, @jakarta.annotation.Nonnull String filterRollup, @jakarta.annotation.Nullable String filterRecordedAt, @jakarta.annotation.Nullable String sort) throws ApiException {
+    return listMetricRollups(filterName, filterRollup, filterRecordedAt, sort, null);
   }
 
   /**
@@ -403,12 +423,13 @@ public class MetricsApi {
    * @param filterName  (required)
    * @param filterRollup  (required)
    * @param filterRecordedAt  (optional)
+   * @param sort Field to sort by. Prefix with &#x60;-&#x60; for descending order. Default: &#x60;bucket&#x60;. Allowed values: &#x60;bucket&#x60;, &#x60;-bucket&#x60;. (optional, default to bucket)
    * @param headers Optional headers to include in the request
    * @return MetricRollupListResponse
    * @throws ApiException if fails to make API call
    */
-  public MetricRollupListResponse listMetricRollups(@jakarta.annotation.Nonnull String filterName, @jakarta.annotation.Nonnull String filterRollup, @jakarta.annotation.Nullable String filterRecordedAt, Map<String, String> headers) throws ApiException {
-    ApiResponse<MetricRollupListResponse> localVarResponse = listMetricRollupsWithHttpInfo(filterName, filterRollup, filterRecordedAt, headers);
+  public MetricRollupListResponse listMetricRollups(@jakarta.annotation.Nonnull String filterName, @jakarta.annotation.Nonnull String filterRollup, @jakarta.annotation.Nullable String filterRecordedAt, @jakarta.annotation.Nullable String sort, Map<String, String> headers) throws ApiException {
+    ApiResponse<MetricRollupListResponse> localVarResponse = listMetricRollupsWithHttpInfo(filterName, filterRollup, filterRecordedAt, sort, headers);
     return localVarResponse.getData();
   }
 
@@ -418,11 +439,12 @@ public class MetricsApi {
    * @param filterName  (required)
    * @param filterRollup  (required)
    * @param filterRecordedAt  (optional)
+   * @param sort Field to sort by. Prefix with &#x60;-&#x60; for descending order. Default: &#x60;bucket&#x60;. Allowed values: &#x60;bucket&#x60;, &#x60;-bucket&#x60;. (optional, default to bucket)
    * @return ApiResponse&lt;MetricRollupListResponse&gt;
    * @throws ApiException if fails to make API call
    */
-  public ApiResponse<MetricRollupListResponse> listMetricRollupsWithHttpInfo(@jakarta.annotation.Nonnull String filterName, @jakarta.annotation.Nonnull String filterRollup, @jakarta.annotation.Nullable String filterRecordedAt) throws ApiException {
-    return listMetricRollupsWithHttpInfo(filterName, filterRollup, filterRecordedAt, null);
+  public ApiResponse<MetricRollupListResponse> listMetricRollupsWithHttpInfo(@jakarta.annotation.Nonnull String filterName, @jakarta.annotation.Nonnull String filterRollup, @jakarta.annotation.Nullable String filterRecordedAt, @jakarta.annotation.Nullable String sort) throws ApiException {
+    return listMetricRollupsWithHttpInfo(filterName, filterRollup, filterRecordedAt, sort, null);
   }
 
   /**
@@ -431,12 +453,13 @@ public class MetricsApi {
    * @param filterName  (required)
    * @param filterRollup  (required)
    * @param filterRecordedAt  (optional)
+   * @param sort Field to sort by. Prefix with &#x60;-&#x60; for descending order. Default: &#x60;bucket&#x60;. Allowed values: &#x60;bucket&#x60;, &#x60;-bucket&#x60;. (optional, default to bucket)
    * @param headers Optional headers to include in the request
    * @return ApiResponse&lt;MetricRollupListResponse&gt;
    * @throws ApiException if fails to make API call
    */
-  public ApiResponse<MetricRollupListResponse> listMetricRollupsWithHttpInfo(@jakarta.annotation.Nonnull String filterName, @jakarta.annotation.Nonnull String filterRollup, @jakarta.annotation.Nullable String filterRecordedAt, Map<String, String> headers) throws ApiException {
-    HttpRequest.Builder localVarRequestBuilder = listMetricRollupsRequestBuilder(filterName, filterRollup, filterRecordedAt, headers);
+  public ApiResponse<MetricRollupListResponse> listMetricRollupsWithHttpInfo(@jakarta.annotation.Nonnull String filterName, @jakarta.annotation.Nonnull String filterRollup, @jakarta.annotation.Nullable String filterRecordedAt, @jakarta.annotation.Nullable String sort, Map<String, String> headers) throws ApiException {
+    HttpRequest.Builder localVarRequestBuilder = listMetricRollupsRequestBuilder(filterName, filterRollup, filterRecordedAt, sort, headers);
     try {
       HttpResponse<InputStream> localVarResponse = memberVarHttpClient.send(
           localVarRequestBuilder.build(),
@@ -483,7 +506,7 @@ public class MetricsApi {
     }
   }
 
-  private HttpRequest.Builder listMetricRollupsRequestBuilder(@jakarta.annotation.Nonnull String filterName, @jakarta.annotation.Nonnull String filterRollup, @jakarta.annotation.Nullable String filterRecordedAt, Map<String, String> headers) throws ApiException {
+  private HttpRequest.Builder listMetricRollupsRequestBuilder(@jakarta.annotation.Nonnull String filterName, @jakarta.annotation.Nonnull String filterRollup, @jakarta.annotation.Nullable String filterRecordedAt, @jakarta.annotation.Nullable String sort, Map<String, String> headers) throws ApiException {
     // verify the required parameter 'filterName' is set
     if (filterName == null) {
       throw new ApiException(400, "Missing the required parameter 'filterName' when calling listMetricRollups");
@@ -506,6 +529,8 @@ public class MetricsApi {
     localVarQueryParams.addAll(ApiClient.parameterToPairs("filter[rollup]", filterRollup));
     localVarQueryParameterBaseName = "filter[recorded_at]";
     localVarQueryParams.addAll(ApiClient.parameterToPairs("filter[recorded_at]", filterRecordedAt));
+    localVarQueryParameterBaseName = "sort";
+    localVarQueryParams.addAll(ApiClient.parameterToPairs("sort", sort));
 
     if (!localVarQueryParams.isEmpty() || localVarQueryStringJoiner.length() != 0) {
       StringJoiner queryJoiner = new StringJoiner("&");
@@ -537,11 +562,12 @@ public class MetricsApi {
    * Query raw metric rows with filtering by name, time range, and dimensions.
    * @param filterName  (required)
    * @param filterRecordedAt  (optional)
+   * @param sort Field to sort by. Prefix with &#x60;-&#x60; for descending order. Default: &#x60;-recorded_at&#x60;. Allowed values: &#x60;recorded_at&#x60;, &#x60;-recorded_at&#x60;, &#x60;value&#x60;, &#x60;-value&#x60;. (optional, default to -recorded_at)
    * @return MetricListResponse
    * @throws ApiException if fails to make API call
    */
-  public MetricListResponse listMetrics(@jakarta.annotation.Nonnull String filterName, @jakarta.annotation.Nullable String filterRecordedAt) throws ApiException {
-    return listMetrics(filterName, filterRecordedAt, null);
+  public MetricListResponse listMetrics(@jakarta.annotation.Nonnull String filterName, @jakarta.annotation.Nullable String filterRecordedAt, @jakarta.annotation.Nullable String sort) throws ApiException {
+    return listMetrics(filterName, filterRecordedAt, sort, null);
   }
 
   /**
@@ -549,12 +575,13 @@ public class MetricsApi {
    * Query raw metric rows with filtering by name, time range, and dimensions.
    * @param filterName  (required)
    * @param filterRecordedAt  (optional)
+   * @param sort Field to sort by. Prefix with &#x60;-&#x60; for descending order. Default: &#x60;-recorded_at&#x60;. Allowed values: &#x60;recorded_at&#x60;, &#x60;-recorded_at&#x60;, &#x60;value&#x60;, &#x60;-value&#x60;. (optional, default to -recorded_at)
    * @param headers Optional headers to include in the request
    * @return MetricListResponse
    * @throws ApiException if fails to make API call
    */
-  public MetricListResponse listMetrics(@jakarta.annotation.Nonnull String filterName, @jakarta.annotation.Nullable String filterRecordedAt, Map<String, String> headers) throws ApiException {
-    ApiResponse<MetricListResponse> localVarResponse = listMetricsWithHttpInfo(filterName, filterRecordedAt, headers);
+  public MetricListResponse listMetrics(@jakarta.annotation.Nonnull String filterName, @jakarta.annotation.Nullable String filterRecordedAt, @jakarta.annotation.Nullable String sort, Map<String, String> headers) throws ApiException {
+    ApiResponse<MetricListResponse> localVarResponse = listMetricsWithHttpInfo(filterName, filterRecordedAt, sort, headers);
     return localVarResponse.getData();
   }
 
@@ -563,11 +590,12 @@ public class MetricsApi {
    * Query raw metric rows with filtering by name, time range, and dimensions.
    * @param filterName  (required)
    * @param filterRecordedAt  (optional)
+   * @param sort Field to sort by. Prefix with &#x60;-&#x60; for descending order. Default: &#x60;-recorded_at&#x60;. Allowed values: &#x60;recorded_at&#x60;, &#x60;-recorded_at&#x60;, &#x60;value&#x60;, &#x60;-value&#x60;. (optional, default to -recorded_at)
    * @return ApiResponse&lt;MetricListResponse&gt;
    * @throws ApiException if fails to make API call
    */
-  public ApiResponse<MetricListResponse> listMetricsWithHttpInfo(@jakarta.annotation.Nonnull String filterName, @jakarta.annotation.Nullable String filterRecordedAt) throws ApiException {
-    return listMetricsWithHttpInfo(filterName, filterRecordedAt, null);
+  public ApiResponse<MetricListResponse> listMetricsWithHttpInfo(@jakarta.annotation.Nonnull String filterName, @jakarta.annotation.Nullable String filterRecordedAt, @jakarta.annotation.Nullable String sort) throws ApiException {
+    return listMetricsWithHttpInfo(filterName, filterRecordedAt, sort, null);
   }
 
   /**
@@ -575,12 +603,13 @@ public class MetricsApi {
    * Query raw metric rows with filtering by name, time range, and dimensions.
    * @param filterName  (required)
    * @param filterRecordedAt  (optional)
+   * @param sort Field to sort by. Prefix with &#x60;-&#x60; for descending order. Default: &#x60;-recorded_at&#x60;. Allowed values: &#x60;recorded_at&#x60;, &#x60;-recorded_at&#x60;, &#x60;value&#x60;, &#x60;-value&#x60;. (optional, default to -recorded_at)
    * @param headers Optional headers to include in the request
    * @return ApiResponse&lt;MetricListResponse&gt;
    * @throws ApiException if fails to make API call
    */
-  public ApiResponse<MetricListResponse> listMetricsWithHttpInfo(@jakarta.annotation.Nonnull String filterName, @jakarta.annotation.Nullable String filterRecordedAt, Map<String, String> headers) throws ApiException {
-    HttpRequest.Builder localVarRequestBuilder = listMetricsRequestBuilder(filterName, filterRecordedAt, headers);
+  public ApiResponse<MetricListResponse> listMetricsWithHttpInfo(@jakarta.annotation.Nonnull String filterName, @jakarta.annotation.Nullable String filterRecordedAt, @jakarta.annotation.Nullable String sort, Map<String, String> headers) throws ApiException {
+    HttpRequest.Builder localVarRequestBuilder = listMetricsRequestBuilder(filterName, filterRecordedAt, sort, headers);
     try {
       HttpResponse<InputStream> localVarResponse = memberVarHttpClient.send(
           localVarRequestBuilder.build(),
@@ -627,7 +656,7 @@ public class MetricsApi {
     }
   }
 
-  private HttpRequest.Builder listMetricsRequestBuilder(@jakarta.annotation.Nonnull String filterName, @jakarta.annotation.Nullable String filterRecordedAt, Map<String, String> headers) throws ApiException {
+  private HttpRequest.Builder listMetricsRequestBuilder(@jakarta.annotation.Nonnull String filterName, @jakarta.annotation.Nullable String filterRecordedAt, @jakarta.annotation.Nullable String sort, Map<String, String> headers) throws ApiException {
     // verify the required parameter 'filterName' is set
     if (filterName == null) {
       throw new ApiException(400, "Missing the required parameter 'filterName' when calling listMetrics");
@@ -644,6 +673,8 @@ public class MetricsApi {
     localVarQueryParams.addAll(ApiClient.parameterToPairs("filter[name]", filterName));
     localVarQueryParameterBaseName = "filter[recorded_at]";
     localVarQueryParams.addAll(ApiClient.parameterToPairs("filter[recorded_at]", filterRecordedAt));
+    localVarQueryParameterBaseName = "sort";
+    localVarQueryParams.addAll(ApiClient.parameterToPairs("sort", sort));
 
     if (!localVarQueryParams.isEmpty() || localVarQueryStringJoiner.length() != 0) {
       StringJoiner queryJoiner = new StringJoiner("&");

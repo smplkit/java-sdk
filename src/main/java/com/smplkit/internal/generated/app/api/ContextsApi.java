@@ -516,23 +516,25 @@ public class ContextsApi {
    * List Contexts
    * List all context instances for the authenticated account.
    * @param filterContextType  (optional)
+   * @param sort Field to sort by. Prefix with &#x60;-&#x60; for descending order. Default: &#x60;key&#x60;. Allowed values: &#x60;created_at&#x60;, &#x60;-created_at&#x60;, &#x60;key&#x60;, &#x60;-key&#x60;, &#x60;name&#x60;, &#x60;-name&#x60;, &#x60;updated_at&#x60;, &#x60;-updated_at&#x60;. (optional, default to key)
    * @return ContextListResponse
    * @throws ApiException if fails to make API call
    */
-  public ContextListResponse listContexts(@jakarta.annotation.Nullable String filterContextType) throws ApiException {
-    return listContexts(filterContextType, null);
+  public ContextListResponse listContexts(@jakarta.annotation.Nullable String filterContextType, @jakarta.annotation.Nullable String sort) throws ApiException {
+    return listContexts(filterContextType, sort, null);
   }
 
   /**
    * List Contexts
    * List all context instances for the authenticated account.
    * @param filterContextType  (optional)
+   * @param sort Field to sort by. Prefix with &#x60;-&#x60; for descending order. Default: &#x60;key&#x60;. Allowed values: &#x60;created_at&#x60;, &#x60;-created_at&#x60;, &#x60;key&#x60;, &#x60;-key&#x60;, &#x60;name&#x60;, &#x60;-name&#x60;, &#x60;updated_at&#x60;, &#x60;-updated_at&#x60;. (optional, default to key)
    * @param headers Optional headers to include in the request
    * @return ContextListResponse
    * @throws ApiException if fails to make API call
    */
-  public ContextListResponse listContexts(@jakarta.annotation.Nullable String filterContextType, Map<String, String> headers) throws ApiException {
-    ApiResponse<ContextListResponse> localVarResponse = listContextsWithHttpInfo(filterContextType, headers);
+  public ContextListResponse listContexts(@jakarta.annotation.Nullable String filterContextType, @jakarta.annotation.Nullable String sort, Map<String, String> headers) throws ApiException {
+    ApiResponse<ContextListResponse> localVarResponse = listContextsWithHttpInfo(filterContextType, sort, headers);
     return localVarResponse.getData();
   }
 
@@ -540,23 +542,25 @@ public class ContextsApi {
    * List Contexts
    * List all context instances for the authenticated account.
    * @param filterContextType  (optional)
+   * @param sort Field to sort by. Prefix with &#x60;-&#x60; for descending order. Default: &#x60;key&#x60;. Allowed values: &#x60;created_at&#x60;, &#x60;-created_at&#x60;, &#x60;key&#x60;, &#x60;-key&#x60;, &#x60;name&#x60;, &#x60;-name&#x60;, &#x60;updated_at&#x60;, &#x60;-updated_at&#x60;. (optional, default to key)
    * @return ApiResponse&lt;ContextListResponse&gt;
    * @throws ApiException if fails to make API call
    */
-  public ApiResponse<ContextListResponse> listContextsWithHttpInfo(@jakarta.annotation.Nullable String filterContextType) throws ApiException {
-    return listContextsWithHttpInfo(filterContextType, null);
+  public ApiResponse<ContextListResponse> listContextsWithHttpInfo(@jakarta.annotation.Nullable String filterContextType, @jakarta.annotation.Nullable String sort) throws ApiException {
+    return listContextsWithHttpInfo(filterContextType, sort, null);
   }
 
   /**
    * List Contexts
    * List all context instances for the authenticated account.
    * @param filterContextType  (optional)
+   * @param sort Field to sort by. Prefix with &#x60;-&#x60; for descending order. Default: &#x60;key&#x60;. Allowed values: &#x60;created_at&#x60;, &#x60;-created_at&#x60;, &#x60;key&#x60;, &#x60;-key&#x60;, &#x60;name&#x60;, &#x60;-name&#x60;, &#x60;updated_at&#x60;, &#x60;-updated_at&#x60;. (optional, default to key)
    * @param headers Optional headers to include in the request
    * @return ApiResponse&lt;ContextListResponse&gt;
    * @throws ApiException if fails to make API call
    */
-  public ApiResponse<ContextListResponse> listContextsWithHttpInfo(@jakarta.annotation.Nullable String filterContextType, Map<String, String> headers) throws ApiException {
-    HttpRequest.Builder localVarRequestBuilder = listContextsRequestBuilder(filterContextType, headers);
+  public ApiResponse<ContextListResponse> listContextsWithHttpInfo(@jakarta.annotation.Nullable String filterContextType, @jakarta.annotation.Nullable String sort, Map<String, String> headers) throws ApiException {
+    HttpRequest.Builder localVarRequestBuilder = listContextsRequestBuilder(filterContextType, sort, headers);
     try {
       HttpResponse<InputStream> localVarResponse = memberVarHttpClient.send(
           localVarRequestBuilder.build(),
@@ -603,7 +607,7 @@ public class ContextsApi {
     }
   }
 
-  private HttpRequest.Builder listContextsRequestBuilder(@jakarta.annotation.Nullable String filterContextType, Map<String, String> headers) throws ApiException {
+  private HttpRequest.Builder listContextsRequestBuilder(@jakarta.annotation.Nullable String filterContextType, @jakarta.annotation.Nullable String sort, Map<String, String> headers) throws ApiException {
 
     HttpRequest.Builder localVarRequestBuilder = HttpRequest.newBuilder();
 
@@ -614,6 +618,8 @@ public class ContextsApi {
     String localVarQueryParameterBaseName;
     localVarQueryParameterBaseName = "filter[context_type]";
     localVarQueryParams.addAll(ApiClient.parameterToPairs("filter[context_type]", filterContextType));
+    localVarQueryParameterBaseName = "sort";
+    localVarQueryParams.addAll(ApiClient.parameterToPairs("sort", sort));
 
     if (!localVarQueryParams.isEmpty() || localVarQueryStringJoiner.length() != 0) {
       StringJoiner queryJoiner = new StringJoiner("&");

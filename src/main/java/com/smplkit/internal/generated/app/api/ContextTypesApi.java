@@ -513,44 +513,48 @@ public class ContextTypesApi {
   /**
    * List Context Types
    * List all context types for the authenticated account.
+   * @param sort Field to sort by. Prefix with &#x60;-&#x60; for descending order. Default: &#x60;key&#x60;. Allowed values: &#x60;created_at&#x60;, &#x60;-created_at&#x60;, &#x60;key&#x60;, &#x60;-key&#x60;, &#x60;name&#x60;, &#x60;-name&#x60;, &#x60;updated_at&#x60;, &#x60;-updated_at&#x60;. (optional, default to key)
    * @return ContextTypeListResponse
    * @throws ApiException if fails to make API call
    */
-  public ContextTypeListResponse listContextTypes() throws ApiException {
-    return listContextTypes(null);
+  public ContextTypeListResponse listContextTypes(@jakarta.annotation.Nullable String sort) throws ApiException {
+    return listContextTypes(sort, null);
   }
 
   /**
    * List Context Types
    * List all context types for the authenticated account.
+   * @param sort Field to sort by. Prefix with &#x60;-&#x60; for descending order. Default: &#x60;key&#x60;. Allowed values: &#x60;created_at&#x60;, &#x60;-created_at&#x60;, &#x60;key&#x60;, &#x60;-key&#x60;, &#x60;name&#x60;, &#x60;-name&#x60;, &#x60;updated_at&#x60;, &#x60;-updated_at&#x60;. (optional, default to key)
    * @param headers Optional headers to include in the request
    * @return ContextTypeListResponse
    * @throws ApiException if fails to make API call
    */
-  public ContextTypeListResponse listContextTypes(Map<String, String> headers) throws ApiException {
-    ApiResponse<ContextTypeListResponse> localVarResponse = listContextTypesWithHttpInfo(headers);
+  public ContextTypeListResponse listContextTypes(@jakarta.annotation.Nullable String sort, Map<String, String> headers) throws ApiException {
+    ApiResponse<ContextTypeListResponse> localVarResponse = listContextTypesWithHttpInfo(sort, headers);
     return localVarResponse.getData();
   }
 
   /**
    * List Context Types
    * List all context types for the authenticated account.
+   * @param sort Field to sort by. Prefix with &#x60;-&#x60; for descending order. Default: &#x60;key&#x60;. Allowed values: &#x60;created_at&#x60;, &#x60;-created_at&#x60;, &#x60;key&#x60;, &#x60;-key&#x60;, &#x60;name&#x60;, &#x60;-name&#x60;, &#x60;updated_at&#x60;, &#x60;-updated_at&#x60;. (optional, default to key)
    * @return ApiResponse&lt;ContextTypeListResponse&gt;
    * @throws ApiException if fails to make API call
    */
-  public ApiResponse<ContextTypeListResponse> listContextTypesWithHttpInfo() throws ApiException {
-    return listContextTypesWithHttpInfo(null);
+  public ApiResponse<ContextTypeListResponse> listContextTypesWithHttpInfo(@jakarta.annotation.Nullable String sort) throws ApiException {
+    return listContextTypesWithHttpInfo(sort, null);
   }
 
   /**
    * List Context Types
    * List all context types for the authenticated account.
+   * @param sort Field to sort by. Prefix with &#x60;-&#x60; for descending order. Default: &#x60;key&#x60;. Allowed values: &#x60;created_at&#x60;, &#x60;-created_at&#x60;, &#x60;key&#x60;, &#x60;-key&#x60;, &#x60;name&#x60;, &#x60;-name&#x60;, &#x60;updated_at&#x60;, &#x60;-updated_at&#x60;. (optional, default to key)
    * @param headers Optional headers to include in the request
    * @return ApiResponse&lt;ContextTypeListResponse&gt;
    * @throws ApiException if fails to make API call
    */
-  public ApiResponse<ContextTypeListResponse> listContextTypesWithHttpInfo(Map<String, String> headers) throws ApiException {
-    HttpRequest.Builder localVarRequestBuilder = listContextTypesRequestBuilder(headers);
+  public ApiResponse<ContextTypeListResponse> listContextTypesWithHttpInfo(@jakarta.annotation.Nullable String sort, Map<String, String> headers) throws ApiException {
+    HttpRequest.Builder localVarRequestBuilder = listContextTypesRequestBuilder(sort, headers);
     try {
       HttpResponse<InputStream> localVarResponse = memberVarHttpClient.send(
           localVarRequestBuilder.build(),
@@ -597,13 +601,28 @@ public class ContextTypesApi {
     }
   }
 
-  private HttpRequest.Builder listContextTypesRequestBuilder(Map<String, String> headers) throws ApiException {
+  private HttpRequest.Builder listContextTypesRequestBuilder(@jakarta.annotation.Nullable String sort, Map<String, String> headers) throws ApiException {
 
     HttpRequest.Builder localVarRequestBuilder = HttpRequest.newBuilder();
 
     String localVarPath = "/api/v1/context_types";
 
-    localVarRequestBuilder.uri(URI.create(memberVarBaseUri + localVarPath));
+    List<Pair> localVarQueryParams = new ArrayList<>();
+    StringJoiner localVarQueryStringJoiner = new StringJoiner("&");
+    String localVarQueryParameterBaseName;
+    localVarQueryParameterBaseName = "sort";
+    localVarQueryParams.addAll(ApiClient.parameterToPairs("sort", sort));
+
+    if (!localVarQueryParams.isEmpty() || localVarQueryStringJoiner.length() != 0) {
+      StringJoiner queryJoiner = new StringJoiner("&");
+      localVarQueryParams.forEach(p -> queryJoiner.add(p.getName() + '=' + p.getValue()));
+      if (localVarQueryStringJoiner.length() != 0) {
+        queryJoiner.add(localVarQueryStringJoiner.toString());
+      }
+      localVarRequestBuilder.uri(URI.create(memberVarBaseUri + localVarPath + '?' + queryJoiner.toString()));
+    } else {
+      localVarRequestBuilder.uri(URI.create(memberVarBaseUri + localVarPath));
+    }
 
     localVarRequestBuilder.header("Accept", "application/vnd.api+json");
 

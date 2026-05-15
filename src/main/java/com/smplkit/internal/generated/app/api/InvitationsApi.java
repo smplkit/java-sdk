@@ -418,11 +418,12 @@ public class InvitationsApi {
    * List invitations. Authenticated admins list invitations for their own account and may narrow by status. Unauthenticated callers must pass &#x60;&#x60;filter[token]&#x60;&#x60; to look up a specific invitation by its token — used to render the invitation preview before sign-in. The token-filter path always returns an array of 0 or 1 elements.
    * @param filterStatus  (optional)
    * @param filterToken  (optional)
+   * @param sort Field to sort by. Prefix with &#x60;-&#x60; for descending order. Default: &#x60;-created_at&#x60;. Allowed values: &#x60;created_at&#x60;, &#x60;-created_at&#x60;, &#x60;email&#x60;, &#x60;-email&#x60;, &#x60;status&#x60;, &#x60;-status&#x60;. (optional, default to -created_at)
    * @return InvitationListResponse
    * @throws ApiException if fails to make API call
    */
-  public InvitationListResponse listInvitations(@jakarta.annotation.Nullable String filterStatus, @jakarta.annotation.Nullable String filterToken) throws ApiException {
-    return listInvitations(filterStatus, filterToken, null);
+  public InvitationListResponse listInvitations(@jakarta.annotation.Nullable String filterStatus, @jakarta.annotation.Nullable String filterToken, @jakarta.annotation.Nullable String sort) throws ApiException {
+    return listInvitations(filterStatus, filterToken, sort, null);
   }
 
   /**
@@ -430,12 +431,13 @@ public class InvitationsApi {
    * List invitations. Authenticated admins list invitations for their own account and may narrow by status. Unauthenticated callers must pass &#x60;&#x60;filter[token]&#x60;&#x60; to look up a specific invitation by its token — used to render the invitation preview before sign-in. The token-filter path always returns an array of 0 or 1 elements.
    * @param filterStatus  (optional)
    * @param filterToken  (optional)
+   * @param sort Field to sort by. Prefix with &#x60;-&#x60; for descending order. Default: &#x60;-created_at&#x60;. Allowed values: &#x60;created_at&#x60;, &#x60;-created_at&#x60;, &#x60;email&#x60;, &#x60;-email&#x60;, &#x60;status&#x60;, &#x60;-status&#x60;. (optional, default to -created_at)
    * @param headers Optional headers to include in the request
    * @return InvitationListResponse
    * @throws ApiException if fails to make API call
    */
-  public InvitationListResponse listInvitations(@jakarta.annotation.Nullable String filterStatus, @jakarta.annotation.Nullable String filterToken, Map<String, String> headers) throws ApiException {
-    ApiResponse<InvitationListResponse> localVarResponse = listInvitationsWithHttpInfo(filterStatus, filterToken, headers);
+  public InvitationListResponse listInvitations(@jakarta.annotation.Nullable String filterStatus, @jakarta.annotation.Nullable String filterToken, @jakarta.annotation.Nullable String sort, Map<String, String> headers) throws ApiException {
+    ApiResponse<InvitationListResponse> localVarResponse = listInvitationsWithHttpInfo(filterStatus, filterToken, sort, headers);
     return localVarResponse.getData();
   }
 
@@ -444,11 +446,12 @@ public class InvitationsApi {
    * List invitations. Authenticated admins list invitations for their own account and may narrow by status. Unauthenticated callers must pass &#x60;&#x60;filter[token]&#x60;&#x60; to look up a specific invitation by its token — used to render the invitation preview before sign-in. The token-filter path always returns an array of 0 or 1 elements.
    * @param filterStatus  (optional)
    * @param filterToken  (optional)
+   * @param sort Field to sort by. Prefix with &#x60;-&#x60; for descending order. Default: &#x60;-created_at&#x60;. Allowed values: &#x60;created_at&#x60;, &#x60;-created_at&#x60;, &#x60;email&#x60;, &#x60;-email&#x60;, &#x60;status&#x60;, &#x60;-status&#x60;. (optional, default to -created_at)
    * @return ApiResponse&lt;InvitationListResponse&gt;
    * @throws ApiException if fails to make API call
    */
-  public ApiResponse<InvitationListResponse> listInvitationsWithHttpInfo(@jakarta.annotation.Nullable String filterStatus, @jakarta.annotation.Nullable String filterToken) throws ApiException {
-    return listInvitationsWithHttpInfo(filterStatus, filterToken, null);
+  public ApiResponse<InvitationListResponse> listInvitationsWithHttpInfo(@jakarta.annotation.Nullable String filterStatus, @jakarta.annotation.Nullable String filterToken, @jakarta.annotation.Nullable String sort) throws ApiException {
+    return listInvitationsWithHttpInfo(filterStatus, filterToken, sort, null);
   }
 
   /**
@@ -456,12 +459,13 @@ public class InvitationsApi {
    * List invitations. Authenticated admins list invitations for their own account and may narrow by status. Unauthenticated callers must pass &#x60;&#x60;filter[token]&#x60;&#x60; to look up a specific invitation by its token — used to render the invitation preview before sign-in. The token-filter path always returns an array of 0 or 1 elements.
    * @param filterStatus  (optional)
    * @param filterToken  (optional)
+   * @param sort Field to sort by. Prefix with &#x60;-&#x60; for descending order. Default: &#x60;-created_at&#x60;. Allowed values: &#x60;created_at&#x60;, &#x60;-created_at&#x60;, &#x60;email&#x60;, &#x60;-email&#x60;, &#x60;status&#x60;, &#x60;-status&#x60;. (optional, default to -created_at)
    * @param headers Optional headers to include in the request
    * @return ApiResponse&lt;InvitationListResponse&gt;
    * @throws ApiException if fails to make API call
    */
-  public ApiResponse<InvitationListResponse> listInvitationsWithHttpInfo(@jakarta.annotation.Nullable String filterStatus, @jakarta.annotation.Nullable String filterToken, Map<String, String> headers) throws ApiException {
-    HttpRequest.Builder localVarRequestBuilder = listInvitationsRequestBuilder(filterStatus, filterToken, headers);
+  public ApiResponse<InvitationListResponse> listInvitationsWithHttpInfo(@jakarta.annotation.Nullable String filterStatus, @jakarta.annotation.Nullable String filterToken, @jakarta.annotation.Nullable String sort, Map<String, String> headers) throws ApiException {
+    HttpRequest.Builder localVarRequestBuilder = listInvitationsRequestBuilder(filterStatus, filterToken, sort, headers);
     try {
       HttpResponse<InputStream> localVarResponse = memberVarHttpClient.send(
           localVarRequestBuilder.build(),
@@ -508,7 +512,7 @@ public class InvitationsApi {
     }
   }
 
-  private HttpRequest.Builder listInvitationsRequestBuilder(@jakarta.annotation.Nullable String filterStatus, @jakarta.annotation.Nullable String filterToken, Map<String, String> headers) throws ApiException {
+  private HttpRequest.Builder listInvitationsRequestBuilder(@jakarta.annotation.Nullable String filterStatus, @jakarta.annotation.Nullable String filterToken, @jakarta.annotation.Nullable String sort, Map<String, String> headers) throws ApiException {
 
     HttpRequest.Builder localVarRequestBuilder = HttpRequest.newBuilder();
 
@@ -521,6 +525,8 @@ public class InvitationsApi {
     localVarQueryParams.addAll(ApiClient.parameterToPairs("filter[status]", filterStatus));
     localVarQueryParameterBaseName = "filter[token]";
     localVarQueryParams.addAll(ApiClient.parameterToPairs("filter[token]", filterToken));
+    localVarQueryParameterBaseName = "sort";
+    localVarQueryParams.addAll(ApiClient.parameterToPairs("sort", sort));
 
     if (!localVarQueryParams.isEmpty() || localVarQueryStringJoiner.length() != 0) {
       StringJoiner queryJoiner = new StringJoiner("&");
