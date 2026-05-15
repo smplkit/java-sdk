@@ -41,7 +41,7 @@ class ConfigClientWsEventsTest {
         // Default: empty list for init
         ConfigListResponse emptyList = new ConfigListResponse();
         emptyList.setData(List.of());
-        when(mockApi.listConfigs(null)).thenReturn(emptyList);
+        when(mockApi.listConfigs(null, null)).thenReturn(emptyList);
     }
 
     // -----------------------------------------------------------------------
@@ -55,7 +55,7 @@ class ConfigClientWsEventsTest {
                 Map.of("timeout", itemDef(30, ConfigItemDefinition.TypeEnum.NUMBER)), Map.of());
         ConfigListResponse initList = new ConfigListResponse();
         initList.setData(List.of(initial));
-        when(mockApi.listConfigs(null)).thenReturn(initList);
+        when(mockApi.listConfigs(null, null)).thenReturn(initList);
         configClient._connectInternal();
 
         AtomicReference<ConfigChangeEvent> received = new AtomicReference<>();
@@ -74,7 +74,7 @@ class ConfigClientWsEventsTest {
         assertFalse(received.get().isDeleted());
         // Scoped fetch: getConfig called, not listConfigs again
         verify(mockApi, times(1)).getConfig("my-config");
-        verify(mockApi, times(1)).listConfigs(null); // only initial
+        verify(mockApi, times(1)).listConfigs(null, null); // only initial
     }
 
     @Test
@@ -83,7 +83,7 @@ class ConfigClientWsEventsTest {
                 Map.of("timeout", itemDef(30, ConfigItemDefinition.TypeEnum.NUMBER)), Map.of());
         ConfigListResponse initList = new ConfigListResponse();
         initList.setData(List.of(initial));
-        when(mockApi.listConfigs(null)).thenReturn(initList);
+        when(mockApi.listConfigs(null, null)).thenReturn(initList);
         configClient._connectInternal();
 
         AtomicInteger count = new AtomicInteger();
@@ -119,7 +119,7 @@ class ConfigClientWsEventsTest {
                 Map.of("k", itemDef("v", ConfigItemDefinition.TypeEnum.STRING)), Map.of());
         ConfigListResponse initList = new ConfigListResponse();
         initList.setData(List.of(cfg));
-        when(mockApi.listConfigs(null)).thenReturn(initList);
+        when(mockApi.listConfigs(null, null)).thenReturn(initList);
         configClient._connectInternal();
 
         AtomicReference<ConfigChangeEvent> received = new AtomicReference<>();
@@ -133,7 +133,7 @@ class ConfigClientWsEventsTest {
         assertEquals("websocket", received.get().source());
         // No HTTP fetch
         verify(mockApi, never()).getConfig(any());
-        verify(mockApi, times(1)).listConfigs(null); // only initial
+        verify(mockApi, times(1)).listConfigs(null, null); // only initial
     }
 
     @Test
@@ -154,7 +154,7 @@ class ConfigClientWsEventsTest {
                 Map.of("k", itemDef("v", ConfigItemDefinition.TypeEnum.STRING)), Map.of());
         ConfigListResponse initList = new ConfigListResponse();
         initList.setData(List.of(cfg));
-        when(mockApi.listConfigs(null)).thenReturn(initList);
+        when(mockApi.listConfigs(null, null)).thenReturn(initList);
         configClient._connectInternal();
 
         AtomicInteger bCount = new AtomicInteger();
@@ -175,7 +175,7 @@ class ConfigClientWsEventsTest {
                 Map.of("val", itemDef(10, ConfigItemDefinition.TypeEnum.NUMBER)), Map.of());
         ConfigListResponse initList = new ConfigListResponse();
         initList.setData(List.of(initial));
-        when(mockApi.listConfigs(null)).thenReturn(initList);
+        when(mockApi.listConfigs(null, null)).thenReturn(initList);
         configClient._connectInternal();
 
         AtomicReference<ConfigChangeEvent> received = new AtomicReference<>();
@@ -186,19 +186,19 @@ class ConfigClientWsEventsTest {
                 Map.of("val", itemDef(20, ConfigItemDefinition.TypeEnum.NUMBER)), Map.of());
         ConfigListResponse updatedList = new ConfigListResponse();
         updatedList.setData(List.of(updated));
-        when(mockApi.listConfigs(null)).thenReturn(updatedList);
+        when(mockApi.listConfigs(null, null)).thenReturn(updatedList);
 
         configClient.simulateConfigsChanged(Map.of());
 
         assertNotNull(received.get(), "Listener should fire when content changes");
         // listConfigs called twice: once for init, once for configs_changed
-        verify(mockApi, times(2)).listConfigs(null);
+        verify(mockApi, times(2)).listConfigs(null, null);
     }
 
     @Test
     void configsChanged_beforeConnect_isNoOp() throws ApiException {
         configClient.simulateConfigsChanged(Map.of());
-        verify(mockApi, never()).listConfigs(any());
+        verify(mockApi, never()).listConfigs(any(), any());
     }
 
     // -----------------------------------------------------------------------
@@ -216,7 +216,7 @@ class ConfigClientWsEventsTest {
         configClient.simulateConfigChanged(Map.of("id", "some-config"));
 
         assertEquals(0, count.get(), "Listener should not fire when API fetch throws");
-        verify(mockApi, times(1)).listConfigs(null); // only initial call, not triggered by failed event
+        verify(mockApi, times(1)).listConfigs(null, null); // only initial call, not triggered by failed event
         verify(mockApi, times(1)).getConfig("some-config");
     }
 
@@ -227,7 +227,7 @@ class ConfigClientWsEventsTest {
                 Map.of("child-val", itemDef("initial", ConfigItemDefinition.TypeEnum.STRING)), Map.of());
         ConfigListResponse initList = new ConfigListResponse();
         initList.setData(List.of(childCfg));
-        when(mockApi.listConfigs(null)).thenReturn(initList);
+        when(mockApi.listConfigs(null, null)).thenReturn(initList);
         configClient._connectInternal();
 
         AtomicReference<ConfigChangeEvent> received = new AtomicReference<>();
@@ -244,7 +244,7 @@ class ConfigClientWsEventsTest {
                 Map.of("base", itemDef(100, ConfigItemDefinition.TypeEnum.NUMBER)), Map.of());
         ConfigListResponse bothConfigs = new ConfigListResponse();
         bothConfigs.setData(List.of(parentCfg, childWithParent));
-        when(mockApi.listConfigs(null)).thenReturn(bothConfigs);
+        when(mockApi.listConfigs(null, null)).thenReturn(bothConfigs);
 
         configClient.simulateConfigChanged(Map.of("id", "child-cfg"));
 
@@ -259,7 +259,7 @@ class ConfigClientWsEventsTest {
                 Map.of("child-val", itemDef("initial", ConfigItemDefinition.TypeEnum.STRING)), Map.of());
         ConfigListResponse initList = new ConfigListResponse();
         initList.setData(List.of(childCfg));
-        when(mockApi.listConfigs(null)).thenReturn(initList);
+        when(mockApi.listConfigs(null, null)).thenReturn(initList);
         configClient._connectInternal();
 
         AtomicReference<ConfigChangeEvent> received = new AtomicReference<>();
@@ -276,7 +276,7 @@ class ConfigClientWsEventsTest {
                 Map.of("x", itemDef(1, ConfigItemDefinition.TypeEnum.NUMBER)), Map.of());
         ConfigListResponse noParent = new ConfigListResponse();
         noParent.setData(List.of(otherCfg));
-        when(mockApi.listConfigs(null)).thenReturn(noParent);
+        when(mockApi.listConfigs(null, null)).thenReturn(noParent);
 
         configClient.simulateConfigChanged(Map.of("id", "child-cfg"));
 
@@ -289,7 +289,7 @@ class ConfigClientWsEventsTest {
         ConfigResource cfg = makeResource("empty-cfg", "Empty", Map.of(), Map.of());
         ConfigListResponse initList = new ConfigListResponse();
         initList.setData(List.of(cfg));
-        when(mockApi.listConfigs(null)).thenReturn(initList);
+        when(mockApi.listConfigs(null, null)).thenReturn(initList);
         configClient._connectInternal();
 
         AtomicReference<ConfigChangeEvent> received = new AtomicReference<>();
@@ -309,7 +309,7 @@ class ConfigClientWsEventsTest {
         ConfigResource cfg = makeResource("empty-throw-cfg", "EmptyThrow", Map.of(), Map.of());
         ConfigListResponse initList = new ConfigListResponse();
         initList.setData(List.of(cfg));
-        when(mockApi.listConfigs(null)).thenReturn(initList);
+        when(mockApi.listConfigs(null, null)).thenReturn(initList);
         configClient._connectInternal();
 
         configClient.onChange("empty-throw-cfg", e -> { throw new RuntimeException("empty delete crash"); });
@@ -324,7 +324,7 @@ class ConfigClientWsEventsTest {
                 Map.of("k", itemDef("v", ConfigItemDefinition.TypeEnum.STRING)), Map.of());
         ConfigListResponse initList = new ConfigListResponse();
         initList.setData(List.of(cfg));
-        when(mockApi.listConfigs(null)).thenReturn(initList);
+        when(mockApi.listConfigs(null, null)).thenReturn(initList);
         configClient._connectInternal();
 
         configClient.onChange("del-cfg", e -> { throw new RuntimeException("listener crash"); });
