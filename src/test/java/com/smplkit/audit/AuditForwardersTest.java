@@ -78,11 +78,11 @@ class AuditForwardersTest {
         ex.close();
     }
 
-    private static String forwarderResource(String name, String slug) {
+    private static String forwarderResource(String name, String description) {
         return "{\"id\":\"" + FWD_ID + "\",\"type\":\"forwarder\",\"attributes\":{"
-                + "\"name\":\"" + name + "\",\"slug\":\"" + slug + "\","
+                + "\"name\":\"" + name + "\",\"description\":\"" + description + "\","
                 + "\"forwarder_type\":\"DATADOG\",\"enabled\":true,"
-                + "\"http\":{\"method\":\"POST\",\"url\":\"https://siem.example.com/in\","
+                + "\"configuration\":{\"method\":\"POST\",\"url\":\"https://siem.example.com/in\","
                 + "\"headers\":[{\"name\":\"DD-API-KEY\",\"value\":\"<redacted>\"}],"
                 + "\"success_status\":\"2xx\"},"
                 + "\"data\":{},\"created_at\":\"2026-05-07T12:00:00Z\","
@@ -96,18 +96,20 @@ class AuditForwardersTest {
     @Test
     void create_returnsForwarder() throws Exception {
         handler.set(ex -> respondJson(ex, 201,
-                "{\"data\":" + forwarderResource("Datadog production", "datadog_production") + "}"));
+                "{\"data\":" + forwarderResource("Datadog production", "prod sink") + "}"));
         AuditForwarders fwds = new AuditForwarders(forwardersApi);
         CreateForwarderInput input = new CreateForwarderInput(
                 "Datadog production", ForwarderType.DATADOG,
-                new ForwarderHttp("https://siem.example.com/in"));
-        input.http.headers.add(new HttpHeader("DD-API-KEY", "real-secret"));
+                new HttpConfiguration("https://siem.example.com/in"));
+        input.description = "prod sink";
+        input.configuration.headers.add(new HttpHeader("DD-API-KEY", "real-secret"));
         input.filter = Map.of("==", java.util.List.of(1, 1));
+        input.transformType = "JSONATA";
         input.transform = "$";
         Forwarder fwd = fwds.create(input);
-        assertEquals("datadog_production", fwd.slug);
-        assertEquals(1, fwd.http.headers.size());
-        assertEquals("<redacted>", fwd.http.headers.get(0).value);
+        assertEquals("prod sink", fwd.description);
+        assertEquals(1, fwd.configuration.headers.size());
+        assertEquals("<redacted>", fwd.configuration.headers.get(0).value);
     }
 
     @Test
@@ -158,10 +160,10 @@ class AuditForwardersTest {
     @Test
     void update_success() throws Exception {
         handler.set(ex -> respondJson(ex, 200,
-                "{\"data\":" + forwarderResource("Renamed", "renamed") + "}"));
+                "{\"data\":" + forwarderResource("Renamed", "renamed sink") + "}"));
         AuditForwarders fwds = new AuditForwarders(forwardersApi);
         CreateForwarderInput in = new CreateForwarderInput("Renamed", ForwarderType.DATADOG,
-                new ForwarderHttp("https://x"));
+                new HttpConfiguration("https://x"));
         Forwarder fwd = fwds.update(FWD_ID, in);
         assertEquals("Renamed", fwd.name);
     }
@@ -194,40 +196,41 @@ class AuditForwardersTest {
         CreateForwarderInput cfi = new CreateForwarderInput();
         cfi.name = "x";
         ListForwardersInput lfi = new ListForwardersInput();
-        ForwarderHttp fh = new ForwarderHttp();
+        HttpConfiguration cfg = new HttpConfiguration();
         assertEquals("x", cfi.name);
         assertNull(lfi.forwarderType);
-        assertEquals("POST", fh.method);
+        assertEquals("POST", cfg.method);
     }
 
     @Test
     void create_nullForwarderType_passesNull() throws Exception {
         handler.set(ex -> respondJson(ex, 201,
                 "{\"data\":{\"id\":\"" + FWD_ID + "\",\"type\":\"forwarder\","
-                + "\"attributes\":{\"name\":\"x\",\"slug\":\"x\","
+                + "\"attributes\":{\"name\":\"x\","
                 + "\"enabled\":true,"
-                + "\"http\":{\"method\":\"POST\",\"url\":\"https://x\","
+                + "\"configuration\":{\"method\":\"POST\",\"url\":\"https://x\","
                 + "\"success_status\":\"2xx\"},"
                 + "\"created_at\":\"2026-05-07T12:00:00Z\","
                 + "\"updated_at\":\"2026-05-07T12:00:00Z\",\"version\":1}}}"));
         AuditForwarders fwds = new AuditForwarders(forwardersApi);
-        CreateForwarderInput in = new CreateForwarderInput("x", null, new ForwarderHttp("https://x"));
+        CreateForwarderInput in = new CreateForwarderInput("x", null, new HttpConfiguration("https://x"));
         Forwarder fwd = fwds.create(in);
         assertNull(fwd.forwarderType);
     }
 
     @Test
-    void forwarder_httpFromGen_nullSrc() throws Exception {
-        // Create a forwarder response with null http — exercises httpFromGen(null).
+    void forwarder_configurationFromGen_nullSrc() throws Exception {
+        // Create a forwarder response with null configuration — exercises
+        // configurationFromGen(null).
         handler.set(ex -> respondJson(ex, 200,
                 "{\"data\":{\"id\":\"" + FWD_ID + "\",\"type\":\"forwarder\","
-                + "\"attributes\":{\"name\":\"x\",\"slug\":\"x\","
+                + "\"attributes\":{\"name\":\"x\","
                 + "\"enabled\":false,"
                 + "\"created_at\":\"2026-05-07T12:00:00Z\","
                 + "\"updated_at\":\"2026-05-07T12:00:00Z\",\"version\":1}}}"));
         AuditForwarders fwds = new AuditForwarders(forwardersApi);
         Forwarder fwd = fwds.get(FWD_ID);
-        assertNotNull(fwd.http);
+        assertNotNull(fwd.configuration);
         assertFalse(fwd.enabled);
     }
 

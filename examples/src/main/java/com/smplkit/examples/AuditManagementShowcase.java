@@ -14,8 +14,8 @@ package com.smplkit.examples;
 
 import com.smplkit.audit.CreateForwarderInput;
 import com.smplkit.audit.Forwarder;
-import com.smplkit.audit.ForwarderHttp;
 import com.smplkit.audit.ForwarderType;
+import com.smplkit.audit.HttpConfiguration;
 import com.smplkit.audit.HttpHeader;
 import com.smplkit.audit.ListForwardersInput;
 import com.smplkit.audit.ListForwardersPage;
@@ -53,17 +53,18 @@ public final class AuditManagementShowcase {
             // create a forwarder
             CreateForwarderInput createInput = new CreateForwarderInput(
                     forwarderName, ForwarderType.HTTP,
-                    new ForwarderHttp("https://httpbin.org/post"));
-            createInput.http.headers.add(new HttpHeader("X-Showcase", "ok"));
-            createInput.http.successStatus = "2xx";
+                    new HttpConfiguration("https://httpbin.org/post"));
+            createInput.configuration.headers.add(new HttpHeader("X-Showcase", "ok"));
+            createInput.configuration.successStatus = "2xx";
             createInput.filter = INVOICE_FILTER;
+            createInput.transformType = "JSONATA";
             createInput.transform = SIEM_TRANSFORM;
             Forwarder forwarder = manage.audit.forwarders.create(createInput);
             assert forwarder.name.equals(forwarderName) : "name mismatch";
             assert forwarder.enabled : "expected enabled=true";
             assert INVOICE_FILTER.equals(forwarder.filter) : "filter mismatch";
             assert SIEM_TRANSFORM.equals(forwarder.transform) : "transform mismatch";
-            System.out.println("Created forwarder: " + forwarder.slug);
+            System.out.println("Created forwarder: " + forwarder.id);
 
             // fetch a forwarder
             Forwarder fetched = manage.audit.forwarders.get(forwarder.id);
@@ -83,11 +84,12 @@ public final class AuditManagementShowcase {
             String renamed = forwarder.name + "-renamed";
             CreateForwarderInput updateInput = new CreateForwarderInput(
                     renamed, forwarder.forwarderType,
-                    new ForwarderHttp("https://httpbin.org/post"));
-            updateInput.http.headers.add(new HttpHeader("X-Showcase", "ok"));
-            updateInput.http.successStatus = "2xx";
+                    new HttpConfiguration("https://httpbin.org/post"));
+            updateInput.configuration.headers.add(new HttpHeader("X-Showcase", "ok"));
+            updateInput.configuration.successStatus = "2xx";
             updateInput.enabled = false;
             updateInput.filter = INVOICE_FILTER;
+            updateInput.transformType = "JSONATA";
             updateInput.transform = SIEM_TRANSFORM;
             Forwarder updated = manage.audit.forwarders.update(forwarder.id, updateInput);
             assert updated.name.equals(renamed) : "updated name mismatch";
@@ -99,7 +101,7 @@ public final class AuditManagementShowcase {
             ListForwardersPage remaining = manage.audit.forwarders.list(new ListForwardersInput());
             assert remaining.forwarders.stream().noneMatch(f -> f.id.equals(forwarder.id))
                     : "deleted forwarder still in list";
-            System.out.println("Deleted forwarder: " + forwarder.slug);
+            System.out.println("Deleted forwarder: " + forwarder.id);
 
             System.out.println("Done!");
         }
