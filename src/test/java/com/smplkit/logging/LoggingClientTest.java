@@ -1096,13 +1096,15 @@ class LoggingClientTest {
                 .thenReturn(buildLoggerResponse("com.acme.wstest", "com.acme.wstest",
                         "wstest", "WARN", true));
 
-        // Simulate a WS logger_changed event — scoped fetch fires key-scoped listener
+        // Simulate a WS logger_changed event — fires key-scoped listener AND
+        // global listener once (any resolved-level delta fires global once).
         client.simulateLoggerChanged(Map.of("id", "com.acme.wstest"));
 
         assertNotNull(receivedKeyed.get());
         assertEquals("websocket", receivedKeyed.get().source());
-        // Global listener is NOT fired by scoped logger_changed (only by loggers_changed/full fetch)
-        assertNull(receivedGlobal.get());
+        assertNotNull(receivedGlobal.get(),
+                "Global listener fires once when any tracked logger's resolved level changed");
+        assertEquals("websocket", receivedGlobal.get().source());
     }
 
     @Test

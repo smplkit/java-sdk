@@ -113,22 +113,75 @@ class LoggingClientWsEventsTest {
     }
 
     @Test
-    void loggerChanged_globalListenerNotFiredByScopedEvent() throws ApiException {
-        // Global listener should NOT fire for logger_changed; only loggers_changed fires global
+    void loggerChanged_levelUnchanged_doesNotFireGlobalOrScoped() throws ApiException {
+        // Diff-based firing: when the resolved level does not move, no listener
+        // fires (key-scoped or global). Mirrors the negative check that protects
+        // against a raw-diff implementation firing on cosmetic field edits.
         stubManagedLoggerStart("com.acme.service", "INFO");
         client.registerAdapter(noopAdapter("com.acme.service", "INFO"));
         client.install();
 
         AtomicInteger globalCount = new AtomicInteger();
+        AtomicInteger keyedCount = new AtomicInteger();
         client.onChange(e -> globalCount.incrementAndGet());
-        globalCount.set(0); // clear start event
+        client.onChange("com.acme.service", e -> keyedCount.incrementAndGet());
+        globalCount.set(0);
+        keyedCount.set(0);
 
         when(mockLoggersApi.getLogger("com.acme.service"))
-                .thenReturn(buildLoggerResponse("com.acme.service", "WARN", true));
+                .thenReturn(buildLoggerResponse("com.acme.service", "INFO", true));
 
         client.simulateLoggerChanged(Map.of("id", "com.acme.service"));
 
-        assertEquals(0, globalCount.get(), "Global listener should not fire for scoped logger_changed");
+        assertEquals(0, globalCount.get(), "Global listener must not fire when resolved level unchanged");
+        assertEquals(0, keyedCount.get(), "Scoped listener must not fire when resolved level unchanged");
+    }
+
+    @Test
+    void loggerChanged_dotAncestor_firesDescendantListener() throws ApiException {
+        // Two managed loggers:
+        //   com.acme         — own level WARN (the dot-ancestor)
+        //   com.acme.payments — no own level, no group; inherits via dot-ancestry from com.acme
+        // Server flips com.acme to ERROR. com.acme.payments now resolves to ERROR
+        // and its key-scoped listener must fire.
+        LoggerResource ancestor = buildLoggerResource("com.acme", "WARN", true);
+        LoggerResource child = buildLoggerResource("com.acme.payments", null, true);
+        LoggerListResponse loggers = new LoggerListResponse();
+        loggers.setData(new ArrayList<>(List.of(ancestor, child)));
+        when(mockLoggersApi.listLoggers(isNull(), isNull(), isNull(), isNull(), any(), any(), isNull()))
+                .thenReturn(loggers);
+        when(mockLogGroupsApi.listLogGroups(isNull(), any(), any(), isNull()))
+                .thenReturn(new LogGroupListResponse().data(new ArrayList<>()));
+
+        LoggingAdapter adapter = mock(LoggingAdapter.class);
+        when(adapter.name()).thenReturn("noop");
+        when(adapter.discover()).thenReturn(List.of(
+                new com.smplkit.logging.adapters.DiscoveredLogger("com.acme", "INFO"),
+                new com.smplkit.logging.adapters.DiscoveredLogger("com.acme.payments", "INFO")
+        ));
+        client.registerAdapter(adapter);
+        client.install();
+
+        // Sanity: install pushed WARN to both adapters (descendant inherits ancestor's WARN)
+        verify(adapter, times(1)).applyLevel("com.acme", "WARN");
+        verify(adapter, times(1)).applyLevel("com.acme.payments", "WARN");
+
+        AtomicReference<LoggerChangeEvent> ancestorEvent = new AtomicReference<>();
+        AtomicReference<LoggerChangeEvent> childEvent = new AtomicReference<>();
+        client.onChange("com.acme", ancestorEvent::set);
+        client.onChange("com.acme.payments", childEvent::set);
+
+        // Server flips com.acme to ERROR
+        when(mockLoggersApi.getLogger("com.acme"))
+                .thenReturn(buildLoggerResponse("com.acme", "ERROR", true));
+        client.simulateLoggerChanged(Map.of("id", "com.acme"));
+
+        verify(adapter, times(1)).applyLevel("com.acme", "ERROR");
+        verify(adapter, times(1)).applyLevel("com.acme.payments", "ERROR");
+        assertNotNull(ancestorEvent.get(), "ancestor listener fires");
+        assertEquals(LogLevel.ERROR, ancestorEvent.get().level());
+        assertNotNull(childEvent.get(), "dot-descendant listener must fire on ancestor change");
+        assertEquals(LogLevel.ERROR, childEvent.get().level());
     }
 
     // -----------------------------------------------------------------------
@@ -177,6 +230,62 @@ class LoggingClientWsEventsTest {
         client.simulateLoggerDeleted(Map.of()); // no "id"
 
         assertEquals(0, count.get());
+    }
+
+    @Test
+    void loggerDeleted_listenerException_doesNotStopProcessing() throws ApiException {
+        stubManagedLoggerStart("crashy.logger", "INFO");
+        client.registerAdapter(noopAdapter("crashy.logger", "INFO"));
+        client.install();
+
+        AtomicInteger okCount = new AtomicInteger();
+        client.onChange("crashy.logger", e -> { throw new RuntimeException("boom"); });
+        client.onChange("crashy.logger", e -> okCount.incrementAndGet());
+
+        assertDoesNotThrow(() -> client.simulateLoggerDeleted(Map.of("id", "crashy.logger")));
+        assertEquals(1, okCount.get(), "Second listener still fires after first throws");
+    }
+
+    @Test
+    void loggerDeleted_dotAncestor_reappliesFallbackForDescendant() throws ApiException {
+        // Same shape as the dot-ancestry change test, but the ancestor is
+        // deleted instead of mutated. The descendant must re-resolve (to INFO
+        // fallback here) and its listener must fire.
+        LoggerResource ancestor = buildLoggerResource("com.acme", "WARN", true);
+        LoggerResource child = buildLoggerResource("com.acme.payments", null, true);
+        LoggerListResponse loggers = new LoggerListResponse();
+        loggers.setData(new ArrayList<>(List.of(ancestor, child)));
+        when(mockLoggersApi.listLoggers(isNull(), isNull(), isNull(), isNull(), any(), any(), isNull()))
+                .thenReturn(loggers);
+        when(mockLogGroupsApi.listLogGroups(isNull(), any(), any(), isNull()))
+                .thenReturn(new LogGroupListResponse().data(new ArrayList<>()));
+
+        LoggingAdapter adapter = mock(LoggingAdapter.class);
+        when(adapter.name()).thenReturn("noop");
+        when(adapter.discover()).thenReturn(List.of(
+                new com.smplkit.logging.adapters.DiscoveredLogger("com.acme", "INFO"),
+                new com.smplkit.logging.adapters.DiscoveredLogger("com.acme.payments", "INFO")
+        ));
+        client.registerAdapter(adapter);
+        client.install();
+
+        verify(adapter, times(1)).applyLevel("com.acme", "WARN");
+        verify(adapter, times(1)).applyLevel("com.acme.payments", "WARN");
+
+        AtomicReference<LoggerChangeEvent> ancestorEvent = new AtomicReference<>();
+        AtomicReference<LoggerChangeEvent> childEvent = new AtomicReference<>();
+        client.onChange("com.acme", ancestorEvent::set);
+        client.onChange("com.acme.payments", childEvent::set);
+
+        client.simulateLoggerDeleted(Map.of("id", "com.acme"));
+
+        // Ancestor key gets the synthetic deleted=true event
+        assertNotNull(ancestorEvent.get());
+        assertTrue(ancestorEvent.get().isDeleted());
+        // Descendant re-resolves to INFO fallback; adapter and listener notified
+        verify(adapter, times(1)).applyLevel("com.acme.payments", "INFO");
+        assertNotNull(childEvent.get(), "dot-descendant listener must fire on ancestor deletion");
+        assertEquals(LogLevel.INFO, childEvent.get().level());
     }
 
     // -----------------------------------------------------------------------

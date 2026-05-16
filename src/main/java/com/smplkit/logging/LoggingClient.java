@@ -438,10 +438,10 @@ public final class LoggingClient {
         }
         Debug.log("websocket", "logger_changed event received, key=" + loggerKey);
 
-        // Snapshot pre-state for this logger
-        Map<String, Object> preEntry = loggersCache.get(loggerKey);
-        String preLevel = preEntry != null
-                ? Resolution.resolveLevel(loggerKey, environment, loggersCache, groupsCache) : null;
+        // Snapshot pre-levels across ALL tracked loggers so dot-descendants
+        // (which inherit from this key when they have no own level/group) get
+        // re-resolved and their listeners fire on resolved-level deltas.
+        Map<String, String> preLevels = snapshotLevels();
 
         // Scoped fetch: GET /loggers/{key}
         try {
@@ -463,16 +463,10 @@ public final class LoggingClient {
             return;
         }
 
-        String postLevel = Resolution.resolveLevel(loggerKey, environment, loggersCache, groupsCache);
-
-        // Only fire if level actually changed
-        if (java.util.Objects.equals(preLevel, postLevel)) {
-            Debug.log("websocket", "logger_changed: level unchanged for key=" + loggerKey + ", no listeners fired");
-            return;
-        }
-
-        // Apply level and fire listeners
-        applyLevelForKey(loggerKey, postLevel, "websocket");
+        // Diff-based re-apply: pushes new levels to adapters and fires
+        // key-scoped listeners for every tracked logger whose resolved level
+        // changed — including dot-descendants of the changed key.
+        diffAndFireLevels(preLevels, "websocket");
     }
 
     private void handleLoggerDeleted(Map<String, Object> data) {
@@ -484,12 +478,30 @@ public final class LoggingClient {
         }
         Debug.log("websocket", "logger_deleted event received, key=" + loggerKey);
 
-        // Remove from cache — no HTTP fetch
-        loggersCache.remove(loggerKey);
+        // Snapshot pre-levels for all tracked loggers so dot-descendants get
+        // re-resolved when the deleted key was a dot-ancestor.
+        Map<String, String> preLevels = snapshotLevels();
 
-        // Fire listener with deleted=true
-        LoggerChangeEvent event = new LoggerChangeEvent(loggerKey, null, "websocket", true);
-        fireChangeListeners(loggerKey, event);
+        boolean existed = loggersCache.remove(loggerKey) != null;
+
+        // Diff-based re-apply for dependent loggers whose resolved level changed.
+        diffAndFireLevels(preLevels, "websocket");
+
+        // Synthetic deleted=true event for the deleted key itself (subscribers
+        // may have registered on this exact key).
+        if (existed) {
+            LoggerChangeEvent event = new LoggerChangeEvent(loggerKey, null, "websocket", true);
+            List<Consumer<LoggerChangeEvent>> scoped = keyListeners.get(loggerKey);
+            if (scoped != null) {
+                for (Consumer<LoggerChangeEvent> listener : scoped) {
+                    try {
+                        listener.accept(event);
+                    } catch (Exception e) {
+                        LOG.log(Level.WARNING, "Key-scoped change listener threw exception", e);
+                    }
+                }
+            }
+        }
     }
 
     private void handleGroupChanged(Map<String, Object> data) {
