@@ -514,61 +514,73 @@ public class LoggersApi {
 
   /**
    * List Loggers
-   * List loggers for this account.  Default sort is &#x60;key&#x60; ascending. Supports &#x60;filter[managed]&#x60; to narrow to managed (or unmanaged) loggers, &#x60;filter[service]&#x60; to keep only loggers observed in a specific service, and &#x60;filter[last_seen]&#x60; (interval notation &#x60;[&lt;from&gt;,*)&#x60;) to keep only loggers with a source observation at or after the given timestamp.
+   * List loggers for this account.  Default sort is &#x60;key&#x60; ascending. Supports &#x60;filter[managed]&#x60; to narrow to managed (or unmanaged) loggers, &#x60;filter[service]&#x60; to keep only loggers observed in a specific service, and &#x60;filter[last_seen]&#x60; (interval notation &#x60;[&lt;from&gt;,*)&#x60;) to keep only loggers with a source observation at or after the given timestamp.  &#x60;&#x60;filter[service]&#x60;&#x60; and &#x60;&#x60;filter[last_seen]&#x60;&#x60; are applied via a cross-table membership check in Python after the SQL fetch, so pagination for those calls is applied in memory after the filter; the common path (no source-bound filter) paginates at the SQL level.
    * @param filterManaged  (optional)
    * @param filterService  (optional)
    * @param filterLastSeen  (optional)
    * @param sort Field to sort by. Prefix with &#x60;-&#x60; for descending order. Default: &#x60;key&#x60;. Allowed values: &#x60;created_at&#x60;, &#x60;-created_at&#x60;, &#x60;key&#x60;, &#x60;-key&#x60;, &#x60;name&#x60;, &#x60;-name&#x60;, &#x60;updated_at&#x60;, &#x60;-updated_at&#x60;. (optional, default to key)
+   * @param pageNumber 1-based page number to return. Optional; defaults to &#x60;1&#x60; when omitted. Must be &#x60;&gt;&#x3D; 1&#x60; — requests with a smaller value are rejected with a 400 error. (optional, default to 1)
+   * @param pageSize Number of items per page. Optional; defaults to &#x60;1000&#x60; when omitted. Must be between &#x60;1&#x60; and &#x60;1000&#x60; inclusive — requests outside that range are rejected with a 400 error. (optional, default to 1000)
+   * @param metaTotal When &#x60;true&#x60;, the response&#39;s &#x60;meta.pagination&#x60; block includes &#x60;total&#x60; (the total number of matching items across all pages) and &#x60;total_pages&#x60;. Computing these requires an extra &#x60;COUNT&#x60; query, so omit (or pass &#x60;false&#x60;) when the totals are not needed. Defaults to &#x60;false&#x60;. (optional, default to false)
    * @return LoggerListResponse
    * @throws ApiException if fails to make API call
    */
-  public LoggerListResponse listLoggers(@jakarta.annotation.Nullable Boolean filterManaged, @jakarta.annotation.Nullable String filterService, @jakarta.annotation.Nullable String filterLastSeen, @jakarta.annotation.Nullable String sort) throws ApiException {
-    return listLoggers(filterManaged, filterService, filterLastSeen, sort, null);
+  public LoggerListResponse listLoggers(@jakarta.annotation.Nullable Boolean filterManaged, @jakarta.annotation.Nullable String filterService, @jakarta.annotation.Nullable String filterLastSeen, @jakarta.annotation.Nullable String sort, @jakarta.annotation.Nullable Integer pageNumber, @jakarta.annotation.Nullable Integer pageSize, @jakarta.annotation.Nullable Boolean metaTotal) throws ApiException {
+    return listLoggers(filterManaged, filterService, filterLastSeen, sort, pageNumber, pageSize, metaTotal, null);
   }
 
   /**
    * List Loggers
-   * List loggers for this account.  Default sort is &#x60;key&#x60; ascending. Supports &#x60;filter[managed]&#x60; to narrow to managed (or unmanaged) loggers, &#x60;filter[service]&#x60; to keep only loggers observed in a specific service, and &#x60;filter[last_seen]&#x60; (interval notation &#x60;[&lt;from&gt;,*)&#x60;) to keep only loggers with a source observation at or after the given timestamp.
+   * List loggers for this account.  Default sort is &#x60;key&#x60; ascending. Supports &#x60;filter[managed]&#x60; to narrow to managed (or unmanaged) loggers, &#x60;filter[service]&#x60; to keep only loggers observed in a specific service, and &#x60;filter[last_seen]&#x60; (interval notation &#x60;[&lt;from&gt;,*)&#x60;) to keep only loggers with a source observation at or after the given timestamp.  &#x60;&#x60;filter[service]&#x60;&#x60; and &#x60;&#x60;filter[last_seen]&#x60;&#x60; are applied via a cross-table membership check in Python after the SQL fetch, so pagination for those calls is applied in memory after the filter; the common path (no source-bound filter) paginates at the SQL level.
    * @param filterManaged  (optional)
    * @param filterService  (optional)
    * @param filterLastSeen  (optional)
    * @param sort Field to sort by. Prefix with &#x60;-&#x60; for descending order. Default: &#x60;key&#x60;. Allowed values: &#x60;created_at&#x60;, &#x60;-created_at&#x60;, &#x60;key&#x60;, &#x60;-key&#x60;, &#x60;name&#x60;, &#x60;-name&#x60;, &#x60;updated_at&#x60;, &#x60;-updated_at&#x60;. (optional, default to key)
+   * @param pageNumber 1-based page number to return. Optional; defaults to &#x60;1&#x60; when omitted. Must be &#x60;&gt;&#x3D; 1&#x60; — requests with a smaller value are rejected with a 400 error. (optional, default to 1)
+   * @param pageSize Number of items per page. Optional; defaults to &#x60;1000&#x60; when omitted. Must be between &#x60;1&#x60; and &#x60;1000&#x60; inclusive — requests outside that range are rejected with a 400 error. (optional, default to 1000)
+   * @param metaTotal When &#x60;true&#x60;, the response&#39;s &#x60;meta.pagination&#x60; block includes &#x60;total&#x60; (the total number of matching items across all pages) and &#x60;total_pages&#x60;. Computing these requires an extra &#x60;COUNT&#x60; query, so omit (or pass &#x60;false&#x60;) when the totals are not needed. Defaults to &#x60;false&#x60;. (optional, default to false)
    * @param headers Optional headers to include in the request
    * @return LoggerListResponse
    * @throws ApiException if fails to make API call
    */
-  public LoggerListResponse listLoggers(@jakarta.annotation.Nullable Boolean filterManaged, @jakarta.annotation.Nullable String filterService, @jakarta.annotation.Nullable String filterLastSeen, @jakarta.annotation.Nullable String sort, Map<String, String> headers) throws ApiException {
-    ApiResponse<LoggerListResponse> localVarResponse = listLoggersWithHttpInfo(filterManaged, filterService, filterLastSeen, sort, headers);
+  public LoggerListResponse listLoggers(@jakarta.annotation.Nullable Boolean filterManaged, @jakarta.annotation.Nullable String filterService, @jakarta.annotation.Nullable String filterLastSeen, @jakarta.annotation.Nullable String sort, @jakarta.annotation.Nullable Integer pageNumber, @jakarta.annotation.Nullable Integer pageSize, @jakarta.annotation.Nullable Boolean metaTotal, Map<String, String> headers) throws ApiException {
+    ApiResponse<LoggerListResponse> localVarResponse = listLoggersWithHttpInfo(filterManaged, filterService, filterLastSeen, sort, pageNumber, pageSize, metaTotal, headers);
     return localVarResponse.getData();
   }
 
   /**
    * List Loggers
-   * List loggers for this account.  Default sort is &#x60;key&#x60; ascending. Supports &#x60;filter[managed]&#x60; to narrow to managed (or unmanaged) loggers, &#x60;filter[service]&#x60; to keep only loggers observed in a specific service, and &#x60;filter[last_seen]&#x60; (interval notation &#x60;[&lt;from&gt;,*)&#x60;) to keep only loggers with a source observation at or after the given timestamp.
+   * List loggers for this account.  Default sort is &#x60;key&#x60; ascending. Supports &#x60;filter[managed]&#x60; to narrow to managed (or unmanaged) loggers, &#x60;filter[service]&#x60; to keep only loggers observed in a specific service, and &#x60;filter[last_seen]&#x60; (interval notation &#x60;[&lt;from&gt;,*)&#x60;) to keep only loggers with a source observation at or after the given timestamp.  &#x60;&#x60;filter[service]&#x60;&#x60; and &#x60;&#x60;filter[last_seen]&#x60;&#x60; are applied via a cross-table membership check in Python after the SQL fetch, so pagination for those calls is applied in memory after the filter; the common path (no source-bound filter) paginates at the SQL level.
    * @param filterManaged  (optional)
    * @param filterService  (optional)
    * @param filterLastSeen  (optional)
    * @param sort Field to sort by. Prefix with &#x60;-&#x60; for descending order. Default: &#x60;key&#x60;. Allowed values: &#x60;created_at&#x60;, &#x60;-created_at&#x60;, &#x60;key&#x60;, &#x60;-key&#x60;, &#x60;name&#x60;, &#x60;-name&#x60;, &#x60;updated_at&#x60;, &#x60;-updated_at&#x60;. (optional, default to key)
+   * @param pageNumber 1-based page number to return. Optional; defaults to &#x60;1&#x60; when omitted. Must be &#x60;&gt;&#x3D; 1&#x60; — requests with a smaller value are rejected with a 400 error. (optional, default to 1)
+   * @param pageSize Number of items per page. Optional; defaults to &#x60;1000&#x60; when omitted. Must be between &#x60;1&#x60; and &#x60;1000&#x60; inclusive — requests outside that range are rejected with a 400 error. (optional, default to 1000)
+   * @param metaTotal When &#x60;true&#x60;, the response&#39;s &#x60;meta.pagination&#x60; block includes &#x60;total&#x60; (the total number of matching items across all pages) and &#x60;total_pages&#x60;. Computing these requires an extra &#x60;COUNT&#x60; query, so omit (or pass &#x60;false&#x60;) when the totals are not needed. Defaults to &#x60;false&#x60;. (optional, default to false)
    * @return ApiResponse&lt;LoggerListResponse&gt;
    * @throws ApiException if fails to make API call
    */
-  public ApiResponse<LoggerListResponse> listLoggersWithHttpInfo(@jakarta.annotation.Nullable Boolean filterManaged, @jakarta.annotation.Nullable String filterService, @jakarta.annotation.Nullable String filterLastSeen, @jakarta.annotation.Nullable String sort) throws ApiException {
-    return listLoggersWithHttpInfo(filterManaged, filterService, filterLastSeen, sort, null);
+  public ApiResponse<LoggerListResponse> listLoggersWithHttpInfo(@jakarta.annotation.Nullable Boolean filterManaged, @jakarta.annotation.Nullable String filterService, @jakarta.annotation.Nullable String filterLastSeen, @jakarta.annotation.Nullable String sort, @jakarta.annotation.Nullable Integer pageNumber, @jakarta.annotation.Nullable Integer pageSize, @jakarta.annotation.Nullable Boolean metaTotal) throws ApiException {
+    return listLoggersWithHttpInfo(filterManaged, filterService, filterLastSeen, sort, pageNumber, pageSize, metaTotal, null);
   }
 
   /**
    * List Loggers
-   * List loggers for this account.  Default sort is &#x60;key&#x60; ascending. Supports &#x60;filter[managed]&#x60; to narrow to managed (or unmanaged) loggers, &#x60;filter[service]&#x60; to keep only loggers observed in a specific service, and &#x60;filter[last_seen]&#x60; (interval notation &#x60;[&lt;from&gt;,*)&#x60;) to keep only loggers with a source observation at or after the given timestamp.
+   * List loggers for this account.  Default sort is &#x60;key&#x60; ascending. Supports &#x60;filter[managed]&#x60; to narrow to managed (or unmanaged) loggers, &#x60;filter[service]&#x60; to keep only loggers observed in a specific service, and &#x60;filter[last_seen]&#x60; (interval notation &#x60;[&lt;from&gt;,*)&#x60;) to keep only loggers with a source observation at or after the given timestamp.  &#x60;&#x60;filter[service]&#x60;&#x60; and &#x60;&#x60;filter[last_seen]&#x60;&#x60; are applied via a cross-table membership check in Python after the SQL fetch, so pagination for those calls is applied in memory after the filter; the common path (no source-bound filter) paginates at the SQL level.
    * @param filterManaged  (optional)
    * @param filterService  (optional)
    * @param filterLastSeen  (optional)
    * @param sort Field to sort by. Prefix with &#x60;-&#x60; for descending order. Default: &#x60;key&#x60;. Allowed values: &#x60;created_at&#x60;, &#x60;-created_at&#x60;, &#x60;key&#x60;, &#x60;-key&#x60;, &#x60;name&#x60;, &#x60;-name&#x60;, &#x60;updated_at&#x60;, &#x60;-updated_at&#x60;. (optional, default to key)
+   * @param pageNumber 1-based page number to return. Optional; defaults to &#x60;1&#x60; when omitted. Must be &#x60;&gt;&#x3D; 1&#x60; — requests with a smaller value are rejected with a 400 error. (optional, default to 1)
+   * @param pageSize Number of items per page. Optional; defaults to &#x60;1000&#x60; when omitted. Must be between &#x60;1&#x60; and &#x60;1000&#x60; inclusive — requests outside that range are rejected with a 400 error. (optional, default to 1000)
+   * @param metaTotal When &#x60;true&#x60;, the response&#39;s &#x60;meta.pagination&#x60; block includes &#x60;total&#x60; (the total number of matching items across all pages) and &#x60;total_pages&#x60;. Computing these requires an extra &#x60;COUNT&#x60; query, so omit (or pass &#x60;false&#x60;) when the totals are not needed. Defaults to &#x60;false&#x60;. (optional, default to false)
    * @param headers Optional headers to include in the request
    * @return ApiResponse&lt;LoggerListResponse&gt;
    * @throws ApiException if fails to make API call
    */
-  public ApiResponse<LoggerListResponse> listLoggersWithHttpInfo(@jakarta.annotation.Nullable Boolean filterManaged, @jakarta.annotation.Nullable String filterService, @jakarta.annotation.Nullable String filterLastSeen, @jakarta.annotation.Nullable String sort, Map<String, String> headers) throws ApiException {
-    HttpRequest.Builder localVarRequestBuilder = listLoggersRequestBuilder(filterManaged, filterService, filterLastSeen, sort, headers);
+  public ApiResponse<LoggerListResponse> listLoggersWithHttpInfo(@jakarta.annotation.Nullable Boolean filterManaged, @jakarta.annotation.Nullable String filterService, @jakarta.annotation.Nullable String filterLastSeen, @jakarta.annotation.Nullable String sort, @jakarta.annotation.Nullable Integer pageNumber, @jakarta.annotation.Nullable Integer pageSize, @jakarta.annotation.Nullable Boolean metaTotal, Map<String, String> headers) throws ApiException {
+    HttpRequest.Builder localVarRequestBuilder = listLoggersRequestBuilder(filterManaged, filterService, filterLastSeen, sort, pageNumber, pageSize, metaTotal, headers);
     try {
       HttpResponse<InputStream> localVarResponse = memberVarHttpClient.send(
           localVarRequestBuilder.build(),
@@ -615,7 +627,7 @@ public class LoggersApi {
     }
   }
 
-  private HttpRequest.Builder listLoggersRequestBuilder(@jakarta.annotation.Nullable Boolean filterManaged, @jakarta.annotation.Nullable String filterService, @jakarta.annotation.Nullable String filterLastSeen, @jakarta.annotation.Nullable String sort, Map<String, String> headers) throws ApiException {
+  private HttpRequest.Builder listLoggersRequestBuilder(@jakarta.annotation.Nullable Boolean filterManaged, @jakarta.annotation.Nullable String filterService, @jakarta.annotation.Nullable String filterLastSeen, @jakarta.annotation.Nullable String sort, @jakarta.annotation.Nullable Integer pageNumber, @jakarta.annotation.Nullable Integer pageSize, @jakarta.annotation.Nullable Boolean metaTotal, Map<String, String> headers) throws ApiException {
 
     HttpRequest.Builder localVarRequestBuilder = HttpRequest.newBuilder();
 
@@ -632,6 +644,12 @@ public class LoggersApi {
     localVarQueryParams.addAll(ApiClient.parameterToPairs("filter[last_seen]", filterLastSeen));
     localVarQueryParameterBaseName = "sort";
     localVarQueryParams.addAll(ApiClient.parameterToPairs("sort", sort));
+    localVarQueryParameterBaseName = "page[number]";
+    localVarQueryParams.addAll(ApiClient.parameterToPairs("page[number]", pageNumber));
+    localVarQueryParameterBaseName = "page[size]";
+    localVarQueryParams.addAll(ApiClient.parameterToPairs("page[size]", pageSize));
+    localVarQueryParameterBaseName = "meta[total]";
+    localVarQueryParams.addAll(ApiClient.parameterToPairs("meta[total]", metaTotal));
 
     if (!localVarQueryParams.isEmpty() || localVarQueryStringJoiner.length() != 0) {
       StringJoiner queryJoiner = new StringJoiner("&");
