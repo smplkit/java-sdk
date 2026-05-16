@@ -24,82 +24,53 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonTypeName;
 import com.fasterxml.jackson.annotation.JsonValue;
-import com.smplkit.internal.generated.app.model.CreateSubscriptionAttributes;
+import com.smplkit.internal.generated.app.model.AdminSubscriptionRequestResource;
 import java.util.Arrays;
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 
 
 import com.smplkit.internal.generated.app.ApiClient;
 /**
- * Resource object for the create-subscription request.
+ * Admin-scope request envelope for replacing a subscription.
  */
 @JsonPropertyOrder({
-  CreateSubscriptionData.JSON_PROPERTY_TYPE,
-  CreateSubscriptionData.JSON_PROPERTY_ATTRIBUTES
+  AdminSubscriptionRequest.JSON_PROPERTY_DATA
 })
 @jakarta.annotation.Generated(value = "org.openapitools.codegen.languages.JavaClientCodegen", comments = "Generator version: 7.21.0")
-public class CreateSubscriptionData {
-  public static final String JSON_PROPERTY_TYPE = "type";
+public class AdminSubscriptionRequest {
+  public static final String JSON_PROPERTY_DATA = "data";
   @jakarta.annotation.Nonnull
-  private String type;
+  private AdminSubscriptionRequestResource data;
 
-  public static final String JSON_PROPERTY_ATTRIBUTES = "attributes";
-  @jakarta.annotation.Nonnull
-  private CreateSubscriptionAttributes attributes;
-
-  public CreateSubscriptionData() { 
+  public AdminSubscriptionRequest() { 
   }
 
-  public CreateSubscriptionData type(@jakarta.annotation.Nonnull String type) {
-    this.type = type;
+  public AdminSubscriptionRequest data(@jakarta.annotation.Nonnull AdminSubscriptionRequestResource data) {
+    this.data = data;
     return this;
   }
 
   /**
-   * Resource type; must be &#x60;subscription&#x60;.
-   * @return type
+   * Get data
+   * @return data
    */
   @jakarta.annotation.Nonnull
-  @JsonProperty(value = JSON_PROPERTY_TYPE, required = true)
+  @JsonProperty(value = JSON_PROPERTY_DATA, required = true)
   @JsonInclude(value = JsonInclude.Include.ALWAYS)
-  public String getType() {
-    return type;
+  public AdminSubscriptionRequestResource getData() {
+    return data;
   }
 
 
-  @JsonProperty(value = JSON_PROPERTY_TYPE, required = true)
+  @JsonProperty(value = JSON_PROPERTY_DATA, required = true)
   @JsonInclude(value = JsonInclude.Include.ALWAYS)
-  public void setType(@jakarta.annotation.Nonnull String type) {
-    this.type = type;
-  }
-
-
-  public CreateSubscriptionData attributes(@jakarta.annotation.Nonnull CreateSubscriptionAttributes attributes) {
-    this.attributes = attributes;
-    return this;
-  }
-
-  /**
-   * Get attributes
-   * @return attributes
-   */
-  @jakarta.annotation.Nonnull
-  @JsonProperty(value = JSON_PROPERTY_ATTRIBUTES, required = true)
-  @JsonInclude(value = JsonInclude.Include.ALWAYS)
-  public CreateSubscriptionAttributes getAttributes() {
-    return attributes;
-  }
-
-
-  @JsonProperty(value = JSON_PROPERTY_ATTRIBUTES, required = true)
-  @JsonInclude(value = JsonInclude.Include.ALWAYS)
-  public void setAttributes(@jakarta.annotation.Nonnull CreateSubscriptionAttributes attributes) {
-    this.attributes = attributes;
+  public void setData(@jakarta.annotation.Nonnull AdminSubscriptionRequestResource data) {
+    this.data = data;
   }
 
 
   /**
-   * Return true if this CreateSubscriptionData object is equal to o.
+   * Return true if this AdminSubscriptionRequest object is equal to o.
    */
   @Override
   public boolean equals(Object o) {
@@ -109,22 +80,20 @@ public class CreateSubscriptionData {
     if (o == null || getClass() != o.getClass()) {
       return false;
     }
-    CreateSubscriptionData createSubscriptionData = (CreateSubscriptionData) o;
-    return Objects.equals(this.type, createSubscriptionData.type) &&
-        Objects.equals(this.attributes, createSubscriptionData.attributes);
+    AdminSubscriptionRequest adminSubscriptionRequest = (AdminSubscriptionRequest) o;
+    return Objects.equals(this.data, adminSubscriptionRequest.data);
   }
 
   @Override
   public int hashCode() {
-    return Objects.hash(type, attributes);
+    return Objects.hash(data);
   }
 
   @Override
   public String toString() {
     StringBuilder sb = new StringBuilder();
-    sb.append("class CreateSubscriptionData {\n");
-    sb.append("    type: ").append(toIndentedString(type)).append("\n");
-    sb.append("    attributes: ").append(toIndentedString(attributes)).append("\n");
+    sb.append("class AdminSubscriptionRequest {\n");
+    sb.append("    data: ").append(toIndentedString(data)).append("\n");
     sb.append("}");
     return sb.toString();
   }
@@ -169,14 +138,9 @@ public class CreateSubscriptionData {
 
     StringJoiner joiner = new StringJoiner("&");
 
-    // add `type` to the URL query string
-    if (getType() != null) {
-      joiner.add(String.format(java.util.Locale.ROOT, "%stype%s=%s", prefix, suffix, ApiClient.urlEncode(ApiClient.valueToString(getType()))));
-    }
-
-    // add `attributes` to the URL query string
-    if (getAttributes() != null) {
-      joiner.add(getAttributes().toUrlQueryString(prefix + "attributes" + suffix));
+    // add `data` to the URL query string
+    if (getData() != null) {
+      joiner.add(getData().toUrlQueryString(prefix + "data" + suffix));
     }
 
     return joiner.toString();

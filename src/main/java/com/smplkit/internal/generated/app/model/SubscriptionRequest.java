@@ -24,28 +24,28 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonTypeName;
 import com.fasterxml.jackson.annotation.JsonValue;
-import com.smplkit.internal.generated.app.model.CreateSubscriptionData;
+import com.smplkit.internal.generated.app.model.SubscriptionRequestResource;
 import java.util.Arrays;
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 
 
 import com.smplkit.internal.generated.app.ApiClient;
 /**
- * JSON:API request envelope for creating a subscription.
+ * Single-resource request envelope for replacing the subscription.
  */
 @JsonPropertyOrder({
-  CreateSubscriptionBody.JSON_PROPERTY_DATA
+  SubscriptionRequest.JSON_PROPERTY_DATA
 })
 @jakarta.annotation.Generated(value = "org.openapitools.codegen.languages.JavaClientCodegen", comments = "Generator version: 7.21.0")
-public class CreateSubscriptionBody {
+public class SubscriptionRequest {
   public static final String JSON_PROPERTY_DATA = "data";
   @jakarta.annotation.Nonnull
-  private CreateSubscriptionData data;
+  private SubscriptionRequestResource data;
 
-  public CreateSubscriptionBody() { 
+  public SubscriptionRequest() { 
   }
 
-  public CreateSubscriptionBody data(@jakarta.annotation.Nonnull CreateSubscriptionData data) {
+  public SubscriptionRequest data(@jakarta.annotation.Nonnull SubscriptionRequestResource data) {
     this.data = data;
     return this;
   }
@@ -57,20 +57,20 @@ public class CreateSubscriptionBody {
   @jakarta.annotation.Nonnull
   @JsonProperty(value = JSON_PROPERTY_DATA, required = true)
   @JsonInclude(value = JsonInclude.Include.ALWAYS)
-  public CreateSubscriptionData getData() {
+  public SubscriptionRequestResource getData() {
     return data;
   }
 
 
   @JsonProperty(value = JSON_PROPERTY_DATA, required = true)
   @JsonInclude(value = JsonInclude.Include.ALWAYS)
-  public void setData(@jakarta.annotation.Nonnull CreateSubscriptionData data) {
+  public void setData(@jakarta.annotation.Nonnull SubscriptionRequestResource data) {
     this.data = data;
   }
 
 
   /**
-   * Return true if this CreateSubscriptionBody object is equal to o.
+   * Return true if this SubscriptionRequest object is equal to o.
    */
   @Override
   public boolean equals(Object o) {
@@ -80,8 +80,8 @@ public class CreateSubscriptionBody {
     if (o == null || getClass() != o.getClass()) {
       return false;
     }
-    CreateSubscriptionBody createSubscriptionBody = (CreateSubscriptionBody) o;
-    return Objects.equals(this.data, createSubscriptionBody.data);
+    SubscriptionRequest subscriptionRequest = (SubscriptionRequest) o;
+    return Objects.equals(this.data, subscriptionRequest.data);
   }
 
   @Override
@@ -92,7 +92,7 @@ public class CreateSubscriptionBody {
   @Override
   public String toString() {
     StringBuilder sb = new StringBuilder();
-    sb.append("class CreateSubscriptionBody {\n");
+    sb.append("class SubscriptionRequest {\n");
     sb.append("    data: ").append(toIndentedString(data)).append("\n");
     sb.append("}");
     return sb.toString();

@@ -24,7 +24,7 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonTypeName;
 import com.fasterxml.jackson.annotation.JsonValue;
-import com.smplkit.internal.generated.app.model.SubscriptionResponseAttributes;
+import com.smplkit.internal.generated.app.model.AdminSubscriptionRequestAttributes;
 import java.util.Arrays;
 import org.openapitools.jackson.nullable.JsonNullable;
 import com.fasterxml.jackson.annotation.JsonIgnore;
@@ -35,15 +35,15 @@ import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 
 import com.smplkit.internal.generated.app.ApiClient;
 /**
- * JSON:API resource object for a subscription.
+ * Admin-scope resource object for a subscription update request.
  */
 @JsonPropertyOrder({
-  SubscriptionResource.JSON_PROPERTY_ID,
-  SubscriptionResource.JSON_PROPERTY_TYPE,
-  SubscriptionResource.JSON_PROPERTY_ATTRIBUTES
+  AdminSubscriptionRequestResource.JSON_PROPERTY_ID,
+  AdminSubscriptionRequestResource.JSON_PROPERTY_TYPE,
+  AdminSubscriptionRequestResource.JSON_PROPERTY_ATTRIBUTES
 })
 @jakarta.annotation.Generated(value = "org.openapitools.codegen.languages.JavaClientCodegen", comments = "Generator version: 7.21.0")
-public class SubscriptionResource {
+public class AdminSubscriptionRequestResource {
   public static final String JSON_PROPERTY_ID = "id";
   private JsonNullable<String> id = JsonNullable.<String>undefined();
 
@@ -86,18 +86,18 @@ public class SubscriptionResource {
 
   public static final String JSON_PROPERTY_ATTRIBUTES = "attributes";
   @jakarta.annotation.Nonnull
-  private SubscriptionResponseAttributes attributes;
+  private AdminSubscriptionRequestAttributes attributes;
 
-  public SubscriptionResource() { 
+  public AdminSubscriptionRequestResource() { 
   }
 
-  public SubscriptionResource id(@jakarta.annotation.Nullable String id) {
+  public AdminSubscriptionRequestResource id(@jakarta.annotation.Nullable String id) {
     this.id = JsonNullable.<String>of(id);
     return this;
   }
 
   /**
-   * Subscription identifier. Always &#x60;current&#x60; on response; absent on create-style requests.
+   * Get id
    * @return id
    */
   @jakarta.annotation.Nullable
@@ -123,7 +123,7 @@ public class SubscriptionResource {
   }
 
 
-  public SubscriptionResource type(@jakarta.annotation.Nonnull TypeEnum type) {
+  public AdminSubscriptionRequestResource type(@jakarta.annotation.Nonnull TypeEnum type) {
     this.type = type;
     return this;
   }
@@ -147,7 +147,7 @@ public class SubscriptionResource {
   }
 
 
-  public SubscriptionResource attributes(@jakarta.annotation.Nonnull SubscriptionResponseAttributes attributes) {
+  public AdminSubscriptionRequestResource attributes(@jakarta.annotation.Nonnull AdminSubscriptionRequestAttributes attributes) {
     this.attributes = attributes;
     return this;
   }
@@ -159,20 +159,20 @@ public class SubscriptionResource {
   @jakarta.annotation.Nonnull
   @JsonProperty(value = JSON_PROPERTY_ATTRIBUTES, required = true)
   @JsonInclude(value = JsonInclude.Include.ALWAYS)
-  public SubscriptionResponseAttributes getAttributes() {
+  public AdminSubscriptionRequestAttributes getAttributes() {
     return attributes;
   }
 
 
   @JsonProperty(value = JSON_PROPERTY_ATTRIBUTES, required = true)
   @JsonInclude(value = JsonInclude.Include.ALWAYS)
-  public void setAttributes(@jakarta.annotation.Nonnull SubscriptionResponseAttributes attributes) {
+  public void setAttributes(@jakarta.annotation.Nonnull AdminSubscriptionRequestAttributes attributes) {
     this.attributes = attributes;
   }
 
 
   /**
-   * Return true if this SubscriptionResource object is equal to o.
+   * Return true if this AdminSubscriptionRequestResource object is equal to o.
    */
   @Override
   public boolean equals(Object o) {
@@ -182,10 +182,10 @@ public class SubscriptionResource {
     if (o == null || getClass() != o.getClass()) {
       return false;
     }
-    SubscriptionResource subscriptionResource = (SubscriptionResource) o;
-    return equalsNullable(this.id, subscriptionResource.id) &&
-        Objects.equals(this.type, subscriptionResource.type) &&
-        Objects.equals(this.attributes, subscriptionResource.attributes);
+    AdminSubscriptionRequestResource adminSubscriptionRequestResource = (AdminSubscriptionRequestResource) o;
+    return equalsNullable(this.id, adminSubscriptionRequestResource.id) &&
+        Objects.equals(this.type, adminSubscriptionRequestResource.type) &&
+        Objects.equals(this.attributes, adminSubscriptionRequestResource.attributes);
   }
 
   private static <T> boolean equalsNullable(JsonNullable<T> a, JsonNullable<T> b) {
@@ -207,7 +207,7 @@ public class SubscriptionResource {
   @Override
   public String toString() {
     StringBuilder sb = new StringBuilder();
-    sb.append("class SubscriptionResource {\n");
+    sb.append("class AdminSubscriptionRequestResource {\n");
     sb.append("    id: ").append(toIndentedString(id)).append("\n");
     sb.append("    type: ").append(toIndentedString(type)).append("\n");
     sb.append("    attributes: ").append(toIndentedString(attributes)).append("\n");

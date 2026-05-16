@@ -24,7 +24,7 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonTypeName;
 import com.fasterxml.jackson.annotation.JsonValue;
-import com.smplkit.internal.generated.app.model.SubscriptionResponseAttributes;
+import com.smplkit.internal.generated.app.model.SubscriptionPreviewAttributes;
 import java.util.Arrays;
 import org.openapitools.jackson.nullable.JsonNullable;
 import com.fasterxml.jackson.annotation.JsonIgnore;
@@ -35,23 +35,56 @@ import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 
 import com.smplkit.internal.generated.app.ApiClient;
 /**
- * JSON:API resource object for a subscription.
+ * JSON:API resource object for a subscription preview.
  */
 @JsonPropertyOrder({
-  SubscriptionResource.JSON_PROPERTY_ID,
-  SubscriptionResource.JSON_PROPERTY_TYPE,
-  SubscriptionResource.JSON_PROPERTY_ATTRIBUTES
+  SubscriptionPreviewResource.JSON_PROPERTY_ID,
+  SubscriptionPreviewResource.JSON_PROPERTY_TYPE,
+  SubscriptionPreviewResource.JSON_PROPERTY_ATTRIBUTES
 })
 @jakarta.annotation.Generated(value = "org.openapitools.codegen.languages.JavaClientCodegen", comments = "Generator version: 7.21.0")
-public class SubscriptionResource {
+public class SubscriptionPreviewResource {
+  /**
+   * Always &#x60;preview&#x60;.
+   */
+  public enum IdEnum {
+    PREVIEW(String.valueOf("preview"));
+
+    private String value;
+
+    IdEnum(String value) {
+      this.value = value;
+    }
+
+    @JsonValue
+    public String getValue() {
+      return value;
+    }
+
+    @Override
+    public String toString() {
+      return String.valueOf(value);
+    }
+
+    @JsonCreator
+    public static IdEnum fromValue(String value) {
+      for (IdEnum b : IdEnum.values()) {
+        if (b.value.equals(value)) {
+          return b;
+        }
+      }
+      return null;
+    }
+  }
+
   public static final String JSON_PROPERTY_ID = "id";
-  private JsonNullable<String> id = JsonNullable.<String>undefined();
+  private JsonNullable<IdEnum> id = JsonNullable.<IdEnum>of(IdEnum.PREVIEW);
 
   /**
    * JSON:API resource type.
    */
   public enum TypeEnum {
-    SUBSCRIPTION(String.valueOf("subscription"));
+    SUBSCRIPTION_PREVIEW(String.valueOf("subscription_preview"));
 
     private String value;
 
@@ -86,44 +119,44 @@ public class SubscriptionResource {
 
   public static final String JSON_PROPERTY_ATTRIBUTES = "attributes";
   @jakarta.annotation.Nonnull
-  private SubscriptionResponseAttributes attributes;
+  private SubscriptionPreviewAttributes attributes;
 
-  public SubscriptionResource() { 
+  public SubscriptionPreviewResource() { 
   }
 
-  public SubscriptionResource id(@jakarta.annotation.Nullable String id) {
-    this.id = JsonNullable.<String>of(id);
+  public SubscriptionPreviewResource id(@jakarta.annotation.Nullable IdEnum id) {
+    this.id = JsonNullable.<IdEnum>of(id);
     return this;
   }
 
   /**
-   * Subscription identifier. Always &#x60;current&#x60; on response; absent on create-style requests.
+   * Always &#x60;preview&#x60;.
    * @return id
    */
   @jakarta.annotation.Nullable
   @JsonIgnore
-  public String getId() {
+  public IdEnum getId() {
         return id.orElse(null);
   }
 
   @JsonProperty(value = JSON_PROPERTY_ID, required = false)
   @JsonInclude(value = JsonInclude.Include.USE_DEFAULTS)
 
-  public JsonNullable<String> getId_JsonNullable() {
+  public JsonNullable<IdEnum> getId_JsonNullable() {
     return id;
   }
   
   @JsonProperty(JSON_PROPERTY_ID)
-  public void setId_JsonNullable(JsonNullable<String> id) {
+  public void setId_JsonNullable(JsonNullable<IdEnum> id) {
     this.id = id;
   }
 
-  public void setId(@jakarta.annotation.Nullable String id) {
-    this.id = JsonNullable.<String>of(id);
+  public void setId(@jakarta.annotation.Nullable IdEnum id) {
+    this.id = JsonNullable.<IdEnum>of(id);
   }
 
 
-  public SubscriptionResource type(@jakarta.annotation.Nonnull TypeEnum type) {
+  public SubscriptionPreviewResource type(@jakarta.annotation.Nonnull TypeEnum type) {
     this.type = type;
     return this;
   }
@@ -147,7 +180,7 @@ public class SubscriptionResource {
   }
 
 
-  public SubscriptionResource attributes(@jakarta.annotation.Nonnull SubscriptionResponseAttributes attributes) {
+  public SubscriptionPreviewResource attributes(@jakarta.annotation.Nonnull SubscriptionPreviewAttributes attributes) {
     this.attributes = attributes;
     return this;
   }
@@ -159,20 +192,20 @@ public class SubscriptionResource {
   @jakarta.annotation.Nonnull
   @JsonProperty(value = JSON_PROPERTY_ATTRIBUTES, required = true)
   @JsonInclude(value = JsonInclude.Include.ALWAYS)
-  public SubscriptionResponseAttributes getAttributes() {
+  public SubscriptionPreviewAttributes getAttributes() {
     return attributes;
   }
 
 
   @JsonProperty(value = JSON_PROPERTY_ATTRIBUTES, required = true)
   @JsonInclude(value = JsonInclude.Include.ALWAYS)
-  public void setAttributes(@jakarta.annotation.Nonnull SubscriptionResponseAttributes attributes) {
+  public void setAttributes(@jakarta.annotation.Nonnull SubscriptionPreviewAttributes attributes) {
     this.attributes = attributes;
   }
 
 
   /**
-   * Return true if this SubscriptionResource object is equal to o.
+   * Return true if this SubscriptionPreviewResource object is equal to o.
    */
   @Override
   public boolean equals(Object o) {
@@ -182,10 +215,10 @@ public class SubscriptionResource {
     if (o == null || getClass() != o.getClass()) {
       return false;
     }
-    SubscriptionResource subscriptionResource = (SubscriptionResource) o;
-    return equalsNullable(this.id, subscriptionResource.id) &&
-        Objects.equals(this.type, subscriptionResource.type) &&
-        Objects.equals(this.attributes, subscriptionResource.attributes);
+    SubscriptionPreviewResource subscriptionPreviewResource = (SubscriptionPreviewResource) o;
+    return equalsNullable(this.id, subscriptionPreviewResource.id) &&
+        Objects.equals(this.type, subscriptionPreviewResource.type) &&
+        Objects.equals(this.attributes, subscriptionPreviewResource.attributes);
   }
 
   private static <T> boolean equalsNullable(JsonNullable<T> a, JsonNullable<T> b) {
@@ -207,7 +240,7 @@ public class SubscriptionResource {
   @Override
   public String toString() {
     StringBuilder sb = new StringBuilder();
-    sb.append("class SubscriptionResource {\n");
+    sb.append("class SubscriptionPreviewResource {\n");
     sb.append("    id: ").append(toIndentedString(id)).append("\n");
     sb.append("    type: ").append(toIndentedString(type)).append("\n");
     sb.append("    attributes: ").append(toIndentedString(attributes)).append("\n");

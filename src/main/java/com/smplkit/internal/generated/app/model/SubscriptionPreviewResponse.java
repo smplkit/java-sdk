@@ -24,52 +24,53 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonTypeName;
 import com.fasterxml.jackson.annotation.JsonValue;
+import com.smplkit.internal.generated.app.model.SubscriptionPreviewResource;
 import java.util.Arrays;
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 
 
 import com.smplkit.internal.generated.app.ApiClient;
 /**
- * Body for the subscription upgrade and downgrade actions.
+ * Response envelope for the preview action.
  */
 @JsonPropertyOrder({
-  PlanChangeRequest.JSON_PROPERTY_PLAN
+  SubscriptionPreviewResponse.JSON_PROPERTY_DATA
 })
 @jakarta.annotation.Generated(value = "org.openapitools.codegen.languages.JavaClientCodegen", comments = "Generator version: 7.21.0")
-public class PlanChangeRequest {
-  public static final String JSON_PROPERTY_PLAN = "plan";
+public class SubscriptionPreviewResponse {
+  public static final String JSON_PROPERTY_DATA = "data";
   @jakarta.annotation.Nonnull
-  private String plan;
+  private SubscriptionPreviewResource data;
 
-  public PlanChangeRequest() { 
+  public SubscriptionPreviewResponse() { 
   }
 
-  public PlanChangeRequest plan(@jakarta.annotation.Nonnull String plan) {
-    this.plan = plan;
+  public SubscriptionPreviewResponse data(@jakarta.annotation.Nonnull SubscriptionPreviewResource data) {
+    this.data = data;
     return this;
   }
 
   /**
-   * Plan key to change the subscription to.
-   * @return plan
+   * Get data
+   * @return data
    */
   @jakarta.annotation.Nonnull
-  @JsonProperty(value = JSON_PROPERTY_PLAN, required = true)
+  @JsonProperty(value = JSON_PROPERTY_DATA, required = true)
   @JsonInclude(value = JsonInclude.Include.ALWAYS)
-  public String getPlan() {
-    return plan;
+  public SubscriptionPreviewResource getData() {
+    return data;
   }
 
 
-  @JsonProperty(value = JSON_PROPERTY_PLAN, required = true)
+  @JsonProperty(value = JSON_PROPERTY_DATA, required = true)
   @JsonInclude(value = JsonInclude.Include.ALWAYS)
-  public void setPlan(@jakarta.annotation.Nonnull String plan) {
-    this.plan = plan;
+  public void setData(@jakarta.annotation.Nonnull SubscriptionPreviewResource data) {
+    this.data = data;
   }
 
 
   /**
-   * Return true if this PlanChangeRequest object is equal to o.
+   * Return true if this SubscriptionPreviewResponse object is equal to o.
    */
   @Override
   public boolean equals(Object o) {
@@ -79,20 +80,20 @@ public class PlanChangeRequest {
     if (o == null || getClass() != o.getClass()) {
       return false;
     }
-    PlanChangeRequest planChangeRequest = (PlanChangeRequest) o;
-    return Objects.equals(this.plan, planChangeRequest.plan);
+    SubscriptionPreviewResponse subscriptionPreviewResponse = (SubscriptionPreviewResponse) o;
+    return Objects.equals(this.data, subscriptionPreviewResponse.data);
   }
 
   @Override
   public int hashCode() {
-    return Objects.hash(plan);
+    return Objects.hash(data);
   }
 
   @Override
   public String toString() {
     StringBuilder sb = new StringBuilder();
-    sb.append("class PlanChangeRequest {\n");
-    sb.append("    plan: ").append(toIndentedString(plan)).append("\n");
+    sb.append("class SubscriptionPreviewResponse {\n");
+    sb.append("    data: ").append(toIndentedString(data)).append("\n");
     sb.append("}");
     return sb.toString();
   }
@@ -137,9 +138,9 @@ public class PlanChangeRequest {
 
     StringJoiner joiner = new StringJoiner("&");
 
-    // add `plan` to the URL query string
-    if (getPlan() != null) {
-      joiner.add(String.format(java.util.Locale.ROOT, "%splan%s=%s", prefix, suffix, ApiClient.urlEncode(ApiClient.valueToString(getPlan()))));
+    // add `data` to the URL query string
+    if (getData() != null) {
+      joiner.add(getData().toUrlQueryString(prefix + "data" + suffix));
     }
 
     return joiner.toString();
