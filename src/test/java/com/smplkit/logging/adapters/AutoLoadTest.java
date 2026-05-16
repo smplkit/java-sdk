@@ -39,11 +39,11 @@ class AutoLoadTest {
     private void stubEmptyResponses() throws ApiException {
         LoggerListResponse loggerResp = new LoggerListResponse();
         loggerResp.setData(new ArrayList<>());
-        when(mockLoggersApi.listLoggers(null, null, null, null)).thenReturn(loggerResp);
+        when(mockLoggersApi.listLoggers(null, null, null, null, null, null, null)).thenReturn(loggerResp);
 
         LogGroupListResponse groupResp = new LogGroupListResponse();
         groupResp.setData(new ArrayList<>());
-        when(mockLogGroupsApi.listLogGroups(null)).thenReturn(groupResp);
+        when(mockLogGroupsApi.listLogGroups(null, null, null, null)).thenReturn(groupResp);
     }
 
     @Test
@@ -190,11 +190,11 @@ class AutoLoadTest {
         lr.setType(com.smplkit.internal.generated.logging.model.LoggerResource.TypeEnum.LOGGER);
         lr.setAttributes(attrs);
         loggerResp.setData(new ArrayList<>(List.of(lr)));
-        when(mockLoggersApi.listLoggers(null, null, null, null)).thenReturn(loggerResp);
+        when(mockLoggersApi.listLoggers(null, null, null, null, null, null, null)).thenReturn(loggerResp);
 
         LogGroupListResponse groupResp = new LogGroupListResponse();
         groupResp.setData(new ArrayList<>());
-        when(mockLogGroupsApi.listLogGroups(null)).thenReturn(groupResp);
+        when(mockLogGroupsApi.listLogGroups(null, null, null, null)).thenReturn(groupResp);
 
         LoggingAdapter failAdapter = mock(LoggingAdapter.class);
         when(failAdapter.name()).thenReturn("fail");

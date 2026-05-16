@@ -83,7 +83,7 @@ public final class LoggingManagement {
      */
     public List<Logger> list() {
         try {
-            LoggerListResponse response = client.loggersApi.listLoggers(null, null, null, null);
+            LoggerListResponse response = client.loggersApi.listLoggers(null, null, null, null, null, null, null);
             List<Logger> result = new ArrayList<>();
             if (response.getData() != null) {
                 for (LoggerResource r : response.getData()) {
@@ -164,7 +164,7 @@ public final class LoggingManagement {
      */
     public List<LogGroup> listGroups() {
         try {
-            LogGroupListResponse response = client.logGroupsApi.listLogGroups(null);
+            LogGroupListResponse response = client.logGroupsApi.listLogGroups(null, null, null, null);
             List<LogGroup> result = new ArrayList<>();
             if (response.getData() != null) {
                 for (LogGroupResource r : response.getData()) {
