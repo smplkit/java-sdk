@@ -34,20 +34,20 @@ import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 
 import com.smplkit.internal.generated.audit.ApiClient;
 /**
- * ForwarderListLinks
+ * ForwarderDeliveryListLinks
  */
 @JsonPropertyOrder({
-  ForwarderListLinks.JSON_PROPERTY_NEXT
+  ForwarderDeliveryListLinks.JSON_PROPERTY_NEXT
 })
 @jakarta.annotation.Generated(value = "org.openapitools.codegen.languages.JavaClientCodegen", comments = "Generator version: 7.21.0")
-public class ForwarderListLinks {
+public class ForwarderDeliveryListLinks {
   public static final String JSON_PROPERTY_NEXT = "next";
   private JsonNullable<String> next = JsonNullable.<String>undefined();
 
-  public ForwarderListLinks() { 
+  public ForwarderDeliveryListLinks() { 
   }
 
-  public ForwarderListLinks next(@jakarta.annotation.Nullable String next) {
+  public ForwarderDeliveryListLinks next(@jakarta.annotation.Nullable String next) {
     this.next = JsonNullable.<String>of(next);
     return this;
   }
@@ -80,7 +80,7 @@ public class ForwarderListLinks {
 
 
   /**
-   * Return true if this ForwarderListLinks object is equal to o.
+   * Return true if this ForwarderDeliveryListLinks object is equal to o.
    */
   @Override
   public boolean equals(Object o) {
@@ -90,8 +90,8 @@ public class ForwarderListLinks {
     if (o == null || getClass() != o.getClass()) {
       return false;
     }
-    ForwarderListLinks forwarderListLinks = (ForwarderListLinks) o;
-    return equalsNullable(this.next, forwarderListLinks.next);
+    ForwarderDeliveryListLinks forwarderDeliveryListLinks = (ForwarderDeliveryListLinks) o;
+    return equalsNullable(this.next, forwarderDeliveryListLinks.next);
   }
 
   private static <T> boolean equalsNullable(JsonNullable<T> a, JsonNullable<T> b) {
@@ -113,7 +113,7 @@ public class ForwarderListLinks {
   @Override
   public String toString() {
     StringBuilder sb = new StringBuilder();
-    sb.append("class ForwarderListLinks {\n");
+    sb.append("class ForwarderDeliveryListLinks {\n");
     sb.append("    next: ").append(toIndentedString(next)).append("\n");
     sb.append("}");
     return sb.toString();

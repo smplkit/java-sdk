@@ -24,52 +24,53 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonTypeName;
 import com.fasterxml.jackson.annotation.JsonValue;
+import com.smplkit.internal.generated.audit.model.PaginationMeta;
 import java.util.Arrays;
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 
 
 import com.smplkit.internal.generated.audit.ApiClient;
 /**
- * ResourceTypeListMeta
+ * Top-level &#x60;&#x60;meta&#x60;&#x60; block included on every JSON:API list response.
  */
 @JsonPropertyOrder({
-  ResourceTypeListMeta.JSON_PROPERTY_PAGE_SIZE
+  ListMeta.JSON_PROPERTY_PAGINATION
 })
 @jakarta.annotation.Generated(value = "org.openapitools.codegen.languages.JavaClientCodegen", comments = "Generator version: 7.21.0")
-public class ResourceTypeListMeta {
-  public static final String JSON_PROPERTY_PAGE_SIZE = "page_size";
+public class ListMeta {
+  public static final String JSON_PROPERTY_PAGINATION = "pagination";
   @jakarta.annotation.Nonnull
-  private Integer pageSize;
+  private PaginationMeta pagination;
 
-  public ResourceTypeListMeta() { 
+  public ListMeta() { 
   }
 
-  public ResourceTypeListMeta pageSize(@jakarta.annotation.Nonnull Integer pageSize) {
-    this.pageSize = pageSize;
+  public ListMeta pagination(@jakarta.annotation.Nonnull PaginationMeta pagination) {
+    this.pagination = pagination;
     return this;
   }
 
   /**
-   * Get pageSize
-   * @return pageSize
+   * Get pagination
+   * @return pagination
    */
   @jakarta.annotation.Nonnull
-  @JsonProperty(value = JSON_PROPERTY_PAGE_SIZE, required = true)
+  @JsonProperty(value = JSON_PROPERTY_PAGINATION, required = true)
   @JsonInclude(value = JsonInclude.Include.ALWAYS)
-  public Integer getPageSize() {
-    return pageSize;
+  public PaginationMeta getPagination() {
+    return pagination;
   }
 
 
-  @JsonProperty(value = JSON_PROPERTY_PAGE_SIZE, required = true)
+  @JsonProperty(value = JSON_PROPERTY_PAGINATION, required = true)
   @JsonInclude(value = JsonInclude.Include.ALWAYS)
-  public void setPageSize(@jakarta.annotation.Nonnull Integer pageSize) {
-    this.pageSize = pageSize;
+  public void setPagination(@jakarta.annotation.Nonnull PaginationMeta pagination) {
+    this.pagination = pagination;
   }
 
 
   /**
-   * Return true if this ResourceTypeListMeta object is equal to o.
+   * Return true if this ListMeta object is equal to o.
    */
   @Override
   public boolean equals(Object o) {
@@ -79,20 +80,20 @@ public class ResourceTypeListMeta {
     if (o == null || getClass() != o.getClass()) {
       return false;
     }
-    ResourceTypeListMeta resourceTypeListMeta = (ResourceTypeListMeta) o;
-    return Objects.equals(this.pageSize, resourceTypeListMeta.pageSize);
+    ListMeta listMeta = (ListMeta) o;
+    return Objects.equals(this.pagination, listMeta.pagination);
   }
 
   @Override
   public int hashCode() {
-    return Objects.hash(pageSize);
+    return Objects.hash(pagination);
   }
 
   @Override
   public String toString() {
     StringBuilder sb = new StringBuilder();
-    sb.append("class ResourceTypeListMeta {\n");
-    sb.append("    pageSize: ").append(toIndentedString(pageSize)).append("\n");
+    sb.append("class ListMeta {\n");
+    sb.append("    pagination: ").append(toIndentedString(pagination)).append("\n");
     sb.append("}");
     return sb.toString();
   }
@@ -137,9 +138,9 @@ public class ResourceTypeListMeta {
 
     StringJoiner joiner = new StringJoiner("&");
 
-    // add `page_size` to the URL query string
-    if (getPageSize() != null) {
-      joiner.add(String.format(java.util.Locale.ROOT, "%spage_size%s=%s", prefix, suffix, ApiClient.urlEncode(ApiClient.valueToString(getPageSize()))));
+    // add `pagination` to the URL query string
+    if (getPagination() != null) {
+      joiner.add(getPagination().toUrlQueryString(prefix + "pagination" + suffix));
     }
 
     return joiner.toString();

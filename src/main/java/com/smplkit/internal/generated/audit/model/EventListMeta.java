@@ -30,7 +30,7 @@ import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 
 import com.smplkit.internal.generated.audit.ApiClient;
 /**
- * EventListMeta
+ * Cursor-pagination meta for the audit-event list endpoint.  Audit events are append-only at high cardinality (millions of rows per account at production tenants), so this endpoint stays on cursor pagination — the documented exception in ADR-014. Every other read-many endpoint in the platform follows the standard offset convention (&#x60;page[number]&#x60; / &#x60;page[size]&#x60;).
  */
 @JsonPropertyOrder({
   EventListMeta.JSON_PROPERTY_PAGE_SIZE

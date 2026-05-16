@@ -24,9 +24,8 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonTypeName;
 import com.fasterxml.jackson.annotation.JsonValue;
-import com.smplkit.internal.generated.audit.model.ActionListLinks;
-import com.smplkit.internal.generated.audit.model.ActionListMeta;
 import com.smplkit.internal.generated.audit.model.ActionResource;
+import com.smplkit.internal.generated.audit.model.ListMeta;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -39,8 +38,7 @@ import com.smplkit.internal.generated.audit.ApiClient;
  */
 @JsonPropertyOrder({
   ActionListResponse.JSON_PROPERTY_DATA,
-  ActionListResponse.JSON_PROPERTY_META,
-  ActionListResponse.JSON_PROPERTY_LINKS
+  ActionListResponse.JSON_PROPERTY_META
 })
 @jakarta.annotation.Generated(value = "org.openapitools.codegen.languages.JavaClientCodegen", comments = "Generator version: 7.21.0")
 public class ActionListResponse {
@@ -50,11 +48,7 @@ public class ActionListResponse {
 
   public static final String JSON_PROPERTY_META = "meta";
   @jakarta.annotation.Nonnull
-  private ActionListMeta meta;
-
-  public static final String JSON_PROPERTY_LINKS = "links";
-  @jakarta.annotation.Nullable
-  private ActionListLinks links;
+  private ListMeta meta;
 
   public ActionListResponse() { 
   }
@@ -91,7 +85,7 @@ public class ActionListResponse {
   }
 
 
-  public ActionListResponse meta(@jakarta.annotation.Nonnull ActionListMeta meta) {
+  public ActionListResponse meta(@jakarta.annotation.Nonnull ListMeta meta) {
     this.meta = meta;
     return this;
   }
@@ -103,39 +97,15 @@ public class ActionListResponse {
   @jakarta.annotation.Nonnull
   @JsonProperty(value = JSON_PROPERTY_META, required = true)
   @JsonInclude(value = JsonInclude.Include.ALWAYS)
-  public ActionListMeta getMeta() {
+  public ListMeta getMeta() {
     return meta;
   }
 
 
   @JsonProperty(value = JSON_PROPERTY_META, required = true)
   @JsonInclude(value = JsonInclude.Include.ALWAYS)
-  public void setMeta(@jakarta.annotation.Nonnull ActionListMeta meta) {
+  public void setMeta(@jakarta.annotation.Nonnull ListMeta meta) {
     this.meta = meta;
-  }
-
-
-  public ActionListResponse links(@jakarta.annotation.Nullable ActionListLinks links) {
-    this.links = links;
-    return this;
-  }
-
-  /**
-   * Get links
-   * @return links
-   */
-  @jakarta.annotation.Nullable
-  @JsonProperty(value = JSON_PROPERTY_LINKS, required = false)
-  @JsonInclude(value = JsonInclude.Include.USE_DEFAULTS)
-  public ActionListLinks getLinks() {
-    return links;
-  }
-
-
-  @JsonProperty(value = JSON_PROPERTY_LINKS, required = false)
-  @JsonInclude(value = JsonInclude.Include.USE_DEFAULTS)
-  public void setLinks(@jakarta.annotation.Nullable ActionListLinks links) {
-    this.links = links;
   }
 
 
@@ -152,13 +122,12 @@ public class ActionListResponse {
     }
     ActionListResponse actionListResponse = (ActionListResponse) o;
     return Objects.equals(this.data, actionListResponse.data) &&
-        Objects.equals(this.meta, actionListResponse.meta) &&
-        Objects.equals(this.links, actionListResponse.links);
+        Objects.equals(this.meta, actionListResponse.meta);
   }
 
   @Override
   public int hashCode() {
-    return Objects.hash(data, meta, links);
+    return Objects.hash(data, meta);
   }
 
   @Override
@@ -167,7 +136,6 @@ public class ActionListResponse {
     sb.append("class ActionListResponse {\n");
     sb.append("    data: ").append(toIndentedString(data)).append("\n");
     sb.append("    meta: ").append(toIndentedString(meta)).append("\n");
-    sb.append("    links: ").append(toIndentedString(links)).append("\n");
     sb.append("}");
     return sb.toString();
   }
@@ -225,11 +193,6 @@ public class ActionListResponse {
     // add `meta` to the URL query string
     if (getMeta() != null) {
       joiner.add(getMeta().toUrlQueryString(prefix + "meta" + suffix));
-    }
-
-    // add `links` to the URL query string
-    if (getLinks() != null) {
-      joiner.add(getLinks().toUrlQueryString(prefix + "links" + suffix));
     }
 
     return joiner.toString();

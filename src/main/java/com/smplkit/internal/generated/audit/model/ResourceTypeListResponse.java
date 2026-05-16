@@ -24,8 +24,7 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonTypeName;
 import com.fasterxml.jackson.annotation.JsonValue;
-import com.smplkit.internal.generated.audit.model.ResourceTypeListLinks;
-import com.smplkit.internal.generated.audit.model.ResourceTypeListMeta;
+import com.smplkit.internal.generated.audit.model.ListMeta;
 import com.smplkit.internal.generated.audit.model.ResourceTypeResource;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -39,8 +38,7 @@ import com.smplkit.internal.generated.audit.ApiClient;
  */
 @JsonPropertyOrder({
   ResourceTypeListResponse.JSON_PROPERTY_DATA,
-  ResourceTypeListResponse.JSON_PROPERTY_META,
-  ResourceTypeListResponse.JSON_PROPERTY_LINKS
+  ResourceTypeListResponse.JSON_PROPERTY_META
 })
 @jakarta.annotation.Generated(value = "org.openapitools.codegen.languages.JavaClientCodegen", comments = "Generator version: 7.21.0")
 public class ResourceTypeListResponse {
@@ -50,11 +48,7 @@ public class ResourceTypeListResponse {
 
   public static final String JSON_PROPERTY_META = "meta";
   @jakarta.annotation.Nonnull
-  private ResourceTypeListMeta meta;
-
-  public static final String JSON_PROPERTY_LINKS = "links";
-  @jakarta.annotation.Nullable
-  private ResourceTypeListLinks links;
+  private ListMeta meta;
 
   public ResourceTypeListResponse() { 
   }
@@ -91,7 +85,7 @@ public class ResourceTypeListResponse {
   }
 
 
-  public ResourceTypeListResponse meta(@jakarta.annotation.Nonnull ResourceTypeListMeta meta) {
+  public ResourceTypeListResponse meta(@jakarta.annotation.Nonnull ListMeta meta) {
     this.meta = meta;
     return this;
   }
@@ -103,39 +97,15 @@ public class ResourceTypeListResponse {
   @jakarta.annotation.Nonnull
   @JsonProperty(value = JSON_PROPERTY_META, required = true)
   @JsonInclude(value = JsonInclude.Include.ALWAYS)
-  public ResourceTypeListMeta getMeta() {
+  public ListMeta getMeta() {
     return meta;
   }
 
 
   @JsonProperty(value = JSON_PROPERTY_META, required = true)
   @JsonInclude(value = JsonInclude.Include.ALWAYS)
-  public void setMeta(@jakarta.annotation.Nonnull ResourceTypeListMeta meta) {
+  public void setMeta(@jakarta.annotation.Nonnull ListMeta meta) {
     this.meta = meta;
-  }
-
-
-  public ResourceTypeListResponse links(@jakarta.annotation.Nullable ResourceTypeListLinks links) {
-    this.links = links;
-    return this;
-  }
-
-  /**
-   * Get links
-   * @return links
-   */
-  @jakarta.annotation.Nullable
-  @JsonProperty(value = JSON_PROPERTY_LINKS, required = false)
-  @JsonInclude(value = JsonInclude.Include.USE_DEFAULTS)
-  public ResourceTypeListLinks getLinks() {
-    return links;
-  }
-
-
-  @JsonProperty(value = JSON_PROPERTY_LINKS, required = false)
-  @JsonInclude(value = JsonInclude.Include.USE_DEFAULTS)
-  public void setLinks(@jakarta.annotation.Nullable ResourceTypeListLinks links) {
-    this.links = links;
   }
 
 
@@ -152,13 +122,12 @@ public class ResourceTypeListResponse {
     }
     ResourceTypeListResponse resourceTypeListResponse = (ResourceTypeListResponse) o;
     return Objects.equals(this.data, resourceTypeListResponse.data) &&
-        Objects.equals(this.meta, resourceTypeListResponse.meta) &&
-        Objects.equals(this.links, resourceTypeListResponse.links);
+        Objects.equals(this.meta, resourceTypeListResponse.meta);
   }
 
   @Override
   public int hashCode() {
-    return Objects.hash(data, meta, links);
+    return Objects.hash(data, meta);
   }
 
   @Override
@@ -167,7 +136,6 @@ public class ResourceTypeListResponse {
     sb.append("class ResourceTypeListResponse {\n");
     sb.append("    data: ").append(toIndentedString(data)).append("\n");
     sb.append("    meta: ").append(toIndentedString(meta)).append("\n");
-    sb.append("    links: ").append(toIndentedString(links)).append("\n");
     sb.append("}");
     return sb.toString();
   }
@@ -225,11 +193,6 @@ public class ResourceTypeListResponse {
     // add `meta` to the URL query string
     if (getMeta() != null) {
       joiner.add(getMeta().toUrlQueryString(prefix + "meta" + suffix));
-    }
-
-    // add `links` to the URL query string
-    if (getLinks() != null) {
-      joiner.add(getLinks().toUrlQueryString(prefix + "links" + suffix));
     }
 
     return joiner.toString();
