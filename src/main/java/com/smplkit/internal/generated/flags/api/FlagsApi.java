@@ -636,65 +636,77 @@ public class FlagsApi {
 
   /**
    * List Flags
-   * List feature flags for this account.  Default sort is &#x60;key&#x60; ascending.
+   * List feature flags for this account.  Default sort is &#x60;key&#x60; ascending. &#x60;&#x60;filter[references_context]&#x60;&#x60; and &#x60;&#x60;filter[references_context_type]&#x60;&#x60; walk the rules JSON in Python after the SQL fetch, so pagination for those calls is applied in memory after the filter; for the common case (no rules-traversal filter) pagination is applied at the SQL level.
    * @param filterType  (optional)
    * @param filterManaged  (optional)
    * @param filterReferencesContext Return flags whose rules reference this context instance. Format: {type}:{key} (optional)
    * @param filterReferencesContextType Return flags whose rules reference any attribute of the given context type. (optional)
    * @param sort Field to sort by. Prefix with &#x60;-&#x60; for descending order. Default: &#x60;key&#x60;. Allowed values: &#x60;created_at&#x60;, &#x60;-created_at&#x60;, &#x60;key&#x60;, &#x60;-key&#x60;, &#x60;name&#x60;, &#x60;-name&#x60;, &#x60;type&#x60;, &#x60;-type&#x60;, &#x60;updated_at&#x60;, &#x60;-updated_at&#x60;. (optional, default to key)
+   * @param pageNumber 1-based page number to return. Optional; defaults to &#x60;1&#x60; when omitted. Must be &#x60;&gt;&#x3D; 1&#x60; — requests with a smaller value are rejected with a 400 error. (optional, default to 1)
+   * @param pageSize Number of items per page. Optional; defaults to &#x60;1000&#x60; when omitted. Must be between &#x60;1&#x60; and &#x60;1000&#x60; inclusive — requests outside that range are rejected with a 400 error. (optional, default to 1000)
+   * @param metaTotal When &#x60;true&#x60;, the response&#39;s &#x60;meta.pagination&#x60; block includes &#x60;total&#x60; (the total number of matching items across all pages) and &#x60;total_pages&#x60;. Computing these requires an extra &#x60;COUNT&#x60; query, so omit (or pass &#x60;false&#x60;) when the totals are not needed. Defaults to &#x60;false&#x60;. (optional, default to false)
    * @return FlagListResponse
    * @throws ApiException if fails to make API call
    */
-  public FlagListResponse listFlags(@jakarta.annotation.Nullable String filterType, @jakarta.annotation.Nullable Boolean filterManaged, @jakarta.annotation.Nullable String filterReferencesContext, @jakarta.annotation.Nullable String filterReferencesContextType, @jakarta.annotation.Nullable String sort) throws ApiException {
-    return listFlags(filterType, filterManaged, filterReferencesContext, filterReferencesContextType, sort, null);
+  public FlagListResponse listFlags(@jakarta.annotation.Nullable String filterType, @jakarta.annotation.Nullable Boolean filterManaged, @jakarta.annotation.Nullable String filterReferencesContext, @jakarta.annotation.Nullable String filterReferencesContextType, @jakarta.annotation.Nullable String sort, @jakarta.annotation.Nullable Integer pageNumber, @jakarta.annotation.Nullable Integer pageSize, @jakarta.annotation.Nullable Boolean metaTotal) throws ApiException {
+    return listFlags(filterType, filterManaged, filterReferencesContext, filterReferencesContextType, sort, pageNumber, pageSize, metaTotal, null);
   }
 
   /**
    * List Flags
-   * List feature flags for this account.  Default sort is &#x60;key&#x60; ascending.
+   * List feature flags for this account.  Default sort is &#x60;key&#x60; ascending. &#x60;&#x60;filter[references_context]&#x60;&#x60; and &#x60;&#x60;filter[references_context_type]&#x60;&#x60; walk the rules JSON in Python after the SQL fetch, so pagination for those calls is applied in memory after the filter; for the common case (no rules-traversal filter) pagination is applied at the SQL level.
    * @param filterType  (optional)
    * @param filterManaged  (optional)
    * @param filterReferencesContext Return flags whose rules reference this context instance. Format: {type}:{key} (optional)
    * @param filterReferencesContextType Return flags whose rules reference any attribute of the given context type. (optional)
    * @param sort Field to sort by. Prefix with &#x60;-&#x60; for descending order. Default: &#x60;key&#x60;. Allowed values: &#x60;created_at&#x60;, &#x60;-created_at&#x60;, &#x60;key&#x60;, &#x60;-key&#x60;, &#x60;name&#x60;, &#x60;-name&#x60;, &#x60;type&#x60;, &#x60;-type&#x60;, &#x60;updated_at&#x60;, &#x60;-updated_at&#x60;. (optional, default to key)
+   * @param pageNumber 1-based page number to return. Optional; defaults to &#x60;1&#x60; when omitted. Must be &#x60;&gt;&#x3D; 1&#x60; — requests with a smaller value are rejected with a 400 error. (optional, default to 1)
+   * @param pageSize Number of items per page. Optional; defaults to &#x60;1000&#x60; when omitted. Must be between &#x60;1&#x60; and &#x60;1000&#x60; inclusive — requests outside that range are rejected with a 400 error. (optional, default to 1000)
+   * @param metaTotal When &#x60;true&#x60;, the response&#39;s &#x60;meta.pagination&#x60; block includes &#x60;total&#x60; (the total number of matching items across all pages) and &#x60;total_pages&#x60;. Computing these requires an extra &#x60;COUNT&#x60; query, so omit (or pass &#x60;false&#x60;) when the totals are not needed. Defaults to &#x60;false&#x60;. (optional, default to false)
    * @param headers Optional headers to include in the request
    * @return FlagListResponse
    * @throws ApiException if fails to make API call
    */
-  public FlagListResponse listFlags(@jakarta.annotation.Nullable String filterType, @jakarta.annotation.Nullable Boolean filterManaged, @jakarta.annotation.Nullable String filterReferencesContext, @jakarta.annotation.Nullable String filterReferencesContextType, @jakarta.annotation.Nullable String sort, Map<String, String> headers) throws ApiException {
-    ApiResponse<FlagListResponse> localVarResponse = listFlagsWithHttpInfo(filterType, filterManaged, filterReferencesContext, filterReferencesContextType, sort, headers);
+  public FlagListResponse listFlags(@jakarta.annotation.Nullable String filterType, @jakarta.annotation.Nullable Boolean filterManaged, @jakarta.annotation.Nullable String filterReferencesContext, @jakarta.annotation.Nullable String filterReferencesContextType, @jakarta.annotation.Nullable String sort, @jakarta.annotation.Nullable Integer pageNumber, @jakarta.annotation.Nullable Integer pageSize, @jakarta.annotation.Nullable Boolean metaTotal, Map<String, String> headers) throws ApiException {
+    ApiResponse<FlagListResponse> localVarResponse = listFlagsWithHttpInfo(filterType, filterManaged, filterReferencesContext, filterReferencesContextType, sort, pageNumber, pageSize, metaTotal, headers);
     return localVarResponse.getData();
   }
 
   /**
    * List Flags
-   * List feature flags for this account.  Default sort is &#x60;key&#x60; ascending.
+   * List feature flags for this account.  Default sort is &#x60;key&#x60; ascending. &#x60;&#x60;filter[references_context]&#x60;&#x60; and &#x60;&#x60;filter[references_context_type]&#x60;&#x60; walk the rules JSON in Python after the SQL fetch, so pagination for those calls is applied in memory after the filter; for the common case (no rules-traversal filter) pagination is applied at the SQL level.
    * @param filterType  (optional)
    * @param filterManaged  (optional)
    * @param filterReferencesContext Return flags whose rules reference this context instance. Format: {type}:{key} (optional)
    * @param filterReferencesContextType Return flags whose rules reference any attribute of the given context type. (optional)
    * @param sort Field to sort by. Prefix with &#x60;-&#x60; for descending order. Default: &#x60;key&#x60;. Allowed values: &#x60;created_at&#x60;, &#x60;-created_at&#x60;, &#x60;key&#x60;, &#x60;-key&#x60;, &#x60;name&#x60;, &#x60;-name&#x60;, &#x60;type&#x60;, &#x60;-type&#x60;, &#x60;updated_at&#x60;, &#x60;-updated_at&#x60;. (optional, default to key)
+   * @param pageNumber 1-based page number to return. Optional; defaults to &#x60;1&#x60; when omitted. Must be &#x60;&gt;&#x3D; 1&#x60; — requests with a smaller value are rejected with a 400 error. (optional, default to 1)
+   * @param pageSize Number of items per page. Optional; defaults to &#x60;1000&#x60; when omitted. Must be between &#x60;1&#x60; and &#x60;1000&#x60; inclusive — requests outside that range are rejected with a 400 error. (optional, default to 1000)
+   * @param metaTotal When &#x60;true&#x60;, the response&#39;s &#x60;meta.pagination&#x60; block includes &#x60;total&#x60; (the total number of matching items across all pages) and &#x60;total_pages&#x60;. Computing these requires an extra &#x60;COUNT&#x60; query, so omit (or pass &#x60;false&#x60;) when the totals are not needed. Defaults to &#x60;false&#x60;. (optional, default to false)
    * @return ApiResponse&lt;FlagListResponse&gt;
    * @throws ApiException if fails to make API call
    */
-  public ApiResponse<FlagListResponse> listFlagsWithHttpInfo(@jakarta.annotation.Nullable String filterType, @jakarta.annotation.Nullable Boolean filterManaged, @jakarta.annotation.Nullable String filterReferencesContext, @jakarta.annotation.Nullable String filterReferencesContextType, @jakarta.annotation.Nullable String sort) throws ApiException {
-    return listFlagsWithHttpInfo(filterType, filterManaged, filterReferencesContext, filterReferencesContextType, sort, null);
+  public ApiResponse<FlagListResponse> listFlagsWithHttpInfo(@jakarta.annotation.Nullable String filterType, @jakarta.annotation.Nullable Boolean filterManaged, @jakarta.annotation.Nullable String filterReferencesContext, @jakarta.annotation.Nullable String filterReferencesContextType, @jakarta.annotation.Nullable String sort, @jakarta.annotation.Nullable Integer pageNumber, @jakarta.annotation.Nullable Integer pageSize, @jakarta.annotation.Nullable Boolean metaTotal) throws ApiException {
+    return listFlagsWithHttpInfo(filterType, filterManaged, filterReferencesContext, filterReferencesContextType, sort, pageNumber, pageSize, metaTotal, null);
   }
 
   /**
    * List Flags
-   * List feature flags for this account.  Default sort is &#x60;key&#x60; ascending.
+   * List feature flags for this account.  Default sort is &#x60;key&#x60; ascending. &#x60;&#x60;filter[references_context]&#x60;&#x60; and &#x60;&#x60;filter[references_context_type]&#x60;&#x60; walk the rules JSON in Python after the SQL fetch, so pagination for those calls is applied in memory after the filter; for the common case (no rules-traversal filter) pagination is applied at the SQL level.
    * @param filterType  (optional)
    * @param filterManaged  (optional)
    * @param filterReferencesContext Return flags whose rules reference this context instance. Format: {type}:{key} (optional)
    * @param filterReferencesContextType Return flags whose rules reference any attribute of the given context type. (optional)
    * @param sort Field to sort by. Prefix with &#x60;-&#x60; for descending order. Default: &#x60;key&#x60;. Allowed values: &#x60;created_at&#x60;, &#x60;-created_at&#x60;, &#x60;key&#x60;, &#x60;-key&#x60;, &#x60;name&#x60;, &#x60;-name&#x60;, &#x60;type&#x60;, &#x60;-type&#x60;, &#x60;updated_at&#x60;, &#x60;-updated_at&#x60;. (optional, default to key)
+   * @param pageNumber 1-based page number to return. Optional; defaults to &#x60;1&#x60; when omitted. Must be &#x60;&gt;&#x3D; 1&#x60; — requests with a smaller value are rejected with a 400 error. (optional, default to 1)
+   * @param pageSize Number of items per page. Optional; defaults to &#x60;1000&#x60; when omitted. Must be between &#x60;1&#x60; and &#x60;1000&#x60; inclusive — requests outside that range are rejected with a 400 error. (optional, default to 1000)
+   * @param metaTotal When &#x60;true&#x60;, the response&#39;s &#x60;meta.pagination&#x60; block includes &#x60;total&#x60; (the total number of matching items across all pages) and &#x60;total_pages&#x60;. Computing these requires an extra &#x60;COUNT&#x60; query, so omit (or pass &#x60;false&#x60;) when the totals are not needed. Defaults to &#x60;false&#x60;. (optional, default to false)
    * @param headers Optional headers to include in the request
    * @return ApiResponse&lt;FlagListResponse&gt;
    * @throws ApiException if fails to make API call
    */
-  public ApiResponse<FlagListResponse> listFlagsWithHttpInfo(@jakarta.annotation.Nullable String filterType, @jakarta.annotation.Nullable Boolean filterManaged, @jakarta.annotation.Nullable String filterReferencesContext, @jakarta.annotation.Nullable String filterReferencesContextType, @jakarta.annotation.Nullable String sort, Map<String, String> headers) throws ApiException {
-    HttpRequest.Builder localVarRequestBuilder = listFlagsRequestBuilder(filterType, filterManaged, filterReferencesContext, filterReferencesContextType, sort, headers);
+  public ApiResponse<FlagListResponse> listFlagsWithHttpInfo(@jakarta.annotation.Nullable String filterType, @jakarta.annotation.Nullable Boolean filterManaged, @jakarta.annotation.Nullable String filterReferencesContext, @jakarta.annotation.Nullable String filterReferencesContextType, @jakarta.annotation.Nullable String sort, @jakarta.annotation.Nullable Integer pageNumber, @jakarta.annotation.Nullable Integer pageSize, @jakarta.annotation.Nullable Boolean metaTotal, Map<String, String> headers) throws ApiException {
+    HttpRequest.Builder localVarRequestBuilder = listFlagsRequestBuilder(filterType, filterManaged, filterReferencesContext, filterReferencesContextType, sort, pageNumber, pageSize, metaTotal, headers);
     try {
       HttpResponse<InputStream> localVarResponse = memberVarHttpClient.send(
           localVarRequestBuilder.build(),
@@ -741,7 +753,7 @@ public class FlagsApi {
     }
   }
 
-  private HttpRequest.Builder listFlagsRequestBuilder(@jakarta.annotation.Nullable String filterType, @jakarta.annotation.Nullable Boolean filterManaged, @jakarta.annotation.Nullable String filterReferencesContext, @jakarta.annotation.Nullable String filterReferencesContextType, @jakarta.annotation.Nullable String sort, Map<String, String> headers) throws ApiException {
+  private HttpRequest.Builder listFlagsRequestBuilder(@jakarta.annotation.Nullable String filterType, @jakarta.annotation.Nullable Boolean filterManaged, @jakarta.annotation.Nullable String filterReferencesContext, @jakarta.annotation.Nullable String filterReferencesContextType, @jakarta.annotation.Nullable String sort, @jakarta.annotation.Nullable Integer pageNumber, @jakarta.annotation.Nullable Integer pageSize, @jakarta.annotation.Nullable Boolean metaTotal, Map<String, String> headers) throws ApiException {
 
     HttpRequest.Builder localVarRequestBuilder = HttpRequest.newBuilder();
 
@@ -760,6 +772,12 @@ public class FlagsApi {
     localVarQueryParams.addAll(ApiClient.parameterToPairs("filter[references_context_type]", filterReferencesContextType));
     localVarQueryParameterBaseName = "sort";
     localVarQueryParams.addAll(ApiClient.parameterToPairs("sort", sort));
+    localVarQueryParameterBaseName = "page[number]";
+    localVarQueryParams.addAll(ApiClient.parameterToPairs("page[number]", pageNumber));
+    localVarQueryParameterBaseName = "page[size]";
+    localVarQueryParams.addAll(ApiClient.parameterToPairs("page[size]", pageSize));
+    localVarQueryParameterBaseName = "meta[total]";
+    localVarQueryParams.addAll(ApiClient.parameterToPairs("meta[total]", metaTotal));
 
     if (!localVarQueryParams.isEmpty() || localVarQueryStringJoiner.length() != 0) {
       StringJoiner queryJoiner = new StringJoiner("&");
