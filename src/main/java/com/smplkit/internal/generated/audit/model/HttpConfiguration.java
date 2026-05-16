@@ -28,26 +28,21 @@ import com.smplkit.internal.generated.audit.model.HttpHeader;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
-import org.openapitools.jackson.nullable.JsonNullable;
-import com.fasterxml.jackson.annotation.JsonIgnore;
-import org.openapitools.jackson.nullable.JsonNullable;
-import java.util.NoSuchElementException;
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 
 
 import com.smplkit.internal.generated.audit.ApiClient;
 /**
- * HTTP request configuration used to deliver an event to the destination.
+ * HTTP request configuration used to deliver an event to the destination.  Used when the parent forwarder&#39;s &#x60;&#x60;forwarder_type&#x60;&#x60; is one of the HTTP-family destinations (&#x60;&#x60;HTTP&#x60;&#x60;, &#x60;&#x60;DATADOG&#x60;&#x60;, &#x60;&#x60;SPLUNK_HEC&#x60;&#x60;, &#x60;&#x60;SUMO_LOGIC&#x60;&#x60;, &#x60;&#x60;NEW_RELIC&#x60;&#x60;, &#x60;&#x60;HONEYCOMB&#x60;&#x60;, &#x60;&#x60;ELASTIC&#x60;&#x60;). When other transports land (&#x60;&#x60;FTP&#x60;&#x60;, &#x60;&#x60;SQS&#x60;&#x60;, …) their own configuration schemas will join this one as members of a discriminated union under the &#x60;&#x60;configuration&#x60;&#x60; field of &#x60;&#x60;Forwarder&#x60;&#x60;.
  */
 @JsonPropertyOrder({
-  ForwarderHttp.JSON_PROPERTY_METHOD,
-  ForwarderHttp.JSON_PROPERTY_URL,
-  ForwarderHttp.JSON_PROPERTY_HEADERS,
-  ForwarderHttp.JSON_PROPERTY_BODY,
-  ForwarderHttp.JSON_PROPERTY_SUCCESS_STATUS
+  HttpConfiguration.JSON_PROPERTY_METHOD,
+  HttpConfiguration.JSON_PROPERTY_URL,
+  HttpConfiguration.JSON_PROPERTY_HEADERS,
+  HttpConfiguration.JSON_PROPERTY_SUCCESS_STATUS
 })
 @jakarta.annotation.Generated(value = "org.openapitools.codegen.languages.JavaClientCodegen", comments = "Generator version: 7.21.0")
-public class ForwarderHttp {
+public class HttpConfiguration {
   /**
    * HTTP method used when delivering an event.
    */
@@ -101,17 +96,14 @@ public class ForwarderHttp {
   @jakarta.annotation.Nullable
   private List<HttpHeader> headers = new ArrayList<>();
 
-  public static final String JSON_PROPERTY_BODY = "body";
-  private JsonNullable<String> body = JsonNullable.<String>undefined();
-
   public static final String JSON_PROPERTY_SUCCESS_STATUS = "success_status";
   @jakarta.annotation.Nullable
   private String successStatus = "2xx";
 
-  public ForwarderHttp() { 
+  public HttpConfiguration() { 
   }
 
-  public ForwarderHttp method(@jakarta.annotation.Nullable MethodEnum method) {
+  public HttpConfiguration method(@jakarta.annotation.Nullable MethodEnum method) {
     this.method = method;
     return this;
   }
@@ -135,7 +127,7 @@ public class ForwarderHttp {
   }
 
 
-  public ForwarderHttp url(@jakarta.annotation.Nonnull String url) {
+  public HttpConfiguration url(@jakarta.annotation.Nonnull String url) {
     this.url = url;
     return this;
   }
@@ -159,12 +151,12 @@ public class ForwarderHttp {
   }
 
 
-  public ForwarderHttp headers(@jakarta.annotation.Nullable List<HttpHeader> headers) {
+  public HttpConfiguration headers(@jakarta.annotation.Nullable List<HttpHeader> headers) {
     this.headers = headers;
     return this;
   }
 
-  public ForwarderHttp addHeadersItem(HttpHeader headersItem) {
+  public HttpConfiguration addHeadersItem(HttpHeader headersItem) {
     if (this.headers == null) {
       this.headers = new ArrayList<>();
     }
@@ -191,39 +183,7 @@ public class ForwarderHttp {
   }
 
 
-  public ForwarderHttp body(@jakarta.annotation.Nullable String body) {
-    this.body = JsonNullable.<String>of(body);
-    return this;
-  }
-
-  /**
-   * Request body sent to the destination. If omitted, the event JSON is sent as the body.
-   * @return body
-   */
-  @jakarta.annotation.Nullable
-  @JsonIgnore
-  public String getBody() {
-        return body.orElse(null);
-  }
-
-  @JsonProperty(value = JSON_PROPERTY_BODY, required = false)
-  @JsonInclude(value = JsonInclude.Include.USE_DEFAULTS)
-
-  public JsonNullable<String> getBody_JsonNullable() {
-    return body;
-  }
-  
-  @JsonProperty(JSON_PROPERTY_BODY)
-  public void setBody_JsonNullable(JsonNullable<String> body) {
-    this.body = body;
-  }
-
-  public void setBody(@jakarta.annotation.Nullable String body) {
-    this.body = JsonNullable.<String>of(body);
-  }
-
-
-  public ForwarderHttp successStatus(@jakarta.annotation.Nullable String successStatus) {
+  public HttpConfiguration successStatus(@jakarta.annotation.Nullable String successStatus) {
     this.successStatus = successStatus;
     return this;
   }
@@ -248,7 +208,7 @@ public class ForwarderHttp {
 
 
   /**
-   * Return true if this ForwarderHttp object is equal to o.
+   * Return true if this HttpConfiguration object is equal to o.
    */
   @Override
   public boolean equals(Object o) {
@@ -258,38 +218,25 @@ public class ForwarderHttp {
     if (o == null || getClass() != o.getClass()) {
       return false;
     }
-    ForwarderHttp forwarderHttp = (ForwarderHttp) o;
-    return Objects.equals(this.method, forwarderHttp.method) &&
-        Objects.equals(this.url, forwarderHttp.url) &&
-        Objects.equals(this.headers, forwarderHttp.headers) &&
-        equalsNullable(this.body, forwarderHttp.body) &&
-        Objects.equals(this.successStatus, forwarderHttp.successStatus);
-  }
-
-  private static <T> boolean equalsNullable(JsonNullable<T> a, JsonNullable<T> b) {
-    return a == b || (a != null && b != null && a.isPresent() && b.isPresent() && Objects.deepEquals(a.get(), b.get()));
+    HttpConfiguration httpConfiguration = (HttpConfiguration) o;
+    return Objects.equals(this.method, httpConfiguration.method) &&
+        Objects.equals(this.url, httpConfiguration.url) &&
+        Objects.equals(this.headers, httpConfiguration.headers) &&
+        Objects.equals(this.successStatus, httpConfiguration.successStatus);
   }
 
   @Override
   public int hashCode() {
-    return Objects.hash(method, url, headers, hashCodeNullable(body), successStatus);
-  }
-
-  private static <T> int hashCodeNullable(JsonNullable<T> a) {
-    if (a == null) {
-      return 1;
-    }
-    return a.isPresent() ? Arrays.deepHashCode(new Object[]{a.get()}) : 31;
+    return Objects.hash(method, url, headers, successStatus);
   }
 
   @Override
   public String toString() {
     StringBuilder sb = new StringBuilder();
-    sb.append("class ForwarderHttp {\n");
+    sb.append("class HttpConfiguration {\n");
     sb.append("    method: ").append(toIndentedString(method)).append("\n");
     sb.append("    url: ").append(toIndentedString(url)).append("\n");
     sb.append("    headers: ").append(toIndentedString(headers)).append("\n");
-    sb.append("    body: ").append(toIndentedString(body)).append("\n");
     sb.append("    successStatus: ").append(toIndentedString(successStatus)).append("\n");
     sb.append("}");
     return sb.toString();
@@ -353,11 +300,6 @@ public class ForwarderHttp {
           "".equals(suffix) ? "" : String.format(java.util.Locale.ROOT, "%s%d%s", containerPrefix, i, containerSuffix))));
         }
       }
-    }
-
-    // add `body` to the URL query string
-    if (getBody() != null) {
-      joiner.add(String.format(java.util.Locale.ROOT, "%sbody%s=%s", prefix, suffix, ApiClient.urlEncode(ApiClient.valueToString(getBody()))));
     }
 
     // add `success_status` to the URL query string
