@@ -24,93 +24,53 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonTypeName;
 import com.fasterxml.jackson.annotation.JsonValue;
-import com.smplkit.internal.generated.flags.model.FlagResource;
-import com.smplkit.internal.generated.flags.model.ListMeta;
-import java.util.ArrayList;
+import com.smplkit.internal.generated.flags.model.PaginationMeta;
 import java.util.Arrays;
-import java.util.List;
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 
 
 import com.smplkit.internal.generated.flags.ApiClient;
 /**
- * JSON:API collection response envelope for flags.
+ * Top-level &#x60;&#x60;meta&#x60;&#x60; block included on every JSON:API list response.
  */
 @JsonPropertyOrder({
-  FlagListResponse.JSON_PROPERTY_DATA,
-  FlagListResponse.JSON_PROPERTY_META
+  ListMeta.JSON_PROPERTY_PAGINATION
 })
 @jakarta.annotation.Generated(value = "org.openapitools.codegen.languages.JavaClientCodegen", comments = "Generator version: 7.21.0")
-public class FlagListResponse {
-  public static final String JSON_PROPERTY_DATA = "data";
+public class ListMeta {
+  public static final String JSON_PROPERTY_PAGINATION = "pagination";
   @jakarta.annotation.Nonnull
-  private List<FlagResource> data = new ArrayList<>();
+  private PaginationMeta pagination;
 
-  public static final String JSON_PROPERTY_META = "meta";
-  @jakarta.annotation.Nonnull
-  private ListMeta meta;
-
-  public FlagListResponse() { 
+  public ListMeta() { 
   }
 
-  public FlagListResponse data(@jakarta.annotation.Nonnull List<FlagResource> data) {
-    this.data = data;
-    return this;
-  }
-
-  public FlagListResponse addDataItem(FlagResource dataItem) {
-    if (this.data == null) {
-      this.data = new ArrayList<>();
-    }
-    this.data.add(dataItem);
+  public ListMeta pagination(@jakarta.annotation.Nonnull PaginationMeta pagination) {
+    this.pagination = pagination;
     return this;
   }
 
   /**
-   * Get data
-   * @return data
+   * Get pagination
+   * @return pagination
    */
   @jakarta.annotation.Nonnull
-  @JsonProperty(value = JSON_PROPERTY_DATA, required = true)
+  @JsonProperty(value = JSON_PROPERTY_PAGINATION, required = true)
   @JsonInclude(value = JsonInclude.Include.ALWAYS)
-  public List<FlagResource> getData() {
-    return data;
+  public PaginationMeta getPagination() {
+    return pagination;
   }
 
 
-  @JsonProperty(value = JSON_PROPERTY_DATA, required = true)
+  @JsonProperty(value = JSON_PROPERTY_PAGINATION, required = true)
   @JsonInclude(value = JsonInclude.Include.ALWAYS)
-  public void setData(@jakarta.annotation.Nonnull List<FlagResource> data) {
-    this.data = data;
-  }
-
-
-  public FlagListResponse meta(@jakarta.annotation.Nonnull ListMeta meta) {
-    this.meta = meta;
-    return this;
-  }
-
-  /**
-   * Get meta
-   * @return meta
-   */
-  @jakarta.annotation.Nonnull
-  @JsonProperty(value = JSON_PROPERTY_META, required = true)
-  @JsonInclude(value = JsonInclude.Include.ALWAYS)
-  public ListMeta getMeta() {
-    return meta;
-  }
-
-
-  @JsonProperty(value = JSON_PROPERTY_META, required = true)
-  @JsonInclude(value = JsonInclude.Include.ALWAYS)
-  public void setMeta(@jakarta.annotation.Nonnull ListMeta meta) {
-    this.meta = meta;
+  public void setPagination(@jakarta.annotation.Nonnull PaginationMeta pagination) {
+    this.pagination = pagination;
   }
 
 
   /**
-   * Return true if this FlagListResponse object is equal to o.
+   * Return true if this ListMeta object is equal to o.
    */
   @Override
   public boolean equals(Object o) {
@@ -120,22 +80,20 @@ public class FlagListResponse {
     if (o == null || getClass() != o.getClass()) {
       return false;
     }
-    FlagListResponse flagListResponse = (FlagListResponse) o;
-    return Objects.equals(this.data, flagListResponse.data) &&
-        Objects.equals(this.meta, flagListResponse.meta);
+    ListMeta listMeta = (ListMeta) o;
+    return Objects.equals(this.pagination, listMeta.pagination);
   }
 
   @Override
   public int hashCode() {
-    return Objects.hash(data, meta);
+    return Objects.hash(pagination);
   }
 
   @Override
   public String toString() {
     StringBuilder sb = new StringBuilder();
-    sb.append("class FlagListResponse {\n");
-    sb.append("    data: ").append(toIndentedString(data)).append("\n");
-    sb.append("    meta: ").append(toIndentedString(meta)).append("\n");
+    sb.append("class ListMeta {\n");
+    sb.append("    pagination: ").append(toIndentedString(pagination)).append("\n");
     sb.append("}");
     return sb.toString();
   }
@@ -180,19 +138,9 @@ public class FlagListResponse {
 
     StringJoiner joiner = new StringJoiner("&");
 
-    // add `data` to the URL query string
-    if (getData() != null) {
-      for (int i = 0; i < getData().size(); i++) {
-        if (getData().get(i) != null) {
-          joiner.add(getData().get(i).toUrlQueryString(String.format(java.util.Locale.ROOT, "%sdata%s%s", prefix, suffix,
-          "".equals(suffix) ? "" : String.format(java.util.Locale.ROOT, "%s%d%s", containerPrefix, i, containerSuffix))));
-        }
-      }
-    }
-
-    // add `meta` to the URL query string
-    if (getMeta() != null) {
-      joiner.add(getMeta().toUrlQueryString(prefix + "meta" + suffix));
+    // add `pagination` to the URL query string
+    if (getPagination() != null) {
+      joiner.add(getPagination().toUrlQueryString(prefix + "pagination" + suffix));
     }
 
     return joiner.toString();
