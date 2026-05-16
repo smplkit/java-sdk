@@ -421,7 +421,7 @@ class ManagementTest {
         EnvironmentResource r = buildEnvResource("prod", "Production", null, "STANDARD",
                 OffsetDateTime.now(), OffsetDateTime.now());
         resp.setData(List.of(r));
-        when(mockEnvApi.listEnvironments(null)).thenReturn(resp);
+        when(mockEnvApi.listEnvironments(null, null, null, null)).thenReturn(resp);
 
         List<com.smplkit.management.Environment> envs = envClient.list();
         assertEquals(1, envs.size());
@@ -432,7 +432,7 @@ class ManagementTest {
     void envClient_list_emptyData() throws Exception {
         EnvironmentListResponse resp = new EnvironmentListResponse();
         resp.setData(null);
-        when(mockEnvApi.listEnvironments(null)).thenReturn(resp);
+        when(mockEnvApi.listEnvironments(null, null, null, null)).thenReturn(resp);
         assertTrue(envClient.list().isEmpty());
     }
 
@@ -519,13 +519,13 @@ class ManagementTest {
 
     @Test
     void envClient_apiException_mapped() throws Exception {
-        when(mockEnvApi.listEnvironments(null)).thenThrow(new ApiException(404, "not found"));
+        when(mockEnvApi.listEnvironments(null, null, null, null)).thenThrow(new ApiException(404, "not found"));
         assertThrows(SmplError.class, () -> envClient.list());
     }
 
     @Test
     void envClient_apiException_zeroCode() throws Exception {
-        when(mockEnvApi.listEnvironments(null)).thenThrow(new ApiException(0, "network error"));
+        when(mockEnvApi.listEnvironments(null, null, null, null)).thenThrow(new ApiException(0, "network error"));
         assertThrows(SmplError.class, () -> envClient.list());
     }
 
@@ -576,7 +576,7 @@ class ManagementTest {
         ContextTypeListResponse resp = new ContextTypeListResponse();
         resp.setData(List.of(buildCtResource("user", "User", new HashMap<>(),
                 OffsetDateTime.now(), OffsetDateTime.now())));
-        when(mockCtApi.listContextTypes(null)).thenReturn(resp);
+        when(mockCtApi.listContextTypes(null, null, null, null)).thenReturn(resp);
 
         List<com.smplkit.management.ContextType> cts = ctClient.list();
         assertEquals(1, cts.size());
@@ -587,7 +587,7 @@ class ManagementTest {
     void ctClient_list_emptyData() throws Exception {
         ContextTypeListResponse resp = new ContextTypeListResponse();
         resp.setData(null);
-        when(mockCtApi.listContextTypes(null)).thenReturn(resp);
+        when(mockCtApi.listContextTypes(null, null, null, null)).thenReturn(resp);
         assertTrue(ctClient.list().isEmpty());
     }
 
@@ -696,13 +696,13 @@ class ManagementTest {
 
     @Test
     void ctClient_apiException_mapped() throws Exception {
-        when(mockCtApi.listContextTypes(null)).thenThrow(new ApiException(404, "not found"));
+        when(mockCtApi.listContextTypes(null, null, null, null)).thenThrow(new ApiException(404, "not found"));
         assertThrows(SmplError.class, () -> ctClient.list());
     }
 
     @Test
     void ctClient_apiException_zeroCode() throws Exception {
-        when(mockCtApi.listContextTypes(null)).thenThrow(new ApiException(0, "network"));
+        when(mockCtApi.listContextTypes(null, null, null, null)).thenThrow(new ApiException(0, "network"));
         assertThrows(SmplError.class, () -> ctClient.list());
     }
 
@@ -785,7 +785,7 @@ class ManagementTest {
         ContextListResponse resp = new ContextListResponse();
         resp.setData(List.of(buildCtxResource("user:u1", "Alice", new HashMap<>(),
                 OffsetDateTime.now(), OffsetDateTime.now())));
-        when(mockCtxApi.listContexts("user", null)).thenReturn(resp);
+        when(mockCtxApi.listContexts("user", null, null, null, null, null)).thenReturn(resp);
 
         List<ContextEntity> entities = ctxClient.list("user");
         assertEquals(1, entities.size());
@@ -797,7 +797,7 @@ class ManagementTest {
     void ctxClient_list_emptyData() throws Exception {
         ContextListResponse resp = new ContextListResponse();
         resp.setData(null);
-        when(mockCtxApi.listContexts("user", null)).thenReturn(resp);
+        when(mockCtxApi.listContexts("user", null, null, null, null, null)).thenReturn(resp);
         assertTrue(ctxClient.list("user").isEmpty());
     }
 
@@ -875,7 +875,7 @@ class ManagementTest {
 
     @Test
     void ctxClient_list_apiException() throws Exception {
-        when(mockCtxApi.listContexts(any(), any())).thenThrow(new ApiException(0, "error"));
+        when(mockCtxApi.listContexts(any(), any(), any(), any(), any(), any())).thenThrow(new ApiException(0, "error"));
         assertThrows(SmplError.class, () -> ctxClient.list("user"));
     }
 
