@@ -214,13 +214,122 @@ class LoggingClientWsEventsTest {
         verify(mockLogGroupsApi, never()).getLogGroup(any());
     }
 
+    @Test
+    void groupChanged_reappliesInheritedLevelOnDependentLogger() throws ApiException {
+        // Logger with no own level inherits from group "g1" (WARN)
+        String key = "com.acme.inherits";
+        LoggerResource lr = buildLoggerResource(key, null, true);
+        lr.getAttributes().setGroup("g1");
+        LoggerListResponse loggers = new LoggerListResponse();
+        loggers.setData(new ArrayList<>(List.of(lr)));
+        when(mockLoggersApi.listLoggers(isNull(), isNull(), isNull(), isNull(), any(), any(), isNull()))
+                .thenReturn(loggers);
+        when(mockLogGroupsApi.listLogGroups(isNull(), any(), any(), isNull()))
+                .thenReturn(buildGroupListResponse("g1", "WARN"));
+
+        LoggingAdapter adapter = noopAdapter(key, "INFO");
+        client.registerAdapter(adapter);
+        client.install();
+
+        // After install, adapter should have been told WARN (group inherited)
+        verify(adapter, times(1)).applyLevel(key, "WARN");
+
+        // Now group's level changes to ERROR
+        when(mockLogGroupsApi.getLogGroup("g1")).thenReturn(buildGroupResponse("g1", "ERROR"));
+
+        AtomicReference<LoggerChangeEvent> received = new AtomicReference<>();
+        client.onChange(key, received::set);
+
+        client.simulateGroupChanged(Map.of("id", "g1"));
+
+        // Dependent logger should be re-applied at the new resolved level
+        verify(adapter, times(1)).applyLevel(key, "ERROR");
+        assertNotNull(received.get(), "key-scoped listener should fire on group-driven change");
+        assertEquals(LogLevel.ERROR, received.get().level());
+    }
+
+    @Test
+    void groupChanged_levelUnchanged_doesNotReapply() throws ApiException {
+        String key = "com.acme.stable";
+        LoggerResource lr = buildLoggerResource(key, null, true);
+        lr.getAttributes().setGroup("g1");
+        LoggerListResponse loggers = new LoggerListResponse();
+        loggers.setData(new ArrayList<>(List.of(lr)));
+        when(mockLoggersApi.listLoggers(isNull(), isNull(), isNull(), isNull(), any(), any(), isNull()))
+                .thenReturn(loggers);
+        when(mockLogGroupsApi.listLogGroups(isNull(), any(), any(), isNull()))
+                .thenReturn(buildGroupListResponse("g1", "WARN"));
+
+        LoggingAdapter adapter = noopAdapter(key, "INFO");
+        client.registerAdapter(adapter);
+        client.install();
+        verify(adapter, times(1)).applyLevel(key, "WARN");
+
+        // Group's level stays WARN — no diff
+        when(mockLogGroupsApi.getLogGroup("g1")).thenReturn(buildGroupResponse("g1", "WARN"));
+
+        AtomicInteger keyedCount = new AtomicInteger();
+        client.onChange(key, e -> keyedCount.incrementAndGet());
+
+        client.simulateGroupChanged(Map.of("id", "g1"));
+
+        // Adapter was already at WARN; no extra applyLevel call
+        verify(adapter, times(1)).applyLevel(key, "WARN");
+        assertEquals(0, keyedCount.get(),
+                "Key-scoped listener should not fire when resolved level unchanged");
+    }
+
+    @Test
+    void groupDeleted_reappliesFallbackForDependentLogger() throws ApiException {
+        // Logger inherits from group "g1" (WARN) — install pushes WARN
+        String key = "com.acme.orphan";
+        LoggerResource lr = buildLoggerResource(key, null, true);
+        lr.getAttributes().setGroup("g1");
+        LoggerListResponse loggers = new LoggerListResponse();
+        loggers.setData(new ArrayList<>(List.of(lr)));
+        when(mockLoggersApi.listLoggers(isNull(), isNull(), isNull(), isNull(), any(), any(), isNull()))
+                .thenReturn(loggers);
+        when(mockLogGroupsApi.listLogGroups(isNull(), any(), any(), isNull()))
+                .thenReturn(buildGroupListResponse("g1", "WARN"));
+
+        LoggingAdapter adapter = noopAdapter(key, "INFO");
+        client.registerAdapter(adapter);
+        client.install();
+        verify(adapter, times(1)).applyLevel(key, "WARN");
+
+        AtomicReference<LoggerChangeEvent> dependentEvent = new AtomicReference<>();
+        AtomicReference<LoggerChangeEvent> deletedEvent = new AtomicReference<>();
+        client.onChange(key, dependentEvent::set);
+        client.onChange("g1", deletedEvent::set);
+
+        // group_deleted removes g1; dependent logger now resolves to INFO fallback.
+        client.simulateGroupDeleted(Map.of("id", "g1"));
+
+        // Adapter re-applied at fallback level
+        verify(adapter, times(1)).applyLevel(key, "INFO");
+        // Key-scoped listener for the dependent logger fired with new level
+        assertNotNull(dependentEvent.get(), "dependent logger should re-fire on group_deleted");
+        assertEquals(LogLevel.INFO, dependentEvent.get().level());
+        // Group key listener fires with deleted=true
+        assertNotNull(deletedEvent.get(), "group key listener should fire with deleted=true");
+        assertEquals("g1", deletedEvent.get().id());
+        assertTrue(deletedEvent.get().isDeleted());
+    }
+
     // -----------------------------------------------------------------------
     // E. group_deleted — remove from cache, fire listener, no fetch
     // -----------------------------------------------------------------------
 
     @Test
     void groupDeleted_firesListenerWithDeletedTrue() throws ApiException {
-        stubEmptyStart();
+        // Install with the group in the cache so deletion is observable.
+        LoggerListResponse emptyLoggers = new LoggerListResponse();
+        emptyLoggers.setData(new ArrayList<>());
+        when(mockLoggersApi.listLoggers(isNull(), isNull(), isNull(), isNull(), any(), any(), isNull()))
+                .thenReturn(emptyLoggers);
+        when(mockLogGroupsApi.listLogGroups(isNull(), any(), any(), isNull()))
+                .thenReturn(buildGroupListResponse("my-group", "WARN"));
+        client.registerAdapter(noopAdapter(null, null));
         client.install();
 
         AtomicReference<LoggerChangeEvent> received = new AtomicReference<>();
@@ -232,6 +341,39 @@ class LoggingClientWsEventsTest {
         assertEquals("my-group", received.get().id());
         assertTrue(received.get().isDeleted());
         verify(mockLogGroupsApi, never()).getLogGroup(any());
+    }
+
+    @Test
+    void groupDeleted_unknownGroup_doesNotFireListener() throws ApiException {
+        stubEmptyStart();
+        client.install();
+
+        AtomicInteger count = new AtomicInteger();
+        client.onChange("ghost-group", e -> count.incrementAndGet());
+
+        client.simulateGroupDeleted(Map.of("id", "ghost-group"));
+
+        assertEquals(0, count.get(),
+                "Deletion of an unknown group is a no-op for the synthetic deleted listener");
+    }
+
+    @Test
+    void groupDeleted_listenerException_doesNotStopProcessing() throws ApiException {
+        LoggerListResponse emptyLoggers = new LoggerListResponse();
+        emptyLoggers.setData(new ArrayList<>());
+        when(mockLoggersApi.listLoggers(isNull(), isNull(), isNull(), isNull(), any(), any(), isNull()))
+                .thenReturn(emptyLoggers);
+        when(mockLogGroupsApi.listLogGroups(isNull(), any(), any(), isNull()))
+                .thenReturn(buildGroupListResponse("crashy-group", "WARN"));
+        client.registerAdapter(noopAdapter(null, null));
+        client.install();
+
+        AtomicInteger okCount = new AtomicInteger();
+        client.onChange("crashy-group", e -> { throw new RuntimeException("boom"); });
+        client.onChange("crashy-group", e -> okCount.incrementAndGet());
+
+        assertDoesNotThrow(() -> client.simulateGroupDeleted(Map.of("id", "crashy-group")));
+        assertEquals(1, okCount.get(), "Second listener still fires after first throws");
     }
 
     @Test

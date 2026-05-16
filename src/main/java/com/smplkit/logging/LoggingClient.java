@@ -53,7 +53,6 @@ import java.util.logging.Level;
 public final class LoggingClient {
 
     private static final java.util.logging.Logger LOG = java.util.logging.Logger.getLogger("smplkit.logging");
-    private static final String FALLBACK_LEVEL = "INFO";
 
     final LoggersApi loggersApi;
     final LogGroupsApi logGroupsApi;
@@ -364,89 +363,6 @@ public final class LoggingClient {
     }
 
     // -----------------------------------------------------------------------
-    // Level resolution (per ADR-034 section 3.1)
-    // -----------------------------------------------------------------------
-
-    /**
-     * Resolves the effective log level for a logger in the given environment.
-     *
-     * <p>Package-private for testing.</p>
-     */
-    String resolveLevel(String loggerKey, String env,
-                        Map<String, Map<String, Object>> loggers,
-                        Map<String, Map<String, Object>> groups) {
-        String result = resolveForEntry(loggerKey, env, loggers, groups);
-        if (result != null) return result;
-
-        // Dot-notation ancestry: walk up the hierarchy
-        String[] parts = loggerKey.split("\\.");
-        for (int i = parts.length - 1; i > 0; i--) {
-            StringBuilder ancestor = new StringBuilder(parts[0]);
-            for (int j = 1; j < i; j++) {
-                ancestor.append('.').append(parts[j]);
-            }
-            result = resolveForEntry(ancestor.toString(), env, loggers, groups);
-            if (result != null) return result;
-        }
-
-        return FALLBACK_LEVEL;
-    }
-
-    private String resolveForEntry(String key, String env,
-                                   Map<String, Map<String, Object>> loggers,
-                                   Map<String, Map<String, Object>> groups) {
-        Map<String, Object> entry = loggers.get(key);
-        if (entry == null) return null;
-
-        // Step 1: env override on the entry itself
-        String envLevel = extractEnvLevel(entry, env);
-        if (envLevel != null) return envLevel;
-
-        // Step 2: base level on the entry itself
-        String base = (String) entry.get("level");
-        if (base != null) return base;
-
-        // Step 3: group chain
-        String groupId = (String) entry.get("group");
-        return resolveGroupChain(groupId, env, groups);
-    }
-
-    private String resolveGroupChain(String groupId, String env,
-                                     Map<String, Map<String, Object>> groups) {
-        Set<String> visited = new HashSet<>();
-        String currentId = groupId;
-        while (currentId != null && !visited.contains(currentId)) {
-            visited.add(currentId);
-            Map<String, Object> group = groups.get(currentId);
-            if (group == null) break;
-
-            String envLevel = extractEnvLevel(group, env);
-            if (envLevel != null) return envLevel;
-
-            String base = (String) group.get("level");
-            if (base != null) return base;
-
-            currentId = (String) group.get("group");
-        }
-        return null;
-    }
-
-    @SuppressWarnings("unchecked")
-    private String extractEnvLevel(Map<String, Object> entry, String env) {
-        Object envs = entry.get("environments");
-        if (envs instanceof Map) {
-            Object envData = ((Map<String, Object>) envs).get(env);
-            if (envData instanceof Map) {
-                Object level = ((Map<String, Object>) envData).get("level");
-                if (level instanceof String) {
-                    return (String) level;
-                }
-            }
-        }
-        return null;
-    }
-
-    // -----------------------------------------------------------------------
     // Key normalization (ADR-034 section 5)
     // -----------------------------------------------------------------------
 
@@ -501,7 +417,7 @@ public final class LoggingClient {
         if (started) {
             Map<String, Object> entry = loggersCache.get(normalized);
             if (entry != null && Boolean.TRUE.equals(entry.get("managed"))) {
-                String resolved = resolveLevel(normalized, environment, loggersCache, groupsCache);
+                String resolved = Resolution.resolveLevel(normalized, environment, loggersCache, groupsCache);
                 for (LoggingAdapter adapter : adapters) {
                     try {
                         adapter.applyLevel(originalName, resolved);
@@ -525,7 +441,7 @@ public final class LoggingClient {
         // Snapshot pre-state for this logger
         Map<String, Object> preEntry = loggersCache.get(loggerKey);
         String preLevel = preEntry != null
-                ? resolveLevel(loggerKey, environment, loggersCache, groupsCache) : null;
+                ? Resolution.resolveLevel(loggerKey, environment, loggersCache, groupsCache) : null;
 
         // Scoped fetch: GET /loggers/{key}
         try {
@@ -547,7 +463,7 @@ public final class LoggingClient {
             return;
         }
 
-        String postLevel = resolveLevel(loggerKey, environment, loggersCache, groupsCache);
+        String postLevel = Resolution.resolveLevel(loggerKey, environment, loggersCache, groupsCache);
 
         // Only fire if level actually changed
         if (java.util.Objects.equals(preLevel, postLevel)) {
@@ -619,12 +535,32 @@ public final class LoggingClient {
         }
         Debug.log("websocket", "group_deleted event received, key=" + groupKey);
 
-        // Remove from cache — no HTTP fetch
-        groupsCache.remove(groupKey);
+        // Snapshot pre-levels so dependent loggers can be re-applied if their
+        // resolved level changed (e.g., a logger whose chain ran through this
+        // group now falls through to its dot-ancestor or system default).
+        Map<String, String> preLevels = snapshotLevels();
 
-        // Fire listener with deleted=true
-        LoggerChangeEvent event = new LoggerChangeEvent(groupKey, null, "websocket", true);
-        fireChangeListeners(groupKey, event);
+        boolean existed = groupsCache.remove(groupKey) != null;
+
+        // Diff-based re-apply: pushes new levels to adapters and fires
+        // key-scoped listeners for dependent loggers whose resolved level changed.
+        diffAndFireLevels(preLevels, "websocket");
+
+        // Fire the synthetic deleted=true listener for the group key itself
+        // (subscribers may have registered on the group id directly).
+        if (existed) {
+            LoggerChangeEvent event = new LoggerChangeEvent(groupKey, null, "websocket", true);
+            List<Consumer<LoggerChangeEvent>> scoped = keyListeners.get(groupKey);
+            if (scoped != null) {
+                for (Consumer<LoggerChangeEvent> listener : scoped) {
+                    try {
+                        listener.accept(event);
+                    } catch (Exception e) {
+                        LOG.log(Level.WARNING, "Key-scoped change listener threw exception", e);
+                    }
+                }
+            }
+        }
     }
 
     private void handleLoggersChanged(Map<String, Object> data) {
@@ -651,7 +587,7 @@ public final class LoggingClient {
     private Map<String, String> snapshotLevels() {
         Map<String, String> snapshot = new HashMap<>();
         for (String key : nameMap.values()) {
-            snapshot.put(key, resolveLevel(key, environment, loggersCache, groupsCache));
+            snapshot.put(key, Resolution.resolveLevel(key, environment, loggersCache, groupsCache));
         }
         return snapshot;
     }
@@ -663,7 +599,7 @@ public final class LoggingClient {
             String originalName = mapping.getKey();
             String normalizedKey = mapping.getValue();
             String preLevel = preLevels.get(normalizedKey);
-            String postLevel = resolveLevel(normalizedKey, environment, loggersCache, groupsCache);
+            String postLevel = Resolution.resolveLevel(normalizedKey, environment, loggersCache, groupsCache);
 
             if (!java.util.Objects.equals(preLevel, postLevel)) {
                 anyChanged = true;
@@ -872,7 +808,7 @@ public final class LoggingClient {
             Boolean managed = (Boolean) entry.get("managed");
             if (managed == null || !managed) continue;
 
-            String resolved = resolveLevel(normalizedKey, environment, loggersCache, groupsCache);
+            String resolved = Resolution.resolveLevel(normalizedKey, environment, loggersCache, groupsCache);
             Debug.log("resolution", "resolved " + normalizedKey + " → " + resolved);
             LogLevel logLevel = tryParseLogLevel(resolved, normalizedKey);
             if (logLevel == null) continue;
