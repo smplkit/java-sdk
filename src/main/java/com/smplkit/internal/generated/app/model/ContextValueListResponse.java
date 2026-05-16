@@ -24,8 +24,8 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonTypeName;
 import com.fasterxml.jackson.annotation.JsonValue;
+import com.smplkit.internal.generated.app.model.ContextValueResource;
 import com.smplkit.internal.generated.app.model.ListMeta;
-import com.smplkit.internal.generated.app.model.ProductResource;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -34,31 +34,31 @@ import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 
 import com.smplkit.internal.generated.app.ApiClient;
 /**
- * JSON:API collection response for products.
+ * JSON:API collection response envelope for distinct context values.
  */
 @JsonPropertyOrder({
-  ProductListResponse.JSON_PROPERTY_DATA,
-  ProductListResponse.JSON_PROPERTY_META
+  ContextValueListResponse.JSON_PROPERTY_DATA,
+  ContextValueListResponse.JSON_PROPERTY_META
 })
 @jakarta.annotation.Generated(value = "org.openapitools.codegen.languages.JavaClientCodegen", comments = "Generator version: 7.21.0")
-public class ProductListResponse {
+public class ContextValueListResponse {
   public static final String JSON_PROPERTY_DATA = "data";
   @jakarta.annotation.Nonnull
-  private List<ProductResource> data = new ArrayList<>();
+  private List<ContextValueResource> data = new ArrayList<>();
 
   public static final String JSON_PROPERTY_META = "meta";
   @jakarta.annotation.Nonnull
   private ListMeta meta;
 
-  public ProductListResponse() { 
+  public ContextValueListResponse() { 
   }
 
-  public ProductListResponse data(@jakarta.annotation.Nonnull List<ProductResource> data) {
+  public ContextValueListResponse data(@jakarta.annotation.Nonnull List<ContextValueResource> data) {
     this.data = data;
     return this;
   }
 
-  public ProductListResponse addDataItem(ProductResource dataItem) {
+  public ContextValueListResponse addDataItem(ContextValueResource dataItem) {
     if (this.data == null) {
       this.data = new ArrayList<>();
     }
@@ -73,19 +73,19 @@ public class ProductListResponse {
   @jakarta.annotation.Nonnull
   @JsonProperty(value = JSON_PROPERTY_DATA, required = true)
   @JsonInclude(value = JsonInclude.Include.ALWAYS)
-  public List<ProductResource> getData() {
+  public List<ContextValueResource> getData() {
     return data;
   }
 
 
   @JsonProperty(value = JSON_PROPERTY_DATA, required = true)
   @JsonInclude(value = JsonInclude.Include.ALWAYS)
-  public void setData(@jakarta.annotation.Nonnull List<ProductResource> data) {
+  public void setData(@jakarta.annotation.Nonnull List<ContextValueResource> data) {
     this.data = data;
   }
 
 
-  public ProductListResponse meta(@jakarta.annotation.Nonnull ListMeta meta) {
+  public ContextValueListResponse meta(@jakarta.annotation.Nonnull ListMeta meta) {
     this.meta = meta;
     return this;
   }
@@ -110,7 +110,7 @@ public class ProductListResponse {
 
 
   /**
-   * Return true if this ProductListResponse object is equal to o.
+   * Return true if this ContextValueListResponse object is equal to o.
    */
   @Override
   public boolean equals(Object o) {
@@ -120,9 +120,9 @@ public class ProductListResponse {
     if (o == null || getClass() != o.getClass()) {
       return false;
     }
-    ProductListResponse productListResponse = (ProductListResponse) o;
-    return Objects.equals(this.data, productListResponse.data) &&
-        Objects.equals(this.meta, productListResponse.meta);
+    ContextValueListResponse contextValueListResponse = (ContextValueListResponse) o;
+    return Objects.equals(this.data, contextValueListResponse.data) &&
+        Objects.equals(this.meta, contextValueListResponse.meta);
   }
 
   @Override
@@ -133,7 +133,7 @@ public class ProductListResponse {
   @Override
   public String toString() {
     StringBuilder sb = new StringBuilder();
-    sb.append("class ProductListResponse {\n");
+    sb.append("class ContextValueListResponse {\n");
     sb.append("    data: ").append(toIndentedString(data)).append("\n");
     sb.append("    meta: ").append(toIndentedString(meta)).append("\n");
     sb.append("}");

@@ -24,6 +24,7 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonTypeName;
 import com.fasterxml.jackson.annotation.JsonValue;
+import com.smplkit.internal.generated.app.model.ListMeta;
 import com.smplkit.internal.generated.app.model.MetricRollupResource;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -36,13 +37,18 @@ import com.smplkit.internal.generated.app.ApiClient;
  * JSON:API collection response for metric rollups.
  */
 @JsonPropertyOrder({
-  MetricRollupListResponse.JSON_PROPERTY_DATA
+  MetricRollupListResponse.JSON_PROPERTY_DATA,
+  MetricRollupListResponse.JSON_PROPERTY_META
 })
 @jakarta.annotation.Generated(value = "org.openapitools.codegen.languages.JavaClientCodegen", comments = "Generator version: 7.21.0")
 public class MetricRollupListResponse {
   public static final String JSON_PROPERTY_DATA = "data";
   @jakarta.annotation.Nonnull
   private List<MetricRollupResource> data = new ArrayList<>();
+
+  public static final String JSON_PROPERTY_META = "meta";
+  @jakarta.annotation.Nonnull
+  private ListMeta meta;
 
   public MetricRollupListResponse() { 
   }
@@ -79,6 +85,30 @@ public class MetricRollupListResponse {
   }
 
 
+  public MetricRollupListResponse meta(@jakarta.annotation.Nonnull ListMeta meta) {
+    this.meta = meta;
+    return this;
+  }
+
+  /**
+   * Get meta
+   * @return meta
+   */
+  @jakarta.annotation.Nonnull
+  @JsonProperty(value = JSON_PROPERTY_META, required = true)
+  @JsonInclude(value = JsonInclude.Include.ALWAYS)
+  public ListMeta getMeta() {
+    return meta;
+  }
+
+
+  @JsonProperty(value = JSON_PROPERTY_META, required = true)
+  @JsonInclude(value = JsonInclude.Include.ALWAYS)
+  public void setMeta(@jakarta.annotation.Nonnull ListMeta meta) {
+    this.meta = meta;
+  }
+
+
   /**
    * Return true if this MetricRollupListResponse object is equal to o.
    */
@@ -91,12 +121,13 @@ public class MetricRollupListResponse {
       return false;
     }
     MetricRollupListResponse metricRollupListResponse = (MetricRollupListResponse) o;
-    return Objects.equals(this.data, metricRollupListResponse.data);
+    return Objects.equals(this.data, metricRollupListResponse.data) &&
+        Objects.equals(this.meta, metricRollupListResponse.meta);
   }
 
   @Override
   public int hashCode() {
-    return Objects.hash(data);
+    return Objects.hash(data, meta);
   }
 
   @Override
@@ -104,6 +135,7 @@ public class MetricRollupListResponse {
     StringBuilder sb = new StringBuilder();
     sb.append("class MetricRollupListResponse {\n");
     sb.append("    data: ").append(toIndentedString(data)).append("\n");
+    sb.append("    meta: ").append(toIndentedString(meta)).append("\n");
     sb.append("}");
     return sb.toString();
   }
@@ -156,6 +188,11 @@ public class MetricRollupListResponse {
           "".equals(suffix) ? "" : String.format(java.util.Locale.ROOT, "%s%d%s", containerPrefix, i, containerSuffix))));
         }
       }
+    }
+
+    // add `meta` to the URL query string
+    if (getMeta() != null) {
+      joiner.add(getMeta().toUrlQueryString(prefix + "meta" + suffix));
     }
 
     return joiner.toString();

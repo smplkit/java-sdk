@@ -40,6 +40,7 @@ import com.smplkit.internal.generated.app.ApiClient;
  * A specific instance of a context type — for example, a particular user, account, or device — together with the attributes observed on it.  Context instances are addressed by a composite identifier of the form &#x60;context_type:key&#x60; (e.g. &#x60;user:alice-123&#x60;).
  */
 @JsonPropertyOrder({
+  Context.JSON_PROPERTY_KEY,
   Context.JSON_PROPERTY_NAME,
   Context.JSON_PROPERTY_CONTEXT_TYPE,
   Context.JSON_PROPERTY_ATTRIBUTES,
@@ -48,6 +49,10 @@ import com.smplkit.internal.generated.app.ApiClient;
 })
 @jakarta.annotation.Generated(value = "org.openapitools.codegen.languages.JavaClientCodegen", comments = "Generator version: 7.21.0")
 public class Context {
+  public static final String JSON_PROPERTY_KEY = "key";
+  @jakarta.annotation.Nonnull
+  private String key;
+
   public static final String JSON_PROPERTY_NAME = "name";
   private JsonNullable<String> name = JsonNullable.<String>undefined();
 
@@ -70,13 +75,29 @@ public class Context {
 
   @JsonCreator
   public Context(
+    @JsonProperty(JSON_PROPERTY_KEY) String key, 
     @JsonProperty(JSON_PROPERTY_CREATED_AT) OffsetDateTime createdAt, 
     @JsonProperty(JSON_PROPERTY_UPDATED_AT) OffsetDateTime updatedAt
   ) {
   this();
+    this.key = key;
     this.createdAt = createdAt == null ? JsonNullable.<OffsetDateTime>undefined() : JsonNullable.of(createdAt);
     this.updatedAt = updatedAt == null ? JsonNullable.<OffsetDateTime>undefined() : JsonNullable.of(updatedAt);
   }
+
+  /**
+   * Entity identifier within the context type (e.g. &#x60;alice-123&#x60;). Together with &#x60;context_type&#x60; it forms the composite &#x60;id&#x60; &#x60;context_type:key&#x60;. Set by the bulk-register API; not editable.
+   * @return key
+   */
+  @jakarta.annotation.Nonnull
+  @JsonProperty(value = JSON_PROPERTY_KEY, required = true)
+  @JsonInclude(value = JsonInclude.Include.ALWAYS)
+  public String getKey() {
+    return key;
+  }
+
+
+
 
   public Context name(@jakarta.annotation.Nullable String name) {
     this.name = JsonNullable.<String>of(name);
@@ -234,7 +255,8 @@ public class Context {
       return false;
     }
     Context context = (Context) o;
-    return equalsNullable(this.name, context.name) &&
+    return Objects.equals(this.key, context.key) &&
+        equalsNullable(this.name, context.name) &&
         Objects.equals(this.contextType, context.contextType) &&
         Objects.equals(this.attributes, context.attributes) &&
         equalsNullable(this.createdAt, context.createdAt) &&
@@ -247,7 +269,7 @@ public class Context {
 
   @Override
   public int hashCode() {
-    return Objects.hash(hashCodeNullable(name), contextType, attributes, hashCodeNullable(createdAt), hashCodeNullable(updatedAt));
+    return Objects.hash(key, hashCodeNullable(name), contextType, attributes, hashCodeNullable(createdAt), hashCodeNullable(updatedAt));
   }
 
   private static <T> int hashCodeNullable(JsonNullable<T> a) {
@@ -261,6 +283,7 @@ public class Context {
   public String toString() {
     StringBuilder sb = new StringBuilder();
     sb.append("class Context {\n");
+    sb.append("    key: ").append(toIndentedString(key)).append("\n");
     sb.append("    name: ").append(toIndentedString(name)).append("\n");
     sb.append("    contextType: ").append(toIndentedString(contextType)).append("\n");
     sb.append("    attributes: ").append(toIndentedString(attributes)).append("\n");
@@ -309,6 +332,11 @@ public class Context {
     }
 
     StringJoiner joiner = new StringJoiner("&");
+
+    // add `key` to the URL query string
+    if (getKey() != null) {
+      joiner.add(String.format(java.util.Locale.ROOT, "%skey%s=%s", prefix, suffix, ApiClient.urlEncode(ApiClient.valueToString(getKey()))));
+    }
 
     // add `name` to the URL query string
     if (getName() != null) {

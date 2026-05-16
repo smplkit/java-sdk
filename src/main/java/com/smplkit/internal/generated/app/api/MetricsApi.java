@@ -279,23 +279,29 @@ public class MetricsApi {
    * List Metric Names
    * Return distinct metric names recorded for the account, each with a representative unit. Plain-JSON response (not JSON:API) — this is metadata for discovery, not a metric resource.  Default sort is &#x60;name&#x60; ascending.
    * @param sort Field to sort by. Prefix with &#x60;-&#x60; for descending order. Default: &#x60;name&#x60;. Allowed values: &#x60;name&#x60;, &#x60;-name&#x60;. (optional, default to name)
+   * @param pageNumber 1-based page number to return. Optional; defaults to &#x60;1&#x60; when omitted. Must be &#x60;&gt;&#x3D; 1&#x60; — requests with a smaller value are rejected with a 400 error. (optional, default to 1)
+   * @param pageSize Number of items per page. Optional; defaults to &#x60;1000&#x60; when omitted. Must be between &#x60;1&#x60; and &#x60;1000&#x60; inclusive — requests outside that range are rejected with a 400 error. (optional, default to 1000)
+   * @param metaTotal When &#x60;true&#x60;, the response&#39;s &#x60;meta.pagination&#x60; block includes &#x60;total&#x60; (the total number of matching items across all pages) and &#x60;total_pages&#x60;. Computing these requires an extra &#x60;COUNT&#x60; query, so omit (or pass &#x60;false&#x60;) when the totals are not needed. Defaults to &#x60;false&#x60;. (optional, default to false)
    * @return MetricNamesResponse
    * @throws ApiException if fails to make API call
    */
-  public MetricNamesResponse listMetricNames(@jakarta.annotation.Nullable String sort) throws ApiException {
-    return listMetricNames(sort, null);
+  public MetricNamesResponse listMetricNames(@jakarta.annotation.Nullable String sort, @jakarta.annotation.Nullable Integer pageNumber, @jakarta.annotation.Nullable Integer pageSize, @jakarta.annotation.Nullable Boolean metaTotal) throws ApiException {
+    return listMetricNames(sort, pageNumber, pageSize, metaTotal, null);
   }
 
   /**
    * List Metric Names
    * Return distinct metric names recorded for the account, each with a representative unit. Plain-JSON response (not JSON:API) — this is metadata for discovery, not a metric resource.  Default sort is &#x60;name&#x60; ascending.
    * @param sort Field to sort by. Prefix with &#x60;-&#x60; for descending order. Default: &#x60;name&#x60;. Allowed values: &#x60;name&#x60;, &#x60;-name&#x60;. (optional, default to name)
+   * @param pageNumber 1-based page number to return. Optional; defaults to &#x60;1&#x60; when omitted. Must be &#x60;&gt;&#x3D; 1&#x60; — requests with a smaller value are rejected with a 400 error. (optional, default to 1)
+   * @param pageSize Number of items per page. Optional; defaults to &#x60;1000&#x60; when omitted. Must be between &#x60;1&#x60; and &#x60;1000&#x60; inclusive — requests outside that range are rejected with a 400 error. (optional, default to 1000)
+   * @param metaTotal When &#x60;true&#x60;, the response&#39;s &#x60;meta.pagination&#x60; block includes &#x60;total&#x60; (the total number of matching items across all pages) and &#x60;total_pages&#x60;. Computing these requires an extra &#x60;COUNT&#x60; query, so omit (or pass &#x60;false&#x60;) when the totals are not needed. Defaults to &#x60;false&#x60;. (optional, default to false)
    * @param headers Optional headers to include in the request
    * @return MetricNamesResponse
    * @throws ApiException if fails to make API call
    */
-  public MetricNamesResponse listMetricNames(@jakarta.annotation.Nullable String sort, Map<String, String> headers) throws ApiException {
-    ApiResponse<MetricNamesResponse> localVarResponse = listMetricNamesWithHttpInfo(sort, headers);
+  public MetricNamesResponse listMetricNames(@jakarta.annotation.Nullable String sort, @jakarta.annotation.Nullable Integer pageNumber, @jakarta.annotation.Nullable Integer pageSize, @jakarta.annotation.Nullable Boolean metaTotal, Map<String, String> headers) throws ApiException {
+    ApiResponse<MetricNamesResponse> localVarResponse = listMetricNamesWithHttpInfo(sort, pageNumber, pageSize, metaTotal, headers);
     return localVarResponse.getData();
   }
 
@@ -303,23 +309,29 @@ public class MetricsApi {
    * List Metric Names
    * Return distinct metric names recorded for the account, each with a representative unit. Plain-JSON response (not JSON:API) — this is metadata for discovery, not a metric resource.  Default sort is &#x60;name&#x60; ascending.
    * @param sort Field to sort by. Prefix with &#x60;-&#x60; for descending order. Default: &#x60;name&#x60;. Allowed values: &#x60;name&#x60;, &#x60;-name&#x60;. (optional, default to name)
+   * @param pageNumber 1-based page number to return. Optional; defaults to &#x60;1&#x60; when omitted. Must be &#x60;&gt;&#x3D; 1&#x60; — requests with a smaller value are rejected with a 400 error. (optional, default to 1)
+   * @param pageSize Number of items per page. Optional; defaults to &#x60;1000&#x60; when omitted. Must be between &#x60;1&#x60; and &#x60;1000&#x60; inclusive — requests outside that range are rejected with a 400 error. (optional, default to 1000)
+   * @param metaTotal When &#x60;true&#x60;, the response&#39;s &#x60;meta.pagination&#x60; block includes &#x60;total&#x60; (the total number of matching items across all pages) and &#x60;total_pages&#x60;. Computing these requires an extra &#x60;COUNT&#x60; query, so omit (or pass &#x60;false&#x60;) when the totals are not needed. Defaults to &#x60;false&#x60;. (optional, default to false)
    * @return ApiResponse&lt;MetricNamesResponse&gt;
    * @throws ApiException if fails to make API call
    */
-  public ApiResponse<MetricNamesResponse> listMetricNamesWithHttpInfo(@jakarta.annotation.Nullable String sort) throws ApiException {
-    return listMetricNamesWithHttpInfo(sort, null);
+  public ApiResponse<MetricNamesResponse> listMetricNamesWithHttpInfo(@jakarta.annotation.Nullable String sort, @jakarta.annotation.Nullable Integer pageNumber, @jakarta.annotation.Nullable Integer pageSize, @jakarta.annotation.Nullable Boolean metaTotal) throws ApiException {
+    return listMetricNamesWithHttpInfo(sort, pageNumber, pageSize, metaTotal, null);
   }
 
   /**
    * List Metric Names
    * Return distinct metric names recorded for the account, each with a representative unit. Plain-JSON response (not JSON:API) — this is metadata for discovery, not a metric resource.  Default sort is &#x60;name&#x60; ascending.
    * @param sort Field to sort by. Prefix with &#x60;-&#x60; for descending order. Default: &#x60;name&#x60;. Allowed values: &#x60;name&#x60;, &#x60;-name&#x60;. (optional, default to name)
+   * @param pageNumber 1-based page number to return. Optional; defaults to &#x60;1&#x60; when omitted. Must be &#x60;&gt;&#x3D; 1&#x60; — requests with a smaller value are rejected with a 400 error. (optional, default to 1)
+   * @param pageSize Number of items per page. Optional; defaults to &#x60;1000&#x60; when omitted. Must be between &#x60;1&#x60; and &#x60;1000&#x60; inclusive — requests outside that range are rejected with a 400 error. (optional, default to 1000)
+   * @param metaTotal When &#x60;true&#x60;, the response&#39;s &#x60;meta.pagination&#x60; block includes &#x60;total&#x60; (the total number of matching items across all pages) and &#x60;total_pages&#x60;. Computing these requires an extra &#x60;COUNT&#x60; query, so omit (or pass &#x60;false&#x60;) when the totals are not needed. Defaults to &#x60;false&#x60;. (optional, default to false)
    * @param headers Optional headers to include in the request
    * @return ApiResponse&lt;MetricNamesResponse&gt;
    * @throws ApiException if fails to make API call
    */
-  public ApiResponse<MetricNamesResponse> listMetricNamesWithHttpInfo(@jakarta.annotation.Nullable String sort, Map<String, String> headers) throws ApiException {
-    HttpRequest.Builder localVarRequestBuilder = listMetricNamesRequestBuilder(sort, headers);
+  public ApiResponse<MetricNamesResponse> listMetricNamesWithHttpInfo(@jakarta.annotation.Nullable String sort, @jakarta.annotation.Nullable Integer pageNumber, @jakarta.annotation.Nullable Integer pageSize, @jakarta.annotation.Nullable Boolean metaTotal, Map<String, String> headers) throws ApiException {
+    HttpRequest.Builder localVarRequestBuilder = listMetricNamesRequestBuilder(sort, pageNumber, pageSize, metaTotal, headers);
     try {
       HttpResponse<InputStream> localVarResponse = memberVarHttpClient.send(
           localVarRequestBuilder.build(),
@@ -366,7 +378,7 @@ public class MetricsApi {
     }
   }
 
-  private HttpRequest.Builder listMetricNamesRequestBuilder(@jakarta.annotation.Nullable String sort, Map<String, String> headers) throws ApiException {
+  private HttpRequest.Builder listMetricNamesRequestBuilder(@jakarta.annotation.Nullable String sort, @jakarta.annotation.Nullable Integer pageNumber, @jakarta.annotation.Nullable Integer pageSize, @jakarta.annotation.Nullable Boolean metaTotal, Map<String, String> headers) throws ApiException {
 
     HttpRequest.Builder localVarRequestBuilder = HttpRequest.newBuilder();
 
@@ -377,6 +389,12 @@ public class MetricsApi {
     String localVarQueryParameterBaseName;
     localVarQueryParameterBaseName = "sort";
     localVarQueryParams.addAll(ApiClient.parameterToPairs("sort", sort));
+    localVarQueryParameterBaseName = "page[number]";
+    localVarQueryParams.addAll(ApiClient.parameterToPairs("page[number]", pageNumber));
+    localVarQueryParameterBaseName = "page[size]";
+    localVarQueryParams.addAll(ApiClient.parameterToPairs("page[size]", pageSize));
+    localVarQueryParameterBaseName = "meta[total]";
+    localVarQueryParams.addAll(ApiClient.parameterToPairs("meta[total]", metaTotal));
 
     if (!localVarQueryParams.isEmpty() || localVarQueryStringJoiner.length() != 0) {
       StringJoiner queryJoiner = new StringJoiner("&");
@@ -410,11 +428,14 @@ public class MetricsApi {
    * @param filterRollup  (required)
    * @param filterRecordedAt  (optional)
    * @param sort Field to sort by. Prefix with &#x60;-&#x60; for descending order. Default: &#x60;bucket&#x60;. Allowed values: &#x60;bucket&#x60;, &#x60;-bucket&#x60;. (optional, default to bucket)
+   * @param pageNumber 1-based page number to return. Optional; defaults to &#x60;1&#x60; when omitted. Must be &#x60;&gt;&#x3D; 1&#x60; — requests with a smaller value are rejected with a 400 error. (optional, default to 1)
+   * @param pageSize Number of items per page. Optional; defaults to &#x60;1000&#x60; when omitted. Must be between &#x60;1&#x60; and &#x60;1000&#x60; inclusive — requests outside that range are rejected with a 400 error. (optional, default to 1000)
+   * @param metaTotal When &#x60;true&#x60;, the response&#39;s &#x60;meta.pagination&#x60; block includes &#x60;total&#x60; (the total number of matching items across all pages) and &#x60;total_pages&#x60;. Computing these requires an extra &#x60;COUNT&#x60; query, so omit (or pass &#x60;false&#x60;) when the totals are not needed. Defaults to &#x60;false&#x60;. (optional, default to false)
    * @return MetricRollupListResponse
    * @throws ApiException if fails to make API call
    */
-  public MetricRollupListResponse listMetricRollups(@jakarta.annotation.Nonnull String filterName, @jakarta.annotation.Nonnull String filterRollup, @jakarta.annotation.Nullable String filterRecordedAt, @jakarta.annotation.Nullable String sort) throws ApiException {
-    return listMetricRollups(filterName, filterRollup, filterRecordedAt, sort, null);
+  public MetricRollupListResponse listMetricRollups(@jakarta.annotation.Nonnull String filterName, @jakarta.annotation.Nonnull String filterRollup, @jakarta.annotation.Nullable String filterRecordedAt, @jakarta.annotation.Nullable String sort, @jakarta.annotation.Nullable Integer pageNumber, @jakarta.annotation.Nullable Integer pageSize, @jakarta.annotation.Nullable Boolean metaTotal) throws ApiException {
+    return listMetricRollups(filterName, filterRollup, filterRecordedAt, sort, pageNumber, pageSize, metaTotal, null);
   }
 
   /**
@@ -424,12 +445,15 @@ public class MetricsApi {
    * @param filterRollup  (required)
    * @param filterRecordedAt  (optional)
    * @param sort Field to sort by. Prefix with &#x60;-&#x60; for descending order. Default: &#x60;bucket&#x60;. Allowed values: &#x60;bucket&#x60;, &#x60;-bucket&#x60;. (optional, default to bucket)
+   * @param pageNumber 1-based page number to return. Optional; defaults to &#x60;1&#x60; when omitted. Must be &#x60;&gt;&#x3D; 1&#x60; — requests with a smaller value are rejected with a 400 error. (optional, default to 1)
+   * @param pageSize Number of items per page. Optional; defaults to &#x60;1000&#x60; when omitted. Must be between &#x60;1&#x60; and &#x60;1000&#x60; inclusive — requests outside that range are rejected with a 400 error. (optional, default to 1000)
+   * @param metaTotal When &#x60;true&#x60;, the response&#39;s &#x60;meta.pagination&#x60; block includes &#x60;total&#x60; (the total number of matching items across all pages) and &#x60;total_pages&#x60;. Computing these requires an extra &#x60;COUNT&#x60; query, so omit (or pass &#x60;false&#x60;) when the totals are not needed. Defaults to &#x60;false&#x60;. (optional, default to false)
    * @param headers Optional headers to include in the request
    * @return MetricRollupListResponse
    * @throws ApiException if fails to make API call
    */
-  public MetricRollupListResponse listMetricRollups(@jakarta.annotation.Nonnull String filterName, @jakarta.annotation.Nonnull String filterRollup, @jakarta.annotation.Nullable String filterRecordedAt, @jakarta.annotation.Nullable String sort, Map<String, String> headers) throws ApiException {
-    ApiResponse<MetricRollupListResponse> localVarResponse = listMetricRollupsWithHttpInfo(filterName, filterRollup, filterRecordedAt, sort, headers);
+  public MetricRollupListResponse listMetricRollups(@jakarta.annotation.Nonnull String filterName, @jakarta.annotation.Nonnull String filterRollup, @jakarta.annotation.Nullable String filterRecordedAt, @jakarta.annotation.Nullable String sort, @jakarta.annotation.Nullable Integer pageNumber, @jakarta.annotation.Nullable Integer pageSize, @jakarta.annotation.Nullable Boolean metaTotal, Map<String, String> headers) throws ApiException {
+    ApiResponse<MetricRollupListResponse> localVarResponse = listMetricRollupsWithHttpInfo(filterName, filterRollup, filterRecordedAt, sort, pageNumber, pageSize, metaTotal, headers);
     return localVarResponse.getData();
   }
 
@@ -440,11 +464,14 @@ public class MetricsApi {
    * @param filterRollup  (required)
    * @param filterRecordedAt  (optional)
    * @param sort Field to sort by. Prefix with &#x60;-&#x60; for descending order. Default: &#x60;bucket&#x60;. Allowed values: &#x60;bucket&#x60;, &#x60;-bucket&#x60;. (optional, default to bucket)
+   * @param pageNumber 1-based page number to return. Optional; defaults to &#x60;1&#x60; when omitted. Must be &#x60;&gt;&#x3D; 1&#x60; — requests with a smaller value are rejected with a 400 error. (optional, default to 1)
+   * @param pageSize Number of items per page. Optional; defaults to &#x60;1000&#x60; when omitted. Must be between &#x60;1&#x60; and &#x60;1000&#x60; inclusive — requests outside that range are rejected with a 400 error. (optional, default to 1000)
+   * @param metaTotal When &#x60;true&#x60;, the response&#39;s &#x60;meta.pagination&#x60; block includes &#x60;total&#x60; (the total number of matching items across all pages) and &#x60;total_pages&#x60;. Computing these requires an extra &#x60;COUNT&#x60; query, so omit (or pass &#x60;false&#x60;) when the totals are not needed. Defaults to &#x60;false&#x60;. (optional, default to false)
    * @return ApiResponse&lt;MetricRollupListResponse&gt;
    * @throws ApiException if fails to make API call
    */
-  public ApiResponse<MetricRollupListResponse> listMetricRollupsWithHttpInfo(@jakarta.annotation.Nonnull String filterName, @jakarta.annotation.Nonnull String filterRollup, @jakarta.annotation.Nullable String filterRecordedAt, @jakarta.annotation.Nullable String sort) throws ApiException {
-    return listMetricRollupsWithHttpInfo(filterName, filterRollup, filterRecordedAt, sort, null);
+  public ApiResponse<MetricRollupListResponse> listMetricRollupsWithHttpInfo(@jakarta.annotation.Nonnull String filterName, @jakarta.annotation.Nonnull String filterRollup, @jakarta.annotation.Nullable String filterRecordedAt, @jakarta.annotation.Nullable String sort, @jakarta.annotation.Nullable Integer pageNumber, @jakarta.annotation.Nullable Integer pageSize, @jakarta.annotation.Nullable Boolean metaTotal) throws ApiException {
+    return listMetricRollupsWithHttpInfo(filterName, filterRollup, filterRecordedAt, sort, pageNumber, pageSize, metaTotal, null);
   }
 
   /**
@@ -454,12 +481,15 @@ public class MetricsApi {
    * @param filterRollup  (required)
    * @param filterRecordedAt  (optional)
    * @param sort Field to sort by. Prefix with &#x60;-&#x60; for descending order. Default: &#x60;bucket&#x60;. Allowed values: &#x60;bucket&#x60;, &#x60;-bucket&#x60;. (optional, default to bucket)
+   * @param pageNumber 1-based page number to return. Optional; defaults to &#x60;1&#x60; when omitted. Must be &#x60;&gt;&#x3D; 1&#x60; — requests with a smaller value are rejected with a 400 error. (optional, default to 1)
+   * @param pageSize Number of items per page. Optional; defaults to &#x60;1000&#x60; when omitted. Must be between &#x60;1&#x60; and &#x60;1000&#x60; inclusive — requests outside that range are rejected with a 400 error. (optional, default to 1000)
+   * @param metaTotal When &#x60;true&#x60;, the response&#39;s &#x60;meta.pagination&#x60; block includes &#x60;total&#x60; (the total number of matching items across all pages) and &#x60;total_pages&#x60;. Computing these requires an extra &#x60;COUNT&#x60; query, so omit (or pass &#x60;false&#x60;) when the totals are not needed. Defaults to &#x60;false&#x60;. (optional, default to false)
    * @param headers Optional headers to include in the request
    * @return ApiResponse&lt;MetricRollupListResponse&gt;
    * @throws ApiException if fails to make API call
    */
-  public ApiResponse<MetricRollupListResponse> listMetricRollupsWithHttpInfo(@jakarta.annotation.Nonnull String filterName, @jakarta.annotation.Nonnull String filterRollup, @jakarta.annotation.Nullable String filterRecordedAt, @jakarta.annotation.Nullable String sort, Map<String, String> headers) throws ApiException {
-    HttpRequest.Builder localVarRequestBuilder = listMetricRollupsRequestBuilder(filterName, filterRollup, filterRecordedAt, sort, headers);
+  public ApiResponse<MetricRollupListResponse> listMetricRollupsWithHttpInfo(@jakarta.annotation.Nonnull String filterName, @jakarta.annotation.Nonnull String filterRollup, @jakarta.annotation.Nullable String filterRecordedAt, @jakarta.annotation.Nullable String sort, @jakarta.annotation.Nullable Integer pageNumber, @jakarta.annotation.Nullable Integer pageSize, @jakarta.annotation.Nullable Boolean metaTotal, Map<String, String> headers) throws ApiException {
+    HttpRequest.Builder localVarRequestBuilder = listMetricRollupsRequestBuilder(filterName, filterRollup, filterRecordedAt, sort, pageNumber, pageSize, metaTotal, headers);
     try {
       HttpResponse<InputStream> localVarResponse = memberVarHttpClient.send(
           localVarRequestBuilder.build(),
@@ -506,7 +536,7 @@ public class MetricsApi {
     }
   }
 
-  private HttpRequest.Builder listMetricRollupsRequestBuilder(@jakarta.annotation.Nonnull String filterName, @jakarta.annotation.Nonnull String filterRollup, @jakarta.annotation.Nullable String filterRecordedAt, @jakarta.annotation.Nullable String sort, Map<String, String> headers) throws ApiException {
+  private HttpRequest.Builder listMetricRollupsRequestBuilder(@jakarta.annotation.Nonnull String filterName, @jakarta.annotation.Nonnull String filterRollup, @jakarta.annotation.Nullable String filterRecordedAt, @jakarta.annotation.Nullable String sort, @jakarta.annotation.Nullable Integer pageNumber, @jakarta.annotation.Nullable Integer pageSize, @jakarta.annotation.Nullable Boolean metaTotal, Map<String, String> headers) throws ApiException {
     // verify the required parameter 'filterName' is set
     if (filterName == null) {
       throw new ApiException(400, "Missing the required parameter 'filterName' when calling listMetricRollups");
@@ -531,6 +561,12 @@ public class MetricsApi {
     localVarQueryParams.addAll(ApiClient.parameterToPairs("filter[recorded_at]", filterRecordedAt));
     localVarQueryParameterBaseName = "sort";
     localVarQueryParams.addAll(ApiClient.parameterToPairs("sort", sort));
+    localVarQueryParameterBaseName = "page[number]";
+    localVarQueryParams.addAll(ApiClient.parameterToPairs("page[number]", pageNumber));
+    localVarQueryParameterBaseName = "page[size]";
+    localVarQueryParams.addAll(ApiClient.parameterToPairs("page[size]", pageSize));
+    localVarQueryParameterBaseName = "meta[total]";
+    localVarQueryParams.addAll(ApiClient.parameterToPairs("meta[total]", metaTotal));
 
     if (!localVarQueryParams.isEmpty() || localVarQueryStringJoiner.length() != 0) {
       StringJoiner queryJoiner = new StringJoiner("&");
@@ -563,11 +599,14 @@ public class MetricsApi {
    * @param filterName  (required)
    * @param filterRecordedAt  (optional)
    * @param sort Field to sort by. Prefix with &#x60;-&#x60; for descending order. Default: &#x60;-recorded_at&#x60;. Allowed values: &#x60;recorded_at&#x60;, &#x60;-recorded_at&#x60;, &#x60;value&#x60;, &#x60;-value&#x60;. (optional, default to -recorded_at)
+   * @param pageNumber 1-based page number to return. Optional; defaults to &#x60;1&#x60; when omitted. Must be &#x60;&gt;&#x3D; 1&#x60; — requests with a smaller value are rejected with a 400 error. (optional, default to 1)
+   * @param pageSize Number of items per page. Optional; defaults to &#x60;1000&#x60; when omitted. Must be between &#x60;1&#x60; and &#x60;1000&#x60; inclusive — requests outside that range are rejected with a 400 error. (optional, default to 1000)
+   * @param metaTotal When &#x60;true&#x60;, the response&#39;s &#x60;meta.pagination&#x60; block includes &#x60;total&#x60; (the total number of matching items across all pages) and &#x60;total_pages&#x60;. Computing these requires an extra &#x60;COUNT&#x60; query, so omit (or pass &#x60;false&#x60;) when the totals are not needed. Defaults to &#x60;false&#x60;. (optional, default to false)
    * @return MetricListResponse
    * @throws ApiException if fails to make API call
    */
-  public MetricListResponse listMetrics(@jakarta.annotation.Nonnull String filterName, @jakarta.annotation.Nullable String filterRecordedAt, @jakarta.annotation.Nullable String sort) throws ApiException {
-    return listMetrics(filterName, filterRecordedAt, sort, null);
+  public MetricListResponse listMetrics(@jakarta.annotation.Nonnull String filterName, @jakarta.annotation.Nullable String filterRecordedAt, @jakarta.annotation.Nullable String sort, @jakarta.annotation.Nullable Integer pageNumber, @jakarta.annotation.Nullable Integer pageSize, @jakarta.annotation.Nullable Boolean metaTotal) throws ApiException {
+    return listMetrics(filterName, filterRecordedAt, sort, pageNumber, pageSize, metaTotal, null);
   }
 
   /**
@@ -576,12 +615,15 @@ public class MetricsApi {
    * @param filterName  (required)
    * @param filterRecordedAt  (optional)
    * @param sort Field to sort by. Prefix with &#x60;-&#x60; for descending order. Default: &#x60;-recorded_at&#x60;. Allowed values: &#x60;recorded_at&#x60;, &#x60;-recorded_at&#x60;, &#x60;value&#x60;, &#x60;-value&#x60;. (optional, default to -recorded_at)
+   * @param pageNumber 1-based page number to return. Optional; defaults to &#x60;1&#x60; when omitted. Must be &#x60;&gt;&#x3D; 1&#x60; — requests with a smaller value are rejected with a 400 error. (optional, default to 1)
+   * @param pageSize Number of items per page. Optional; defaults to &#x60;1000&#x60; when omitted. Must be between &#x60;1&#x60; and &#x60;1000&#x60; inclusive — requests outside that range are rejected with a 400 error. (optional, default to 1000)
+   * @param metaTotal When &#x60;true&#x60;, the response&#39;s &#x60;meta.pagination&#x60; block includes &#x60;total&#x60; (the total number of matching items across all pages) and &#x60;total_pages&#x60;. Computing these requires an extra &#x60;COUNT&#x60; query, so omit (or pass &#x60;false&#x60;) when the totals are not needed. Defaults to &#x60;false&#x60;. (optional, default to false)
    * @param headers Optional headers to include in the request
    * @return MetricListResponse
    * @throws ApiException if fails to make API call
    */
-  public MetricListResponse listMetrics(@jakarta.annotation.Nonnull String filterName, @jakarta.annotation.Nullable String filterRecordedAt, @jakarta.annotation.Nullable String sort, Map<String, String> headers) throws ApiException {
-    ApiResponse<MetricListResponse> localVarResponse = listMetricsWithHttpInfo(filterName, filterRecordedAt, sort, headers);
+  public MetricListResponse listMetrics(@jakarta.annotation.Nonnull String filterName, @jakarta.annotation.Nullable String filterRecordedAt, @jakarta.annotation.Nullable String sort, @jakarta.annotation.Nullable Integer pageNumber, @jakarta.annotation.Nullable Integer pageSize, @jakarta.annotation.Nullable Boolean metaTotal, Map<String, String> headers) throws ApiException {
+    ApiResponse<MetricListResponse> localVarResponse = listMetricsWithHttpInfo(filterName, filterRecordedAt, sort, pageNumber, pageSize, metaTotal, headers);
     return localVarResponse.getData();
   }
 
@@ -591,11 +633,14 @@ public class MetricsApi {
    * @param filterName  (required)
    * @param filterRecordedAt  (optional)
    * @param sort Field to sort by. Prefix with &#x60;-&#x60; for descending order. Default: &#x60;-recorded_at&#x60;. Allowed values: &#x60;recorded_at&#x60;, &#x60;-recorded_at&#x60;, &#x60;value&#x60;, &#x60;-value&#x60;. (optional, default to -recorded_at)
+   * @param pageNumber 1-based page number to return. Optional; defaults to &#x60;1&#x60; when omitted. Must be &#x60;&gt;&#x3D; 1&#x60; — requests with a smaller value are rejected with a 400 error. (optional, default to 1)
+   * @param pageSize Number of items per page. Optional; defaults to &#x60;1000&#x60; when omitted. Must be between &#x60;1&#x60; and &#x60;1000&#x60; inclusive — requests outside that range are rejected with a 400 error. (optional, default to 1000)
+   * @param metaTotal When &#x60;true&#x60;, the response&#39;s &#x60;meta.pagination&#x60; block includes &#x60;total&#x60; (the total number of matching items across all pages) and &#x60;total_pages&#x60;. Computing these requires an extra &#x60;COUNT&#x60; query, so omit (or pass &#x60;false&#x60;) when the totals are not needed. Defaults to &#x60;false&#x60;. (optional, default to false)
    * @return ApiResponse&lt;MetricListResponse&gt;
    * @throws ApiException if fails to make API call
    */
-  public ApiResponse<MetricListResponse> listMetricsWithHttpInfo(@jakarta.annotation.Nonnull String filterName, @jakarta.annotation.Nullable String filterRecordedAt, @jakarta.annotation.Nullable String sort) throws ApiException {
-    return listMetricsWithHttpInfo(filterName, filterRecordedAt, sort, null);
+  public ApiResponse<MetricListResponse> listMetricsWithHttpInfo(@jakarta.annotation.Nonnull String filterName, @jakarta.annotation.Nullable String filterRecordedAt, @jakarta.annotation.Nullable String sort, @jakarta.annotation.Nullable Integer pageNumber, @jakarta.annotation.Nullable Integer pageSize, @jakarta.annotation.Nullable Boolean metaTotal) throws ApiException {
+    return listMetricsWithHttpInfo(filterName, filterRecordedAt, sort, pageNumber, pageSize, metaTotal, null);
   }
 
   /**
@@ -604,12 +649,15 @@ public class MetricsApi {
    * @param filterName  (required)
    * @param filterRecordedAt  (optional)
    * @param sort Field to sort by. Prefix with &#x60;-&#x60; for descending order. Default: &#x60;-recorded_at&#x60;. Allowed values: &#x60;recorded_at&#x60;, &#x60;-recorded_at&#x60;, &#x60;value&#x60;, &#x60;-value&#x60;. (optional, default to -recorded_at)
+   * @param pageNumber 1-based page number to return. Optional; defaults to &#x60;1&#x60; when omitted. Must be &#x60;&gt;&#x3D; 1&#x60; — requests with a smaller value are rejected with a 400 error. (optional, default to 1)
+   * @param pageSize Number of items per page. Optional; defaults to &#x60;1000&#x60; when omitted. Must be between &#x60;1&#x60; and &#x60;1000&#x60; inclusive — requests outside that range are rejected with a 400 error. (optional, default to 1000)
+   * @param metaTotal When &#x60;true&#x60;, the response&#39;s &#x60;meta.pagination&#x60; block includes &#x60;total&#x60; (the total number of matching items across all pages) and &#x60;total_pages&#x60;. Computing these requires an extra &#x60;COUNT&#x60; query, so omit (or pass &#x60;false&#x60;) when the totals are not needed. Defaults to &#x60;false&#x60;. (optional, default to false)
    * @param headers Optional headers to include in the request
    * @return ApiResponse&lt;MetricListResponse&gt;
    * @throws ApiException if fails to make API call
    */
-  public ApiResponse<MetricListResponse> listMetricsWithHttpInfo(@jakarta.annotation.Nonnull String filterName, @jakarta.annotation.Nullable String filterRecordedAt, @jakarta.annotation.Nullable String sort, Map<String, String> headers) throws ApiException {
-    HttpRequest.Builder localVarRequestBuilder = listMetricsRequestBuilder(filterName, filterRecordedAt, sort, headers);
+  public ApiResponse<MetricListResponse> listMetricsWithHttpInfo(@jakarta.annotation.Nonnull String filterName, @jakarta.annotation.Nullable String filterRecordedAt, @jakarta.annotation.Nullable String sort, @jakarta.annotation.Nullable Integer pageNumber, @jakarta.annotation.Nullable Integer pageSize, @jakarta.annotation.Nullable Boolean metaTotal, Map<String, String> headers) throws ApiException {
+    HttpRequest.Builder localVarRequestBuilder = listMetricsRequestBuilder(filterName, filterRecordedAt, sort, pageNumber, pageSize, metaTotal, headers);
     try {
       HttpResponse<InputStream> localVarResponse = memberVarHttpClient.send(
           localVarRequestBuilder.build(),
@@ -656,7 +704,7 @@ public class MetricsApi {
     }
   }
 
-  private HttpRequest.Builder listMetricsRequestBuilder(@jakarta.annotation.Nonnull String filterName, @jakarta.annotation.Nullable String filterRecordedAt, @jakarta.annotation.Nullable String sort, Map<String, String> headers) throws ApiException {
+  private HttpRequest.Builder listMetricsRequestBuilder(@jakarta.annotation.Nonnull String filterName, @jakarta.annotation.Nullable String filterRecordedAt, @jakarta.annotation.Nullable String sort, @jakarta.annotation.Nullable Integer pageNumber, @jakarta.annotation.Nullable Integer pageSize, @jakarta.annotation.Nullable Boolean metaTotal, Map<String, String> headers) throws ApiException {
     // verify the required parameter 'filterName' is set
     if (filterName == null) {
       throw new ApiException(400, "Missing the required parameter 'filterName' when calling listMetrics");
@@ -675,6 +723,12 @@ public class MetricsApi {
     localVarQueryParams.addAll(ApiClient.parameterToPairs("filter[recorded_at]", filterRecordedAt));
     localVarQueryParameterBaseName = "sort";
     localVarQueryParams.addAll(ApiClient.parameterToPairs("sort", sort));
+    localVarQueryParameterBaseName = "page[number]";
+    localVarQueryParams.addAll(ApiClient.parameterToPairs("page[number]", pageNumber));
+    localVarQueryParameterBaseName = "page[size]";
+    localVarQueryParams.addAll(ApiClient.parameterToPairs("page[size]", pageSize));
+    localVarQueryParameterBaseName = "meta[total]";
+    localVarQueryParams.addAll(ApiClient.parameterToPairs("meta[total]", metaTotal));
 
     if (!localVarQueryParams.isEmpty() || localVarQueryStringJoiner.length() != 0) {
       StringJoiner queryJoiner = new StringJoiner("&");

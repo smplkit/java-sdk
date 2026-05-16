@@ -744,49 +744,61 @@ public class BillingApi {
 
   /**
    * List Invoices
-   * Return invoice history for the account from Stripe.  Default sort is &#x60;-created_at&#x60; (newest first).
+   * Return invoice history for the account from Stripe.  Default sort is &#x60;-created_at&#x60; (newest first). The endpoint fetches the most recent 100 invoices from Stripe (its per-request cap) and pages over the result in memory; clients should not depend on more than 100 invoices being visible at once.
    * @param sort Field to sort by. Prefix with &#x60;-&#x60; for descending order. Default: &#x60;-created_at&#x60;. Allowed values: &#x60;created_at&#x60;, &#x60;-created_at&#x60;, &#x60;status&#x60;, &#x60;-status&#x60;, &#x60;total&#x60;, &#x60;-total&#x60;. (optional, default to -created_at)
+   * @param pageNumber 1-based page number to return. Optional; defaults to &#x60;1&#x60; when omitted. Must be &#x60;&gt;&#x3D; 1&#x60; — requests with a smaller value are rejected with a 400 error. (optional, default to 1)
+   * @param pageSize Number of items per page. Optional; defaults to &#x60;1000&#x60; when omitted. Must be between &#x60;1&#x60; and &#x60;1000&#x60; inclusive — requests outside that range are rejected with a 400 error. (optional, default to 1000)
+   * @param metaTotal When &#x60;true&#x60;, the response&#39;s &#x60;meta.pagination&#x60; block includes &#x60;total&#x60; (the total number of matching items across all pages) and &#x60;total_pages&#x60;. Computing these requires an extra &#x60;COUNT&#x60; query, so omit (or pass &#x60;false&#x60;) when the totals are not needed. Defaults to &#x60;false&#x60;. (optional, default to false)
    * @return InvoiceListResponse
    * @throws ApiException if fails to make API call
    */
-  public InvoiceListResponse listInvoices(@jakarta.annotation.Nullable String sort) throws ApiException {
-    return listInvoices(sort, null);
+  public InvoiceListResponse listInvoices(@jakarta.annotation.Nullable String sort, @jakarta.annotation.Nullable Integer pageNumber, @jakarta.annotation.Nullable Integer pageSize, @jakarta.annotation.Nullable Boolean metaTotal) throws ApiException {
+    return listInvoices(sort, pageNumber, pageSize, metaTotal, null);
   }
 
   /**
    * List Invoices
-   * Return invoice history for the account from Stripe.  Default sort is &#x60;-created_at&#x60; (newest first).
+   * Return invoice history for the account from Stripe.  Default sort is &#x60;-created_at&#x60; (newest first). The endpoint fetches the most recent 100 invoices from Stripe (its per-request cap) and pages over the result in memory; clients should not depend on more than 100 invoices being visible at once.
    * @param sort Field to sort by. Prefix with &#x60;-&#x60; for descending order. Default: &#x60;-created_at&#x60;. Allowed values: &#x60;created_at&#x60;, &#x60;-created_at&#x60;, &#x60;status&#x60;, &#x60;-status&#x60;, &#x60;total&#x60;, &#x60;-total&#x60;. (optional, default to -created_at)
+   * @param pageNumber 1-based page number to return. Optional; defaults to &#x60;1&#x60; when omitted. Must be &#x60;&gt;&#x3D; 1&#x60; — requests with a smaller value are rejected with a 400 error. (optional, default to 1)
+   * @param pageSize Number of items per page. Optional; defaults to &#x60;1000&#x60; when omitted. Must be between &#x60;1&#x60; and &#x60;1000&#x60; inclusive — requests outside that range are rejected with a 400 error. (optional, default to 1000)
+   * @param metaTotal When &#x60;true&#x60;, the response&#39;s &#x60;meta.pagination&#x60; block includes &#x60;total&#x60; (the total number of matching items across all pages) and &#x60;total_pages&#x60;. Computing these requires an extra &#x60;COUNT&#x60; query, so omit (or pass &#x60;false&#x60;) when the totals are not needed. Defaults to &#x60;false&#x60;. (optional, default to false)
    * @param headers Optional headers to include in the request
    * @return InvoiceListResponse
    * @throws ApiException if fails to make API call
    */
-  public InvoiceListResponse listInvoices(@jakarta.annotation.Nullable String sort, Map<String, String> headers) throws ApiException {
-    ApiResponse<InvoiceListResponse> localVarResponse = listInvoicesWithHttpInfo(sort, headers);
+  public InvoiceListResponse listInvoices(@jakarta.annotation.Nullable String sort, @jakarta.annotation.Nullable Integer pageNumber, @jakarta.annotation.Nullable Integer pageSize, @jakarta.annotation.Nullable Boolean metaTotal, Map<String, String> headers) throws ApiException {
+    ApiResponse<InvoiceListResponse> localVarResponse = listInvoicesWithHttpInfo(sort, pageNumber, pageSize, metaTotal, headers);
     return localVarResponse.getData();
   }
 
   /**
    * List Invoices
-   * Return invoice history for the account from Stripe.  Default sort is &#x60;-created_at&#x60; (newest first).
+   * Return invoice history for the account from Stripe.  Default sort is &#x60;-created_at&#x60; (newest first). The endpoint fetches the most recent 100 invoices from Stripe (its per-request cap) and pages over the result in memory; clients should not depend on more than 100 invoices being visible at once.
    * @param sort Field to sort by. Prefix with &#x60;-&#x60; for descending order. Default: &#x60;-created_at&#x60;. Allowed values: &#x60;created_at&#x60;, &#x60;-created_at&#x60;, &#x60;status&#x60;, &#x60;-status&#x60;, &#x60;total&#x60;, &#x60;-total&#x60;. (optional, default to -created_at)
+   * @param pageNumber 1-based page number to return. Optional; defaults to &#x60;1&#x60; when omitted. Must be &#x60;&gt;&#x3D; 1&#x60; — requests with a smaller value are rejected with a 400 error. (optional, default to 1)
+   * @param pageSize Number of items per page. Optional; defaults to &#x60;1000&#x60; when omitted. Must be between &#x60;1&#x60; and &#x60;1000&#x60; inclusive — requests outside that range are rejected with a 400 error. (optional, default to 1000)
+   * @param metaTotal When &#x60;true&#x60;, the response&#39;s &#x60;meta.pagination&#x60; block includes &#x60;total&#x60; (the total number of matching items across all pages) and &#x60;total_pages&#x60;. Computing these requires an extra &#x60;COUNT&#x60; query, so omit (or pass &#x60;false&#x60;) when the totals are not needed. Defaults to &#x60;false&#x60;. (optional, default to false)
    * @return ApiResponse&lt;InvoiceListResponse&gt;
    * @throws ApiException if fails to make API call
    */
-  public ApiResponse<InvoiceListResponse> listInvoicesWithHttpInfo(@jakarta.annotation.Nullable String sort) throws ApiException {
-    return listInvoicesWithHttpInfo(sort, null);
+  public ApiResponse<InvoiceListResponse> listInvoicesWithHttpInfo(@jakarta.annotation.Nullable String sort, @jakarta.annotation.Nullable Integer pageNumber, @jakarta.annotation.Nullable Integer pageSize, @jakarta.annotation.Nullable Boolean metaTotal) throws ApiException {
+    return listInvoicesWithHttpInfo(sort, pageNumber, pageSize, metaTotal, null);
   }
 
   /**
    * List Invoices
-   * Return invoice history for the account from Stripe.  Default sort is &#x60;-created_at&#x60; (newest first).
+   * Return invoice history for the account from Stripe.  Default sort is &#x60;-created_at&#x60; (newest first). The endpoint fetches the most recent 100 invoices from Stripe (its per-request cap) and pages over the result in memory; clients should not depend on more than 100 invoices being visible at once.
    * @param sort Field to sort by. Prefix with &#x60;-&#x60; for descending order. Default: &#x60;-created_at&#x60;. Allowed values: &#x60;created_at&#x60;, &#x60;-created_at&#x60;, &#x60;status&#x60;, &#x60;-status&#x60;, &#x60;total&#x60;, &#x60;-total&#x60;. (optional, default to -created_at)
+   * @param pageNumber 1-based page number to return. Optional; defaults to &#x60;1&#x60; when omitted. Must be &#x60;&gt;&#x3D; 1&#x60; — requests with a smaller value are rejected with a 400 error. (optional, default to 1)
+   * @param pageSize Number of items per page. Optional; defaults to &#x60;1000&#x60; when omitted. Must be between &#x60;1&#x60; and &#x60;1000&#x60; inclusive — requests outside that range are rejected with a 400 error. (optional, default to 1000)
+   * @param metaTotal When &#x60;true&#x60;, the response&#39;s &#x60;meta.pagination&#x60; block includes &#x60;total&#x60; (the total number of matching items across all pages) and &#x60;total_pages&#x60;. Computing these requires an extra &#x60;COUNT&#x60; query, so omit (or pass &#x60;false&#x60;) when the totals are not needed. Defaults to &#x60;false&#x60;. (optional, default to false)
    * @param headers Optional headers to include in the request
    * @return ApiResponse&lt;InvoiceListResponse&gt;
    * @throws ApiException if fails to make API call
    */
-  public ApiResponse<InvoiceListResponse> listInvoicesWithHttpInfo(@jakarta.annotation.Nullable String sort, Map<String, String> headers) throws ApiException {
-    HttpRequest.Builder localVarRequestBuilder = listInvoicesRequestBuilder(sort, headers);
+  public ApiResponse<InvoiceListResponse> listInvoicesWithHttpInfo(@jakarta.annotation.Nullable String sort, @jakarta.annotation.Nullable Integer pageNumber, @jakarta.annotation.Nullable Integer pageSize, @jakarta.annotation.Nullable Boolean metaTotal, Map<String, String> headers) throws ApiException {
+    HttpRequest.Builder localVarRequestBuilder = listInvoicesRequestBuilder(sort, pageNumber, pageSize, metaTotal, headers);
     try {
       HttpResponse<InputStream> localVarResponse = memberVarHttpClient.send(
           localVarRequestBuilder.build(),
@@ -833,7 +845,7 @@ public class BillingApi {
     }
   }
 
-  private HttpRequest.Builder listInvoicesRequestBuilder(@jakarta.annotation.Nullable String sort, Map<String, String> headers) throws ApiException {
+  private HttpRequest.Builder listInvoicesRequestBuilder(@jakarta.annotation.Nullable String sort, @jakarta.annotation.Nullable Integer pageNumber, @jakarta.annotation.Nullable Integer pageSize, @jakarta.annotation.Nullable Boolean metaTotal, Map<String, String> headers) throws ApiException {
 
     HttpRequest.Builder localVarRequestBuilder = HttpRequest.newBuilder();
 
@@ -844,6 +856,12 @@ public class BillingApi {
     String localVarQueryParameterBaseName;
     localVarQueryParameterBaseName = "sort";
     localVarQueryParams.addAll(ApiClient.parameterToPairs("sort", sort));
+    localVarQueryParameterBaseName = "page[number]";
+    localVarQueryParams.addAll(ApiClient.parameterToPairs("page[number]", pageNumber));
+    localVarQueryParameterBaseName = "page[size]";
+    localVarQueryParams.addAll(ApiClient.parameterToPairs("page[size]", pageSize));
+    localVarQueryParameterBaseName = "meta[total]";
+    localVarQueryParams.addAll(ApiClient.parameterToPairs("meta[total]", metaTotal));
 
     if (!localVarQueryParams.isEmpty() || localVarQueryStringJoiner.length() != 0) {
       StringJoiner queryJoiner = new StringJoiner("&");
@@ -874,23 +892,29 @@ public class BillingApi {
    * List Payment Methods
    * List all payment methods for the account. Default is returned first, then newest first.
    * @param sort Field to sort by. Prefix with &#x60;-&#x60; for descending order. Default: &#x60;-created_at&#x60;. Allowed values: &#x60;created_at&#x60;, &#x60;-created_at&#x60;, &#x60;exp_year&#x60;, &#x60;-exp_year&#x60;, &#x60;is_default&#x60;, &#x60;-is_default&#x60;, &#x60;updated_at&#x60;, &#x60;-updated_at&#x60;. (optional, default to -created_at)
+   * @param pageNumber 1-based page number to return. Optional; defaults to &#x60;1&#x60; when omitted. Must be &#x60;&gt;&#x3D; 1&#x60; — requests with a smaller value are rejected with a 400 error. (optional, default to 1)
+   * @param pageSize Number of items per page. Optional; defaults to &#x60;1000&#x60; when omitted. Must be between &#x60;1&#x60; and &#x60;1000&#x60; inclusive — requests outside that range are rejected with a 400 error. (optional, default to 1000)
+   * @param metaTotal When &#x60;true&#x60;, the response&#39;s &#x60;meta.pagination&#x60; block includes &#x60;total&#x60; (the total number of matching items across all pages) and &#x60;total_pages&#x60;. Computing these requires an extra &#x60;COUNT&#x60; query, so omit (or pass &#x60;false&#x60;) when the totals are not needed. Defaults to &#x60;false&#x60;. (optional, default to false)
    * @return PaymentMethodListResponse
    * @throws ApiException if fails to make API call
    */
-  public PaymentMethodListResponse listPaymentMethods(@jakarta.annotation.Nullable String sort) throws ApiException {
-    return listPaymentMethods(sort, null);
+  public PaymentMethodListResponse listPaymentMethods(@jakarta.annotation.Nullable String sort, @jakarta.annotation.Nullable Integer pageNumber, @jakarta.annotation.Nullable Integer pageSize, @jakarta.annotation.Nullable Boolean metaTotal) throws ApiException {
+    return listPaymentMethods(sort, pageNumber, pageSize, metaTotal, null);
   }
 
   /**
    * List Payment Methods
    * List all payment methods for the account. Default is returned first, then newest first.
    * @param sort Field to sort by. Prefix with &#x60;-&#x60; for descending order. Default: &#x60;-created_at&#x60;. Allowed values: &#x60;created_at&#x60;, &#x60;-created_at&#x60;, &#x60;exp_year&#x60;, &#x60;-exp_year&#x60;, &#x60;is_default&#x60;, &#x60;-is_default&#x60;, &#x60;updated_at&#x60;, &#x60;-updated_at&#x60;. (optional, default to -created_at)
+   * @param pageNumber 1-based page number to return. Optional; defaults to &#x60;1&#x60; when omitted. Must be &#x60;&gt;&#x3D; 1&#x60; — requests with a smaller value are rejected with a 400 error. (optional, default to 1)
+   * @param pageSize Number of items per page. Optional; defaults to &#x60;1000&#x60; when omitted. Must be between &#x60;1&#x60; and &#x60;1000&#x60; inclusive — requests outside that range are rejected with a 400 error. (optional, default to 1000)
+   * @param metaTotal When &#x60;true&#x60;, the response&#39;s &#x60;meta.pagination&#x60; block includes &#x60;total&#x60; (the total number of matching items across all pages) and &#x60;total_pages&#x60;. Computing these requires an extra &#x60;COUNT&#x60; query, so omit (or pass &#x60;false&#x60;) when the totals are not needed. Defaults to &#x60;false&#x60;. (optional, default to false)
    * @param headers Optional headers to include in the request
    * @return PaymentMethodListResponse
    * @throws ApiException if fails to make API call
    */
-  public PaymentMethodListResponse listPaymentMethods(@jakarta.annotation.Nullable String sort, Map<String, String> headers) throws ApiException {
-    ApiResponse<PaymentMethodListResponse> localVarResponse = listPaymentMethodsWithHttpInfo(sort, headers);
+  public PaymentMethodListResponse listPaymentMethods(@jakarta.annotation.Nullable String sort, @jakarta.annotation.Nullable Integer pageNumber, @jakarta.annotation.Nullable Integer pageSize, @jakarta.annotation.Nullable Boolean metaTotal, Map<String, String> headers) throws ApiException {
+    ApiResponse<PaymentMethodListResponse> localVarResponse = listPaymentMethodsWithHttpInfo(sort, pageNumber, pageSize, metaTotal, headers);
     return localVarResponse.getData();
   }
 
@@ -898,23 +922,29 @@ public class BillingApi {
    * List Payment Methods
    * List all payment methods for the account. Default is returned first, then newest first.
    * @param sort Field to sort by. Prefix with &#x60;-&#x60; for descending order. Default: &#x60;-created_at&#x60;. Allowed values: &#x60;created_at&#x60;, &#x60;-created_at&#x60;, &#x60;exp_year&#x60;, &#x60;-exp_year&#x60;, &#x60;is_default&#x60;, &#x60;-is_default&#x60;, &#x60;updated_at&#x60;, &#x60;-updated_at&#x60;. (optional, default to -created_at)
+   * @param pageNumber 1-based page number to return. Optional; defaults to &#x60;1&#x60; when omitted. Must be &#x60;&gt;&#x3D; 1&#x60; — requests with a smaller value are rejected with a 400 error. (optional, default to 1)
+   * @param pageSize Number of items per page. Optional; defaults to &#x60;1000&#x60; when omitted. Must be between &#x60;1&#x60; and &#x60;1000&#x60; inclusive — requests outside that range are rejected with a 400 error. (optional, default to 1000)
+   * @param metaTotal When &#x60;true&#x60;, the response&#39;s &#x60;meta.pagination&#x60; block includes &#x60;total&#x60; (the total number of matching items across all pages) and &#x60;total_pages&#x60;. Computing these requires an extra &#x60;COUNT&#x60; query, so omit (or pass &#x60;false&#x60;) when the totals are not needed. Defaults to &#x60;false&#x60;. (optional, default to false)
    * @return ApiResponse&lt;PaymentMethodListResponse&gt;
    * @throws ApiException if fails to make API call
    */
-  public ApiResponse<PaymentMethodListResponse> listPaymentMethodsWithHttpInfo(@jakarta.annotation.Nullable String sort) throws ApiException {
-    return listPaymentMethodsWithHttpInfo(sort, null);
+  public ApiResponse<PaymentMethodListResponse> listPaymentMethodsWithHttpInfo(@jakarta.annotation.Nullable String sort, @jakarta.annotation.Nullable Integer pageNumber, @jakarta.annotation.Nullable Integer pageSize, @jakarta.annotation.Nullable Boolean metaTotal) throws ApiException {
+    return listPaymentMethodsWithHttpInfo(sort, pageNumber, pageSize, metaTotal, null);
   }
 
   /**
    * List Payment Methods
    * List all payment methods for the account. Default is returned first, then newest first.
    * @param sort Field to sort by. Prefix with &#x60;-&#x60; for descending order. Default: &#x60;-created_at&#x60;. Allowed values: &#x60;created_at&#x60;, &#x60;-created_at&#x60;, &#x60;exp_year&#x60;, &#x60;-exp_year&#x60;, &#x60;is_default&#x60;, &#x60;-is_default&#x60;, &#x60;updated_at&#x60;, &#x60;-updated_at&#x60;. (optional, default to -created_at)
+   * @param pageNumber 1-based page number to return. Optional; defaults to &#x60;1&#x60; when omitted. Must be &#x60;&gt;&#x3D; 1&#x60; — requests with a smaller value are rejected with a 400 error. (optional, default to 1)
+   * @param pageSize Number of items per page. Optional; defaults to &#x60;1000&#x60; when omitted. Must be between &#x60;1&#x60; and &#x60;1000&#x60; inclusive — requests outside that range are rejected with a 400 error. (optional, default to 1000)
+   * @param metaTotal When &#x60;true&#x60;, the response&#39;s &#x60;meta.pagination&#x60; block includes &#x60;total&#x60; (the total number of matching items across all pages) and &#x60;total_pages&#x60;. Computing these requires an extra &#x60;COUNT&#x60; query, so omit (or pass &#x60;false&#x60;) when the totals are not needed. Defaults to &#x60;false&#x60;. (optional, default to false)
    * @param headers Optional headers to include in the request
    * @return ApiResponse&lt;PaymentMethodListResponse&gt;
    * @throws ApiException if fails to make API call
    */
-  public ApiResponse<PaymentMethodListResponse> listPaymentMethodsWithHttpInfo(@jakarta.annotation.Nullable String sort, Map<String, String> headers) throws ApiException {
-    HttpRequest.Builder localVarRequestBuilder = listPaymentMethodsRequestBuilder(sort, headers);
+  public ApiResponse<PaymentMethodListResponse> listPaymentMethodsWithHttpInfo(@jakarta.annotation.Nullable String sort, @jakarta.annotation.Nullable Integer pageNumber, @jakarta.annotation.Nullable Integer pageSize, @jakarta.annotation.Nullable Boolean metaTotal, Map<String, String> headers) throws ApiException {
+    HttpRequest.Builder localVarRequestBuilder = listPaymentMethodsRequestBuilder(sort, pageNumber, pageSize, metaTotal, headers);
     try {
       HttpResponse<InputStream> localVarResponse = memberVarHttpClient.send(
           localVarRequestBuilder.build(),
@@ -961,7 +991,7 @@ public class BillingApi {
     }
   }
 
-  private HttpRequest.Builder listPaymentMethodsRequestBuilder(@jakarta.annotation.Nullable String sort, Map<String, String> headers) throws ApiException {
+  private HttpRequest.Builder listPaymentMethodsRequestBuilder(@jakarta.annotation.Nullable String sort, @jakarta.annotation.Nullable Integer pageNumber, @jakarta.annotation.Nullable Integer pageSize, @jakarta.annotation.Nullable Boolean metaTotal, Map<String, String> headers) throws ApiException {
 
     HttpRequest.Builder localVarRequestBuilder = HttpRequest.newBuilder();
 
@@ -972,6 +1002,12 @@ public class BillingApi {
     String localVarQueryParameterBaseName;
     localVarQueryParameterBaseName = "sort";
     localVarQueryParams.addAll(ApiClient.parameterToPairs("sort", sort));
+    localVarQueryParameterBaseName = "page[number]";
+    localVarQueryParams.addAll(ApiClient.parameterToPairs("page[number]", pageNumber));
+    localVarQueryParameterBaseName = "page[size]";
+    localVarQueryParams.addAll(ApiClient.parameterToPairs("page[size]", pageSize));
+    localVarQueryParameterBaseName = "meta[total]";
+    localVarQueryParams.addAll(ApiClient.parameterToPairs("meta[total]", metaTotal));
 
     if (!localVarQueryParams.isEmpty() || localVarQueryStringJoiner.length() != 0) {
       StringJoiner queryJoiner = new StringJoiner("&");
