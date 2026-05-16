@@ -24,6 +24,7 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonTypeName;
 import com.fasterxml.jackson.annotation.JsonValue;
+import com.smplkit.internal.generated.app.model.ListMeta;
 import com.smplkit.internal.generated.app.model.PaymentMethodResource;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -36,13 +37,18 @@ import com.smplkit.internal.generated.app.ApiClient;
  * JSON:API collection response for payment methods.
  */
 @JsonPropertyOrder({
-  PaymentMethodListResponse.JSON_PROPERTY_DATA
+  PaymentMethodListResponse.JSON_PROPERTY_DATA,
+  PaymentMethodListResponse.JSON_PROPERTY_META
 })
 @jakarta.annotation.Generated(value = "org.openapitools.codegen.languages.JavaClientCodegen", comments = "Generator version: 7.21.0")
 public class PaymentMethodListResponse {
   public static final String JSON_PROPERTY_DATA = "data";
   @jakarta.annotation.Nonnull
   private List<PaymentMethodResource> data = new ArrayList<>();
+
+  public static final String JSON_PROPERTY_META = "meta";
+  @jakarta.annotation.Nonnull
+  private ListMeta meta;
 
   public PaymentMethodListResponse() { 
   }
@@ -79,6 +85,30 @@ public class PaymentMethodListResponse {
   }
 
 
+  public PaymentMethodListResponse meta(@jakarta.annotation.Nonnull ListMeta meta) {
+    this.meta = meta;
+    return this;
+  }
+
+  /**
+   * Get meta
+   * @return meta
+   */
+  @jakarta.annotation.Nonnull
+  @JsonProperty(value = JSON_PROPERTY_META, required = true)
+  @JsonInclude(value = JsonInclude.Include.ALWAYS)
+  public ListMeta getMeta() {
+    return meta;
+  }
+
+
+  @JsonProperty(value = JSON_PROPERTY_META, required = true)
+  @JsonInclude(value = JsonInclude.Include.ALWAYS)
+  public void setMeta(@jakarta.annotation.Nonnull ListMeta meta) {
+    this.meta = meta;
+  }
+
+
   /**
    * Return true if this PaymentMethodListResponse object is equal to o.
    */
@@ -91,12 +121,13 @@ public class PaymentMethodListResponse {
       return false;
     }
     PaymentMethodListResponse paymentMethodListResponse = (PaymentMethodListResponse) o;
-    return Objects.equals(this.data, paymentMethodListResponse.data);
+    return Objects.equals(this.data, paymentMethodListResponse.data) &&
+        Objects.equals(this.meta, paymentMethodListResponse.meta);
   }
 
   @Override
   public int hashCode() {
-    return Objects.hash(data);
+    return Objects.hash(data, meta);
   }
 
   @Override
@@ -104,6 +135,7 @@ public class PaymentMethodListResponse {
     StringBuilder sb = new StringBuilder();
     sb.append("class PaymentMethodListResponse {\n");
     sb.append("    data: ").append(toIndentedString(data)).append("\n");
+    sb.append("    meta: ").append(toIndentedString(meta)).append("\n");
     sb.append("}");
     return sb.toString();
   }
@@ -156,6 +188,11 @@ public class PaymentMethodListResponse {
           "".equals(suffix) ? "" : String.format(java.util.Locale.ROOT, "%s%d%s", containerPrefix, i, containerSuffix))));
         }
       }
+    }
+
+    // add `meta` to the URL query string
+    if (getMeta() != null) {
+      joiner.add(getMeta().toUrlQueryString(prefix + "meta" + suffix));
     }
 
     return joiner.toString();

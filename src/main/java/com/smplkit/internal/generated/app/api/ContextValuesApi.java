@@ -18,8 +18,8 @@ import com.smplkit.internal.generated.app.ApiResponse;
 import com.smplkit.internal.generated.app.Configuration;
 import com.smplkit.internal.generated.app.Pair;
 
+import com.smplkit.internal.generated.app.model.ContextValueListResponse;
 import com.smplkit.internal.generated.app.model.ErrorResponse;
-import com.smplkit.internal.generated.app.model.PlanListResponse;
 
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -47,7 +47,7 @@ import java.util.Set;
 import java.util.function.Consumer;
 
 @jakarta.annotation.Generated(value = "org.openapitools.codegen.languages.JavaClientCodegen", comments = "Generator version: 7.21.0")
-public class PlansApi {
+public class ContextValuesApi {
   /**
    * Utility class for extending HttpRequest.Builder functionality.
    */
@@ -76,11 +76,11 @@ public class PlansApi {
   private final Consumer<HttpResponse<InputStream>> memberVarResponseInterceptor;
   private final Consumer<HttpResponse<InputStream>> memberVarAsyncResponseInterceptor;
 
-  public PlansApi() {
+  public ContextValuesApi() {
     this(Configuration.getDefaultApiClient());
   }
 
-  public PlansApi(ApiClient apiClient) {
+  public ContextValuesApi(ApiClient apiClient) {
     memberVarHttpClient = apiClient.getHttpClient();
     memberVarObjectMapper = apiClient.getObjectMapper();
     memberVarBaseUri = apiClient.getBaseUri();
@@ -164,62 +164,70 @@ public class PlansApi {
   }
 
   /**
-   * List Plans
-   * Return all plan tier definitions as JSON:API resources.  Default sort is &#x60;sort_order&#x60; ascending — the natural ladder defined in &#x60;plans.yaml&#x60;. Pass &#x60;sort&#x3D;display_name&#x60; for an alphabetical view.
-   * @param sort Field to sort by. Prefix with &#x60;-&#x60; for descending order. Default: &#x60;sort_order&#x60;. Allowed values: &#x60;display_name&#x60;, &#x60;-display_name&#x60;, &#x60;id&#x60;, &#x60;-id&#x60;, &#x60;sort_order&#x60;, &#x60;-sort_order&#x60;. (optional, default to sort_order)
+   * List Context Values
+   * Return distinct values observed for a single attribute across context instances of one context type. The intended use case is a typeahead picker in a rule-building UI: the customer chooses a context type and an attribute name, then this endpoint streams back the distinct values matching what they&#39;ve typed so far.  &#x60;filter[context_type]&#x60; and &#x60;filter[attribute]&#x60; are required. &#x60;filter[attribute]&#x60; accepts any attribute name — including the two first-class columns &#x60;key&#x60; and &#x60;name&#x60; — and is treated uniformly from the customer&#39;s perspective; the server adjusts the underlying query accordingly.  &#x60;filter[search]&#x60; does a case-insensitive starts-with match. The returned set excludes empty strings and NULL values.
+   * @param filterContextType Context type key whose instances should be searched (e.g. &#x60;user&#x60;). (optional)
+   * @param filterAttribute Attribute name whose distinct values should be returned (e.g. &#x60;first_name&#x60;). Accepts &#x60;key&#x60; and &#x60;name&#x60; as well as any attribute key stored on the context instance. (optional)
+   * @param filterSearch Optional case-insensitive starts-with match against the projected attribute value. When omitted, all distinct values are returned in the page. (optional)
    * @param pageNumber 1-based page number to return. Optional; defaults to &#x60;1&#x60; when omitted. Must be &#x60;&gt;&#x3D; 1&#x60; — requests with a smaller value are rejected with a 400 error. (optional, default to 1)
    * @param pageSize Number of items per page. Optional; defaults to &#x60;1000&#x60; when omitted. Must be between &#x60;1&#x60; and &#x60;1000&#x60; inclusive — requests outside that range are rejected with a 400 error. (optional, default to 1000)
    * @param metaTotal When &#x60;true&#x60;, the response&#39;s &#x60;meta.pagination&#x60; block includes &#x60;total&#x60; (the total number of matching items across all pages) and &#x60;total_pages&#x60;. Computing these requires an extra &#x60;COUNT&#x60; query, so omit (or pass &#x60;false&#x60;) when the totals are not needed. Defaults to &#x60;false&#x60;. (optional, default to false)
-   * @return PlanListResponse
+   * @return ContextValueListResponse
    * @throws ApiException if fails to make API call
    */
-  public PlanListResponse listPlans(@jakarta.annotation.Nullable String sort, @jakarta.annotation.Nullable Integer pageNumber, @jakarta.annotation.Nullable Integer pageSize, @jakarta.annotation.Nullable Boolean metaTotal) throws ApiException {
-    return listPlans(sort, pageNumber, pageSize, metaTotal, null);
+  public ContextValueListResponse listContextValues(@jakarta.annotation.Nullable String filterContextType, @jakarta.annotation.Nullable String filterAttribute, @jakarta.annotation.Nullable String filterSearch, @jakarta.annotation.Nullable Integer pageNumber, @jakarta.annotation.Nullable Integer pageSize, @jakarta.annotation.Nullable Boolean metaTotal) throws ApiException {
+    return listContextValues(filterContextType, filterAttribute, filterSearch, pageNumber, pageSize, metaTotal, null);
   }
 
   /**
-   * List Plans
-   * Return all plan tier definitions as JSON:API resources.  Default sort is &#x60;sort_order&#x60; ascending — the natural ladder defined in &#x60;plans.yaml&#x60;. Pass &#x60;sort&#x3D;display_name&#x60; for an alphabetical view.
-   * @param sort Field to sort by. Prefix with &#x60;-&#x60; for descending order. Default: &#x60;sort_order&#x60;. Allowed values: &#x60;display_name&#x60;, &#x60;-display_name&#x60;, &#x60;id&#x60;, &#x60;-id&#x60;, &#x60;sort_order&#x60;, &#x60;-sort_order&#x60;. (optional, default to sort_order)
+   * List Context Values
+   * Return distinct values observed for a single attribute across context instances of one context type. The intended use case is a typeahead picker in a rule-building UI: the customer chooses a context type and an attribute name, then this endpoint streams back the distinct values matching what they&#39;ve typed so far.  &#x60;filter[context_type]&#x60; and &#x60;filter[attribute]&#x60; are required. &#x60;filter[attribute]&#x60; accepts any attribute name — including the two first-class columns &#x60;key&#x60; and &#x60;name&#x60; — and is treated uniformly from the customer&#39;s perspective; the server adjusts the underlying query accordingly.  &#x60;filter[search]&#x60; does a case-insensitive starts-with match. The returned set excludes empty strings and NULL values.
+   * @param filterContextType Context type key whose instances should be searched (e.g. &#x60;user&#x60;). (optional)
+   * @param filterAttribute Attribute name whose distinct values should be returned (e.g. &#x60;first_name&#x60;). Accepts &#x60;key&#x60; and &#x60;name&#x60; as well as any attribute key stored on the context instance. (optional)
+   * @param filterSearch Optional case-insensitive starts-with match against the projected attribute value. When omitted, all distinct values are returned in the page. (optional)
    * @param pageNumber 1-based page number to return. Optional; defaults to &#x60;1&#x60; when omitted. Must be &#x60;&gt;&#x3D; 1&#x60; — requests with a smaller value are rejected with a 400 error. (optional, default to 1)
    * @param pageSize Number of items per page. Optional; defaults to &#x60;1000&#x60; when omitted. Must be between &#x60;1&#x60; and &#x60;1000&#x60; inclusive — requests outside that range are rejected with a 400 error. (optional, default to 1000)
    * @param metaTotal When &#x60;true&#x60;, the response&#39;s &#x60;meta.pagination&#x60; block includes &#x60;total&#x60; (the total number of matching items across all pages) and &#x60;total_pages&#x60;. Computing these requires an extra &#x60;COUNT&#x60; query, so omit (or pass &#x60;false&#x60;) when the totals are not needed. Defaults to &#x60;false&#x60;. (optional, default to false)
    * @param headers Optional headers to include in the request
-   * @return PlanListResponse
+   * @return ContextValueListResponse
    * @throws ApiException if fails to make API call
    */
-  public PlanListResponse listPlans(@jakarta.annotation.Nullable String sort, @jakarta.annotation.Nullable Integer pageNumber, @jakarta.annotation.Nullable Integer pageSize, @jakarta.annotation.Nullable Boolean metaTotal, Map<String, String> headers) throws ApiException {
-    ApiResponse<PlanListResponse> localVarResponse = listPlansWithHttpInfo(sort, pageNumber, pageSize, metaTotal, headers);
+  public ContextValueListResponse listContextValues(@jakarta.annotation.Nullable String filterContextType, @jakarta.annotation.Nullable String filterAttribute, @jakarta.annotation.Nullable String filterSearch, @jakarta.annotation.Nullable Integer pageNumber, @jakarta.annotation.Nullable Integer pageSize, @jakarta.annotation.Nullable Boolean metaTotal, Map<String, String> headers) throws ApiException {
+    ApiResponse<ContextValueListResponse> localVarResponse = listContextValuesWithHttpInfo(filterContextType, filterAttribute, filterSearch, pageNumber, pageSize, metaTotal, headers);
     return localVarResponse.getData();
   }
 
   /**
-   * List Plans
-   * Return all plan tier definitions as JSON:API resources.  Default sort is &#x60;sort_order&#x60; ascending — the natural ladder defined in &#x60;plans.yaml&#x60;. Pass &#x60;sort&#x3D;display_name&#x60; for an alphabetical view.
-   * @param sort Field to sort by. Prefix with &#x60;-&#x60; for descending order. Default: &#x60;sort_order&#x60;. Allowed values: &#x60;display_name&#x60;, &#x60;-display_name&#x60;, &#x60;id&#x60;, &#x60;-id&#x60;, &#x60;sort_order&#x60;, &#x60;-sort_order&#x60;. (optional, default to sort_order)
+   * List Context Values
+   * Return distinct values observed for a single attribute across context instances of one context type. The intended use case is a typeahead picker in a rule-building UI: the customer chooses a context type and an attribute name, then this endpoint streams back the distinct values matching what they&#39;ve typed so far.  &#x60;filter[context_type]&#x60; and &#x60;filter[attribute]&#x60; are required. &#x60;filter[attribute]&#x60; accepts any attribute name — including the two first-class columns &#x60;key&#x60; and &#x60;name&#x60; — and is treated uniformly from the customer&#39;s perspective; the server adjusts the underlying query accordingly.  &#x60;filter[search]&#x60; does a case-insensitive starts-with match. The returned set excludes empty strings and NULL values.
+   * @param filterContextType Context type key whose instances should be searched (e.g. &#x60;user&#x60;). (optional)
+   * @param filterAttribute Attribute name whose distinct values should be returned (e.g. &#x60;first_name&#x60;). Accepts &#x60;key&#x60; and &#x60;name&#x60; as well as any attribute key stored on the context instance. (optional)
+   * @param filterSearch Optional case-insensitive starts-with match against the projected attribute value. When omitted, all distinct values are returned in the page. (optional)
    * @param pageNumber 1-based page number to return. Optional; defaults to &#x60;1&#x60; when omitted. Must be &#x60;&gt;&#x3D; 1&#x60; — requests with a smaller value are rejected with a 400 error. (optional, default to 1)
    * @param pageSize Number of items per page. Optional; defaults to &#x60;1000&#x60; when omitted. Must be between &#x60;1&#x60; and &#x60;1000&#x60; inclusive — requests outside that range are rejected with a 400 error. (optional, default to 1000)
    * @param metaTotal When &#x60;true&#x60;, the response&#39;s &#x60;meta.pagination&#x60; block includes &#x60;total&#x60; (the total number of matching items across all pages) and &#x60;total_pages&#x60;. Computing these requires an extra &#x60;COUNT&#x60; query, so omit (or pass &#x60;false&#x60;) when the totals are not needed. Defaults to &#x60;false&#x60;. (optional, default to false)
-   * @return ApiResponse&lt;PlanListResponse&gt;
+   * @return ApiResponse&lt;ContextValueListResponse&gt;
    * @throws ApiException if fails to make API call
    */
-  public ApiResponse<PlanListResponse> listPlansWithHttpInfo(@jakarta.annotation.Nullable String sort, @jakarta.annotation.Nullable Integer pageNumber, @jakarta.annotation.Nullable Integer pageSize, @jakarta.annotation.Nullable Boolean metaTotal) throws ApiException {
-    return listPlansWithHttpInfo(sort, pageNumber, pageSize, metaTotal, null);
+  public ApiResponse<ContextValueListResponse> listContextValuesWithHttpInfo(@jakarta.annotation.Nullable String filterContextType, @jakarta.annotation.Nullable String filterAttribute, @jakarta.annotation.Nullable String filterSearch, @jakarta.annotation.Nullable Integer pageNumber, @jakarta.annotation.Nullable Integer pageSize, @jakarta.annotation.Nullable Boolean metaTotal) throws ApiException {
+    return listContextValuesWithHttpInfo(filterContextType, filterAttribute, filterSearch, pageNumber, pageSize, metaTotal, null);
   }
 
   /**
-   * List Plans
-   * Return all plan tier definitions as JSON:API resources.  Default sort is &#x60;sort_order&#x60; ascending — the natural ladder defined in &#x60;plans.yaml&#x60;. Pass &#x60;sort&#x3D;display_name&#x60; for an alphabetical view.
-   * @param sort Field to sort by. Prefix with &#x60;-&#x60; for descending order. Default: &#x60;sort_order&#x60;. Allowed values: &#x60;display_name&#x60;, &#x60;-display_name&#x60;, &#x60;id&#x60;, &#x60;-id&#x60;, &#x60;sort_order&#x60;, &#x60;-sort_order&#x60;. (optional, default to sort_order)
+   * List Context Values
+   * Return distinct values observed for a single attribute across context instances of one context type. The intended use case is a typeahead picker in a rule-building UI: the customer chooses a context type and an attribute name, then this endpoint streams back the distinct values matching what they&#39;ve typed so far.  &#x60;filter[context_type]&#x60; and &#x60;filter[attribute]&#x60; are required. &#x60;filter[attribute]&#x60; accepts any attribute name — including the two first-class columns &#x60;key&#x60; and &#x60;name&#x60; — and is treated uniformly from the customer&#39;s perspective; the server adjusts the underlying query accordingly.  &#x60;filter[search]&#x60; does a case-insensitive starts-with match. The returned set excludes empty strings and NULL values.
+   * @param filterContextType Context type key whose instances should be searched (e.g. &#x60;user&#x60;). (optional)
+   * @param filterAttribute Attribute name whose distinct values should be returned (e.g. &#x60;first_name&#x60;). Accepts &#x60;key&#x60; and &#x60;name&#x60; as well as any attribute key stored on the context instance. (optional)
+   * @param filterSearch Optional case-insensitive starts-with match against the projected attribute value. When omitted, all distinct values are returned in the page. (optional)
    * @param pageNumber 1-based page number to return. Optional; defaults to &#x60;1&#x60; when omitted. Must be &#x60;&gt;&#x3D; 1&#x60; — requests with a smaller value are rejected with a 400 error. (optional, default to 1)
    * @param pageSize Number of items per page. Optional; defaults to &#x60;1000&#x60; when omitted. Must be between &#x60;1&#x60; and &#x60;1000&#x60; inclusive — requests outside that range are rejected with a 400 error. (optional, default to 1000)
    * @param metaTotal When &#x60;true&#x60;, the response&#39;s &#x60;meta.pagination&#x60; block includes &#x60;total&#x60; (the total number of matching items across all pages) and &#x60;total_pages&#x60;. Computing these requires an extra &#x60;COUNT&#x60; query, so omit (or pass &#x60;false&#x60;) when the totals are not needed. Defaults to &#x60;false&#x60;. (optional, default to false)
    * @param headers Optional headers to include in the request
-   * @return ApiResponse&lt;PlanListResponse&gt;
+   * @return ApiResponse&lt;ContextValueListResponse&gt;
    * @throws ApiException if fails to make API call
    */
-  public ApiResponse<PlanListResponse> listPlansWithHttpInfo(@jakarta.annotation.Nullable String sort, @jakarta.annotation.Nullable Integer pageNumber, @jakarta.annotation.Nullable Integer pageSize, @jakarta.annotation.Nullable Boolean metaTotal, Map<String, String> headers) throws ApiException {
-    HttpRequest.Builder localVarRequestBuilder = listPlansRequestBuilder(sort, pageNumber, pageSize, metaTotal, headers);
+  public ApiResponse<ContextValueListResponse> listContextValuesWithHttpInfo(@jakarta.annotation.Nullable String filterContextType, @jakarta.annotation.Nullable String filterAttribute, @jakarta.annotation.Nullable String filterSearch, @jakarta.annotation.Nullable Integer pageNumber, @jakarta.annotation.Nullable Integer pageSize, @jakarta.annotation.Nullable Boolean metaTotal, Map<String, String> headers) throws ApiException {
+    HttpRequest.Builder localVarRequestBuilder = listContextValuesRequestBuilder(filterContextType, filterAttribute, filterSearch, pageNumber, pageSize, metaTotal, headers);
     try {
       HttpResponse<InputStream> localVarResponse = memberVarHttpClient.send(
           localVarRequestBuilder.build(),
@@ -230,11 +238,11 @@ public class PlansApi {
       InputStream localVarResponseBody = null;
       try {
         if (localVarResponse.statusCode()/ 100 != 2) {
-          throw getApiException("listPlans", localVarResponse);
+          throw getApiException("listContextValues", localVarResponse);
         }
         localVarResponseBody = ApiClient.getResponseBody(localVarResponse);
         if (localVarResponseBody == null) {
-          return new ApiResponse<PlanListResponse>(
+          return new ApiResponse<ContextValueListResponse>(
               localVarResponse.statusCode(),
               localVarResponse.headers().map(),
               null
@@ -244,10 +252,10 @@ public class PlansApi {
         
         
         String responseBody = new String(localVarResponseBody.readAllBytes());
-        PlanListResponse responseValue = responseBody.isBlank()? null: memberVarObjectMapper.readValue(responseBody, new TypeReference<PlanListResponse>() {});
+        ContextValueListResponse responseValue = responseBody.isBlank()? null: memberVarObjectMapper.readValue(responseBody, new TypeReference<ContextValueListResponse>() {});
         
 
-        return new ApiResponse<PlanListResponse>(
+        return new ApiResponse<ContextValueListResponse>(
             localVarResponse.statusCode(),
             localVarResponse.headers().map(),
             responseValue
@@ -266,17 +274,21 @@ public class PlansApi {
     }
   }
 
-  private HttpRequest.Builder listPlansRequestBuilder(@jakarta.annotation.Nullable String sort, @jakarta.annotation.Nullable Integer pageNumber, @jakarta.annotation.Nullable Integer pageSize, @jakarta.annotation.Nullable Boolean metaTotal, Map<String, String> headers) throws ApiException {
+  private HttpRequest.Builder listContextValuesRequestBuilder(@jakarta.annotation.Nullable String filterContextType, @jakarta.annotation.Nullable String filterAttribute, @jakarta.annotation.Nullable String filterSearch, @jakarta.annotation.Nullable Integer pageNumber, @jakarta.annotation.Nullable Integer pageSize, @jakarta.annotation.Nullable Boolean metaTotal, Map<String, String> headers) throws ApiException {
 
     HttpRequest.Builder localVarRequestBuilder = HttpRequest.newBuilder();
 
-    String localVarPath = "/api/v1/plans";
+    String localVarPath = "/api/v1/context_values";
 
     List<Pair> localVarQueryParams = new ArrayList<>();
     StringJoiner localVarQueryStringJoiner = new StringJoiner("&");
     String localVarQueryParameterBaseName;
-    localVarQueryParameterBaseName = "sort";
-    localVarQueryParams.addAll(ApiClient.parameterToPairs("sort", sort));
+    localVarQueryParameterBaseName = "filter[context_type]";
+    localVarQueryParams.addAll(ApiClient.parameterToPairs("filter[context_type]", filterContextType));
+    localVarQueryParameterBaseName = "filter[attribute]";
+    localVarQueryParams.addAll(ApiClient.parameterToPairs("filter[attribute]", filterAttribute));
+    localVarQueryParameterBaseName = "filter[search]";
+    localVarQueryParams.addAll(ApiClient.parameterToPairs("filter[search]", filterSearch));
     localVarQueryParameterBaseName = "page[number]";
     localVarQueryParams.addAll(ApiClient.parameterToPairs("page[number]", pageNumber));
     localVarQueryParameterBaseName = "page[size]";

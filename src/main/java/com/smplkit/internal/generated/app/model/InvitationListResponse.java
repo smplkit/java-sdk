@@ -25,6 +25,7 @@ import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonTypeName;
 import com.fasterxml.jackson.annotation.JsonValue;
 import com.smplkit.internal.generated.app.model.InvitationResource;
+import com.smplkit.internal.generated.app.model.ListMeta;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -36,13 +37,18 @@ import com.smplkit.internal.generated.app.ApiClient;
  * JSON:API collection response for invitations.
  */
 @JsonPropertyOrder({
-  InvitationListResponse.JSON_PROPERTY_DATA
+  InvitationListResponse.JSON_PROPERTY_DATA,
+  InvitationListResponse.JSON_PROPERTY_META
 })
 @jakarta.annotation.Generated(value = "org.openapitools.codegen.languages.JavaClientCodegen", comments = "Generator version: 7.21.0")
 public class InvitationListResponse {
   public static final String JSON_PROPERTY_DATA = "data";
   @jakarta.annotation.Nonnull
   private List<InvitationResource> data = new ArrayList<>();
+
+  public static final String JSON_PROPERTY_META = "meta";
+  @jakarta.annotation.Nonnull
+  private ListMeta meta;
 
   public InvitationListResponse() { 
   }
@@ -79,6 +85,30 @@ public class InvitationListResponse {
   }
 
 
+  public InvitationListResponse meta(@jakarta.annotation.Nonnull ListMeta meta) {
+    this.meta = meta;
+    return this;
+  }
+
+  /**
+   * Get meta
+   * @return meta
+   */
+  @jakarta.annotation.Nonnull
+  @JsonProperty(value = JSON_PROPERTY_META, required = true)
+  @JsonInclude(value = JsonInclude.Include.ALWAYS)
+  public ListMeta getMeta() {
+    return meta;
+  }
+
+
+  @JsonProperty(value = JSON_PROPERTY_META, required = true)
+  @JsonInclude(value = JsonInclude.Include.ALWAYS)
+  public void setMeta(@jakarta.annotation.Nonnull ListMeta meta) {
+    this.meta = meta;
+  }
+
+
   /**
    * Return true if this InvitationListResponse object is equal to o.
    */
@@ -91,12 +121,13 @@ public class InvitationListResponse {
       return false;
     }
     InvitationListResponse invitationListResponse = (InvitationListResponse) o;
-    return Objects.equals(this.data, invitationListResponse.data);
+    return Objects.equals(this.data, invitationListResponse.data) &&
+        Objects.equals(this.meta, invitationListResponse.meta);
   }
 
   @Override
   public int hashCode() {
-    return Objects.hash(data);
+    return Objects.hash(data, meta);
   }
 
   @Override
@@ -104,6 +135,7 @@ public class InvitationListResponse {
     StringBuilder sb = new StringBuilder();
     sb.append("class InvitationListResponse {\n");
     sb.append("    data: ").append(toIndentedString(data)).append("\n");
+    sb.append("    meta: ").append(toIndentedString(meta)).append("\n");
     sb.append("}");
     return sb.toString();
   }
@@ -156,6 +188,11 @@ public class InvitationListResponse {
           "".equals(suffix) ? "" : String.format(java.util.Locale.ROOT, "%s%d%s", containerPrefix, i, containerSuffix))));
         }
       }
+    }
+
+    // add `meta` to the URL query string
+    if (getMeta() != null) {
+      joiner.add(getMeta().toUrlQueryString(prefix + "meta" + suffix));
     }
 
     return joiner.toString();

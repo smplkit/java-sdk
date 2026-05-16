@@ -24,7 +24,7 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonTypeName;
 import com.fasterxml.jackson.annotation.JsonValue;
-import com.smplkit.internal.generated.app.model.UserListMeta;
+import com.smplkit.internal.generated.app.model.ListMeta;
 import com.smplkit.internal.generated.app.model.UserResource;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -47,8 +47,8 @@ public class UserListResponse {
   private List<UserResource> data = new ArrayList<>();
 
   public static final String JSON_PROPERTY_META = "meta";
-  @jakarta.annotation.Nullable
-  private UserListMeta meta;
+  @jakarta.annotation.Nonnull
+  private ListMeta meta;
 
   public UserListResponse() { 
   }
@@ -85,7 +85,7 @@ public class UserListResponse {
   }
 
 
-  public UserListResponse meta(@jakarta.annotation.Nullable UserListMeta meta) {
+  public UserListResponse meta(@jakarta.annotation.Nonnull ListMeta meta) {
     this.meta = meta;
     return this;
   }
@@ -94,17 +94,17 @@ public class UserListResponse {
    * Get meta
    * @return meta
    */
-  @jakarta.annotation.Nullable
-  @JsonProperty(value = JSON_PROPERTY_META, required = false)
-  @JsonInclude(value = JsonInclude.Include.USE_DEFAULTS)
-  public UserListMeta getMeta() {
+  @jakarta.annotation.Nonnull
+  @JsonProperty(value = JSON_PROPERTY_META, required = true)
+  @JsonInclude(value = JsonInclude.Include.ALWAYS)
+  public ListMeta getMeta() {
     return meta;
   }
 
 
-  @JsonProperty(value = JSON_PROPERTY_META, required = false)
-  @JsonInclude(value = JsonInclude.Include.USE_DEFAULTS)
-  public void setMeta(@jakarta.annotation.Nullable UserListMeta meta) {
+  @JsonProperty(value = JSON_PROPERTY_META, required = true)
+  @JsonInclude(value = JsonInclude.Include.ALWAYS)
+  public void setMeta(@jakarta.annotation.Nonnull ListMeta meta) {
     this.meta = meta;
   }
 
