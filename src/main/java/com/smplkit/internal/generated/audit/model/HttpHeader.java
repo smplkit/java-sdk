@@ -30,7 +30,7 @@ import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 
 import com.smplkit.internal.generated.audit.ApiClient;
 /**
- * A single HTTP header attached to a forwarder delivery request.
+ * A single HTTP header attached to a forwarder delivery request.  Header values carrying secrets (API keys, bearer tokens, HEC tokens) are encrypted at the application layer before persistence; the wire representation here is always plaintext.
  */
 @JsonPropertyOrder({
   HttpHeader.JSON_PROPERTY_NAME,

@@ -3,11 +3,11 @@ package com.smplkit.audit;
 import com.smplkit.internal.generated.audit.ApiException;
 import com.smplkit.internal.generated.audit.api.ForwardersApi;
 import com.smplkit.internal.generated.audit.model.Forwarder;
-import com.smplkit.internal.generated.audit.model.ForwarderHttp;
 import com.smplkit.internal.generated.audit.model.ForwarderListResponse;
 import com.smplkit.internal.generated.audit.model.ForwarderRequest;
 import com.smplkit.internal.generated.audit.model.ForwarderResource;
 import com.smplkit.internal.generated.audit.model.ForwarderResponse;
+import com.smplkit.internal.generated.audit.model.HttpConfiguration;
 import com.smplkit.internal.generated.audit.model.HttpHeader;
 
 import java.util.ArrayList;
@@ -66,10 +66,14 @@ public final class AuditForwarders {
     private static ForwarderRequest wrapRequest(UUID id, CreateForwarderInput input) {
         Forwarder attrs = new Forwarder();
         attrs.setName(input.name);
+        if (input.description != null) attrs.setDescription(input.description);
         attrs.setForwarderType(toGenForwarderType(input.forwarderType));
         attrs.setEnabled(input.enabled);
-        attrs.setHttp(toGenHttp(input.http));
+        attrs.setConfiguration(toGenConfiguration(input.configuration));
         if (input.filter != null) attrs.setFilter(input.filter);
+        if (input.transformType != null) {
+            attrs.setTransformType(Forwarder.TransformTypeEnum.fromValue(input.transformType));
+        }
         if (input.transform != null) attrs.setTransform(input.transform);
         ForwarderResource r = new ForwarderResource();
         r.setId(id != null ? id.toString() : "");
@@ -80,13 +84,12 @@ public final class AuditForwarders {
         return body;
     }
 
-    private static ForwarderHttp toGenHttp(com.smplkit.audit.ForwarderHttp src) {
-        ForwarderHttp out = new ForwarderHttp();
+    private static HttpConfiguration toGenConfiguration(com.smplkit.audit.HttpConfiguration src) {
+        HttpConfiguration out = new HttpConfiguration();
         if (src.method != null) {
-            out.setMethod(ForwarderHttp.MethodEnum.fromValue(src.method));
+            out.setMethod(HttpConfiguration.MethodEnum.fromValue(src.method));
         }
         out.setUrl(src.url);
-        if (src.body != null) out.setBody(src.body);
         if (src.successStatus != null) out.setSuccessStatus(src.successStatus);
         if (src.headers != null) {
             List<HttpHeader> hh = new ArrayList<>();
@@ -103,17 +106,19 @@ public final class AuditForwarders {
 
     private static com.smplkit.audit.Forwarder fromResource(ForwarderResource r) {
         Forwarder a = r.getAttributes();
-        com.smplkit.audit.ForwarderHttp http = httpFromGen(a.getHttp());
+        com.smplkit.audit.HttpConfiguration cfg = configurationFromGen(a.getConfiguration());
         UUID id = (r.getId() != null && !r.getId().isEmpty()) ? UUID.fromString(r.getId()) : null;
+        Forwarder.TransformTypeEnum tt = a.getTransformType();
         return new com.smplkit.audit.Forwarder(
                 id,
                 a.getName(),
-                a.getSlug(),
+                a.getDescription(),
                 fromGenForwarderType(a.getForwarderType()),
                 a.getEnabled() != null ? a.getEnabled() : true,
                 a.getFilter(),
+                tt != null ? tt.getValue() : null,
                 a.getTransform(),
-                http,
+                cfg,
                 a.getCreatedAt(),
                 a.getUpdatedAt(),
                 a.getDeletedAt(),
@@ -132,12 +137,11 @@ public final class AuditForwarders {
         return com.smplkit.audit.ForwarderType.fromValue(src.getValue());
     }
 
-    private static com.smplkit.audit.ForwarderHttp httpFromGen(ForwarderHttp src) {
-        com.smplkit.audit.ForwarderHttp out = new com.smplkit.audit.ForwarderHttp();
+    private static com.smplkit.audit.HttpConfiguration configurationFromGen(HttpConfiguration src) {
+        com.smplkit.audit.HttpConfiguration out = new com.smplkit.audit.HttpConfiguration();
         if (src == null) return out;
         if (src.getMethod() != null) out.method = src.getMethod().getValue();
         out.url = src.getUrl() != null ? src.getUrl() : "";
-        if (src.getBody() != null) out.body = src.getBody();
         if (src.getSuccessStatus() != null) out.successStatus = src.getSuccessStatus();
         out.headers = new ArrayList<>();
         if (src.getHeaders() != null) {

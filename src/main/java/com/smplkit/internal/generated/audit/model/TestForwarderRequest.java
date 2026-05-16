@@ -43,7 +43,6 @@ import com.smplkit.internal.generated.audit.ApiClient;
   TestForwarderRequest.JSON_PROPERTY_METHOD,
   TestForwarderRequest.JSON_PROPERTY_URL,
   TestForwarderRequest.JSON_PROPERTY_HEADERS,
-  TestForwarderRequest.JSON_PROPERTY_BODY,
   TestForwarderRequest.JSON_PROPERTY_SUCCESS_STATUS,
   TestForwarderRequest.JSON_PROPERTY_TIMEOUT_MS
 })
@@ -101,9 +100,6 @@ public class TestForwarderRequest {
   public static final String JSON_PROPERTY_HEADERS = "headers";
   @jakarta.annotation.Nullable
   private List<HttpHeader> headers = new ArrayList<>();
-
-  public static final String JSON_PROPERTY_BODY = "body";
-  private JsonNullable<String> body = JsonNullable.<String>undefined();
 
   public static final String JSON_PROPERTY_SUCCESS_STATUS = "success_status";
   @jakarta.annotation.Nullable
@@ -195,38 +191,6 @@ public class TestForwarderRequest {
   }
 
 
-  public TestForwarderRequest body(@jakarta.annotation.Nullable String body) {
-    this.body = JsonNullable.<String>of(body);
-    return this;
-  }
-
-  /**
-   * Request body. If omitted, an empty body is sent.
-   * @return body
-   */
-  @jakarta.annotation.Nullable
-  @JsonIgnore
-  public String getBody() {
-        return body.orElse(null);
-  }
-
-  @JsonProperty(value = JSON_PROPERTY_BODY, required = false)
-  @JsonInclude(value = JsonInclude.Include.USE_DEFAULTS)
-
-  public JsonNullable<String> getBody_JsonNullable() {
-    return body;
-  }
-  
-  @JsonProperty(JSON_PROPERTY_BODY)
-  public void setBody_JsonNullable(JsonNullable<String> body) {
-    this.body = body;
-  }
-
-  public void setBody(@jakarta.annotation.Nullable String body) {
-    this.body = JsonNullable.<String>of(body);
-  }
-
-
   public TestForwarderRequest successStatus(@jakarta.annotation.Nullable String successStatus) {
     this.successStatus = successStatus;
     return this;
@@ -300,7 +264,6 @@ public class TestForwarderRequest {
     return Objects.equals(this.method, testForwarderRequest.method) &&
         Objects.equals(this.url, testForwarderRequest.url) &&
         Objects.equals(this.headers, testForwarderRequest.headers) &&
-        equalsNullable(this.body, testForwarderRequest.body) &&
         Objects.equals(this.successStatus, testForwarderRequest.successStatus) &&
         equalsNullable(this.timeoutMs, testForwarderRequest.timeoutMs);
   }
@@ -311,7 +274,7 @@ public class TestForwarderRequest {
 
   @Override
   public int hashCode() {
-    return Objects.hash(method, url, headers, hashCodeNullable(body), successStatus, hashCodeNullable(timeoutMs));
+    return Objects.hash(method, url, headers, successStatus, hashCodeNullable(timeoutMs));
   }
 
   private static <T> int hashCodeNullable(JsonNullable<T> a) {
@@ -328,7 +291,6 @@ public class TestForwarderRequest {
     sb.append("    method: ").append(toIndentedString(method)).append("\n");
     sb.append("    url: ").append(toIndentedString(url)).append("\n");
     sb.append("    headers: ").append(toIndentedString(headers)).append("\n");
-    sb.append("    body: ").append(toIndentedString(body)).append("\n");
     sb.append("    successStatus: ").append(toIndentedString(successStatus)).append("\n");
     sb.append("    timeoutMs: ").append(toIndentedString(timeoutMs)).append("\n");
     sb.append("}");
@@ -393,11 +355,6 @@ public class TestForwarderRequest {
           "".equals(suffix) ? "" : String.format(java.util.Locale.ROOT, "%s%d%s", containerPrefix, i, containerSuffix))));
         }
       }
-    }
-
-    // add `body` to the URL query string
-    if (getBody() != null) {
-      joiner.add(String.format(java.util.Locale.ROOT, "%sbody%s=%s", prefix, suffix, ApiClient.urlEncode(ApiClient.valueToString(getBody()))));
     }
 
     // add `success_status` to the URL query string

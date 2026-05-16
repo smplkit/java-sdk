@@ -24,8 +24,8 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonTypeName;
 import com.fasterxml.jackson.annotation.JsonValue;
-import com.smplkit.internal.generated.audit.model.ForwarderHttp;
 import com.smplkit.internal.generated.audit.model.ForwarderType;
+import com.smplkit.internal.generated.audit.model.HttpConfiguration;
 import java.time.OffsetDateTime;
 import java.util.Arrays;
 import java.util.HashMap;
@@ -39,16 +39,17 @@ import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 
 import com.smplkit.internal.generated.audit.ApiClient;
 /**
- * A destination that receives audit events recorded for the account.  Each event recorded for the account is evaluated against every enabled forwarder. If the filter expression evaluates truthy — or is absent — the event is delivered to the destination using the configured HTTP request. The slug, derived from &#x60;name&#x60; at create time, is the stable identifier used by the console and other tooling.
+ * A destination that receives audit events recorded for the account.  Each event recorded for the account is evaluated against every enabled forwarder. If the filter expression evaluates truthy — or is absent — the event is shaped by the configured transform and delivered to the destination defined by &#x60;&#x60;configuration&#x60;&#x60;.
  */
 @JsonPropertyOrder({
   Forwarder.JSON_PROPERTY_NAME,
+  Forwarder.JSON_PROPERTY_DESCRIPTION,
   Forwarder.JSON_PROPERTY_FORWARDER_TYPE,
   Forwarder.JSON_PROPERTY_ENABLED,
   Forwarder.JSON_PROPERTY_FILTER,
+  Forwarder.JSON_PROPERTY_TRANSFORM_TYPE,
   Forwarder.JSON_PROPERTY_TRANSFORM,
-  Forwarder.JSON_PROPERTY_HTTP,
-  Forwarder.JSON_PROPERTY_SLUG,
+  Forwarder.JSON_PROPERTY_CONFIGURATION,
   Forwarder.JSON_PROPERTY_CREATED_AT,
   Forwarder.JSON_PROPERTY_UPDATED_AT,
   Forwarder.JSON_PROPERTY_DELETED_AT,
@@ -59,6 +60,9 @@ public class Forwarder {
   public static final String JSON_PROPERTY_NAME = "name";
   @jakarta.annotation.Nonnull
   private String name;
+
+  public static final String JSON_PROPERTY_DESCRIPTION = "description";
+  private JsonNullable<String> description = JsonNullable.<String>undefined();
 
   public static final String JSON_PROPERTY_FORWARDER_TYPE = "forwarder_type";
   @jakarta.annotation.Nonnull
@@ -71,15 +75,48 @@ public class Forwarder {
   public static final String JSON_PROPERTY_FILTER = "filter";
   private JsonNullable<Map<String, Object>> filter = JsonNullable.<Map<String, Object>>undefined();
 
+  /**
+   * Engine used to evaluate &#x60;&#x60;transform&#x60;&#x60;. Must be set whenever &#x60;&#x60;transform&#x60;&#x60; is set. Today only &#x60;JSONATA&#x60; is supported.
+   */
+  public enum TransformTypeEnum {
+    JSONATA(String.valueOf("JSONATA"));
+
+    private String value;
+
+    TransformTypeEnum(String value) {
+      this.value = value;
+    }
+
+    @JsonValue
+    public String getValue() {
+      return value;
+    }
+
+    @Override
+    public String toString() {
+      return String.valueOf(value);
+    }
+
+    @JsonCreator
+    public static TransformTypeEnum fromValue(String value) {
+      for (TransformTypeEnum b : TransformTypeEnum.values()) {
+        if (b.value.equals(value)) {
+          return b;
+        }
+      }
+      return null;
+    }
+  }
+
+  public static final String JSON_PROPERTY_TRANSFORM_TYPE = "transform_type";
+  private JsonNullable<TransformTypeEnum> transformType = JsonNullable.<TransformTypeEnum>undefined();
+
   public static final String JSON_PROPERTY_TRANSFORM = "transform";
-  private JsonNullable<String> transform = JsonNullable.<String>undefined();
+  private JsonNullable<Object> transform = JsonNullable.<Object>of(null);
 
-  public static final String JSON_PROPERTY_HTTP = "http";
+  public static final String JSON_PROPERTY_CONFIGURATION = "configuration";
   @jakarta.annotation.Nonnull
-  private ForwarderHttp http;
-
-  public static final String JSON_PROPERTY_SLUG = "slug";
-  private JsonNullable<String> slug = JsonNullable.<String>undefined();
+  private HttpConfiguration _configuration;
 
   public static final String JSON_PROPERTY_CREATED_AT = "created_at";
   private JsonNullable<OffsetDateTime> createdAt = JsonNullable.<OffsetDateTime>undefined();
@@ -98,14 +135,12 @@ public class Forwarder {
 
   @JsonCreator
   public Forwarder(
-    @JsonProperty(JSON_PROPERTY_SLUG) String slug, 
     @JsonProperty(JSON_PROPERTY_CREATED_AT) OffsetDateTime createdAt, 
     @JsonProperty(JSON_PROPERTY_UPDATED_AT) OffsetDateTime updatedAt, 
     @JsonProperty(JSON_PROPERTY_DELETED_AT) OffsetDateTime deletedAt, 
     @JsonProperty(JSON_PROPERTY_VERSION) Integer version
   ) {
   this();
-    this.slug = slug == null ? JsonNullable.<String>undefined() : JsonNullable.of(slug);
     this.createdAt = createdAt == null ? JsonNullable.<OffsetDateTime>undefined() : JsonNullable.of(createdAt);
     this.updatedAt = updatedAt == null ? JsonNullable.<OffsetDateTime>undefined() : JsonNullable.of(updatedAt);
     this.deletedAt = deletedAt == null ? JsonNullable.<OffsetDateTime>undefined() : JsonNullable.of(deletedAt);
@@ -133,6 +168,38 @@ public class Forwarder {
   @JsonInclude(value = JsonInclude.Include.ALWAYS)
   public void setName(@jakarta.annotation.Nonnull String name) {
     this.name = name;
+  }
+
+
+  public Forwarder description(@jakarta.annotation.Nullable String description) {
+    this.description = JsonNullable.<String>of(description);
+    return this;
+  }
+
+  /**
+   * Free-text description for the forwarder.
+   * @return description
+   */
+  @jakarta.annotation.Nullable
+  @JsonIgnore
+  public String getDescription() {
+        return description.orElse(null);
+  }
+
+  @JsonProperty(value = JSON_PROPERTY_DESCRIPTION, required = false)
+  @JsonInclude(value = JsonInclude.Include.USE_DEFAULTS)
+
+  public JsonNullable<String> getDescription_JsonNullable() {
+    return description;
+  }
+  
+  @JsonProperty(JSON_PROPERTY_DESCRIPTION)
+  public void setDescription_JsonNullable(JsonNullable<String> description) {
+    this.description = description;
+  }
+
+  public void setDescription(@jakarta.annotation.Nullable String description) {
+    this.description = JsonNullable.<String>of(description);
   }
 
 
@@ -228,88 +295,92 @@ public class Forwarder {
   }
 
 
-  public Forwarder transform(@jakarta.annotation.Nullable String transform) {
-    this.transform = JsonNullable.<String>of(transform);
+  public Forwarder transformType(@jakarta.annotation.Nullable TransformTypeEnum transformType) {
+    this.transformType = JsonNullable.<TransformTypeEnum>of(transformType);
     return this;
   }
 
   /**
-   * JSONata template applied to each event before delivery. Omit to deliver the event unchanged.
+   * Engine used to evaluate &#x60;&#x60;transform&#x60;&#x60;. Must be set whenever &#x60;&#x60;transform&#x60;&#x60; is set. Today only &#x60;JSONATA&#x60; is supported.
+   * @return transformType
+   */
+  @jakarta.annotation.Nullable
+  @JsonIgnore
+  public TransformTypeEnum getTransformType() {
+        return transformType.orElse(null);
+  }
+
+  @JsonProperty(value = JSON_PROPERTY_TRANSFORM_TYPE, required = false)
+  @JsonInclude(value = JsonInclude.Include.USE_DEFAULTS)
+
+  public JsonNullable<TransformTypeEnum> getTransformType_JsonNullable() {
+    return transformType;
+  }
+  
+  @JsonProperty(JSON_PROPERTY_TRANSFORM_TYPE)
+  public void setTransformType_JsonNullable(JsonNullable<TransformTypeEnum> transformType) {
+    this.transformType = transformType;
+  }
+
+  public void setTransformType(@jakarta.annotation.Nullable TransformTypeEnum transformType) {
+    this.transformType = JsonNullable.<TransformTypeEnum>of(transformType);
+  }
+
+
+  public Forwarder transform(@jakarta.annotation.Nullable Object transform) {
+    this.transform = JsonNullable.<Object>of(transform);
+    return this;
+  }
+
+  /**
+   * Template applied to each event before delivery. The shape depends on &#x60;&#x60;transform_type&#x60;&#x60;: for &#x60;JSONATA&#x60;, a string containing a JSONata expression. Omit to deliver the event JSON unchanged.
    * @return transform
    */
   @jakarta.annotation.Nullable
   @JsonIgnore
-  public String getTransform() {
+  public Object getTransform() {
         return transform.orElse(null);
   }
 
   @JsonProperty(value = JSON_PROPERTY_TRANSFORM, required = false)
   @JsonInclude(value = JsonInclude.Include.USE_DEFAULTS)
 
-  public JsonNullable<String> getTransform_JsonNullable() {
+  public JsonNullable<Object> getTransform_JsonNullable() {
     return transform;
   }
   
   @JsonProperty(JSON_PROPERTY_TRANSFORM)
-  public void setTransform_JsonNullable(JsonNullable<String> transform) {
+  public void setTransform_JsonNullable(JsonNullable<Object> transform) {
     this.transform = transform;
   }
 
-  public void setTransform(@jakarta.annotation.Nullable String transform) {
-    this.transform = JsonNullable.<String>of(transform);
+  public void setTransform(@jakarta.annotation.Nullable Object transform) {
+    this.transform = JsonNullable.<Object>of(transform);
   }
 
 
-  public Forwarder http(@jakarta.annotation.Nonnull ForwarderHttp http) {
-    this.http = http;
+  public Forwarder _configuration(@jakarta.annotation.Nonnull HttpConfiguration _configuration) {
+    this._configuration = _configuration;
     return this;
   }
 
   /**
-   * Get http
-   * @return http
+   * Get _configuration
+   * @return _configuration
    */
   @jakarta.annotation.Nonnull
-  @JsonProperty(value = JSON_PROPERTY_HTTP, required = true)
+  @JsonProperty(value = JSON_PROPERTY_CONFIGURATION, required = true)
   @JsonInclude(value = JsonInclude.Include.ALWAYS)
-  public ForwarderHttp getHttp() {
-    return http;
+  public HttpConfiguration getConfiguration() {
+    return _configuration;
   }
 
 
-  @JsonProperty(value = JSON_PROPERTY_HTTP, required = true)
+  @JsonProperty(value = JSON_PROPERTY_CONFIGURATION, required = true)
   @JsonInclude(value = JsonInclude.Include.ALWAYS)
-  public void setHttp(@jakarta.annotation.Nonnull ForwarderHttp http) {
-    this.http = http;
+  public void setConfiguration(@jakarta.annotation.Nonnull HttpConfiguration _configuration) {
+    this._configuration = _configuration;
   }
-
-
-  /**
-   * URL-safe identifier derived from &#x60;name&#x60; at create time. Stable for the lifetime of the forwarder.
-   * @return slug
-   */
-  @jakarta.annotation.Nullable
-  @JsonIgnore
-  public String getSlug() {
-    
-    if (slug == null) {
-      slug = JsonNullable.<String>undefined();
-    }
-    return slug.orElse(null);
-  }
-
-  @JsonProperty(value = JSON_PROPERTY_SLUG, required = false)
-  @JsonInclude(value = JsonInclude.Include.USE_DEFAULTS)
-
-  public JsonNullable<String> getSlug_JsonNullable() {
-    return slug;
-  }
-  
-  @JsonProperty(JSON_PROPERTY_SLUG)
-  private void setSlug_JsonNullable(JsonNullable<String> slug) {
-    this.slug = slug;
-  }
-
 
 
   /**
@@ -437,12 +508,13 @@ public class Forwarder {
     }
     Forwarder forwarder = (Forwarder) o;
     return Objects.equals(this.name, forwarder.name) &&
+        equalsNullable(this.description, forwarder.description) &&
         Objects.equals(this.forwarderType, forwarder.forwarderType) &&
         Objects.equals(this.enabled, forwarder.enabled) &&
         equalsNullable(this.filter, forwarder.filter) &&
+        equalsNullable(this.transformType, forwarder.transformType) &&
         equalsNullable(this.transform, forwarder.transform) &&
-        Objects.equals(this.http, forwarder.http) &&
-        equalsNullable(this.slug, forwarder.slug) &&
+        Objects.equals(this._configuration, forwarder._configuration) &&
         equalsNullable(this.createdAt, forwarder.createdAt) &&
         equalsNullable(this.updatedAt, forwarder.updatedAt) &&
         equalsNullable(this.deletedAt, forwarder.deletedAt) &&
@@ -455,7 +527,7 @@ public class Forwarder {
 
   @Override
   public int hashCode() {
-    return Objects.hash(name, forwarderType, enabled, hashCodeNullable(filter), hashCodeNullable(transform), http, hashCodeNullable(slug), hashCodeNullable(createdAt), hashCodeNullable(updatedAt), hashCodeNullable(deletedAt), hashCodeNullable(version));
+    return Objects.hash(name, hashCodeNullable(description), forwarderType, enabled, hashCodeNullable(filter), hashCodeNullable(transformType), hashCodeNullable(transform), _configuration, hashCodeNullable(createdAt), hashCodeNullable(updatedAt), hashCodeNullable(deletedAt), hashCodeNullable(version));
   }
 
   private static <T> int hashCodeNullable(JsonNullable<T> a) {
@@ -470,12 +542,13 @@ public class Forwarder {
     StringBuilder sb = new StringBuilder();
     sb.append("class Forwarder {\n");
     sb.append("    name: ").append(toIndentedString(name)).append("\n");
+    sb.append("    description: ").append(toIndentedString(description)).append("\n");
     sb.append("    forwarderType: ").append(toIndentedString(forwarderType)).append("\n");
     sb.append("    enabled: ").append(toIndentedString(enabled)).append("\n");
     sb.append("    filter: ").append(toIndentedString(filter)).append("\n");
+    sb.append("    transformType: ").append(toIndentedString(transformType)).append("\n");
     sb.append("    transform: ").append(toIndentedString(transform)).append("\n");
-    sb.append("    http: ").append(toIndentedString(http)).append("\n");
-    sb.append("    slug: ").append(toIndentedString(slug)).append("\n");
+    sb.append("    _configuration: ").append(toIndentedString(_configuration)).append("\n");
     sb.append("    createdAt: ").append(toIndentedString(createdAt)).append("\n");
     sb.append("    updatedAt: ").append(toIndentedString(updatedAt)).append("\n");
     sb.append("    deletedAt: ").append(toIndentedString(deletedAt)).append("\n");
@@ -529,6 +602,11 @@ public class Forwarder {
       joiner.add(String.format(java.util.Locale.ROOT, "%sname%s=%s", prefix, suffix, ApiClient.urlEncode(ApiClient.valueToString(getName()))));
     }
 
+    // add `description` to the URL query string
+    if (getDescription() != null) {
+      joiner.add(String.format(java.util.Locale.ROOT, "%sdescription%s=%s", prefix, suffix, ApiClient.urlEncode(ApiClient.valueToString(getDescription()))));
+    }
+
     // add `forwarder_type` to the URL query string
     if (getForwarderType() != null) {
       joiner.add(String.format(java.util.Locale.ROOT, "%sforwarder_type%s=%s", prefix, suffix, ApiClient.urlEncode(ApiClient.valueToString(getForwarderType()))));
@@ -548,19 +626,19 @@ public class Forwarder {
       }
     }
 
+    // add `transform_type` to the URL query string
+    if (getTransformType() != null) {
+      joiner.add(String.format(java.util.Locale.ROOT, "%stransform_type%s=%s", prefix, suffix, ApiClient.urlEncode(ApiClient.valueToString(getTransformType()))));
+    }
+
     // add `transform` to the URL query string
     if (getTransform() != null) {
       joiner.add(String.format(java.util.Locale.ROOT, "%stransform%s=%s", prefix, suffix, ApiClient.urlEncode(ApiClient.valueToString(getTransform()))));
     }
 
-    // add `http` to the URL query string
-    if (getHttp() != null) {
-      joiner.add(getHttp().toUrlQueryString(prefix + "http" + suffix));
-    }
-
-    // add `slug` to the URL query string
-    if (getSlug() != null) {
-      joiner.add(String.format(java.util.Locale.ROOT, "%sslug%s=%s", prefix, suffix, ApiClient.urlEncode(ApiClient.valueToString(getSlug()))));
+    // add `configuration` to the URL query string
+    if (getConfiguration() != null) {
+      joiner.add(getConfiguration().toUrlQueryString(prefix + "configuration" + suffix));
     }
 
     // add `created_at` to the URL query string
