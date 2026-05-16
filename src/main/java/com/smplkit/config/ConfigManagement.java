@@ -85,7 +85,7 @@ public final class ConfigManagement {
      */
     public List<Config> list() {
         try {
-            ConfigListResponse response = client.configsApi.listConfigs(null, null);
+            ConfigListResponse response = client.configsApi.listConfigs(null, null, null, null, null);
             List<ConfigResource> data = response.getData();
             if (data == null) {
                 return Collections.emptyList();
