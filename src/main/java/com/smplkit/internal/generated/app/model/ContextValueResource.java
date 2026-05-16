@@ -24,7 +24,7 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonTypeName;
 import com.fasterxml.jackson.annotation.JsonValue;
-import com.smplkit.internal.generated.app.model.Context;
+import com.smplkit.internal.generated.app.model.ContextValue;
 import java.util.Arrays;
 import org.openapitools.jackson.nullable.JsonNullable;
 import com.fasterxml.jackson.annotation.JsonIgnore;
@@ -35,15 +35,15 @@ import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 
 import com.smplkit.internal.generated.app.ApiClient;
 /**
- * JSON:API resource envelope for a context instance.  &#x60;id&#x60; is the composite identifier &#x60;context_type:key&#x60; (e.g. &#x60;user:alice-123&#x60;).
+ * JSON:API resource envelope for a distinct context-attribute value.  &#x60;id&#x60; is the value itself.
  */
 @JsonPropertyOrder({
-  ContextResource.JSON_PROPERTY_ID,
-  ContextResource.JSON_PROPERTY_TYPE,
-  ContextResource.JSON_PROPERTY_ATTRIBUTES
+  ContextValueResource.JSON_PROPERTY_ID,
+  ContextValueResource.JSON_PROPERTY_TYPE,
+  ContextValueResource.JSON_PROPERTY_ATTRIBUTES
 })
 @jakarta.annotation.Generated(value = "org.openapitools.codegen.languages.JavaClientCodegen", comments = "Generator version: 7.21.0")
-public class ContextResource {
+public class ContextValueResource {
   public static final String JSON_PROPERTY_ID = "id";
   private JsonNullable<String> id = JsonNullable.<String>undefined();
 
@@ -51,7 +51,7 @@ public class ContextResource {
    * Gets or Sets type
    */
   public enum TypeEnum {
-    CONTEXT(String.valueOf("context"));
+    CONTEXT_VALUE(String.valueOf("context_value"));
 
     private String value;
 
@@ -86,12 +86,12 @@ public class ContextResource {
 
   public static final String JSON_PROPERTY_ATTRIBUTES = "attributes";
   @jakarta.annotation.Nonnull
-  private Context attributes;
+  private ContextValue attributes;
 
-  public ContextResource() { 
+  public ContextValueResource() { 
   }
 
-  public ContextResource id(@jakarta.annotation.Nullable String id) {
+  public ContextValueResource id(@jakarta.annotation.Nullable String id) {
     this.id = JsonNullable.<String>of(id);
     return this;
   }
@@ -123,7 +123,7 @@ public class ContextResource {
   }
 
 
-  public ContextResource type(@jakarta.annotation.Nonnull TypeEnum type) {
+  public ContextValueResource type(@jakarta.annotation.Nonnull TypeEnum type) {
     this.type = type;
     return this;
   }
@@ -147,7 +147,7 @@ public class ContextResource {
   }
 
 
-  public ContextResource attributes(@jakarta.annotation.Nonnull Context attributes) {
+  public ContextValueResource attributes(@jakarta.annotation.Nonnull ContextValue attributes) {
     this.attributes = attributes;
     return this;
   }
@@ -159,20 +159,20 @@ public class ContextResource {
   @jakarta.annotation.Nonnull
   @JsonProperty(value = JSON_PROPERTY_ATTRIBUTES, required = true)
   @JsonInclude(value = JsonInclude.Include.ALWAYS)
-  public Context getAttributes() {
+  public ContextValue getAttributes() {
     return attributes;
   }
 
 
   @JsonProperty(value = JSON_PROPERTY_ATTRIBUTES, required = true)
   @JsonInclude(value = JsonInclude.Include.ALWAYS)
-  public void setAttributes(@jakarta.annotation.Nonnull Context attributes) {
+  public void setAttributes(@jakarta.annotation.Nonnull ContextValue attributes) {
     this.attributes = attributes;
   }
 
 
   /**
-   * Return true if this ContextResource object is equal to o.
+   * Return true if this ContextValueResource object is equal to o.
    */
   @Override
   public boolean equals(Object o) {
@@ -182,10 +182,10 @@ public class ContextResource {
     if (o == null || getClass() != o.getClass()) {
       return false;
     }
-    ContextResource contextResource = (ContextResource) o;
-    return equalsNullable(this.id, contextResource.id) &&
-        Objects.equals(this.type, contextResource.type) &&
-        Objects.equals(this.attributes, contextResource.attributes);
+    ContextValueResource contextValueResource = (ContextValueResource) o;
+    return equalsNullable(this.id, contextValueResource.id) &&
+        Objects.equals(this.type, contextValueResource.type) &&
+        Objects.equals(this.attributes, contextValueResource.attributes);
   }
 
   private static <T> boolean equalsNullable(JsonNullable<T> a, JsonNullable<T> b) {
@@ -207,7 +207,7 @@ public class ContextResource {
   @Override
   public String toString() {
     StringBuilder sb = new StringBuilder();
-    sb.append("class ContextResource {\n");
+    sb.append("class ContextValueResource {\n");
     sb.append("    id: ").append(toIndentedString(id)).append("\n");
     sb.append("    type: ").append(toIndentedString(type)).append("\n");
     sb.append("    attributes: ").append(toIndentedString(attributes)).append("\n");

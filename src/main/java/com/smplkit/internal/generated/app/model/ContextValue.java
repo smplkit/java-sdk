@@ -24,53 +24,52 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonTypeName;
 import com.fasterxml.jackson.annotation.JsonValue;
-import com.smplkit.internal.generated.app.model.PageMeta;
 import java.util.Arrays;
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 
 
 import com.smplkit.internal.generated.app.ApiClient;
 /**
- * UserListMeta
+ * A single distinct attribute value observed across context instances.  Returned by &#x60;GET /api/v1/context_values&#x60; to power typeahead pickers in rule-building UIs. The set of values reflects what has been registered via the bulk-context endpoint — it is observational, not a customer- declared enumeration.
  */
 @JsonPropertyOrder({
-  UserListMeta.JSON_PROPERTY_PAGE
+  ContextValue.JSON_PROPERTY_VALUE
 })
 @jakarta.annotation.Generated(value = "org.openapitools.codegen.languages.JavaClientCodegen", comments = "Generator version: 7.21.0")
-public class UserListMeta {
-  public static final String JSON_PROPERTY_PAGE = "page";
+public class ContextValue {
+  public static final String JSON_PROPERTY_VALUE = "value";
   @jakarta.annotation.Nonnull
-  private PageMeta page;
+  private String value;
 
-  public UserListMeta() { 
+  public ContextValue() { 
   }
 
-  public UserListMeta page(@jakarta.annotation.Nonnull PageMeta page) {
-    this.page = page;
+  public ContextValue value(@jakarta.annotation.Nonnull String value) {
+    this.value = value;
     return this;
   }
 
   /**
-   * Get page
-   * @return page
+   * The distinct attribute value as it appears on at least one context instance of the requested type.
+   * @return value
    */
   @jakarta.annotation.Nonnull
-  @JsonProperty(value = JSON_PROPERTY_PAGE, required = true)
+  @JsonProperty(value = JSON_PROPERTY_VALUE, required = true)
   @JsonInclude(value = JsonInclude.Include.ALWAYS)
-  public PageMeta getPage() {
-    return page;
+  public String getValue() {
+    return value;
   }
 
 
-  @JsonProperty(value = JSON_PROPERTY_PAGE, required = true)
+  @JsonProperty(value = JSON_PROPERTY_VALUE, required = true)
   @JsonInclude(value = JsonInclude.Include.ALWAYS)
-  public void setPage(@jakarta.annotation.Nonnull PageMeta page) {
-    this.page = page;
+  public void setValue(@jakarta.annotation.Nonnull String value) {
+    this.value = value;
   }
 
 
   /**
-   * Return true if this UserListMeta object is equal to o.
+   * Return true if this ContextValue object is equal to o.
    */
   @Override
   public boolean equals(Object o) {
@@ -80,20 +79,20 @@ public class UserListMeta {
     if (o == null || getClass() != o.getClass()) {
       return false;
     }
-    UserListMeta userListMeta = (UserListMeta) o;
-    return Objects.equals(this.page, userListMeta.page);
+    ContextValue contextValue = (ContextValue) o;
+    return Objects.equals(this.value, contextValue.value);
   }
 
   @Override
   public int hashCode() {
-    return Objects.hash(page);
+    return Objects.hash(value);
   }
 
   @Override
   public String toString() {
     StringBuilder sb = new StringBuilder();
-    sb.append("class UserListMeta {\n");
-    sb.append("    page: ").append(toIndentedString(page)).append("\n");
+    sb.append("class ContextValue {\n");
+    sb.append("    value: ").append(toIndentedString(value)).append("\n");
     sb.append("}");
     return sb.toString();
   }
@@ -138,9 +137,9 @@ public class UserListMeta {
 
     StringJoiner joiner = new StringJoiner("&");
 
-    // add `page` to the URL query string
-    if (getPage() != null) {
-      joiner.add(getPage().toUrlQueryString(prefix + "page" + suffix));
+    // add `value` to the URL query string
+    if (getValue() != null) {
+      joiner.add(String.format(java.util.Locale.ROOT, "%svalue%s=%s", prefix, suffix, ApiClient.urlEncode(ApiClient.valueToString(getValue()))));
     }
 
     return joiner.toString();

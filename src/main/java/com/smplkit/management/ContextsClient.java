@@ -85,7 +85,7 @@ public final class ContextsClient {
     /** List all contexts of the given type. */
     public List<ContextEntity> list(String type) {
         try {
-            ContextListResponse resp = api.listContexts(type, null);
+            ContextListResponse resp = api.listContexts(type, null, null, null, null, null);
             List<ContextEntity> result = new ArrayList<>();
             if (resp.getData() != null) {
                 for (ContextResource r : resp.getData()) {
