@@ -3,6 +3,7 @@ package com.smplkit.management;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.smplkit.errors.ApiExceptionHandler;
+import com.smplkit.internal.HttpClients;
 import com.smplkit.internal.generated.app.ApiClient;
 import com.smplkit.internal.generated.app.ApiException;
 import com.smplkit.internal.generated.app.api.AccountApi;
@@ -26,7 +27,7 @@ public final class AccountSettingsClient {
     private final java.net.http.HttpClient httpClient;
 
     AccountSettingsClient(ApiClient appApiClient, String appBaseUrl, String apiKey) {
-        this(appApiClient, appBaseUrl, apiKey, java.net.http.HttpClient.newHttpClient());
+        this(appApiClient, appBaseUrl, apiKey, HttpClients.builder().build());
     }
 
     AccountSettingsClient(ApiClient appApiClient, String appBaseUrl, String apiKey,

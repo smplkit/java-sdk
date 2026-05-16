@@ -1,6 +1,7 @@
 package com.smplkit.audit;
 
 import com.smplkit.SmplClient;
+import com.smplkit.internal.HttpClients;
 import com.smplkit.internal.generated.audit.ApiClient;
 import com.smplkit.internal.generated.audit.api.ForwardersApi;
 
@@ -23,6 +24,7 @@ public final class AuditManagementClient {
     public AuditManagementClient(String apiKey, Map<String, String> extraHeaders,
                                  Duration timeout, String baseUrl) {
         ApiClient apiClient = new ApiClient();
+        apiClient.setHttpClientBuilder(HttpClients.builder());
         apiClient.updateBaseUri(baseUrl);
         apiClient.setRequestInterceptor(SmplClient.compositeInterceptor(apiKey, extraHeaders));
         apiClient.setReadTimeout(timeout);

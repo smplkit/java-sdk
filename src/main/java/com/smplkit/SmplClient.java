@@ -15,6 +15,7 @@ import com.smplkit.internal.generated.logging.api.LogGroupsApi;
 import com.smplkit.internal.generated.logging.api.LoggersApi;
 
 import com.smplkit.internal.Debug;
+import com.smplkit.internal.HttpClients;
 
 import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
@@ -95,9 +96,7 @@ public final class SmplClient implements AutoCloseable {
             Debug.enable();
         }
 
-        this.httpClient = HttpClient.newBuilder()
-                .connectTimeout(timeout)
-                .build();
+        this.httpClient = HttpClients.http11(timeout);
         this.metrics = resolvedConfig.disableTelemetry ? null
                 : new MetricsReporter(httpClient, appBaseUrl, apiKey, environment, service);
         this.sharedWs = new SharedWebSocket(httpClient, appBaseUrl, apiKey, metrics);
@@ -245,6 +244,7 @@ public final class SmplClient implements AutoCloseable {
                                                    Map<String, String> extraHeaders,
                                                    Duration timeout, String configBaseUrl) {
         ApiClient apiClient = new ApiClient();
+        apiClient.setHttpClientBuilder(HttpClients.builder());
         apiClient.updateBaseUri(configBaseUrl);
         apiClient.setRequestInterceptor(compositeInterceptor(apiKey, extraHeaders));
         apiClient.setReadTimeout(timeout);
@@ -259,6 +259,7 @@ public final class SmplClient implements AutoCloseable {
                                                  String flagsBaseUrl, String appBaseUrl) {
         com.smplkit.internal.generated.flags.ApiClient flagsApiClient =
                 new com.smplkit.internal.generated.flags.ApiClient();
+        flagsApiClient.setHttpClientBuilder(HttpClients.builder());
         flagsApiClient.updateBaseUri(flagsBaseUrl);
         flagsApiClient.setRequestInterceptor(compositeInterceptor(apiKey, extraHeaders));
         flagsApiClient.setReadTimeout(timeout);
@@ -266,6 +267,7 @@ public final class SmplClient implements AutoCloseable {
 
         com.smplkit.internal.generated.app.ApiClient appApiClient =
                 new com.smplkit.internal.generated.app.ApiClient();
+        appApiClient.setHttpClientBuilder(HttpClients.builder());
         appApiClient.updateBaseUri(appBaseUrl);
         appApiClient.setRequestInterceptor(compositeInterceptor(apiKey, extraHeaders));
         appApiClient.setReadTimeout(timeout);
@@ -283,6 +285,7 @@ public final class SmplClient implements AutoCloseable {
                                                  Map<String, String> extraHeaders, Duration timeout) {
         com.smplkit.internal.generated.app.ApiClient appApiClient =
                 new com.smplkit.internal.generated.app.ApiClient();
+        appApiClient.setHttpClientBuilder(HttpClients.builder());
         appApiClient.updateBaseUri(baseUrl);
         appApiClient.setRequestInterceptor(compositeInterceptor(apiKey, extraHeaders));
         appApiClient.setReadTimeout(timeout);
@@ -318,6 +321,7 @@ public final class SmplClient implements AutoCloseable {
                                                     String service, String loggingBaseUrl) {
         com.smplkit.internal.generated.logging.ApiClient loggingApiClient =
                 new com.smplkit.internal.generated.logging.ApiClient();
+        loggingApiClient.setHttpClientBuilder(HttpClients.builder());
         loggingApiClient.updateBaseUri(loggingBaseUrl);
         loggingApiClient.setRequestInterceptor(compositeInterceptor(apiKey, extraHeaders));
         loggingApiClient.setReadTimeout(timeout);

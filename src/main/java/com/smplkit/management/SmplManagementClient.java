@@ -6,6 +6,7 @@ import com.smplkit.config.ConfigClient;
 import com.smplkit.config.ConfigManagement;
 import com.smplkit.flags.FlagsClient;
 import com.smplkit.flags.FlagsManagement;
+import com.smplkit.internal.HttpClients;
 import com.smplkit.internal.generated.app.ApiClient;
 import com.smplkit.internal.generated.config.api.ConfigsApi;
 import com.smplkit.internal.generated.flags.api.FlagsApi;
@@ -123,6 +124,7 @@ public final class SmplManagementClient implements AutoCloseable {
         // Headless config client — only ever used for its management() surface.
         com.smplkit.internal.generated.config.ApiClient configApiClient =
                 new com.smplkit.internal.generated.config.ApiClient();
+        configApiClient.setHttpClientBuilder(HttpClients.builder());
         configApiClient.updateBaseUri(configBaseUrl);
         configApiClient.setRequestInterceptor(authInterceptor(cfg.apiKey));
         configApiClient.setReadTimeout(timeout);
@@ -133,6 +135,7 @@ public final class SmplManagementClient implements AutoCloseable {
         // Headless flags client — only ever used for its management() surface.
         com.smplkit.internal.generated.flags.ApiClient flagsApiClient =
                 new com.smplkit.internal.generated.flags.ApiClient();
+        flagsApiClient.setHttpClientBuilder(HttpClients.builder());
         flagsApiClient.updateBaseUri(flagsBaseUrl);
         flagsApiClient.setRequestInterceptor(authInterceptor(cfg.apiKey));
         flagsApiClient.setReadTimeout(timeout);
@@ -146,6 +149,7 @@ public final class SmplManagementClient implements AutoCloseable {
         // Headless logging client — backs LoggersClient and LogGroupsClient.
         com.smplkit.internal.generated.logging.ApiClient loggingApiClient =
                 new com.smplkit.internal.generated.logging.ApiClient();
+        loggingApiClient.setHttpClientBuilder(HttpClients.builder());
         loggingApiClient.updateBaseUri(loggingBaseUrl);
         loggingApiClient.setRequestInterceptor(authInterceptor(cfg.apiKey));
         loggingApiClient.setReadTimeout(timeout);
@@ -163,6 +167,7 @@ public final class SmplManagementClient implements AutoCloseable {
     /** Build an ApiClient for the app service. */
     public static ApiClient buildAppApiClient(String baseUrl, String apiKey, Duration timeout) {
         ApiClient client = new ApiClient();
+        client.setHttpClientBuilder(HttpClients.builder());
         client.updateBaseUri(baseUrl);
         client.setRequestInterceptor(authInterceptor(apiKey));
         if (timeout != null) client.setReadTimeout(timeout);
@@ -197,7 +202,7 @@ public final class SmplManagementClient implements AutoCloseable {
      */
     public static SmplManagementClient fromResolved(ResolvedManagementConfig cfg, Duration timeout) {
         return new SmplManagementClient(cfg, timeout,
-                HttpClient.newBuilder().connectTimeout(timeout).build(),
+                HttpClients.http11(timeout),
                 new ContextRegistrationBuffer());
     }
 
