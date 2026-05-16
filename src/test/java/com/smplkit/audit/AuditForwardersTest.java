@@ -111,29 +111,39 @@ class AuditForwardersTest {
     }
 
     @Test
-    void list_paginatesAndExtractsCursor() throws Exception {
+    void list_paginatesAndExposesPagination() throws Exception {
         java.util.concurrent.atomic.AtomicInteger calls = new java.util.concurrent.atomic.AtomicInteger();
+        java.util.concurrent.atomic.AtomicReference<String> lastUri = new java.util.concurrent.atomic.AtomicReference<>();
         handler.set(ex -> {
             int n = calls.incrementAndGet();
+            lastUri.set(ex.getRequestURI().getRawQuery());
             String body = n == 1
                     ? "{\"data\":[" + forwarderResource("A", "a")
-                            + "],\"links\":{\"next\":\"/api/v1/forwarders?page[size]=1&page[after]=tok-2\"},"
-                            + "\"meta\":{\"page_size\":1}}"
+                            + "],\"meta\":{\"pagination\":{\"page\":1,\"size\":1,\"total\":2,\"total_pages\":2}}}"
                     : "{\"data\":[" + forwarderResource("B", "b")
-                            + "],\"meta\":{\"page_size\":1}}";
+                            + "],\"meta\":{\"pagination\":{\"page\":2,\"size\":1}}}";
             respondJson(ex, 200, body);
         });
         AuditForwarders fwds = new AuditForwarders(forwardersApi);
         ListForwardersInput in1 = new ListForwardersInput();
         in1.forwarderType = ForwarderType.DATADOG;
         in1.enabled = true;
+        in1.pageNumber = 1;
         in1.pageSize = 1;
+        in1.metaTotal = true;
         ListForwardersPage first = fwds.list(in1);
-        assertEquals("tok-2", first.nextCursor);
+        assertEquals(1, first.pagination.page);
+        assertEquals(1, first.pagination.size);
+        assertEquals(2, first.pagination.total);
+        assertEquals(2, first.pagination.totalPages);
+        assertTrue(lastUri.get().contains("meta%5Btotal%5D=true"),
+                "expected meta[total]=true in query: " + lastUri.get());
         ListForwardersInput in2 = new ListForwardersInput();
-        in2.pageAfter = first.nextCursor;
+        in2.pageNumber = 2;
+        in2.pageSize = 1;
         ListForwardersPage second = fwds.list(in2);
-        assertNull(second.nextCursor);
+        assertEquals(2, second.pagination.page);
+        assertNull(second.pagination.total);
     }
 
     @Test
@@ -163,19 +173,11 @@ class AuditForwardersTest {
     }
 
     @Test
-    void list_emptyDataAndNoLinks() throws Exception {
-        handler.set(ex -> respondJson(ex, 200, "{\"meta\":{\"page_size\":1}}"));
+    void list_emptyDataAndMissingMeta_returnsNullPagination() throws Exception {
+        handler.set(ex -> respondJson(ex, 200, "{\"data\":[]}"));
         ListForwardersPage page = new AuditForwarders(forwardersApi).list(new ListForwardersInput());
         assertEquals(0, page.forwarders.size());
-        assertNull(page.nextCursor);
-    }
-
-    @Test
-    void list_linkWithoutPageAfter_returnsNullCursor() throws Exception {
-        handler.set(ex -> respondJson(ex, 200,
-                "{\"data\":[],\"links\":{\"next\":\"/api/v1/forwarders?other=v\"},\"meta\":{\"page_size\":1}}"));
-        ListForwardersPage page = new AuditForwarders(forwardersApi).list(new ListForwardersInput());
-        assertNull(page.nextCursor);
+        assertNull(page.pagination);
     }
 
     @Test
@@ -253,55 +255,51 @@ class AuditForwardersTest {
                 + "\"attributes\":{\"resource_type\":\"invoice\",\"created_at\":\"2026-04-01T00:00:00Z\"}},"
                 + "{\"id\":\"user\",\"type\":\"resource_type\","
                 + "\"attributes\":{\"resource_type\":\"user\",\"created_at\":\"2026-04-02T00:00:00Z\"}}"
-                + "],\"meta\":{\"page_size\":25}}"));
+                + "],\"meta\":{\"pagination\":{\"page\":1,\"size\":1000}}}"));
         AuditResourceTypesClient rt = new AuditResourceTypesClient(resourceTypesApi);
         ListResourceTypesPage page = rt.list(new ListResourceTypesInput());
         assertEquals(2, page.resourceTypes.size());
         assertEquals("invoice", page.resourceTypes.get(0).id);
         assertEquals("invoice", page.resourceTypes.get(0).resourceType);
         assertNotNull(page.resourceTypes.get(0).createdAt);
-        assertNull(page.nextCursor);
+        assertEquals(1, page.pagination.page);
+        assertEquals(1000, page.pagination.size);
+        assertNull(page.pagination.total);
+        assertNull(page.pagination.totalPages);
     }
 
     @Test
-    void resourceTypes_list_emptyData() throws Exception {
-        handler.set(ex -> respondJson(ex, 200, "{\"meta\":{\"page_size\":25}}"));
+    void resourceTypes_list_missingMeta_returnsNullPagination() throws Exception {
+        handler.set(ex -> respondJson(ex, 200, "{\"data\":[]}"));
         AuditResourceTypesClient rt = new AuditResourceTypesClient(resourceTypesApi);
         ListResourceTypesPage page = rt.list(new ListResourceTypesInput());
         assertEquals(0, page.resourceTypes.size());
-        assertNull(page.nextCursor);
+        assertNull(page.pagination);
     }
 
     @Test
-    void resourceTypes_list_paginationCursor() throws Exception {
-        handler.set(ex -> respondJson(ex, 200,
-                "{\"data\":[],"
-                + "\"links\":{\"next\":\"/api/v1/resource_types?page[after]=tok-rt&page[size]=1\"},"
-                + "\"meta\":{\"page_size\":1}}"));
+    void resourceTypes_list_pageNumberAndMetaTotalForwardedToQuery() throws Exception {
+        java.util.concurrent.atomic.AtomicReference<String> lastUri = new java.util.concurrent.atomic.AtomicReference<>();
+        handler.set(ex -> {
+            lastUri.set(ex.getRequestURI().getRawQuery());
+            respondJson(ex, 200,
+                    "{\"data\":[],\"meta\":{\"pagination\":{\"page\":2,\"size\":1,\"total\":3,\"total_pages\":3}}}");
+        });
         AuditResourceTypesClient rt = new AuditResourceTypesClient(resourceTypesApi);
         ListResourceTypesInput in = new ListResourceTypesInput();
+        in.pageNumber = 2;
         in.pageSize = 1;
+        in.metaTotal = true;
         ListResourceTypesPage page = rt.list(in);
-        assertEquals("tok-rt", page.nextCursor);
-    }
-
-    @Test
-    void resourceTypes_list_linkWithoutPageAfter_returnsNull() throws Exception {
-        handler.set(ex -> respondJson(ex, 200,
-                "{\"data\":[],\"links\":{\"next\":\"/api/v1/resource_types?other=v\"}}"));
-        AuditResourceTypesClient rt = new AuditResourceTypesClient(resourceTypesApi);
-        ListResourceTypesPage page = rt.list(new ListResourceTypesInput());
-        assertNull(page.nextCursor);
-    }
-
-    @Test
-    void resourceTypes_list_cursorWithAmpersand() throws Exception {
-        handler.set(ex -> respondJson(ex, 200,
-                "{\"data\":[],"
-                + "\"links\":{\"next\":\"/api/v1/resource_types?page[after]=tok-xyz&extra=junk\"}}"));
-        AuditResourceTypesClient rt = new AuditResourceTypesClient(resourceTypesApi);
-        ListResourceTypesPage page = rt.list(new ListResourceTypesInput());
-        assertEquals("tok-xyz", page.nextCursor);
+        assertEquals(2, page.pagination.page);
+        assertEquals(3, page.pagination.total);
+        assertEquals(3, page.pagination.totalPages);
+        assertTrue(lastUri.get().contains("page%5Bnumber%5D=2"),
+                "expected page[number]=2: " + lastUri.get());
+        assertTrue(lastUri.get().contains("page%5Bsize%5D=1"),
+                "expected page[size]=1: " + lastUri.get());
+        assertTrue(lastUri.get().contains("meta%5Btotal%5D=true"),
+                "expected meta[total]=true: " + lastUri.get());
     }
 
     @Test
@@ -316,17 +314,29 @@ class AuditForwardersTest {
     @Test
     void listResourceTypesInput_isInstantiable() {
         ListResourceTypesInput in = new ListResourceTypesInput();
+        in.pageNumber = 2;
         in.pageSize = 10;
-        in.pageAfter = "tok";
+        in.metaTotal = true;
+        assertEquals(2, in.pageNumber);
         assertEquals(10, in.pageSize);
-        assertEquals("tok", in.pageAfter);
+        assertTrue(in.metaTotal);
     }
 
     @Test
     void listResourceTypesPage_constructorPopulatesFields() {
-        ListResourceTypesPage page = new ListResourceTypesPage(java.util.List.of(), "tok");
+        PageInfo info = new PageInfo(1, 1000, null, null);
+        ListResourceTypesPage page = new ListResourceTypesPage(java.util.List.of(), info);
         assertEquals(0, page.resourceTypes.size());
-        assertEquals("tok", page.nextCursor);
+        assertSame(info, page.pagination);
+    }
+
+    @Test
+    void pageInfo_carriesTotalAndTotalPagesWhenRequested() {
+        PageInfo info = new PageInfo(3, 50, 250, 5);
+        assertEquals(3, info.page);
+        assertEquals(50, info.size);
+        assertEquals(250, info.total);
+        assertEquals(5, info.totalPages);
     }
 
     // -----------------------------------------------------------------
@@ -341,7 +351,7 @@ class AuditForwardersTest {
                 + "\"attributes\":{\"action\":\"invoice.created\",\"created_at\":\"2026-04-01T00:00:00Z\"}},"
                 + "{\"id\":\"user.updated\",\"type\":\"action\","
                 + "\"attributes\":{\"action\":\"user.updated\",\"created_at\":\"2026-04-02T00:00:00Z\"}}"
-                + "],\"meta\":{\"page_size\":25}}"));
+                + "],\"meta\":{\"pagination\":{\"page\":1,\"size\":1000}}}"));
         AuditActionsClient ac = new AuditActionsClient(actionsApi);
         ListActionsInput in = new ListActionsInput();
         in.filterResourceType = "invoice";
@@ -350,49 +360,42 @@ class AuditForwardersTest {
         assertEquals("invoice.created", page.actions.get(0).id);
         assertEquals("invoice.created", page.actions.get(0).action);
         assertNotNull(page.actions.get(0).createdAt);
-        assertNull(page.nextCursor);
+        assertEquals(1, page.pagination.page);
+        assertEquals(1000, page.pagination.size);
     }
 
     @Test
-    void actions_list_emptyData() throws Exception {
-        handler.set(ex -> respondJson(ex, 200, "{\"meta\":{\"page_size\":25}}"));
+    void actions_list_missingMeta_returnsNullPagination() throws Exception {
+        handler.set(ex -> respondJson(ex, 200, "{\"data\":[]}"));
         AuditActionsClient ac = new AuditActionsClient(actionsApi);
         ListActionsPage page = ac.list(new ListActionsInput());
         assertEquals(0, page.actions.size());
-        assertNull(page.nextCursor);
+        assertNull(page.pagination);
     }
 
     @Test
-    void actions_list_paginationCursor() throws Exception {
-        handler.set(ex -> respondJson(ex, 200,
-                "{\"data\":[],"
-                + "\"links\":{\"next\":\"/api/v1/actions?page[after]=tok-ac&page[size]=1\"},"
-                + "\"meta\":{\"page_size\":1}}"));
+    void actions_list_filterAndPaginationForwardedToQuery() throws Exception {
+        java.util.concurrent.atomic.AtomicReference<String> lastUri = new java.util.concurrent.atomic.AtomicReference<>();
+        handler.set(ex -> {
+            lastUri.set(ex.getRequestURI().getRawQuery());
+            respondJson(ex, 200,
+                    "{\"data\":[],\"meta\":{\"pagination\":{\"page\":2,\"size\":1,\"total\":3,\"total_pages\":3}}}");
+        });
         AuditActionsClient ac = new AuditActionsClient(actionsApi);
         ListActionsInput in = new ListActionsInput();
+        in.filterResourceType = "invoice";
+        in.pageNumber = 2;
         in.pageSize = 1;
-        in.pageAfter = "prev-tok";
+        in.metaTotal = true;
         ListActionsPage page = ac.list(in);
-        assertEquals("tok-ac", page.nextCursor);
-    }
-
-    @Test
-    void actions_list_linkWithoutPageAfter_returnsNull() throws Exception {
-        handler.set(ex -> respondJson(ex, 200,
-                "{\"data\":[],\"links\":{\"next\":\"/api/v1/actions?other=v\"}}"));
-        AuditActionsClient ac = new AuditActionsClient(actionsApi);
-        ListActionsPage page = ac.list(new ListActionsInput());
-        assertNull(page.nextCursor);
-    }
-
-    @Test
-    void actions_list_cursorWithAmpersand() throws Exception {
-        handler.set(ex -> respondJson(ex, 200,
-                "{\"data\":[],"
-                + "\"links\":{\"next\":\"/api/v1/actions?page[after]=tok-ac&extra=junk\"}}"));
-        AuditActionsClient ac = new AuditActionsClient(actionsApi);
-        ListActionsPage page = ac.list(new ListActionsInput());
-        assertEquals("tok-ac", page.nextCursor);
+        assertEquals(2, page.pagination.page);
+        assertEquals(3, page.pagination.total);
+        assertTrue(lastUri.get().contains("filter%5Bresource_type%5D=invoice"),
+                "expected filter[resource_type]=invoice: " + lastUri.get());
+        assertTrue(lastUri.get().contains("page%5Bnumber%5D=2"),
+                "expected page[number]=2: " + lastUri.get());
+        assertTrue(lastUri.get().contains("meta%5Btotal%5D=true"),
+                "expected meta[total]=true: " + lastUri.get());
     }
 
     @Test
@@ -408,17 +411,20 @@ class AuditForwardersTest {
     void listActionsInput_isInstantiable() {
         ListActionsInput in = new ListActionsInput();
         in.filterResourceType = "invoice";
+        in.pageNumber = 1;
         in.pageSize = 5;
-        in.pageAfter = "tok";
+        in.metaTotal = false;
         assertEquals("invoice", in.filterResourceType);
+        assertEquals(1, in.pageNumber);
         assertEquals(5, in.pageSize);
-        assertEquals("tok", in.pageAfter);
+        assertFalse(in.metaTotal);
     }
 
     @Test
     void listActionsPage_constructorPopulatesFields() {
-        ListActionsPage page = new ListActionsPage(java.util.List.of(), "tok-a");
+        PageInfo info = new PageInfo(1, 1000, null, null);
+        ListActionsPage page = new ListActionsPage(java.util.List.of(), info);
         assertEquals(0, page.actions.size());
-        assertEquals("tok-a", page.nextCursor);
+        assertSame(info, page.pagination);
     }
 }

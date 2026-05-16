@@ -15,8 +15,9 @@ import java.util.List;
  * <p>Without {@link ListActionsInput#filterResourceType}, returns one
  * row per distinct action. With the filter, returns the actions seen
  * with that specific resource_type, powering cascading-filter behavior.
- * ADR-047 §2.5. Sorted alphabetically; cursor pagination via
- * {@link ListActionsInput#pageAfter}.</p>
+ * ADR-047 §2.5. Sorted alphabetically; offset pagination via
+ * {@link ListActionsInput#pageNumber} / {@link
+ * ListActionsInput#pageSize}.</p>
  */
 public final class AuditActionsClient {
 
@@ -29,18 +30,15 @@ public final class AuditActionsClient {
     /** List the distinct action slugs seen in the account. */
     public ListActionsPage list(ListActionsInput input) throws ApiException {
         ActionListResponse resp = api.listActions(
-                input.filterResourceType, input.pageSize, input.pageAfter, null);
+                input.filterResourceType, null, input.pageNumber, input.pageSize, input.metaTotal);
         List<AuditAction> rows = new ArrayList<>();
         if (resp.getData() != null) {
             for (ActionResource r : resp.getData()) {
                 rows.add(fromResource(r));
             }
         }
-        String nextCursor = null;
-        if (resp.getLinks() != null && resp.getLinks().getNext() != null) {
-            nextCursor = extractCursor(resp.getLinks().getNext());
-        }
-        return new ListActionsPage(rows, nextCursor);
+        return new ListActionsPage(rows, AuditResourceTypesClient.extractPagination(
+                resp.getMeta() == null ? null : resp.getMeta().getPagination()));
     }
 
     private static AuditAction fromResource(ActionResource r) {
@@ -50,13 +48,5 @@ public final class AuditActionsClient {
         java.time.OffsetDateTime createdAt = r.getAttributes() != null
                 ? r.getAttributes().getCreatedAt() : null;
         return new AuditAction(id, action, createdAt);
-    }
-
-    private static String extractCursor(String link) {
-        int i = link.indexOf("page[after]=");
-        if (i < 0) return null;
-        String token = link.substring(i + "page[after]=".length());
-        int amp = token.indexOf('&');
-        return amp >= 0 ? token.substring(0, amp) : token;
     }
 }

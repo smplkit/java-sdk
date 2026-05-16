@@ -4,6 +4,10 @@ package com.smplkit.audit;
 public final class ListActionsInput {
     /** Filter to actions seen with a specific resource_type. */
     public String filterResourceType;
+    /** 1-based page number to return. Defaults to 1 server-side when null. */
+    public Integer pageNumber;
+    /** Items per page (1–1000). Defaults to 1000 server-side when null. */
     public Integer pageSize;
-    public String pageAfter;
+    /** When true, the server populates {@code total} and {@code totalPages} on the response. */
+    public Boolean metaTotal;
 }

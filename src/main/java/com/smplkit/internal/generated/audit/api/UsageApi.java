@@ -166,23 +166,29 @@ public class UsageApi {
    * List Usage
    * Report the current-period usage counters for this account.
    * @param filterPeriod Period to report. &#x60;current&#x60; is the only supported value. (required)
+   * @param pageNumber 1-based page number to return. Optional; defaults to &#x60;1&#x60; when omitted. Must be &#x60;&gt;&#x3D; 1&#x60; — requests with a smaller value are rejected with a 400 error. (optional, default to 1)
+   * @param pageSize Number of items per page. Optional; defaults to &#x60;1000&#x60; when omitted. Must be between &#x60;1&#x60; and &#x60;1000&#x60; inclusive — requests outside that range are rejected with a 400 error. (optional, default to 1000)
+   * @param metaTotal When &#x60;true&#x60;, the response&#39;s &#x60;meta.pagination&#x60; block includes &#x60;total&#x60; (the total number of matching items across all pages) and &#x60;total_pages&#x60;. Computing these requires an extra &#x60;COUNT&#x60; query, so omit (or pass &#x60;false&#x60;) when the totals are not needed. Defaults to &#x60;false&#x60;. (optional, default to false)
    * @return UsageResponse
    * @throws ApiException if fails to make API call
    */
-  public UsageResponse listUsage(@jakarta.annotation.Nonnull String filterPeriod) throws ApiException {
-    return listUsage(filterPeriod, null);
+  public UsageResponse listUsage(@jakarta.annotation.Nonnull String filterPeriod, @jakarta.annotation.Nullable Integer pageNumber, @jakarta.annotation.Nullable Integer pageSize, @jakarta.annotation.Nullable Boolean metaTotal) throws ApiException {
+    return listUsage(filterPeriod, pageNumber, pageSize, metaTotal, null);
   }
 
   /**
    * List Usage
    * Report the current-period usage counters for this account.
    * @param filterPeriod Period to report. &#x60;current&#x60; is the only supported value. (required)
+   * @param pageNumber 1-based page number to return. Optional; defaults to &#x60;1&#x60; when omitted. Must be &#x60;&gt;&#x3D; 1&#x60; — requests with a smaller value are rejected with a 400 error. (optional, default to 1)
+   * @param pageSize Number of items per page. Optional; defaults to &#x60;1000&#x60; when omitted. Must be between &#x60;1&#x60; and &#x60;1000&#x60; inclusive — requests outside that range are rejected with a 400 error. (optional, default to 1000)
+   * @param metaTotal When &#x60;true&#x60;, the response&#39;s &#x60;meta.pagination&#x60; block includes &#x60;total&#x60; (the total number of matching items across all pages) and &#x60;total_pages&#x60;. Computing these requires an extra &#x60;COUNT&#x60; query, so omit (or pass &#x60;false&#x60;) when the totals are not needed. Defaults to &#x60;false&#x60;. (optional, default to false)
    * @param headers Optional headers to include in the request
    * @return UsageResponse
    * @throws ApiException if fails to make API call
    */
-  public UsageResponse listUsage(@jakarta.annotation.Nonnull String filterPeriod, Map<String, String> headers) throws ApiException {
-    ApiResponse<UsageResponse> localVarResponse = listUsageWithHttpInfo(filterPeriod, headers);
+  public UsageResponse listUsage(@jakarta.annotation.Nonnull String filterPeriod, @jakarta.annotation.Nullable Integer pageNumber, @jakarta.annotation.Nullable Integer pageSize, @jakarta.annotation.Nullable Boolean metaTotal, Map<String, String> headers) throws ApiException {
+    ApiResponse<UsageResponse> localVarResponse = listUsageWithHttpInfo(filterPeriod, pageNumber, pageSize, metaTotal, headers);
     return localVarResponse.getData();
   }
 
@@ -190,23 +196,29 @@ public class UsageApi {
    * List Usage
    * Report the current-period usage counters for this account.
    * @param filterPeriod Period to report. &#x60;current&#x60; is the only supported value. (required)
+   * @param pageNumber 1-based page number to return. Optional; defaults to &#x60;1&#x60; when omitted. Must be &#x60;&gt;&#x3D; 1&#x60; — requests with a smaller value are rejected with a 400 error. (optional, default to 1)
+   * @param pageSize Number of items per page. Optional; defaults to &#x60;1000&#x60; when omitted. Must be between &#x60;1&#x60; and &#x60;1000&#x60; inclusive — requests outside that range are rejected with a 400 error. (optional, default to 1000)
+   * @param metaTotal When &#x60;true&#x60;, the response&#39;s &#x60;meta.pagination&#x60; block includes &#x60;total&#x60; (the total number of matching items across all pages) and &#x60;total_pages&#x60;. Computing these requires an extra &#x60;COUNT&#x60; query, so omit (or pass &#x60;false&#x60;) when the totals are not needed. Defaults to &#x60;false&#x60;. (optional, default to false)
    * @return ApiResponse&lt;UsageResponse&gt;
    * @throws ApiException if fails to make API call
    */
-  public ApiResponse<UsageResponse> listUsageWithHttpInfo(@jakarta.annotation.Nonnull String filterPeriod) throws ApiException {
-    return listUsageWithHttpInfo(filterPeriod, null);
+  public ApiResponse<UsageResponse> listUsageWithHttpInfo(@jakarta.annotation.Nonnull String filterPeriod, @jakarta.annotation.Nullable Integer pageNumber, @jakarta.annotation.Nullable Integer pageSize, @jakarta.annotation.Nullable Boolean metaTotal) throws ApiException {
+    return listUsageWithHttpInfo(filterPeriod, pageNumber, pageSize, metaTotal, null);
   }
 
   /**
    * List Usage
    * Report the current-period usage counters for this account.
    * @param filterPeriod Period to report. &#x60;current&#x60; is the only supported value. (required)
+   * @param pageNumber 1-based page number to return. Optional; defaults to &#x60;1&#x60; when omitted. Must be &#x60;&gt;&#x3D; 1&#x60; — requests with a smaller value are rejected with a 400 error. (optional, default to 1)
+   * @param pageSize Number of items per page. Optional; defaults to &#x60;1000&#x60; when omitted. Must be between &#x60;1&#x60; and &#x60;1000&#x60; inclusive — requests outside that range are rejected with a 400 error. (optional, default to 1000)
+   * @param metaTotal When &#x60;true&#x60;, the response&#39;s &#x60;meta.pagination&#x60; block includes &#x60;total&#x60; (the total number of matching items across all pages) and &#x60;total_pages&#x60;. Computing these requires an extra &#x60;COUNT&#x60; query, so omit (or pass &#x60;false&#x60;) when the totals are not needed. Defaults to &#x60;false&#x60;. (optional, default to false)
    * @param headers Optional headers to include in the request
    * @return ApiResponse&lt;UsageResponse&gt;
    * @throws ApiException if fails to make API call
    */
-  public ApiResponse<UsageResponse> listUsageWithHttpInfo(@jakarta.annotation.Nonnull String filterPeriod, Map<String, String> headers) throws ApiException {
-    HttpRequest.Builder localVarRequestBuilder = listUsageRequestBuilder(filterPeriod, headers);
+  public ApiResponse<UsageResponse> listUsageWithHttpInfo(@jakarta.annotation.Nonnull String filterPeriod, @jakarta.annotation.Nullable Integer pageNumber, @jakarta.annotation.Nullable Integer pageSize, @jakarta.annotation.Nullable Boolean metaTotal, Map<String, String> headers) throws ApiException {
+    HttpRequest.Builder localVarRequestBuilder = listUsageRequestBuilder(filterPeriod, pageNumber, pageSize, metaTotal, headers);
     try {
       HttpResponse<InputStream> localVarResponse = memberVarHttpClient.send(
           localVarRequestBuilder.build(),
@@ -253,7 +265,7 @@ public class UsageApi {
     }
   }
 
-  private HttpRequest.Builder listUsageRequestBuilder(@jakarta.annotation.Nonnull String filterPeriod, Map<String, String> headers) throws ApiException {
+  private HttpRequest.Builder listUsageRequestBuilder(@jakarta.annotation.Nonnull String filterPeriod, @jakarta.annotation.Nullable Integer pageNumber, @jakarta.annotation.Nullable Integer pageSize, @jakarta.annotation.Nullable Boolean metaTotal, Map<String, String> headers) throws ApiException {
     // verify the required parameter 'filterPeriod' is set
     if (filterPeriod == null) {
       throw new ApiException(400, "Missing the required parameter 'filterPeriod' when calling listUsage");
@@ -268,6 +280,12 @@ public class UsageApi {
     String localVarQueryParameterBaseName;
     localVarQueryParameterBaseName = "filter[period]";
     localVarQueryParams.addAll(ApiClient.parameterToPairs("filter[period]", filterPeriod));
+    localVarQueryParameterBaseName = "page[number]";
+    localVarQueryParams.addAll(ApiClient.parameterToPairs("page[number]", pageNumber));
+    localVarQueryParameterBaseName = "page[size]";
+    localVarQueryParams.addAll(ApiClient.parameterToPairs("page[size]", pageSize));
+    localVarQueryParameterBaseName = "meta[total]";
+    localVarQueryParams.addAll(ApiClient.parameterToPairs("meta[total]", metaTotal));
 
     if (!localVarQueryParams.isEmpty() || localVarQueryStringJoiner.length() != 0) {
       StringJoiner queryJoiner = new StringJoiner("&");

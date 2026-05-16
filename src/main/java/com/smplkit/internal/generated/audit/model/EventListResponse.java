@@ -35,7 +35,7 @@ import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 
 import com.smplkit.internal.generated.audit.ApiClient;
 /**
- * JSON:API collection response for audit events.
+ * JSON:API collection response for audit events (cursor paged).
  */
 @JsonPropertyOrder({
   EventListResponse.JSON_PROPERTY_DATA,

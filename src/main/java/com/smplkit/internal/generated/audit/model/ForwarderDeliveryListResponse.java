@@ -24,9 +24,9 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonTypeName;
 import com.fasterxml.jackson.annotation.JsonValue;
+import com.smplkit.internal.generated.audit.model.ForwarderDeliveryListLinks;
+import com.smplkit.internal.generated.audit.model.ForwarderDeliveryListMeta;
 import com.smplkit.internal.generated.audit.model.ForwarderDeliveryResource;
-import com.smplkit.internal.generated.audit.model.ForwarderListLinks;
-import com.smplkit.internal.generated.audit.model.ForwarderListMeta;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -35,7 +35,7 @@ import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 
 import com.smplkit.internal.generated.audit.ApiClient;
 /**
- * JSON:API collection response for forwarder deliveries.
+ * JSON:API collection response for forwarder deliveries (cursor paged).
  */
 @JsonPropertyOrder({
   ForwarderDeliveryListResponse.JSON_PROPERTY_DATA,
@@ -50,11 +50,11 @@ public class ForwarderDeliveryListResponse {
 
   public static final String JSON_PROPERTY_META = "meta";
   @jakarta.annotation.Nonnull
-  private ForwarderListMeta meta;
+  private ForwarderDeliveryListMeta meta;
 
   public static final String JSON_PROPERTY_LINKS = "links";
   @jakarta.annotation.Nullable
-  private ForwarderListLinks links;
+  private ForwarderDeliveryListLinks links;
 
   public ForwarderDeliveryListResponse() { 
   }
@@ -91,7 +91,7 @@ public class ForwarderDeliveryListResponse {
   }
 
 
-  public ForwarderDeliveryListResponse meta(@jakarta.annotation.Nonnull ForwarderListMeta meta) {
+  public ForwarderDeliveryListResponse meta(@jakarta.annotation.Nonnull ForwarderDeliveryListMeta meta) {
     this.meta = meta;
     return this;
   }
@@ -103,19 +103,19 @@ public class ForwarderDeliveryListResponse {
   @jakarta.annotation.Nonnull
   @JsonProperty(value = JSON_PROPERTY_META, required = true)
   @JsonInclude(value = JsonInclude.Include.ALWAYS)
-  public ForwarderListMeta getMeta() {
+  public ForwarderDeliveryListMeta getMeta() {
     return meta;
   }
 
 
   @JsonProperty(value = JSON_PROPERTY_META, required = true)
   @JsonInclude(value = JsonInclude.Include.ALWAYS)
-  public void setMeta(@jakarta.annotation.Nonnull ForwarderListMeta meta) {
+  public void setMeta(@jakarta.annotation.Nonnull ForwarderDeliveryListMeta meta) {
     this.meta = meta;
   }
 
 
-  public ForwarderDeliveryListResponse links(@jakarta.annotation.Nullable ForwarderListLinks links) {
+  public ForwarderDeliveryListResponse links(@jakarta.annotation.Nullable ForwarderDeliveryListLinks links) {
     this.links = links;
     return this;
   }
@@ -127,14 +127,14 @@ public class ForwarderDeliveryListResponse {
   @jakarta.annotation.Nullable
   @JsonProperty(value = JSON_PROPERTY_LINKS, required = false)
   @JsonInclude(value = JsonInclude.Include.USE_DEFAULTS)
-  public ForwarderListLinks getLinks() {
+  public ForwarderDeliveryListLinks getLinks() {
     return links;
   }
 
 
   @JsonProperty(value = JSON_PROPERTY_LINKS, required = false)
   @JsonInclude(value = JsonInclude.Include.USE_DEFAULTS)
-  public void setLinks(@jakarta.annotation.Nullable ForwarderListLinks links) {
+  public void setLinks(@jakarta.annotation.Nullable ForwarderDeliveryListLinks links) {
     this.links = links;
   }
 

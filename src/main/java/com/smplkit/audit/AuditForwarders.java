@@ -35,13 +35,13 @@ public final class AuditForwarders {
     public ListForwardersPage list(ListForwardersInput input) throws ApiException {
         String filterType = input.forwarderType == null ? null : input.forwarderType.getValue();
         ForwarderListResponse resp = api.listForwarders(
-                filterType, input.enabled, input.pageSize, input.pageAfter, null);
+                filterType, input.enabled, null, input.pageNumber, input.pageSize, input.metaTotal);
         List<com.smplkit.audit.Forwarder> out = new ArrayList<>();
         if (resp.getData() != null) {
             for (ForwarderResource r : resp.getData()) out.add(fromResource(r));
         }
-        return new ListForwardersPage(out, nextCursor(
-                resp.getLinks() == null ? null : resp.getLinks().getNext()));
+        return new ListForwardersPage(out, AuditResourceTypesClient.extractPagination(
+                resp.getMeta() == null ? null : resp.getMeta().getPagination()));
     }
 
     public com.smplkit.audit.Forwarder get(UUID forwarderId) throws ApiException {
@@ -148,12 +148,4 @@ public final class AuditForwarders {
         return out;
     }
 
-    private static String nextCursor(String link) {
-        if (link == null) return null;
-        int i = link.indexOf("page[after]=");
-        if (i < 0) return null;
-        String token = link.substring(i + "page[after]=".length());
-        int amp = token.indexOf('&');
-        return amp >= 0 ? token.substring(0, amp) : token;
-    }
 }

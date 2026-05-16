@@ -25,62 +25,51 @@ import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonTypeName;
 import com.fasterxml.jackson.annotation.JsonValue;
 import java.util.Arrays;
-import org.openapitools.jackson.nullable.JsonNullable;
-import com.fasterxml.jackson.annotation.JsonIgnore;
-import org.openapitools.jackson.nullable.JsonNullable;
-import java.util.NoSuchElementException;
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 
 
 import com.smplkit.internal.generated.audit.ApiClient;
 /**
- * ResourceTypeListLinks
+ * Cursor-pagination meta for the forwarder-delivery log endpoint.  Forwarder deliveries are append-only at high cardinality (one row per delivery attempt per event) and scroll with the same workload as audit events, so this endpoint stays on cursor pagination — the documented exception in ADR-014. The parent &#x60;/forwarders&#x60; collection follows the standard offset convention.
  */
 @JsonPropertyOrder({
-  ResourceTypeListLinks.JSON_PROPERTY_NEXT
+  ForwarderDeliveryListMeta.JSON_PROPERTY_PAGE_SIZE
 })
 @jakarta.annotation.Generated(value = "org.openapitools.codegen.languages.JavaClientCodegen", comments = "Generator version: 7.21.0")
-public class ResourceTypeListLinks {
-  public static final String JSON_PROPERTY_NEXT = "next";
-  private JsonNullable<String> next = JsonNullable.<String>undefined();
+public class ForwarderDeliveryListMeta {
+  public static final String JSON_PROPERTY_PAGE_SIZE = "page_size";
+  @jakarta.annotation.Nonnull
+  private Integer pageSize;
 
-  public ResourceTypeListLinks() { 
+  public ForwarderDeliveryListMeta() { 
   }
 
-  public ResourceTypeListLinks next(@jakarta.annotation.Nullable String next) {
-    this.next = JsonNullable.<String>of(next);
+  public ForwarderDeliveryListMeta pageSize(@jakarta.annotation.Nonnull Integer pageSize) {
+    this.pageSize = pageSize;
     return this;
   }
 
   /**
-   * Get next
-   * @return next
+   * Get pageSize
+   * @return pageSize
    */
-  @jakarta.annotation.Nullable
-  @JsonIgnore
-  public String getNext() {
-        return next.orElse(null);
+  @jakarta.annotation.Nonnull
+  @JsonProperty(value = JSON_PROPERTY_PAGE_SIZE, required = true)
+  @JsonInclude(value = JsonInclude.Include.ALWAYS)
+  public Integer getPageSize() {
+    return pageSize;
   }
 
-  @JsonProperty(value = JSON_PROPERTY_NEXT, required = false)
-  @JsonInclude(value = JsonInclude.Include.USE_DEFAULTS)
 
-  public JsonNullable<String> getNext_JsonNullable() {
-    return next;
-  }
-  
-  @JsonProperty(JSON_PROPERTY_NEXT)
-  public void setNext_JsonNullable(JsonNullable<String> next) {
-    this.next = next;
-  }
-
-  public void setNext(@jakarta.annotation.Nullable String next) {
-    this.next = JsonNullable.<String>of(next);
+  @JsonProperty(value = JSON_PROPERTY_PAGE_SIZE, required = true)
+  @JsonInclude(value = JsonInclude.Include.ALWAYS)
+  public void setPageSize(@jakarta.annotation.Nonnull Integer pageSize) {
+    this.pageSize = pageSize;
   }
 
 
   /**
-   * Return true if this ResourceTypeListLinks object is equal to o.
+   * Return true if this ForwarderDeliveryListMeta object is equal to o.
    */
   @Override
   public boolean equals(Object o) {
@@ -90,31 +79,20 @@ public class ResourceTypeListLinks {
     if (o == null || getClass() != o.getClass()) {
       return false;
     }
-    ResourceTypeListLinks resourceTypeListLinks = (ResourceTypeListLinks) o;
-    return equalsNullable(this.next, resourceTypeListLinks.next);
-  }
-
-  private static <T> boolean equalsNullable(JsonNullable<T> a, JsonNullable<T> b) {
-    return a == b || (a != null && b != null && a.isPresent() && b.isPresent() && Objects.deepEquals(a.get(), b.get()));
+    ForwarderDeliveryListMeta forwarderDeliveryListMeta = (ForwarderDeliveryListMeta) o;
+    return Objects.equals(this.pageSize, forwarderDeliveryListMeta.pageSize);
   }
 
   @Override
   public int hashCode() {
-    return Objects.hash(hashCodeNullable(next));
-  }
-
-  private static <T> int hashCodeNullable(JsonNullable<T> a) {
-    if (a == null) {
-      return 1;
-    }
-    return a.isPresent() ? Arrays.deepHashCode(new Object[]{a.get()}) : 31;
+    return Objects.hash(pageSize);
   }
 
   @Override
   public String toString() {
     StringBuilder sb = new StringBuilder();
-    sb.append("class ResourceTypeListLinks {\n");
-    sb.append("    next: ").append(toIndentedString(next)).append("\n");
+    sb.append("class ForwarderDeliveryListMeta {\n");
+    sb.append("    pageSize: ").append(toIndentedString(pageSize)).append("\n");
     sb.append("}");
     return sb.toString();
   }
@@ -159,9 +137,9 @@ public class ResourceTypeListLinks {
 
     StringJoiner joiner = new StringJoiner("&");
 
-    // add `next` to the URL query string
-    if (getNext() != null) {
-      joiner.add(String.format(java.util.Locale.ROOT, "%snext%s=%s", prefix, suffix, ApiClient.urlEncode(ApiClient.valueToString(getNext()))));
+    // add `page_size` to the URL query string
+    if (getPageSize() != null) {
+      joiner.add(String.format(java.util.Locale.ROOT, "%spage_size%s=%s", prefix, suffix, ApiClient.urlEncode(ApiClient.valueToString(getPageSize()))));
     }
 
     return joiner.toString();

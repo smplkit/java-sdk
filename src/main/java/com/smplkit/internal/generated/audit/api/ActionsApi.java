@@ -166,29 +166,31 @@ public class ActionsApi {
    * List Actions
    * List the distinct &#x60;action&#x60; slugs recorded for this account.  Default sort is &#x60;key&#x60; ascending; pass &#x60;sort&#x3D;-key&#x60; for descending. Without &#x60;filter[resource_type]&#x60;, returns one row per distinct action. With &#x60;filter[resource_type]&#x60;, returns the actions recorded for that specific resource type.
    * @param filterResourceType  (optional)
-   * @param pageSize  (optional)
-   * @param pageAfter  (optional)
    * @param sort Field to sort by. Prefix with &#x60;-&#x60; for descending order. Default: &#x60;key&#x60;. Allowed values: &#x60;key&#x60;, &#x60;-key&#x60;. (optional, default to key)
+   * @param pageNumber 1-based page number to return. Optional; defaults to &#x60;1&#x60; when omitted. Must be &#x60;&gt;&#x3D; 1&#x60; — requests with a smaller value are rejected with a 400 error. (optional, default to 1)
+   * @param pageSize Number of items per page. Optional; defaults to &#x60;1000&#x60; when omitted. Must be between &#x60;1&#x60; and &#x60;1000&#x60; inclusive — requests outside that range are rejected with a 400 error. (optional, default to 1000)
+   * @param metaTotal When &#x60;true&#x60;, the response&#39;s &#x60;meta.pagination&#x60; block includes &#x60;total&#x60; (the total number of matching items across all pages) and &#x60;total_pages&#x60;. Computing these requires an extra &#x60;COUNT&#x60; query, so omit (or pass &#x60;false&#x60;) when the totals are not needed. Defaults to &#x60;false&#x60;. (optional, default to false)
    * @return ActionListResponse
    * @throws ApiException if fails to make API call
    */
-  public ActionListResponse listActions(@jakarta.annotation.Nullable String filterResourceType, @jakarta.annotation.Nullable Integer pageSize, @jakarta.annotation.Nullable String pageAfter, @jakarta.annotation.Nullable String sort) throws ApiException {
-    return listActions(filterResourceType, pageSize, pageAfter, sort, null);
+  public ActionListResponse listActions(@jakarta.annotation.Nullable String filterResourceType, @jakarta.annotation.Nullable String sort, @jakarta.annotation.Nullable Integer pageNumber, @jakarta.annotation.Nullable Integer pageSize, @jakarta.annotation.Nullable Boolean metaTotal) throws ApiException {
+    return listActions(filterResourceType, sort, pageNumber, pageSize, metaTotal, null);
   }
 
   /**
    * List Actions
    * List the distinct &#x60;action&#x60; slugs recorded for this account.  Default sort is &#x60;key&#x60; ascending; pass &#x60;sort&#x3D;-key&#x60; for descending. Without &#x60;filter[resource_type]&#x60;, returns one row per distinct action. With &#x60;filter[resource_type]&#x60;, returns the actions recorded for that specific resource type.
    * @param filterResourceType  (optional)
-   * @param pageSize  (optional)
-   * @param pageAfter  (optional)
    * @param sort Field to sort by. Prefix with &#x60;-&#x60; for descending order. Default: &#x60;key&#x60;. Allowed values: &#x60;key&#x60;, &#x60;-key&#x60;. (optional, default to key)
+   * @param pageNumber 1-based page number to return. Optional; defaults to &#x60;1&#x60; when omitted. Must be &#x60;&gt;&#x3D; 1&#x60; — requests with a smaller value are rejected with a 400 error. (optional, default to 1)
+   * @param pageSize Number of items per page. Optional; defaults to &#x60;1000&#x60; when omitted. Must be between &#x60;1&#x60; and &#x60;1000&#x60; inclusive — requests outside that range are rejected with a 400 error. (optional, default to 1000)
+   * @param metaTotal When &#x60;true&#x60;, the response&#39;s &#x60;meta.pagination&#x60; block includes &#x60;total&#x60; (the total number of matching items across all pages) and &#x60;total_pages&#x60;. Computing these requires an extra &#x60;COUNT&#x60; query, so omit (or pass &#x60;false&#x60;) when the totals are not needed. Defaults to &#x60;false&#x60;. (optional, default to false)
    * @param headers Optional headers to include in the request
    * @return ActionListResponse
    * @throws ApiException if fails to make API call
    */
-  public ActionListResponse listActions(@jakarta.annotation.Nullable String filterResourceType, @jakarta.annotation.Nullable Integer pageSize, @jakarta.annotation.Nullable String pageAfter, @jakarta.annotation.Nullable String sort, Map<String, String> headers) throws ApiException {
-    ApiResponse<ActionListResponse> localVarResponse = listActionsWithHttpInfo(filterResourceType, pageSize, pageAfter, sort, headers);
+  public ActionListResponse listActions(@jakarta.annotation.Nullable String filterResourceType, @jakarta.annotation.Nullable String sort, @jakarta.annotation.Nullable Integer pageNumber, @jakarta.annotation.Nullable Integer pageSize, @jakarta.annotation.Nullable Boolean metaTotal, Map<String, String> headers) throws ApiException {
+    ApiResponse<ActionListResponse> localVarResponse = listActionsWithHttpInfo(filterResourceType, sort, pageNumber, pageSize, metaTotal, headers);
     return localVarResponse.getData();
   }
 
@@ -196,29 +198,31 @@ public class ActionsApi {
    * List Actions
    * List the distinct &#x60;action&#x60; slugs recorded for this account.  Default sort is &#x60;key&#x60; ascending; pass &#x60;sort&#x3D;-key&#x60; for descending. Without &#x60;filter[resource_type]&#x60;, returns one row per distinct action. With &#x60;filter[resource_type]&#x60;, returns the actions recorded for that specific resource type.
    * @param filterResourceType  (optional)
-   * @param pageSize  (optional)
-   * @param pageAfter  (optional)
    * @param sort Field to sort by. Prefix with &#x60;-&#x60; for descending order. Default: &#x60;key&#x60;. Allowed values: &#x60;key&#x60;, &#x60;-key&#x60;. (optional, default to key)
+   * @param pageNumber 1-based page number to return. Optional; defaults to &#x60;1&#x60; when omitted. Must be &#x60;&gt;&#x3D; 1&#x60; — requests with a smaller value are rejected with a 400 error. (optional, default to 1)
+   * @param pageSize Number of items per page. Optional; defaults to &#x60;1000&#x60; when omitted. Must be between &#x60;1&#x60; and &#x60;1000&#x60; inclusive — requests outside that range are rejected with a 400 error. (optional, default to 1000)
+   * @param metaTotal When &#x60;true&#x60;, the response&#39;s &#x60;meta.pagination&#x60; block includes &#x60;total&#x60; (the total number of matching items across all pages) and &#x60;total_pages&#x60;. Computing these requires an extra &#x60;COUNT&#x60; query, so omit (or pass &#x60;false&#x60;) when the totals are not needed. Defaults to &#x60;false&#x60;. (optional, default to false)
    * @return ApiResponse&lt;ActionListResponse&gt;
    * @throws ApiException if fails to make API call
    */
-  public ApiResponse<ActionListResponse> listActionsWithHttpInfo(@jakarta.annotation.Nullable String filterResourceType, @jakarta.annotation.Nullable Integer pageSize, @jakarta.annotation.Nullable String pageAfter, @jakarta.annotation.Nullable String sort) throws ApiException {
-    return listActionsWithHttpInfo(filterResourceType, pageSize, pageAfter, sort, null);
+  public ApiResponse<ActionListResponse> listActionsWithHttpInfo(@jakarta.annotation.Nullable String filterResourceType, @jakarta.annotation.Nullable String sort, @jakarta.annotation.Nullable Integer pageNumber, @jakarta.annotation.Nullable Integer pageSize, @jakarta.annotation.Nullable Boolean metaTotal) throws ApiException {
+    return listActionsWithHttpInfo(filterResourceType, sort, pageNumber, pageSize, metaTotal, null);
   }
 
   /**
    * List Actions
    * List the distinct &#x60;action&#x60; slugs recorded for this account.  Default sort is &#x60;key&#x60; ascending; pass &#x60;sort&#x3D;-key&#x60; for descending. Without &#x60;filter[resource_type]&#x60;, returns one row per distinct action. With &#x60;filter[resource_type]&#x60;, returns the actions recorded for that specific resource type.
    * @param filterResourceType  (optional)
-   * @param pageSize  (optional)
-   * @param pageAfter  (optional)
    * @param sort Field to sort by. Prefix with &#x60;-&#x60; for descending order. Default: &#x60;key&#x60;. Allowed values: &#x60;key&#x60;, &#x60;-key&#x60;. (optional, default to key)
+   * @param pageNumber 1-based page number to return. Optional; defaults to &#x60;1&#x60; when omitted. Must be &#x60;&gt;&#x3D; 1&#x60; — requests with a smaller value are rejected with a 400 error. (optional, default to 1)
+   * @param pageSize Number of items per page. Optional; defaults to &#x60;1000&#x60; when omitted. Must be between &#x60;1&#x60; and &#x60;1000&#x60; inclusive — requests outside that range are rejected with a 400 error. (optional, default to 1000)
+   * @param metaTotal When &#x60;true&#x60;, the response&#39;s &#x60;meta.pagination&#x60; block includes &#x60;total&#x60; (the total number of matching items across all pages) and &#x60;total_pages&#x60;. Computing these requires an extra &#x60;COUNT&#x60; query, so omit (or pass &#x60;false&#x60;) when the totals are not needed. Defaults to &#x60;false&#x60;. (optional, default to false)
    * @param headers Optional headers to include in the request
    * @return ApiResponse&lt;ActionListResponse&gt;
    * @throws ApiException if fails to make API call
    */
-  public ApiResponse<ActionListResponse> listActionsWithHttpInfo(@jakarta.annotation.Nullable String filterResourceType, @jakarta.annotation.Nullable Integer pageSize, @jakarta.annotation.Nullable String pageAfter, @jakarta.annotation.Nullable String sort, Map<String, String> headers) throws ApiException {
-    HttpRequest.Builder localVarRequestBuilder = listActionsRequestBuilder(filterResourceType, pageSize, pageAfter, sort, headers);
+  public ApiResponse<ActionListResponse> listActionsWithHttpInfo(@jakarta.annotation.Nullable String filterResourceType, @jakarta.annotation.Nullable String sort, @jakarta.annotation.Nullable Integer pageNumber, @jakarta.annotation.Nullable Integer pageSize, @jakarta.annotation.Nullable Boolean metaTotal, Map<String, String> headers) throws ApiException {
+    HttpRequest.Builder localVarRequestBuilder = listActionsRequestBuilder(filterResourceType, sort, pageNumber, pageSize, metaTotal, headers);
     try {
       HttpResponse<InputStream> localVarResponse = memberVarHttpClient.send(
           localVarRequestBuilder.build(),
@@ -265,7 +269,7 @@ public class ActionsApi {
     }
   }
 
-  private HttpRequest.Builder listActionsRequestBuilder(@jakarta.annotation.Nullable String filterResourceType, @jakarta.annotation.Nullable Integer pageSize, @jakarta.annotation.Nullable String pageAfter, @jakarta.annotation.Nullable String sort, Map<String, String> headers) throws ApiException {
+  private HttpRequest.Builder listActionsRequestBuilder(@jakarta.annotation.Nullable String filterResourceType, @jakarta.annotation.Nullable String sort, @jakarta.annotation.Nullable Integer pageNumber, @jakarta.annotation.Nullable Integer pageSize, @jakarta.annotation.Nullable Boolean metaTotal, Map<String, String> headers) throws ApiException {
 
     HttpRequest.Builder localVarRequestBuilder = HttpRequest.newBuilder();
 
@@ -276,12 +280,14 @@ public class ActionsApi {
     String localVarQueryParameterBaseName;
     localVarQueryParameterBaseName = "filter[resource_type]";
     localVarQueryParams.addAll(ApiClient.parameterToPairs("filter[resource_type]", filterResourceType));
-    localVarQueryParameterBaseName = "page[size]";
-    localVarQueryParams.addAll(ApiClient.parameterToPairs("page[size]", pageSize));
-    localVarQueryParameterBaseName = "page[after]";
-    localVarQueryParams.addAll(ApiClient.parameterToPairs("page[after]", pageAfter));
     localVarQueryParameterBaseName = "sort";
     localVarQueryParams.addAll(ApiClient.parameterToPairs("sort", sort));
+    localVarQueryParameterBaseName = "page[number]";
+    localVarQueryParams.addAll(ApiClient.parameterToPairs("page[number]", pageNumber));
+    localVarQueryParameterBaseName = "page[size]";
+    localVarQueryParams.addAll(ApiClient.parameterToPairs("page[size]", pageSize));
+    localVarQueryParameterBaseName = "meta[total]";
+    localVarQueryParams.addAll(ApiClient.parameterToPairs("meta[total]", metaTotal));
 
     if (!localVarQueryParams.isEmpty() || localVarQueryStringJoiner.length() != 0) {
       StringJoiner queryJoiner = new StringJoiner("&");
