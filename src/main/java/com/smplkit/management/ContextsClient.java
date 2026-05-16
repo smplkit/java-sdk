@@ -82,10 +82,20 @@ public final class ContextsClient {
         }
     }
 
-    /** List all contexts of the given type. */
+    /** Lists contexts of the given type using the server's default pagination (first page, up to 1000 rows). */
     public List<ContextEntity> list(String type) {
+        return list(type, null, null);
+    }
+
+    /**
+     * Lists a single page of contexts of the given type. Pass {@code null} for either
+     * pagination argument to use the server default ({@code page[number]=1},
+     * {@code page[size]=1000}). The wrapper does not loop — customers paginate
+     * by calling this method with successive {@code pageNumber} values.
+     */
+    public List<ContextEntity> list(String type, Integer pageNumber, Integer pageSize) {
         try {
-            ContextListResponse resp = api.listContexts(type, null, null, null, null, null);
+            ContextListResponse resp = api.listContexts(type, null, null, pageNumber, pageSize, null);
             List<ContextEntity> result = new ArrayList<>();
             if (resp.getData() != null) {
                 for (ContextResource r : resp.getData()) {

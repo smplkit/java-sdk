@@ -43,10 +43,21 @@ public final class LogGroupsClient {
         }
     }
 
-    /** List all log groups. */
+    /** Lists log groups using the server's default pagination (first page, up to 1000 rows). */
     public List<LogGroup> list() {
+        return list(null, null);
+    }
+
+    /**
+     * Lists a single page of log groups. Pass {@code null} for either argument to use the
+     * server default ({@code page[number]=1}, {@code page[size]=1000}). The wrapper
+     * does not loop — customers paginate by calling this method with successive
+     * {@code pageNumber} values.
+     */
+    public List<LogGroup> list(Integer pageNumber, Integer pageSize) {
         try {
-            LogGroupListResponse response = inner.logGroupsApi.listLogGroups(null, null, null, null);
+            LogGroupListResponse response = inner.logGroupsApi.listLogGroups(
+                    null, pageNumber, pageSize, null);
             List<LogGroup> result = new ArrayList<>();
             if (response.getData() != null) {
                 for (LogGroupResource r : response.getData()) {

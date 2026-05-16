@@ -41,10 +41,20 @@ public final class ContextTypesClient {
                 attributes, null, null);
     }
 
-    /** List all context types. */
+    /** Lists context types using the server's default pagination (first page, up to 1000 rows). */
     public List<com.smplkit.management.ContextType> list() {
+        return list(null, null);
+    }
+
+    /**
+     * Lists a single page of context types. Pass {@code null} for either argument to use the
+     * server default ({@code page[number]=1}, {@code page[size]=1000}). The wrapper
+     * does not loop — customers paginate by calling this method with successive
+     * {@code pageNumber} values.
+     */
+    public List<com.smplkit.management.ContextType> list(Integer pageNumber, Integer pageSize) {
         try {
-            ContextTypeListResponse resp = api.listContextTypes(null, null, null, null);
+            ContextTypeListResponse resp = api.listContextTypes(null, pageNumber, pageSize, null);
             List<com.smplkit.management.ContextType> result = new ArrayList<>();
             if (resp.getData() != null) {
                 for (ContextTypeResource r : resp.getData()) {

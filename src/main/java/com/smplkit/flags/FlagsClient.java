@@ -632,11 +632,18 @@ public final class FlagsClient {
         flushFlags();
     }
 
+    private static final int RUNTIME_PAGE_SIZE = 1000;
+
     private void fetchAllFlags() {
-        List<Flag<?>> flags = management.list();
         flagStore.clear();
-        for (Flag<?> flag : flags) {
-            flagStore.put(flag.getId(), flagToStoreEntry(flag));
+        int page = 1;
+        while (true) {
+            List<Flag<?>> rows = management.list(page, RUNTIME_PAGE_SIZE);
+            for (Flag<?> flag : rows) {
+                flagStore.put(flag.getId(), flagToStoreEntry(flag));
+            }
+            if (rows.size() < RUNTIME_PAGE_SIZE) break;
+            page++;
         }
     }
 

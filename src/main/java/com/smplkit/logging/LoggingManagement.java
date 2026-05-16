@@ -77,13 +77,24 @@ public final class LoggingManagement {
     }
 
     /**
-     * List all loggers.
+     * Lists loggers using the server's default pagination (first page, up to 1000 rows).
      *
-     * @return list of all loggers
+     * @return list of loggers on the current page
      */
     public List<Logger> list() {
+        return list(null, null);
+    }
+
+    /**
+     * Lists a single page of loggers. Pass {@code null} for either argument to use the
+     * server default ({@code page[number]=1}, {@code page[size]=1000}). The wrapper
+     * does not loop — customers paginate by calling this method with successive
+     * {@code pageNumber} values.
+     */
+    public List<Logger> list(Integer pageNumber, Integer pageSize) {
         try {
-            LoggerListResponse response = client.loggersApi.listLoggers(null, null, null, null, null, null, null);
+            LoggerListResponse response = client.loggersApi.listLoggers(
+                    null, null, null, null, pageNumber, pageSize, null);
             List<Logger> result = new ArrayList<>();
             if (response.getData() != null) {
                 for (LoggerResource r : response.getData()) {
@@ -158,13 +169,24 @@ public final class LoggingManagement {
     }
 
     /**
-     * List all log groups.
+     * Lists log groups using the server's default pagination (first page, up to 1000 rows).
      *
-     * @return list of all log groups
+     * @return list of log groups on the current page
      */
     public List<LogGroup> listGroups() {
+        return listGroups(null, null);
+    }
+
+    /**
+     * Lists a single page of log groups. Pass {@code null} for either argument to use the
+     * server default ({@code page[number]=1}, {@code page[size]=1000}). The wrapper
+     * does not loop — customers paginate by calling this method with successive
+     * {@code pageNumber} values.
+     */
+    public List<LogGroup> listGroups(Integer pageNumber, Integer pageSize) {
         try {
-            LogGroupListResponse response = client.logGroupsApi.listLogGroups(null, null, null, null);
+            LogGroupListResponse response = client.logGroupsApi.listLogGroups(
+                    null, pageNumber, pageSize, null);
             List<LogGroup> result = new ArrayList<>();
             if (response.getData() != null) {
                 for (LogGroupResource r : response.getData()) {

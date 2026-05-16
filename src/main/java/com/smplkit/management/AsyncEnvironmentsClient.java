@@ -25,6 +25,10 @@ public final class AsyncEnvironmentsClient {
         return CompletableFuture.supplyAsync(sync::list, executor);
     }
 
+    public CompletableFuture<List<Environment>> list(Integer pageNumber, Integer pageSize) {
+        return CompletableFuture.supplyAsync(() -> sync.list(pageNumber, pageSize), executor);
+    }
+
     public CompletableFuture<Environment> get(String id) {
         return CompletableFuture.supplyAsync(() -> sync.get(id), executor);
     }

@@ -97,10 +97,21 @@ public final class FlagsManagement {
         }
     }
 
-    /** Lists all flags. */
+    /** Lists flags using the server's default pagination (first page, up to 1000 rows). */
     public List<Flag<?>> list() {
+        return list(null, null);
+    }
+
+    /**
+     * Lists a single page of flags. Pass {@code null} for either argument to use the
+     * server default ({@code page[number]=1}, {@code page[size]=1000}). The wrapper
+     * does not loop — customers paginate by calling this method with successive
+     * {@code pageNumber} values.
+     */
+    public List<Flag<?>> list(Integer pageNumber, Integer pageSize) {
         try {
-            FlagListResponse response = client.flagsApi.listFlags(null, null, null, null, null, null, null, null);
+            FlagListResponse response = client.flagsApi.listFlags(
+                    null, null, null, null, null, pageNumber, pageSize, null);
             return client.parseListResponse(response);
         } catch (ApiException e) {
             throw FlagsClient.mapException(e);

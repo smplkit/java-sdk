@@ -401,16 +401,21 @@ public final class ConfigClient {
     // Internal: cache building
     // -----------------------------------------------------------------------
 
+    private static final int RUNTIME_PAGE_SIZE = 1000;
+
     private Map<String, Map<String, Object>> buildCache(String env) {
-        List<Config> allConfigs = management.list();
         Map<String, Config> configById = new HashMap<>();
-        for (Config cfg : allConfigs) {
-            if (cfg.getId() != null) {
-                configById.put(cfg.getId(), cfg);
+        int page = 1;
+        while (true) {
+            List<Config> rows = management.list(page, RUNTIME_PAGE_SIZE);
+            for (Config cfg : rows) {
+                if (cfg.getId() != null) {
+                    configById.put(cfg.getId(), cfg);
+                }
             }
+            if (rows.size() < RUNTIME_PAGE_SIZE) break;
+            page++;
         }
-        // Side-effect: persist the raw store so single-config WS events
-        // can rebuild the resolved cache without a full re-list.
         configStore = configById;
         return resolveAllFromStore(configById, env);
     }

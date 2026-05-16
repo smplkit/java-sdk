@@ -34,6 +34,10 @@ public final class AsyncConfigManagement {
         return CompletableFuture.supplyAsync(sync::list, executor);
     }
 
+    public CompletableFuture<List<Config>> list(Integer pageNumber, Integer pageSize) {
+        return CompletableFuture.supplyAsync(() -> sync.list(pageNumber, pageSize), executor);
+    }
+
     public CompletableFuture<Void> delete(String id) {
         return CompletableFuture.runAsync(() -> sync.delete(id), executor);
     }

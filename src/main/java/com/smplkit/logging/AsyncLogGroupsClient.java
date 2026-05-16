@@ -28,6 +28,10 @@ public final class AsyncLogGroupsClient {
         return CompletableFuture.supplyAsync(sync::list, executor);
     }
 
+    public CompletableFuture<List<LogGroup>> list(Integer pageNumber, Integer pageSize) {
+        return CompletableFuture.supplyAsync(() -> sync.list(pageNumber, pageSize), executor);
+    }
+
     public CompletableFuture<Void> delete(String id) {
         return CompletableFuture.runAsync(() -> sync.delete(id), executor);
     }

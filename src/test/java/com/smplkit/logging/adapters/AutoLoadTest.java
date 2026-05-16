@@ -15,6 +15,8 @@ import java.util.List;
 import java.util.function.BiConsumer;
 
 import static org.junit.jupiter.api.Assertions.*;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.isNull;
 import static org.mockito.Mockito.*;
 
 /**
@@ -39,11 +41,11 @@ class AutoLoadTest {
     private void stubEmptyResponses() throws ApiException {
         LoggerListResponse loggerResp = new LoggerListResponse();
         loggerResp.setData(new ArrayList<>());
-        when(mockLoggersApi.listLoggers(null, null, null, null, null, null, null)).thenReturn(loggerResp);
+        when(mockLoggersApi.listLoggers(isNull(), isNull(), isNull(), isNull(), any(), any(), isNull())).thenReturn(loggerResp);
 
         LogGroupListResponse groupResp = new LogGroupListResponse();
         groupResp.setData(new ArrayList<>());
-        when(mockLogGroupsApi.listLogGroups(null, null, null, null)).thenReturn(groupResp);
+        when(mockLogGroupsApi.listLogGroups(isNull(), any(), any(), isNull())).thenReturn(groupResp);
     }
 
     @Test
@@ -190,11 +192,11 @@ class AutoLoadTest {
         lr.setType(com.smplkit.internal.generated.logging.model.LoggerResource.TypeEnum.LOGGER);
         lr.setAttributes(attrs);
         loggerResp.setData(new ArrayList<>(List.of(lr)));
-        when(mockLoggersApi.listLoggers(null, null, null, null, null, null, null)).thenReturn(loggerResp);
+        when(mockLoggersApi.listLoggers(isNull(), isNull(), isNull(), isNull(), any(), any(), isNull())).thenReturn(loggerResp);
 
         LogGroupListResponse groupResp = new LogGroupListResponse();
         groupResp.setData(new ArrayList<>());
-        when(mockLogGroupsApi.listLogGroups(null, null, null, null)).thenReturn(groupResp);
+        when(mockLogGroupsApi.listLogGroups(isNull(), any(), any(), isNull())).thenReturn(groupResp);
 
         LoggingAdapter failAdapter = mock(LoggingAdapter.class);
         when(failAdapter.name()).thenReturn("fail");

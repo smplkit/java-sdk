@@ -779,50 +779,12 @@ public final class LoggingClient {
         flushLoggerBuffer(); // all exceptions handled internally
     }
 
+    private static final int RUNTIME_PAGE_SIZE = 1000;
+
     @SuppressWarnings("unchecked")
     private void fetchAndApply(String source) {
-        // Fetch loggers
-        Map<String, Map<String, Object>> loggersData = new HashMap<>();
-        try {
-            LoggerListResponse loggerResp = loggersApi.listLoggers(null, null, null, null, null, null, null);
-            if (loggerResp.getData() != null) {
-                for (LoggerResource r : loggerResp.getData()) {
-                    var attrs = r.getAttributes();
-                    String id = r.getId() != null ? r.getId() : "";
-                    Map<String, Object> entry = new HashMap<>();
-                    entry.put("id", id);
-                    entry.put("level", attrs.getLevel() != null ? attrs.getLevel().getValue() : null);
-                    entry.put("group", attrs.getGroup());
-                    entry.put("managed", attrs.getManaged());
-                    entry.put("environments", attrs.getEnvironments() != null
-                            ? new HashMap<>(attrs.getEnvironments()) : new HashMap<>());
-                    loggersData.put(id, entry);
-                }
-            }
-        } catch (ApiException e) {
-            throw mapLoggingException(e);
-        }
-
-        // Fetch groups
-        Map<String, Map<String, Object>> groupsData = new HashMap<>();
-        try {
-            LogGroupListResponse groupResp = logGroupsApi.listLogGroups(null, null, null, null);
-            if (groupResp.getData() != null) {
-                for (LogGroupResource r : groupResp.getData()) {
-                    var attrs = r.getAttributes();
-                    String gid = r.getId() != null ? r.getId() : "";
-                    Map<String, Object> entry = new HashMap<>();
-                    entry.put("id", gid);
-                    entry.put("level", attrs.getLevel() != null ? attrs.getLevel().getValue() : null);
-                    entry.put("group", attrs.getParentId());
-                    entry.put("environments", attrs.getEnvironments() != null
-                            ? new HashMap<>(attrs.getEnvironments()) : new HashMap<>());
-                    groupsData.put(gid, entry);
-                }
-            }
-        } catch (ApiException e) {
-            throw mapLoggingException(e);
-        }
+        Map<String, Map<String, Object>> loggersData = fetchAllLoggers();
+        Map<String, Map<String, Object>> groupsData = fetchAllGroups();
 
         this.loggersCache = new ConcurrentHashMap<>(loggersData);
         this.groupsCache = new ConcurrentHashMap<>(groupsData);
@@ -834,12 +796,23 @@ public final class LoggingClient {
     /** Fetches loggers and groups and updates the caches without firing any listeners. */
     @SuppressWarnings("unchecked")
     private void fetchOnly() {
-        // Fetch loggers
+        Map<String, Map<String, Object>> loggersData = fetchAllLoggers();
+        Map<String, Map<String, Object>> groupsData = fetchAllGroups();
+
+        this.loggersCache = new ConcurrentHashMap<>(loggersData);
+        this.groupsCache = new ConcurrentHashMap<>(groupsData);
+    }
+
+    private Map<String, Map<String, Object>> fetchAllLoggers() {
         Map<String, Map<String, Object>> loggersData = new HashMap<>();
+        int page = 1;
         try {
-            LoggerListResponse loggerResp = loggersApi.listLoggers(null, null, null, null, null, null, null);
-            if (loggerResp.getData() != null) {
-                for (LoggerResource r : loggerResp.getData()) {
+            while (true) {
+                LoggerListResponse loggerResp = loggersApi.listLoggers(
+                        null, null, null, null, page, RUNTIME_PAGE_SIZE, null);
+                List<LoggerResource> rows = loggerResp.getData() != null
+                        ? loggerResp.getData() : List.of();
+                for (LoggerResource r : rows) {
                     var attrs = r.getAttributes();
                     String id = r.getId() != null ? r.getId() : "";
                     Map<String, Object> entry = new HashMap<>();
@@ -851,17 +824,25 @@ public final class LoggingClient {
                             ? new HashMap<>(attrs.getEnvironments()) : new HashMap<>());
                     loggersData.put(id, entry);
                 }
+                if (rows.size() < RUNTIME_PAGE_SIZE) break;
+                page++;
             }
         } catch (ApiException e) {
             throw mapLoggingException(e);
         }
+        return loggersData;
+    }
 
-        // Fetch groups
+    private Map<String, Map<String, Object>> fetchAllGroups() {
         Map<String, Map<String, Object>> groupsData = new HashMap<>();
+        int page = 1;
         try {
-            LogGroupListResponse groupResp = logGroupsApi.listLogGroups(null, null, null, null);
-            if (groupResp.getData() != null) {
-                for (LogGroupResource r : groupResp.getData()) {
+            while (true) {
+                LogGroupListResponse groupResp = logGroupsApi.listLogGroups(
+                        null, page, RUNTIME_PAGE_SIZE, null);
+                List<LogGroupResource> rows = groupResp.getData() != null
+                        ? groupResp.getData() : List.of();
+                for (LogGroupResource r : rows) {
                     var attrs = r.getAttributes();
                     String gid = r.getId() != null ? r.getId() : "";
                     Map<String, Object> entry = new HashMap<>();
@@ -872,13 +853,13 @@ public final class LoggingClient {
                             ? new HashMap<>(attrs.getEnvironments()) : new HashMap<>());
                     groupsData.put(gid, entry);
                 }
+                if (rows.size() < RUNTIME_PAGE_SIZE) break;
+                page++;
             }
         } catch (ApiException e) {
             throw mapLoggingException(e);
         }
-
-        this.loggersCache = new ConcurrentHashMap<>(loggersData);
-        this.groupsCache = new ConcurrentHashMap<>(groupsData);
+        return groupsData;
     }
 
     @SuppressWarnings("unchecked")

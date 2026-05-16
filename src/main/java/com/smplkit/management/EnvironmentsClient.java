@@ -33,10 +33,20 @@ public final class EnvironmentsClient {
                 null, null);
     }
 
-    /** List all environments. */
+    /** Lists environments using the server's default pagination (first page, up to 1000 rows). */
     public List<com.smplkit.management.Environment> list() {
+        return list(null, null);
+    }
+
+    /**
+     * Lists a single page of environments. Pass {@code null} for either argument to use the
+     * server default ({@code page[number]=1}, {@code page[size]=1000}). The wrapper
+     * does not loop — customers paginate by calling this method with successive
+     * {@code pageNumber} values.
+     */
+    public List<com.smplkit.management.Environment> list(Integer pageNumber, Integer pageSize) {
         try {
-            EnvironmentListResponse resp = api.listEnvironments(null, null, null, null);
+            EnvironmentListResponse resp = api.listEnvironments(null, pageNumber, pageSize, null);
             List<com.smplkit.management.Environment> result = new ArrayList<>();
             if (resp.getData() != null) {
                 for (EnvironmentResource r : resp.getData()) {

@@ -305,7 +305,7 @@ class TelemetryIntegrationTest {
         when(loggersApi.listLoggers(nullable(Boolean.class), nullable(String.class), nullable(String.class), nullable(String.class), nullable(Integer.class), nullable(Integer.class), nullable(Boolean.class))).thenReturn(loggerResp);
         LogGroupListResponse groupResp = new LogGroupListResponse();
         groupResp.setData(List.of());
-        when(logGroupsApi.listLogGroups(null, null, null, null)).thenReturn(groupResp);
+        when(logGroupsApi.listLogGroups(isNull(), any(), any(), isNull())).thenReturn(groupResp);
 
         LoggingClient logging = new LoggingClient(loggersApi, logGroupsApi, mockHttpClient, "key");
         logging.setEnvironment("production");
@@ -366,7 +366,7 @@ class TelemetryIntegrationTest {
 
         LogGroupListResponse groupResp = new LogGroupListResponse();
         groupResp.setData(List.of());
-        when(logGroupsApi.listLogGroups(null, null, null, null)).thenReturn(groupResp);
+        when(logGroupsApi.listLogGroups(isNull(), any(), any(), isNull())).thenReturn(groupResp);
 
         LoggingClient logging = new LoggingClient(loggersApi, logGroupsApi, mockHttpClient, "key");
         logging.setEnvironment("production");

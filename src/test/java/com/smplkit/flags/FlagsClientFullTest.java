@@ -293,7 +293,7 @@ class FlagsClientFullTest {
                 flagData("num-flag", "NUMERIC", 100,
                         Map.of("staging", Map.of("enabled", true, "default", 500)))
         )), FlagListResponse.class);
-        when(mockApi.listFlags(isNull(), isNull(), isNull(), isNull(), isNull(), isNull(), isNull(), isNull())).thenReturn(listResponse);
+        when(mockApi.listFlags(isNull(), isNull(), isNull(), isNull(), isNull(), any(), any(), isNull())).thenReturn(listResponse);
         client._connectInternal();
 
         Flag<Boolean> boolHandle = client.booleanFlag("bool-flag", false);
@@ -684,7 +684,7 @@ class FlagsClientFullTest {
 
     private void setupList(String id, String type, Object defaultValue,
                             Map<String, Object> environments) throws ApiException {
-        when(mockApi.listFlags(isNull(), isNull(), isNull(), isNull(), isNull(), isNull(), isNull(), isNull())).thenReturn(
+        when(mockApi.listFlags(isNull(), isNull(), isNull(), isNull(), isNull(), any(), any(), isNull())).thenReturn(
                 makeFlagListResponse(id, type, defaultValue, environments));
     }
 

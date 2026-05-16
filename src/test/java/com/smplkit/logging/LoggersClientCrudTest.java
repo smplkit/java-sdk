@@ -23,6 +23,7 @@ import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.isNull;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
@@ -74,7 +75,7 @@ class LoggersClientCrudTest {
         resp.setData(new ArrayList<>(List.of(
                 buildLoggerResource("a", "A", "INFO"),
                 buildLoggerResource("b", "B", "DEBUG"))));
-        when(mockLoggersApi.listLoggers((Boolean) null, null, null, null, null, null, null)).thenReturn(resp);
+        when(mockLoggersApi.listLoggers(isNull(), isNull(), isNull(), isNull(), any(), any(), isNull())).thenReturn(resp);
 
         List<Logger> out = loggers.list();
         assertEquals(2, out.size());
@@ -86,14 +87,14 @@ class LoggersClientCrudTest {
     void loggers_list_withNullData_returnsEmpty() throws ApiException {
         LoggerListResponse resp = new LoggerListResponse();
         resp.setData(null);
-        when(mockLoggersApi.listLoggers((Boolean) null, null, null, null, null, null, null)).thenReturn(resp);
+        when(mockLoggersApi.listLoggers(isNull(), isNull(), isNull(), isNull(), any(), any(), isNull())).thenReturn(resp);
 
         assertTrue(loggers.list().isEmpty());
     }
 
     @Test
     void loggers_list_mapsApiException() throws ApiException {
-        when(mockLoggersApi.listLoggers((Boolean) null, null, null, null, null, null, null))
+        when(mockLoggersApi.listLoggers(isNull(), isNull(), isNull(), isNull(), any(), any(), isNull()))
                 .thenThrow(new ApiException(500, "boom"));
         assertThrows(RuntimeException.class, () -> loggers.list());
     }
@@ -169,7 +170,7 @@ class LoggersClientCrudTest {
         resp.setData(new ArrayList<>(List.of(
                 buildGroupResource("g1", "G1", "INFO"),
                 buildGroupResource("g2", "G2", null))));
-        when(mockLogGroupsApi.listLogGroups(null, null, null, null)).thenReturn(resp);
+        when(mockLogGroupsApi.listLogGroups(isNull(), any(), any(), isNull())).thenReturn(resp);
 
         List<LogGroup> out = groups.list();
         assertEquals(2, out.size());
@@ -180,14 +181,14 @@ class LoggersClientCrudTest {
     void groups_list_withNullData_returnsEmpty() throws ApiException {
         LogGroupListResponse resp = new LogGroupListResponse();
         resp.setData(null);
-        when(mockLogGroupsApi.listLogGroups(null, null, null, null)).thenReturn(resp);
+        when(mockLogGroupsApi.listLogGroups(isNull(), any(), any(), isNull())).thenReturn(resp);
 
         assertTrue(groups.list().isEmpty());
     }
 
     @Test
     void groups_list_mapsApiException() throws ApiException {
-        when(mockLogGroupsApi.listLogGroups(null, null, null, null)).thenThrow(new ApiException(500, "boom"));
+        when(mockLogGroupsApi.listLogGroups(isNull(), any(), any(), isNull())).thenThrow(new ApiException(500, "boom"));
         assertThrows(RuntimeException.class, () -> groups.list());
     }
 

@@ -79,13 +79,24 @@ public final class ConfigManagement {
     }
 
     /**
-     * Lists all configs for the account.
+     * Lists configs using the server's default pagination (first page, up to 1000 rows).
      *
      * @return an unmodifiable list of configs
      */
     public List<Config> list() {
+        return list(null, null);
+    }
+
+    /**
+     * Lists a single page of configs. Pass {@code null} for either argument to use the
+     * server default ({@code page[number]=1}, {@code page[size]=1000}). The wrapper
+     * does not loop — customers paginate by calling this method with successive
+     * {@code pageNumber} values.
+     */
+    public List<Config> list(Integer pageNumber, Integer pageSize) {
         try {
-            ConfigListResponse response = client.configsApi.listConfigs(null, null, null, null, null);
+            ConfigListResponse response = client.configsApi.listConfigs(
+                    null, null, pageNumber, pageSize, null);
             List<ConfigResource> data = response.getData();
             if (data == null) {
                 return Collections.emptyList();

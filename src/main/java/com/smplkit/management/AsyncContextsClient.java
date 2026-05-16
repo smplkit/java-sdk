@@ -34,6 +34,10 @@ public final class AsyncContextsClient {
         return CompletableFuture.supplyAsync(() -> sync.list(type), executor);
     }
 
+    public CompletableFuture<List<ContextEntity>> list(String type, Integer pageNumber, Integer pageSize) {
+        return CompletableFuture.supplyAsync(() -> sync.list(type, pageNumber, pageSize), executor);
+    }
+
     public CompletableFuture<ContextEntity> get(String compositeId) {
         return CompletableFuture.supplyAsync(() -> sync.get(compositeId), executor);
     }

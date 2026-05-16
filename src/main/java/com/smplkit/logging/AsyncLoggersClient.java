@@ -26,6 +26,10 @@ public final class AsyncLoggersClient {
         return CompletableFuture.supplyAsync(sync::list, executor);
     }
 
+    public CompletableFuture<List<Logger>> list(Integer pageNumber, Integer pageSize) {
+        return CompletableFuture.supplyAsync(() -> sync.list(pageNumber, pageSize), executor);
+    }
+
     public CompletableFuture<Void> delete(String id) {
         return CompletableFuture.runAsync(() -> sync.delete(id), executor);
     }

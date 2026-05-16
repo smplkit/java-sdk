@@ -78,7 +78,7 @@ class Phase2CoverageTest {
                         "attributes", configData
                 ))),
                 ConfigListResponse.class);
-        when(mockApi.listConfigs(isNull(), isNull(), isNull(), isNull(), isNull())).thenReturn(listResponse);
+        when(mockApi.listConfigs(isNull(), isNull(), any(), any(), isNull())).thenReturn(listResponse);
 
         // Without setEnvironment, get returns empty (no lazy init)
         ConfigClient noEnvClient = new ConfigClient(mockApi, HttpClient.newHttpClient(), "test-key");
@@ -111,7 +111,7 @@ class Phase2CoverageTest {
                         )
                 ))),
                 ConfigListResponse.class);
-        when(mockApi.listConfigs(isNull(), isNull(), isNull(), isNull(), isNull())).thenReturn(listResponse);
+        when(mockApi.listConfigs(isNull(), isNull(), any(), any(), isNull())).thenReturn(listResponse);
 
         ConfigClient configClient = new ConfigClient(mockApi, HttpClient.newHttpClient(), "test-key");
         configClient.setEnvironment("staging");
@@ -155,7 +155,7 @@ class Phase2CoverageTest {
                         "type", "flag", "attributes", attrs
                 ))),
                 FlagListResponse.class);
-        when(mockApi.listFlags(isNull(), isNull(), isNull(), isNull(), isNull(), isNull(), isNull(), isNull())).thenReturn(flagList);
+        when(mockApi.listFlags(isNull(), isNull(), isNull(), isNull(), isNull(), any(), any(), isNull())).thenReturn(flagList);
 
         Flag<Boolean> handle = flagsClient.booleanFlag("svc-flag", false);
         assertTrue(handle.get(List.of()));
@@ -191,7 +191,7 @@ class Phase2CoverageTest {
                         "type", "flag", "attributes", attrs
                 ))),
                 FlagListResponse.class);
-        when(mockApi.listFlags(isNull(), isNull(), isNull(), isNull(), isNull(), isNull(), isNull(), isNull())).thenReturn(flagList);
+        when(mockApi.listFlags(isNull(), isNull(), isNull(), isNull(), isNull(), any(), any(), isNull())).thenReturn(flagList);
 
         Flag<Boolean> handle = flagsClient.booleanFlag("svc-flag", false);
         Context explicitService = new Context("service", "other-service", Map.of());
@@ -227,7 +227,7 @@ class Phase2CoverageTest {
                         "type", "flag", "attributes", attrs
                 ))),
                 FlagListResponse.class);
-        when(mockApi.listFlags(isNull(), isNull(), isNull(), isNull(), isNull(), isNull(), isNull(), isNull())).thenReturn(flagList);
+        when(mockApi.listFlags(isNull(), isNull(), isNull(), isNull(), isNull(), any(), any(), isNull())).thenReturn(flagList);
 
         Flag<Boolean> handle = flagsClient.booleanFlag("svc-flag", false);
         assertFalse(handle.get(List.of()));
@@ -325,11 +325,11 @@ class Phase2CoverageTest {
         lr.setAttributes(attrs);
         LoggerListResponse initialLoggers = new LoggerListResponse();
         initialLoggers.setData(new ArrayList<>(List.of(lr)));
-        when(mockLoggersApi.listLoggers(null, null, null, null, null, null, null)).thenReturn(initialLoggers);
+        when(mockLoggersApi.listLoggers(isNull(), isNull(), isNull(), isNull(), any(), any(), isNull())).thenReturn(initialLoggers);
 
         LogGroupListResponse emptyGroups = new LogGroupListResponse();
         emptyGroups.setData(new ArrayList<>());
-        when(mockGroupsApi.listLogGroups(null, null, null, null)).thenReturn(emptyGroups);
+        when(mockGroupsApi.listLogGroups(isNull(), any(), any(), isNull())).thenReturn(emptyGroups);
 
         LoggingAdapter mockAdapter = mock(LoggingAdapter.class);
         when(mockAdapter.name()).thenReturn("test");
@@ -349,7 +349,7 @@ class Phase2CoverageTest {
         lrWarn.setAttributes(attrsWarn);
         LoggerListResponse warnLoggers = new LoggerListResponse();
         warnLoggers.setData(new ArrayList<>(List.of(lrWarn)));
-        when(mockLoggersApi.listLoggers(null, null, null, null, null, null, null)).thenReturn(warnLoggers);
+        when(mockLoggersApi.listLoggers(isNull(), isNull(), isNull(), isNull(), any(), any(), isNull())).thenReturn(warnLoggers);
 
         // Call simulateLoggersChanged via reflection (package-private test helper)
         assertDoesNotThrow(() -> {
@@ -369,13 +369,13 @@ class Phase2CoverageTest {
                 Duration.ofSeconds(5));
         flagsClient.setEnvironment("staging");
 
-        when(mockApi.listFlags(isNull(), isNull(), isNull(), isNull(), isNull(), isNull(), isNull(), isNull()))
+        when(mockApi.listFlags(isNull(), isNull(), isNull(), isNull(), isNull(), any(), any(), isNull()))
                 .thenReturn(new FlagListResponse().data(List.of()));
 
         Flag<Boolean> handle = flagsClient.booleanFlag("unknown-flag", false);
         handle.get(List.of());
         handle.get(List.of());
 
-        verify(mockApi, times(1)).listFlags(isNull(), isNull(), isNull(), isNull(), isNull(), isNull(), isNull(), isNull());
+        verify(mockApi, times(1)).listFlags(isNull(), isNull(), isNull(), isNull(), isNull(), any(), any(), isNull());
     }
 }

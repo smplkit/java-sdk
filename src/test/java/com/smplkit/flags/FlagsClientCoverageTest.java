@@ -241,7 +241,7 @@ class FlagsClientCoverageTest {
         client.onChange("other-flag", e -> otherCount.incrementAndGet());
 
         // Refresh with changed data for target-flag -- target listener fires, other does NOT
-        when(mockApi.listFlags(isNull(), isNull(), isNull(), isNull(), isNull(), isNull(), isNull(), isNull())).thenReturn(
+        when(mockApi.listFlags(isNull(), isNull(), isNull(), isNull(), isNull(), any(), any(), isNull())).thenReturn(
                 makeFlagListResponse("target-flag", "BOOLEAN", true, Map.of()));
         client.refresh();
 
@@ -458,7 +458,7 @@ class FlagsClientCoverageTest {
         attrs.put("default", null);
         attrs.put("values", List.of());
         attrs.put("environments", Map.of("staging", Map.of("enabled", true)));
-        when(mockApi.listFlags(isNull(), isNull(), isNull(), isNull(), isNull(), isNull(), isNull(), isNull())).thenReturn(OBJECT_MAPPER.convertValue(
+        when(mockApi.listFlags(isNull(), isNull(), isNull(), isNull(), isNull(), any(), any(), isNull())).thenReturn(OBJECT_MAPPER.convertValue(
                 Map.of("data", List.of(Map.of("id", "feature-x", "type", "flag", "attributes", attrs))),
                 FlagListResponse.class));
         client._connectInternal();
@@ -473,7 +473,7 @@ class FlagsClientCoverageTest {
     void parseListResponse_nullData_returnsEmpty() throws ApiException {
         FlagListResponse resp = new FlagListResponse();
         resp.setData(null);
-        when(mockApi.listFlags(isNull(), isNull(), isNull(), isNull(), isNull(), isNull(), isNull(), isNull())).thenReturn(resp);
+        when(mockApi.listFlags(isNull(), isNull(), isNull(), isNull(), isNull(), any(), any(), isNull())).thenReturn(resp);
         List<Flag<?>> result = client.management().list();
         assertTrue(result.isEmpty());
     }
@@ -482,14 +482,14 @@ class FlagsClientCoverageTest {
 
     @Test
     void list_apiException_throwsSmplError() throws ApiException {
-        when(mockApi.listFlags(isNull(), isNull(), isNull(), isNull(), isNull(), isNull(), isNull(), isNull()))
+        when(mockApi.listFlags(isNull(), isNull(), isNull(), isNull(), isNull(), any(), any(), isNull()))
                 .thenThrow(new ApiException(500, "Server Error"));
         assertThrows(SmplError.class, () -> client.management().list());
     }
 
     @Test
     void list_apiException_code0_mapsToConnectionError() throws ApiException {
-        when(mockApi.listFlags(isNull(), isNull(), isNull(), isNull(), isNull(), isNull(), isNull(), isNull()))
+        when(mockApi.listFlags(isNull(), isNull(), isNull(), isNull(), isNull(), any(), any(), isNull()))
                 .thenThrow(new ApiException("network failure"));
         assertThrows(SmplError.class, () -> client.management().list());
     }
@@ -561,7 +561,7 @@ class FlagsClientCoverageTest {
         attrs.put("default", null);
         attrs.put("values", List.of());
         attrs.put("environments", Map.of());
-        when(mockApi.listFlags(isNull(), isNull(), isNull(), isNull(), isNull(), isNull(), isNull(), isNull())).thenReturn(OBJECT_MAPPER.convertValue(
+        when(mockApi.listFlags(isNull(), isNull(), isNull(), isNull(), isNull(), any(), any(), isNull())).thenReturn(OBJECT_MAPPER.convertValue(
                 Map.of("data", List.of(Map.of("id", "null-flag", "type", "flag", "attributes", attrs))),
                 FlagListResponse.class));
         client._connectInternal();
@@ -607,7 +607,7 @@ class FlagsClientCoverageTest {
     @Test
     void evaluateFlag_noEnvironments_returnsFlagDefault() throws ApiException {
         // Flag with no environments at all
-        when(mockApi.listFlags(isNull(), isNull(), isNull(), isNull(), isNull(), isNull(), isNull(), isNull())).thenReturn(
+        when(mockApi.listFlags(isNull(), isNull(), isNull(), isNull(), isNull(), any(), any(), isNull())).thenReturn(
                 makeFlagListResponse("simple-flag", "BOOLEAN", true, Map.of()));
         client._connectInternal();
 
@@ -642,7 +642,7 @@ class FlagsClientCoverageTest {
 
     private void setupFlagStore(String id, String type, Object defaultValue,
                                  Map<String, Object> environments) throws ApiException {
-        when(mockApi.listFlags(isNull(), isNull(), isNull(), isNull(), isNull(), isNull(), isNull(), isNull())).thenReturn(
+        when(mockApi.listFlags(isNull(), isNull(), isNull(), isNull(), isNull(), any(), any(), isNull())).thenReturn(
                 makeFlagListResponse(id, type, defaultValue, environments));
         client._connectInternal();
     }
