@@ -30,15 +30,15 @@ import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 
 import com.smplkit.internal.generated.app.ApiClient;
 /**
- * Information about the next volume-discount tier.
+ * Hint describing how the customer could unlock a better discount.
  */
 @JsonPropertyOrder({
-  NextTierMeta.JSON_PROPERTY_PRODUCTS_NEEDED,
-  NextTierMeta.JSON_PROPERTY_DISCOUNT_PCT,
-  NextTierMeta.JSON_PROPERTY_ADDITIONAL_SAVINGS_CENTS
+  NextTierResponse.JSON_PROPERTY_PRODUCTS_NEEDED,
+  NextTierResponse.JSON_PROPERTY_DISCOUNT_PCT,
+  NextTierResponse.JSON_PROPERTY_ADDITIONAL_SAVINGS_CENTS
 })
 @jakarta.annotation.Generated(value = "org.openapitools.codegen.languages.JavaClientCodegen", comments = "Generator version: 7.21.0")
-public class NextTierMeta {
+public class NextTierResponse {
   public static final String JSON_PROPERTY_PRODUCTS_NEEDED = "products_needed";
   @jakarta.annotation.Nonnull
   private Integer productsNeeded;
@@ -51,16 +51,16 @@ public class NextTierMeta {
   @jakarta.annotation.Nonnull
   private Integer additionalSavingsCents;
 
-  public NextTierMeta() { 
+  public NextTierResponse() { 
   }
 
-  public NextTierMeta productsNeeded(@jakarta.annotation.Nonnull Integer productsNeeded) {
+  public NextTierResponse productsNeeded(@jakarta.annotation.Nonnull Integer productsNeeded) {
     this.productsNeeded = productsNeeded;
     return this;
   }
 
   /**
-   * Number of additional subscribed products needed to reach the next tier.
+   * Number of additional paid products required to reach the next discount tier.
    * @return productsNeeded
    */
   @jakarta.annotation.Nonnull
@@ -78,7 +78,7 @@ public class NextTierMeta {
   }
 
 
-  public NextTierMeta discountPct(@jakarta.annotation.Nonnull Integer discountPct) {
+  public NextTierResponse discountPct(@jakarta.annotation.Nonnull Integer discountPct) {
     this.discountPct = discountPct;
     return this;
   }
@@ -102,13 +102,13 @@ public class NextTierMeta {
   }
 
 
-  public NextTierMeta additionalSavingsCents(@jakarta.annotation.Nonnull Integer additionalSavingsCents) {
+  public NextTierResponse additionalSavingsCents(@jakarta.annotation.Nonnull Integer additionalSavingsCents) {
     this.additionalSavingsCents = additionalSavingsCents;
     return this;
   }
 
   /**
-   * Additional monthly savings in cents at the next tier.
+   * Estimated additional monthly savings (in cents) at the next tier, compared to paying full list price for the added product.
    * @return additionalSavingsCents
    */
   @jakarta.annotation.Nonnull
@@ -127,7 +127,7 @@ public class NextTierMeta {
 
 
   /**
-   * Return true if this NextTierMeta object is equal to o.
+   * Return true if this NextTierResponse object is equal to o.
    */
   @Override
   public boolean equals(Object o) {
@@ -137,10 +137,10 @@ public class NextTierMeta {
     if (o == null || getClass() != o.getClass()) {
       return false;
     }
-    NextTierMeta nextTierMeta = (NextTierMeta) o;
-    return Objects.equals(this.productsNeeded, nextTierMeta.productsNeeded) &&
-        Objects.equals(this.discountPct, nextTierMeta.discountPct) &&
-        Objects.equals(this.additionalSavingsCents, nextTierMeta.additionalSavingsCents);
+    NextTierResponse nextTierResponse = (NextTierResponse) o;
+    return Objects.equals(this.productsNeeded, nextTierResponse.productsNeeded) &&
+        Objects.equals(this.discountPct, nextTierResponse.discountPct) &&
+        Objects.equals(this.additionalSavingsCents, nextTierResponse.additionalSavingsCents);
   }
 
   @Override
@@ -151,7 +151,7 @@ public class NextTierMeta {
   @Override
   public String toString() {
     StringBuilder sb = new StringBuilder();
-    sb.append("class NextTierMeta {\n");
+    sb.append("class NextTierResponse {\n");
     sb.append("    productsNeeded: ").append(toIndentedString(productsNeeded)).append("\n");
     sb.append("    discountPct: ").append(toIndentedString(discountPct)).append("\n");
     sb.append("    additionalSavingsCents: ").append(toIndentedString(additionalSavingsCents)).append("\n");

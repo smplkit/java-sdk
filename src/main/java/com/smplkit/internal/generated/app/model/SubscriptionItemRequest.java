@@ -25,24 +25,19 @@ import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonTypeName;
 import com.fasterxml.jackson.annotation.JsonValue;
 import java.util.Arrays;
-import org.openapitools.jackson.nullable.JsonNullable;
-import com.fasterxml.jackson.annotation.JsonIgnore;
-import org.openapitools.jackson.nullable.JsonNullable;
-import java.util.NoSuchElementException;
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 
 
 import com.smplkit.internal.generated.app.ApiClient;
 /**
- * Attributes accepted when creating a new subscription.
+ * One product enrollment as supplied by the caller.  The caller supplies the *desired* (product, plan) pair for each product they want enrolled. Products absent from the request are interpreted as scheduled-for-drop at the end of the current billing period.
  */
 @JsonPropertyOrder({
-  CreateSubscriptionAttributes.JSON_PROPERTY_PRODUCT,
-  CreateSubscriptionAttributes.JSON_PROPERTY_PLAN,
-  CreateSubscriptionAttributes.JSON_PROPERTY_PAYMENT_METHOD
+  SubscriptionItemRequest.JSON_PROPERTY_PRODUCT,
+  SubscriptionItemRequest.JSON_PROPERTY_PLAN
 })
 @jakarta.annotation.Generated(value = "org.openapitools.codegen.languages.JavaClientCodegen", comments = "Generator version: 7.21.0")
-public class CreateSubscriptionAttributes {
+public class SubscriptionItemRequest {
   public static final String JSON_PROPERTY_PRODUCT = "product";
   @jakarta.annotation.Nonnull
   private String product;
@@ -51,19 +46,16 @@ public class CreateSubscriptionAttributes {
   @jakarta.annotation.Nonnull
   private String plan;
 
-  public static final String JSON_PROPERTY_PAYMENT_METHOD = "payment_method";
-  private JsonNullable<String> paymentMethod = JsonNullable.<String>undefined();
-
-  public CreateSubscriptionAttributes() { 
+  public SubscriptionItemRequest() { 
   }
 
-  public CreateSubscriptionAttributes product(@jakarta.annotation.Nonnull String product) {
+  public SubscriptionItemRequest product(@jakarta.annotation.Nonnull String product) {
     this.product = product;
     return this;
   }
 
   /**
-   * Product key to subscribe to, e.g. &#x60;flags&#x60;.
+   * Product key (e.g. &#x60;audit&#x60;, &#x60;config&#x60;, &#x60;flags&#x60;, &#x60;logging&#x60;).
    * @return product
    */
   @jakarta.annotation.Nonnull
@@ -81,13 +73,13 @@ public class CreateSubscriptionAttributes {
   }
 
 
-  public CreateSubscriptionAttributes plan(@jakarta.annotation.Nonnull String plan) {
+  public SubscriptionItemRequest plan(@jakarta.annotation.Nonnull String plan) {
     this.plan = plan;
     return this;
   }
 
   /**
-   * Plan key to subscribe on, e.g. &#x60;pro&#x60;.
+   * Target plan for this product. Must be a paid plan such as &#x60;STANDARD&#x60; or &#x60;PRO&#x60;; the free plan is implicit when a product is not listed.
    * @return plan
    */
   @jakarta.annotation.Nonnull
@@ -105,40 +97,8 @@ public class CreateSubscriptionAttributes {
   }
 
 
-  public CreateSubscriptionAttributes paymentMethod(@jakarta.annotation.Nullable String paymentMethod) {
-    this.paymentMethod = JsonNullable.<String>of(paymentMethod);
-    return this;
-  }
-
   /**
-   * UUID of a payment method on file to bill against. If omitted, the account&#39;s default payment method is used.
-   * @return paymentMethod
-   */
-  @jakarta.annotation.Nullable
-  @JsonIgnore
-  public String getPaymentMethod() {
-        return paymentMethod.orElse(null);
-  }
-
-  @JsonProperty(value = JSON_PROPERTY_PAYMENT_METHOD, required = false)
-  @JsonInclude(value = JsonInclude.Include.USE_DEFAULTS)
-
-  public JsonNullable<String> getPaymentMethod_JsonNullable() {
-    return paymentMethod;
-  }
-  
-  @JsonProperty(JSON_PROPERTY_PAYMENT_METHOD)
-  public void setPaymentMethod_JsonNullable(JsonNullable<String> paymentMethod) {
-    this.paymentMethod = paymentMethod;
-  }
-
-  public void setPaymentMethod(@jakarta.annotation.Nullable String paymentMethod) {
-    this.paymentMethod = JsonNullable.<String>of(paymentMethod);
-  }
-
-
-  /**
-   * Return true if this CreateSubscriptionAttributes object is equal to o.
+   * Return true if this SubscriptionItemRequest object is equal to o.
    */
   @Override
   public boolean equals(Object o) {
@@ -148,35 +108,22 @@ public class CreateSubscriptionAttributes {
     if (o == null || getClass() != o.getClass()) {
       return false;
     }
-    CreateSubscriptionAttributes createSubscriptionAttributes = (CreateSubscriptionAttributes) o;
-    return Objects.equals(this.product, createSubscriptionAttributes.product) &&
-        Objects.equals(this.plan, createSubscriptionAttributes.plan) &&
-        equalsNullable(this.paymentMethod, createSubscriptionAttributes.paymentMethod);
-  }
-
-  private static <T> boolean equalsNullable(JsonNullable<T> a, JsonNullable<T> b) {
-    return a == b || (a != null && b != null && a.isPresent() && b.isPresent() && Objects.deepEquals(a.get(), b.get()));
+    SubscriptionItemRequest subscriptionItemRequest = (SubscriptionItemRequest) o;
+    return Objects.equals(this.product, subscriptionItemRequest.product) &&
+        Objects.equals(this.plan, subscriptionItemRequest.plan);
   }
 
   @Override
   public int hashCode() {
-    return Objects.hash(product, plan, hashCodeNullable(paymentMethod));
-  }
-
-  private static <T> int hashCodeNullable(JsonNullable<T> a) {
-    if (a == null) {
-      return 1;
-    }
-    return a.isPresent() ? Arrays.deepHashCode(new Object[]{a.get()}) : 31;
+    return Objects.hash(product, plan);
   }
 
   @Override
   public String toString() {
     StringBuilder sb = new StringBuilder();
-    sb.append("class CreateSubscriptionAttributes {\n");
+    sb.append("class SubscriptionItemRequest {\n");
     sb.append("    product: ").append(toIndentedString(product)).append("\n");
     sb.append("    plan: ").append(toIndentedString(plan)).append("\n");
-    sb.append("    paymentMethod: ").append(toIndentedString(paymentMethod)).append("\n");
     sb.append("}");
     return sb.toString();
   }
@@ -229,11 +176,6 @@ public class CreateSubscriptionAttributes {
     // add `plan` to the URL query string
     if (getPlan() != null) {
       joiner.add(String.format(java.util.Locale.ROOT, "%splan%s=%s", prefix, suffix, ApiClient.urlEncode(ApiClient.valueToString(getPlan()))));
-    }
-
-    // add `payment_method` to the URL query string
-    if (getPaymentMethod() != null) {
-      joiner.add(String.format(java.util.Locale.ROOT, "%spayment_method%s=%s", prefix, suffix, ApiClient.urlEncode(ApiClient.valueToString(getPaymentMethod()))));
     }
 
     return joiner.toString();
