@@ -33,12 +33,12 @@ import com.smplkit.internal.generated.audit.ApiClient;
  * Scan statistics for a search response.  Exposed so a selective JSON Logic filter doesn&#39;t silently look like \&quot;0 matches\&quot; when the truth is \&quot;the scan ceiling was reached before the filter had a chance to find page[size] matches.\&quot;
  */
 @JsonPropertyOrder({
-  SearchScanMeta.JSON_PROPERTY_SCANNED,
-  SearchScanMeta.JSON_PROPERTY_MATCHED,
-  SearchScanMeta.JSON_PROPERTY_EXHAUSTED
+  EventSearchScanMeta.JSON_PROPERTY_SCANNED,
+  EventSearchScanMeta.JSON_PROPERTY_MATCHED,
+  EventSearchScanMeta.JSON_PROPERTY_EXHAUSTED
 })
 @jakarta.annotation.Generated(value = "org.openapitools.codegen.languages.JavaClientCodegen", comments = "Generator version: 7.21.0")
-public class SearchScanMeta {
+public class EventSearchScanMeta {
   public static final String JSON_PROPERTY_SCANNED = "scanned";
   @jakarta.annotation.Nonnull
   private Integer scanned;
@@ -51,10 +51,10 @@ public class SearchScanMeta {
   @jakarta.annotation.Nonnull
   private Boolean exhausted;
 
-  public SearchScanMeta() { 
+  public EventSearchScanMeta() { 
   }
 
-  public SearchScanMeta scanned(@jakarta.annotation.Nonnull Integer scanned) {
+  public EventSearchScanMeta scanned(@jakarta.annotation.Nonnull Integer scanned) {
     this.scanned = scanned;
     return this;
   }
@@ -78,7 +78,7 @@ public class SearchScanMeta {
   }
 
 
-  public SearchScanMeta matched(@jakarta.annotation.Nonnull Integer matched) {
+  public EventSearchScanMeta matched(@jakarta.annotation.Nonnull Integer matched) {
     this.matched = matched;
     return this;
   }
@@ -102,7 +102,7 @@ public class SearchScanMeta {
   }
 
 
-  public SearchScanMeta exhausted(@jakarta.annotation.Nonnull Boolean exhausted) {
+  public EventSearchScanMeta exhausted(@jakarta.annotation.Nonnull Boolean exhausted) {
     this.exhausted = exhausted;
     return this;
   }
@@ -127,7 +127,7 @@ public class SearchScanMeta {
 
 
   /**
-   * Return true if this SearchScanMeta object is equal to o.
+   * Return true if this EventSearchScanMeta object is equal to o.
    */
   @Override
   public boolean equals(Object o) {
@@ -137,10 +137,10 @@ public class SearchScanMeta {
     if (o == null || getClass() != o.getClass()) {
       return false;
     }
-    SearchScanMeta searchScanMeta = (SearchScanMeta) o;
-    return Objects.equals(this.scanned, searchScanMeta.scanned) &&
-        Objects.equals(this.matched, searchScanMeta.matched) &&
-        Objects.equals(this.exhausted, searchScanMeta.exhausted);
+    EventSearchScanMeta eventSearchScanMeta = (EventSearchScanMeta) o;
+    return Objects.equals(this.scanned, eventSearchScanMeta.scanned) &&
+        Objects.equals(this.matched, eventSearchScanMeta.matched) &&
+        Objects.equals(this.exhausted, eventSearchScanMeta.exhausted);
   }
 
   @Override
@@ -151,7 +151,7 @@ public class SearchScanMeta {
   @Override
   public String toString() {
     StringBuilder sb = new StringBuilder();
-    sb.append("class SearchScanMeta {\n");
+    sb.append("class EventSearchScanMeta {\n");
     sb.append("    scanned: ").append(toIndentedString(scanned)).append("\n");
     sb.append("    matched: ").append(toIndentedString(matched)).append("\n");
     sb.append("    exhausted: ").append(toIndentedString(exhausted)).append("\n");

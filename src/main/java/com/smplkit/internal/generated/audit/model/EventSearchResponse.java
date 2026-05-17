@@ -25,8 +25,8 @@ import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonTypeName;
 import com.fasterxml.jackson.annotation.JsonValue;
 import com.smplkit.internal.generated.audit.model.EventResource;
-import com.smplkit.internal.generated.audit.model.SearchEventsListLinks;
-import com.smplkit.internal.generated.audit.model.SearchEventsListMeta;
+import com.smplkit.internal.generated.audit.model.EventSearchListLinks;
+import com.smplkit.internal.generated.audit.model.EventSearchListMeta;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -35,36 +35,36 @@ import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 
 import com.smplkit.internal.generated.audit.ApiClient;
 /**
- * JSON:API list envelope returned by the search endpoint.  Structurally identical to &#x60;&#x60;EventListResponse&#x60;&#x60; from the list endpoint — the only difference is the extra &#x60;scan&#x60; block inside &#x60;meta&#x60; (&#x60;SearchEventsListMeta&#x60; vs &#x60;EventListMeta&#x60;).
+ * JSON:API list envelope returned by the search endpoint.  Structurally identical to &#x60;&#x60;EventListResponse&#x60;&#x60; from the list endpoint — the only difference is the extra &#x60;scan&#x60; block inside &#x60;meta&#x60; (&#x60;EventSearchListMeta&#x60; vs &#x60;EventListMeta&#x60;).
  */
 @JsonPropertyOrder({
-  SearchEventsResponse.JSON_PROPERTY_DATA,
-  SearchEventsResponse.JSON_PROPERTY_META,
-  SearchEventsResponse.JSON_PROPERTY_LINKS
+  EventSearchResponse.JSON_PROPERTY_DATA,
+  EventSearchResponse.JSON_PROPERTY_META,
+  EventSearchResponse.JSON_PROPERTY_LINKS
 })
 @jakarta.annotation.Generated(value = "org.openapitools.codegen.languages.JavaClientCodegen", comments = "Generator version: 7.21.0")
-public class SearchEventsResponse {
+public class EventSearchResponse {
   public static final String JSON_PROPERTY_DATA = "data";
   @jakarta.annotation.Nonnull
   private List<EventResource> data = new ArrayList<>();
 
   public static final String JSON_PROPERTY_META = "meta";
   @jakarta.annotation.Nonnull
-  private SearchEventsListMeta meta;
+  private EventSearchListMeta meta;
 
   public static final String JSON_PROPERTY_LINKS = "links";
   @jakarta.annotation.Nullable
-  private SearchEventsListLinks links;
+  private EventSearchListLinks links;
 
-  public SearchEventsResponse() { 
+  public EventSearchResponse() { 
   }
 
-  public SearchEventsResponse data(@jakarta.annotation.Nonnull List<EventResource> data) {
+  public EventSearchResponse data(@jakarta.annotation.Nonnull List<EventResource> data) {
     this.data = data;
     return this;
   }
 
-  public SearchEventsResponse addDataItem(EventResource dataItem) {
+  public EventSearchResponse addDataItem(EventResource dataItem) {
     if (this.data == null) {
       this.data = new ArrayList<>();
     }
@@ -91,7 +91,7 @@ public class SearchEventsResponse {
   }
 
 
-  public SearchEventsResponse meta(@jakarta.annotation.Nonnull SearchEventsListMeta meta) {
+  public EventSearchResponse meta(@jakarta.annotation.Nonnull EventSearchListMeta meta) {
     this.meta = meta;
     return this;
   }
@@ -103,19 +103,19 @@ public class SearchEventsResponse {
   @jakarta.annotation.Nonnull
   @JsonProperty(value = JSON_PROPERTY_META, required = true)
   @JsonInclude(value = JsonInclude.Include.ALWAYS)
-  public SearchEventsListMeta getMeta() {
+  public EventSearchListMeta getMeta() {
     return meta;
   }
 
 
   @JsonProperty(value = JSON_PROPERTY_META, required = true)
   @JsonInclude(value = JsonInclude.Include.ALWAYS)
-  public void setMeta(@jakarta.annotation.Nonnull SearchEventsListMeta meta) {
+  public void setMeta(@jakarta.annotation.Nonnull EventSearchListMeta meta) {
     this.meta = meta;
   }
 
 
-  public SearchEventsResponse links(@jakarta.annotation.Nullable SearchEventsListLinks links) {
+  public EventSearchResponse links(@jakarta.annotation.Nullable EventSearchListLinks links) {
     this.links = links;
     return this;
   }
@@ -127,20 +127,20 @@ public class SearchEventsResponse {
   @jakarta.annotation.Nullable
   @JsonProperty(value = JSON_PROPERTY_LINKS, required = false)
   @JsonInclude(value = JsonInclude.Include.USE_DEFAULTS)
-  public SearchEventsListLinks getLinks() {
+  public EventSearchListLinks getLinks() {
     return links;
   }
 
 
   @JsonProperty(value = JSON_PROPERTY_LINKS, required = false)
   @JsonInclude(value = JsonInclude.Include.USE_DEFAULTS)
-  public void setLinks(@jakarta.annotation.Nullable SearchEventsListLinks links) {
+  public void setLinks(@jakarta.annotation.Nullable EventSearchListLinks links) {
     this.links = links;
   }
 
 
   /**
-   * Return true if this SearchEventsResponse object is equal to o.
+   * Return true if this EventSearchResponse object is equal to o.
    */
   @Override
   public boolean equals(Object o) {
@@ -150,10 +150,10 @@ public class SearchEventsResponse {
     if (o == null || getClass() != o.getClass()) {
       return false;
     }
-    SearchEventsResponse searchEventsResponse = (SearchEventsResponse) o;
-    return Objects.equals(this.data, searchEventsResponse.data) &&
-        Objects.equals(this.meta, searchEventsResponse.meta) &&
-        Objects.equals(this.links, searchEventsResponse.links);
+    EventSearchResponse eventSearchResponse = (EventSearchResponse) o;
+    return Objects.equals(this.data, eventSearchResponse.data) &&
+        Objects.equals(this.meta, eventSearchResponse.meta) &&
+        Objects.equals(this.links, eventSearchResponse.links);
   }
 
   @Override
@@ -164,7 +164,7 @@ public class SearchEventsResponse {
   @Override
   public String toString() {
     StringBuilder sb = new StringBuilder();
-    sb.append("class SearchEventsResponse {\n");
+    sb.append("class EventSearchResponse {\n");
     sb.append("    data: ").append(toIndentedString(data)).append("\n");
     sb.append("    meta: ").append(toIndentedString(meta)).append("\n");
     sb.append("    links: ").append(toIndentedString(links)).append("\n");

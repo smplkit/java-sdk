@@ -34,20 +34,20 @@ import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 
 import com.smplkit.internal.generated.audit.ApiClient;
 /**
- * SearchEventsListLinks
+ * EventSearchListLinks
  */
 @JsonPropertyOrder({
-  SearchEventsListLinks.JSON_PROPERTY_NEXT
+  EventSearchListLinks.JSON_PROPERTY_NEXT
 })
 @jakarta.annotation.Generated(value = "org.openapitools.codegen.languages.JavaClientCodegen", comments = "Generator version: 7.21.0")
-public class SearchEventsListLinks {
+public class EventSearchListLinks {
   public static final String JSON_PROPERTY_NEXT = "next";
   private JsonNullable<String> next = JsonNullable.<String>undefined();
 
-  public SearchEventsListLinks() { 
+  public EventSearchListLinks() { 
   }
 
-  public SearchEventsListLinks next(@jakarta.annotation.Nullable String next) {
+  public EventSearchListLinks next(@jakarta.annotation.Nullable String next) {
     this.next = JsonNullable.<String>of(next);
     return this;
   }
@@ -80,7 +80,7 @@ public class SearchEventsListLinks {
 
 
   /**
-   * Return true if this SearchEventsListLinks object is equal to o.
+   * Return true if this EventSearchListLinks object is equal to o.
    */
   @Override
   public boolean equals(Object o) {
@@ -90,8 +90,8 @@ public class SearchEventsListLinks {
     if (o == null || getClass() != o.getClass()) {
       return false;
     }
-    SearchEventsListLinks searchEventsListLinks = (SearchEventsListLinks) o;
-    return equalsNullable(this.next, searchEventsListLinks.next);
+    EventSearchListLinks eventSearchListLinks = (EventSearchListLinks) o;
+    return equalsNullable(this.next, eventSearchListLinks.next);
   }
 
   private static <T> boolean equalsNullable(JsonNullable<T> a, JsonNullable<T> b) {
@@ -113,7 +113,7 @@ public class SearchEventsListLinks {
   @Override
   public String toString() {
     StringBuilder sb = new StringBuilder();
-    sb.append("class SearchEventsListLinks {\n");
+    sb.append("class EventSearchListLinks {\n");
     sb.append("    next: ").append(toIndentedString(next)).append("\n");
     sb.append("}");
     return sb.toString();

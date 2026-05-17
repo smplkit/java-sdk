@@ -39,20 +39,20 @@ import com.smplkit.internal.generated.audit.ApiClient;
  * Request body for &#x60;&#x60;POST /api/v1/search/events&#x60;&#x60;.  Mirrors every column filter accepted by &#x60;&#x60;GET /api/v1/events&#x60;&#x60; with identical semantics, and adds a top-level &#x60;&#x60;filter&#x60;&#x60; field carrying a JSON Logic expression. When &#x60;&#x60;filter&#x60;&#x60; is present the search is silently capped to the last 30 days by &#x60;&#x60;occurred_at&#x60;&#x60;; the expression is then evaluated in memory against each row that passes the column filters using the same &#x60;&#x60;json-logic-qubit&#x60;&#x60; evaluator that runs in the forwarder pipeline (so search results match what would be forwarded).  Filter-combination rules match &#x60;&#x60;GET /api/v1/events&#x60;&#x60; exactly:  - &#x60;&#x60;filter[resource_id]&#x60;&#x60; must be accompanied by   &#x60;&#x60;filter[resource_type]&#x60;&#x60; — the index is keyed on the pair. - &#x60;&#x60;filter[search]&#x60;&#x60; must be accompanied by either   &#x60;&#x60;filter[occurred_at]&#x60;&#x60; or &#x60;&#x60;filter[resource_type]&#x60;&#x60; +   &#x60;&#x60;filter[resource_id]&#x60;&#x60; — substring matching has no index, so an   unbounded substring scan is rejected.
  */
 @JsonPropertyOrder({
-  SearchEventsRequest.JSON_PROPERTY_FILTER,
-  SearchEventsRequest.JSON_PROPERTY_FILTER_ACTION,
-  SearchEventsRequest.JSON_PROPERTY_FILTER_RESOURCE_TYPE,
-  SearchEventsRequest.JSON_PROPERTY_FILTER_RESOURCE_ID,
-  SearchEventsRequest.JSON_PROPERTY_FILTER_ACTOR_TYPE,
-  SearchEventsRequest.JSON_PROPERTY_FILTER_ACTOR_ID,
-  SearchEventsRequest.JSON_PROPERTY_FILTER_OCCURRED_AT,
-  SearchEventsRequest.JSON_PROPERTY_FILTER_SEARCH,
-  SearchEventsRequest.JSON_PROPERTY_PAGE_SIZE,
-  SearchEventsRequest.JSON_PROPERTY_PAGE_AFTER,
-  SearchEventsRequest.JSON_PROPERTY_SORT
+  EventSearchRequest.JSON_PROPERTY_FILTER,
+  EventSearchRequest.JSON_PROPERTY_FILTER_ACTION,
+  EventSearchRequest.JSON_PROPERTY_FILTER_RESOURCE_TYPE,
+  EventSearchRequest.JSON_PROPERTY_FILTER_RESOURCE_ID,
+  EventSearchRequest.JSON_PROPERTY_FILTER_ACTOR_TYPE,
+  EventSearchRequest.JSON_PROPERTY_FILTER_ACTOR_ID,
+  EventSearchRequest.JSON_PROPERTY_FILTER_OCCURRED_AT,
+  EventSearchRequest.JSON_PROPERTY_FILTER_SEARCH,
+  EventSearchRequest.JSON_PROPERTY_PAGE_SIZE,
+  EventSearchRequest.JSON_PROPERTY_PAGE_AFTER,
+  EventSearchRequest.JSON_PROPERTY_SORT
 })
 @jakarta.annotation.Generated(value = "org.openapitools.codegen.languages.JavaClientCodegen", comments = "Generator version: 7.21.0")
-public class SearchEventsRequest {
+public class EventSearchRequest {
   public static final String JSON_PROPERTY_FILTER = "filter";
   private JsonNullable<Map<String, Object>> filter = JsonNullable.<Map<String, Object>>undefined();
 
@@ -88,15 +88,15 @@ public class SearchEventsRequest {
   @jakarta.annotation.Nullable
   private String sort = "-occurred_at";
 
-  public SearchEventsRequest() { 
+  public EventSearchRequest() { 
   }
 
-  public SearchEventsRequest filter(@jakarta.annotation.Nullable Map<String, Object> filter) {
+  public EventSearchRequest filter(@jakarta.annotation.Nullable Map<String, Object> filter) {
     this.filter = JsonNullable.<Map<String, Object>>of(filter);
     return this;
   }
 
-  public SearchEventsRequest putFilterItem(String key, Object filterItem) {
+  public EventSearchRequest putFilterItem(String key, Object filterItem) {
     if (this.filter == null || !this.filter.isPresent()) {
       this.filter = JsonNullable.<Map<String, Object>>of(new HashMap<>());
     }
@@ -135,7 +135,7 @@ public class SearchEventsRequest {
   }
 
 
-  public SearchEventsRequest filterAction(@jakarta.annotation.Nullable String filterAction) {
+  public EventSearchRequest filterAction(@jakarta.annotation.Nullable String filterAction) {
     this.filterAction = JsonNullable.<String>of(filterAction);
     return this;
   }
@@ -167,7 +167,7 @@ public class SearchEventsRequest {
   }
 
 
-  public SearchEventsRequest filterResourceType(@jakarta.annotation.Nullable String filterResourceType) {
+  public EventSearchRequest filterResourceType(@jakarta.annotation.Nullable String filterResourceType) {
     this.filterResourceType = JsonNullable.<String>of(filterResourceType);
     return this;
   }
@@ -199,7 +199,7 @@ public class SearchEventsRequest {
   }
 
 
-  public SearchEventsRequest filterResourceId(@jakarta.annotation.Nullable String filterResourceId) {
+  public EventSearchRequest filterResourceId(@jakarta.annotation.Nullable String filterResourceId) {
     this.filterResourceId = JsonNullable.<String>of(filterResourceId);
     return this;
   }
@@ -231,7 +231,7 @@ public class SearchEventsRequest {
   }
 
 
-  public SearchEventsRequest filterActorType(@jakarta.annotation.Nullable String filterActorType) {
+  public EventSearchRequest filterActorType(@jakarta.annotation.Nullable String filterActorType) {
     this.filterActorType = JsonNullable.<String>of(filterActorType);
     return this;
   }
@@ -263,7 +263,7 @@ public class SearchEventsRequest {
   }
 
 
-  public SearchEventsRequest filterActorId(@jakarta.annotation.Nullable String filterActorId) {
+  public EventSearchRequest filterActorId(@jakarta.annotation.Nullable String filterActorId) {
     this.filterActorId = JsonNullable.<String>of(filterActorId);
     return this;
   }
@@ -295,7 +295,7 @@ public class SearchEventsRequest {
   }
 
 
-  public SearchEventsRequest filterOccurredAt(@jakarta.annotation.Nullable String filterOccurredAt) {
+  public EventSearchRequest filterOccurredAt(@jakarta.annotation.Nullable String filterOccurredAt) {
     this.filterOccurredAt = JsonNullable.<String>of(filterOccurredAt);
     return this;
   }
@@ -327,7 +327,7 @@ public class SearchEventsRequest {
   }
 
 
-  public SearchEventsRequest filterSearch(@jakarta.annotation.Nullable String filterSearch) {
+  public EventSearchRequest filterSearch(@jakarta.annotation.Nullable String filterSearch) {
     this.filterSearch = JsonNullable.<String>of(filterSearch);
     return this;
   }
@@ -359,7 +359,7 @@ public class SearchEventsRequest {
   }
 
 
-  public SearchEventsRequest pageSize(@jakarta.annotation.Nullable Integer pageSize) {
+  public EventSearchRequest pageSize(@jakarta.annotation.Nullable Integer pageSize) {
     this.pageSize = pageSize;
     return this;
   }
@@ -385,7 +385,7 @@ public class SearchEventsRequest {
   }
 
 
-  public SearchEventsRequest pageAfter(@jakarta.annotation.Nullable String pageAfter) {
+  public EventSearchRequest pageAfter(@jakarta.annotation.Nullable String pageAfter) {
     this.pageAfter = JsonNullable.<String>of(pageAfter);
     return this;
   }
@@ -417,7 +417,7 @@ public class SearchEventsRequest {
   }
 
 
-  public SearchEventsRequest sort(@jakarta.annotation.Nullable String sort) {
+  public EventSearchRequest sort(@jakarta.annotation.Nullable String sort) {
     this.sort = sort;
     return this;
   }
@@ -442,7 +442,7 @@ public class SearchEventsRequest {
 
 
   /**
-   * Return true if this SearchEventsRequest object is equal to o.
+   * Return true if this EventSearchRequest object is equal to o.
    */
   @Override
   public boolean equals(Object o) {
@@ -452,18 +452,18 @@ public class SearchEventsRequest {
     if (o == null || getClass() != o.getClass()) {
       return false;
     }
-    SearchEventsRequest searchEventsRequest = (SearchEventsRequest) o;
-    return equalsNullable(this.filter, searchEventsRequest.filter) &&
-        equalsNullable(this.filterAction, searchEventsRequest.filterAction) &&
-        equalsNullable(this.filterResourceType, searchEventsRequest.filterResourceType) &&
-        equalsNullable(this.filterResourceId, searchEventsRequest.filterResourceId) &&
-        equalsNullable(this.filterActorType, searchEventsRequest.filterActorType) &&
-        equalsNullable(this.filterActorId, searchEventsRequest.filterActorId) &&
-        equalsNullable(this.filterOccurredAt, searchEventsRequest.filterOccurredAt) &&
-        equalsNullable(this.filterSearch, searchEventsRequest.filterSearch) &&
-        Objects.equals(this.pageSize, searchEventsRequest.pageSize) &&
-        equalsNullable(this.pageAfter, searchEventsRequest.pageAfter) &&
-        Objects.equals(this.sort, searchEventsRequest.sort);
+    EventSearchRequest eventSearchRequest = (EventSearchRequest) o;
+    return equalsNullable(this.filter, eventSearchRequest.filter) &&
+        equalsNullable(this.filterAction, eventSearchRequest.filterAction) &&
+        equalsNullable(this.filterResourceType, eventSearchRequest.filterResourceType) &&
+        equalsNullable(this.filterResourceId, eventSearchRequest.filterResourceId) &&
+        equalsNullable(this.filterActorType, eventSearchRequest.filterActorType) &&
+        equalsNullable(this.filterActorId, eventSearchRequest.filterActorId) &&
+        equalsNullable(this.filterOccurredAt, eventSearchRequest.filterOccurredAt) &&
+        equalsNullable(this.filterSearch, eventSearchRequest.filterSearch) &&
+        Objects.equals(this.pageSize, eventSearchRequest.pageSize) &&
+        equalsNullable(this.pageAfter, eventSearchRequest.pageAfter) &&
+        Objects.equals(this.sort, eventSearchRequest.sort);
   }
 
   private static <T> boolean equalsNullable(JsonNullable<T> a, JsonNullable<T> b) {
@@ -485,7 +485,7 @@ public class SearchEventsRequest {
   @Override
   public String toString() {
     StringBuilder sb = new StringBuilder();
-    sb.append("class SearchEventsRequest {\n");
+    sb.append("class EventSearchRequest {\n");
     sb.append("    filter: ").append(toIndentedString(filter)).append("\n");
     sb.append("    filterAction: ").append(toIndentedString(filterAction)).append("\n");
     sb.append("    filterResourceType: ").append(toIndentedString(filterResourceType)).append("\n");
