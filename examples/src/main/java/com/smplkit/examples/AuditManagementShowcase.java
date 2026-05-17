@@ -12,15 +12,15 @@
  */
 package com.smplkit.examples;
 
-import com.smplkit.audit.CreateForwarderInput;
 import com.smplkit.audit.Forwarder;
 import com.smplkit.audit.ForwarderType;
 import com.smplkit.audit.HttpConfiguration;
 import com.smplkit.audit.HttpHeader;
-import com.smplkit.audit.ListForwardersInput;
+import com.smplkit.audit.HttpMethod;
 import com.smplkit.audit.ListForwardersPage;
 import com.smplkit.management.SmplManagementClient;
 
+import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 
@@ -30,7 +30,7 @@ public final class AuditManagementShowcase {
     // Events that don't match are recorded as ``filtered_out`` deliveries.
     // See https://jsonlogic.com for the full operator reference.
     private static final Map<String, Object> INVOICE_FILTER =
-            Map.of("in", java.util.List.of("invoice.", Map.of("var", "action")));
+            Map.of("in", List.of("invoice.", Map.of("var", "action")));
 
     // JSONata template — reshape the event payload before POSTing to the
     // destination. This example flattens the event into a compact SIEM-style
@@ -48,60 +48,45 @@ public final class AuditManagementShowcase {
 
         // create the client (use AsyncSmplManagementClient for asynchronous use)
         try (SmplManagementClient manage = SmplManagementClient.create()) {
-            String forwarderName = "showcase-" + UUID.randomUUID().toString().substring(0, 6);
+            String forwarderName = "showcase-" + UUID.randomUUID().toString().replace("-", "").substring(0, 6);
 
-            // create a forwarder
-            CreateForwarderInput createInput = new CreateForwarderInput(
-                    forwarderName, ForwarderType.HTTP,
-                    new HttpConfiguration("https://httpbin.org/post"));
-            createInput.configuration.headers.add(new HttpHeader("X-Showcase", "ok"));
-            createInput.configuration.successStatus = "2xx";
-            createInput.filter = INVOICE_FILTER;
-            createInput.transformType = "JSONATA";
-            createInput.transform = SIEM_TRANSFORM;
-            Forwarder forwarder = manage.audit.forwarders.create(createInput);
-            assert forwarder.name.equals(forwarderName) : "name mismatch";
-            assert forwarder.enabled : "expected enabled=true";
-            assert INVOICE_FILTER.equals(forwarder.filter) : "filter mismatch";
-            assert SIEM_TRANSFORM.equals(forwarder.transform) : "transform mismatch";
-            System.out.println("Created forwarder: " + forwarder.id);
-
-            // fetch a forwarder
-            Forwarder fetched = manage.audit.forwarders.get(forwarder.id);
-            assert fetched.id.equals(forwarder.id) : "fetched id mismatch";
-            assert fetched.name.equals(forwarderName) : "fetched name mismatch";
-            assert INVOICE_FILTER.equals(fetched.filter) : "fetched filter mismatch";
-            assert SIEM_TRANSFORM.equals(fetched.transform) : "fetched transform mismatch";
-            System.out.println("Fetched forwarder: " + fetched.name);
+            // create a new forwarder
+            Forwarder forwarder = manage.audit.forwarders.newForwarder(
+                    forwarderName,
+                    ForwarderType.HTTP,
+                    new HttpConfiguration(
+                            HttpMethod.POST,
+                            "https://httpbin.org/post",
+                            List.of(new HttpHeader("X-Showcase", "ok"))));
+            forwarder.filter = INVOICE_FILTER;
+            forwarder.transform = SIEM_TRANSFORM;
+            forwarder.save();
+            System.out.println("Created forwarder: " + forwarder.name + " (id=" + forwarder.id + ")");
 
             // list forwarders
-            ListForwardersPage listed = manage.audit.forwarders.list(new ListForwardersInput());
+            ListForwardersPage listed = manage.audit.forwarders.list();
             assert listed.forwarders.stream().anyMatch(f -> f.id.equals(forwarder.id))
                     : "created forwarder not in list";
             System.out.println("Account has " + listed.forwarders.size() + " forwarder(s)");
 
+            // get a forwarder
+            Forwarder fetched = manage.audit.forwarders.get(forwarder.id);
+            assert fetched.id.equals(forwarder.id) : "fetched id mismatch";
+            assert fetched.enabled : "expected enabled=true";
+            System.out.println("Fetched forwarder: " + fetched.name);
+
             // update a forwarder
-            String renamed = forwarder.name + "-renamed";
-            CreateForwarderInput updateInput = new CreateForwarderInput(
-                    renamed, forwarder.forwarderType,
-                    new HttpConfiguration("https://httpbin.org/post"));
-            updateInput.configuration.headers.add(new HttpHeader("X-Showcase", "ok"));
-            updateInput.configuration.successStatus = "2xx";
-            updateInput.enabled = false;
-            updateInput.filter = INVOICE_FILTER;
-            updateInput.transformType = "JSONATA";
-            updateInput.transform = SIEM_TRANSFORM;
-            Forwarder updated = manage.audit.forwarders.update(forwarder.id, updateInput);
-            assert updated.name.equals(renamed) : "updated name mismatch";
-            assert !updated.enabled : "expected enabled=false";
-            System.out.println("Updated forwarder: " + updated.name + " (enabled=" + updated.enabled + ")");
+            fetched.enabled = false;
+            fetched.save();
+            assert !fetched.enabled : "expected enabled=false";
+            System.out.println("Disabled forwarder: " + fetched.name + " (enabled=" + fetched.enabled + ")");
 
             // delete a forwarder
-            manage.audit.forwarders.delete(forwarder.id);
-            ListForwardersPage remaining = manage.audit.forwarders.list(new ListForwardersInput());
+            fetched.delete();
+            ListForwardersPage remaining = manage.audit.forwarders.list();
             assert remaining.forwarders.stream().noneMatch(f -> f.id.equals(forwarder.id))
                     : "deleted forwarder still in list";
-            System.out.println("Deleted forwarder: " + forwarder.id);
+            System.out.println("Deleted forwarder: " + fetched.name);
 
             System.out.println("Done!");
         }

@@ -10,19 +10,33 @@ import java.util.List;
  * ELASTIC). Carried as {@code Forwarder.configuration}; non-HTTP
  * transports will land their own configuration shapes alongside
  * this one as the discriminated union grows.
- *
- * <p>{@code successStatus} is a 3-character string: an exact code
- * (e.g. {@code "200"}) or a status class (e.g. {@code "2xx"}).</p>
  */
 public final class HttpConfiguration {
-    public String method = "POST";
+    /** HTTP verb used for delivery. Defaults to {@link HttpMethod#POST}. */
+    public HttpMethod method = HttpMethod.POST;
+    /** Destination URL the audit service POSTs each event to. */
     public String url = "";
+    /**
+     * Headers attached to every outbound request. Values carry credentials
+     * and are encrypted at rest server-side; reads return them redacted.
+     */
     public List<HttpHeader> headers = new ArrayList<>();
+    /**
+     * Status the destination must return for delivery to count as success —
+     * either an exact code ({@code "200"}, {@code "204"}) or a class
+     * ({@code "2xx"}, {@code "4xx"}). Defaults to {@code "2xx"}.
+     */
     public String successStatus = "2xx";
 
     public HttpConfiguration() {}
 
     public HttpConfiguration(String url) {
         this.url = url;
+    }
+
+    public HttpConfiguration(HttpMethod method, String url, List<HttpHeader> headers) {
+        this.method = method;
+        this.url = url;
+        this.headers = new ArrayList<>(headers);
     }
 }

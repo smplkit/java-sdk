@@ -5,17 +5,28 @@ package com.smplkit.audit;
  * {@code ForwarderType} enum so the wrapper public surface keeps
  * customer code outside {@code com.smplkit.internal.*}.
  *
- * <p>ADR-047 §2.12. The audit service rejects any other value with
- * a 400.
+ * <p>The available types are real-time HTTP destinations sharing one
+ * outbound plumbing path. Object-storage archival (S3, GCS, etc.) has
+ * different operational shape (batching, IAM, lifecycle policies) and
+ * will get its own type if customer demand warrants.</p>
+ *
+ * <p>Members are declared in alphabetical order.</p>
  */
 public enum ForwarderType {
-    HTTP("HTTP"),
+    /** Datadog Logs intake. */
     DATADOG("DATADOG"),
-    SPLUNK_HEC("SPLUNK_HEC"),
-    SUMO_LOGIC("SUMO_LOGIC"),
-    NEW_RELIC("NEW_RELIC"),
+    /** Elastic / Elasticsearch HTTP ingest. */
+    ELASTIC("ELASTIC"),
+    /** Honeycomb events HTTP ingest. */
     HONEYCOMB("HONEYCOMB"),
-    ELASTIC("ELASTIC");
+    /** Generic HTTP POST destination. */
+    HTTP("HTTP"),
+    /** New Relic logs HTTP ingest. */
+    NEW_RELIC("NEW_RELIC"),
+    /** Splunk HTTP Event Collector. */
+    SPLUNK_HEC("SPLUNK_HEC"),
+    /** Sumo Logic HTTP source. */
+    SUMO_LOGIC("SUMO_LOGIC");
 
     private final String value;
 

@@ -79,37 +79,111 @@ class AuditForwardersTest {
     }
 
     private static String forwarderResource(String name, String description) {
+        return forwarderResource(name, description, true, "2026-05-07T12:00:00Z");
+    }
+
+    private static String forwarderResource(String name, String description,
+                                            boolean enabled, String createdAt) {
         return "{\"id\":\"" + FWD_ID + "\",\"type\":\"forwarder\",\"attributes\":{"
                 + "\"name\":\"" + name + "\",\"description\":\"" + description + "\","
-                + "\"forwarder_type\":\"DATADOG\",\"enabled\":true,"
+                + "\"forwarder_type\":\"DATADOG\",\"enabled\":" + enabled + ","
                 + "\"configuration\":{\"method\":\"POST\",\"url\":\"https://siem.example.com/in\","
                 + "\"headers\":[{\"name\":\"DD-API-KEY\",\"value\":\"<redacted>\"}],"
                 + "\"success_status\":\"2xx\"},"
-                + "\"data\":{},\"created_at\":\"2026-05-07T12:00:00Z\","
-                + "\"updated_at\":\"2026-05-07T12:00:00Z\",\"version\":1}}";
+                + "\"data\":{},\"created_at\":\"" + createdAt + "\","
+                + "\"updated_at\":\"" + createdAt + "\",\"version\":1}}";
     }
 
     // -----------------------------------------------------------------
-    // AuditForwarders CRUD
+    // Active-record save / delete via Forwarder
     // -----------------------------------------------------------------
 
     @Test
-    void create_returnsForwarder() throws Exception {
+    void newForwarderSave_postsAndAppliesResponse() throws Exception {
         handler.set(ex -> respondJson(ex, 201,
                 "{\"data\":" + forwarderResource("Datadog production", "prod sink") + "}"));
         AuditForwarders fwds = new AuditForwarders(forwardersApi);
-        CreateForwarderInput input = new CreateForwarderInput(
+        Forwarder fwd = fwds.newForwarder(
                 "Datadog production", ForwarderType.DATADOG,
                 new HttpConfiguration("https://siem.example.com/in"));
-        input.description = "prod sink";
-        input.configuration.headers.add(new HttpHeader("DD-API-KEY", "real-secret"));
-        input.filter = Map.of("==", java.util.List.of(1, 1));
-        input.transformType = "JSONATA";
-        input.transform = "$";
-        Forwarder fwd = fwds.create(input);
+        fwd.description = "prod sink";
+        fwd.configuration.headers.add(new HttpHeader("DD-API-KEY", "real-secret"));
+        fwd.filter = Map.of("==", java.util.List.of(1, 1));
+        fwd.transform = "$";
+        fwd.save();
+        assertEquals(FWD_ID, fwd.id);
         assertEquals("prod sink", fwd.description);
         assertEquals(1, fwd.configuration.headers.size());
         assertEquals("<redacted>", fwd.configuration.headers.get(0).value);
+        assertNotNull(fwd.createdAt);
+    }
+
+    @Test
+    void existingForwarderSave_putsAndAppliesResponse() throws Exception {
+        handler.set(ex -> respondJson(ex, 200,
+                "{\"data\":" + forwarderResource("Renamed", "renamed sink", false, "2026-05-07T12:00:00Z") + "}"));
+        AuditForwarders fwds = new AuditForwarders(forwardersApi);
+        Forwarder fwd = fwds.get(FWD_ID);  // first GET handler also returns the same body
+        fwd.enabled = false;
+        fwd.name = "Renamed";
+        fwd.save();
+        assertEquals("Renamed", fwd.name);
+        assertFalse(fwd.enabled);
+    }
+
+    @Test
+    void forwarderDelete_callsApi() throws Exception {
+        // First GET returns a saved forwarder; the DELETE follow-up returns 204.
+        java.util.concurrent.atomic.AtomicInteger calls = new java.util.concurrent.atomic.AtomicInteger();
+        handler.set(ex -> {
+            int n = calls.incrementAndGet();
+            if (n == 1) respondJson(ex, 200, "{\"data\":" + forwarderResource("x", "x") + "}");
+            else respondJson(ex, 204, "");
+        });
+        AuditForwarders fwds = new AuditForwarders(forwardersApi);
+        Forwarder fwd = fwds.get(FWD_ID);
+        fwd.delete();
+    }
+
+    @Test
+    void save_withoutClient_throws() {
+        Forwarder fwd = new Forwarder(null, "x", ForwarderType.HTTP, new HttpConfiguration("https://x"));
+        assertThrows(IllegalStateException.class, fwd::save);
+    }
+
+    @Test
+    void delete_withoutClient_throws() {
+        Forwarder fwd = new Forwarder(null, "x", ForwarderType.HTTP, new HttpConfiguration("https://x"));
+        fwd.id = FWD_ID;
+        assertThrows(IllegalStateException.class, fwd::delete);
+    }
+
+    @Test
+    void delete_withoutId_throws() throws Exception {
+        AuditForwarders fwds = new AuditForwarders(forwardersApi);
+        Forwarder fwd = fwds.newForwarder("x", ForwarderType.HTTP, new HttpConfiguration("https://x"));
+        assertThrows(IllegalStateException.class, fwd::delete);
+    }
+
+    @Test
+    void update_withoutId_throws() throws Exception {
+        AuditForwarders fwds = new AuditForwarders(forwardersApi);
+        Forwarder fwd = fwds.newForwarder("x", ForwarderType.HTTP, new HttpConfiguration("https://x"));
+        assertThrows(IllegalStateException.class, () -> fwds.update(fwd));
+    }
+
+    // -----------------------------------------------------------------
+    // AuditForwarders list / get / delete
+    // -----------------------------------------------------------------
+
+    @Test
+    void list_noArg_usesDefaults() throws Exception {
+        handler.set(ex -> respondJson(ex, 200,
+                "{\"data\":[" + forwarderResource("a", "a")
+                        + "],\"meta\":{\"pagination\":{\"page\":1,\"size\":1000}}}"));
+        AuditForwarders fwds = new AuditForwarders(forwardersApi);
+        ListForwardersPage page = fwds.list();
+        assertEquals(1, page.forwarders.size());
     }
 
     @Test
@@ -158,18 +232,7 @@ class AuditForwardersTest {
     }
 
     @Test
-    void update_success() throws Exception {
-        handler.set(ex -> respondJson(ex, 200,
-                "{\"data\":" + forwarderResource("Renamed", "renamed sink") + "}"));
-        AuditForwarders fwds = new AuditForwarders(forwardersApi);
-        CreateForwarderInput in = new CreateForwarderInput("Renamed", ForwarderType.DATADOG,
-                new HttpConfiguration("https://x"));
-        Forwarder fwd = fwds.update(FWD_ID, in);
-        assertEquals("Renamed", fwd.name);
-    }
-
-    @Test
-    void delete_success() throws Exception {
+    void delete_byId_success() throws Exception {
         handler.set(ex -> respondJson(ex, 204, ""));
         new AuditForwarders(forwardersApi).delete(FWD_ID);
     }
@@ -183,23 +246,32 @@ class AuditForwardersTest {
     }
 
     @Test
-    void forwarderTypeFromValueRoundTripsAndRejectsUnknown() {
+    void enumsFromValueRoundTripAndRejectUnknown() {
         for (ForwarderType t : ForwarderType.values()) {
             assertEquals(t, ForwarderType.fromValue(t.getValue()));
         }
         assertThrows(IllegalArgumentException.class,
                 () -> ForwarderType.fromValue("definitely-not-a-real-type"));
+        for (HttpMethod m : HttpMethod.values()) {
+            assertEquals(m, HttpMethod.fromValue(m.getValue()));
+        }
+        assertThrows(IllegalArgumentException.class, () -> HttpMethod.fromValue("nope"));
+        for (TransformType t : TransformType.values()) {
+            assertEquals(t, TransformType.fromValue(t.getValue()));
+        }
+        assertThrows(IllegalArgumentException.class, () -> TransformType.fromValue("nope"));
     }
 
     @Test
     void modelDefaultConstructorsCoverable() {
-        CreateForwarderInput cfi = new CreateForwarderInput();
-        cfi.name = "x";
         ListForwardersInput lfi = new ListForwardersInput();
         HttpConfiguration cfg = new HttpConfiguration();
-        assertEquals("x", cfi.name);
+        HttpConfiguration cfg2 = new HttpConfiguration(HttpMethod.GET, "https://x",
+                java.util.List.of(new HttpHeader("k", "v")));
         assertNull(lfi.forwarderType);
-        assertEquals("POST", cfg.method);
+        assertEquals(HttpMethod.POST, cfg.method);
+        assertEquals(HttpMethod.GET, cfg2.method);
+        assertEquals(1, cfg2.headers.size());
     }
 
     @Test
@@ -213,8 +285,8 @@ class AuditForwardersTest {
                 + "\"created_at\":\"2026-05-07T12:00:00Z\","
                 + "\"updated_at\":\"2026-05-07T12:00:00Z\",\"version\":1}}}"));
         AuditForwarders fwds = new AuditForwarders(forwardersApi);
-        CreateForwarderInput in = new CreateForwarderInput("x", null, new HttpConfiguration("https://x"));
-        Forwarder fwd = fwds.create(in);
+        Forwarder fwd = fwds.newForwarder("x", null, new HttpConfiguration("https://x"));
+        fwd.save();
         assertNull(fwd.forwarderType);
     }
 
@@ -232,6 +304,40 @@ class AuditForwardersTest {
         Forwarder fwd = fwds.get(FWD_ID);
         assertNotNull(fwd.configuration);
         assertFalse(fwd.enabled);
+    }
+
+    @Test
+    void forwarder_transformType_roundTrips() throws Exception {
+        // Server returns a forwarder with transform + transform_type — exercises
+        // the gen-to-wrapper TransformType conversion path.
+        handler.set(ex -> respondJson(ex, 200,
+                "{\"data\":{\"id\":\"" + FWD_ID + "\",\"type\":\"forwarder\","
+                + "\"attributes\":{\"name\":\"x\","
+                + "\"forwarder_type\":\"HTTP\","
+                + "\"enabled\":true,"
+                + "\"transform\":\"$\",\"transform_type\":\"JSONATA\","
+                + "\"configuration\":{\"method\":\"POST\",\"url\":\"https://x\","
+                + "\"success_status\":\"2xx\"},"
+                + "\"created_at\":\"2026-05-07T12:00:00Z\","
+                + "\"updated_at\":\"2026-05-07T12:00:00Z\",\"version\":1}}}"));
+        AuditForwarders fwds = new AuditForwarders(forwardersApi);
+        Forwarder fwd = fwds.get(FWD_ID);
+        assertEquals(TransformType.JSONATA, fwd.transformType);
+        assertEquals("$", fwd.transform);
+    }
+
+    @Test
+    void forwarder_explicitTransformType_passesThrough() throws Exception {
+        // Set transformType explicitly — exercises the branch that uses
+        // the caller-provided value rather than the auto-default.
+        handler.set(ex -> respondJson(ex, 201,
+                "{\"data\":" + forwarderResource("x", "x") + "}"));
+        AuditForwarders fwds = new AuditForwarders(forwardersApi);
+        Forwarder fwd = fwds.newForwarder("x", ForwarderType.HTTP, new HttpConfiguration("https://x"));
+        fwd.transform = "$";
+        fwd.transformType = TransformType.JSONATA;
+        fwd.save();
+        // Round-trip succeeds (server response is forwarderResource which carries no transform fields).
     }
 
     // -----------------------------------------------------------------

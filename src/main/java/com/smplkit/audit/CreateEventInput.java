@@ -10,10 +10,13 @@ import java.util.Map;
  * smplkit-emitted events; the server returns 403 for customer attempts.</p>
  */
 public final class CreateEventInput {
+    /** Action slug — e.g. {@code "user.created"}, {@code "invoice.paid"}. */
     public String action;
+    /** Type of resource the action operated on — e.g. {@code "invoice"}. */
     public String resourceType;
+    /** Customer-facing id of the resource the action operated on. */
     public String resourceId;
-    /** Optional. Defaults to server-side now() if null. */
+    /** Optional; defaults to server-side {@code now()} if {@code null}. */
     public OffsetDateTime occurredAt;
     /**
      * Optional contextual extras. To record a resource snapshot, nest it
@@ -21,11 +24,11 @@ public final class CreateEventInput {
      * {@code data.put("snapshot", ...)}, but the shape is unconstrained.
      */
     public Map<String, Object> data;
-    /** Optional. Server derives a content hash if null. */
+    /** Optional; the server derives a content hash when {@code null}. */
     public String idempotencyKey;
     /**
-     * When true, the audit service records the event normally but does NOT
-     * POST it through any configured SIEM forwarder. A
+     * When {@code true}, the audit service records the event normally but
+     * does NOT POST it through any configured SIEM forwarder. A
      * {@code skipped_do_not_forward} delivery row is recorded for each
      * enabled forwarder so the skip is visible in the delivery log.
      */

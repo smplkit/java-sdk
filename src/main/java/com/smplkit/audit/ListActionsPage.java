@@ -4,12 +4,11 @@ import java.util.List;
 
 /**
  * A single page from {@link AuditActionsClient#list(ListActionsInput)}.
- *
- * <p>{@code actions} is the page's items; {@code pagination} describes
- * the page that served the response.</p>
  */
 public final class ListActionsPage {
+    /** The page's items, in server-returned order. */
     public final List<AuditAction> actions;
+    /** Pagination metadata describing the page that served the response. */
     public final PageInfo pagination;
 
     public ListActionsPage(List<AuditAction> actions, PageInfo pagination) {

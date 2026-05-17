@@ -1,16 +1,28 @@
 package com.smplkit;
 
 /**
- * Log levels for the smplkit logging service.
+ * Log severity levels used by the smplkit logging service.
+ *
+ * <p>Members are declared in alphabetical order. Severity ordering is
+ * not derived from declaration order — see
+ * {@code com.smplkit.logging.adapters.JulAdapter} for the canonical
+ * smplkit ↔ {@code java.util.logging.Level} mapping.</p>
  */
 public enum LogLevel {
-    TRACE("TRACE"),
+    /** {@code DEBUG} severity. */
     DEBUG("DEBUG"),
-    INFO("INFO"),
-    WARN("WARN"),
+    /** {@code ERROR} severity. */
     ERROR("ERROR"),
+    /** {@code FATAL} severity. */
     FATAL("FATAL"),
-    SILENT("SILENT");
+    /** {@code INFO} severity. */
+    INFO("INFO"),
+    /** Disables emission. Used as a per-logger / per-environment ceiling. */
+    SILENT("SILENT"),
+    /** {@code TRACE} severity (lowest). */
+    TRACE("TRACE"),
+    /** {@code WARN} severity. */
+    WARN("WARN");
 
     private final String value;
 

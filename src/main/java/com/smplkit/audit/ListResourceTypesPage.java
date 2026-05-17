@@ -4,12 +4,11 @@ import java.util.List;
 
 /**
  * A single page from {@link AuditResourceTypesClient#list(ListResourceTypesInput)}.
- *
- * <p>{@code resourceTypes} is the page's items; {@code pagination}
- * describes the page that served the response.</p>
  */
 public final class ListResourceTypesPage {
+    /** The page's items, in server-returned order. */
     public final List<AuditResourceType> resourceTypes;
+    /** Pagination metadata describing the page that served the response. */
     public final PageInfo pagination;
 
     public ListResourceTypesPage(List<AuditResourceType> resourceTypes, PageInfo pagination) {

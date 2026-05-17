@@ -11,8 +11,11 @@ import java.time.OffsetDateTime;
  * whichever name reads better in context.</p>
  */
 public final class AuditResourceType {
+    /** The resource-type slug, surfaced as the JSON:API resource id. */
     public final String id;
+    /** Same value as {@link #id}; provided for readability. */
     public final String resourceType;
+    /** Earliest sighting of this resource_type for the account. */
     public final OffsetDateTime createdAt;
 
     public AuditResourceType(String id, String resourceType, OffsetDateTime createdAt) {
