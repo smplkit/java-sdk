@@ -28,7 +28,6 @@ import java.time.OffsetDateTime;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
-import java.util.UUID;
 import org.openapitools.jackson.nullable.JsonNullable;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import org.openapitools.jackson.nullable.JsonNullable;
@@ -46,12 +45,12 @@ import com.smplkit.internal.generated.audit.ApiClient;
   Event.JSON_PROPERTY_RESOURCE_ID,
   Event.JSON_PROPERTY_DESCRIPTION,
   Event.JSON_PROPERTY_OCCURRED_AT,
-  Event.JSON_PROPERTY_DATA,
-  Event.JSON_PROPERTY_DO_NOT_FORWARD,
-  Event.JSON_PROPERTY_CREATED_AT,
   Event.JSON_PROPERTY_ACTOR_TYPE,
   Event.JSON_PROPERTY_ACTOR_ID,
   Event.JSON_PROPERTY_ACTOR_LABEL,
+  Event.JSON_PROPERTY_DATA,
+  Event.JSON_PROPERTY_DO_NOT_FORWARD,
+  Event.JSON_PROPERTY_CREATED_AT,
   Event.JSON_PROPERTY_IDEMPOTENCY_KEY
 })
 @jakarta.annotation.Generated(value = "org.openapitools.codegen.languages.JavaClientCodegen", comments = "Generator version: 7.21.0")
@@ -74,6 +73,15 @@ public class Event {
   public static final String JSON_PROPERTY_OCCURRED_AT = "occurred_at";
   private JsonNullable<OffsetDateTime> occurredAt = JsonNullable.<OffsetDateTime>undefined();
 
+  public static final String JSON_PROPERTY_ACTOR_TYPE = "actor_type";
+  private JsonNullable<String> actorType = JsonNullable.<String>undefined();
+
+  public static final String JSON_PROPERTY_ACTOR_ID = "actor_id";
+  private JsonNullable<String> actorId = JsonNullable.<String>undefined();
+
+  public static final String JSON_PROPERTY_ACTOR_LABEL = "actor_label";
+  private JsonNullable<String> actorLabel = JsonNullable.<String>undefined();
+
   public static final String JSON_PROPERTY_DATA = "data";
   @jakarta.annotation.Nullable
   private Map<String, Object> data = new HashMap<>();
@@ -85,15 +93,6 @@ public class Event {
   public static final String JSON_PROPERTY_CREATED_AT = "created_at";
   private JsonNullable<OffsetDateTime> createdAt = JsonNullable.<OffsetDateTime>undefined();
 
-  public static final String JSON_PROPERTY_ACTOR_TYPE = "actor_type";
-  private JsonNullable<String> actorType = JsonNullable.<String>undefined();
-
-  public static final String JSON_PROPERTY_ACTOR_ID = "actor_id";
-  private JsonNullable<UUID> actorId = JsonNullable.<UUID>undefined();
-
-  public static final String JSON_PROPERTY_ACTOR_LABEL = "actor_label";
-  private JsonNullable<String> actorLabel = JsonNullable.<String>undefined();
-
   public static final String JSON_PROPERTY_IDEMPOTENCY_KEY = "idempotency_key";
   private JsonNullable<String> idempotencyKey = JsonNullable.<String>undefined();
 
@@ -103,16 +102,10 @@ public class Event {
   @JsonCreator
   public Event(
     @JsonProperty(JSON_PROPERTY_CREATED_AT) OffsetDateTime createdAt, 
-    @JsonProperty(JSON_PROPERTY_ACTOR_TYPE) String actorType, 
-    @JsonProperty(JSON_PROPERTY_ACTOR_ID) UUID actorId, 
-    @JsonProperty(JSON_PROPERTY_ACTOR_LABEL) String actorLabel, 
     @JsonProperty(JSON_PROPERTY_IDEMPOTENCY_KEY) String idempotencyKey
   ) {
   this();
     this.createdAt = createdAt == null ? JsonNullable.<OffsetDateTime>undefined() : JsonNullable.of(createdAt);
-    this.actorType = actorType == null ? JsonNullable.<String>undefined() : JsonNullable.of(actorType);
-    this.actorId = actorId == null ? JsonNullable.<UUID>undefined() : JsonNullable.of(actorId);
-    this.actorLabel = actorLabel == null ? JsonNullable.<String>undefined() : JsonNullable.of(actorLabel);
     this.idempotencyKey = idempotencyKey == null ? JsonNullable.<String>undefined() : JsonNullable.of(idempotencyKey);
   }
 
@@ -122,7 +115,7 @@ public class Event {
   }
 
   /**
-   * Slug for what happened, e.g. &#x60;user.created&#x60;. Lowercase, dot-separated.
+   * What happened, e.g. &#x60;user.created&#x60;. Any non-empty string.
    * @return action
    */
   @jakarta.annotation.Nonnull
@@ -146,7 +139,7 @@ public class Event {
   }
 
   /**
-   * Slug for the kind of resource the event is about, e.g. &#x60;user&#x60;. Lowercase, dot-separated.
+   * Kind of resource the event is about, e.g. &#x60;user&#x60;. Any non-empty string.
    * @return resourceType
    */
   @jakarta.annotation.Nonnull
@@ -252,6 +245,102 @@ public class Event {
   }
 
 
+  public Event actorType(@jakarta.annotation.Nullable String actorType) {
+    this.actorType = JsonNullable.<String>of(actorType);
+    return this;
+  }
+
+  /**
+   * Kind of actor that caused the event, e.g. &#x60;USER&#x60;, &#x60;API_KEY&#x60;, &#x60;SYSTEM&#x60;, or any other label you choose. Free-form string; the API does not constrain or interpret it.
+   * @return actorType
+   */
+  @jakarta.annotation.Nullable
+  @JsonIgnore
+  public String getActorType() {
+        return actorType.orElse(null);
+  }
+
+  @JsonProperty(value = JSON_PROPERTY_ACTOR_TYPE, required = false)
+  @JsonInclude(value = JsonInclude.Include.USE_DEFAULTS)
+
+  public JsonNullable<String> getActorType_JsonNullable() {
+    return actorType;
+  }
+  
+  @JsonProperty(JSON_PROPERTY_ACTOR_TYPE)
+  public void setActorType_JsonNullable(JsonNullable<String> actorType) {
+    this.actorType = actorType;
+  }
+
+  public void setActorType(@jakarta.annotation.Nullable String actorType) {
+    this.actorType = JsonNullable.<String>of(actorType);
+  }
+
+
+  public Event actorId(@jakarta.annotation.Nullable String actorId) {
+    this.actorId = JsonNullable.<String>of(actorId);
+    return this;
+  }
+
+  /**
+   * Identifier of the actor that caused the event. Free-form string — any identifier scheme is accepted.
+   * @return actorId
+   */
+  @jakarta.annotation.Nullable
+  @JsonIgnore
+  public String getActorId() {
+        return actorId.orElse(null);
+  }
+
+  @JsonProperty(value = JSON_PROPERTY_ACTOR_ID, required = false)
+  @JsonInclude(value = JsonInclude.Include.USE_DEFAULTS)
+
+  public JsonNullable<String> getActorId_JsonNullable() {
+    return actorId;
+  }
+  
+  @JsonProperty(JSON_PROPERTY_ACTOR_ID)
+  public void setActorId_JsonNullable(JsonNullable<String> actorId) {
+    this.actorId = actorId;
+  }
+
+  public void setActorId(@jakarta.annotation.Nullable String actorId) {
+    this.actorId = JsonNullable.<String>of(actorId);
+  }
+
+
+  public Event actorLabel(@jakarta.annotation.Nullable String actorLabel) {
+    this.actorLabel = JsonNullable.<String>of(actorLabel);
+    return this;
+  }
+
+  /**
+   * Human-readable label for the actor (e.g. an email address or API key name) at the time the event was recorded.
+   * @return actorLabel
+   */
+  @jakarta.annotation.Nullable
+  @JsonIgnore
+  public String getActorLabel() {
+        return actorLabel.orElse(null);
+  }
+
+  @JsonProperty(value = JSON_PROPERTY_ACTOR_LABEL, required = false)
+  @JsonInclude(value = JsonInclude.Include.USE_DEFAULTS)
+
+  public JsonNullable<String> getActorLabel_JsonNullable() {
+    return actorLabel;
+  }
+  
+  @JsonProperty(JSON_PROPERTY_ACTOR_LABEL)
+  public void setActorLabel_JsonNullable(JsonNullable<String> actorLabel) {
+    this.actorLabel = actorLabel;
+  }
+
+  public void setActorLabel(@jakarta.annotation.Nullable String actorLabel) {
+    this.actorLabel = JsonNullable.<String>of(actorLabel);
+  }
+
+
   public Event data(@jakarta.annotation.Nullable Map<String, Object> data) {
     this.data = data;
     return this;
@@ -337,90 +426,6 @@ public class Event {
 
 
   /**
-   * Kind of credential that emitted the event, e.g. &#x60;USER&#x60; or &#x60;API_KEY&#x60;. Resolved server-side from the request credential.
-   * @return actorType
-   */
-  @jakarta.annotation.Nullable
-  @JsonIgnore
-  public String getActorType() {
-    
-    if (actorType == null) {
-      actorType = JsonNullable.<String>undefined();
-    }
-    return actorType.orElse(null);
-  }
-
-  @JsonProperty(value = JSON_PROPERTY_ACTOR_TYPE, required = false)
-  @JsonInclude(value = JsonInclude.Include.USE_DEFAULTS)
-
-  public JsonNullable<String> getActorType_JsonNullable() {
-    return actorType;
-  }
-  
-  @JsonProperty(JSON_PROPERTY_ACTOR_TYPE)
-  private void setActorType_JsonNullable(JsonNullable<String> actorType) {
-    this.actorType = actorType;
-  }
-
-
-
-  /**
-   * Identifier of the actor that emitted the event.
-   * @return actorId
-   */
-  @jakarta.annotation.Nullable
-  @JsonIgnore
-  public UUID getActorId() {
-    
-    if (actorId == null) {
-      actorId = JsonNullable.<UUID>undefined();
-    }
-    return actorId.orElse(null);
-  }
-
-  @JsonProperty(value = JSON_PROPERTY_ACTOR_ID, required = false)
-  @JsonInclude(value = JsonInclude.Include.USE_DEFAULTS)
-
-  public JsonNullable<UUID> getActorId_JsonNullable() {
-    return actorId;
-  }
-  
-  @JsonProperty(JSON_PROPERTY_ACTOR_ID)
-  private void setActorId_JsonNullable(JsonNullable<UUID> actorId) {
-    this.actorId = actorId;
-  }
-
-
-
-  /**
-   * Human-readable label for the actor (e.g. the user&#39;s email address or the API key name) at the time the event was recorded.
-   * @return actorLabel
-   */
-  @jakarta.annotation.Nullable
-  @JsonIgnore
-  public String getActorLabel() {
-    
-    if (actorLabel == null) {
-      actorLabel = JsonNullable.<String>undefined();
-    }
-    return actorLabel.orElse(null);
-  }
-
-  @JsonProperty(value = JSON_PROPERTY_ACTOR_LABEL, required = false)
-  @JsonInclude(value = JsonInclude.Include.USE_DEFAULTS)
-
-  public JsonNullable<String> getActorLabel_JsonNullable() {
-    return actorLabel;
-  }
-  
-  @JsonProperty(JSON_PROPERTY_ACTOR_LABEL)
-  private void setActorLabel_JsonNullable(JsonNullable<String> actorLabel) {
-    this.actorLabel = actorLabel;
-  }
-
-
-
-  /**
    * The idempotency key used to deduplicate the record. Echoes the &#x60;Idempotency-Key&#x60; header if one was supplied, otherwise a key derived from the event&#39;s content.
    * @return idempotencyKey
    */
@@ -465,12 +470,12 @@ public class Event {
         Objects.equals(this.resourceId, event.resourceId) &&
         equalsNullable(this.description, event.description) &&
         equalsNullable(this.occurredAt, event.occurredAt) &&
-        Objects.equals(this.data, event.data) &&
-        Objects.equals(this.doNotForward, event.doNotForward) &&
-        equalsNullable(this.createdAt, event.createdAt) &&
         equalsNullable(this.actorType, event.actorType) &&
         equalsNullable(this.actorId, event.actorId) &&
         equalsNullable(this.actorLabel, event.actorLabel) &&
+        Objects.equals(this.data, event.data) &&
+        Objects.equals(this.doNotForward, event.doNotForward) &&
+        equalsNullable(this.createdAt, event.createdAt) &&
         equalsNullable(this.idempotencyKey, event.idempotencyKey);
   }
 
@@ -480,7 +485,7 @@ public class Event {
 
   @Override
   public int hashCode() {
-    return Objects.hash(action, resourceType, resourceId, hashCodeNullable(description), hashCodeNullable(occurredAt), data, doNotForward, hashCodeNullable(createdAt), hashCodeNullable(actorType), hashCodeNullable(actorId), hashCodeNullable(actorLabel), hashCodeNullable(idempotencyKey));
+    return Objects.hash(action, resourceType, resourceId, hashCodeNullable(description), hashCodeNullable(occurredAt), hashCodeNullable(actorType), hashCodeNullable(actorId), hashCodeNullable(actorLabel), data, doNotForward, hashCodeNullable(createdAt), hashCodeNullable(idempotencyKey));
   }
 
   private static <T> int hashCodeNullable(JsonNullable<T> a) {
@@ -499,12 +504,12 @@ public class Event {
     sb.append("    resourceId: ").append(toIndentedString(resourceId)).append("\n");
     sb.append("    description: ").append(toIndentedString(description)).append("\n");
     sb.append("    occurredAt: ").append(toIndentedString(occurredAt)).append("\n");
-    sb.append("    data: ").append(toIndentedString(data)).append("\n");
-    sb.append("    doNotForward: ").append(toIndentedString(doNotForward)).append("\n");
-    sb.append("    createdAt: ").append(toIndentedString(createdAt)).append("\n");
     sb.append("    actorType: ").append(toIndentedString(actorType)).append("\n");
     sb.append("    actorId: ").append(toIndentedString(actorId)).append("\n");
     sb.append("    actorLabel: ").append(toIndentedString(actorLabel)).append("\n");
+    sb.append("    data: ").append(toIndentedString(data)).append("\n");
+    sb.append("    doNotForward: ").append(toIndentedString(doNotForward)).append("\n");
+    sb.append("    createdAt: ").append(toIndentedString(createdAt)).append("\n");
     sb.append("    idempotencyKey: ").append(toIndentedString(idempotencyKey)).append("\n");
     sb.append("}");
     return sb.toString();
@@ -575,6 +580,21 @@ public class Event {
       joiner.add(String.format(java.util.Locale.ROOT, "%soccurred_at%s=%s", prefix, suffix, ApiClient.urlEncode(ApiClient.valueToString(getOccurredAt()))));
     }
 
+    // add `actor_type` to the URL query string
+    if (getActorType() != null) {
+      joiner.add(String.format(java.util.Locale.ROOT, "%sactor_type%s=%s", prefix, suffix, ApiClient.urlEncode(ApiClient.valueToString(getActorType()))));
+    }
+
+    // add `actor_id` to the URL query string
+    if (getActorId() != null) {
+      joiner.add(String.format(java.util.Locale.ROOT, "%sactor_id%s=%s", prefix, suffix, ApiClient.urlEncode(ApiClient.valueToString(getActorId()))));
+    }
+
+    // add `actor_label` to the URL query string
+    if (getActorLabel() != null) {
+      joiner.add(String.format(java.util.Locale.ROOT, "%sactor_label%s=%s", prefix, suffix, ApiClient.urlEncode(ApiClient.valueToString(getActorLabel()))));
+    }
+
     // add `data` to the URL query string
     if (getData() != null) {
       for (String _key : getData().keySet()) {
@@ -592,21 +612,6 @@ public class Event {
     // add `created_at` to the URL query string
     if (getCreatedAt() != null) {
       joiner.add(String.format(java.util.Locale.ROOT, "%screated_at%s=%s", prefix, suffix, ApiClient.urlEncode(ApiClient.valueToString(getCreatedAt()))));
-    }
-
-    // add `actor_type` to the URL query string
-    if (getActorType() != null) {
-      joiner.add(String.format(java.util.Locale.ROOT, "%sactor_type%s=%s", prefix, suffix, ApiClient.urlEncode(ApiClient.valueToString(getActorType()))));
-    }
-
-    // add `actor_id` to the URL query string
-    if (getActorId() != null) {
-      joiner.add(String.format(java.util.Locale.ROOT, "%sactor_id%s=%s", prefix, suffix, ApiClient.urlEncode(ApiClient.valueToString(getActorId()))));
-    }
-
-    // add `actor_label` to the URL query string
-    if (getActorLabel() != null) {
-      joiner.add(String.format(java.util.Locale.ROOT, "%sactor_label%s=%s", prefix, suffix, ApiClient.urlEncode(ApiClient.valueToString(getActorLabel()))));
     }
 
     // add `idempotency_key` to the URL query string

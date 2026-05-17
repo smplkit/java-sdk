@@ -26,18 +26,21 @@ public final class AuditEvent {
     /** When the audit service first ingested this event. */
     public final OffsetDateTime createdAt;
     /**
-     * Type of the actor that performed the action ({@code "USER"},
-     * {@code "API_KEY"}, {@code "SYSTEM"}, …). Empty string when unknown.
+     * Free-form label for the kind of actor that caused the event
+     * (e.g. {@code "USER"}, {@code "API_KEY"}, {@code "SYSTEM"}, or any
+     * custom value). {@code null} when not supplied — the audit service
+     * never backfills from the request credential.
      */
     public final String actorType;
     /**
-     * UUID of the actor when the actor is a tracked entity (user, api_key).
-     * {@code null} for system actors or anonymous events.
+     * Identifier of the actor. Free-form string — any identifier scheme
+     * is accepted, including non-UUID values. {@code null} when not
+     * supplied.
      */
-    public final UUID actorId;
+    public final String actorId;
     /**
-     * Display label for the actor — typically a name or email. Empty
-     * string when unknown.
+     * Human-readable label for the actor (e.g. an email address or API
+     * key name). {@code null} when not supplied.
      */
     public final String actorLabel;
     /**
@@ -58,7 +61,7 @@ public final class AuditEvent {
 
     public AuditEvent(UUID id, String action, String resourceType, String resourceId,
                       OffsetDateTime occurredAt, OffsetDateTime createdAt,
-                      String actorType, UUID actorId, String actorLabel,
+                      String actorType, String actorId, String actorLabel,
                       Map<String, Object> data,
                       String idempotencyKey, boolean doNotForward) {
         this.id = id;

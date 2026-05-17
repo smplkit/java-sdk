@@ -19,6 +19,17 @@ public final class CreateEventInput {
     /** Optional; defaults to server-side {@code now()} if {@code null}. */
     public OffsetDateTime occurredAt;
     /**
+     * Free-form label for the kind of actor that caused the event (e.g.
+     * {@code "USER"}, {@code "API_KEY"}, {@code "SYSTEM"}, or any custom
+     * value). The audit service never backfills this from the request
+     * credential — set it explicitly when you want the event attributed.
+     */
+    public String actorType;
+    /** Free-form identifier of the actor. Any string scheme is accepted. */
+    public String actorId;
+    /** Human-readable label for the actor (e.g. email or API key name). */
+    public String actorLabel;
+    /**
      * Optional contextual extras. To record a resource snapshot, nest it
      * inside {@code data} — smplkit's internal convention is
      * {@code data.put("snapshot", ...)}, but the shape is unconstrained.

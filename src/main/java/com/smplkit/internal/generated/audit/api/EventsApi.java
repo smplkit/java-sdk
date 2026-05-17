@@ -299,7 +299,7 @@ public class EventsApi {
    * @return EventListResponse
    * @throws ApiException if fails to make API call
    */
-  public EventListResponse listEvents(@jakarta.annotation.Nullable String filterOccurredAt, @jakarta.annotation.Nullable String filterActorType, @jakarta.annotation.Nullable UUID filterActorId, @jakarta.annotation.Nullable String filterAction, @jakarta.annotation.Nullable String filterResourceType, @jakarta.annotation.Nullable String filterResourceId, @jakarta.annotation.Nullable String filterSearch, @jakarta.annotation.Nullable Integer pageSize, @jakarta.annotation.Nullable String pageAfter, @jakarta.annotation.Nullable String sort) throws ApiException {
+  public EventListResponse listEvents(@jakarta.annotation.Nullable String filterOccurredAt, @jakarta.annotation.Nullable String filterActorType, @jakarta.annotation.Nullable String filterActorId, @jakarta.annotation.Nullable String filterAction, @jakarta.annotation.Nullable String filterResourceType, @jakarta.annotation.Nullable String filterResourceId, @jakarta.annotation.Nullable String filterSearch, @jakarta.annotation.Nullable Integer pageSize, @jakarta.annotation.Nullable String pageAfter, @jakarta.annotation.Nullable String sort) throws ApiException {
     return listEvents(filterOccurredAt, filterActorType, filterActorId, filterAction, filterResourceType, filterResourceId, filterSearch, pageSize, pageAfter, sort, null);
   }
 
@@ -320,7 +320,7 @@ public class EventsApi {
    * @return EventListResponse
    * @throws ApiException if fails to make API call
    */
-  public EventListResponse listEvents(@jakarta.annotation.Nullable String filterOccurredAt, @jakarta.annotation.Nullable String filterActorType, @jakarta.annotation.Nullable UUID filterActorId, @jakarta.annotation.Nullable String filterAction, @jakarta.annotation.Nullable String filterResourceType, @jakarta.annotation.Nullable String filterResourceId, @jakarta.annotation.Nullable String filterSearch, @jakarta.annotation.Nullable Integer pageSize, @jakarta.annotation.Nullable String pageAfter, @jakarta.annotation.Nullable String sort, Map<String, String> headers) throws ApiException {
+  public EventListResponse listEvents(@jakarta.annotation.Nullable String filterOccurredAt, @jakarta.annotation.Nullable String filterActorType, @jakarta.annotation.Nullable String filterActorId, @jakarta.annotation.Nullable String filterAction, @jakarta.annotation.Nullable String filterResourceType, @jakarta.annotation.Nullable String filterResourceId, @jakarta.annotation.Nullable String filterSearch, @jakarta.annotation.Nullable Integer pageSize, @jakarta.annotation.Nullable String pageAfter, @jakarta.annotation.Nullable String sort, Map<String, String> headers) throws ApiException {
     ApiResponse<EventListResponse> localVarResponse = listEventsWithHttpInfo(filterOccurredAt, filterActorType, filterActorId, filterAction, filterResourceType, filterResourceId, filterSearch, pageSize, pageAfter, sort, headers);
     return localVarResponse.getData();
   }
@@ -341,7 +341,7 @@ public class EventsApi {
    * @return ApiResponse&lt;EventListResponse&gt;
    * @throws ApiException if fails to make API call
    */
-  public ApiResponse<EventListResponse> listEventsWithHttpInfo(@jakarta.annotation.Nullable String filterOccurredAt, @jakarta.annotation.Nullable String filterActorType, @jakarta.annotation.Nullable UUID filterActorId, @jakarta.annotation.Nullable String filterAction, @jakarta.annotation.Nullable String filterResourceType, @jakarta.annotation.Nullable String filterResourceId, @jakarta.annotation.Nullable String filterSearch, @jakarta.annotation.Nullable Integer pageSize, @jakarta.annotation.Nullable String pageAfter, @jakarta.annotation.Nullable String sort) throws ApiException {
+  public ApiResponse<EventListResponse> listEventsWithHttpInfo(@jakarta.annotation.Nullable String filterOccurredAt, @jakarta.annotation.Nullable String filterActorType, @jakarta.annotation.Nullable String filterActorId, @jakarta.annotation.Nullable String filterAction, @jakarta.annotation.Nullable String filterResourceType, @jakarta.annotation.Nullable String filterResourceId, @jakarta.annotation.Nullable String filterSearch, @jakarta.annotation.Nullable Integer pageSize, @jakarta.annotation.Nullable String pageAfter, @jakarta.annotation.Nullable String sort) throws ApiException {
     return listEventsWithHttpInfo(filterOccurredAt, filterActorType, filterActorId, filterAction, filterResourceType, filterResourceId, filterSearch, pageSize, pageAfter, sort, null);
   }
 
@@ -362,7 +362,7 @@ public class EventsApi {
    * @return ApiResponse&lt;EventListResponse&gt;
    * @throws ApiException if fails to make API call
    */
-  public ApiResponse<EventListResponse> listEventsWithHttpInfo(@jakarta.annotation.Nullable String filterOccurredAt, @jakarta.annotation.Nullable String filterActorType, @jakarta.annotation.Nullable UUID filterActorId, @jakarta.annotation.Nullable String filterAction, @jakarta.annotation.Nullable String filterResourceType, @jakarta.annotation.Nullable String filterResourceId, @jakarta.annotation.Nullable String filterSearch, @jakarta.annotation.Nullable Integer pageSize, @jakarta.annotation.Nullable String pageAfter, @jakarta.annotation.Nullable String sort, Map<String, String> headers) throws ApiException {
+  public ApiResponse<EventListResponse> listEventsWithHttpInfo(@jakarta.annotation.Nullable String filterOccurredAt, @jakarta.annotation.Nullable String filterActorType, @jakarta.annotation.Nullable String filterActorId, @jakarta.annotation.Nullable String filterAction, @jakarta.annotation.Nullable String filterResourceType, @jakarta.annotation.Nullable String filterResourceId, @jakarta.annotation.Nullable String filterSearch, @jakarta.annotation.Nullable Integer pageSize, @jakarta.annotation.Nullable String pageAfter, @jakarta.annotation.Nullable String sort, Map<String, String> headers) throws ApiException {
     HttpRequest.Builder localVarRequestBuilder = listEventsRequestBuilder(filterOccurredAt, filterActorType, filterActorId, filterAction, filterResourceType, filterResourceId, filterSearch, pageSize, pageAfter, sort, headers);
     try {
       HttpResponse<InputStream> localVarResponse = memberVarHttpClient.send(
@@ -410,7 +410,7 @@ public class EventsApi {
     }
   }
 
-  private HttpRequest.Builder listEventsRequestBuilder(@jakarta.annotation.Nullable String filterOccurredAt, @jakarta.annotation.Nullable String filterActorType, @jakarta.annotation.Nullable UUID filterActorId, @jakarta.annotation.Nullable String filterAction, @jakarta.annotation.Nullable String filterResourceType, @jakarta.annotation.Nullable String filterResourceId, @jakarta.annotation.Nullable String filterSearch, @jakarta.annotation.Nullable Integer pageSize, @jakarta.annotation.Nullable String pageAfter, @jakarta.annotation.Nullable String sort, Map<String, String> headers) throws ApiException {
+  private HttpRequest.Builder listEventsRequestBuilder(@jakarta.annotation.Nullable String filterOccurredAt, @jakarta.annotation.Nullable String filterActorType, @jakarta.annotation.Nullable String filterActorId, @jakarta.annotation.Nullable String filterAction, @jakarta.annotation.Nullable String filterResourceType, @jakarta.annotation.Nullable String filterResourceId, @jakarta.annotation.Nullable String filterSearch, @jakarta.annotation.Nullable Integer pageSize, @jakarta.annotation.Nullable String pageAfter, @jakarta.annotation.Nullable String sort, Map<String, String> headers) throws ApiException {
 
     HttpRequest.Builder localVarRequestBuilder = HttpRequest.newBuilder();
 
