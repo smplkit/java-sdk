@@ -79,7 +79,7 @@ public class SearchEventsRequest {
 
   public static final String JSON_PROPERTY_PAGE_SIZE = "page[size]";
   @jakarta.annotation.Nullable
-  private Integer pageSize = 10;
+  private Integer pageSize = 1000;
 
   public static final String JSON_PROPERTY_PAGE_AFTER = "page[after]";
   private JsonNullable<String> pageAfter = JsonNullable.<String>undefined();
@@ -365,7 +365,7 @@ public class SearchEventsRequest {
   }
 
   /**
-   * Maximum events to return. Range 1..1000, default 10. The default is intentionally smaller than the list endpoint&#39;s default of 1000 because the search UI typically renders results one card at a time.
+   * Maximum events to return. Range 1..1000, default 1000 — matches every other list / search endpoint on the platform. Set explicitly to a smaller value when the consumer is rendering results card-by-card.
    * minimum: 1
    * maximum: 1000
    * @return pageSize
