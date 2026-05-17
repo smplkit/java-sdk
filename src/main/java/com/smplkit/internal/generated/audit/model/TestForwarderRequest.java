@@ -141,7 +141,7 @@ public class TestForwarderRequest {
   }
 
   /**
-   * Destination URL.
+   * Destination URL. Must be an absolute &#x60;http://&#x60; or &#x60;https://&#x60; URL with a hostname (e.g. &#x60;https://siem.example.com/in&#x60;).
    * @return url
    */
   @jakarta.annotation.Nonnull
