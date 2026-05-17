@@ -32,10 +32,9 @@ public final class AuditForwarders {
      * {@code description}, {@code enabled}, etc.) and call
      * {@link Forwarder#save()} to persist.
      *
-     * <p>When {@link Forwarder#transform} is set after the {@code newForwarder}
-     * call, also set {@link Forwarder#transformType} (currently only
-     * {@link TransformType#JSONATA}); the SDK auto-fills it on {@code save}
-     * if {@code transform} is non-{@code null} but {@code transformType} is.</p>
+     * <p>If you also want to set a {@code transform} now, prefer the
+     * five-arg overload — {@link Forwarder#save()} rejects a forwarder
+     * with {@code transform} set but {@code transformType} unset.</p>
      *
      * @param name display name for the forwarder
      * @param forwarderType destination type
@@ -44,6 +43,35 @@ public final class AuditForwarders {
     public Forwarder newForwarder(String name, ForwarderType forwarderType,
                                   com.smplkit.audit.HttpConfiguration configuration) {
         return new Forwarder(this, name, forwarderType, configuration);
+    }
+
+    /**
+     * Returns an unsaved {@link Forwarder} bound to this client, with a
+     * transform pre-configured.
+     *
+     * <p>{@code transform} is accepted as {@code Object} so future template
+     * engines can carry structured templates; for the only currently
+     * supported engine ({@link TransformType#JSONATA}), pass a {@code String}
+     * containing the JSONata expression.</p>
+     *
+     * @param name display name for the forwarder
+     * @param forwarderType destination type
+     * @param configuration destination request configuration
+     * @param transformType template engine — required when {@code transform} is non-null
+     * @param transform template applied to each event before delivery; may be {@code null}
+     * @throws IllegalArgumentException if {@code transform} is set but {@code transformType} is null
+     */
+    public Forwarder newForwarder(String name, ForwarderType forwarderType,
+                                  com.smplkit.audit.HttpConfiguration configuration,
+                                  TransformType transformType, Object transform) {
+        if (transform != null && transformType == null) {
+            throw new IllegalArgumentException(
+                    "transformType must be set when transform is provided");
+        }
+        Forwarder fwd = new Forwarder(this, name, forwarderType, configuration);
+        fwd.transformType = transformType;
+        fwd.transform = transform;
+        return fwd;
     }
 
     /** List forwarders for the authenticated account (default filters and page size). */
@@ -108,11 +136,9 @@ public final class AuditForwarders {
         attrs.setEnabled(forwarder.enabled);
         attrs.setConfiguration(toGenConfiguration(forwarder.configuration));
         if (forwarder.filter != null) attrs.setFilter(forwarder.filter);
-        TransformType tt = forwarder.transformType;
-        if (tt == null && forwarder.transform != null) tt = TransformType.JSONATA;
-        if (tt != null) {
+        if (forwarder.transformType != null) {
             attrs.setTransformType(com.smplkit.internal.generated.audit.model.Forwarder.TransformTypeEnum
-                    .fromValue(tt.getValue()));
+                    .fromValue(forwarder.transformType.getValue()));
         }
         if (forwarder.transform != null) attrs.setTransform(forwarder.transform);
         ForwarderResource r = new ForwarderResource();
@@ -149,7 +175,6 @@ public final class AuditForwarders {
         com.smplkit.audit.HttpConfiguration cfg = configurationFromGen(a.getConfiguration());
         UUID id = (r.getId() != null && !r.getId().isEmpty()) ? UUID.fromString(r.getId()) : null;
         com.smplkit.internal.generated.audit.model.Forwarder.TransformTypeEnum tt = a.getTransformType();
-        Object rawTransform = a.getTransform();
         return new Forwarder(
                 this,
                 id,
@@ -159,7 +184,7 @@ public final class AuditForwarders {
                 a.getEnabled() != null ? a.getEnabled() : true,
                 a.getFilter(),
                 tt != null ? TransformType.fromValue(tt.getValue()) : null,
-                rawTransform != null ? rawTransform.toString() : null,
+                a.getTransform(),
                 cfg,
                 a.getCreatedAt(),
                 a.getUpdatedAt(),

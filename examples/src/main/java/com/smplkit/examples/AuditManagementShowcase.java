@@ -18,6 +18,7 @@ import com.smplkit.audit.HttpConfiguration;
 import com.smplkit.audit.HttpHeader;
 import com.smplkit.audit.HttpMethod;
 import com.smplkit.audit.ListForwardersPage;
+import com.smplkit.audit.TransformType;
 import com.smplkit.management.SmplManagementClient;
 
 import java.util.List;
@@ -57,9 +58,10 @@ public final class AuditManagementShowcase {
                     new HttpConfiguration(
                             HttpMethod.POST,
                             "https://httpbin.org/post",
-                            List.of(new HttpHeader("X-Showcase", "ok"))));
+                            List.of(new HttpHeader("X-Showcase", "ok"))),
+                    TransformType.JSONATA,
+                    SIEM_TRANSFORM);
             forwarder.filter = INVOICE_FILTER;
-            forwarder.transform = SIEM_TRANSFORM;
             forwarder.save();
             System.out.println("Created forwarder: " + forwarder.name + " (id=" + forwarder.id + ")");
 

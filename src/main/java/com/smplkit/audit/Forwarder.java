@@ -44,12 +44,16 @@ public final class Forwarder {
      * depends on {@link #transformType}; for {@link TransformType#JSONATA},
      * a JSONata expression string. {@code null} delivers the event JSON
      * as-is.
+     *
+     * <p>Typed as {@code Object} because future engines may carry
+     * structured templates rather than plain strings; the wire model
+     * accepts any JSON-serializable value.</p>
      */
-    public String transform;
+    public Object transform;
     /**
-     * Engine used to evaluate {@link #transform}. Automatically set to
-     * {@link TransformType#JSONATA} when {@link #transform} is set via
-     * {@link AuditForwarders#newForwarder}.
+     * Engine used to evaluate {@link #transform}. Must be set whenever
+     * {@link #transform} is set; {@link #save()} rejects a forwarder with
+     * {@code transform != null && transformType == null}.
      */
     public TransformType transformType;
     /** Destination request configuration. */
@@ -73,7 +77,7 @@ public final class Forwarder {
 
     Forwarder(AuditForwarders client, UUID id, String name, String description,
               ForwarderType forwarderType, boolean enabled, Map<String, Object> filter,
-              TransformType transformType, String transform, HttpConfiguration configuration,
+              TransformType transformType, Object transform, HttpConfiguration configuration,
               OffsetDateTime createdAt, OffsetDateTime updatedAt,
               OffsetDateTime deletedAt, Integer version) {
         this.client = client;
@@ -100,10 +104,17 @@ public final class Forwarder {
      * updated (PUT). After the call, every field is refreshed from the
      * server response (including newly-assigned {@code id},
      * {@code createdAt}, {@code updatedAt}, {@code version}).</p>
+     *
+     * @throws IllegalArgumentException if {@code transform} is set without
+     *     a {@code transformType}
      */
     public void save() throws ApiException {
         if (client == null) {
             throw new IllegalStateException("Forwarder was constructed without a client; cannot save");
+        }
+        if (transform != null && transformType == null) {
+            throw new IllegalArgumentException(
+                    "transformType must be set when transform is provided");
         }
         Forwarder other = (createdAt == null) ? client.create(this) : client.update(this);
         apply(other);

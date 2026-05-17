@@ -105,17 +105,57 @@ class AuditForwardersTest {
         AuditForwarders fwds = new AuditForwarders(forwardersApi);
         Forwarder fwd = fwds.newForwarder(
                 "Datadog production", ForwarderType.DATADOG,
-                new HttpConfiguration("https://siem.example.com/in"));
+                new HttpConfiguration("https://siem.example.com/in"),
+                TransformType.JSONATA, "$");
         fwd.description = "prod sink";
         fwd.configuration.headers.add(new HttpHeader("DD-API-KEY", "real-secret"));
         fwd.filter = Map.of("==", java.util.List.of(1, 1));
-        fwd.transform = "$";
         fwd.save();
         assertEquals(FWD_ID, fwd.id);
         assertEquals("prod sink", fwd.description);
         assertEquals(1, fwd.configuration.headers.size());
         assertEquals("<redacted>", fwd.configuration.headers.get(0).value);
         assertNotNull(fwd.createdAt);
+    }
+
+    @Test
+    void newForwarderWithTransform_nullTransformIsOk() {
+        AuditForwarders fwds = new AuditForwarders(forwardersApi);
+        // Passing both as null is valid (no transform configured).
+        Forwarder fwd = fwds.newForwarder("x", ForwarderType.HTTP,
+                new HttpConfiguration("https://x"), null, null);
+        assertNull(fwd.transformType);
+        assertNull(fwd.transform);
+    }
+
+    @Test
+    void newForwarderWithTransform_throwsWhenTypeMissing() {
+        AuditForwarders fwds = new AuditForwarders(forwardersApi);
+        assertThrows(IllegalArgumentException.class,
+                () -> fwds.newForwarder("x", ForwarderType.HTTP,
+                        new HttpConfiguration("https://x"), null, "$"));
+    }
+
+    @Test
+    void save_throwsWhenTransformSetButTypeMissing() {
+        AuditForwarders fwds = new AuditForwarders(forwardersApi);
+        Forwarder fwd = fwds.newForwarder("x", ForwarderType.HTTP, new HttpConfiguration("https://x"));
+        fwd.transform = "$";
+        assertThrows(IllegalArgumentException.class, fwd::save);
+    }
+
+    @Test
+    void newForwarderWithStructuredTransform_objectPayloadAccepted() throws Exception {
+        // Exercises the transform=Object path: a Map template is forwarded
+        // through the active record without coercion to String.
+        handler.set(ex -> respondJson(ex, 201,
+                "{\"data\":" + forwarderResource("x", "x") + "}"));
+        AuditForwarders fwds = new AuditForwarders(forwardersApi);
+        Forwarder fwd = fwds.newForwarder("x", ForwarderType.HTTP,
+                new HttpConfiguration("https://x"),
+                TransformType.JSONATA,
+                Map.of("template", "$"));
+        fwd.save();
     }
 
     @Test
@@ -328,8 +368,8 @@ class AuditForwardersTest {
 
     @Test
     void forwarder_explicitTransformType_passesThrough() throws Exception {
-        // Set transformType explicitly — exercises the branch that uses
-        // the caller-provided value rather than the auto-default.
+        // Set transformType explicitly via fields — exercises the wrap-request
+        // branch that copies transformType into the wire model.
         handler.set(ex -> respondJson(ex, 201,
                 "{\"data\":" + forwarderResource("x", "x") + "}"));
         AuditForwarders fwds = new AuditForwarders(forwardersApi);

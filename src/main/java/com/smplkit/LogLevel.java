@@ -3,26 +3,28 @@ package com.smplkit;
 /**
  * Log severity levels used by the smplkit logging service.
  *
- * <p>Members are declared in alphabetical order. Severity ordering is
- * not derived from declaration order — see
- * {@code com.smplkit.logging.adapters.JulAdapter} for the canonical
- * smplkit ↔ {@code java.util.logging.Level} mapping.</p>
+ * <p>Members are declared in increasing order of severity per Java
+ * logging convention (SLF4J / Log4j / {@code java.util.logging}):
+ * {@link #TRACE} (finest) → {@link #DEBUG} → {@link #INFO} →
+ * {@link #WARN} → {@link #ERROR} → {@link #FATAL} → {@link #SILENT}
+ * (disables emission). This means {@link #ordinal()} is a usable
+ * severity index.</p>
  */
 public enum LogLevel {
+    /** {@code TRACE} severity (lowest / most verbose). */
+    TRACE("TRACE"),
     /** {@code DEBUG} severity. */
     DEBUG("DEBUG"),
-    /** {@code ERROR} severity. */
-    ERROR("ERROR"),
-    /** {@code FATAL} severity. */
-    FATAL("FATAL"),
     /** {@code INFO} severity. */
     INFO("INFO"),
-    /** Disables emission. Used as a per-logger / per-environment ceiling. */
-    SILENT("SILENT"),
-    /** {@code TRACE} severity (lowest). */
-    TRACE("TRACE"),
     /** {@code WARN} severity. */
-    WARN("WARN");
+    WARN("WARN"),
+    /** {@code ERROR} severity. */
+    ERROR("ERROR"),
+    /** {@code FATAL} severity (highest). */
+    FATAL("FATAL"),
+    /** Disables emission. Used as a per-logger / per-environment ceiling. */
+    SILENT("SILENT");
 
     private final String value;
 
