@@ -53,6 +53,15 @@ public final class AuditEvents {
         if (input.occurredAt != null) {
             attrs.occurredAt(input.occurredAt);
         }
+        if (input.actorType != null) {
+            attrs.actorType(input.actorType);
+        }
+        if (input.actorId != null) {
+            attrs.actorId(input.actorId);
+        }
+        if (input.actorLabel != null) {
+            attrs.actorLabel(input.actorLabel);
+        }
         if (input.data != null) {
             attrs.data(input.data);
         }
@@ -75,14 +84,10 @@ public final class AuditEvents {
 
     /** List events with filters and cursor pagination. */
     public ListEventsPage list(ListEventsInput input) throws ApiException {
-        UUID actorId = null;
-        if (input.actorId != null && !input.actorId.isEmpty()) {
-            actorId = UUID.fromString(input.actorId);
-        }
         EventListResponse resp = api.listEvents(
                 input.occurredAtRange,
                 input.actorType,
-                actorId,
+                input.actorId,
                 input.action,
                 input.resourceType,
                 input.resourceId,

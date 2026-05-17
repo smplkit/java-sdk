@@ -168,6 +168,17 @@ class AuditClientTest {
     }
 
     @Test
+    void create_forwardsCustomerSuppliedActorFields() throws Exception {
+        CreateEventInput input = new CreateEventInput("user.created", "user", "u-1");
+        input.actorType = "EXTERNAL_SERVICE";
+        input.actorId = "not-a-uuid:billing-bot";
+        input.actorLabel = "Billing Bot";
+        client.events().record(input);
+        client.events().flush(2_000);
+        assertTrue(postCount.get() >= 1);
+    }
+
+    @Test
     void create_setsDoNotForward() throws Exception {
         CreateEventInput input = new CreateEventInput("user.created", "user", "u-1");
         input.doNotForward = true;

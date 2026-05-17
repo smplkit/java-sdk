@@ -13,9 +13,9 @@ public final class ListEventsInput {
     public String resourceType;
     /** Filter by resource id (exact match). */
     public String resourceId;
-    /** Filter by actor type — e.g. {@code "USER"}, {@code "API_KEY"}. */
+    /** Filter by actor type. Matches the literal string stored on the event. */
     public String actorType;
-    /** Filter by actor UUID, as a string. */
+    /** Filter by actor id. Matches the literal string stored on the event — any identifier scheme works. */
     public String actorId;
     /** Range filter on {@code occurredAt}, e.g. {@code "[2026-01-01T00:00:00Z,*)"}. */
     public String occurredAtRange;

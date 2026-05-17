@@ -180,7 +180,7 @@ class AuditBufferCoverageTest {
     @Test
     void auditEvent_constructorPopulatesAllFields() {
         var id = UUID.randomUUID();
-        var actorId = UUID.randomUUID();
+        var actorId = "not-a-uuid:billing-bot";
         java.util.Map<String, Object> data = java.util.Map.of(
                 "snapshot", java.util.Map.of("k", "v"),
                 "d", 1);
