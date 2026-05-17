@@ -57,17 +57,17 @@ public final class AuditForwarders {
      * @param name display name for the forwarder
      * @param forwarderType destination type
      * @param configuration destination request configuration
-     * @param transformType template engine — required when {@code transform} is non-null
+     * @param transformType template engine — must be paired with {@code transform}
      * @param transform template applied to each event before delivery; may be {@code null}
-     * @throws IllegalArgumentException if {@code transform} is set but {@code transformType} is null
+     *     (in which case {@code transformType} must also be {@code null})
+     * @throws IllegalArgumentException if exactly one of {@code transform} /
+     *     {@code transformType} is set, or if {@code transformType} is
+     *     {@link TransformType#JSONATA} and {@code transform} is not a {@code String}
      */
     public Forwarder newForwarder(String name, ForwarderType forwarderType,
                                   com.smplkit.audit.HttpConfiguration configuration,
                                   TransformType transformType, Object transform) {
-        if (transform != null && transformType == null) {
-            throw new IllegalArgumentException(
-                    "transformType must be set when transform is provided");
-        }
+        Forwarder.validateTransform(transformType, transform);
         Forwarder fwd = new Forwarder(this, name, forwarderType, configuration);
         fwd.transformType = transformType;
         fwd.transform = transform;

@@ -42,8 +42,8 @@ public final class Forwarder {
     /**
      * Optional template applied to each event before delivery. Shape
      * depends on {@link #transformType}; for {@link TransformType#JSONATA},
-     * a JSONata expression string. {@code null} delivers the event JSON
-     * as-is.
+     * a {@code String} containing the JSONata expression. {@code null}
+     * delivers the event JSON as-is.
      *
      * <p>Typed as {@code Object} because future engines may carry
      * structured templates rather than plain strings; the wire model
@@ -52,8 +52,8 @@ public final class Forwarder {
     public Object transform;
     /**
      * Engine used to evaluate {@link #transform}. Must be set whenever
-     * {@link #transform} is set; {@link #save()} rejects a forwarder with
-     * {@code transform != null && transformType == null}.
+     * {@link #transform} is set, and vice versa — {@link #save()} rejects
+     * a forwarder where exactly one of the two is set.
      */
     public TransformType transformType;
     /** Destination request configuration. */
@@ -105,19 +105,29 @@ public final class Forwarder {
      * server response (including newly-assigned {@code id},
      * {@code createdAt}, {@code updatedAt}, {@code version}).</p>
      *
-     * @throws IllegalArgumentException if {@code transform} is set without
-     *     a {@code transformType}
+     * @throws IllegalArgumentException if {@code transform} and
+     *     {@code transformType} are not both set or both unset, or if
+     *     {@code transformType} is {@link TransformType#JSONATA} and
+     *     {@code transform} is not a {@code String}
      */
     public void save() throws ApiException {
         if (client == null) {
             throw new IllegalStateException("Forwarder was constructed without a client; cannot save");
         }
-        if (transform != null && transformType == null) {
-            throw new IllegalArgumentException(
-                    "transformType must be set when transform is provided");
-        }
+        validateTransform(transformType, transform);
         Forwarder other = (createdAt == null) ? client.create(this) : client.update(this);
         apply(other);
+    }
+
+    static void validateTransform(TransformType transformType, Object transform) {
+        if ((transform == null) != (transformType == null)) {
+            throw new IllegalArgumentException(
+                    "transform and transformType must both be set or both be unset");
+        }
+        if (transformType == TransformType.JSONATA && !(transform instanceof String)) {
+            throw new IllegalArgumentException(
+                    "transform must be a String when transformType is JSONATA");
+        }
     }
 
     /** Soft-deletes this forwarder on the server. */

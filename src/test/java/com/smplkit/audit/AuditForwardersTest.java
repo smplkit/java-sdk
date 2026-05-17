@@ -145,17 +145,39 @@ class AuditForwardersTest {
     }
 
     @Test
-    void newForwarderWithStructuredTransform_objectPayloadAccepted() throws Exception {
-        // Exercises the transform=Object path: a Map template is forwarded
-        // through the active record without coercion to String.
-        handler.set(ex -> respondJson(ex, 201,
-                "{\"data\":" + forwarderResource("x", "x") + "}"));
+    void newForwarderWithTransform_throwsWhenTransformMissing() {
         AuditForwarders fwds = new AuditForwarders(forwardersApi);
-        Forwarder fwd = fwds.newForwarder("x", ForwarderType.HTTP,
-                new HttpConfiguration("https://x"),
-                TransformType.JSONATA,
-                Map.of("template", "$"));
-        fwd.save();
+        // transformType set without transform → reject (both-or-neither).
+        assertThrows(IllegalArgumentException.class,
+                () -> fwds.newForwarder("x", ForwarderType.HTTP,
+                        new HttpConfiguration("https://x"), TransformType.JSONATA, null));
+    }
+
+    @Test
+    void newForwarderWithTransform_throwsWhenJsonataAndNonString() {
+        AuditForwarders fwds = new AuditForwarders(forwardersApi);
+        // JSONATA requires transform to be a String.
+        assertThrows(IllegalArgumentException.class,
+                () -> fwds.newForwarder("x", ForwarderType.HTTP,
+                        new HttpConfiguration("https://x"),
+                        TransformType.JSONATA, Map.of("template", "$")));
+    }
+
+    @Test
+    void save_throwsWhenTransformTypeSetButTransformMissing() throws Exception {
+        AuditForwarders fwds = new AuditForwarders(forwardersApi);
+        Forwarder fwd = fwds.newForwarder("x", ForwarderType.HTTP, new HttpConfiguration("https://x"));
+        fwd.transformType = TransformType.JSONATA;
+        assertThrows(IllegalArgumentException.class, fwd::save);
+    }
+
+    @Test
+    void save_throwsWhenJsonataAndNonStringTransform() throws Exception {
+        AuditForwarders fwds = new AuditForwarders(forwardersApi);
+        Forwarder fwd = fwds.newForwarder("x", ForwarderType.HTTP, new HttpConfiguration("https://x"));
+        fwd.transformType = TransformType.JSONATA;
+        fwd.transform = Map.of("template", "$");
+        assertThrows(IllegalArgumentException.class, fwd::save);
     }
 
     @Test
