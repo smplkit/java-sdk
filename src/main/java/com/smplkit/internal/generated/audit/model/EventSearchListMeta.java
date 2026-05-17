@@ -24,7 +24,7 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonTypeName;
 import com.fasterxml.jackson.annotation.JsonValue;
-import com.smplkit.internal.generated.audit.model.SearchScanMeta;
+import com.smplkit.internal.generated.audit.model.EventSearchScanMeta;
 import java.util.Arrays;
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 
@@ -34,23 +34,23 @@ import com.smplkit.internal.generated.audit.ApiClient;
  * Cursor-pagination + scan meta for the search response.  Mirrors &#x60;EventListMeta&#x60; (cursor pagination — &#x60;page_size&#x60; is the only pagination field) and adds the &#x60;scan&#x60; block above.
  */
 @JsonPropertyOrder({
-  SearchEventsListMeta.JSON_PROPERTY_PAGE_SIZE,
-  SearchEventsListMeta.JSON_PROPERTY_SCAN
+  EventSearchListMeta.JSON_PROPERTY_PAGE_SIZE,
+  EventSearchListMeta.JSON_PROPERTY_SCAN
 })
 @jakarta.annotation.Generated(value = "org.openapitools.codegen.languages.JavaClientCodegen", comments = "Generator version: 7.21.0")
-public class SearchEventsListMeta {
+public class EventSearchListMeta {
   public static final String JSON_PROPERTY_PAGE_SIZE = "page_size";
   @jakarta.annotation.Nonnull
   private Integer pageSize;
 
   public static final String JSON_PROPERTY_SCAN = "scan";
   @jakarta.annotation.Nonnull
-  private SearchScanMeta scan;
+  private EventSearchScanMeta scan;
 
-  public SearchEventsListMeta() { 
+  public EventSearchListMeta() { 
   }
 
-  public SearchEventsListMeta pageSize(@jakarta.annotation.Nonnull Integer pageSize) {
+  public EventSearchListMeta pageSize(@jakarta.annotation.Nonnull Integer pageSize) {
     this.pageSize = pageSize;
     return this;
   }
@@ -74,7 +74,7 @@ public class SearchEventsListMeta {
   }
 
 
-  public SearchEventsListMeta scan(@jakarta.annotation.Nonnull SearchScanMeta scan) {
+  public EventSearchListMeta scan(@jakarta.annotation.Nonnull EventSearchScanMeta scan) {
     this.scan = scan;
     return this;
   }
@@ -86,20 +86,20 @@ public class SearchEventsListMeta {
   @jakarta.annotation.Nonnull
   @JsonProperty(value = JSON_PROPERTY_SCAN, required = true)
   @JsonInclude(value = JsonInclude.Include.ALWAYS)
-  public SearchScanMeta getScan() {
+  public EventSearchScanMeta getScan() {
     return scan;
   }
 
 
   @JsonProperty(value = JSON_PROPERTY_SCAN, required = true)
   @JsonInclude(value = JsonInclude.Include.ALWAYS)
-  public void setScan(@jakarta.annotation.Nonnull SearchScanMeta scan) {
+  public void setScan(@jakarta.annotation.Nonnull EventSearchScanMeta scan) {
     this.scan = scan;
   }
 
 
   /**
-   * Return true if this SearchEventsListMeta object is equal to o.
+   * Return true if this EventSearchListMeta object is equal to o.
    */
   @Override
   public boolean equals(Object o) {
@@ -109,9 +109,9 @@ public class SearchEventsListMeta {
     if (o == null || getClass() != o.getClass()) {
       return false;
     }
-    SearchEventsListMeta searchEventsListMeta = (SearchEventsListMeta) o;
-    return Objects.equals(this.pageSize, searchEventsListMeta.pageSize) &&
-        Objects.equals(this.scan, searchEventsListMeta.scan);
+    EventSearchListMeta eventSearchListMeta = (EventSearchListMeta) o;
+    return Objects.equals(this.pageSize, eventSearchListMeta.pageSize) &&
+        Objects.equals(this.scan, eventSearchListMeta.scan);
   }
 
   @Override
@@ -122,7 +122,7 @@ public class SearchEventsListMeta {
   @Override
   public String toString() {
     StringBuilder sb = new StringBuilder();
-    sb.append("class SearchEventsListMeta {\n");
+    sb.append("class EventSearchListMeta {\n");
     sb.append("    pageSize: ").append(toIndentedString(pageSize)).append("\n");
     sb.append("    scan: ").append(toIndentedString(scan)).append("\n");
     sb.append("}");

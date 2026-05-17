@@ -18,8 +18,8 @@ import com.smplkit.internal.generated.audit.ApiResponse;
 import com.smplkit.internal.generated.audit.Configuration;
 import com.smplkit.internal.generated.audit.Pair;
 
-import com.smplkit.internal.generated.audit.model.SearchEventsRequest;
-import com.smplkit.internal.generated.audit.model.SearchEventsResponse;
+import com.smplkit.internal.generated.audit.model.EventSearchRequest;
+import com.smplkit.internal.generated.audit.model.EventSearchResponse;
 
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -166,48 +166,48 @@ public class SearchApi {
   /**
    * Search Events
    * Search audit events with column filters and an optional JSON Logic expression.  Without a JSON Logic &#x60;filter&#x60;: behaves like &#x60;GET /api/v1/events&#x60; with the same column filters.  With a JSON Logic &#x60;filter&#x60;: the search is silently capped to the last 30 days by &#x60;occurred_at&#x60; (intersected with any explicit &#x60;filter[occurred_at]&#x60; the caller supplied), the column filters narrow the candidate set in SQL, and the JSON Logic expression runs in memory against each candidate row using the same &#x60;json-logic-qubit&#x60; evaluator the forwarder pipeline uses. Up to 50,000 rows are scanned per request; the response&#39;s &#x60;meta.scan&#x60; block reports the scan stats so a selective filter doesn&#39;t look like \&quot;0 matches\&quot; when the truth is \&quot;ceiling reached.\&quot;
-   * @param searchEventsRequest  (required)
-   * @return SearchEventsResponse
+   * @param eventSearchRequest  (required)
+   * @return EventSearchResponse
    * @throws ApiException if fails to make API call
    */
-  public SearchEventsResponse searchEvents(@jakarta.annotation.Nonnull SearchEventsRequest searchEventsRequest) throws ApiException {
-    return searchEvents(searchEventsRequest, null);
+  public EventSearchResponse searchEvents(@jakarta.annotation.Nonnull EventSearchRequest eventSearchRequest) throws ApiException {
+    return searchEvents(eventSearchRequest, null);
   }
 
   /**
    * Search Events
    * Search audit events with column filters and an optional JSON Logic expression.  Without a JSON Logic &#x60;filter&#x60;: behaves like &#x60;GET /api/v1/events&#x60; with the same column filters.  With a JSON Logic &#x60;filter&#x60;: the search is silently capped to the last 30 days by &#x60;occurred_at&#x60; (intersected with any explicit &#x60;filter[occurred_at]&#x60; the caller supplied), the column filters narrow the candidate set in SQL, and the JSON Logic expression runs in memory against each candidate row using the same &#x60;json-logic-qubit&#x60; evaluator the forwarder pipeline uses. Up to 50,000 rows are scanned per request; the response&#39;s &#x60;meta.scan&#x60; block reports the scan stats so a selective filter doesn&#39;t look like \&quot;0 matches\&quot; when the truth is \&quot;ceiling reached.\&quot;
-   * @param searchEventsRequest  (required)
+   * @param eventSearchRequest  (required)
    * @param headers Optional headers to include in the request
-   * @return SearchEventsResponse
+   * @return EventSearchResponse
    * @throws ApiException if fails to make API call
    */
-  public SearchEventsResponse searchEvents(@jakarta.annotation.Nonnull SearchEventsRequest searchEventsRequest, Map<String, String> headers) throws ApiException {
-    ApiResponse<SearchEventsResponse> localVarResponse = searchEventsWithHttpInfo(searchEventsRequest, headers);
+  public EventSearchResponse searchEvents(@jakarta.annotation.Nonnull EventSearchRequest eventSearchRequest, Map<String, String> headers) throws ApiException {
+    ApiResponse<EventSearchResponse> localVarResponse = searchEventsWithHttpInfo(eventSearchRequest, headers);
     return localVarResponse.getData();
   }
 
   /**
    * Search Events
    * Search audit events with column filters and an optional JSON Logic expression.  Without a JSON Logic &#x60;filter&#x60;: behaves like &#x60;GET /api/v1/events&#x60; with the same column filters.  With a JSON Logic &#x60;filter&#x60;: the search is silently capped to the last 30 days by &#x60;occurred_at&#x60; (intersected with any explicit &#x60;filter[occurred_at]&#x60; the caller supplied), the column filters narrow the candidate set in SQL, and the JSON Logic expression runs in memory against each candidate row using the same &#x60;json-logic-qubit&#x60; evaluator the forwarder pipeline uses. Up to 50,000 rows are scanned per request; the response&#39;s &#x60;meta.scan&#x60; block reports the scan stats so a selective filter doesn&#39;t look like \&quot;0 matches\&quot; when the truth is \&quot;ceiling reached.\&quot;
-   * @param searchEventsRequest  (required)
-   * @return ApiResponse&lt;SearchEventsResponse&gt;
+   * @param eventSearchRequest  (required)
+   * @return ApiResponse&lt;EventSearchResponse&gt;
    * @throws ApiException if fails to make API call
    */
-  public ApiResponse<SearchEventsResponse> searchEventsWithHttpInfo(@jakarta.annotation.Nonnull SearchEventsRequest searchEventsRequest) throws ApiException {
-    return searchEventsWithHttpInfo(searchEventsRequest, null);
+  public ApiResponse<EventSearchResponse> searchEventsWithHttpInfo(@jakarta.annotation.Nonnull EventSearchRequest eventSearchRequest) throws ApiException {
+    return searchEventsWithHttpInfo(eventSearchRequest, null);
   }
 
   /**
    * Search Events
    * Search audit events with column filters and an optional JSON Logic expression.  Without a JSON Logic &#x60;filter&#x60;: behaves like &#x60;GET /api/v1/events&#x60; with the same column filters.  With a JSON Logic &#x60;filter&#x60;: the search is silently capped to the last 30 days by &#x60;occurred_at&#x60; (intersected with any explicit &#x60;filter[occurred_at]&#x60; the caller supplied), the column filters narrow the candidate set in SQL, and the JSON Logic expression runs in memory against each candidate row using the same &#x60;json-logic-qubit&#x60; evaluator the forwarder pipeline uses. Up to 50,000 rows are scanned per request; the response&#39;s &#x60;meta.scan&#x60; block reports the scan stats so a selective filter doesn&#39;t look like \&quot;0 matches\&quot; when the truth is \&quot;ceiling reached.\&quot;
-   * @param searchEventsRequest  (required)
+   * @param eventSearchRequest  (required)
    * @param headers Optional headers to include in the request
-   * @return ApiResponse&lt;SearchEventsResponse&gt;
+   * @return ApiResponse&lt;EventSearchResponse&gt;
    * @throws ApiException if fails to make API call
    */
-  public ApiResponse<SearchEventsResponse> searchEventsWithHttpInfo(@jakarta.annotation.Nonnull SearchEventsRequest searchEventsRequest, Map<String, String> headers) throws ApiException {
-    HttpRequest.Builder localVarRequestBuilder = searchEventsRequestBuilder(searchEventsRequest, headers);
+  public ApiResponse<EventSearchResponse> searchEventsWithHttpInfo(@jakarta.annotation.Nonnull EventSearchRequest eventSearchRequest, Map<String, String> headers) throws ApiException {
+    HttpRequest.Builder localVarRequestBuilder = searchEventsRequestBuilder(eventSearchRequest, headers);
     try {
       HttpResponse<InputStream> localVarResponse = memberVarHttpClient.send(
           localVarRequestBuilder.build(),
@@ -222,7 +222,7 @@ public class SearchApi {
         }
         localVarResponseBody = ApiClient.getResponseBody(localVarResponse);
         if (localVarResponseBody == null) {
-          return new ApiResponse<SearchEventsResponse>(
+          return new ApiResponse<EventSearchResponse>(
               localVarResponse.statusCode(),
               localVarResponse.headers().map(),
               null
@@ -232,10 +232,10 @@ public class SearchApi {
         
         
         String responseBody = new String(localVarResponseBody.readAllBytes());
-        SearchEventsResponse responseValue = responseBody.isBlank()? null: memberVarObjectMapper.readValue(responseBody, new TypeReference<SearchEventsResponse>() {});
+        EventSearchResponse responseValue = responseBody.isBlank()? null: memberVarObjectMapper.readValue(responseBody, new TypeReference<EventSearchResponse>() {});
         
 
-        return new ApiResponse<SearchEventsResponse>(
+        return new ApiResponse<EventSearchResponse>(
             localVarResponse.statusCode(),
             localVarResponse.headers().map(),
             responseValue
@@ -254,10 +254,10 @@ public class SearchApi {
     }
   }
 
-  private HttpRequest.Builder searchEventsRequestBuilder(@jakarta.annotation.Nonnull SearchEventsRequest searchEventsRequest, Map<String, String> headers) throws ApiException {
-    // verify the required parameter 'searchEventsRequest' is set
-    if (searchEventsRequest == null) {
-      throw new ApiException(400, "Missing the required parameter 'searchEventsRequest' when calling searchEvents");
+  private HttpRequest.Builder searchEventsRequestBuilder(@jakarta.annotation.Nonnull EventSearchRequest eventSearchRequest, Map<String, String> headers) throws ApiException {
+    // verify the required parameter 'eventSearchRequest' is set
+    if (eventSearchRequest == null) {
+      throw new ApiException(400, "Missing the required parameter 'eventSearchRequest' when calling searchEvents");
     }
 
     HttpRequest.Builder localVarRequestBuilder = HttpRequest.newBuilder();
@@ -270,7 +270,7 @@ public class SearchApi {
     localVarRequestBuilder.header("Accept", "application/json");
 
     try {
-      byte[] localVarPostBody = memberVarObjectMapper.writeValueAsBytes(searchEventsRequest);
+      byte[] localVarPostBody = memberVarObjectMapper.writeValueAsBytes(eventSearchRequest);
       localVarRequestBuilder.method("POST", HttpRequest.BodyPublishers.ofByteArray(localVarPostBody));
     } catch (IOException e) {
       throw new ApiException(e);
