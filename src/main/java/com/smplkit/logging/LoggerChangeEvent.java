@@ -3,22 +3,18 @@ package com.smplkit.logging;
 import com.smplkit.LogLevel;
 
 /**
- * Event fired when a logger's effective level changes.
+ * Event fired when the SDK applies a new effective level to a logger.
  *
- * @param id      the logger id that changed
- * @param level   the new effective log level (may be {@code null} for delete events)
- * @param source  the change source (e.g. {@code "start"}, {@code "refresh"})
- * @param deleted {@code true} if the logger or group was deleted
+ * <p>A listener invocation always corresponds to exactly one
+ * {@code adapter.applyLevel(...)} call: a key-scoped listener fires for the
+ * one logger whose level changed; a global listener fires once per affected
+ * logger (so a single trigger that re-resolves N loggers produces N global
+ * invocations). Logger deletion is not a level change and does not produce
+ * an event.</p>
+ *
+ * @param id      the logger id whose effective level changed
+ * @param level   the newly-applied effective level
+ * @param source  the trigger ({@code "websocket"}, {@code "manual"}, {@code "start"})
  */
-public record LoggerChangeEvent(String id, LogLevel level, String source, boolean deleted) {
-
-    /** Convenience constructor for non-delete events. */
-    public LoggerChangeEvent(String id, LogLevel level, String source) {
-        this(id, level, source, false);
-    }
-
-    /** Returns {@code true} if the logger was deleted. */
-    public boolean isDeleted() {
-        return deleted;
-    }
+public record LoggerChangeEvent(String id, LogLevel level, String source) {
 }

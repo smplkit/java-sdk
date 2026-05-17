@@ -28,12 +28,15 @@ import static org.mockito.ArgumentMatchers.*;
 import static org.mockito.Mockito.*;
 
 /**
- * Tests for LoggingClient WS event behaviors:
- * - logger_changed: scoped fetch, diff-based listener firing
- * - logger_deleted: remove from cache, fire listener with deleted=true, no fetch
- * - group_changed: scoped fetch, diff-based
- * - group_deleted: remove from cache, fire listener with deleted=true, no fetch
- * - loggers_changed: full refetch of loggers+groups, diff-based firing, global listener fires once
+ * Tests for LoggingClient WS event behaviors. Listener semantics:
+ * <ul>
+ *   <li>Every {@code adapter.applyLevel(...)} call fires the matching
+ *       key-scoped listener AND every global listener with the per-key event.
+ *   <li>Logger / group deletion is not a level change — no listener fires
+ *       for the deleted key itself. Dependent loggers whose resolved level
+ *       moves go through the normal apply path.
+ *   <li>An edit that leaves the resolved level unchanged fires no listeners.
+ * </ul>
  */
 class LoggingClientWsEventsTest {
 
@@ -74,7 +77,6 @@ class LoggingClientWsEventsTest {
         assertNotNull(received.get(), "Key-scoped listener should fire when level changes");
         assertEquals("com.acme.service", received.get().id());
         assertEquals("websocket", received.get().source());
-        assertFalse(received.get().isDeleted());
         verify(mockLoggersApi, times(1)).getLogger("com.acme.service");
         verify(mockLoggersApi, times(1)).listLoggers(isNull(), isNull(), isNull(), isNull(), any(), any(), isNull()); // only start
     }
@@ -185,26 +187,33 @@ class LoggingClientWsEventsTest {
     }
 
     // -----------------------------------------------------------------------
-    // E. logger_deleted — remove from cache, fire listener, no fetch
+    // E. logger_deleted — remove from cache, no listener for the deleted key,
+    // no fetch; dependent loggers (dot-descendants) re-resolve via the normal
+    // apply path.
     // -----------------------------------------------------------------------
 
     @Test
-    void loggerDeleted_removesFromCache_firesListenerWithDeletedTrue() throws ApiException {
+    void loggerDeleted_deletedKeyItself_firesNoListener() throws ApiException {
+        // Deletion is not a level change — a listener registered on the
+        // deleted key gets nothing.
         stubManagedLoggerStart("com.acme.service", "INFO");
         client.registerAdapter(noopAdapter("com.acme.service", "INFO"));
         client.install();
 
-        AtomicReference<LoggerChangeEvent> received = new AtomicReference<>();
-        client.onChange("com.acme.service", received::set);
-        received.set(null);
+        AtomicInteger keyedCount = new AtomicInteger();
+        AtomicInteger globalCount = new AtomicInteger();
+        client.onChange("com.acme.service", e -> keyedCount.incrementAndGet());
+        client.onChange(e -> globalCount.incrementAndGet());
+        keyedCount.set(0);
+        globalCount.set(0);
 
         client.simulateLoggerDeleted(Map.of("id", "com.acme.service"));
 
-        assertNotNull(received.get(), "Listener should fire on delete");
-        assertEquals("com.acme.service", received.get().id());
-        assertTrue(received.get().isDeleted());
-        assertNull(received.get().level(), "Level should be null for delete events");
-        // No fetch
+        // The deleted key was tracked and had own level INFO. After cache
+        // removal it resolves to INFO again (system fallback) — same value,
+        // so no apply, no listener invocation.
+        assertEquals(0, keyedCount.get(), "no listener fires for the deleted key itself");
+        assertEquals(0, globalCount.get(), "no global event for deletion");
         verify(mockLoggersApi, never()).getLogger(any());
     }
 
@@ -230,20 +239,6 @@ class LoggingClientWsEventsTest {
         client.simulateLoggerDeleted(Map.of()); // no "id"
 
         assertEquals(0, count.get());
-    }
-
-    @Test
-    void loggerDeleted_listenerException_doesNotStopProcessing() throws ApiException {
-        stubManagedLoggerStart("crashy.logger", "INFO");
-        client.registerAdapter(noopAdapter("crashy.logger", "INFO"));
-        client.install();
-
-        AtomicInteger okCount = new AtomicInteger();
-        client.onChange("crashy.logger", e -> { throw new RuntimeException("boom"); });
-        client.onChange("crashy.logger", e -> okCount.incrementAndGet());
-
-        assertDoesNotThrow(() -> client.simulateLoggerDeleted(Map.of("id", "crashy.logger")));
-        assertEquals(1, okCount.get(), "Second listener still fires after first throws");
     }
 
     @Test
@@ -279,9 +274,11 @@ class LoggingClientWsEventsTest {
 
         client.simulateLoggerDeleted(Map.of("id", "com.acme"));
 
-        // Ancestor key gets the synthetic deleted=true event
-        assertNotNull(ancestorEvent.get());
-        assertTrue(ancestorEvent.get().isDeleted());
+        // Deletion is not a level change. The deleted key fires nothing,
+        // and the SDK stops pushing levels to its adapter slot.
+        assertNull(ancestorEvent.get(),
+                "deleted logger's own listener does not fire");
+        verify(adapter, never()).applyLevel("com.acme", "INFO");
         // Descendant re-resolves to INFO fallback; adapter and listener notified
         verify(adapter, times(1)).applyLevel("com.acme.payments", "INFO");
         assertNotNull(childEvent.get(), "dot-descendant listener must fire on ancestor deletion");
@@ -407,9 +404,9 @@ class LoggingClientWsEventsTest {
         verify(adapter, times(1)).applyLevel(key, "WARN");
 
         AtomicReference<LoggerChangeEvent> dependentEvent = new AtomicReference<>();
-        AtomicReference<LoggerChangeEvent> deletedEvent = new AtomicReference<>();
+        AtomicInteger groupKeyListenerCount = new AtomicInteger();
         client.onChange(key, dependentEvent::set);
-        client.onChange("g1", deletedEvent::set);
+        client.onChange("g1", e -> groupKeyListenerCount.incrementAndGet());
 
         // group_deleted removes g1; dependent logger now resolves to INFO fallback.
         client.simulateGroupDeleted(Map.of("id", "g1"));
@@ -419,19 +416,20 @@ class LoggingClientWsEventsTest {
         // Key-scoped listener for the dependent logger fired with new level
         assertNotNull(dependentEvent.get(), "dependent logger should re-fire on group_deleted");
         assertEquals(LogLevel.INFO, dependentEvent.get().level());
-        // Group key listener fires with deleted=true
-        assertNotNull(deletedEvent.get(), "group key listener should fire with deleted=true");
-        assertEquals("g1", deletedEvent.get().id());
-        assertTrue(deletedEvent.get().isDeleted());
+        // Deletion is not a level change — the deleted group's listener fires nothing.
+        assertEquals(0, groupKeyListenerCount.get(),
+                "deleted group's listener does not fire — deletion is not a level change");
     }
 
     // -----------------------------------------------------------------------
-    // E. group_deleted — remove from cache, fire listener, no fetch
+    // E. group_deleted — remove from cache, no listener for the deleted key,
+    // no fetch; dependent loggers re-resolve via the normal apply path.
     // -----------------------------------------------------------------------
 
     @Test
-    void groupDeleted_firesListenerWithDeletedTrue() throws ApiException {
-        // Install with the group in the cache so deletion is observable.
+    void groupDeleted_deletedKeyItself_firesNoListener() throws ApiException {
+        // A listener registered on the deleted group id receives nothing —
+        // deletion is not a level change.
         LoggerListResponse emptyLoggers = new LoggerListResponse();
         emptyLoggers.setData(new ArrayList<>());
         when(mockLoggersApi.listLoggers(isNull(), isNull(), isNull(), isNull(), any(), any(), isNull()))
@@ -441,14 +439,15 @@ class LoggingClientWsEventsTest {
         client.registerAdapter(noopAdapter(null, null));
         client.install();
 
-        AtomicReference<LoggerChangeEvent> received = new AtomicReference<>();
-        client.onChange("my-group", received::set);
+        AtomicInteger groupListenerCount = new AtomicInteger();
+        AtomicInteger globalCount = new AtomicInteger();
+        client.onChange("my-group", e -> groupListenerCount.incrementAndGet());
+        client.onChange(e -> globalCount.incrementAndGet());
 
         client.simulateGroupDeleted(Map.of("id", "my-group"));
 
-        assertNotNull(received.get());
-        assertEquals("my-group", received.get().id());
-        assertTrue(received.get().isDeleted());
+        assertEquals(0, groupListenerCount.get(), "deleted group fires no key-scoped listener");
+        assertEquals(0, globalCount.get(), "deleted group fires no global event");
         verify(mockLogGroupsApi, never()).getLogGroup(any());
     }
 
@@ -468,20 +467,26 @@ class LoggingClientWsEventsTest {
 
     @Test
     void groupDeleted_listenerException_doesNotStopProcessing() throws ApiException {
-        LoggerListResponse emptyLoggers = new LoggerListResponse();
-        emptyLoggers.setData(new ArrayList<>());
+        // Dependent logger inherits group "g" at WARN; deleting "g" makes
+        // the dependent re-resolve to INFO and fires its listeners. One of
+        // those listeners throws — the other must still fire.
+        String key = "app.db";
+        LoggerResource lr = buildLoggerResource(key, null, true);
+        lr.getAttributes().setGroup("g");
+        LoggerListResponse loggers = new LoggerListResponse();
+        loggers.setData(new ArrayList<>(List.of(lr)));
         when(mockLoggersApi.listLoggers(isNull(), isNull(), isNull(), isNull(), any(), any(), isNull()))
-                .thenReturn(emptyLoggers);
+                .thenReturn(loggers);
         when(mockLogGroupsApi.listLogGroups(isNull(), any(), any(), isNull()))
-                .thenReturn(buildGroupListResponse("crashy-group", "WARN"));
-        client.registerAdapter(noopAdapter(null, null));
+                .thenReturn(buildGroupListResponse("g", "WARN"));
+        client.registerAdapter(noopAdapter(key, "INFO"));
         client.install();
 
         AtomicInteger okCount = new AtomicInteger();
-        client.onChange("crashy-group", e -> { throw new RuntimeException("boom"); });
-        client.onChange("crashy-group", e -> okCount.incrementAndGet());
+        client.onChange(key, e -> { throw new RuntimeException("boom"); });
+        client.onChange(key, e -> okCount.incrementAndGet());
 
-        assertDoesNotThrow(() -> client.simulateGroupDeleted(Map.of("id", "crashy-group")));
+        assertDoesNotThrow(() -> client.simulateGroupDeleted(Map.of("id", "g")));
         assertEquals(1, okCount.get(), "Second listener still fires after first throws");
     }
 
@@ -734,22 +739,6 @@ class LoggingClientWsEventsTest {
     }
 
     // -----------------------------------------------------------------------
-    // LoggerChangeEvent.isDeleted()
-    // -----------------------------------------------------------------------
-
-    @Test
-    void loggerChangeEvent_isDeletedFalseByDefault() {
-        LoggerChangeEvent event = new LoggerChangeEvent("logger", LogLevel.INFO, "websocket");
-        assertFalse(event.isDeleted());
-    }
-
-    @Test
-    void loggerChangeEvent_isDeletedTrueWhenSet() {
-        LoggerChangeEvent event = new LoggerChangeEvent("logger", null, "websocket", true);
-        assertTrue(event.isDeleted());
-    }
-
-    // -----------------------------------------------------------------------
     // Helpers
     // -----------------------------------------------------------------------
 
@@ -940,5 +929,140 @@ class LoggingClientWsEventsTest {
         LogGroupResponse resp = new LogGroupResponse();
         resp.setData(data);
         return resp;
+    }
+
+    // -----------------------------------------------------------------------
+    // Per-logger global fanout — the four diagnostic scenarios from the
+    // change-listener semantics prompt. Each scenario asserts that ONE
+    // global listener gets ONE invocation per affected logger (never one
+    // summary event), and that deletion fires nothing for the deleted key.
+    // -----------------------------------------------------------------------
+
+    @Test
+    void diag1_logger_changed_dotAncestor_globalFiresOncePerDescendant() throws ApiException {
+        // Managed `com.acme` at WARN; 5 managed descendants inherit via dot-ancestry.
+        List<LoggerResource> data = new ArrayList<>();
+        data.add(buildLoggerResource("com.acme", "WARN", true));
+        String[] descendants = {
+                "com.acme.db", "com.acme.queue", "com.acme.api",
+                "com.acme.cache", "com.acme.auth"};
+        for (String d : descendants) data.add(buildLoggerResource(d, null, true));
+        when(mockLoggersApi.listLoggers(isNull(), isNull(), isNull(), isNull(), any(), any(), isNull()))
+                .thenReturn(new LoggerListResponse().data(data));
+        when(mockLogGroupsApi.listLogGroups(isNull(), any(), any(), isNull()))
+                .thenReturn(new LogGroupListResponse().data(new ArrayList<>()));
+        LoggingAdapter adapter = mock(LoggingAdapter.class);
+        when(adapter.name()).thenReturn("noop");
+        List<com.smplkit.logging.adapters.DiscoveredLogger> discovered = new ArrayList<>();
+        discovered.add(new com.smplkit.logging.adapters.DiscoveredLogger("com.acme", "INFO"));
+        for (String d : descendants) {
+            discovered.add(new com.smplkit.logging.adapters.DiscoveredLogger(d, "INFO"));
+        }
+        when(adapter.discover()).thenReturn(discovered);
+        client.registerAdapter(adapter);
+        client.install();
+
+        AtomicInteger globalCount = new AtomicInteger();
+        client.onChange(e -> globalCount.incrementAndGet());
+
+        when(mockLoggersApi.getLogger("com.acme"))
+                .thenReturn(buildLoggerResponse("com.acme", "ERROR", true));
+        client.simulateLoggerChanged(Map.of("id", "com.acme"));
+
+        // 6 fires: the ancestor + 5 descendants
+        assertEquals(6, globalCount.get(),
+                "Global listener fires once per affected logger, never as a summary event");
+    }
+
+    @Test
+    void diag2_group_changed_globalFiresOncePerDependent() throws ApiException {
+        // Managed `app.db`, `app.queue`, `app.api` all inheriting from group `app`.
+        List<LoggerResource> data = new ArrayList<>();
+        for (String k : List.of("app.db", "app.queue", "app.api")) {
+            LoggerResource r = buildLoggerResource(k, null, true);
+            r.getAttributes().setGroup("app");
+            data.add(r);
+        }
+        when(mockLoggersApi.listLoggers(isNull(), isNull(), isNull(), isNull(), any(), any(), isNull()))
+                .thenReturn(new LoggerListResponse().data(data));
+        when(mockLogGroupsApi.listLogGroups(isNull(), any(), any(), isNull()))
+                .thenReturn(buildGroupListResponse("app", "WARN"));
+        LoggingAdapter adapter = mock(LoggingAdapter.class);
+        when(adapter.name()).thenReturn("noop");
+        List<com.smplkit.logging.adapters.DiscoveredLogger> discovered = new ArrayList<>();
+        for (String k : List.of("app.db", "app.queue", "app.api")) {
+            discovered.add(new com.smplkit.logging.adapters.DiscoveredLogger(k, "INFO"));
+        }
+        when(adapter.discover()).thenReturn(discovered);
+        client.registerAdapter(adapter);
+        client.install();
+
+        AtomicInteger globalCount = new AtomicInteger();
+        client.onChange(e -> globalCount.incrementAndGet());
+
+        when(mockLogGroupsApi.getLogGroup("app"))
+                .thenReturn(buildGroupResponse("app", "ERROR"));
+        client.simulateGroupChanged(Map.of("id", "app"));
+
+        assertEquals(3, globalCount.get(),
+                "Global listener fires once per dependent logger affected by the group change");
+    }
+
+    @Test
+    void diag3_group_deleted_globalFiresOncePerDependent_noEventForGroupKey() throws ApiException {
+        // Same setup as diag2: 3 dependents of group `app` at WARN.
+        List<LoggerResource> data = new ArrayList<>();
+        for (String k : List.of("app.db", "app.queue", "app.api")) {
+            LoggerResource r = buildLoggerResource(k, null, true);
+            r.getAttributes().setGroup("app");
+            data.add(r);
+        }
+        when(mockLoggersApi.listLoggers(isNull(), isNull(), isNull(), isNull(), any(), any(), isNull()))
+                .thenReturn(new LoggerListResponse().data(data));
+        when(mockLogGroupsApi.listLogGroups(isNull(), any(), any(), isNull()))
+                .thenReturn(buildGroupListResponse("app", "WARN"));
+        LoggingAdapter adapter = mock(LoggingAdapter.class);
+        when(adapter.name()).thenReturn("noop");
+        List<com.smplkit.logging.adapters.DiscoveredLogger> discovered = new ArrayList<>();
+        for (String k : List.of("app.db", "app.queue", "app.api")) {
+            discovered.add(new com.smplkit.logging.adapters.DiscoveredLogger(k, "INFO"));
+        }
+        when(adapter.discover()).thenReturn(discovered);
+        client.registerAdapter(adapter);
+        client.install();
+
+        AtomicInteger globalCount = new AtomicInteger();
+        AtomicInteger appGroupCount = new AtomicInteger();
+        client.onChange(e -> globalCount.incrementAndGet());
+        client.onChange("app", e -> appGroupCount.incrementAndGet());
+
+        client.simulateGroupDeleted(Map.of("id", "app"));
+
+        assertEquals(3, globalCount.get(),
+                "Global fires once per dependent whose level moved to fallback");
+        assertEquals(0, appGroupCount.get(),
+                "No event fires for the deleted group key");
+    }
+
+    @Test
+    void diag4_noOp_edit_firesNoListeners() throws ApiException {
+        // logger_changed where the new payload leaves the resolved level unchanged.
+        stubManagedLoggerStart("noop.logger", "INFO");
+        client.registerAdapter(noopAdapter("noop.logger", "INFO"));
+        client.install();
+
+        AtomicInteger keyedCount = new AtomicInteger();
+        AtomicInteger globalCount = new AtomicInteger();
+        client.onChange("noop.logger", e -> keyedCount.incrementAndGet());
+        client.onChange(e -> globalCount.incrementAndGet());
+        keyedCount.set(0);
+        globalCount.set(0);
+
+        when(mockLoggersApi.getLogger("noop.logger"))
+                .thenReturn(buildLoggerResponse("noop.logger", "INFO", true));
+        client.simulateLoggerChanged(Map.of("id", "noop.logger"));
+
+        assertEquals(0, keyedCount.get(), "Key-scoped listener does not fire on no-op");
+        assertEquals(0, globalCount.get(), "Global listener does not fire on no-op");
     }
 }

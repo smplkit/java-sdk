@@ -478,30 +478,15 @@ public final class LoggingClient {
         }
         Debug.log("websocket", "logger_deleted event received, key=" + loggerKey);
 
-        // Snapshot pre-levels for all tracked loggers so dot-descendants get
-        // re-resolved when the deleted key was a dot-ancestor.
+        // Deletion is not a level change. Snapshot resolved levels, evict
+        // the logger from cache, then re-apply for every tracked logger
+        // whose effective level moved — EXCEPT the deleted key itself.
+        // We deliberately stop pushing levels to a key the platform no
+        // longer manages: per the listener contract, deletion fires no
+        // listener for the deleted logger.
         Map<String, String> preLevels = snapshotLevels();
-
-        boolean existed = loggersCache.remove(loggerKey) != null;
-
-        // Diff-based re-apply for dependent loggers whose resolved level changed.
-        diffAndFireLevels(preLevels, "websocket");
-
-        // Synthetic deleted=true event for the deleted key itself (subscribers
-        // may have registered on this exact key).
-        if (existed) {
-            LoggerChangeEvent event = new LoggerChangeEvent(loggerKey, null, "websocket", true);
-            List<Consumer<LoggerChangeEvent>> scoped = keyListeners.get(loggerKey);
-            if (scoped != null) {
-                for (Consumer<LoggerChangeEvent> listener : scoped) {
-                    try {
-                        listener.accept(event);
-                    } catch (Exception e) {
-                        LOG.log(Level.WARNING, "Key-scoped change listener threw exception", e);
-                    }
-                }
-            }
-        }
+        loggersCache.remove(loggerKey);
+        diffAndFireLevels(preLevels, "websocket", java.util.Set.of(loggerKey));
     }
 
     private void handleGroupChanged(Map<String, Object> data) {
@@ -547,32 +532,15 @@ public final class LoggingClient {
         }
         Debug.log("websocket", "group_deleted event received, key=" + groupKey);
 
-        // Snapshot pre-levels so dependent loggers can be re-applied if their
-        // resolved level changed (e.g., a logger whose chain ran through this
-        // group now falls through to its dot-ancestor or system default).
+        // Deletion is not a level change. Snapshot resolved levels, evict the
+        // group from cache, then re-apply for every tracked logger whose
+        // effective level moved (typically loggers whose resolution chain ran
+        // through this group and now fall through to a parent group, a
+        // dot-ancestor, or INFO fallback). No synthetic event fires for the
+        // deleted group key itself.
         Map<String, String> preLevels = snapshotLevels();
-
-        boolean existed = groupsCache.remove(groupKey) != null;
-
-        // Diff-based re-apply: pushes new levels to adapters and fires
-        // key-scoped listeners for dependent loggers whose resolved level changed.
+        groupsCache.remove(groupKey);
         diffAndFireLevels(preLevels, "websocket");
-
-        // Fire the synthetic deleted=true listener for the group key itself
-        // (subscribers may have registered on the group id directly).
-        if (existed) {
-            LoggerChangeEvent event = new LoggerChangeEvent(groupKey, null, "websocket", true);
-            List<Consumer<LoggerChangeEvent>> scoped = keyListeners.get(groupKey);
-            if (scoped != null) {
-                for (Consumer<LoggerChangeEvent> listener : scoped) {
-                    try {
-                        listener.accept(event);
-                    } catch (Exception e) {
-                        LOG.log(Level.WARNING, "Key-scoped change listener threw exception", e);
-                    }
-                }
-            }
-        }
     }
 
     private void handleLoggersChanged(Map<String, Object> data) {
@@ -604,37 +572,43 @@ public final class LoggingClient {
         return snapshot;
     }
 
-    /** Diffs pre vs post levels and fires listeners for changed keys; fires global listener once. */
+    /**
+     * Diffs pre vs post resolved levels and applies the new level (plus fires
+     * listeners) for each tracked logger whose level moved. Each apply goes
+     * through {@link #applyLevelForKey}, which fires the key-scoped listener
+     * AND every global listener exactly once for that key — so a single
+     * trigger that re-resolves N loggers produces N global invocations, not
+     * one summary event.
+     */
     private void diffAndFireLevels(Map<String, String> preLevels, String source) {
-        boolean anyChanged = false;
-        for (Map.Entry<String, String> mapping : nameMap.entrySet()) {
-            String originalName = mapping.getKey();
-            String normalizedKey = mapping.getValue();
+        diffAndFireLevels(preLevels, source, java.util.Set.of());
+    }
+
+    /**
+     * Variant that skips a set of keys — used by deletion handlers so the
+     * just-deleted key fires no listener even if its post-deletion fallback
+     * resolution differs from its pre-deletion own level.
+     */
+    private void diffAndFireLevels(Map<String, String> preLevels, String source,
+                                   java.util.Set<String> skipKeys) {
+        for (String normalizedKey : nameMap.values()) {
+            if (skipKeys.contains(normalizedKey)) continue;
             String preLevel = preLevels.get(normalizedKey);
             String postLevel = Resolution.resolveLevel(normalizedKey, environment, loggersCache, groupsCache);
-
             if (!java.util.Objects.equals(preLevel, postLevel)) {
-                anyChanged = true;
                 applyLevelForKey(normalizedKey, postLevel, source);
-            }
-        }
-        // Global listener fires once if any changed
-        if (anyChanged) {
-            for (Consumer<LoggerChangeEvent> listener : globalListeners) {
-                try {
-                    listener.accept(new LoggerChangeEvent("", null, source));
-                } catch (Exception e) {
-                    LOG.log(Level.WARNING, "Global change listener threw exception", e);
-                }
             }
         }
     }
 
-    /** Applies a resolved level to adapters and fires key-scoped listeners. */
+    /**
+     * Applies a resolved level to every adapter for the given key and fires
+     * the resulting {@link LoggerChangeEvent} to the key-scoped listeners for
+     * that key AND every global listener.
+     */
     private void applyLevelForKey(String normalizedKey, String level, String source) {
         LogLevel logLevel = tryParseLogLevel(level, normalizedKey);
         if (logLevel == null) return;
-        // Apply through all adapters for loggers with this key
         for (Map.Entry<String, String> mapping : nameMap.entrySet()) {
             if (!normalizedKey.equals(mapping.getValue())) continue;
             String originalName = mapping.getKey();
@@ -651,17 +625,7 @@ public final class LoggingClient {
                         java.util.Map.of("logger", normalizedKey));
             }
             LoggerChangeEvent event = new LoggerChangeEvent(normalizedKey, logLevel, source);
-            // Only key-scoped listeners
-            List<Consumer<LoggerChangeEvent>> scoped = keyListeners.get(normalizedKey);
-            if (scoped != null) {
-                for (Consumer<LoggerChangeEvent> listener : scoped) {
-                    try {
-                        listener.accept(event);
-                    } catch (Exception e) {
-                        LOG.log(Level.WARNING, "Key-scoped change listener threw exception", e);
-                    }
-                }
-            }
+            fireChangeListeners(normalizedKey, event);
         }
     }
 
