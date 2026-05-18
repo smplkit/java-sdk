@@ -481,44 +481,48 @@ public class AccountApi {
   /**
    * Update Account Settings
    * Replace the current account&#39;s settings with the provided JSON object. Requires admin role.
+   * @param requestBody  (required)
    * @return Map&lt;String, Object&gt;
    * @throws ApiException if fails to make API call
    */
-  public Map<String, Object> putAccountSettings() throws ApiException {
-    return putAccountSettings(null);
+  public Map<String, Object> putAccountSettings(@jakarta.annotation.Nonnull Map<String, Object> requestBody) throws ApiException {
+    return putAccountSettings(requestBody, null);
   }
 
   /**
    * Update Account Settings
    * Replace the current account&#39;s settings with the provided JSON object. Requires admin role.
+   * @param requestBody  (required)
    * @param headers Optional headers to include in the request
    * @return Map&lt;String, Object&gt;
    * @throws ApiException if fails to make API call
    */
-  public Map<String, Object> putAccountSettings(Map<String, String> headers) throws ApiException {
-    ApiResponse<Map<String, Object>> localVarResponse = putAccountSettingsWithHttpInfo(headers);
+  public Map<String, Object> putAccountSettings(@jakarta.annotation.Nonnull Map<String, Object> requestBody, Map<String, String> headers) throws ApiException {
+    ApiResponse<Map<String, Object>> localVarResponse = putAccountSettingsWithHttpInfo(requestBody, headers);
     return localVarResponse.getData();
   }
 
   /**
    * Update Account Settings
    * Replace the current account&#39;s settings with the provided JSON object. Requires admin role.
+   * @param requestBody  (required)
    * @return ApiResponse&lt;Map&lt;String, Object&gt;&gt;
    * @throws ApiException if fails to make API call
    */
-  public ApiResponse<Map<String, Object>> putAccountSettingsWithHttpInfo() throws ApiException {
-    return putAccountSettingsWithHttpInfo(null);
+  public ApiResponse<Map<String, Object>> putAccountSettingsWithHttpInfo(@jakarta.annotation.Nonnull Map<String, Object> requestBody) throws ApiException {
+    return putAccountSettingsWithHttpInfo(requestBody, null);
   }
 
   /**
    * Update Account Settings
    * Replace the current account&#39;s settings with the provided JSON object. Requires admin role.
+   * @param requestBody  (required)
    * @param headers Optional headers to include in the request
    * @return ApiResponse&lt;Map&lt;String, Object&gt;&gt;
    * @throws ApiException if fails to make API call
    */
-  public ApiResponse<Map<String, Object>> putAccountSettingsWithHttpInfo(Map<String, String> headers) throws ApiException {
-    HttpRequest.Builder localVarRequestBuilder = putAccountSettingsRequestBuilder(headers);
+  public ApiResponse<Map<String, Object>> putAccountSettingsWithHttpInfo(@jakarta.annotation.Nonnull Map<String, Object> requestBody, Map<String, String> headers) throws ApiException {
+    HttpRequest.Builder localVarRequestBuilder = putAccountSettingsRequestBuilder(requestBody, headers);
     try {
       HttpResponse<InputStream> localVarResponse = memberVarHttpClient.send(
           localVarRequestBuilder.build(),
@@ -565,7 +569,11 @@ public class AccountApi {
     }
   }
 
-  private HttpRequest.Builder putAccountSettingsRequestBuilder(Map<String, String> headers) throws ApiException {
+  private HttpRequest.Builder putAccountSettingsRequestBuilder(@jakarta.annotation.Nonnull Map<String, Object> requestBody, Map<String, String> headers) throws ApiException {
+    // verify the required parameter 'requestBody' is set
+    if (requestBody == null) {
+      throw new ApiException(400, "Missing the required parameter 'requestBody' when calling putAccountSettings");
+    }
 
     HttpRequest.Builder localVarRequestBuilder = HttpRequest.newBuilder();
 
@@ -573,9 +581,15 @@ public class AccountApi {
 
     localVarRequestBuilder.uri(URI.create(memberVarBaseUri + localVarPath));
 
+    localVarRequestBuilder.header("Content-Type", "application/vnd.api+json");
     localVarRequestBuilder.header("Accept", "application/vnd.api+json");
 
-    localVarRequestBuilder.method("PUT", HttpRequest.BodyPublishers.noBody());
+    try {
+      byte[] localVarPostBody = memberVarObjectMapper.writeValueAsBytes(requestBody);
+      localVarRequestBuilder.method("PUT", HttpRequest.BodyPublishers.ofByteArray(localVarPostBody));
+    } catch (IOException e) {
+      throw new ApiException(e);
+    }
     if (memberVarReadTimeout != null) {
       localVarRequestBuilder.timeout(memberVarReadTimeout);
     }
