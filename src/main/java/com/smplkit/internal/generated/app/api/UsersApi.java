@@ -669,44 +669,48 @@ public class UsersApi {
   /**
    * Update User Settings
    * Replace the current user&#39;s settings with the provided JSON object.
+   * @param requestBody  (required)
    * @return Map&lt;String, Object&gt;
    * @throws ApiException if fails to make API call
    */
-  public Map<String, Object> putUserSettings() throws ApiException {
-    return putUserSettings(null);
+  public Map<String, Object> putUserSettings(@jakarta.annotation.Nonnull Map<String, Object> requestBody) throws ApiException {
+    return putUserSettings(requestBody, null);
   }
 
   /**
    * Update User Settings
    * Replace the current user&#39;s settings with the provided JSON object.
+   * @param requestBody  (required)
    * @param headers Optional headers to include in the request
    * @return Map&lt;String, Object&gt;
    * @throws ApiException if fails to make API call
    */
-  public Map<String, Object> putUserSettings(Map<String, String> headers) throws ApiException {
-    ApiResponse<Map<String, Object>> localVarResponse = putUserSettingsWithHttpInfo(headers);
+  public Map<String, Object> putUserSettings(@jakarta.annotation.Nonnull Map<String, Object> requestBody, Map<String, String> headers) throws ApiException {
+    ApiResponse<Map<String, Object>> localVarResponse = putUserSettingsWithHttpInfo(requestBody, headers);
     return localVarResponse.getData();
   }
 
   /**
    * Update User Settings
    * Replace the current user&#39;s settings with the provided JSON object.
+   * @param requestBody  (required)
    * @return ApiResponse&lt;Map&lt;String, Object&gt;&gt;
    * @throws ApiException if fails to make API call
    */
-  public ApiResponse<Map<String, Object>> putUserSettingsWithHttpInfo() throws ApiException {
-    return putUserSettingsWithHttpInfo(null);
+  public ApiResponse<Map<String, Object>> putUserSettingsWithHttpInfo(@jakarta.annotation.Nonnull Map<String, Object> requestBody) throws ApiException {
+    return putUserSettingsWithHttpInfo(requestBody, null);
   }
 
   /**
    * Update User Settings
    * Replace the current user&#39;s settings with the provided JSON object.
+   * @param requestBody  (required)
    * @param headers Optional headers to include in the request
    * @return ApiResponse&lt;Map&lt;String, Object&gt;&gt;
    * @throws ApiException if fails to make API call
    */
-  public ApiResponse<Map<String, Object>> putUserSettingsWithHttpInfo(Map<String, String> headers) throws ApiException {
-    HttpRequest.Builder localVarRequestBuilder = putUserSettingsRequestBuilder(headers);
+  public ApiResponse<Map<String, Object>> putUserSettingsWithHttpInfo(@jakarta.annotation.Nonnull Map<String, Object> requestBody, Map<String, String> headers) throws ApiException {
+    HttpRequest.Builder localVarRequestBuilder = putUserSettingsRequestBuilder(requestBody, headers);
     try {
       HttpResponse<InputStream> localVarResponse = memberVarHttpClient.send(
           localVarRequestBuilder.build(),
@@ -753,7 +757,11 @@ public class UsersApi {
     }
   }
 
-  private HttpRequest.Builder putUserSettingsRequestBuilder(Map<String, String> headers) throws ApiException {
+  private HttpRequest.Builder putUserSettingsRequestBuilder(@jakarta.annotation.Nonnull Map<String, Object> requestBody, Map<String, String> headers) throws ApiException {
+    // verify the required parameter 'requestBody' is set
+    if (requestBody == null) {
+      throw new ApiException(400, "Missing the required parameter 'requestBody' when calling putUserSettings");
+    }
 
     HttpRequest.Builder localVarRequestBuilder = HttpRequest.newBuilder();
 
@@ -761,9 +769,15 @@ public class UsersApi {
 
     localVarRequestBuilder.uri(URI.create(memberVarBaseUri + localVarPath));
 
+    localVarRequestBuilder.header("Content-Type", "application/vnd.api+json");
     localVarRequestBuilder.header("Accept", "application/vnd.api+json");
 
-    localVarRequestBuilder.method("PUT", HttpRequest.BodyPublishers.noBody());
+    try {
+      byte[] localVarPostBody = memberVarObjectMapper.writeValueAsBytes(requestBody);
+      localVarRequestBuilder.method("PUT", HttpRequest.BodyPublishers.ofByteArray(localVarPostBody));
+    } catch (IOException e) {
+      throw new ApiException(e);
+    }
     if (memberVarReadTimeout != null) {
       localVarRequestBuilder.timeout(memberVarReadTimeout);
     }
@@ -779,23 +793,25 @@ public class UsersApi {
    * Update User Setting by Key
    * Set a single key in the current user&#39;s settings. The key is stored as a flat literal key (dot-notation is NOT expanded to nested paths). Returns the full updated settings object.
    * @param key  (required)
+   * @param requestBody  (required)
    * @return Map&lt;String, Object&gt;
    * @throws ApiException if fails to make API call
    */
-  public Map<String, Object> putUserSettingsKey(@jakarta.annotation.Nonnull String key) throws ApiException {
-    return putUserSettingsKey(key, null);
+  public Map<String, Object> putUserSettingsKey(@jakarta.annotation.Nonnull String key, @jakarta.annotation.Nonnull Map<String, Object> requestBody) throws ApiException {
+    return putUserSettingsKey(key, requestBody, null);
   }
 
   /**
    * Update User Setting by Key
    * Set a single key in the current user&#39;s settings. The key is stored as a flat literal key (dot-notation is NOT expanded to nested paths). Returns the full updated settings object.
    * @param key  (required)
+   * @param requestBody  (required)
    * @param headers Optional headers to include in the request
    * @return Map&lt;String, Object&gt;
    * @throws ApiException if fails to make API call
    */
-  public Map<String, Object> putUserSettingsKey(@jakarta.annotation.Nonnull String key, Map<String, String> headers) throws ApiException {
-    ApiResponse<Map<String, Object>> localVarResponse = putUserSettingsKeyWithHttpInfo(key, headers);
+  public Map<String, Object> putUserSettingsKey(@jakarta.annotation.Nonnull String key, @jakarta.annotation.Nonnull Map<String, Object> requestBody, Map<String, String> headers) throws ApiException {
+    ApiResponse<Map<String, Object>> localVarResponse = putUserSettingsKeyWithHttpInfo(key, requestBody, headers);
     return localVarResponse.getData();
   }
 
@@ -803,23 +819,25 @@ public class UsersApi {
    * Update User Setting by Key
    * Set a single key in the current user&#39;s settings. The key is stored as a flat literal key (dot-notation is NOT expanded to nested paths). Returns the full updated settings object.
    * @param key  (required)
+   * @param requestBody  (required)
    * @return ApiResponse&lt;Map&lt;String, Object&gt;&gt;
    * @throws ApiException if fails to make API call
    */
-  public ApiResponse<Map<String, Object>> putUserSettingsKeyWithHttpInfo(@jakarta.annotation.Nonnull String key) throws ApiException {
-    return putUserSettingsKeyWithHttpInfo(key, null);
+  public ApiResponse<Map<String, Object>> putUserSettingsKeyWithHttpInfo(@jakarta.annotation.Nonnull String key, @jakarta.annotation.Nonnull Map<String, Object> requestBody) throws ApiException {
+    return putUserSettingsKeyWithHttpInfo(key, requestBody, null);
   }
 
   /**
    * Update User Setting by Key
    * Set a single key in the current user&#39;s settings. The key is stored as a flat literal key (dot-notation is NOT expanded to nested paths). Returns the full updated settings object.
    * @param key  (required)
+   * @param requestBody  (required)
    * @param headers Optional headers to include in the request
    * @return ApiResponse&lt;Map&lt;String, Object&gt;&gt;
    * @throws ApiException if fails to make API call
    */
-  public ApiResponse<Map<String, Object>> putUserSettingsKeyWithHttpInfo(@jakarta.annotation.Nonnull String key, Map<String, String> headers) throws ApiException {
-    HttpRequest.Builder localVarRequestBuilder = putUserSettingsKeyRequestBuilder(key, headers);
+  public ApiResponse<Map<String, Object>> putUserSettingsKeyWithHttpInfo(@jakarta.annotation.Nonnull String key, @jakarta.annotation.Nonnull Map<String, Object> requestBody, Map<String, String> headers) throws ApiException {
+    HttpRequest.Builder localVarRequestBuilder = putUserSettingsKeyRequestBuilder(key, requestBody, headers);
     try {
       HttpResponse<InputStream> localVarResponse = memberVarHttpClient.send(
           localVarRequestBuilder.build(),
@@ -866,10 +884,14 @@ public class UsersApi {
     }
   }
 
-  private HttpRequest.Builder putUserSettingsKeyRequestBuilder(@jakarta.annotation.Nonnull String key, Map<String, String> headers) throws ApiException {
+  private HttpRequest.Builder putUserSettingsKeyRequestBuilder(@jakarta.annotation.Nonnull String key, @jakarta.annotation.Nonnull Map<String, Object> requestBody, Map<String, String> headers) throws ApiException {
     // verify the required parameter 'key' is set
     if (key == null) {
       throw new ApiException(400, "Missing the required parameter 'key' when calling putUserSettingsKey");
+    }
+    // verify the required parameter 'requestBody' is set
+    if (requestBody == null) {
+      throw new ApiException(400, "Missing the required parameter 'requestBody' when calling putUserSettingsKey");
     }
 
     HttpRequest.Builder localVarRequestBuilder = HttpRequest.newBuilder();
@@ -879,9 +901,15 @@ public class UsersApi {
 
     localVarRequestBuilder.uri(URI.create(memberVarBaseUri + localVarPath));
 
+    localVarRequestBuilder.header("Content-Type", "application/vnd.api+json");
     localVarRequestBuilder.header("Accept", "application/vnd.api+json");
 
-    localVarRequestBuilder.method("PUT", HttpRequest.BodyPublishers.noBody());
+    try {
+      byte[] localVarPostBody = memberVarObjectMapper.writeValueAsBytes(requestBody);
+      localVarRequestBuilder.method("PUT", HttpRequest.BodyPublishers.ofByteArray(localVarPostBody));
+    } catch (IOException e) {
+      throw new ApiException(e);
+    }
     if (memberVarReadTimeout != null) {
       localVarRequestBuilder.timeout(memberVarReadTimeout);
     }
