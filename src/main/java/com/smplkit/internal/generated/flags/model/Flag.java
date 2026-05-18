@@ -152,7 +152,7 @@ public class Flag {
   }
 
   /**
-   * Human-readable display name for the flag.
+   * Human-readable display name for the flag. Cannot be empty or whitespace-only.
    * @return name
    */
   @jakarta.annotation.Nonnull
