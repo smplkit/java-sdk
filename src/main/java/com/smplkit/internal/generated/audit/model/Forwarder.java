@@ -153,7 +153,7 @@ public class Forwarder {
   }
 
   /**
-   * Human-readable name for the forwarder.
+   * Human-readable name for the forwarder. Must contain at least one non-whitespace character.
    * @return name
    */
   @jakarta.annotation.Nonnull
