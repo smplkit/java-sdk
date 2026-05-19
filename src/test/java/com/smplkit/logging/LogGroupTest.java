@@ -96,7 +96,7 @@ class LogGroupTest {
     @Test
     void setLevel_setsStringFromEnum() {
         LogGroup grp = new LogGroup(null, null, "name", null, null, null, null, null);
-        grp.setLevel(LogLevel.WARN);
+        grp.setLevel(com.smplkit.internal.generated.logging.model.LogLevel.WARN);
         assertEquals("WARN", grp.getLevel());
     }
 
