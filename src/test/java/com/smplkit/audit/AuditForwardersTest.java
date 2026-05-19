@@ -86,7 +86,7 @@ class AuditForwardersTest {
                                             boolean enabled, String createdAt) {
         return "{\"id\":\"" + FWD_ID + "\",\"type\":\"forwarder\",\"attributes\":{"
                 + "\"name\":\"" + name + "\",\"description\":\"" + description + "\","
-                + "\"forwarder_type\":\"DATADOG\",\"enabled\":" + enabled + ","
+                + "\"forwarder_type\":\"datadog\",\"enabled\":" + enabled + ","
                 + "\"configuration\":{\"method\":\"POST\",\"url\":\"https://siem.example.com/in\","
                 + "\"headers\":[{\"name\":\"DD-API-KEY\",\"value\":\"<redacted>\"}],"
                 + "\"success_status\":\"2xx\"},"
@@ -375,7 +375,7 @@ class AuditForwardersTest {
         handler.set(ex -> respondJson(ex, 200,
                 "{\"data\":{\"id\":\"" + FWD_ID + "\",\"type\":\"forwarder\","
                 + "\"attributes\":{\"name\":\"x\","
-                + "\"forwarder_type\":\"HTTP\","
+                + "\"forwarder_type\":\"http\","
                 + "\"enabled\":true,"
                 + "\"transform\":\"$\",\"transform_type\":\"JSONATA\","
                 + "\"configuration\":{\"method\":\"POST\",\"url\":\"https://x\","

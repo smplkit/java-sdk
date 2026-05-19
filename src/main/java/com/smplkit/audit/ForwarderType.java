@@ -14,19 +14,19 @@ package com.smplkit.audit;
  */
 public enum ForwarderType {
     /** Datadog Logs intake. */
-    DATADOG("DATADOG"),
+    DATADOG("datadog"),
     /** Elastic / Elasticsearch HTTP ingest. */
-    ELASTIC("ELASTIC"),
+    ELASTIC("elastic"),
     /** Honeycomb events HTTP ingest. */
-    HONEYCOMB("HONEYCOMB"),
+    HONEYCOMB("honeycomb"),
     /** Generic HTTP POST destination. */
-    HTTP("HTTP"),
+    HTTP("http"),
     /** New Relic logs HTTP ingest. */
-    NEW_RELIC("NEW_RELIC"),
+    NEW_RELIC("new_relic"),
     /** Splunk HTTP Event Collector. */
-    SPLUNK_HEC("SPLUNK_HEC"),
+    SPLUNK_HEC("splunk_hec"),
     /** Sumo Logic HTTP source. */
-    SUMO_LOGIC("SUMO_LOGIC");
+    SUMO_LOGIC("sumo_logic");
 
     private final String value;
 
@@ -34,7 +34,7 @@ public enum ForwarderType {
         this.value = value;
     }
 
-    /** The wire-format slug — e.g. {@code "SPLUNK_HEC"}. */
+    /** The wire-format slug — e.g. {@code "splunk_hec"}. */
     public String getValue() {
         return value;
     }
