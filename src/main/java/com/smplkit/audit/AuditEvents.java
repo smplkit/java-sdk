@@ -92,6 +92,7 @@ public final class AuditEvents {
                 input.resourceType,
                 input.resourceId,
                 input.search,
+                input.doNotForward,
                 input.pageSize,
                 input.pageAfter,
                 null

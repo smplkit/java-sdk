@@ -26,6 +26,13 @@ public final class ListEventsInput {
      * under the ADR. Use {@link #resourceId} for exact-match instead.
      */
     public String search;
+    /**
+     * Restrict results to events whose {@code doNotForward} flag matches the
+     * given boolean. Forwarder previews typically pass {@code false} to match
+     * live-pipeline semantics (events flagged {@code doNotForward=true} are
+     * skipped by the forwarder pipeline). {@code null} leaves the filter unset.
+     */
+    public Boolean doNotForward;
     /** Items per page; the server's max is honored. */
     public Integer pageSize;
     /** Opaque cursor returned by a prior page's {@code nextCursor}. */
