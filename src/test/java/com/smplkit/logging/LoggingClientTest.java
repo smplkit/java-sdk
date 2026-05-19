@@ -1452,11 +1452,17 @@ class LoggingClientTest {
         when(mockLogGroupsApi.listLogGroups(isNull(), any(), any(), isNull())).thenReturn(groupResp);
     }
 
+    private static com.smplkit.internal.generated.logging.model.LogLevel tolerantLogLevel(String value) {
+        if (value == null) return null;
+        try { return com.smplkit.internal.generated.logging.model.LogLevel.fromValue(value); }
+        catch (IllegalArgumentException e) { return null; }
+    }
+
     private LoggerResource buildLoggerResource(String id, String key, String name, String level) {
         OffsetDateTime now = OffsetDateTime.now();
         var attrs = new com.smplkit.internal.generated.logging.model.Logger(null, null, now, now);
         attrs.setName(name);
-        if (level != null) attrs.setLevel(com.smplkit.internal.generated.logging.model.LogLevel.fromValue(level));
+        if (level != null) attrs.setLevel(tolerantLogLevel(level));
         attrs.setManaged(false);
 
         LoggerResource resource = new LoggerResource();
@@ -1477,7 +1483,7 @@ class LoggingClientTest {
         OffsetDateTime now = OffsetDateTime.now();
         var attrs = new com.smplkit.internal.generated.logging.model.Logger(null, null, now, now);
         attrs.setName(name);
-        if (level != null) attrs.setLevel(com.smplkit.internal.generated.logging.model.LogLevel.fromValue(level));
+        if (level != null) attrs.setLevel(tolerantLogLevel(level));
         attrs.setManaged(managed);
 
         LoggerResource data = new LoggerResource();
@@ -1494,7 +1500,7 @@ class LoggingClientTest {
         OffsetDateTime now = OffsetDateTime.now();
         var attrs = new com.smplkit.internal.generated.logging.model.LogGroup(now, now);
         attrs.setName(name);
-        if (level != null) attrs.setLevel(com.smplkit.internal.generated.logging.model.LogLevel.fromValue(level));
+        if (level != null) attrs.setLevel(tolerantLogLevel(level));
 
         LogGroupResource resource = new LogGroupResource();
         resource.setId(id);
@@ -1514,7 +1520,7 @@ class LoggingClientTest {
         OffsetDateTime now = OffsetDateTime.now();
         var attrs = new com.smplkit.internal.generated.logging.model.LogGroup(now, now);
         attrs.setName(name);
-        if (level != null) attrs.setLevel(com.smplkit.internal.generated.logging.model.LogLevel.fromValue(level));
+        if (level != null) attrs.setLevel(tolerantLogLevel(level));
 
         LogGroupResource data = new LogGroupResource();
         data.setId(id);

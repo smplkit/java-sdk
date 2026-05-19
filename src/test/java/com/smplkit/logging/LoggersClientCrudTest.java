@@ -287,11 +287,17 @@ class LoggersClientCrudTest {
 
     // -------------------------------------------------------------- helpers
 
+    private static com.smplkit.internal.generated.logging.model.LogLevel tolerantLogLevel(String value) {
+        if (value == null) return null;
+        try { return com.smplkit.internal.generated.logging.model.LogLevel.fromValue(value); }
+        catch (IllegalArgumentException e) { return null; }
+    }
+
     private LoggerResource buildLoggerResource(String id, String name, String level) {
         OffsetDateTime now = OffsetDateTime.now();
         var attrs = new com.smplkit.internal.generated.logging.model.Logger(null, null, now, now);
         attrs.setName(name);
-        if (level != null) attrs.setLevel(com.smplkit.internal.generated.logging.model.LogLevel.fromValue(level));
+        if (level != null) attrs.setLevel(tolerantLogLevel(level));
         attrs.setManaged(false);
 
         LoggerResource res = new LoggerResource();
@@ -311,7 +317,7 @@ class LoggersClientCrudTest {
         OffsetDateTime now = OffsetDateTime.now();
         var attrs = new com.smplkit.internal.generated.logging.model.LogGroup(now, now);
         attrs.setName(name);
-        if (level != null) attrs.setLevel(com.smplkit.internal.generated.logging.model.LogLevel.fromValue(level));
+        if (level != null) attrs.setLevel(tolerantLogLevel(level));
 
         LogGroupResource res = new LogGroupResource();
         res.setId(id);
