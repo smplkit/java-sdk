@@ -118,8 +118,53 @@ public class Logger {
   public static final String JSON_PROPERTY_ENVIRONMENTS = "environments";
   private JsonNullable<Map<String, Object>> environments = JsonNullable.<Map<String, Object>>undefined();
 
+  /**
+   * Gets or Sets inner
+   */
+  public enum InnerEnum {
+    TRACE(String.valueOf("TRACE")),
+    
+    DEBUG(String.valueOf("DEBUG")),
+    
+    INFO(String.valueOf("INFO")),
+    
+    WARN(String.valueOf("WARN")),
+    
+    ERROR(String.valueOf("ERROR")),
+    
+    FATAL(String.valueOf("FATAL")),
+    
+    SILENT(String.valueOf("SILENT"));
+
+    private String value;
+
+    InnerEnum(String value) {
+      this.value = value;
+    }
+
+    @JsonValue
+    public String getValue() {
+      return value;
+    }
+
+    @Override
+    public String toString() {
+      return String.valueOf(value);
+    }
+
+    @JsonCreator
+    public static InnerEnum fromValue(String value) {
+      for (InnerEnum b : InnerEnum.values()) {
+        if (b.value.equals(value)) {
+          return b;
+        }
+      }
+      throw new IllegalArgumentException("Unexpected value '" + value + "'");
+    }
+  }
+
   public static final String JSON_PROPERTY_EFFECTIVE_LEVELS = "effective_levels";
-  private JsonNullable<Map<String, Object>> effectiveLevels = JsonNullable.<Map<String, Object>>undefined();
+  private JsonNullable<Map<String, List<InnerEnum>>> effectiveLevels = JsonNullable.<Map<String, List<InnerEnum>>>undefined();
 
   public static final String JSON_PROPERTY_CREATED_AT = "created_at";
   private JsonNullable<OffsetDateTime> createdAt = JsonNullable.<OffsetDateTime>undefined();
@@ -133,13 +178,13 @@ public class Logger {
   @JsonCreator
   public Logger(
     @JsonProperty(JSON_PROPERTY_SOURCES) List<Map<String, Object>> sources, 
-    @JsonProperty(JSON_PROPERTY_EFFECTIVE_LEVELS) Map<String, Object> effectiveLevels, 
+    @JsonProperty(JSON_PROPERTY_EFFECTIVE_LEVELS) Map<String, List<InnerEnum>> effectiveLevels, 
     @JsonProperty(JSON_PROPERTY_CREATED_AT) OffsetDateTime createdAt, 
     @JsonProperty(JSON_PROPERTY_UPDATED_AT) OffsetDateTime updatedAt
   ) {
   this();
     this.sources = sources == null ? JsonNullable.<List<Map<String, Object>>>undefined() : JsonNullable.of(sources);
-    this.effectiveLevels = effectiveLevels == null ? JsonNullable.<Map<String, Object>>undefined() : JsonNullable.of(effectiveLevels);
+    this.effectiveLevels = effectiveLevels == null ? JsonNullable.<Map<String, List<InnerEnum>>>undefined() : JsonNullable.of(effectiveLevels);
     this.createdAt = createdAt == null ? JsonNullable.<OffsetDateTime>undefined() : JsonNullable.of(createdAt);
     this.updatedAt = updatedAt == null ? JsonNullable.<OffsetDateTime>undefined() : JsonNullable.of(updatedAt);
   }
@@ -337,28 +382,28 @@ public class Logger {
 
 
   /**
-   * Per-environment summary of what runtimes are reporting for this logger. Keyed by environment name; each entry is one of &#x60;{\&quot;status\&quot;: \&quot;none\&quot;}&#x60;, &#x60;{\&quot;status\&quot;: \&quot;agrees\&quot;, \&quot;level\&quot;: \&quot;&lt;LEVEL&gt;\&quot;}&#x60;, or &#x60;{\&quot;status\&quot;: \&quot;varies\&quot;}&#x60;. &#x60;agrees&#x60; means every observed source in that environment reports the same resolved level; &#x60;varies&#x60; means at least two sources disagree.
+   * Per-environment summary of what runtimes are reporting for this logger. Keyed by environment name; each value is the list of distinct resolved levels observed across all source rows in that environment, ordered from most-verbose (&#x60;TRACE&#x60;) to least-verbose (&#x60;SILENT&#x60;). A single-element list means every source agrees; a multi-element list means sources disagree. Environments with no observed sources are omitted — cross-reference &#x60;environments&#x60; to find environments that are configured but have not yet been reported in.
    * @return effectiveLevels
    */
   @jakarta.annotation.Nullable
   @JsonIgnore
-  public Map<String, Object> getEffectiveLevels() {
+  public Map<String, List<InnerEnum>> getEffectiveLevels() {
     
     if (effectiveLevels == null) {
-      effectiveLevels = JsonNullable.<Map<String, Object>>undefined();
+      effectiveLevels = JsonNullable.<Map<String, List<InnerEnum>>>undefined();
     }
     return effectiveLevels.orElse(null);
   }
 
   @JsonProperty(value = JSON_PROPERTY_EFFECTIVE_LEVELS, required = false)
-  @JsonInclude(content = JsonInclude.Include.ALWAYS, value = JsonInclude.Include.USE_DEFAULTS)
+  @JsonInclude(value = JsonInclude.Include.USE_DEFAULTS)
 
-  public JsonNullable<Map<String, Object>> getEffectiveLevels_JsonNullable() {
+  public JsonNullable<Map<String, List<InnerEnum>>> getEffectiveLevels_JsonNullable() {
     return effectiveLevels;
   }
   
   @JsonProperty(JSON_PROPERTY_EFFECTIVE_LEVELS)
-  private void setEffectiveLevels_JsonNullable(JsonNullable<Map<String, Object>> effectiveLevels) {
+  private void setEffectiveLevels_JsonNullable(JsonNullable<Map<String, List<InnerEnum>>> effectiveLevels) {
     this.effectiveLevels = effectiveLevels;
   }
 
