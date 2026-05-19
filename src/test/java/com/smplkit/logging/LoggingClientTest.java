@@ -215,7 +215,7 @@ class LoggingClientTest {
         Logger lg = client.management().get("edit-logger");
         assertEquals("INFO", lg.getLevel());
 
-        lg.setLevel(com.smplkit.internal.generated.logging.model.LogLevel.DEBUG);
+        lg.setLevel(LogLevel.DEBUG);
         lg.setName("Debug Logger");
 
         LoggerResponse updateResp = buildLoggerResponse(id, "edit-logger", "Debug Logger", "DEBUG", false);
@@ -354,7 +354,7 @@ class LoggingClientTest {
         when(mockLogGroupsApi.getLogGroup("edit-group")).thenReturn(getResp);
 
         LogGroup grp = client.management().getGroup("edit-group");
-        grp.setLevel(com.smplkit.internal.generated.logging.model.LogLevel.DEBUG);
+        grp.setLevel(LogLevel.DEBUG);
         grp.setName("Debug Group");
 
         LogGroupResponse updateResp = buildGroupResponse(id, "edit-group", "Debug Group", "DEBUG");

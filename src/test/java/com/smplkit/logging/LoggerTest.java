@@ -115,10 +115,10 @@ class LoggerTest {
     void setLevel_setsStringFromEnum() {
         Logger lg = new Logger(null, null, "name", null, null, false, null, null, null, null);
 
-        lg.setLevel(com.smplkit.internal.generated.logging.model.LogLevel.DEBUG);
+        lg.setLevel(LogLevel.DEBUG);
         assertEquals("DEBUG", lg.getLevel());
 
-        lg.setLevel(com.smplkit.internal.generated.logging.model.LogLevel.WARN);
+        lg.setLevel(LogLevel.WARN);
         assertEquals("WARN", lg.getLevel());
     }
 
