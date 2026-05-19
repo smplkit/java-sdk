@@ -24,6 +24,7 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonTypeName;
 import com.fasterxml.jackson.annotation.JsonValue;
+import com.smplkit.internal.generated.logging.model.LogLevel;
 import java.time.OffsetDateTime;
 import java.util.Arrays;
 import java.util.HashMap;
@@ -53,53 +54,9 @@ public class LogGroup {
   @jakarta.annotation.Nonnull
   private String name;
 
-  /**
-   * Default level applied to every logger in the group. &#x60;null&#x60; leaves member loggers to inherit from elsewhere.
-   */
-  public enum LevelEnum {
-    TRACE(String.valueOf("TRACE")),
-    
-    DEBUG(String.valueOf("DEBUG")),
-    
-    INFO(String.valueOf("INFO")),
-    
-    WARN(String.valueOf("WARN")),
-    
-    ERROR(String.valueOf("ERROR")),
-    
-    FATAL(String.valueOf("FATAL")),
-    
-    SILENT(String.valueOf("SILENT"));
-
-    private String value;
-
-    LevelEnum(String value) {
-      this.value = value;
-    }
-
-    @JsonValue
-    public String getValue() {
-      return value;
-    }
-
-    @Override
-    public String toString() {
-      return String.valueOf(value);
-    }
-
-    @JsonCreator
-    public static LevelEnum fromValue(String value) {
-      for (LevelEnum b : LevelEnum.values()) {
-        if (b.value.equals(value)) {
-          return b;
-        }
-      }
-      return null;
-    }
-  }
-
   public static final String JSON_PROPERTY_LEVEL = "level";
-  private JsonNullable<LevelEnum> level = JsonNullable.<LevelEnum>undefined();
+  @jakarta.annotation.Nullable
+  private LogLevel level;
 
   public static final String JSON_PROPERTY_PARENT_ID = "parent_id";
   private JsonNullable<String> parentId = JsonNullable.<String>undefined();
@@ -150,35 +107,27 @@ public class LogGroup {
   }
 
 
-  public LogGroup level(@jakarta.annotation.Nullable LevelEnum level) {
-    this.level = JsonNullable.<LevelEnum>of(level);
+  public LogGroup level(@jakarta.annotation.Nullable LogLevel level) {
+    this.level = level;
     return this;
   }
 
   /**
-   * Default level applied to every logger in the group. &#x60;null&#x60; leaves member loggers to inherit from elsewhere.
+   * Get level
    * @return level
    */
   @jakarta.annotation.Nullable
-  @JsonIgnore
-  public LevelEnum getLevel() {
-        return level.orElse(null);
+  @JsonProperty(value = JSON_PROPERTY_LEVEL, required = false)
+  @JsonInclude(value = JsonInclude.Include.USE_DEFAULTS)
+  public LogLevel getLevel() {
+    return level;
   }
+
 
   @JsonProperty(value = JSON_PROPERTY_LEVEL, required = false)
   @JsonInclude(value = JsonInclude.Include.USE_DEFAULTS)
-
-  public JsonNullable<LevelEnum> getLevel_JsonNullable() {
-    return level;
-  }
-  
-  @JsonProperty(JSON_PROPERTY_LEVEL)
-  public void setLevel_JsonNullable(JsonNullable<LevelEnum> level) {
+  public void setLevel(@jakarta.annotation.Nullable LogLevel level) {
     this.level = level;
-  }
-
-  public void setLevel(@jakarta.annotation.Nullable LevelEnum level) {
-    this.level = JsonNullable.<LevelEnum>of(level);
   }
 
 
@@ -327,7 +276,7 @@ public class LogGroup {
     }
     LogGroup logGroup = (LogGroup) o;
     return Objects.equals(this.name, logGroup.name) &&
-        equalsNullable(this.level, logGroup.level) &&
+        Objects.equals(this.level, logGroup.level) &&
         equalsNullable(this.parentId, logGroup.parentId) &&
         equalsNullable(this.environments, logGroup.environments) &&
         equalsNullable(this.createdAt, logGroup.createdAt) &&
@@ -340,7 +289,7 @@ public class LogGroup {
 
   @Override
   public int hashCode() {
-    return Objects.hash(name, hashCodeNullable(level), hashCodeNullable(parentId), hashCodeNullable(environments), hashCodeNullable(createdAt), hashCodeNullable(updatedAt));
+    return Objects.hash(name, level, hashCodeNullable(parentId), hashCodeNullable(environments), hashCodeNullable(createdAt), hashCodeNullable(updatedAt));
   }
 
   private static <T> int hashCodeNullable(JsonNullable<T> a) {

@@ -24,6 +24,7 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonTypeName;
 import com.fasterxml.jackson.annotation.JsonValue;
+import com.smplkit.internal.generated.logging.model.LogLevel;
 import java.time.OffsetDateTime;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -58,53 +59,9 @@ public class Logger {
   @jakarta.annotation.Nonnull
   private String name;
 
-  /**
-   * Account-wide log level applied to this logger. &#x60;null&#x60; means no override at the logger level — the level is inherited from the logger&#39;s group or the framework default.
-   */
-  public enum LevelEnum {
-    TRACE(String.valueOf("TRACE")),
-    
-    DEBUG(String.valueOf("DEBUG")),
-    
-    INFO(String.valueOf("INFO")),
-    
-    WARN(String.valueOf("WARN")),
-    
-    ERROR(String.valueOf("ERROR")),
-    
-    FATAL(String.valueOf("FATAL")),
-    
-    SILENT(String.valueOf("SILENT"));
-
-    private String value;
-
-    LevelEnum(String value) {
-      this.value = value;
-    }
-
-    @JsonValue
-    public String getValue() {
-      return value;
-    }
-
-    @Override
-    public String toString() {
-      return String.valueOf(value);
-    }
-
-    @JsonCreator
-    public static LevelEnum fromValue(String value) {
-      for (LevelEnum b : LevelEnum.values()) {
-        if (b.value.equals(value)) {
-          return b;
-        }
-      }
-      return null;
-    }
-  }
-
   public static final String JSON_PROPERTY_LEVEL = "level";
-  private JsonNullable<LevelEnum> level = JsonNullable.<LevelEnum>undefined();
+  @jakarta.annotation.Nullable
+  private LogLevel level;
 
   public static final String JSON_PROPERTY_GROUP = "group";
   private JsonNullable<String> group = JsonNullable.<String>undefined();
@@ -118,53 +75,8 @@ public class Logger {
   public static final String JSON_PROPERTY_ENVIRONMENTS = "environments";
   private JsonNullable<Map<String, Object>> environments = JsonNullable.<Map<String, Object>>undefined();
 
-  /**
-   * Gets or Sets inner
-   */
-  public enum InnerEnum {
-    TRACE(String.valueOf("TRACE")),
-    
-    DEBUG(String.valueOf("DEBUG")),
-    
-    INFO(String.valueOf("INFO")),
-    
-    WARN(String.valueOf("WARN")),
-    
-    ERROR(String.valueOf("ERROR")),
-    
-    FATAL(String.valueOf("FATAL")),
-    
-    SILENT(String.valueOf("SILENT"));
-
-    private String value;
-
-    InnerEnum(String value) {
-      this.value = value;
-    }
-
-    @JsonValue
-    public String getValue() {
-      return value;
-    }
-
-    @Override
-    public String toString() {
-      return String.valueOf(value);
-    }
-
-    @JsonCreator
-    public static InnerEnum fromValue(String value) {
-      for (InnerEnum b : InnerEnum.values()) {
-        if (b.value.equals(value)) {
-          return b;
-        }
-      }
-      throw new IllegalArgumentException("Unexpected value '" + value + "'");
-    }
-  }
-
   public static final String JSON_PROPERTY_EFFECTIVE_LEVELS = "effective_levels";
-  private JsonNullable<Map<String, List<InnerEnum>>> effectiveLevels = JsonNullable.<Map<String, List<InnerEnum>>>undefined();
+  private JsonNullable<Map<String, List<LogLevel>>> effectiveLevels = JsonNullable.<Map<String, List<LogLevel>>>undefined();
 
   public static final String JSON_PROPERTY_CREATED_AT = "created_at";
   private JsonNullable<OffsetDateTime> createdAt = JsonNullable.<OffsetDateTime>undefined();
@@ -178,13 +90,13 @@ public class Logger {
   @JsonCreator
   public Logger(
     @JsonProperty(JSON_PROPERTY_SOURCES) List<Map<String, Object>> sources, 
-    @JsonProperty(JSON_PROPERTY_EFFECTIVE_LEVELS) Map<String, List<InnerEnum>> effectiveLevels, 
+    @JsonProperty(JSON_PROPERTY_EFFECTIVE_LEVELS) Map<String, List<LogLevel>> effectiveLevels, 
     @JsonProperty(JSON_PROPERTY_CREATED_AT) OffsetDateTime createdAt, 
     @JsonProperty(JSON_PROPERTY_UPDATED_AT) OffsetDateTime updatedAt
   ) {
   this();
     this.sources = sources == null ? JsonNullable.<List<Map<String, Object>>>undefined() : JsonNullable.of(sources);
-    this.effectiveLevels = effectiveLevels == null ? JsonNullable.<Map<String, List<InnerEnum>>>undefined() : JsonNullable.of(effectiveLevels);
+    this.effectiveLevels = effectiveLevels == null ? JsonNullable.<Map<String, List<LogLevel>>>undefined() : JsonNullable.of(effectiveLevels);
     this.createdAt = createdAt == null ? JsonNullable.<OffsetDateTime>undefined() : JsonNullable.of(createdAt);
     this.updatedAt = updatedAt == null ? JsonNullable.<OffsetDateTime>undefined() : JsonNullable.of(updatedAt);
   }
@@ -213,35 +125,27 @@ public class Logger {
   }
 
 
-  public Logger level(@jakarta.annotation.Nullable LevelEnum level) {
-    this.level = JsonNullable.<LevelEnum>of(level);
+  public Logger level(@jakarta.annotation.Nullable LogLevel level) {
+    this.level = level;
     return this;
   }
 
   /**
-   * Account-wide log level applied to this logger. &#x60;null&#x60; means no override at the logger level — the level is inherited from the logger&#39;s group or the framework default.
+   * Get level
    * @return level
    */
   @jakarta.annotation.Nullable
-  @JsonIgnore
-  public LevelEnum getLevel() {
-        return level.orElse(null);
+  @JsonProperty(value = JSON_PROPERTY_LEVEL, required = false)
+  @JsonInclude(value = JsonInclude.Include.USE_DEFAULTS)
+  public LogLevel getLevel() {
+    return level;
   }
+
 
   @JsonProperty(value = JSON_PROPERTY_LEVEL, required = false)
   @JsonInclude(value = JsonInclude.Include.USE_DEFAULTS)
-
-  public JsonNullable<LevelEnum> getLevel_JsonNullable() {
-    return level;
-  }
-  
-  @JsonProperty(JSON_PROPERTY_LEVEL)
-  public void setLevel_JsonNullable(JsonNullable<LevelEnum> level) {
+  public void setLevel(@jakarta.annotation.Nullable LogLevel level) {
     this.level = level;
-  }
-
-  public void setLevel(@jakarta.annotation.Nullable LevelEnum level) {
-    this.level = JsonNullable.<LevelEnum>of(level);
   }
 
 
@@ -387,10 +291,10 @@ public class Logger {
    */
   @jakarta.annotation.Nullable
   @JsonIgnore
-  public Map<String, List<InnerEnum>> getEffectiveLevels() {
+  public Map<String, List<LogLevel>> getEffectiveLevels() {
     
     if (effectiveLevels == null) {
-      effectiveLevels = JsonNullable.<Map<String, List<InnerEnum>>>undefined();
+      effectiveLevels = JsonNullable.<Map<String, List<LogLevel>>>undefined();
     }
     return effectiveLevels.orElse(null);
   }
@@ -398,12 +302,12 @@ public class Logger {
   @JsonProperty(value = JSON_PROPERTY_EFFECTIVE_LEVELS, required = false)
   @JsonInclude(value = JsonInclude.Include.USE_DEFAULTS)
 
-  public JsonNullable<Map<String, List<InnerEnum>>> getEffectiveLevels_JsonNullable() {
+  public JsonNullable<Map<String, List<LogLevel>>> getEffectiveLevels_JsonNullable() {
     return effectiveLevels;
   }
   
   @JsonProperty(JSON_PROPERTY_EFFECTIVE_LEVELS)
-  private void setEffectiveLevels_JsonNullable(JsonNullable<Map<String, List<InnerEnum>>> effectiveLevels) {
+  private void setEffectiveLevels_JsonNullable(JsonNullable<Map<String, List<LogLevel>>> effectiveLevels) {
     this.effectiveLevels = effectiveLevels;
   }
 
@@ -478,7 +382,7 @@ public class Logger {
     }
     Logger logger = (Logger) o;
     return Objects.equals(this.name, logger.name) &&
-        equalsNullable(this.level, logger.level) &&
+        Objects.equals(this.level, logger.level) &&
         equalsNullable(this.group, logger.group) &&
         equalsNullable(this.managed, logger.managed) &&
         equalsNullable(this.sources, logger.sources) &&
@@ -494,7 +398,7 @@ public class Logger {
 
   @Override
   public int hashCode() {
-    return Objects.hash(name, hashCodeNullable(level), hashCodeNullable(group), hashCodeNullable(managed), hashCodeNullable(sources), hashCodeNullable(environments), hashCodeNullable(effectiveLevels), hashCodeNullable(createdAt), hashCodeNullable(updatedAt));
+    return Objects.hash(name, level, hashCodeNullable(group), hashCodeNullable(managed), hashCodeNullable(sources), hashCodeNullable(environments), hashCodeNullable(effectiveLevels), hashCodeNullable(createdAt), hashCodeNullable(updatedAt));
   }
 
   private static <T> int hashCodeNullable(JsonNullable<T> a) {

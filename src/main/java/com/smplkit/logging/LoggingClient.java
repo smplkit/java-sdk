@@ -910,7 +910,7 @@ public final class LoggingClient {
         var attrs = new com.smplkit.internal.generated.logging.model.Logger();
         attrs.setName(lg.getName());
         if (lg.getLevel() != null) {
-            attrs.setLevel(com.smplkit.internal.generated.logging.model.Logger.LevelEnum.fromValue(lg.getLevel()));
+            attrs.setLevel(com.smplkit.internal.generated.logging.model.LogLevel.fromValue(lg.getLevel()));
         }
         if (lg.getGroup() != null) attrs.setGroup(lg.getGroup());
         attrs.setManaged(lg.isManaged());
@@ -932,7 +932,7 @@ public final class LoggingClient {
         var attrs = new com.smplkit.internal.generated.logging.model.LogGroup();
         attrs.setName(grp.getName());
         if (grp.getLevel() != null) {
-            attrs.setLevel(com.smplkit.internal.generated.logging.model.LogGroup.LevelEnum.fromValue(grp.getLevel()));
+            attrs.setLevel(com.smplkit.internal.generated.logging.model.LogLevel.fromValue(grp.getLevel()));
         }
         if (grp.getGroup() != null) attrs.setParentId(grp.getGroup());
         if (grp.getEnvironments() != null && !grp.getEnvironments().isEmpty()) {

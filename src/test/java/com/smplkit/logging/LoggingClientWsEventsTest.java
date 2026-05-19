@@ -878,11 +878,17 @@ class LoggingClientWsEventsTest {
         return adapter;
     }
 
+    private static com.smplkit.internal.generated.logging.model.LogLevel tolerantLogLevel(String value) {
+        if (value == null) return null;
+        try { return com.smplkit.internal.generated.logging.model.LogLevel.fromValue(value); }
+        catch (IllegalArgumentException e) { return null; }
+    }
+
     private LoggerResource buildLoggerResource(String id, String level, boolean managed) {
         OffsetDateTime now = OffsetDateTime.now();
         var attrs = new com.smplkit.internal.generated.logging.model.Logger(null, null, now, now);
         attrs.setName(id);
-        if (level != null) attrs.setLevel(com.smplkit.internal.generated.logging.model.Logger.LevelEnum.fromValue(level));
+        if (level != null) attrs.setLevel(tolerantLogLevel(level));
         attrs.setManaged(managed);
 
         LoggerResource resource = new LoggerResource();
@@ -903,7 +909,7 @@ class LoggingClientWsEventsTest {
         OffsetDateTime now = OffsetDateTime.now();
         var attrs = new com.smplkit.internal.generated.logging.model.LogGroup(now, now);
         attrs.setName(id);
-        if (level != null) attrs.setLevel(com.smplkit.internal.generated.logging.model.LogGroup.LevelEnum.fromValue(level));
+        if (level != null) attrs.setLevel(tolerantLogLevel(level));
 
         LogGroupResource data = new LogGroupResource();
         data.setId(id);
@@ -919,7 +925,7 @@ class LoggingClientWsEventsTest {
         OffsetDateTime now = OffsetDateTime.now();
         var attrs = new com.smplkit.internal.generated.logging.model.LogGroup(now, now);
         attrs.setName(id);
-        if (level != null) attrs.setLevel(com.smplkit.internal.generated.logging.model.LogGroup.LevelEnum.fromValue(level));
+        if (level != null) attrs.setLevel(tolerantLogLevel(level));
 
         LogGroupResource data = new LogGroupResource();
         data.setId(id);

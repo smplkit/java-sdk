@@ -167,7 +167,7 @@ class PaginationTest {
             r.setType(LoggerResource.TypeEnum.LOGGER);
             var attrs = new com.smplkit.internal.generated.logging.model.Logger();
             attrs.setName("lg-" + i);
-            attrs.setLevel(com.smplkit.internal.generated.logging.model.Logger.LevelEnum.INFO);
+            attrs.setLevel(com.smplkit.internal.generated.logging.model.LogLevel.INFO);
             attrs.setManaged(false);
             r.setAttributes(attrs);
             data.add(r);
