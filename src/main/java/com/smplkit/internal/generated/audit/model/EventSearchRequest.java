@@ -47,6 +47,7 @@ import com.smplkit.internal.generated.audit.ApiClient;
   EventSearchRequest.JSON_PROPERTY_FILTER_ACTOR_ID,
   EventSearchRequest.JSON_PROPERTY_FILTER_OCCURRED_AT,
   EventSearchRequest.JSON_PROPERTY_FILTER_SEARCH,
+  EventSearchRequest.JSON_PROPERTY_FILTER_DO_NOT_FORWARD,
   EventSearchRequest.JSON_PROPERTY_PAGE_SIZE,
   EventSearchRequest.JSON_PROPERTY_PAGE_AFTER,
   EventSearchRequest.JSON_PROPERTY_SORT
@@ -76,6 +77,9 @@ public class EventSearchRequest {
 
   public static final String JSON_PROPERTY_FILTER_SEARCH = "filter[search]";
   private JsonNullable<String> filterSearch = JsonNullable.<String>undefined();
+
+  public static final String JSON_PROPERTY_FILTER_DO_NOT_FORWARD = "filter[do_not_forward]";
+  private JsonNullable<Boolean> filterDoNotForward = JsonNullable.<Boolean>undefined();
 
   public static final String JSON_PROPERTY_PAGE_SIZE = "page[size]";
   @jakarta.annotation.Nullable
@@ -359,6 +363,38 @@ public class EventSearchRequest {
   }
 
 
+  public EventSearchRequest filterDoNotForward(@jakarta.annotation.Nullable Boolean filterDoNotForward) {
+    this.filterDoNotForward = JsonNullable.<Boolean>of(filterDoNotForward);
+    return this;
+  }
+
+  /**
+   * When set, restrict to events whose &#x60;do_not_forward&#x60; flag matches the given boolean. Forwarder previews typically pass &#x60;false&#x60; to match live-pipeline semantics (events flagged &#x60;do_not_forward&#x3D;true&#x60; are skipped by the forwarder pipeline).
+   * @return filterDoNotForward
+   */
+  @jakarta.annotation.Nullable
+  @JsonIgnore
+  public Boolean getFilterDoNotForward() {
+        return filterDoNotForward.orElse(null);
+  }
+
+  @JsonProperty(value = JSON_PROPERTY_FILTER_DO_NOT_FORWARD, required = false)
+  @JsonInclude(value = JsonInclude.Include.USE_DEFAULTS)
+
+  public JsonNullable<Boolean> getFilterDoNotForward_JsonNullable() {
+    return filterDoNotForward;
+  }
+  
+  @JsonProperty(JSON_PROPERTY_FILTER_DO_NOT_FORWARD)
+  public void setFilterDoNotForward_JsonNullable(JsonNullable<Boolean> filterDoNotForward) {
+    this.filterDoNotForward = filterDoNotForward;
+  }
+
+  public void setFilterDoNotForward(@jakarta.annotation.Nullable Boolean filterDoNotForward) {
+    this.filterDoNotForward = JsonNullable.<Boolean>of(filterDoNotForward);
+  }
+
+
   public EventSearchRequest pageSize(@jakarta.annotation.Nullable Integer pageSize) {
     this.pageSize = pageSize;
     return this;
@@ -461,6 +497,7 @@ public class EventSearchRequest {
         equalsNullable(this.filterActorId, eventSearchRequest.filterActorId) &&
         equalsNullable(this.filterOccurredAt, eventSearchRequest.filterOccurredAt) &&
         equalsNullable(this.filterSearch, eventSearchRequest.filterSearch) &&
+        equalsNullable(this.filterDoNotForward, eventSearchRequest.filterDoNotForward) &&
         Objects.equals(this.pageSize, eventSearchRequest.pageSize) &&
         equalsNullable(this.pageAfter, eventSearchRequest.pageAfter) &&
         Objects.equals(this.sort, eventSearchRequest.sort);
@@ -472,7 +509,7 @@ public class EventSearchRequest {
 
   @Override
   public int hashCode() {
-    return Objects.hash(hashCodeNullable(filter), hashCodeNullable(filterAction), hashCodeNullable(filterResourceType), hashCodeNullable(filterResourceId), hashCodeNullable(filterActorType), hashCodeNullable(filterActorId), hashCodeNullable(filterOccurredAt), hashCodeNullable(filterSearch), pageSize, hashCodeNullable(pageAfter), sort);
+    return Objects.hash(hashCodeNullable(filter), hashCodeNullable(filterAction), hashCodeNullable(filterResourceType), hashCodeNullable(filterResourceId), hashCodeNullable(filterActorType), hashCodeNullable(filterActorId), hashCodeNullable(filterOccurredAt), hashCodeNullable(filterSearch), hashCodeNullable(filterDoNotForward), pageSize, hashCodeNullable(pageAfter), sort);
   }
 
   private static <T> int hashCodeNullable(JsonNullable<T> a) {
@@ -494,6 +531,7 @@ public class EventSearchRequest {
     sb.append("    filterActorId: ").append(toIndentedString(filterActorId)).append("\n");
     sb.append("    filterOccurredAt: ").append(toIndentedString(filterOccurredAt)).append("\n");
     sb.append("    filterSearch: ").append(toIndentedString(filterSearch)).append("\n");
+    sb.append("    filterDoNotForward: ").append(toIndentedString(filterDoNotForward)).append("\n");
     sb.append("    pageSize: ").append(toIndentedString(pageSize)).append("\n");
     sb.append("    pageAfter: ").append(toIndentedString(pageAfter)).append("\n");
     sb.append("    sort: ").append(toIndentedString(sort)).append("\n");
@@ -583,6 +621,11 @@ public class EventSearchRequest {
     // add `filter[search]` to the URL query string
     if (getFilterSearch() != null) {
       joiner.add(String.format(java.util.Locale.ROOT, "%sfilter[search]%s=%s", prefix, suffix, ApiClient.urlEncode(ApiClient.valueToString(getFilterSearch()))));
+    }
+
+    // add `filter[do_not_forward]` to the URL query string
+    if (getFilterDoNotForward() != null) {
+      joiner.add(String.format(java.util.Locale.ROOT, "%sfilter[do_not_forward]%s=%s", prefix, suffix, ApiClient.urlEncode(ApiClient.valueToString(getFilterDoNotForward()))));
     }
 
     // add `page[size]` to the URL query string

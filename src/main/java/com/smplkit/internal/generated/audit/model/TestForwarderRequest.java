@@ -44,7 +44,8 @@ import com.smplkit.internal.generated.audit.ApiClient;
   TestForwarderRequest.JSON_PROPERTY_URL,
   TestForwarderRequest.JSON_PROPERTY_HEADERS,
   TestForwarderRequest.JSON_PROPERTY_SUCCESS_STATUS,
-  TestForwarderRequest.JSON_PROPERTY_TIMEOUT_MS
+  TestForwarderRequest.JSON_PROPERTY_TIMEOUT_MS,
+  TestForwarderRequest.JSON_PROPERTY_BODY
 })
 @jakarta.annotation.Generated(value = "org.openapitools.codegen.languages.JavaClientCodegen", comments = "Generator version: 7.21.0")
 public class TestForwarderRequest {
@@ -107,6 +108,9 @@ public class TestForwarderRequest {
 
   public static final String JSON_PROPERTY_TIMEOUT_MS = "timeout_ms";
   private JsonNullable<Integer> timeoutMs = JsonNullable.<Integer>undefined();
+
+  public static final String JSON_PROPERTY_BODY = "body";
+  private JsonNullable<String> body = JsonNullable.<String>undefined();
 
   public TestForwarderRequest() { 
   }
@@ -249,6 +253,38 @@ public class TestForwarderRequest {
   }
 
 
+  public TestForwarderRequest body(@jakarta.annotation.Nullable String body) {
+    this.body = JsonNullable.<String>of(body);
+    return this;
+  }
+
+  /**
+   * Request body sent to the destination. When omitted, an empty body is sent (suitable for connectivity probes). When set, the body is sent verbatim — pair with an appropriate &#x60;Content-Type&#x60; entry in &#x60;headers&#x60; so the destination interprets it correctly. Limit 1 MiB.
+   * @return body
+   */
+  @jakarta.annotation.Nullable
+  @JsonIgnore
+  public String getBody() {
+        return body.orElse(null);
+  }
+
+  @JsonProperty(value = JSON_PROPERTY_BODY, required = false)
+  @JsonInclude(value = JsonInclude.Include.USE_DEFAULTS)
+
+  public JsonNullable<String> getBody_JsonNullable() {
+    return body;
+  }
+  
+  @JsonProperty(JSON_PROPERTY_BODY)
+  public void setBody_JsonNullable(JsonNullable<String> body) {
+    this.body = body;
+  }
+
+  public void setBody(@jakarta.annotation.Nullable String body) {
+    this.body = JsonNullable.<String>of(body);
+  }
+
+
   /**
    * Return true if this TestForwarderRequest object is equal to o.
    */
@@ -265,7 +301,8 @@ public class TestForwarderRequest {
         Objects.equals(this.url, testForwarderRequest.url) &&
         Objects.equals(this.headers, testForwarderRequest.headers) &&
         Objects.equals(this.successStatus, testForwarderRequest.successStatus) &&
-        equalsNullable(this.timeoutMs, testForwarderRequest.timeoutMs);
+        equalsNullable(this.timeoutMs, testForwarderRequest.timeoutMs) &&
+        equalsNullable(this.body, testForwarderRequest.body);
   }
 
   private static <T> boolean equalsNullable(JsonNullable<T> a, JsonNullable<T> b) {
@@ -274,7 +311,7 @@ public class TestForwarderRequest {
 
   @Override
   public int hashCode() {
-    return Objects.hash(method, url, headers, successStatus, hashCodeNullable(timeoutMs));
+    return Objects.hash(method, url, headers, successStatus, hashCodeNullable(timeoutMs), hashCodeNullable(body));
   }
 
   private static <T> int hashCodeNullable(JsonNullable<T> a) {
@@ -293,6 +330,7 @@ public class TestForwarderRequest {
     sb.append("    headers: ").append(toIndentedString(headers)).append("\n");
     sb.append("    successStatus: ").append(toIndentedString(successStatus)).append("\n");
     sb.append("    timeoutMs: ").append(toIndentedString(timeoutMs)).append("\n");
+    sb.append("    body: ").append(toIndentedString(body)).append("\n");
     sb.append("}");
     return sb.toString();
   }
@@ -365,6 +403,11 @@ public class TestForwarderRequest {
     // add `timeout_ms` to the URL query string
     if (getTimeoutMs() != null) {
       joiner.add(String.format(java.util.Locale.ROOT, "%stimeout_ms%s=%s", prefix, suffix, ApiClient.urlEncode(ApiClient.valueToString(getTimeoutMs()))));
+    }
+
+    // add `body` to the URL query string
+    if (getBody() != null) {
+      joiner.add(String.format(java.util.Locale.ROOT, "%sbody%s=%s", prefix, suffix, ApiClient.urlEncode(ApiClient.valueToString(getBody()))));
     }
 
     return joiner.toString();

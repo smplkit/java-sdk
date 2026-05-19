@@ -293,14 +293,15 @@ public class EventsApi {
    * @param filterResourceType  (optional)
    * @param filterResourceId  (optional)
    * @param filterSearch Case-insensitive substring match against &#x60;resource_id&#x60; or &#x60;description&#x60;. Use &#x60;filter[resource_id]&#x60; for an exact match on &#x60;resource_id&#x60;. (optional)
+   * @param filterDoNotForward When set, restrict to events whose &#x60;do_not_forward&#x60; flag matches the given boolean. Forwarder previews typically pass &#x60;false&#x60; to match live-pipeline semantics (events flagged &#x60;do_not_forward&#x3D;true&#x60; are skipped by the forwarder pipeline). (optional)
    * @param pageSize  (optional)
    * @param pageAfter  (optional)
    * @param sort Field to sort by. Prefix with &#x60;-&#x60; for descending order. Default: &#x60;-occurred_at&#x60;. Allowed values: &#x60;created_at&#x60;, &#x60;-created_at&#x60;, &#x60;occurred_at&#x60;, &#x60;-occurred_at&#x60;. (optional, default to -occurred_at)
    * @return EventListResponse
    * @throws ApiException if fails to make API call
    */
-  public EventListResponse listEvents(@jakarta.annotation.Nullable String filterOccurredAt, @jakarta.annotation.Nullable String filterActorType, @jakarta.annotation.Nullable String filterActorId, @jakarta.annotation.Nullable String filterAction, @jakarta.annotation.Nullable String filterResourceType, @jakarta.annotation.Nullable String filterResourceId, @jakarta.annotation.Nullable String filterSearch, @jakarta.annotation.Nullable Integer pageSize, @jakarta.annotation.Nullable String pageAfter, @jakarta.annotation.Nullable String sort) throws ApiException {
-    return listEvents(filterOccurredAt, filterActorType, filterActorId, filterAction, filterResourceType, filterResourceId, filterSearch, pageSize, pageAfter, sort, null);
+  public EventListResponse listEvents(@jakarta.annotation.Nullable String filterOccurredAt, @jakarta.annotation.Nullable String filterActorType, @jakarta.annotation.Nullable String filterActorId, @jakarta.annotation.Nullable String filterAction, @jakarta.annotation.Nullable String filterResourceType, @jakarta.annotation.Nullable String filterResourceId, @jakarta.annotation.Nullable String filterSearch, @jakarta.annotation.Nullable Boolean filterDoNotForward, @jakarta.annotation.Nullable Integer pageSize, @jakarta.annotation.Nullable String pageAfter, @jakarta.annotation.Nullable String sort) throws ApiException {
+    return listEvents(filterOccurredAt, filterActorType, filterActorId, filterAction, filterResourceType, filterResourceId, filterSearch, filterDoNotForward, pageSize, pageAfter, sort, null);
   }
 
   /**
@@ -313,6 +314,7 @@ public class EventsApi {
    * @param filterResourceType  (optional)
    * @param filterResourceId  (optional)
    * @param filterSearch Case-insensitive substring match against &#x60;resource_id&#x60; or &#x60;description&#x60;. Use &#x60;filter[resource_id]&#x60; for an exact match on &#x60;resource_id&#x60;. (optional)
+   * @param filterDoNotForward When set, restrict to events whose &#x60;do_not_forward&#x60; flag matches the given boolean. Forwarder previews typically pass &#x60;false&#x60; to match live-pipeline semantics (events flagged &#x60;do_not_forward&#x3D;true&#x60; are skipped by the forwarder pipeline). (optional)
    * @param pageSize  (optional)
    * @param pageAfter  (optional)
    * @param sort Field to sort by. Prefix with &#x60;-&#x60; for descending order. Default: &#x60;-occurred_at&#x60;. Allowed values: &#x60;created_at&#x60;, &#x60;-created_at&#x60;, &#x60;occurred_at&#x60;, &#x60;-occurred_at&#x60;. (optional, default to -occurred_at)
@@ -320,8 +322,8 @@ public class EventsApi {
    * @return EventListResponse
    * @throws ApiException if fails to make API call
    */
-  public EventListResponse listEvents(@jakarta.annotation.Nullable String filterOccurredAt, @jakarta.annotation.Nullable String filterActorType, @jakarta.annotation.Nullable String filterActorId, @jakarta.annotation.Nullable String filterAction, @jakarta.annotation.Nullable String filterResourceType, @jakarta.annotation.Nullable String filterResourceId, @jakarta.annotation.Nullable String filterSearch, @jakarta.annotation.Nullable Integer pageSize, @jakarta.annotation.Nullable String pageAfter, @jakarta.annotation.Nullable String sort, Map<String, String> headers) throws ApiException {
-    ApiResponse<EventListResponse> localVarResponse = listEventsWithHttpInfo(filterOccurredAt, filterActorType, filterActorId, filterAction, filterResourceType, filterResourceId, filterSearch, pageSize, pageAfter, sort, headers);
+  public EventListResponse listEvents(@jakarta.annotation.Nullable String filterOccurredAt, @jakarta.annotation.Nullable String filterActorType, @jakarta.annotation.Nullable String filterActorId, @jakarta.annotation.Nullable String filterAction, @jakarta.annotation.Nullable String filterResourceType, @jakarta.annotation.Nullable String filterResourceId, @jakarta.annotation.Nullable String filterSearch, @jakarta.annotation.Nullable Boolean filterDoNotForward, @jakarta.annotation.Nullable Integer pageSize, @jakarta.annotation.Nullable String pageAfter, @jakarta.annotation.Nullable String sort, Map<String, String> headers) throws ApiException {
+    ApiResponse<EventListResponse> localVarResponse = listEventsWithHttpInfo(filterOccurredAt, filterActorType, filterActorId, filterAction, filterResourceType, filterResourceId, filterSearch, filterDoNotForward, pageSize, pageAfter, sort, headers);
     return localVarResponse.getData();
   }
 
@@ -335,14 +337,15 @@ public class EventsApi {
    * @param filterResourceType  (optional)
    * @param filterResourceId  (optional)
    * @param filterSearch Case-insensitive substring match against &#x60;resource_id&#x60; or &#x60;description&#x60;. Use &#x60;filter[resource_id]&#x60; for an exact match on &#x60;resource_id&#x60;. (optional)
+   * @param filterDoNotForward When set, restrict to events whose &#x60;do_not_forward&#x60; flag matches the given boolean. Forwarder previews typically pass &#x60;false&#x60; to match live-pipeline semantics (events flagged &#x60;do_not_forward&#x3D;true&#x60; are skipped by the forwarder pipeline). (optional)
    * @param pageSize  (optional)
    * @param pageAfter  (optional)
    * @param sort Field to sort by. Prefix with &#x60;-&#x60; for descending order. Default: &#x60;-occurred_at&#x60;. Allowed values: &#x60;created_at&#x60;, &#x60;-created_at&#x60;, &#x60;occurred_at&#x60;, &#x60;-occurred_at&#x60;. (optional, default to -occurred_at)
    * @return ApiResponse&lt;EventListResponse&gt;
    * @throws ApiException if fails to make API call
    */
-  public ApiResponse<EventListResponse> listEventsWithHttpInfo(@jakarta.annotation.Nullable String filterOccurredAt, @jakarta.annotation.Nullable String filterActorType, @jakarta.annotation.Nullable String filterActorId, @jakarta.annotation.Nullable String filterAction, @jakarta.annotation.Nullable String filterResourceType, @jakarta.annotation.Nullable String filterResourceId, @jakarta.annotation.Nullable String filterSearch, @jakarta.annotation.Nullable Integer pageSize, @jakarta.annotation.Nullable String pageAfter, @jakarta.annotation.Nullable String sort) throws ApiException {
-    return listEventsWithHttpInfo(filterOccurredAt, filterActorType, filterActorId, filterAction, filterResourceType, filterResourceId, filterSearch, pageSize, pageAfter, sort, null);
+  public ApiResponse<EventListResponse> listEventsWithHttpInfo(@jakarta.annotation.Nullable String filterOccurredAt, @jakarta.annotation.Nullable String filterActorType, @jakarta.annotation.Nullable String filterActorId, @jakarta.annotation.Nullable String filterAction, @jakarta.annotation.Nullable String filterResourceType, @jakarta.annotation.Nullable String filterResourceId, @jakarta.annotation.Nullable String filterSearch, @jakarta.annotation.Nullable Boolean filterDoNotForward, @jakarta.annotation.Nullable Integer pageSize, @jakarta.annotation.Nullable String pageAfter, @jakarta.annotation.Nullable String sort) throws ApiException {
+    return listEventsWithHttpInfo(filterOccurredAt, filterActorType, filterActorId, filterAction, filterResourceType, filterResourceId, filterSearch, filterDoNotForward, pageSize, pageAfter, sort, null);
   }
 
   /**
@@ -355,6 +358,7 @@ public class EventsApi {
    * @param filterResourceType  (optional)
    * @param filterResourceId  (optional)
    * @param filterSearch Case-insensitive substring match against &#x60;resource_id&#x60; or &#x60;description&#x60;. Use &#x60;filter[resource_id]&#x60; for an exact match on &#x60;resource_id&#x60;. (optional)
+   * @param filterDoNotForward When set, restrict to events whose &#x60;do_not_forward&#x60; flag matches the given boolean. Forwarder previews typically pass &#x60;false&#x60; to match live-pipeline semantics (events flagged &#x60;do_not_forward&#x3D;true&#x60; are skipped by the forwarder pipeline). (optional)
    * @param pageSize  (optional)
    * @param pageAfter  (optional)
    * @param sort Field to sort by. Prefix with &#x60;-&#x60; for descending order. Default: &#x60;-occurred_at&#x60;. Allowed values: &#x60;created_at&#x60;, &#x60;-created_at&#x60;, &#x60;occurred_at&#x60;, &#x60;-occurred_at&#x60;. (optional, default to -occurred_at)
@@ -362,8 +366,8 @@ public class EventsApi {
    * @return ApiResponse&lt;EventListResponse&gt;
    * @throws ApiException if fails to make API call
    */
-  public ApiResponse<EventListResponse> listEventsWithHttpInfo(@jakarta.annotation.Nullable String filterOccurredAt, @jakarta.annotation.Nullable String filterActorType, @jakarta.annotation.Nullable String filterActorId, @jakarta.annotation.Nullable String filterAction, @jakarta.annotation.Nullable String filterResourceType, @jakarta.annotation.Nullable String filterResourceId, @jakarta.annotation.Nullable String filterSearch, @jakarta.annotation.Nullable Integer pageSize, @jakarta.annotation.Nullable String pageAfter, @jakarta.annotation.Nullable String sort, Map<String, String> headers) throws ApiException {
-    HttpRequest.Builder localVarRequestBuilder = listEventsRequestBuilder(filterOccurredAt, filterActorType, filterActorId, filterAction, filterResourceType, filterResourceId, filterSearch, pageSize, pageAfter, sort, headers);
+  public ApiResponse<EventListResponse> listEventsWithHttpInfo(@jakarta.annotation.Nullable String filterOccurredAt, @jakarta.annotation.Nullable String filterActorType, @jakarta.annotation.Nullable String filterActorId, @jakarta.annotation.Nullable String filterAction, @jakarta.annotation.Nullable String filterResourceType, @jakarta.annotation.Nullable String filterResourceId, @jakarta.annotation.Nullable String filterSearch, @jakarta.annotation.Nullable Boolean filterDoNotForward, @jakarta.annotation.Nullable Integer pageSize, @jakarta.annotation.Nullable String pageAfter, @jakarta.annotation.Nullable String sort, Map<String, String> headers) throws ApiException {
+    HttpRequest.Builder localVarRequestBuilder = listEventsRequestBuilder(filterOccurredAt, filterActorType, filterActorId, filterAction, filterResourceType, filterResourceId, filterSearch, filterDoNotForward, pageSize, pageAfter, sort, headers);
     try {
       HttpResponse<InputStream> localVarResponse = memberVarHttpClient.send(
           localVarRequestBuilder.build(),
@@ -410,7 +414,7 @@ public class EventsApi {
     }
   }
 
-  private HttpRequest.Builder listEventsRequestBuilder(@jakarta.annotation.Nullable String filterOccurredAt, @jakarta.annotation.Nullable String filterActorType, @jakarta.annotation.Nullable String filterActorId, @jakarta.annotation.Nullable String filterAction, @jakarta.annotation.Nullable String filterResourceType, @jakarta.annotation.Nullable String filterResourceId, @jakarta.annotation.Nullable String filterSearch, @jakarta.annotation.Nullable Integer pageSize, @jakarta.annotation.Nullable String pageAfter, @jakarta.annotation.Nullable String sort, Map<String, String> headers) throws ApiException {
+  private HttpRequest.Builder listEventsRequestBuilder(@jakarta.annotation.Nullable String filterOccurredAt, @jakarta.annotation.Nullable String filterActorType, @jakarta.annotation.Nullable String filterActorId, @jakarta.annotation.Nullable String filterAction, @jakarta.annotation.Nullable String filterResourceType, @jakarta.annotation.Nullable String filterResourceId, @jakarta.annotation.Nullable String filterSearch, @jakarta.annotation.Nullable Boolean filterDoNotForward, @jakarta.annotation.Nullable Integer pageSize, @jakarta.annotation.Nullable String pageAfter, @jakarta.annotation.Nullable String sort, Map<String, String> headers) throws ApiException {
 
     HttpRequest.Builder localVarRequestBuilder = HttpRequest.newBuilder();
 
@@ -433,6 +437,8 @@ public class EventsApi {
     localVarQueryParams.addAll(ApiClient.parameterToPairs("filter[resource_id]", filterResourceId));
     localVarQueryParameterBaseName = "filter[search]";
     localVarQueryParams.addAll(ApiClient.parameterToPairs("filter[search]", filterSearch));
+    localVarQueryParameterBaseName = "filter[do_not_forward]";
+    localVarQueryParams.addAll(ApiClient.parameterToPairs("filter[do_not_forward]", filterDoNotForward));
     localVarQueryParameterBaseName = "page[size]";
     localVarQueryParams.addAll(ApiClient.parameterToPairs("page[size]", pageSize));
     localVarQueryParameterBaseName = "page[after]";
