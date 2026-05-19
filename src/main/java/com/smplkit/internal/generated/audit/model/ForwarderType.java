@@ -26,23 +26,23 @@ import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonValue;
 
 /**
- * Supported forwarder destination types.
+ * Supported forwarder destination types (ADR-050).
  */
 public enum ForwarderType {
   
-  HTTP("HTTP"),
+  DATADOG("datadog"),
   
-  DATADOG("DATADOG"),
+  ELASTIC("elastic"),
   
-  SPLUNK_HEC("SPLUNK_HEC"),
+  HONEYCOMB("honeycomb"),
   
-  SUMO_LOGIC("SUMO_LOGIC"),
+  HTTP("http"),
   
-  NEW_RELIC("NEW_RELIC"),
+  NEW_RELIC("new_relic"),
   
-  HONEYCOMB("HONEYCOMB"),
+  SPLUNK_HEC("splunk_hec"),
   
-  ELASTIC("ELASTIC");
+  SUMO_LOGIC("sumo_logic");
 
   private String value;
 
