@@ -46,7 +46,10 @@ public final class EnvironmentsClient {
      */
     public List<com.smplkit.management.Environment> list(Integer pageNumber, Integer pageSize) {
         try {
-            EnvironmentListResponse resp = api.listEnvironments(null, pageNumber, pageSize, null);
+            // Positional args: filterSearch, filterClassification, sort,
+            // pageNumber, pageSize, metaTotal.
+            EnvironmentListResponse resp = api.listEnvironments(
+                    null, null, null, pageNumber, pageSize, null);
             List<com.smplkit.management.Environment> result = new ArrayList<>();
             if (resp.getData() != null) {
                 for (EnvironmentResource r : resp.getData()) {

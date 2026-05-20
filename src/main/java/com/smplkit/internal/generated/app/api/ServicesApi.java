@@ -512,7 +512,8 @@ public class ServicesApi {
 
   /**
    * List Services
-   * List all services for the authenticated account.
+   * List all services for the authenticated account. &#x60;filter[search]&#x60; does a case-insensitive substring match against the service &#x60;key&#x60; and &#x60;name&#x60;.
+   * @param filterSearch Case-insensitive substring match against the service &#x60;key&#x60; and &#x60;name&#x60;. A service is returned if either field contains the search term. (optional)
    * @param sort Field to sort by. Prefix with &#x60;-&#x60; for descending order. Default: &#x60;name&#x60;. Allowed values: &#x60;created_at&#x60;, &#x60;-created_at&#x60;, &#x60;key&#x60;, &#x60;-key&#x60;, &#x60;name&#x60;, &#x60;-name&#x60;, &#x60;updated_at&#x60;, &#x60;-updated_at&#x60;. (optional, default to name)
    * @param pageNumber 1-based page number to return. Optional; defaults to &#x60;1&#x60; when omitted. Must be &#x60;&gt;&#x3D; 1&#x60; — requests with a smaller value are rejected with a 400 error. (optional, default to 1)
    * @param pageSize Number of items per page. Optional; defaults to &#x60;1000&#x60; when omitted. Must be between &#x60;1&#x60; and &#x60;1000&#x60; inclusive — requests outside that range are rejected with a 400 error. (optional, default to 1000)
@@ -520,13 +521,14 @@ public class ServicesApi {
    * @return ServiceListResponse
    * @throws ApiException if fails to make API call
    */
-  public ServiceListResponse listServices(@jakarta.annotation.Nullable String sort, @jakarta.annotation.Nullable Integer pageNumber, @jakarta.annotation.Nullable Integer pageSize, @jakarta.annotation.Nullable Boolean metaTotal) throws ApiException {
-    return listServices(sort, pageNumber, pageSize, metaTotal, null);
+  public ServiceListResponse listServices(@jakarta.annotation.Nullable String filterSearch, @jakarta.annotation.Nullable String sort, @jakarta.annotation.Nullable Integer pageNumber, @jakarta.annotation.Nullable Integer pageSize, @jakarta.annotation.Nullable Boolean metaTotal) throws ApiException {
+    return listServices(filterSearch, sort, pageNumber, pageSize, metaTotal, null);
   }
 
   /**
    * List Services
-   * List all services for the authenticated account.
+   * List all services for the authenticated account. &#x60;filter[search]&#x60; does a case-insensitive substring match against the service &#x60;key&#x60; and &#x60;name&#x60;.
+   * @param filterSearch Case-insensitive substring match against the service &#x60;key&#x60; and &#x60;name&#x60;. A service is returned if either field contains the search term. (optional)
    * @param sort Field to sort by. Prefix with &#x60;-&#x60; for descending order. Default: &#x60;name&#x60;. Allowed values: &#x60;created_at&#x60;, &#x60;-created_at&#x60;, &#x60;key&#x60;, &#x60;-key&#x60;, &#x60;name&#x60;, &#x60;-name&#x60;, &#x60;updated_at&#x60;, &#x60;-updated_at&#x60;. (optional, default to name)
    * @param pageNumber 1-based page number to return. Optional; defaults to &#x60;1&#x60; when omitted. Must be &#x60;&gt;&#x3D; 1&#x60; — requests with a smaller value are rejected with a 400 error. (optional, default to 1)
    * @param pageSize Number of items per page. Optional; defaults to &#x60;1000&#x60; when omitted. Must be between &#x60;1&#x60; and &#x60;1000&#x60; inclusive — requests outside that range are rejected with a 400 error. (optional, default to 1000)
@@ -535,14 +537,15 @@ public class ServicesApi {
    * @return ServiceListResponse
    * @throws ApiException if fails to make API call
    */
-  public ServiceListResponse listServices(@jakarta.annotation.Nullable String sort, @jakarta.annotation.Nullable Integer pageNumber, @jakarta.annotation.Nullable Integer pageSize, @jakarta.annotation.Nullable Boolean metaTotal, Map<String, String> headers) throws ApiException {
-    ApiResponse<ServiceListResponse> localVarResponse = listServicesWithHttpInfo(sort, pageNumber, pageSize, metaTotal, headers);
+  public ServiceListResponse listServices(@jakarta.annotation.Nullable String filterSearch, @jakarta.annotation.Nullable String sort, @jakarta.annotation.Nullable Integer pageNumber, @jakarta.annotation.Nullable Integer pageSize, @jakarta.annotation.Nullable Boolean metaTotal, Map<String, String> headers) throws ApiException {
+    ApiResponse<ServiceListResponse> localVarResponse = listServicesWithHttpInfo(filterSearch, sort, pageNumber, pageSize, metaTotal, headers);
     return localVarResponse.getData();
   }
 
   /**
    * List Services
-   * List all services for the authenticated account.
+   * List all services for the authenticated account. &#x60;filter[search]&#x60; does a case-insensitive substring match against the service &#x60;key&#x60; and &#x60;name&#x60;.
+   * @param filterSearch Case-insensitive substring match against the service &#x60;key&#x60; and &#x60;name&#x60;. A service is returned if either field contains the search term. (optional)
    * @param sort Field to sort by. Prefix with &#x60;-&#x60; for descending order. Default: &#x60;name&#x60;. Allowed values: &#x60;created_at&#x60;, &#x60;-created_at&#x60;, &#x60;key&#x60;, &#x60;-key&#x60;, &#x60;name&#x60;, &#x60;-name&#x60;, &#x60;updated_at&#x60;, &#x60;-updated_at&#x60;. (optional, default to name)
    * @param pageNumber 1-based page number to return. Optional; defaults to &#x60;1&#x60; when omitted. Must be &#x60;&gt;&#x3D; 1&#x60; — requests with a smaller value are rejected with a 400 error. (optional, default to 1)
    * @param pageSize Number of items per page. Optional; defaults to &#x60;1000&#x60; when omitted. Must be between &#x60;1&#x60; and &#x60;1000&#x60; inclusive — requests outside that range are rejected with a 400 error. (optional, default to 1000)
@@ -550,13 +553,14 @@ public class ServicesApi {
    * @return ApiResponse&lt;ServiceListResponse&gt;
    * @throws ApiException if fails to make API call
    */
-  public ApiResponse<ServiceListResponse> listServicesWithHttpInfo(@jakarta.annotation.Nullable String sort, @jakarta.annotation.Nullable Integer pageNumber, @jakarta.annotation.Nullable Integer pageSize, @jakarta.annotation.Nullable Boolean metaTotal) throws ApiException {
-    return listServicesWithHttpInfo(sort, pageNumber, pageSize, metaTotal, null);
+  public ApiResponse<ServiceListResponse> listServicesWithHttpInfo(@jakarta.annotation.Nullable String filterSearch, @jakarta.annotation.Nullable String sort, @jakarta.annotation.Nullable Integer pageNumber, @jakarta.annotation.Nullable Integer pageSize, @jakarta.annotation.Nullable Boolean metaTotal) throws ApiException {
+    return listServicesWithHttpInfo(filterSearch, sort, pageNumber, pageSize, metaTotal, null);
   }
 
   /**
    * List Services
-   * List all services for the authenticated account.
+   * List all services for the authenticated account. &#x60;filter[search]&#x60; does a case-insensitive substring match against the service &#x60;key&#x60; and &#x60;name&#x60;.
+   * @param filterSearch Case-insensitive substring match against the service &#x60;key&#x60; and &#x60;name&#x60;. A service is returned if either field contains the search term. (optional)
    * @param sort Field to sort by. Prefix with &#x60;-&#x60; for descending order. Default: &#x60;name&#x60;. Allowed values: &#x60;created_at&#x60;, &#x60;-created_at&#x60;, &#x60;key&#x60;, &#x60;-key&#x60;, &#x60;name&#x60;, &#x60;-name&#x60;, &#x60;updated_at&#x60;, &#x60;-updated_at&#x60;. (optional, default to name)
    * @param pageNumber 1-based page number to return. Optional; defaults to &#x60;1&#x60; when omitted. Must be &#x60;&gt;&#x3D; 1&#x60; — requests with a smaller value are rejected with a 400 error. (optional, default to 1)
    * @param pageSize Number of items per page. Optional; defaults to &#x60;1000&#x60; when omitted. Must be between &#x60;1&#x60; and &#x60;1000&#x60; inclusive — requests outside that range are rejected with a 400 error. (optional, default to 1000)
@@ -565,8 +569,8 @@ public class ServicesApi {
    * @return ApiResponse&lt;ServiceListResponse&gt;
    * @throws ApiException if fails to make API call
    */
-  public ApiResponse<ServiceListResponse> listServicesWithHttpInfo(@jakarta.annotation.Nullable String sort, @jakarta.annotation.Nullable Integer pageNumber, @jakarta.annotation.Nullable Integer pageSize, @jakarta.annotation.Nullable Boolean metaTotal, Map<String, String> headers) throws ApiException {
-    HttpRequest.Builder localVarRequestBuilder = listServicesRequestBuilder(sort, pageNumber, pageSize, metaTotal, headers);
+  public ApiResponse<ServiceListResponse> listServicesWithHttpInfo(@jakarta.annotation.Nullable String filterSearch, @jakarta.annotation.Nullable String sort, @jakarta.annotation.Nullable Integer pageNumber, @jakarta.annotation.Nullable Integer pageSize, @jakarta.annotation.Nullable Boolean metaTotal, Map<String, String> headers) throws ApiException {
+    HttpRequest.Builder localVarRequestBuilder = listServicesRequestBuilder(filterSearch, sort, pageNumber, pageSize, metaTotal, headers);
     try {
       HttpResponse<InputStream> localVarResponse = memberVarHttpClient.send(
           localVarRequestBuilder.build(),
@@ -613,7 +617,7 @@ public class ServicesApi {
     }
   }
 
-  private HttpRequest.Builder listServicesRequestBuilder(@jakarta.annotation.Nullable String sort, @jakarta.annotation.Nullable Integer pageNumber, @jakarta.annotation.Nullable Integer pageSize, @jakarta.annotation.Nullable Boolean metaTotal, Map<String, String> headers) throws ApiException {
+  private HttpRequest.Builder listServicesRequestBuilder(@jakarta.annotation.Nullable String filterSearch, @jakarta.annotation.Nullable String sort, @jakarta.annotation.Nullable Integer pageNumber, @jakarta.annotation.Nullable Integer pageSize, @jakarta.annotation.Nullable Boolean metaTotal, Map<String, String> headers) throws ApiException {
 
     HttpRequest.Builder localVarRequestBuilder = HttpRequest.newBuilder();
 
@@ -622,6 +626,8 @@ public class ServicesApi {
     List<Pair> localVarQueryParams = new ArrayList<>();
     StringJoiner localVarQueryStringJoiner = new StringJoiner("&");
     String localVarQueryParameterBaseName;
+    localVarQueryParameterBaseName = "filter[search]";
+    localVarQueryParams.addAll(ApiClient.parameterToPairs("filter[search]", filterSearch));
     localVarQueryParameterBaseName = "sort";
     localVarQueryParams.addAll(ApiClient.parameterToPairs("sort", sort));
     localVarQueryParameterBaseName = "page[number]";

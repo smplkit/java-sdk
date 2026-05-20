@@ -51,18 +51,18 @@ class PaginationTest {
     void env_listWithPagination_passesThrough() throws ApiException {
         EnvironmentListResponse resp = new EnvironmentListResponse();
         resp.setData(List.of(buildEnvResource("prod")));
-        when(mockEnvApi.listEnvironments(isNull(), eq(2), eq(50), isNull())).thenReturn(resp);
+        when(mockEnvApi.listEnvironments(isNull(), isNull(), isNull(), eq(2), eq(50), isNull())).thenReturn(resp);
 
         List<com.smplkit.management.Environment> envs = envClient.list(2, 50);
         assertEquals(1, envs.size());
-        verify(mockEnvApi).listEnvironments(isNull(), eq(2), eq(50), isNull());
+        verify(mockEnvApi).listEnvironments(isNull(), isNull(), isNull(), eq(2), eq(50), isNull());
     }
 
     @Test
     void env_asyncListWithPagination_delegatesToSync() throws Exception {
         EnvironmentListResponse resp = new EnvironmentListResponse();
         resp.setData(List.of(buildEnvResource("staging")));
-        when(mockEnvApi.listEnvironments(isNull(), eq(3), eq(10), isNull())).thenReturn(resp);
+        when(mockEnvApi.listEnvironments(isNull(), isNull(), isNull(), eq(3), eq(10), isNull())).thenReturn(resp);
 
         AsyncEnvironmentsClient async = new AsyncEnvironmentsClient(
                 envClient, Executors.newSingleThreadExecutor());
