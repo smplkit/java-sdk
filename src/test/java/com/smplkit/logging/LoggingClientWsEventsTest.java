@@ -78,7 +78,7 @@ class LoggingClientWsEventsTest {
         assertEquals("com.acme.service", received.get().id());
         assertEquals("websocket", received.get().source());
         verify(mockLoggersApi, times(1)).getLogger("com.acme.service");
-        verify(mockLoggersApi, times(1)).listLoggers(isNull(), isNull(), isNull(), isNull(), any(), any(), isNull()); // only start
+        verify(mockLoggersApi, times(1)).listLoggers(isNull(), isNull(), isNull(), isNull(), isNull(), any(), any(), isNull()); // only start
     }
 
     @Test
@@ -150,7 +150,7 @@ class LoggingClientWsEventsTest {
         LoggerResource child = buildLoggerResource("com.acme.payments", null, true);
         LoggerListResponse loggers = new LoggerListResponse();
         loggers.setData(new ArrayList<>(List.of(ancestor, child)));
-        when(mockLoggersApi.listLoggers(isNull(), isNull(), isNull(), isNull(), any(), any(), isNull()))
+        when(mockLoggersApi.listLoggers(isNull(), isNull(), isNull(), isNull(), isNull(), any(), any(), isNull()))
                 .thenReturn(loggers);
         when(mockLogGroupsApi.listLogGroups(isNull(), any(), any(), isNull()))
                 .thenReturn(new LogGroupListResponse().data(new ArrayList<>()));
@@ -250,7 +250,7 @@ class LoggingClientWsEventsTest {
         LoggerResource child = buildLoggerResource("com.acme.payments", null, true);
         LoggerListResponse loggers = new LoggerListResponse();
         loggers.setData(new ArrayList<>(List.of(ancestor, child)));
-        when(mockLoggersApi.listLoggers(isNull(), isNull(), isNull(), isNull(), any(), any(), isNull()))
+        when(mockLoggersApi.listLoggers(isNull(), isNull(), isNull(), isNull(), isNull(), any(), any(), isNull()))
                 .thenReturn(loggers);
         when(mockLogGroupsApi.listLogGroups(isNull(), any(), any(), isNull()))
                 .thenReturn(new LogGroupListResponse().data(new ArrayList<>()));
@@ -300,7 +300,7 @@ class LoggingClientWsEventsTest {
         client.simulateGroupChanged(Map.of("id", "my-group"));
 
         verify(mockLogGroupsApi, times(1)).getLogGroup("my-group");
-        verify(mockLoggersApi, times(1)).listLoggers(isNull(), isNull(), isNull(), isNull(), any(), any(), isNull()); // only start
+        verify(mockLoggersApi, times(1)).listLoggers(isNull(), isNull(), isNull(), isNull(), isNull(), any(), any(), isNull()); // only start
     }
 
     @Test
@@ -328,7 +328,7 @@ class LoggingClientWsEventsTest {
         lr.getAttributes().setGroup("g1");
         LoggerListResponse loggers = new LoggerListResponse();
         loggers.setData(new ArrayList<>(List.of(lr)));
-        when(mockLoggersApi.listLoggers(isNull(), isNull(), isNull(), isNull(), any(), any(), isNull()))
+        when(mockLoggersApi.listLoggers(isNull(), isNull(), isNull(), isNull(), isNull(), any(), any(), isNull()))
                 .thenReturn(loggers);
         when(mockLogGroupsApi.listLogGroups(isNull(), any(), any(), isNull()))
                 .thenReturn(buildGroupListResponse("g1", "WARN"));
@@ -361,7 +361,7 @@ class LoggingClientWsEventsTest {
         lr.getAttributes().setGroup("g1");
         LoggerListResponse loggers = new LoggerListResponse();
         loggers.setData(new ArrayList<>(List.of(lr)));
-        when(mockLoggersApi.listLoggers(isNull(), isNull(), isNull(), isNull(), any(), any(), isNull()))
+        when(mockLoggersApi.listLoggers(isNull(), isNull(), isNull(), isNull(), isNull(), any(), any(), isNull()))
                 .thenReturn(loggers);
         when(mockLogGroupsApi.listLogGroups(isNull(), any(), any(), isNull()))
                 .thenReturn(buildGroupListResponse("g1", "WARN"));
@@ -393,7 +393,7 @@ class LoggingClientWsEventsTest {
         lr.getAttributes().setGroup("g1");
         LoggerListResponse loggers = new LoggerListResponse();
         loggers.setData(new ArrayList<>(List.of(lr)));
-        when(mockLoggersApi.listLoggers(isNull(), isNull(), isNull(), isNull(), any(), any(), isNull()))
+        when(mockLoggersApi.listLoggers(isNull(), isNull(), isNull(), isNull(), isNull(), any(), any(), isNull()))
                 .thenReturn(loggers);
         when(mockLogGroupsApi.listLogGroups(isNull(), any(), any(), isNull()))
                 .thenReturn(buildGroupListResponse("g1", "WARN"));
@@ -432,7 +432,7 @@ class LoggingClientWsEventsTest {
         // deletion is not a level change.
         LoggerListResponse emptyLoggers = new LoggerListResponse();
         emptyLoggers.setData(new ArrayList<>());
-        when(mockLoggersApi.listLoggers(isNull(), isNull(), isNull(), isNull(), any(), any(), isNull()))
+        when(mockLoggersApi.listLoggers(isNull(), isNull(), isNull(), isNull(), isNull(), any(), any(), isNull()))
                 .thenReturn(emptyLoggers);
         when(mockLogGroupsApi.listLogGroups(isNull(), any(), any(), isNull()))
                 .thenReturn(buildGroupListResponse("my-group", "WARN"));
@@ -475,7 +475,7 @@ class LoggingClientWsEventsTest {
         lr.getAttributes().setGroup("g");
         LoggerListResponse loggers = new LoggerListResponse();
         loggers.setData(new ArrayList<>(List.of(lr)));
-        when(mockLoggersApi.listLoggers(isNull(), isNull(), isNull(), isNull(), any(), any(), isNull()))
+        when(mockLoggersApi.listLoggers(isNull(), isNull(), isNull(), isNull(), isNull(), any(), any(), isNull()))
                 .thenReturn(loggers);
         when(mockLogGroupsApi.listLogGroups(isNull(), any(), any(), isNull()))
                 .thenReturn(buildGroupListResponse("g", "WARN"));
@@ -525,7 +525,7 @@ class LoggingClientWsEventsTest {
         // Second listLoggers call returns same empty list
         LoggerListResponse emptyLoggers = new LoggerListResponse();
         emptyLoggers.setData(new ArrayList<>());
-        when(mockLoggersApi.listLoggers(isNull(), isNull(), isNull(), isNull(), any(), any(), isNull())).thenReturn(emptyLoggers);
+        when(mockLoggersApi.listLoggers(isNull(), isNull(), isNull(), isNull(), isNull(), any(), any(), isNull())).thenReturn(emptyLoggers);
         LogGroupListResponse emptyGroups = new LogGroupListResponse();
         emptyGroups.setData(new ArrayList<>());
         when(mockLogGroupsApi.listLogGroups(isNull(), any(), any(), isNull())).thenReturn(emptyGroups);
@@ -533,7 +533,7 @@ class LoggingClientWsEventsTest {
         client.simulateLoggersChanged(Map.of());
 
         // listLoggers called once for start, once for loggers_changed
-        verify(mockLoggersApi, times(2)).listLoggers(isNull(), isNull(), isNull(), isNull(), any(), any(), isNull());
+        verify(mockLoggersApi, times(2)).listLoggers(isNull(), isNull(), isNull(), isNull(), isNull(), any(), any(), isNull());
         // listLogGroups called once for start, once for loggers_changed
         verify(mockLogGroupsApi, times(2)).listLogGroups(isNull(), any(), any(), isNull());
     }
@@ -542,7 +542,7 @@ class LoggingClientWsEventsTest {
     void loggersChanged_beforeStart_isNoOp() throws ApiException {
         client.simulateLoggersChanged(Map.of());
 
-        verify(mockLoggersApi, never()).listLoggers(any(), any(), any(), any(), any(), any(), any());
+        verify(mockLoggersApi, never()).listLoggers(any(), any(), any(), any(), any(), any(), any(), any());
     }
 
     @Test
@@ -560,7 +560,7 @@ class LoggingClientWsEventsTest {
         LoggerResource lr = buildLoggerResource("com.acme.svc", "WARN", true);
         LoggerListResponse updatedLoggers = new LoggerListResponse();
         updatedLoggers.setData(new ArrayList<>(List.of(lr)));
-        when(mockLoggersApi.listLoggers(isNull(), isNull(), isNull(), isNull(), any(), any(), isNull())).thenReturn(updatedLoggers);
+        when(mockLoggersApi.listLoggers(isNull(), isNull(), isNull(), isNull(), isNull(), any(), any(), isNull())).thenReturn(updatedLoggers);
         LogGroupListResponse emptyGroups = new LogGroupListResponse();
         emptyGroups.setData(new ArrayList<>());
         when(mockLogGroupsApi.listLogGroups(isNull(), any(), any(), isNull())).thenReturn(emptyGroups);
@@ -609,7 +609,7 @@ class LoggingClientWsEventsTest {
         stubEmptyStart();
         client.install();
 
-        when(mockLoggersApi.listLoggers(isNull(), isNull(), isNull(), isNull(), any(), any(), isNull()))
+        when(mockLoggersApi.listLoggers(isNull(), isNull(), isNull(), isNull(), isNull(), any(), any(), isNull()))
                 .thenThrow(new ApiException("API failure"));
 
         assertDoesNotThrow(() -> client.simulateLoggersChanged(Map.of()));
@@ -626,7 +626,7 @@ class LoggingClientWsEventsTest {
         LoggerResource lr = buildLoggerResource("com.acme.svc", "INFO", true);
         LoggerListResponse sameLoggers = new LoggerListResponse();
         sameLoggers.setData(new ArrayList<>(List.of(lr)));
-        when(mockLoggersApi.listLoggers(isNull(), isNull(), isNull(), isNull(), any(), any(), isNull())).thenReturn(sameLoggers);
+        when(mockLoggersApi.listLoggers(isNull(), isNull(), isNull(), isNull(), isNull(), any(), any(), isNull())).thenReturn(sameLoggers);
 
         // Return a group with data to exercise the group loop in fetchOnly
         LogGroupListResponse groupsWithData = buildGroupListResponse("my-group", "DEBUG");
@@ -646,7 +646,7 @@ class LoggingClientWsEventsTest {
         // listLoggers succeeds but listLogGroups throws
         LoggerListResponse emptyLoggers = new LoggerListResponse();
         emptyLoggers.setData(new ArrayList<>());
-        when(mockLoggersApi.listLoggers(isNull(), isNull(), isNull(), isNull(), any(), any(), isNull())).thenReturn(emptyLoggers);
+        when(mockLoggersApi.listLoggers(isNull(), isNull(), isNull(), isNull(), isNull(), any(), any(), isNull())).thenReturn(emptyLoggers);
         when(mockLogGroupsApi.listLogGroups(isNull(), any(), any(), isNull())).thenThrow(new ApiException("group fetch failed"));
 
         assertDoesNotThrow(() -> client.simulateLoggersChanged(Map.of()));
@@ -663,7 +663,7 @@ class LoggingClientWsEventsTest {
         LoggerResource lr = buildLoggerResource("com.acme.svc", "WARN", true);
         LoggerListResponse updated = new LoggerListResponse();
         updated.setData(new ArrayList<>(List.of(lr)));
-        when(mockLoggersApi.listLoggers(isNull(), isNull(), isNull(), isNull(), any(), any(), isNull())).thenReturn(updated);
+        when(mockLoggersApi.listLoggers(isNull(), isNull(), isNull(), isNull(), isNull(), any(), any(), isNull())).thenReturn(updated);
         LogGroupListResponse emptyGroups = new LogGroupListResponse();
         emptyGroups.setData(new ArrayList<>());
         when(mockLogGroupsApi.listLogGroups(isNull(), any(), any(), isNull())).thenReturn(emptyGroups);
@@ -685,7 +685,7 @@ class LoggingClientWsEventsTest {
         LoggerResource lr = buildLoggerResource("com.acme.svc", "WARN", true);
         LoggerListResponse updated = new LoggerListResponse();
         updated.setData(new ArrayList<>(List.of(lr)));
-        when(mockLoggersApi.listLoggers(isNull(), isNull(), isNull(), isNull(), any(), any(), isNull())).thenReturn(updated);
+        when(mockLoggersApi.listLoggers(isNull(), isNull(), isNull(), isNull(), isNull(), any(), any(), isNull())).thenReturn(updated);
         LogGroupListResponse emptyGroups = new LogGroupListResponse();
         emptyGroups.setData(new ArrayList<>());
         when(mockLogGroupsApi.listLogGroups(isNull(), any(), any(), isNull())).thenReturn(emptyGroups);
@@ -705,7 +705,7 @@ class LoggingClientWsEventsTest {
         LoggerResource lr = buildLoggerResource("com.acme.svc", "WARN", true);
         LoggerListResponse updated = new LoggerListResponse();
         updated.setData(new ArrayList<>(List.of(lr)));
-        when(mockLoggersApi.listLoggers(isNull(), isNull(), isNull(), isNull(), any(), any(), isNull())).thenReturn(updated);
+        when(mockLoggersApi.listLoggers(isNull(), isNull(), isNull(), isNull(), isNull(), any(), any(), isNull())).thenReturn(updated);
         LogGroupListResponse emptyGroups = new LogGroupListResponse();
         emptyGroups.setData(new ArrayList<>());
         when(mockLogGroupsApi.listLogGroups(isNull(), any(), any(), isNull())).thenReturn(emptyGroups);
@@ -728,7 +728,7 @@ class LoggingClientWsEventsTest {
         LoggerResource lr = buildLoggerResource("com.acme.svc", "INVALID_LEVEL", true);
         LoggerListResponse updated = new LoggerListResponse();
         updated.setData(new ArrayList<>(List.of(lr)));
-        when(mockLoggersApi.listLoggers(isNull(), isNull(), isNull(), isNull(), any(), any(), isNull())).thenReturn(updated);
+        when(mockLoggersApi.listLoggers(isNull(), isNull(), isNull(), isNull(), isNull(), any(), any(), isNull())).thenReturn(updated);
         LogGroupListResponse emptyGroups = new LogGroupListResponse();
         emptyGroups.setData(new ArrayList<>());
         when(mockLogGroupsApi.listLogGroups(isNull(), any(), any(), isNull())).thenReturn(emptyGroups);
@@ -749,7 +749,7 @@ class LoggingClientWsEventsTest {
     @Test
     void refresh_beforeInstall_isNoOp() throws ApiException {
         client.refresh();
-        verify(mockLoggersApi, never()).listLoggers(any(), any(), any(), any(), any(), any(), any());
+        verify(mockLoggersApi, never()).listLoggers(any(), any(), any(), any(), any(), any(), any(), any());
         verify(mockLogGroupsApi, never()).listLogGroups(isNull(), any(), any(), isNull());
     }
 
@@ -761,14 +761,14 @@ class LoggingClientWsEventsTest {
         // Reset stubs: refresh issues another listLoggers + listLogGroups.
         LoggerListResponse emptyLoggers = new LoggerListResponse();
         emptyLoggers.setData(new ArrayList<>());
-        when(mockLoggersApi.listLoggers(isNull(), isNull(), isNull(), isNull(), any(), any(), isNull())).thenReturn(emptyLoggers);
+        when(mockLoggersApi.listLoggers(isNull(), isNull(), isNull(), isNull(), isNull(), any(), any(), isNull())).thenReturn(emptyLoggers);
         LogGroupListResponse emptyGroups = new LogGroupListResponse();
         emptyGroups.setData(new ArrayList<>());
         when(mockLogGroupsApi.listLogGroups(isNull(), any(), any(), isNull())).thenReturn(emptyGroups);
 
         client.refresh();
 
-        verify(mockLoggersApi, times(2)).listLoggers(isNull(), isNull(), isNull(), isNull(), any(), any(), isNull());
+        verify(mockLoggersApi, times(2)).listLoggers(isNull(), isNull(), isNull(), isNull(), isNull(), any(), any(), isNull());
         verify(mockLogGroupsApi, times(2)).listLogGroups(isNull(), any(), any(), isNull());
     }
 
@@ -789,7 +789,7 @@ class LoggingClientWsEventsTest {
         LoggerResource lr = buildLoggerResource("com.acme.svc", "WARN", true);
         LoggerListResponse changed = new LoggerListResponse();
         changed.setData(new ArrayList<>(List.of(lr)));
-        when(mockLoggersApi.listLoggers(isNull(), isNull(), isNull(), isNull(), any(), any(), isNull())).thenReturn(changed);
+        when(mockLoggersApi.listLoggers(isNull(), isNull(), isNull(), isNull(), isNull(), any(), any(), isNull())).thenReturn(changed);
         LogGroupListResponse emptyGroups = new LogGroupListResponse();
         emptyGroups.setData(new ArrayList<>());
         when(mockLogGroupsApi.listLogGroups(isNull(), any(), any(), isNull())).thenReturn(emptyGroups);
@@ -820,7 +820,7 @@ class LoggingClientWsEventsTest {
         LoggerResource lr = buildLoggerResource("com.acme.svc", "INFO", true);
         LoggerListResponse same = new LoggerListResponse();
         same.setData(new ArrayList<>(List.of(lr)));
-        when(mockLoggersApi.listLoggers(isNull(), isNull(), isNull(), isNull(), any(), any(), isNull())).thenReturn(same);
+        when(mockLoggersApi.listLoggers(isNull(), isNull(), isNull(), isNull(), isNull(), any(), any(), isNull())).thenReturn(same);
         LogGroupListResponse emptyGroups = new LogGroupListResponse();
         emptyGroups.setData(new ArrayList<>());
         when(mockLogGroupsApi.listLogGroups(isNull(), any(), any(), isNull())).thenReturn(emptyGroups);
@@ -836,7 +836,7 @@ class LoggingClientWsEventsTest {
         stubEmptyStart();
         client.install();
 
-        when(mockLoggersApi.listLoggers(isNull(), isNull(), isNull(), isNull(), any(), any(), isNull()))
+        when(mockLoggersApi.listLoggers(isNull(), isNull(), isNull(), isNull(), isNull(), any(), any(), isNull()))
                 .thenThrow(new ApiException("API failure"));
 
         assertDoesNotThrow(() -> client.refresh());
@@ -847,7 +847,7 @@ class LoggingClientWsEventsTest {
     private void stubEmptyStart() throws ApiException {
         LoggerListResponse emptyLoggers = new LoggerListResponse();
         emptyLoggers.setData(new ArrayList<>());
-        when(mockLoggersApi.listLoggers(isNull(), isNull(), isNull(), isNull(), any(), any(), isNull())).thenReturn(emptyLoggers);
+        when(mockLoggersApi.listLoggers(isNull(), isNull(), isNull(), isNull(), isNull(), any(), any(), isNull())).thenReturn(emptyLoggers);
 
         LogGroupListResponse emptyGroups = new LogGroupListResponse();
         emptyGroups.setData(new ArrayList<>());
@@ -860,7 +860,7 @@ class LoggingClientWsEventsTest {
         LoggerResource lr = buildLoggerResource(key, level, true);
         LoggerListResponse loggerResp = new LoggerListResponse();
         loggerResp.setData(new ArrayList<>(List.of(lr)));
-        when(mockLoggersApi.listLoggers(isNull(), isNull(), isNull(), isNull(), any(), any(), isNull())).thenReturn(loggerResp);
+        when(mockLoggersApi.listLoggers(isNull(), isNull(), isNull(), isNull(), isNull(), any(), any(), isNull())).thenReturn(loggerResp);
 
         LogGroupListResponse groupResp = new LogGroupListResponse();
         groupResp.setData(new ArrayList<>());
@@ -953,7 +953,7 @@ class LoggingClientWsEventsTest {
                 "com.acme.db", "com.acme.queue", "com.acme.api",
                 "com.acme.cache", "com.acme.auth"};
         for (String d : descendants) data.add(buildLoggerResource(d, null, true));
-        when(mockLoggersApi.listLoggers(isNull(), isNull(), isNull(), isNull(), any(), any(), isNull()))
+        when(mockLoggersApi.listLoggers(isNull(), isNull(), isNull(), isNull(), isNull(), any(), any(), isNull()))
                 .thenReturn(new LoggerListResponse().data(data));
         when(mockLogGroupsApi.listLogGroups(isNull(), any(), any(), isNull()))
                 .thenReturn(new LogGroupListResponse().data(new ArrayList<>()));
@@ -989,7 +989,7 @@ class LoggingClientWsEventsTest {
             r.getAttributes().setGroup("app");
             data.add(r);
         }
-        when(mockLoggersApi.listLoggers(isNull(), isNull(), isNull(), isNull(), any(), any(), isNull()))
+        when(mockLoggersApi.listLoggers(isNull(), isNull(), isNull(), isNull(), isNull(), any(), any(), isNull()))
                 .thenReturn(new LoggerListResponse().data(data));
         when(mockLogGroupsApi.listLogGroups(isNull(), any(), any(), isNull()))
                 .thenReturn(buildGroupListResponse("app", "WARN"));
@@ -1023,7 +1023,7 @@ class LoggingClientWsEventsTest {
             r.getAttributes().setGroup("app");
             data.add(r);
         }
-        when(mockLoggersApi.listLoggers(isNull(), isNull(), isNull(), isNull(), any(), any(), isNull()))
+        when(mockLoggersApi.listLoggers(isNull(), isNull(), isNull(), isNull(), isNull(), any(), any(), isNull()))
                 .thenReturn(new LoggerListResponse().data(data));
         when(mockLogGroupsApi.listLogGroups(isNull(), any(), any(), isNull()))
                 .thenReturn(buildGroupListResponse("app", "WARN"));

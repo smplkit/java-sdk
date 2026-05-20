@@ -114,7 +114,7 @@ class LoggingClientTest {
         LoggerListResponse resp = buildLoggerListResponse("id-1", "key1", "Key1", null);
         LoggerResource r2 = buildLoggerResource("id-2", "key2", "Key2", "DEBUG");
         resp.getData().add(r2);
-        when(mockLoggersApi.listLoggers(isNull(), isNull(), isNull(), isNull(), any(), any(), isNull())).thenReturn(resp);
+        when(mockLoggersApi.listLoggers(isNull(), isNull(), isNull(), isNull(), isNull(), any(), any(), isNull())).thenReturn(resp);
 
         List<Logger> loggers = client.management().list();
 
@@ -127,7 +127,7 @@ class LoggingClientTest {
     void list_returnsEmptyWhenNoData() throws ApiException {
         LoggerListResponse resp = new LoggerListResponse();
         resp.setData(null);
-        when(mockLoggersApi.listLoggers(isNull(), isNull(), isNull(), isNull(), any(), any(), isNull())).thenReturn(resp);
+        when(mockLoggersApi.listLoggers(isNull(), isNull(), isNull(), isNull(), isNull(), any(), any(), isNull())).thenReturn(resp);
 
         assertTrue(client.management().list().isEmpty());
     }
@@ -386,12 +386,12 @@ class LoggingClientTest {
         assertTrue(client.isInstalled());
 
         // listLoggers should only be called once (the second start() is a no-op)
-        verify(mockLoggersApi, times(1)).listLoggers(isNull(), isNull(), isNull(), isNull(), any(), any(), isNull());
+        verify(mockLoggersApi, times(1)).listLoggers(isNull(), isNull(), isNull(), isNull(), isNull(), any(), any(), isNull());
     }
 
     @Test
     void start_continuesEvenIfFetchFails() throws ApiException {
-        when(mockLoggersApi.listLoggers(isNull(), isNull(), isNull(), isNull(), any(), any(), isNull())).thenThrow(new ApiException(500, "server error"));
+        when(mockLoggersApi.listLoggers(isNull(), isNull(), isNull(), isNull(), isNull(), any(), any(), isNull())).thenThrow(new ApiException(500, "server error"));
 
         LoggingAdapter mockAdapter = mock(LoggingAdapter.class);
         when(mockAdapter.name()).thenReturn("test");
@@ -759,7 +759,7 @@ class LoggingClientTest {
 
     @Test
     void list_mapsApiException() throws ApiException {
-        when(mockLoggersApi.listLoggers(isNull(), isNull(), isNull(), isNull(), any(), any(), isNull()))
+        when(mockLoggersApi.listLoggers(isNull(), isNull(), isNull(), isNull(), isNull(), any(), any(), isNull()))
                 .thenThrow(new ApiException(500, "server error"));
 
         assertThrows(RuntimeException.class, () -> client.management().list());
@@ -767,7 +767,7 @@ class LoggingClientTest {
 
     @Test
     void list_apiException_code0_mapsToConnectionError() throws ApiException {
-        when(mockLoggersApi.listLoggers(isNull(), isNull(), isNull(), isNull(), any(), any(), isNull()))
+        when(mockLoggersApi.listLoggers(isNull(), isNull(), isNull(), isNull(), isNull(), any(), any(), isNull()))
                 .thenThrow(new ApiException("network failure"));
 
         assertThrows(RuntimeException.class, () -> client.management().list());
@@ -850,7 +850,7 @@ class LoggingClientTest {
 
         LoggerListResponse resp = new LoggerListResponse();
         resp.setData(List.of(resource));
-        when(mockLoggersApi.listLoggers(isNull(), isNull(), isNull(), isNull(), any(), any(), isNull())).thenReturn(resp);
+        when(mockLoggersApi.listLoggers(isNull(), isNull(), isNull(), isNull(), isNull(), any(), any(), isNull())).thenReturn(resp);
 
         List<Logger> loggers = client.management().list();
         assertEquals(1, loggers.size());
@@ -872,7 +872,7 @@ class LoggingClientTest {
 
         LoggerListResponse resp = new LoggerListResponse();
         resp.setData(List.of(resource));
-        when(mockLoggersApi.listLoggers(isNull(), isNull(), isNull(), isNull(), any(), any(), isNull())).thenReturn(resp);
+        when(mockLoggersApi.listLoggers(isNull(), isNull(), isNull(), isNull(), isNull(), any(), any(), isNull())).thenReturn(resp);
 
         List<Logger> loggers = client.management().list();
         Logger lg = loggers.get(0);
@@ -947,7 +947,7 @@ class LoggingClientTest {
         lr.getAttributes().setGroup("grp-id");
         LoggerListResponse loggerResp = new LoggerListResponse();
         loggerResp.setData(new ArrayList<>(List.of(lr)));
-        when(mockLoggersApi.listLoggers(isNull(), isNull(), isNull(), isNull(), any(), any(), isNull())).thenReturn(loggerResp);
+        when(mockLoggersApi.listLoggers(isNull(), isNull(), isNull(), isNull(), isNull(), any(), any(), isNull())).thenReturn(loggerResp);
 
         // Set up group with a level
         LogGroupResource gr = buildGroupResource("grp-id", "infra", "Infra", "WARN");
@@ -971,7 +971,7 @@ class LoggingClientTest {
         // Logger fetch succeeds
         LoggerListResponse loggerResp = new LoggerListResponse();
         loggerResp.setData(new ArrayList<>());
-        when(mockLoggersApi.listLoggers(isNull(), isNull(), isNull(), isNull(), any(), any(), isNull())).thenReturn(loggerResp);
+        when(mockLoggersApi.listLoggers(isNull(), isNull(), isNull(), isNull(), isNull(), any(), any(), isNull())).thenReturn(loggerResp);
 
         // Group fetch fails
         when(mockLogGroupsApi.listLogGroups(isNull(), any(), any(), isNull())).thenThrow(new ApiException(500, "group fetch failed"));
@@ -1007,7 +1007,7 @@ class LoggingClientTest {
         lr.getAttributes().setManaged(true);
         LoggerListResponse loggerResp = new LoggerListResponse();
         loggerResp.setData(new ArrayList<>(List.of(lr)));
-        when(mockLoggersApi.listLoggers(isNull(), isNull(), isNull(), isNull(), any(), any(), isNull())).thenReturn(loggerResp);
+        when(mockLoggersApi.listLoggers(isNull(), isNull(), isNull(), isNull(), isNull(), any(), any(), isNull())).thenReturn(loggerResp);
 
         LogGroupListResponse groupResp = new LogGroupListResponse();
         groupResp.setData(new ArrayList<>());
@@ -1074,7 +1074,7 @@ class LoggingClientTest {
         // Scoped fetch: getLogger called once for the changed key
         verify(mockLoggersApi, times(1)).getLogger("com.acme.somelogger");
         // listLoggers called only once for start(), NOT for the scoped change
-        verify(mockLoggersApi, times(1)).listLoggers(isNull(), isNull(), isNull(), isNull(), any(), any(), isNull());
+        verify(mockLoggersApi, times(1)).listLoggers(isNull(), isNull(), isNull(), isNull(), isNull(), any(), any(), isNull());
     }
 
     @Test
@@ -1126,21 +1126,21 @@ class LoggingClientTest {
         // Scoped fetch: getLogGroup called once
         verify(mockLogGroupsApi, times(1)).getLogGroup("some-group-id");
         // listLoggers NOT called again (only for start)
-        verify(mockLoggersApi, times(1)).listLoggers(isNull(), isNull(), isNull(), isNull(), any(), any(), isNull());
+        verify(mockLoggersApi, times(1)).listLoggers(isNull(), isNull(), isNull(), isNull(), isNull(), any(), any(), isNull());
     }
 
     @Test
     void simulateLoggerChanged_beforeStart_isNoOp() throws ApiException {
         // handleLoggerChanged when not started should not throw and not call API
         client.simulateLoggerChanged(Map.of("id", "com.acme.Logger"));
-        verify(mockLoggersApi, never()).listLoggers(any(), any(), any(), any(), any(), any(), any());
+        verify(mockLoggersApi, never()).listLoggers(any(), any(), any(), any(), any(), any(), any(), any());
         verify(mockLoggersApi, never()).getLogger(any());
     }
 
     @Test
     void simulateGroupChanged_beforeStart_isNoOp() throws ApiException {
         client.simulateGroupChanged(Map.of("id", "some-group"));
-        verify(mockLoggersApi, never()).listLoggers(any(), any(), any(), any(), any(), any(), any());
+        verify(mockLoggersApi, never()).listLoggers(any(), any(), any(), any(), any(), any(), any(), any());
         verify(mockLogGroupsApi, never()).getLogGroup(any());
     }
 
@@ -1225,7 +1225,7 @@ class LoggingClientTest {
         lr.getAttributes().setManaged(true);
         LoggerListResponse loggerResp = new LoggerListResponse();
         loggerResp.setData(new ArrayList<>(List.of(lr)));
-        when(mockLoggersApi.listLoggers(isNull(), isNull(), isNull(), isNull(), any(), any(), isNull())).thenReturn(loggerResp);
+        when(mockLoggersApi.listLoggers(isNull(), isNull(), isNull(), isNull(), isNull(), any(), any(), isNull())).thenReturn(loggerResp);
 
         LogGroupListResponse groupResp = new LogGroupListResponse();
         groupResp.setData(new ArrayList<>());
@@ -1252,7 +1252,7 @@ class LoggingClientTest {
         lr.getAttributes().setManaged(false);
         LoggerListResponse loggerResp = new LoggerListResponse();
         loggerResp.setData(new ArrayList<>(List.of(lr)));
-        when(mockLoggersApi.listLoggers(isNull(), isNull(), isNull(), isNull(), any(), any(), isNull())).thenReturn(loggerResp);
+        when(mockLoggersApi.listLoggers(isNull(), isNull(), isNull(), isNull(), isNull(), any(), any(), isNull())).thenReturn(loggerResp);
 
         LogGroupListResponse groupResp = new LogGroupListResponse();
         groupResp.setData(new ArrayList<>());
@@ -1289,7 +1289,7 @@ class LoggingClientTest {
         lr.getAttributes().setManaged(true);
         LoggerListResponse loggerResp = new LoggerListResponse();
         loggerResp.setData(new ArrayList<>(List.of(lr)));
-        when(mockLoggersApi.listLoggers(isNull(), isNull(), isNull(), isNull(), any(), any(), isNull())).thenReturn(loggerResp);
+        when(mockLoggersApi.listLoggers(isNull(), isNull(), isNull(), isNull(), isNull(), any(), any(), isNull())).thenReturn(loggerResp);
 
         LogGroupListResponse groupResp = new LogGroupListResponse();
         groupResp.setData(new ArrayList<>());
@@ -1425,7 +1425,7 @@ class LoggingClientTest {
     private void stubEmptyResponses() throws ApiException {
         LoggerListResponse loggerResp = new LoggerListResponse();
         loggerResp.setData(new ArrayList<>());
-        when(mockLoggersApi.listLoggers(isNull(), isNull(), isNull(), isNull(), any(), any(), isNull())).thenReturn(loggerResp);
+        when(mockLoggersApi.listLoggers(isNull(), isNull(), isNull(), isNull(), isNull(), any(), any(), isNull())).thenReturn(loggerResp);
 
         LogGroupListResponse groupResp = new LogGroupListResponse();
         groupResp.setData(new ArrayList<>());
@@ -1445,7 +1445,7 @@ class LoggingClientTest {
         lr.getAttributes().setManaged(true);
         LoggerListResponse loggerResp = new LoggerListResponse();
         loggerResp.setData(new ArrayList<>(List.of(lr)));
-        when(mockLoggersApi.listLoggers(isNull(), isNull(), isNull(), isNull(), any(), any(), isNull())).thenReturn(loggerResp);
+        when(mockLoggersApi.listLoggers(isNull(), isNull(), isNull(), isNull(), isNull(), any(), any(), isNull())).thenReturn(loggerResp);
 
         LogGroupListResponse groupResp = new LogGroupListResponse();
         groupResp.setData(new ArrayList<>());

@@ -75,7 +75,7 @@ class LoggersClientCrudTest {
         resp.setData(new ArrayList<>(List.of(
                 buildLoggerResource("a", "A", "INFO"),
                 buildLoggerResource("b", "B", "DEBUG"))));
-        when(mockLoggersApi.listLoggers(isNull(), isNull(), isNull(), isNull(), any(), any(), isNull())).thenReturn(resp);
+        when(mockLoggersApi.listLoggers(isNull(), isNull(), isNull(), isNull(), isNull(), any(), any(), isNull())).thenReturn(resp);
 
         List<Logger> out = loggers.list();
         assertEquals(2, out.size());
@@ -87,14 +87,14 @@ class LoggersClientCrudTest {
     void loggers_list_withNullData_returnsEmpty() throws ApiException {
         LoggerListResponse resp = new LoggerListResponse();
         resp.setData(null);
-        when(mockLoggersApi.listLoggers(isNull(), isNull(), isNull(), isNull(), any(), any(), isNull())).thenReturn(resp);
+        when(mockLoggersApi.listLoggers(isNull(), isNull(), isNull(), isNull(), isNull(), any(), any(), isNull())).thenReturn(resp);
 
         assertTrue(loggers.list().isEmpty());
     }
 
     @Test
     void loggers_list_mapsApiException() throws ApiException {
-        when(mockLoggersApi.listLoggers(isNull(), isNull(), isNull(), isNull(), any(), any(), isNull()))
+        when(mockLoggersApi.listLoggers(isNull(), isNull(), isNull(), isNull(), isNull(), any(), any(), isNull()))
                 .thenThrow(new ApiException(500, "boom"));
         assertThrows(RuntimeException.class, () -> loggers.list());
     }
