@@ -193,7 +193,7 @@ class TelemetryIntegrationTest {
         ConfigsApi configsApi = mock(ConfigsApi.class);
         ConfigListResponse listResp = new ConfigListResponse();
         listResp.setData(List.of());
-        when(configsApi.listConfigs(any(), any(), any(), any(), any())).thenReturn(listResp);
+        when(configsApi.listConfigs(any(), any(), any(), any(), any(), any())).thenReturn(listResp);
 
         ConfigClient config = new ConfigClient(configsApi, mockHttpClient, "key");
         config.setEnvironment("production");
@@ -216,7 +216,7 @@ class TelemetryIntegrationTest {
         ConfigsApi configsApi = mock(ConfigsApi.class);
         ConfigListResponse listResp = new ConfigListResponse();
         listResp.setData(List.of());
-        when(configsApi.listConfigs(any(), any(), any(), any(), any())).thenReturn(listResp);
+        when(configsApi.listConfigs(any(), any(), any(), any(), any(), any())).thenReturn(listResp);
 
         ConfigClient config = new ConfigClient(configsApi, mockHttpClient, "key");
         config.setEnvironment("production");
@@ -267,7 +267,7 @@ class TelemetryIntegrationTest {
         cr2.setAttributes(attrs2);
         secondResp.setData(List.of(cr2));
 
-        when(configsApi.listConfigs(nullable(String.class), nullable(String.class), nullable(Integer.class), nullable(Integer.class), nullable(Boolean.class)))
+        when(configsApi.listConfigs(nullable(String.class), nullable(String.class), nullable(String.class), nullable(Integer.class), nullable(Integer.class), nullable(Boolean.class)))
                 .thenReturn(firstResp)
                 .thenReturn(secondResp);
 

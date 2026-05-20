@@ -387,7 +387,7 @@ class ConfigClientTest {
     void list_returnsAllConfigs() throws ApiException {
         ConfigResource r1 = makeResource(CONFIG_ID, "Svc A", null, null, Map.of(), Map.of(), null, null);
         ConfigResource r2 = makeResource(CONFIG_ID_2, "Svc B", null, CONFIG_ID, Map.of(), Map.of(), null, null);
-        when(mockApi.listConfigs(isNull(), isNull(), any(), any(), isNull())).thenReturn(listResponse(List.of(r1, r2)));
+        when(mockApi.listConfigs(isNull(), isNull(), isNull(), any(), any(), isNull())).thenReturn(listResponse(List.of(r1, r2)));
 
         List<Config> configs = configClient.management().list();
 
@@ -399,7 +399,7 @@ class ConfigClientTest {
 
     @Test
     void list_returnsUnmodifiableList() throws ApiException {
-        when(mockApi.listConfigs(isNull(), isNull(), any(), any(), isNull())).thenReturn(listResponse(List.of()));
+        when(mockApi.listConfigs(isNull(), isNull(), isNull(), any(), any(), isNull())).thenReturn(listResponse(List.of()));
 
         List<Config> configs = configClient.management().list();
 
@@ -411,7 +411,7 @@ class ConfigClientTest {
     void list_nullData_returnsEmpty() throws ApiException {
         ConfigListResponse response = new ConfigListResponse();
         response.setData(null);
-        when(mockApi.listConfigs(isNull(), isNull(), any(), any(), isNull())).thenReturn(response);
+        when(mockApi.listConfigs(isNull(), isNull(), isNull(), any(), any(), isNull())).thenReturn(response);
 
         List<Config> configs = configClient.management().list();
 
@@ -420,7 +420,7 @@ class ConfigClientTest {
 
     @Test
     void list_apiException_throwsSmplError() throws ApiException {
-        when(mockApi.listConfigs(isNull(), isNull(), any(), any(), isNull()))
+        when(mockApi.listConfigs(isNull(), isNull(), isNull(), any(), any(), isNull()))
                 .thenThrow(new ApiException(503, "Service Unavailable"));
 
         SmplError ex = assertThrows(SmplError.class, () ->
@@ -706,7 +706,7 @@ class ConfigClientTest {
 
     @Test
     void connectInternal_registersWsHandlersWhenManagerSet() throws ApiException {
-        when(mockApi.listConfigs(isNull(), isNull(), any(), any(), isNull())).thenReturn(emptyListResponse());
+        when(mockApi.listConfigs(isNull(), isNull(), isNull(), any(), any(), isNull())).thenReturn(emptyListResponse());
         SharedWebSocket mockWs = mock(SharedWebSocket.class);
         configClient.setSharedWs(mockWs);
         configClient.setEnvironment("production");
@@ -720,7 +720,7 @@ class ConfigClientTest {
 
     @Test
     void simulateConfigChanged_triggersSccopedFetch() throws ApiException {
-        when(mockApi.listConfigs(isNull(), isNull(), any(), any(), isNull())).thenReturn(emptyListResponse());
+        when(mockApi.listConfigs(isNull(), isNull(), isNull(), any(), any(), isNull())).thenReturn(emptyListResponse());
         ConfigResource resource = makeResource(CONFIG_ID, "Some Config", null, null,
                 Map.of("timeout", itemDef(30, ConfigItemDefinition.TypeEnum.NUMBER)),
                 Map.of(), null, null);
@@ -733,19 +733,19 @@ class ConfigClientTest {
         // Scoped fetch: getConfig called once for the changed key
         verify(mockApi, times(1)).getConfig("some-config-id");
         // listConfigs called only once for init, NOT for the scoped change
-        verify(mockApi, times(1)).listConfigs(isNull(), isNull(), any(), any(), isNull());
+        verify(mockApi, times(1)).listConfigs(isNull(), isNull(), isNull(), any(), any(), isNull());
     }
 
     @Test
     void simulateConfigDeleted_removesFromCacheNoFetch() throws ApiException {
-        when(mockApi.listConfigs(isNull(), isNull(), any(), any(), isNull())).thenReturn(emptyListResponse());
+        when(mockApi.listConfigs(isNull(), isNull(), isNull(), any(), any(), isNull())).thenReturn(emptyListResponse());
         configClient.setEnvironment("production");
         configClient._connectInternal();
 
         configClient.simulateConfigDeleted(Map.of("id", "some-config-id"));
 
         // No additional listConfigs or getConfig calls — deleted is handled locally
-        verify(mockApi, times(1)).listConfigs(isNull(), isNull(), any(), any(), isNull());
+        verify(mockApi, times(1)).listConfigs(isNull(), isNull(), isNull(), any(), any(), isNull());
         verify(mockApi, never()).getConfig(any());
     }
 
@@ -753,26 +753,26 @@ class ConfigClientTest {
     void simulateConfigChanged_beforeConnect_isNoOp() throws ApiException {
         // handleConfigChanged when not connected should not throw and not call API
         configClient.simulateConfigChanged(Map.of("id", "some-config-id"));
-        verify(mockApi, never()).listConfigs(any(), any(), any(), any(), any());
+        verify(mockApi, never()).listConfigs(any(), any(), any(), any(), any(), any());
         verify(mockApi, never()).getConfig(any());
     }
 
     @Test
     void simulateConfigDeleted_beforeConnect_isNoOp() throws ApiException {
         configClient.simulateConfigDeleted(Map.of("id", "some-config-id"));
-        verify(mockApi, never()).listConfigs(any(), any(), any(), any(), any());
+        verify(mockApi, never()).listConfigs(any(), any(), any(), any(), any(), any());
     }
 
     @Test
     void simulateConfigsChanged_triggersFullRefresh() throws ApiException {
-        when(mockApi.listConfigs(isNull(), isNull(), any(), any(), isNull())).thenReturn(emptyListResponse());
+        when(mockApi.listConfigs(isNull(), isNull(), isNull(), any(), any(), isNull())).thenReturn(emptyListResponse());
         configClient.setEnvironment("production");
         configClient._connectInternal();
 
         configClient.simulateConfigsChanged(Map.of());
 
         // configs_changed triggers full refresh: listConfigs called twice
-        verify(mockApi, times(2)).listConfigs(isNull(), isNull(), any(), any(), isNull());
+        verify(mockApi, times(2)).listConfigs(isNull(), isNull(), isNull(), any(), any(), isNull());
     }
 
     private com.smplkit.internal.generated.config.model.ConfigListResponse emptyListResponse() {
