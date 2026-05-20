@@ -45,13 +45,13 @@ class PaginationTest {
 
     @Test
     void runtime_singlePageExit_stopsAfterShortPage() throws ApiException {
-        when(mockApi.listFlags(isNull(), isNull(), isNull(), isNull(), isNull(),
+        when(mockApi.listFlags(isNull(), isNull(), isNull(), isNull(), isNull(), isNull(),
                 eq(1), eq(1000), isNull()))
                 .thenReturn(makeListResponse("f1"));
 
         client._connectInternal();
 
-        verify(mockApi, times(1)).listFlags(isNull(), isNull(), isNull(), isNull(), isNull(),
+        verify(mockApi, times(1)).listFlags(isNull(), isNull(), isNull(), isNull(), isNull(), isNull(),
                 eq(1), eq(1000), isNull());
         assertTrue(client.isConnected());
     }
@@ -61,38 +61,38 @@ class PaginationTest {
         List<String> page1Ids = new ArrayList<>();
         for (int i = 0; i < 1000; i++) page1Ids.add("f" + i);
 
-        when(mockApi.listFlags(isNull(), isNull(), isNull(), isNull(), isNull(),
+        when(mockApi.listFlags(isNull(), isNull(), isNull(), isNull(), isNull(), isNull(),
                 eq(1), eq(1000), isNull()))
                 .thenReturn(makeListResponse(page1Ids.toArray(new String[0])));
-        when(mockApi.listFlags(isNull(), isNull(), isNull(), isNull(), isNull(),
+        when(mockApi.listFlags(isNull(), isNull(), isNull(), isNull(), isNull(), isNull(),
                 eq(2), eq(1000), isNull()))
                 .thenReturn(makeListResponse("f-extra"));
 
         client._connectInternal();
 
-        verify(mockApi, times(1)).listFlags(isNull(), isNull(), isNull(), isNull(), isNull(),
+        verify(mockApi, times(1)).listFlags(isNull(), isNull(), isNull(), isNull(), isNull(), isNull(),
                 eq(1), eq(1000), isNull());
-        verify(mockApi, times(1)).listFlags(isNull(), isNull(), isNull(), isNull(), isNull(),
+        verify(mockApi, times(1)).listFlags(isNull(), isNull(), isNull(), isNull(), isNull(), isNull(),
                 eq(2), eq(1000), isNull());
         assertTrue(client.isConnected());
     }
 
     @Test
     void management_listWithPaginationArgs_passesThroughToApi() throws ApiException {
-        when(mockApi.listFlags(isNull(), isNull(), isNull(), isNull(), isNull(),
+        when(mockApi.listFlags(isNull(), isNull(), isNull(), isNull(), isNull(), isNull(),
                 eq(2), eq(50), isNull()))
                 .thenReturn(makeListResponse("f-page2"));
 
         List<Flag<?>> result = client.management().list(2, 50);
 
         assertEquals(1, result.size());
-        verify(mockApi).listFlags(isNull(), isNull(), isNull(), isNull(), isNull(),
+        verify(mockApi).listFlags(isNull(), isNull(), isNull(), isNull(), isNull(), isNull(),
                 eq(2), eq(50), isNull());
     }
 
     @Test
     void management_listWithNullArgs_passesNullThroughForServerDefaults() throws ApiException {
-        when(mockApi.listFlags(isNull(), isNull(), isNull(), isNull(), isNull(),
+        when(mockApi.listFlags(isNull(), isNull(), isNull(), isNull(), isNull(), isNull(),
                 isNull(), isNull(), isNull()))
                 .thenReturn(makeListResponse("f1"));
 
@@ -103,7 +103,7 @@ class PaginationTest {
 
     @Test
     void asyncManagement_listWithPagination_delegatesToSync() throws Exception {
-        when(mockApi.listFlags(isNull(), isNull(), isNull(), isNull(), isNull(),
+        when(mockApi.listFlags(isNull(), isNull(), isNull(), isNull(), isNull(), isNull(),
                 eq(3), eq(25), isNull()))
                 .thenReturn(makeListResponse("f-async"));
 
@@ -113,7 +113,7 @@ class PaginationTest {
         List<Flag<?>> result = async.list(3, 25).get();
 
         assertEquals(1, result.size());
-        verify(mockApi).listFlags(isNull(), isNull(), isNull(), isNull(), isNull(),
+        verify(mockApi).listFlags(isNull(), isNull(), isNull(), isNull(), isNull(), isNull(),
                 eq(3), eq(25), isNull());
     }
 
