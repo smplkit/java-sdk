@@ -110,8 +110,11 @@ public final class FlagsManagement {
      */
     public List<Flag<?>> list(Integer pageNumber, Integer pageSize) {
         try {
+            // Positional args: filterType, filterManaged, filterReferencesContext,
+            // filterReferencesContextType, filterSearch, sort, pageNumber,
+            // pageSize, metaTotal.
             FlagListResponse response = client.flagsApi.listFlags(
-                    null, null, null, null, null, pageNumber, pageSize, null);
+                    null, null, null, null, null, null, pageNumber, pageSize, null);
             return client.parseListResponse(response);
         } catch (ApiException e) {
             throw FlagsClient.mapException(e);
