@@ -49,10 +49,7 @@ import com.smplkit.internal.generated.app.ApiClient;
   Account.JSON_PROPERTY_PRODUCT_SUBSCRIPTIONS,
   Account.JSON_PROPERTY_ENTRY_POINT,
   Account.JSON_PROPERTY_SHOW_SAMPLE_DATA,
-  Account.JSON_PROPERTY_DISCOUNT_OVERRIDE_PCT,
-  Account.JSON_PROPERTY_DISCOUNT_OVERRIDE_REASON,
-  Account.JSON_PROPERTY_DISCOUNT_OVERRIDE_SET_BY_USER_ID,
-  Account.JSON_PROPERTY_DISCOUNT_OVERRIDE_SET_AT
+  Account.JSON_PROPERTY_DISCOUNT_OVERRIDE_PCT
 })
 @jakarta.annotation.Generated(value = "org.openapitools.codegen.languages.JavaClientCodegen", comments = "Generator version: 7.21.0")
 public class Account {
@@ -88,15 +85,6 @@ public class Account {
   public static final String JSON_PROPERTY_DISCOUNT_OVERRIDE_PCT = "discount_override_pct";
   private JsonNullable<Integer> discountOverridePct = JsonNullable.<Integer>undefined();
 
-  public static final String JSON_PROPERTY_DISCOUNT_OVERRIDE_REASON = "discount_override_reason";
-  private JsonNullable<String> discountOverrideReason = JsonNullable.<String>undefined();
-
-  public static final String JSON_PROPERTY_DISCOUNT_OVERRIDE_SET_BY_USER_ID = "discount_override_set_by_user_id";
-  private JsonNullable<String> discountOverrideSetByUserId = JsonNullable.<String>undefined();
-
-  public static final String JSON_PROPERTY_DISCOUNT_OVERRIDE_SET_AT = "discount_override_set_at";
-  private JsonNullable<OffsetDateTime> discountOverrideSetAt = JsonNullable.<OffsetDateTime>undefined();
-
   public Account() { 
   }
 
@@ -110,10 +98,7 @@ public class Account {
     @JsonProperty(JSON_PROPERTY_PRODUCT_SUBSCRIPTIONS) Map<String, Object> productSubscriptions, 
     @JsonProperty(JSON_PROPERTY_ENTRY_POINT) String entryPoint, 
     @JsonProperty(JSON_PROPERTY_SHOW_SAMPLE_DATA) Boolean showSampleData, 
-    @JsonProperty(JSON_PROPERTY_DISCOUNT_OVERRIDE_PCT) Integer discountOverridePct, 
-    @JsonProperty(JSON_PROPERTY_DISCOUNT_OVERRIDE_REASON) String discountOverrideReason, 
-    @JsonProperty(JSON_PROPERTY_DISCOUNT_OVERRIDE_SET_BY_USER_ID) String discountOverrideSetByUserId, 
-    @JsonProperty(JSON_PROPERTY_DISCOUNT_OVERRIDE_SET_AT) OffsetDateTime discountOverrideSetAt
+    @JsonProperty(JSON_PROPERTY_DISCOUNT_OVERRIDE_PCT) Integer discountOverridePct
   ) {
   this();
     this.key = key == null ? JsonNullable.<String>undefined() : JsonNullable.of(key);
@@ -125,9 +110,6 @@ public class Account {
     this.entryPoint = entryPoint == null ? JsonNullable.<String>undefined() : JsonNullable.of(entryPoint);
     this.showSampleData = showSampleData == null ? JsonNullable.<Boolean>undefined() : JsonNullable.of(showSampleData);
     this.discountOverridePct = discountOverridePct == null ? JsonNullable.<Integer>undefined() : JsonNullable.of(discountOverridePct);
-    this.discountOverrideReason = discountOverrideReason == null ? JsonNullable.<String>undefined() : JsonNullable.of(discountOverrideReason);
-    this.discountOverrideSetByUserId = discountOverrideSetByUserId == null ? JsonNullable.<String>undefined() : JsonNullable.of(discountOverrideSetByUserId);
-    this.discountOverrideSetAt = discountOverrideSetAt == null ? JsonNullable.<OffsetDateTime>undefined() : JsonNullable.of(discountOverrideSetAt);
   }
 
   public Account name(@jakarta.annotation.Nonnull String name) {
@@ -365,7 +347,7 @@ public class Account {
 
 
   /**
-   * Custom discount percentage applied to the account in place of the volume-based discount schedule. &#x60;null&#x60; means the volume schedule applies.
+   * Custom discount percentage applied to the account in place of the volume-based discount schedule. &#x60;null&#x60; means the volume schedule applies. Who set it, when, and why are captured in the audit-event stream rather than on the subscription row.
    * @return discountOverridePct
    */
   @jakarta.annotation.Nullable
@@ -393,90 +375,6 @@ public class Account {
 
 
   /**
-   * Free-form note explaining why the override was set.
-   * @return discountOverrideReason
-   */
-  @jakarta.annotation.Nullable
-  @JsonIgnore
-  public String getDiscountOverrideReason() {
-    
-    if (discountOverrideReason == null) {
-      discountOverrideReason = JsonNullable.<String>undefined();
-    }
-    return discountOverrideReason.orElse(null);
-  }
-
-  @JsonProperty(value = JSON_PROPERTY_DISCOUNT_OVERRIDE_REASON, required = false)
-  @JsonInclude(value = JsonInclude.Include.USE_DEFAULTS)
-
-  public JsonNullable<String> getDiscountOverrideReason_JsonNullable() {
-    return discountOverrideReason;
-  }
-  
-  @JsonProperty(JSON_PROPERTY_DISCOUNT_OVERRIDE_REASON)
-  private void setDiscountOverrideReason_JsonNullable(JsonNullable<String> discountOverrideReason) {
-    this.discountOverrideReason = discountOverrideReason;
-  }
-
-
-
-  /**
-   * UUID of the user who set the override.
-   * @return discountOverrideSetByUserId
-   */
-  @jakarta.annotation.Nullable
-  @JsonIgnore
-  public String getDiscountOverrideSetByUserId() {
-    
-    if (discountOverrideSetByUserId == null) {
-      discountOverrideSetByUserId = JsonNullable.<String>undefined();
-    }
-    return discountOverrideSetByUserId.orElse(null);
-  }
-
-  @JsonProperty(value = JSON_PROPERTY_DISCOUNT_OVERRIDE_SET_BY_USER_ID, required = false)
-  @JsonInclude(value = JsonInclude.Include.USE_DEFAULTS)
-
-  public JsonNullable<String> getDiscountOverrideSetByUserId_JsonNullable() {
-    return discountOverrideSetByUserId;
-  }
-  
-  @JsonProperty(JSON_PROPERTY_DISCOUNT_OVERRIDE_SET_BY_USER_ID)
-  private void setDiscountOverrideSetByUserId_JsonNullable(JsonNullable<String> discountOverrideSetByUserId) {
-    this.discountOverrideSetByUserId = discountOverrideSetByUserId;
-  }
-
-
-
-  /**
-   * When the override was last changed.
-   * @return discountOverrideSetAt
-   */
-  @jakarta.annotation.Nullable
-  @JsonIgnore
-  public OffsetDateTime getDiscountOverrideSetAt() {
-    
-    if (discountOverrideSetAt == null) {
-      discountOverrideSetAt = JsonNullable.<OffsetDateTime>undefined();
-    }
-    return discountOverrideSetAt.orElse(null);
-  }
-
-  @JsonProperty(value = JSON_PROPERTY_DISCOUNT_OVERRIDE_SET_AT, required = false)
-  @JsonInclude(value = JsonInclude.Include.USE_DEFAULTS)
-
-  public JsonNullable<OffsetDateTime> getDiscountOverrideSetAt_JsonNullable() {
-    return discountOverrideSetAt;
-  }
-  
-  @JsonProperty(JSON_PROPERTY_DISCOUNT_OVERRIDE_SET_AT)
-  private void setDiscountOverrideSetAt_JsonNullable(JsonNullable<OffsetDateTime> discountOverrideSetAt) {
-    this.discountOverrideSetAt = discountOverrideSetAt;
-  }
-
-
-
-  /**
    * Return true if this Account object is equal to o.
    */
   @Override
@@ -497,10 +395,7 @@ public class Account {
         equalsNullable(this.productSubscriptions, account.productSubscriptions) &&
         equalsNullable(this.entryPoint, account.entryPoint) &&
         equalsNullable(this.showSampleData, account.showSampleData) &&
-        equalsNullable(this.discountOverridePct, account.discountOverridePct) &&
-        equalsNullable(this.discountOverrideReason, account.discountOverrideReason) &&
-        equalsNullable(this.discountOverrideSetByUserId, account.discountOverrideSetByUserId) &&
-        equalsNullable(this.discountOverrideSetAt, account.discountOverrideSetAt);
+        equalsNullable(this.discountOverridePct, account.discountOverridePct);
   }
 
   private static <T> boolean equalsNullable(JsonNullable<T> a, JsonNullable<T> b) {
@@ -509,7 +404,7 @@ public class Account {
 
   @Override
   public int hashCode() {
-    return Objects.hash(name, hashCodeNullable(key), hasStripeCustomer, hashCodeNullable(expiresAt), hashCodeNullable(createdAt), hashCodeNullable(deletedAt), hashCodeNullable(productSubscriptions), hashCodeNullable(entryPoint), hashCodeNullable(showSampleData), hashCodeNullable(discountOverridePct), hashCodeNullable(discountOverrideReason), hashCodeNullable(discountOverrideSetByUserId), hashCodeNullable(discountOverrideSetAt));
+    return Objects.hash(name, hashCodeNullable(key), hasStripeCustomer, hashCodeNullable(expiresAt), hashCodeNullable(createdAt), hashCodeNullable(deletedAt), hashCodeNullable(productSubscriptions), hashCodeNullable(entryPoint), hashCodeNullable(showSampleData), hashCodeNullable(discountOverridePct));
   }
 
   private static <T> int hashCodeNullable(JsonNullable<T> a) {
@@ -533,9 +428,6 @@ public class Account {
     sb.append("    entryPoint: ").append(toIndentedString(entryPoint)).append("\n");
     sb.append("    showSampleData: ").append(toIndentedString(showSampleData)).append("\n");
     sb.append("    discountOverridePct: ").append(toIndentedString(discountOverridePct)).append("\n");
-    sb.append("    discountOverrideReason: ").append(toIndentedString(discountOverrideReason)).append("\n");
-    sb.append("    discountOverrideSetByUserId: ").append(toIndentedString(discountOverrideSetByUserId)).append("\n");
-    sb.append("    discountOverrideSetAt: ").append(toIndentedString(discountOverrideSetAt)).append("\n");
     sb.append("}");
     return sb.toString();
   }
@@ -632,21 +524,6 @@ public class Account {
     // add `discount_override_pct` to the URL query string
     if (getDiscountOverridePct() != null) {
       joiner.add(String.format(java.util.Locale.ROOT, "%sdiscount_override_pct%s=%s", prefix, suffix, ApiClient.urlEncode(ApiClient.valueToString(getDiscountOverridePct()))));
-    }
-
-    // add `discount_override_reason` to the URL query string
-    if (getDiscountOverrideReason() != null) {
-      joiner.add(String.format(java.util.Locale.ROOT, "%sdiscount_override_reason%s=%s", prefix, suffix, ApiClient.urlEncode(ApiClient.valueToString(getDiscountOverrideReason()))));
-    }
-
-    // add `discount_override_set_by_user_id` to the URL query string
-    if (getDiscountOverrideSetByUserId() != null) {
-      joiner.add(String.format(java.util.Locale.ROOT, "%sdiscount_override_set_by_user_id%s=%s", prefix, suffix, ApiClient.urlEncode(ApiClient.valueToString(getDiscountOverrideSetByUserId()))));
-    }
-
-    // add `discount_override_set_at` to the URL query string
-    if (getDiscountOverrideSetAt() != null) {
-      joiner.add(String.format(java.util.Locale.ROOT, "%sdiscount_override_set_at%s=%s", prefix, suffix, ApiClient.urlEncode(ApiClient.valueToString(getDiscountOverrideSetAt()))));
     }
 
     return joiner.toString();
