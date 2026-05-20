@@ -37,7 +37,7 @@ class PaginationTest {
 
     @Test
     void runtime_loggers_singlePageExit() throws ApiException {
-        when(mockLoggersApi.listLoggers(isNull(), isNull(), isNull(), isNull(),
+        when(mockLoggersApi.listLoggers(isNull(), isNull(), isNull(), isNull(), isNull(),
                 eq(1), eq(1000), isNull()))
                 .thenReturn(loggers(2));
         when(mockLogGroupsApi.listLogGroups(isNull(), eq(1), eq(1000), isNull()))
@@ -45,16 +45,16 @@ class PaginationTest {
 
         client.install();
 
-        verify(mockLoggersApi, times(1)).listLoggers(isNull(), isNull(), isNull(), isNull(),
+        verify(mockLoggersApi, times(1)).listLoggers(isNull(), isNull(), isNull(), isNull(), isNull(),
                 eq(1), eq(1000), isNull());
     }
 
     @Test
     void runtime_loggers_multiPageExit_loopsUntilShortPage() throws ApiException {
-        when(mockLoggersApi.listLoggers(isNull(), isNull(), isNull(), isNull(),
+        when(mockLoggersApi.listLoggers(isNull(), isNull(), isNull(), isNull(), isNull(),
                 eq(1), eq(1000), isNull()))
                 .thenReturn(loggers(1000));
-        when(mockLoggersApi.listLoggers(isNull(), isNull(), isNull(), isNull(),
+        when(mockLoggersApi.listLoggers(isNull(), isNull(), isNull(), isNull(), isNull(),
                 eq(2), eq(1000), isNull()))
                 .thenReturn(loggers(5));
         when(mockLogGroupsApi.listLogGroups(isNull(), eq(1), eq(1000), isNull()))
@@ -62,15 +62,15 @@ class PaginationTest {
 
         client.install();
 
-        verify(mockLoggersApi, times(1)).listLoggers(isNull(), isNull(), isNull(), isNull(),
+        verify(mockLoggersApi, times(1)).listLoggers(isNull(), isNull(), isNull(), isNull(), isNull(),
                 eq(1), eq(1000), isNull());
-        verify(mockLoggersApi, times(1)).listLoggers(isNull(), isNull(), isNull(), isNull(),
+        verify(mockLoggersApi, times(1)).listLoggers(isNull(), isNull(), isNull(), isNull(), isNull(),
                 eq(2), eq(1000), isNull());
     }
 
     @Test
     void runtime_groups_multiPageExit_loopsUntilShortPage() throws ApiException {
-        when(mockLoggersApi.listLoggers(isNull(), isNull(), isNull(), isNull(),
+        when(mockLoggersApi.listLoggers(isNull(), isNull(), isNull(), isNull(), isNull(),
                 eq(1), eq(1000), isNull()))
                 .thenReturn(loggers(0));
         when(mockLogGroupsApi.listLogGroups(isNull(), eq(1), eq(1000), isNull()))
@@ -86,14 +86,14 @@ class PaginationTest {
 
     @Test
     void management_logger_listWithPagination_passesThrough() throws ApiException {
-        when(mockLoggersApi.listLoggers(isNull(), isNull(), isNull(), isNull(),
+        when(mockLoggersApi.listLoggers(isNull(), isNull(), isNull(), isNull(), isNull(),
                 eq(3), eq(20), isNull()))
                 .thenReturn(loggers(1));
 
         List<Logger> result = client.management().list(3, 20);
 
         assertEquals(1, result.size());
-        verify(mockLoggersApi).listLoggers(isNull(), isNull(), isNull(), isNull(),
+        verify(mockLoggersApi).listLoggers(isNull(), isNull(), isNull(), isNull(), isNull(),
                 eq(3), eq(20), isNull());
     }
 
@@ -110,7 +110,7 @@ class PaginationTest {
 
     @Test
     void mgmtLoggersClient_listWithPagination_passesThrough() throws ApiException {
-        when(mockLoggersApi.listLoggers(isNull(), isNull(), isNull(), isNull(),
+        when(mockLoggersApi.listLoggers(isNull(), isNull(), isNull(), isNull(), isNull(),
                 eq(5), eq(50), isNull()))
                 .thenReturn(loggers(1));
 
@@ -133,7 +133,7 @@ class PaginationTest {
 
     @Test
     void asyncLoggers_listWithPagination_delegatesToSync() throws Exception {
-        when(mockLoggersApi.listLoggers(isNull(), isNull(), isNull(), isNull(),
+        when(mockLoggersApi.listLoggers(isNull(), isNull(), isNull(), isNull(), isNull(),
                 eq(2), eq(25), isNull()))
                 .thenReturn(loggers(1));
 
