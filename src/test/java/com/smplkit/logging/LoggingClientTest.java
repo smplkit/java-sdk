@@ -1133,14 +1133,14 @@ class LoggingClientTest {
     void simulateLoggerChanged_beforeStart_isNoOp() throws ApiException {
         // handleLoggerChanged when not started should not throw and not call API
         client.simulateLoggerChanged(Map.of("id", "com.acme.Logger"));
-        verify(mockLoggersApi, never()).listLoggers(any(), any(), any(), any(), any(), any(), any());
+        verify(mockLoggersApi, never()).listLoggers(any(), any(), any(), any(), any(), any(), any(), any());
         verify(mockLoggersApi, never()).getLogger(any());
     }
 
     @Test
     void simulateGroupChanged_beforeStart_isNoOp() throws ApiException {
         client.simulateGroupChanged(Map.of("id", "some-group"));
-        verify(mockLoggersApi, never()).listLoggers(any(), any(), any(), any(), any(), any(), any());
+        verify(mockLoggersApi, never()).listLoggers(any(), any(), any(), any(), any(), any(), any(), any());
         verify(mockLogGroupsApi, never()).getLogGroup(any());
     }
 
