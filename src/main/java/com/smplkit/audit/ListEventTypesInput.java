@@ -1,8 +1,8 @@
 package com.smplkit.audit;
 
-/** Input for {@link AuditActionsClient#list(ListActionsInput)}. */
-public final class ListActionsInput {
-    /** Filter to actions seen with a specific {@code resourceType}. */
+/** Input for {@link AuditEventTypesClient#list(ListEventTypesInput)}. */
+public final class ListEventTypesInput {
+    /** Filter to event types seen with a specific {@code resourceType}. */
     public String filterResourceType;
     /** 1-based page number to return. Defaults to 1 server-side when null. */
     public Integer pageNumber;

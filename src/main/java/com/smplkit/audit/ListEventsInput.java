@@ -7,8 +7,8 @@ package com.smplkit.audit;
  * {@code occurredAtRange}, e.g. {@code [2026-01-01T00:00:00Z,*)}.</p>
  */
 public final class ListEventsInput {
-    /** Filter by action slug — e.g. {@code "user.created"}. */
-    public String action;
+    /** Filter by event type slug — e.g. {@code "user.created"}. */
+    public String eventType;
     /** Filter by resource type — e.g. {@code "invoice"}. */
     public String resourceType;
     /** Filter by resource id (exact match). */

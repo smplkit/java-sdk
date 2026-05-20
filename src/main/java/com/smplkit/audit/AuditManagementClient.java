@@ -13,7 +13,7 @@ import java.util.Map;
  * {@code SmplManagementClient.audit}.
  *
  * <p>Owns SIEM forwarder CRUD. Runtime audit operations (event
- * record/list/get, resource-types, actions) live on
+ * record/list/get, resource-types, event-types) live on
  * {@code SmplClient.audit()}.</p>
  */
 public final class AuditManagementClient {

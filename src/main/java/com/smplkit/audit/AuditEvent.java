@@ -15,13 +15,13 @@ import java.util.UUID;
 public final class AuditEvent {
     /** Server-assigned UUID for this event. */
     public final UUID id;
-    /** Action slug — e.g. {@code "user.created"}, {@code "invoice.paid"}. */
-    public final String action;
-    /** Type of resource the action operated on — e.g. {@code "invoice"}. */
+    /** Event type slug — e.g. {@code "user.created"}, {@code "invoice.paid"}. */
+    public final String eventType;
+    /** Type of resource the event operated on — e.g. {@code "invoice"}. */
     public final String resourceType;
-    /** Customer-facing id of the resource the action operated on. */
+    /** Customer-facing id of the resource the event operated on. */
     public final String resourceId;
-    /** When the action actually happened, as reported by the source. */
+    /** When the event actually happened, as reported by the source. */
     public final OffsetDateTime occurredAt;
     /** When the audit service first ingested this event. */
     public final OffsetDateTime createdAt;
@@ -59,13 +59,13 @@ public final class AuditEvent {
      */
     public final boolean doNotForward;
 
-    public AuditEvent(UUID id, String action, String resourceType, String resourceId,
+    public AuditEvent(UUID id, String eventType, String resourceType, String resourceId,
                       OffsetDateTime occurredAt, OffsetDateTime createdAt,
                       String actorType, String actorId, String actorLabel,
                       Map<String, Object> data,
                       String idempotencyKey, boolean doNotForward) {
         this.id = id;
-        this.action = action;
+        this.eventType = eventType;
         this.resourceType = resourceType;
         this.resourceId = resourceId;
         this.occurredAt = occurredAt;

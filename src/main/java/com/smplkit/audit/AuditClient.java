@@ -3,7 +3,7 @@ package com.smplkit.audit;
 import com.smplkit.SmplClient;
 import com.smplkit.internal.HttpClients;
 import com.smplkit.internal.generated.audit.ApiClient;
-import com.smplkit.internal.generated.audit.api.ActionsApi;
+import com.smplkit.internal.generated.audit.api.EventTypesApi;
 import com.smplkit.internal.generated.audit.api.EventsApi;
 import com.smplkit.internal.generated.audit.api.ResourceTypesApi;
 
@@ -16,8 +16,8 @@ import java.util.Map;
  *
  * <p>Sub-clients: {@link #events()} for event recording / listing /
  * retrieval; {@link #resourceTypes()} for the distinct resource-type
- * slugs seen in the account; {@link #actions()} for the distinct action
- * slugs (powering cascading filter dropdowns).</p>
+ * slugs seen in the account; {@link #eventTypes()} for the distinct event
+ * type slugs (powering cascading filter dropdowns).</p>
  *
  * <p>Management-plane operations (SIEM forwarder CRUD) live on
  * {@code SmplManagementClient} under {@code mgmt.audit.*}.</p>
@@ -26,7 +26,7 @@ public final class AuditClient implements AutoCloseable {
 
     private final AuditEvents events;
     private final AuditResourceTypesClient resourceTypes;
-    private final AuditActionsClient actions;
+    private final AuditEventTypesClient eventTypes;
 
     public AuditClient(HttpClient httpClient, String apiKey, Map<String, String> extraHeaders,
                        Duration timeout, String baseUrl) {
@@ -37,7 +37,7 @@ public final class AuditClient implements AutoCloseable {
         apiClient.setReadTimeout(timeout);
         this.events = new AuditEvents(new EventsApi(apiClient));
         this.resourceTypes = new AuditResourceTypesClient(new ResourceTypesApi(apiClient));
-        this.actions = new AuditActionsClient(new ActionsApi(apiClient));
+        this.eventTypes = new AuditEventTypesClient(new EventTypesApi(apiClient));
     }
 
     /** Returns the events sub-client (record, list, get). */
@@ -50,9 +50,9 @@ public final class AuditClient implements AutoCloseable {
         return resourceTypes;
     }
 
-    /** Returns the actions sub-client (list). */
-    public AuditActionsClient actions() {
-        return actions;
+    /** Returns the event-types sub-client (list). */
+    public AuditEventTypesClient eventTypes() {
+        return eventTypes;
     }
 
     @Override
