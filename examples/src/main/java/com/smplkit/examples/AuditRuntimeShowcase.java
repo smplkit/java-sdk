@@ -15,10 +15,10 @@ package com.smplkit.examples;
 import com.smplkit.SmplClient;
 import com.smplkit.audit.AuditEvent;
 import com.smplkit.audit.AuditResourceType;
-import com.smplkit.audit.AuditAction;
+import com.smplkit.audit.AuditEventType;
 import com.smplkit.audit.CreateEventInput;
-import com.smplkit.audit.ListActionsInput;
-import com.smplkit.audit.ListActionsPage;
+import com.smplkit.audit.ListEventTypesInput;
+import com.smplkit.audit.EventTypeListPage;
 import com.smplkit.audit.ListEventsInput;
 import com.smplkit.audit.ListEventsPage;
 import com.smplkit.audit.ListResourceTypesInput;
@@ -64,8 +64,8 @@ public final class AuditRuntimeShowcase {
             AuditEvent event = client.audit().events().get(recordedEventId);
             assert event.id.equals(recordedEventId) : "event id mismatch";
             assert event.resourceId.equals(someResourceId) : "resource_id mismatch";
-            assert "invoice.created".equals(event.action) : "action mismatch";
-            System.out.println("Fetched event " + event.id + ": " + event.action);
+            assert "invoice.created".equals(event.eventType) : "event type mismatch";
+            System.out.println("Fetched event " + event.id + ": " + event.eventType);
 
             // list resource types observed
             ListResourceTypesPage resourceTypes = client.audit().resourceTypes().list(new ListResourceTypesInput());
@@ -74,12 +74,12 @@ public final class AuditRuntimeShowcase {
             System.out.println("Observed resource types: "
                     + resourceTypes.resourceTypes.stream().map(rt -> rt.id).toList());
 
-            // list actions observed
-            ListActionsPage actions = client.audit().actions().list(new ListActionsInput());
-            assert actions.actions.stream().anyMatch(a -> "invoice.created".equals(a.id))
-                    : "expected 'invoice.created' action not found";
-            System.out.println("Observed actions: "
-                    + actions.actions.stream().map(a -> a.id).toList());
+            // list event types observed
+            EventTypeListPage eventTypes = client.audit().eventTypes().list(new ListEventTypesInput());
+            assert eventTypes.eventTypes.stream().anyMatch(a -> "invoice.created".equals(a.id))
+                    : "expected 'invoice.created' event type not found";
+            System.out.println("Observed event types: "
+                    + eventTypes.eventTypes.stream().map(a -> a.id).toList());
 
             System.out.println("Done!");
         }

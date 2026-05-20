@@ -10,11 +10,11 @@ import java.util.Map;
  * smplkit-emitted events; the server returns 403 for customer attempts.</p>
  */
 public final class CreateEventInput {
-    /** Action slug — e.g. {@code "user.created"}, {@code "invoice.paid"}. */
-    public String action;
-    /** Type of resource the action operated on — e.g. {@code "invoice"}. */
+    /** Event type slug — e.g. {@code "user.created"}, {@code "invoice.paid"}. */
+    public String eventType;
+    /** Type of resource the event operated on — e.g. {@code "invoice"}. */
     public String resourceType;
-    /** Customer-facing id of the resource the action operated on. */
+    /** Customer-facing id of the resource the event operated on. */
     public String resourceId;
     /** Optional; defaults to server-side {@code now()} if {@code null}. */
     public OffsetDateTime occurredAt;
@@ -47,8 +47,8 @@ public final class CreateEventInput {
 
     public CreateEventInput() {}
 
-    public CreateEventInput(String action, String resourceType, String resourceId) {
-        this.action = action;
+    public CreateEventInput(String eventType, String resourceType, String resourceId) {
+        this.eventType = eventType;
         this.resourceType = resourceType;
         this.resourceId = resourceId;
     }

@@ -289,7 +289,7 @@ public class EventsApi {
    * @param filterOccurredAt  (optional)
    * @param filterActorType  (optional)
    * @param filterActorId  (optional)
-   * @param filterAction  (optional)
+   * @param filterEventType  (optional)
    * @param filterResourceType  (optional)
    * @param filterResourceId  (optional)
    * @param filterSearch Case-insensitive substring match against &#x60;resource_id&#x60; or &#x60;description&#x60;. Use &#x60;filter[resource_id]&#x60; for an exact match on &#x60;resource_id&#x60;. (optional)
@@ -300,8 +300,8 @@ public class EventsApi {
    * @return EventListResponse
    * @throws ApiException if fails to make API call
    */
-  public EventListResponse listEvents(@jakarta.annotation.Nullable String filterOccurredAt, @jakarta.annotation.Nullable String filterActorType, @jakarta.annotation.Nullable String filterActorId, @jakarta.annotation.Nullable String filterAction, @jakarta.annotation.Nullable String filterResourceType, @jakarta.annotation.Nullable String filterResourceId, @jakarta.annotation.Nullable String filterSearch, @jakarta.annotation.Nullable Boolean filterDoNotForward, @jakarta.annotation.Nullable Integer pageSize, @jakarta.annotation.Nullable String pageAfter, @jakarta.annotation.Nullable String sort) throws ApiException {
-    return listEvents(filterOccurredAt, filterActorType, filterActorId, filterAction, filterResourceType, filterResourceId, filterSearch, filterDoNotForward, pageSize, pageAfter, sort, null);
+  public EventListResponse listEvents(@jakarta.annotation.Nullable String filterOccurredAt, @jakarta.annotation.Nullable String filterActorType, @jakarta.annotation.Nullable String filterActorId, @jakarta.annotation.Nullable String filterEventType, @jakarta.annotation.Nullable String filterResourceType, @jakarta.annotation.Nullable String filterResourceId, @jakarta.annotation.Nullable String filterSearch, @jakarta.annotation.Nullable Boolean filterDoNotForward, @jakarta.annotation.Nullable Integer pageSize, @jakarta.annotation.Nullable String pageAfter, @jakarta.annotation.Nullable String sort) throws ApiException {
+    return listEvents(filterOccurredAt, filterActorType, filterActorId, filterEventType, filterResourceType, filterResourceId, filterSearch, filterDoNotForward, pageSize, pageAfter, sort, null);
   }
 
   /**
@@ -310,7 +310,7 @@ public class EventsApi {
    * @param filterOccurredAt  (optional)
    * @param filterActorType  (optional)
    * @param filterActorId  (optional)
-   * @param filterAction  (optional)
+   * @param filterEventType  (optional)
    * @param filterResourceType  (optional)
    * @param filterResourceId  (optional)
    * @param filterSearch Case-insensitive substring match against &#x60;resource_id&#x60; or &#x60;description&#x60;. Use &#x60;filter[resource_id]&#x60; for an exact match on &#x60;resource_id&#x60;. (optional)
@@ -322,8 +322,8 @@ public class EventsApi {
    * @return EventListResponse
    * @throws ApiException if fails to make API call
    */
-  public EventListResponse listEvents(@jakarta.annotation.Nullable String filterOccurredAt, @jakarta.annotation.Nullable String filterActorType, @jakarta.annotation.Nullable String filterActorId, @jakarta.annotation.Nullable String filterAction, @jakarta.annotation.Nullable String filterResourceType, @jakarta.annotation.Nullable String filterResourceId, @jakarta.annotation.Nullable String filterSearch, @jakarta.annotation.Nullable Boolean filterDoNotForward, @jakarta.annotation.Nullable Integer pageSize, @jakarta.annotation.Nullable String pageAfter, @jakarta.annotation.Nullable String sort, Map<String, String> headers) throws ApiException {
-    ApiResponse<EventListResponse> localVarResponse = listEventsWithHttpInfo(filterOccurredAt, filterActorType, filterActorId, filterAction, filterResourceType, filterResourceId, filterSearch, filterDoNotForward, pageSize, pageAfter, sort, headers);
+  public EventListResponse listEvents(@jakarta.annotation.Nullable String filterOccurredAt, @jakarta.annotation.Nullable String filterActorType, @jakarta.annotation.Nullable String filterActorId, @jakarta.annotation.Nullable String filterEventType, @jakarta.annotation.Nullable String filterResourceType, @jakarta.annotation.Nullable String filterResourceId, @jakarta.annotation.Nullable String filterSearch, @jakarta.annotation.Nullable Boolean filterDoNotForward, @jakarta.annotation.Nullable Integer pageSize, @jakarta.annotation.Nullable String pageAfter, @jakarta.annotation.Nullable String sort, Map<String, String> headers) throws ApiException {
+    ApiResponse<EventListResponse> localVarResponse = listEventsWithHttpInfo(filterOccurredAt, filterActorType, filterActorId, filterEventType, filterResourceType, filterResourceId, filterSearch, filterDoNotForward, pageSize, pageAfter, sort, headers);
     return localVarResponse.getData();
   }
 
@@ -333,7 +333,7 @@ public class EventsApi {
    * @param filterOccurredAt  (optional)
    * @param filterActorType  (optional)
    * @param filterActorId  (optional)
-   * @param filterAction  (optional)
+   * @param filterEventType  (optional)
    * @param filterResourceType  (optional)
    * @param filterResourceId  (optional)
    * @param filterSearch Case-insensitive substring match against &#x60;resource_id&#x60; or &#x60;description&#x60;. Use &#x60;filter[resource_id]&#x60; for an exact match on &#x60;resource_id&#x60;. (optional)
@@ -344,8 +344,8 @@ public class EventsApi {
    * @return ApiResponse&lt;EventListResponse&gt;
    * @throws ApiException if fails to make API call
    */
-  public ApiResponse<EventListResponse> listEventsWithHttpInfo(@jakarta.annotation.Nullable String filterOccurredAt, @jakarta.annotation.Nullable String filterActorType, @jakarta.annotation.Nullable String filterActorId, @jakarta.annotation.Nullable String filterAction, @jakarta.annotation.Nullable String filterResourceType, @jakarta.annotation.Nullable String filterResourceId, @jakarta.annotation.Nullable String filterSearch, @jakarta.annotation.Nullable Boolean filterDoNotForward, @jakarta.annotation.Nullable Integer pageSize, @jakarta.annotation.Nullable String pageAfter, @jakarta.annotation.Nullable String sort) throws ApiException {
-    return listEventsWithHttpInfo(filterOccurredAt, filterActorType, filterActorId, filterAction, filterResourceType, filterResourceId, filterSearch, filterDoNotForward, pageSize, pageAfter, sort, null);
+  public ApiResponse<EventListResponse> listEventsWithHttpInfo(@jakarta.annotation.Nullable String filterOccurredAt, @jakarta.annotation.Nullable String filterActorType, @jakarta.annotation.Nullable String filterActorId, @jakarta.annotation.Nullable String filterEventType, @jakarta.annotation.Nullable String filterResourceType, @jakarta.annotation.Nullable String filterResourceId, @jakarta.annotation.Nullable String filterSearch, @jakarta.annotation.Nullable Boolean filterDoNotForward, @jakarta.annotation.Nullable Integer pageSize, @jakarta.annotation.Nullable String pageAfter, @jakarta.annotation.Nullable String sort) throws ApiException {
+    return listEventsWithHttpInfo(filterOccurredAt, filterActorType, filterActorId, filterEventType, filterResourceType, filterResourceId, filterSearch, filterDoNotForward, pageSize, pageAfter, sort, null);
   }
 
   /**
@@ -354,7 +354,7 @@ public class EventsApi {
    * @param filterOccurredAt  (optional)
    * @param filterActorType  (optional)
    * @param filterActorId  (optional)
-   * @param filterAction  (optional)
+   * @param filterEventType  (optional)
    * @param filterResourceType  (optional)
    * @param filterResourceId  (optional)
    * @param filterSearch Case-insensitive substring match against &#x60;resource_id&#x60; or &#x60;description&#x60;. Use &#x60;filter[resource_id]&#x60; for an exact match on &#x60;resource_id&#x60;. (optional)
@@ -366,8 +366,8 @@ public class EventsApi {
    * @return ApiResponse&lt;EventListResponse&gt;
    * @throws ApiException if fails to make API call
    */
-  public ApiResponse<EventListResponse> listEventsWithHttpInfo(@jakarta.annotation.Nullable String filterOccurredAt, @jakarta.annotation.Nullable String filterActorType, @jakarta.annotation.Nullable String filterActorId, @jakarta.annotation.Nullable String filterAction, @jakarta.annotation.Nullable String filterResourceType, @jakarta.annotation.Nullable String filterResourceId, @jakarta.annotation.Nullable String filterSearch, @jakarta.annotation.Nullable Boolean filterDoNotForward, @jakarta.annotation.Nullable Integer pageSize, @jakarta.annotation.Nullable String pageAfter, @jakarta.annotation.Nullable String sort, Map<String, String> headers) throws ApiException {
-    HttpRequest.Builder localVarRequestBuilder = listEventsRequestBuilder(filterOccurredAt, filterActorType, filterActorId, filterAction, filterResourceType, filterResourceId, filterSearch, filterDoNotForward, pageSize, pageAfter, sort, headers);
+  public ApiResponse<EventListResponse> listEventsWithHttpInfo(@jakarta.annotation.Nullable String filterOccurredAt, @jakarta.annotation.Nullable String filterActorType, @jakarta.annotation.Nullable String filterActorId, @jakarta.annotation.Nullable String filterEventType, @jakarta.annotation.Nullable String filterResourceType, @jakarta.annotation.Nullable String filterResourceId, @jakarta.annotation.Nullable String filterSearch, @jakarta.annotation.Nullable Boolean filterDoNotForward, @jakarta.annotation.Nullable Integer pageSize, @jakarta.annotation.Nullable String pageAfter, @jakarta.annotation.Nullable String sort, Map<String, String> headers) throws ApiException {
+    HttpRequest.Builder localVarRequestBuilder = listEventsRequestBuilder(filterOccurredAt, filterActorType, filterActorId, filterEventType, filterResourceType, filterResourceId, filterSearch, filterDoNotForward, pageSize, pageAfter, sort, headers);
     try {
       HttpResponse<InputStream> localVarResponse = memberVarHttpClient.send(
           localVarRequestBuilder.build(),
@@ -414,7 +414,7 @@ public class EventsApi {
     }
   }
 
-  private HttpRequest.Builder listEventsRequestBuilder(@jakarta.annotation.Nullable String filterOccurredAt, @jakarta.annotation.Nullable String filterActorType, @jakarta.annotation.Nullable String filterActorId, @jakarta.annotation.Nullable String filterAction, @jakarta.annotation.Nullable String filterResourceType, @jakarta.annotation.Nullable String filterResourceId, @jakarta.annotation.Nullable String filterSearch, @jakarta.annotation.Nullable Boolean filterDoNotForward, @jakarta.annotation.Nullable Integer pageSize, @jakarta.annotation.Nullable String pageAfter, @jakarta.annotation.Nullable String sort, Map<String, String> headers) throws ApiException {
+  private HttpRequest.Builder listEventsRequestBuilder(@jakarta.annotation.Nullable String filterOccurredAt, @jakarta.annotation.Nullable String filterActorType, @jakarta.annotation.Nullable String filterActorId, @jakarta.annotation.Nullable String filterEventType, @jakarta.annotation.Nullable String filterResourceType, @jakarta.annotation.Nullable String filterResourceId, @jakarta.annotation.Nullable String filterSearch, @jakarta.annotation.Nullable Boolean filterDoNotForward, @jakarta.annotation.Nullable Integer pageSize, @jakarta.annotation.Nullable String pageAfter, @jakarta.annotation.Nullable String sort, Map<String, String> headers) throws ApiException {
 
     HttpRequest.Builder localVarRequestBuilder = HttpRequest.newBuilder();
 
@@ -429,8 +429,8 @@ public class EventsApi {
     localVarQueryParams.addAll(ApiClient.parameterToPairs("filter[actor_type]", filterActorType));
     localVarQueryParameterBaseName = "filter[actor_id]";
     localVarQueryParams.addAll(ApiClient.parameterToPairs("filter[actor_id]", filterActorId));
-    localVarQueryParameterBaseName = "filter[action]";
-    localVarQueryParams.addAll(ApiClient.parameterToPairs("filter[action]", filterAction));
+    localVarQueryParameterBaseName = "filter[event_type]";
+    localVarQueryParams.addAll(ApiClient.parameterToPairs("filter[event_type]", filterEventType));
     localVarQueryParameterBaseName = "filter[resource_type]";
     localVarQueryParams.addAll(ApiClient.parameterToPairs("filter[resource_type]", filterResourceType));
     localVarQueryParameterBaseName = "filter[resource_id]";

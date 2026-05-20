@@ -53,7 +53,7 @@ class AuditBufferCoverageTest {
                 .id("")
                 .type("event")
                 .attributes(new Event()
-                        .action("x.created")
+                        .eventType("x.created")
                         .resourceType("x")
                         .resourceId("1")));
     }
@@ -73,7 +73,7 @@ class AuditBufferCoverageTest {
         server.createContext("/api/v1/events", ex -> {
             postCount.incrementAndGet();
             byte[] resp = ("{\"data\":{\"id\":\"00000000-0000-0000-0000-000000000001\"," +
-                    "\"type\":\"event\",\"attributes\":{\"action\":\"x.created\"," +
+                    "\"type\":\"event\",\"attributes\":{\"event_type\":\"x.created\"," +
                     "\"resource_type\":\"x\",\"resource_id\":\"1\"," +
                     "\"occurred_at\":\"2026-05-06T12:00:00Z\"," +
                     "\"created_at\":\"2026-05-06T12:00:01Z\"," +
@@ -173,8 +173,8 @@ class AuditBufferCoverageTest {
     @Test
     void listEventsInput_isInstantiable() {
         var input = new ListEventsInput();
-        input.action = "x";
-        assertEquals("x", input.action);
+        input.eventType = "x";
+        assertEquals("x", input.eventType);
     }
 
     @Test
@@ -189,7 +189,7 @@ class AuditBufferCoverageTest {
                 "USER", actorId, "label",
                 data, "ik", false);
         assertEquals(id, ev.id);
-        assertEquals("act", ev.action);
+        assertEquals("act", ev.eventType);
         assertEquals(actorId, ev.actorId);
         assertEquals("ik", ev.idempotencyKey);
     }
@@ -197,7 +197,7 @@ class AuditBufferCoverageTest {
     @Test
     void createEventInput_threeArgConstructor() {
         var input = new CreateEventInput("a", "rt", "rid");
-        assertEquals("a", input.action);
+        assertEquals("a", input.eventType);
         assertEquals("rt", input.resourceType);
         assertEquals("rid", input.resourceId);
     }
@@ -215,7 +215,7 @@ class AuditBufferCoverageTest {
         });
         AuditEvents events = new AuditEvents(api);
         var input = new ListEventsInput();
-        input.action = "user.created";
+        input.eventType = "user.created";
         input.resourceType = "user";
         input.resourceId = "u-1";
         input.actorType = "USER";
@@ -227,8 +227,8 @@ class AuditBufferCoverageTest {
         var page = events.list(input);
         assertNotNull(page);
         assertNotNull(capturedQuery.get());
-        assertTrue(capturedQuery.get().contains("filter%5Baction%5D=user.created")
-                || capturedQuery.get().contains("filter[action]=user.created"));
+        assertTrue(capturedQuery.get().contains("filter%5Bevent_type%5D=user.created")
+                || capturedQuery.get().contains("filter[event_type]=user.created"));
         // ADR-014 filter[search] companion is forwarded as a query param.
         assertTrue(capturedQuery.get().contains("filter%5Bsearch%5D=user_workflows")
                 || capturedQuery.get().contains("filter[search]=user_workflows"));
@@ -266,7 +266,7 @@ class AuditBufferCoverageTest {
     void auditEvents_listWithPopulatedData() throws Exception {
         server.createContext("/api/v1/events", ex -> {
             byte[] resp = ("{\"data\":[{\"id\":\"11111111-2222-3333-4444-555555555555\"," +
-                    "\"type\":\"event\",\"attributes\":{\"action\":\"u.created\"," +
+                    "\"type\":\"event\",\"attributes\":{\"event_type\":\"u.created\"," +
                     "\"resource_type\":\"u\",\"resource_id\":\"1\"," +
                     "\"occurred_at\":\"2026-05-06T12:00:00Z\"," +
                     "\"created_at\":\"2026-05-06T12:00:01Z\"," +
@@ -318,7 +318,7 @@ class AuditBufferCoverageTest {
             int n = postCount.incrementAndGet();
             int code = (n % 2 == 0) ? 503 : 201;
             byte[] resp = ("{\"data\":{\"id\":\"00000000-0000-0000-0000-000000000001\"," +
-                    "\"type\":\"event\",\"attributes\":{\"action\":\"x\"," +
+                    "\"type\":\"event\",\"attributes\":{\"event_type\":\"x\"," +
                     "\"resource_type\":\"x\",\"resource_id\":\"1\"," +
                     "\"occurred_at\":\"2026-05-06T12:00:00Z\"," +
                     "\"created_at\":\"2026-05-06T12:00:01Z\"," +

@@ -18,7 +18,7 @@ import com.smplkit.internal.generated.audit.ApiResponse;
 import com.smplkit.internal.generated.audit.Configuration;
 import com.smplkit.internal.generated.audit.Pair;
 
-import com.smplkit.internal.generated.audit.model.ActionListResponse;
+import com.smplkit.internal.generated.audit.model.EventTypeListResponse;
 
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -46,7 +46,7 @@ import java.util.Set;
 import java.util.function.Consumer;
 
 @jakarta.annotation.Generated(value = "org.openapitools.codegen.languages.JavaClientCodegen", comments = "Generator version: 7.21.0")
-public class ActionsApi {
+public class EventTypesApi {
   /**
    * Utility class for extending HttpRequest.Builder functionality.
    */
@@ -75,11 +75,11 @@ public class ActionsApi {
   private final Consumer<HttpResponse<InputStream>> memberVarResponseInterceptor;
   private final Consumer<HttpResponse<InputStream>> memberVarAsyncResponseInterceptor;
 
-  public ActionsApi() {
+  public EventTypesApi() {
     this(Configuration.getDefaultApiClient());
   }
 
-  public ActionsApi(ApiClient apiClient) {
+  public EventTypesApi(ApiClient apiClient) {
     memberVarHttpClient = apiClient.getHttpClient();
     memberVarObjectMapper = apiClient.getObjectMapper();
     memberVarBaseUri = apiClient.getBaseUri();
@@ -163,66 +163,66 @@ public class ActionsApi {
   }
 
   /**
-   * List Actions
-   * List the distinct &#x60;action&#x60; slugs recorded for this account.  Default sort is &#x60;key&#x60; ascending; pass &#x60;sort&#x3D;-key&#x60; for descending. Without &#x60;filter[resource_type]&#x60;, returns one row per distinct action. With &#x60;filter[resource_type]&#x60;, returns the actions recorded for that specific resource type.
+   * List Event Types
+   * List the distinct &#x60;event_type&#x60; slugs recorded for this account.  Default sort is &#x60;key&#x60; ascending; pass &#x60;sort&#x3D;-key&#x60; for descending. Without &#x60;filter[resource_type]&#x60;, returns one row per distinct event_type. With &#x60;filter[resource_type]&#x60;, returns the event_types recorded for that specific resource type.
    * @param filterResourceType  (optional)
    * @param sort Field to sort by. Prefix with &#x60;-&#x60; for descending order. Default: &#x60;key&#x60;. Allowed values: &#x60;key&#x60;, &#x60;-key&#x60;. (optional, default to key)
    * @param pageNumber 1-based page number to return. Optional; defaults to &#x60;1&#x60; when omitted. Must be &#x60;&gt;&#x3D; 1&#x60; — requests with a smaller value are rejected with a 400 error. (optional, default to 1)
    * @param pageSize Number of items per page. Optional; defaults to &#x60;1000&#x60; when omitted. Must be between &#x60;1&#x60; and &#x60;1000&#x60; inclusive — requests outside that range are rejected with a 400 error. (optional, default to 1000)
    * @param metaTotal When &#x60;true&#x60;, the response&#39;s &#x60;meta.pagination&#x60; block includes &#x60;total&#x60; (the total number of matching items across all pages) and &#x60;total_pages&#x60;. Computing these requires an extra &#x60;COUNT&#x60; query, so omit (or pass &#x60;false&#x60;) when the totals are not needed. Defaults to &#x60;false&#x60;. (optional, default to false)
-   * @return ActionListResponse
+   * @return EventTypeListResponse
    * @throws ApiException if fails to make API call
    */
-  public ActionListResponse listActions(@jakarta.annotation.Nullable String filterResourceType, @jakarta.annotation.Nullable String sort, @jakarta.annotation.Nullable Integer pageNumber, @jakarta.annotation.Nullable Integer pageSize, @jakarta.annotation.Nullable Boolean metaTotal) throws ApiException {
-    return listActions(filterResourceType, sort, pageNumber, pageSize, metaTotal, null);
+  public EventTypeListResponse listEventTypes(@jakarta.annotation.Nullable String filterResourceType, @jakarta.annotation.Nullable String sort, @jakarta.annotation.Nullable Integer pageNumber, @jakarta.annotation.Nullable Integer pageSize, @jakarta.annotation.Nullable Boolean metaTotal) throws ApiException {
+    return listEventTypes(filterResourceType, sort, pageNumber, pageSize, metaTotal, null);
   }
 
   /**
-   * List Actions
-   * List the distinct &#x60;action&#x60; slugs recorded for this account.  Default sort is &#x60;key&#x60; ascending; pass &#x60;sort&#x3D;-key&#x60; for descending. Without &#x60;filter[resource_type]&#x60;, returns one row per distinct action. With &#x60;filter[resource_type]&#x60;, returns the actions recorded for that specific resource type.
+   * List Event Types
+   * List the distinct &#x60;event_type&#x60; slugs recorded for this account.  Default sort is &#x60;key&#x60; ascending; pass &#x60;sort&#x3D;-key&#x60; for descending. Without &#x60;filter[resource_type]&#x60;, returns one row per distinct event_type. With &#x60;filter[resource_type]&#x60;, returns the event_types recorded for that specific resource type.
    * @param filterResourceType  (optional)
    * @param sort Field to sort by. Prefix with &#x60;-&#x60; for descending order. Default: &#x60;key&#x60;. Allowed values: &#x60;key&#x60;, &#x60;-key&#x60;. (optional, default to key)
    * @param pageNumber 1-based page number to return. Optional; defaults to &#x60;1&#x60; when omitted. Must be &#x60;&gt;&#x3D; 1&#x60; — requests with a smaller value are rejected with a 400 error. (optional, default to 1)
    * @param pageSize Number of items per page. Optional; defaults to &#x60;1000&#x60; when omitted. Must be between &#x60;1&#x60; and &#x60;1000&#x60; inclusive — requests outside that range are rejected with a 400 error. (optional, default to 1000)
    * @param metaTotal When &#x60;true&#x60;, the response&#39;s &#x60;meta.pagination&#x60; block includes &#x60;total&#x60; (the total number of matching items across all pages) and &#x60;total_pages&#x60;. Computing these requires an extra &#x60;COUNT&#x60; query, so omit (or pass &#x60;false&#x60;) when the totals are not needed. Defaults to &#x60;false&#x60;. (optional, default to false)
    * @param headers Optional headers to include in the request
-   * @return ActionListResponse
+   * @return EventTypeListResponse
    * @throws ApiException if fails to make API call
    */
-  public ActionListResponse listActions(@jakarta.annotation.Nullable String filterResourceType, @jakarta.annotation.Nullable String sort, @jakarta.annotation.Nullable Integer pageNumber, @jakarta.annotation.Nullable Integer pageSize, @jakarta.annotation.Nullable Boolean metaTotal, Map<String, String> headers) throws ApiException {
-    ApiResponse<ActionListResponse> localVarResponse = listActionsWithHttpInfo(filterResourceType, sort, pageNumber, pageSize, metaTotal, headers);
+  public EventTypeListResponse listEventTypes(@jakarta.annotation.Nullable String filterResourceType, @jakarta.annotation.Nullable String sort, @jakarta.annotation.Nullable Integer pageNumber, @jakarta.annotation.Nullable Integer pageSize, @jakarta.annotation.Nullable Boolean metaTotal, Map<String, String> headers) throws ApiException {
+    ApiResponse<EventTypeListResponse> localVarResponse = listEventTypesWithHttpInfo(filterResourceType, sort, pageNumber, pageSize, metaTotal, headers);
     return localVarResponse.getData();
   }
 
   /**
-   * List Actions
-   * List the distinct &#x60;action&#x60; slugs recorded for this account.  Default sort is &#x60;key&#x60; ascending; pass &#x60;sort&#x3D;-key&#x60; for descending. Without &#x60;filter[resource_type]&#x60;, returns one row per distinct action. With &#x60;filter[resource_type]&#x60;, returns the actions recorded for that specific resource type.
+   * List Event Types
+   * List the distinct &#x60;event_type&#x60; slugs recorded for this account.  Default sort is &#x60;key&#x60; ascending; pass &#x60;sort&#x3D;-key&#x60; for descending. Without &#x60;filter[resource_type]&#x60;, returns one row per distinct event_type. With &#x60;filter[resource_type]&#x60;, returns the event_types recorded for that specific resource type.
    * @param filterResourceType  (optional)
    * @param sort Field to sort by. Prefix with &#x60;-&#x60; for descending order. Default: &#x60;key&#x60;. Allowed values: &#x60;key&#x60;, &#x60;-key&#x60;. (optional, default to key)
    * @param pageNumber 1-based page number to return. Optional; defaults to &#x60;1&#x60; when omitted. Must be &#x60;&gt;&#x3D; 1&#x60; — requests with a smaller value are rejected with a 400 error. (optional, default to 1)
    * @param pageSize Number of items per page. Optional; defaults to &#x60;1000&#x60; when omitted. Must be between &#x60;1&#x60; and &#x60;1000&#x60; inclusive — requests outside that range are rejected with a 400 error. (optional, default to 1000)
    * @param metaTotal When &#x60;true&#x60;, the response&#39;s &#x60;meta.pagination&#x60; block includes &#x60;total&#x60; (the total number of matching items across all pages) and &#x60;total_pages&#x60;. Computing these requires an extra &#x60;COUNT&#x60; query, so omit (or pass &#x60;false&#x60;) when the totals are not needed. Defaults to &#x60;false&#x60;. (optional, default to false)
-   * @return ApiResponse&lt;ActionListResponse&gt;
+   * @return ApiResponse&lt;EventTypeListResponse&gt;
    * @throws ApiException if fails to make API call
    */
-  public ApiResponse<ActionListResponse> listActionsWithHttpInfo(@jakarta.annotation.Nullable String filterResourceType, @jakarta.annotation.Nullable String sort, @jakarta.annotation.Nullable Integer pageNumber, @jakarta.annotation.Nullable Integer pageSize, @jakarta.annotation.Nullable Boolean metaTotal) throws ApiException {
-    return listActionsWithHttpInfo(filterResourceType, sort, pageNumber, pageSize, metaTotal, null);
+  public ApiResponse<EventTypeListResponse> listEventTypesWithHttpInfo(@jakarta.annotation.Nullable String filterResourceType, @jakarta.annotation.Nullable String sort, @jakarta.annotation.Nullable Integer pageNumber, @jakarta.annotation.Nullable Integer pageSize, @jakarta.annotation.Nullable Boolean metaTotal) throws ApiException {
+    return listEventTypesWithHttpInfo(filterResourceType, sort, pageNumber, pageSize, metaTotal, null);
   }
 
   /**
-   * List Actions
-   * List the distinct &#x60;action&#x60; slugs recorded for this account.  Default sort is &#x60;key&#x60; ascending; pass &#x60;sort&#x3D;-key&#x60; for descending. Without &#x60;filter[resource_type]&#x60;, returns one row per distinct action. With &#x60;filter[resource_type]&#x60;, returns the actions recorded for that specific resource type.
+   * List Event Types
+   * List the distinct &#x60;event_type&#x60; slugs recorded for this account.  Default sort is &#x60;key&#x60; ascending; pass &#x60;sort&#x3D;-key&#x60; for descending. Without &#x60;filter[resource_type]&#x60;, returns one row per distinct event_type. With &#x60;filter[resource_type]&#x60;, returns the event_types recorded for that specific resource type.
    * @param filterResourceType  (optional)
    * @param sort Field to sort by. Prefix with &#x60;-&#x60; for descending order. Default: &#x60;key&#x60;. Allowed values: &#x60;key&#x60;, &#x60;-key&#x60;. (optional, default to key)
    * @param pageNumber 1-based page number to return. Optional; defaults to &#x60;1&#x60; when omitted. Must be &#x60;&gt;&#x3D; 1&#x60; — requests with a smaller value are rejected with a 400 error. (optional, default to 1)
    * @param pageSize Number of items per page. Optional; defaults to &#x60;1000&#x60; when omitted. Must be between &#x60;1&#x60; and &#x60;1000&#x60; inclusive — requests outside that range are rejected with a 400 error. (optional, default to 1000)
    * @param metaTotal When &#x60;true&#x60;, the response&#39;s &#x60;meta.pagination&#x60; block includes &#x60;total&#x60; (the total number of matching items across all pages) and &#x60;total_pages&#x60;. Computing these requires an extra &#x60;COUNT&#x60; query, so omit (or pass &#x60;false&#x60;) when the totals are not needed. Defaults to &#x60;false&#x60;. (optional, default to false)
    * @param headers Optional headers to include in the request
-   * @return ApiResponse&lt;ActionListResponse&gt;
+   * @return ApiResponse&lt;EventTypeListResponse&gt;
    * @throws ApiException if fails to make API call
    */
-  public ApiResponse<ActionListResponse> listActionsWithHttpInfo(@jakarta.annotation.Nullable String filterResourceType, @jakarta.annotation.Nullable String sort, @jakarta.annotation.Nullable Integer pageNumber, @jakarta.annotation.Nullable Integer pageSize, @jakarta.annotation.Nullable Boolean metaTotal, Map<String, String> headers) throws ApiException {
-    HttpRequest.Builder localVarRequestBuilder = listActionsRequestBuilder(filterResourceType, sort, pageNumber, pageSize, metaTotal, headers);
+  public ApiResponse<EventTypeListResponse> listEventTypesWithHttpInfo(@jakarta.annotation.Nullable String filterResourceType, @jakarta.annotation.Nullable String sort, @jakarta.annotation.Nullable Integer pageNumber, @jakarta.annotation.Nullable Integer pageSize, @jakarta.annotation.Nullable Boolean metaTotal, Map<String, String> headers) throws ApiException {
+    HttpRequest.Builder localVarRequestBuilder = listEventTypesRequestBuilder(filterResourceType, sort, pageNumber, pageSize, metaTotal, headers);
     try {
       HttpResponse<InputStream> localVarResponse = memberVarHttpClient.send(
           localVarRequestBuilder.build(),
@@ -233,11 +233,11 @@ public class ActionsApi {
       InputStream localVarResponseBody = null;
       try {
         if (localVarResponse.statusCode()/ 100 != 2) {
-          throw getApiException("listActions", localVarResponse);
+          throw getApiException("listEventTypes", localVarResponse);
         }
         localVarResponseBody = ApiClient.getResponseBody(localVarResponse);
         if (localVarResponseBody == null) {
-          return new ApiResponse<ActionListResponse>(
+          return new ApiResponse<EventTypeListResponse>(
               localVarResponse.statusCode(),
               localVarResponse.headers().map(),
               null
@@ -247,10 +247,10 @@ public class ActionsApi {
         
         
         String responseBody = new String(localVarResponseBody.readAllBytes());
-        ActionListResponse responseValue = responseBody.isBlank()? null: memberVarObjectMapper.readValue(responseBody, new TypeReference<ActionListResponse>() {});
+        EventTypeListResponse responseValue = responseBody.isBlank()? null: memberVarObjectMapper.readValue(responseBody, new TypeReference<EventTypeListResponse>() {});
         
 
-        return new ApiResponse<ActionListResponse>(
+        return new ApiResponse<EventTypeListResponse>(
             localVarResponse.statusCode(),
             localVarResponse.headers().map(),
             responseValue
@@ -269,11 +269,11 @@ public class ActionsApi {
     }
   }
 
-  private HttpRequest.Builder listActionsRequestBuilder(@jakarta.annotation.Nullable String filterResourceType, @jakarta.annotation.Nullable String sort, @jakarta.annotation.Nullable Integer pageNumber, @jakarta.annotation.Nullable Integer pageSize, @jakarta.annotation.Nullable Boolean metaTotal, Map<String, String> headers) throws ApiException {
+  private HttpRequest.Builder listEventTypesRequestBuilder(@jakarta.annotation.Nullable String filterResourceType, @jakarta.annotation.Nullable String sort, @jakarta.annotation.Nullable Integer pageNumber, @jakarta.annotation.Nullable Integer pageSize, @jakarta.annotation.Nullable Boolean metaTotal, Map<String, String> headers) throws ApiException {
 
     HttpRequest.Builder localVarRequestBuilder = HttpRequest.newBuilder();
 
-    String localVarPath = "/api/v1/actions";
+    String localVarPath = "/api/v1/event_types";
 
     List<Pair> localVarQueryParams = new ArrayList<>();
     StringJoiner localVarQueryStringJoiner = new StringJoiner("&");

@@ -36,18 +36,18 @@ public final class AuditEvents {
      * starting with {@code smpl.} are rejected by the server with a 403
      * (the buffer logs the permanent failure and drops the item).</p>
      *
-     * @throws IllegalArgumentException if action / resourceType / resourceId
+     * @throws IllegalArgumentException if eventType / resourceType / resourceId
      *     are missing
      */
     public void record(CreateEventInput input) {
-        if (input.action == null || input.action.isEmpty()
+        if (input.eventType == null || input.eventType.isEmpty()
                 || input.resourceType == null || input.resourceType.isEmpty()
                 || input.resourceId == null || input.resourceId.isEmpty()) {
             throw new IllegalArgumentException(
-                    "AuditEvents.record requires action, resourceType, and resourceId");
+                    "AuditEvents.record requires eventType, resourceType, and resourceId");
         }
         Event attrs = new Event()
-                .action(input.action)
+                .eventType(input.eventType)
                 .resourceType(input.resourceType)
                 .resourceId(input.resourceId);
         if (input.occurredAt != null) {
@@ -88,7 +88,7 @@ public final class AuditEvents {
                 input.occurredAtRange,
                 input.actorType,
                 input.actorId,
-                input.action,
+                input.eventType,
                 input.resourceType,
                 input.resourceId,
                 input.search,
@@ -133,7 +133,7 @@ public final class AuditEvents {
         Event a = r.getAttributes();
         return new AuditEvent(
                 r.getId() != null && !r.getId().isEmpty() ? UUID.fromString(r.getId()) : null,
-                a.getAction(),
+                a.getEventType(),
                 a.getResourceType(),
                 a.getResourceId(),
                 a.getOccurredAt(),

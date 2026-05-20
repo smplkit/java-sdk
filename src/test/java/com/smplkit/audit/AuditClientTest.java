@@ -68,7 +68,7 @@ class AuditClientTest {
                     lastIdempotencyKey.set(found);
                     postCount.incrementAndGet();
                     firstPostSeen.countDown();
-                    String body = "{\"data\":{\"id\":\"00000000-0000-0000-0000-000000000001\",\"type\":\"event\",\"attributes\":{\"action\":\"x.created\",\"resource_type\":\"x\",\"resource_id\":\"1\",\"occurred_at\":\"2026-05-06T12:00:00Z\",\"created_at\":\"2026-05-06T12:00:01Z\",\"actor_type\":\"API_KEY\",\"actor_id\":null,\"actor_label\":\"\",\"data\":{},\"idempotency_key\":\"\"}}}";
+                    String body = "{\"data\":{\"id\":\"00000000-0000-0000-0000-000000000001\",\"type\":\"event\",\"attributes\":{\"event_type\":\"x.created\",\"resource_type\":\"x\",\"resource_id\":\"1\",\"occurred_at\":\"2026-05-06T12:00:00Z\",\"created_at\":\"2026-05-06T12:00:01Z\",\"actor_type\":\"API_KEY\",\"actor_id\":null,\"actor_label\":\"\",\"data\":{},\"idempotency_key\":\"\"}}}";
                     byte[] resp = body.getBytes();
                     ex.getResponseHeaders().add("Content-Type", "application/vnd.api+json");
                     ex.sendResponseHeaders(201, resp.length);
@@ -77,7 +77,7 @@ class AuditClientTest {
                     return;
                 }
                 if (ex.getRequestMethod().equals("GET")) {
-                    String body = "{\"data\":{\"id\":\"11111111-2222-3333-4444-555555555555\",\"type\":\"event\",\"attributes\":{\"action\":\"x.created\",\"resource_type\":\"x\",\"resource_id\":\"1\",\"occurred_at\":\"2026-05-06T12:00:00Z\",\"created_at\":\"2026-05-06T12:00:01Z\",\"actor_type\":\"API_KEY\",\"actor_id\":null,\"actor_label\":\"\",\"data\":{},\"idempotency_key\":\"k\"}}}";
+                    String body = "{\"data\":{\"id\":\"11111111-2222-3333-4444-555555555555\",\"type\":\"event\",\"attributes\":{\"event_type\":\"x.created\",\"resource_type\":\"x\",\"resource_id\":\"1\",\"occurred_at\":\"2026-05-06T12:00:00Z\",\"created_at\":\"2026-05-06T12:00:01Z\",\"actor_type\":\"API_KEY\",\"actor_id\":null,\"actor_label\":\"\",\"data\":{},\"idempotency_key\":\"k\"}}}";
                     byte[] resp = body.getBytes();
                     ex.getResponseHeaders().add("Content-Type", "application/vnd.api+json");
                     ex.sendResponseHeaders(200, resp.length);
@@ -125,7 +125,7 @@ class AuditClientTest {
     @Test
     void create_rejectsMissingFields() {
         CreateEventInput input = new CreateEventInput();
-        input.action = "user.created";
+        input.eventType = "user.created";
         IllegalArgumentException ex = assertThrows(IllegalArgumentException.class,
                 () -> client.events().record(input));
         assertTrue(ex.getMessage().contains("resourceType")
@@ -137,7 +137,7 @@ class AuditClientTest {
         UUID id = UUID.fromString("11111111-2222-3333-4444-555555555555");
         AuditEvent ev = client.events().get(id);
         assertEquals(id, ev.id);
-        assertEquals("x.created", ev.action);
+        assertEquals("x.created", ev.eventType);
         assertEquals("API_KEY", ev.actorType);
         assertNull(ev.actorId);
     }
@@ -188,8 +188,8 @@ class AuditClientTest {
     }
 
     @Test
-    void client_exposesResourceTypesAndActionsAccessors() {
+    void client_exposesResourceTypesAndEventTypesAccessors() {
         assertNotNull(client.resourceTypes());
-        assertNotNull(client.actions());
+        assertNotNull(client.eventTypes());
     }
 }

@@ -2,7 +2,7 @@ package com.smplkit.audit;
 
 import com.smplkit.internal.generated.audit.ApiClient;
 import com.smplkit.internal.generated.audit.ApiException;
-import com.smplkit.internal.generated.audit.api.ActionsApi;
+import com.smplkit.internal.generated.audit.api.EventTypesApi;
 import com.smplkit.internal.generated.audit.api.ForwardersApi;
 import com.smplkit.internal.generated.audit.api.ResourceTypesApi;
 import com.sun.net.httpserver.HttpExchange;
@@ -23,7 +23,7 @@ import static org.junit.jupiter.api.Assertions.*;
 
 /**
  * Tests for the SIEM forwarders management surface, resource types, and
- * actions clients.
+ * event types clients.
  *
  * <p>Stubs the audit service via the JDK's built-in HttpServer; no
  * real network. The wrapper layer here must reach 100% line coverage
@@ -36,7 +36,7 @@ class AuditForwardersTest {
     private HttpServer server;
     private ForwardersApi forwardersApi;
     private ResourceTypesApi resourceTypesApi;
-    private ActionsApi actionsApi;
+    private EventTypesApi eventTypesApi;
     private final AtomicReference<HttpHandler> handler = new AtomicReference<>();
 
     @BeforeEach
@@ -58,7 +58,7 @@ class AuditForwardersTest {
         apiClient.setReadTimeout(Duration.ofSeconds(5));
         forwardersApi = new ForwardersApi(apiClient);
         resourceTypesApi = new ResourceTypesApi(apiClient);
-        actionsApi = new ActionsApi(apiClient);
+        eventTypesApi = new EventTypesApi(apiClient);
     }
 
     @AfterEach
@@ -511,54 +511,54 @@ class AuditForwardersTest {
     }
 
     // -----------------------------------------------------------------
-    // AuditActionsClient
+    // AuditEventTypesClient
     // -----------------------------------------------------------------
 
     @Test
-    void actions_list_returnsRows() throws Exception {
+    void eventTypes_list_returnsRows() throws Exception {
         handler.set(ex -> respondJson(ex, 200,
                 "{\"data\":["
-                + "{\"id\":\"invoice.created\",\"type\":\"action\","
-                + "\"attributes\":{\"action\":\"invoice.created\",\"created_at\":\"2026-04-01T00:00:00Z\"}},"
-                + "{\"id\":\"user.updated\",\"type\":\"action\","
-                + "\"attributes\":{\"action\":\"user.updated\",\"created_at\":\"2026-04-02T00:00:00Z\"}}"
+                + "{\"id\":\"invoice.created\",\"type\":\"event_type\","
+                + "\"attributes\":{\"event_type\":\"invoice.created\",\"created_at\":\"2026-04-01T00:00:00Z\"}},"
+                + "{\"id\":\"user.updated\",\"type\":\"event_type\","
+                + "\"attributes\":{\"event_type\":\"user.updated\",\"created_at\":\"2026-04-02T00:00:00Z\"}}"
                 + "],\"meta\":{\"pagination\":{\"page\":1,\"size\":1000}}}"));
-        AuditActionsClient ac = new AuditActionsClient(actionsApi);
-        ListActionsInput in = new ListActionsInput();
+        AuditEventTypesClient ac = new AuditEventTypesClient(eventTypesApi);
+        ListEventTypesInput in = new ListEventTypesInput();
         in.filterResourceType = "invoice";
-        ListActionsPage page = ac.list(in);
-        assertEquals(2, page.actions.size());
-        assertEquals("invoice.created", page.actions.get(0).id);
-        assertEquals("invoice.created", page.actions.get(0).action);
-        assertNotNull(page.actions.get(0).createdAt);
+        EventTypeListPage page = ac.list(in);
+        assertEquals(2, page.eventTypes.size());
+        assertEquals("invoice.created", page.eventTypes.get(0).id);
+        assertEquals("invoice.created", page.eventTypes.get(0).eventType);
+        assertNotNull(page.eventTypes.get(0).createdAt);
         assertEquals(1, page.pagination.page);
         assertEquals(1000, page.pagination.size);
     }
 
     @Test
-    void actions_list_missingMeta_returnsNullPagination() throws Exception {
+    void eventTypes_list_missingMeta_returnsNullPagination() throws Exception {
         handler.set(ex -> respondJson(ex, 200, "{\"data\":[]}"));
-        AuditActionsClient ac = new AuditActionsClient(actionsApi);
-        ListActionsPage page = ac.list(new ListActionsInput());
-        assertEquals(0, page.actions.size());
+        AuditEventTypesClient ac = new AuditEventTypesClient(eventTypesApi);
+        EventTypeListPage page = ac.list(new ListEventTypesInput());
+        assertEquals(0, page.eventTypes.size());
         assertNull(page.pagination);
     }
 
     @Test
-    void actions_list_filterAndPaginationForwardedToQuery() throws Exception {
+    void eventTypes_list_filterAndPaginationForwardedToQuery() throws Exception {
         java.util.concurrent.atomic.AtomicReference<String> lastUri = new java.util.concurrent.atomic.AtomicReference<>();
         handler.set(ex -> {
             lastUri.set(ex.getRequestURI().getRawQuery());
             respondJson(ex, 200,
                     "{\"data\":[],\"meta\":{\"pagination\":{\"page\":2,\"size\":1,\"total\":3,\"total_pages\":3}}}");
         });
-        AuditActionsClient ac = new AuditActionsClient(actionsApi);
-        ListActionsInput in = new ListActionsInput();
+        AuditEventTypesClient ac = new AuditEventTypesClient(eventTypesApi);
+        ListEventTypesInput in = new ListEventTypesInput();
         in.filterResourceType = "invoice";
         in.pageNumber = 2;
         in.pageSize = 1;
         in.metaTotal = true;
-        ListActionsPage page = ac.list(in);
+        EventTypeListPage page = ac.list(in);
         assertEquals(2, page.pagination.page);
         assertEquals(3, page.pagination.total);
         assertTrue(lastUri.get().contains("filter%5Bresource_type%5D=invoice"),
@@ -570,17 +570,17 @@ class AuditForwardersTest {
     }
 
     @Test
-    void auditAction_constructorPopulatesFields() {
-        AuditAction action = new AuditAction("invoice.created", "invoice.created",
+    void auditEventType_constructorPopulatesFields() {
+        AuditEventType eventType = new AuditEventType("invoice.created", "invoice.created",
                 java.time.OffsetDateTime.parse("2026-04-01T00:00:00Z"));
-        assertEquals("invoice.created", action.id);
-        assertEquals("invoice.created", action.action);
-        assertNotNull(action.createdAt);
+        assertEquals("invoice.created", eventType.id);
+        assertEquals("invoice.created", eventType.eventType);
+        assertNotNull(eventType.createdAt);
     }
 
     @Test
-    void listActionsInput_isInstantiable() {
-        ListActionsInput in = new ListActionsInput();
+    void listEventTypesInput_isInstantiable() {
+        ListEventTypesInput in = new ListEventTypesInput();
         in.filterResourceType = "invoice";
         in.pageNumber = 1;
         in.pageSize = 5;
@@ -592,10 +592,10 @@ class AuditForwardersTest {
     }
 
     @Test
-    void listActionsPage_constructorPopulatesFields() {
+    void eventTypeListPage_constructorPopulatesFields() {
         PageInfo info = new PageInfo(1, 1000, null, null);
-        ListActionsPage page = new ListActionsPage(java.util.List.of(), info);
-        assertEquals(0, page.actions.size());
+        EventTypeListPage page = new EventTypeListPage(java.util.List.of(), info);
+        assertEquals(0, page.eventTypes.size());
         assertSame(info, page.pagination);
     }
 }

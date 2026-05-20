@@ -27,18 +27,18 @@ import java.util.UUID;
 
 public final class AuditManagementShowcase {
 
-    // JSON Logic filter — only forward ``invoice.*`` actions.
+    // JSON Logic filter — only forward ``invoice.*`` event types.
     // Events that don't match are recorded as ``filtered_out`` deliveries.
     // See https://jsonlogic.com for the full operator reference.
     private static final Map<String, Object> INVOICE_FILTER =
-            Map.of("in", List.of("invoice.", Map.of("var", "action")));
+            Map.of("in", List.of("invoice.", Map.of("var", "event_type")));
 
     // JSONata template — reshape the event payload before POSTing to the
     // destination. This example flattens the event into a compact SIEM-style
     // record. See https://jsonata.org for the full language reference.
     private static final String SIEM_TRANSFORM = """
             {
-                "event": action,
+                "event": event_type,
                 "subject": resource_type & ":" & resource_id,
                 "ts": occurred_at,
                 "actor": actor_label
