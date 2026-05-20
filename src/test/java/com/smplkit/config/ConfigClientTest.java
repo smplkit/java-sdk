@@ -753,14 +753,14 @@ class ConfigClientTest {
     void simulateConfigChanged_beforeConnect_isNoOp() throws ApiException {
         // handleConfigChanged when not connected should not throw and not call API
         configClient.simulateConfigChanged(Map.of("id", "some-config-id"));
-        verify(mockApi, never()).listConfigs(any(), any(), any(), any(), any());
+        verify(mockApi, never()).listConfigs(any(), any(), any(), any(), any(), any());
         verify(mockApi, never()).getConfig(any());
     }
 
     @Test
     void simulateConfigDeleted_beforeConnect_isNoOp() throws ApiException {
         configClient.simulateConfigDeleted(Map.of("id", "some-config-id"));
-        verify(mockApi, never()).listConfigs(any(), any(), any(), any(), any());
+        verify(mockApi, never()).listConfigs(any(), any(), any(), any(), any(), any());
     }
 
     @Test

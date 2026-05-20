@@ -198,7 +198,7 @@ class ConfigClientWsEventsTest {
     @Test
     void configsChanged_beforeConnect_isNoOp() throws ApiException {
         configClient.simulateConfigsChanged(Map.of());
-        verify(mockApi, never()).listConfigs(any(), any(), any(), any(), any());
+        verify(mockApi, never()).listConfigs(any(), any(), any(), any(), any(), any());
     }
 
     // -----------------------------------------------------------------------
