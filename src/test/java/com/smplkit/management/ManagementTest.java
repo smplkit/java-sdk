@@ -421,7 +421,7 @@ class ManagementTest {
         EnvironmentResource r = buildEnvResource("prod", "Production", null, "STANDARD",
                 OffsetDateTime.now(), OffsetDateTime.now());
         resp.setData(List.of(r));
-        when(mockEnvApi.listEnvironments(null, null, null, null)).thenReturn(resp);
+        when(mockEnvApi.listEnvironments(null, null, null, null, null, null)).thenReturn(resp);
 
         List<com.smplkit.management.Environment> envs = envClient.list();
         assertEquals(1, envs.size());
@@ -432,7 +432,7 @@ class ManagementTest {
     void envClient_list_emptyData() throws Exception {
         EnvironmentListResponse resp = new EnvironmentListResponse();
         resp.setData(null);
-        when(mockEnvApi.listEnvironments(null, null, null, null)).thenReturn(resp);
+        when(mockEnvApi.listEnvironments(null, null, null, null, null, null)).thenReturn(resp);
         assertTrue(envClient.list().isEmpty());
     }
 
@@ -519,13 +519,13 @@ class ManagementTest {
 
     @Test
     void envClient_apiException_mapped() throws Exception {
-        when(mockEnvApi.listEnvironments(null, null, null, null)).thenThrow(new ApiException(404, "not found"));
+        when(mockEnvApi.listEnvironments(null, null, null, null, null, null)).thenThrow(new ApiException(404, "not found"));
         assertThrows(SmplError.class, () -> envClient.list());
     }
 
     @Test
     void envClient_apiException_zeroCode() throws Exception {
-        when(mockEnvApi.listEnvironments(null, null, null, null)).thenThrow(new ApiException(0, "network error"));
+        when(mockEnvApi.listEnvironments(null, null, null, null, null, null)).thenThrow(new ApiException(0, "network error"));
         assertThrows(SmplError.class, () -> envClient.list());
     }
 
