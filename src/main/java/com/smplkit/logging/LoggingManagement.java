@@ -93,8 +93,10 @@ public final class LoggingManagement {
      */
     public List<Logger> list(Integer pageNumber, Integer pageSize) {
         try {
+            // Positional args: filterManaged, filterService, filterLastSeen,
+            // filterSearch, sort, pageNumber, pageSize, metaTotal.
             LoggerListResponse response = client.loggersApi.listLoggers(
-                    null, null, null, null, pageNumber, pageSize, null);
+                    null, null, null, null, null, pageNumber, pageSize, null);
             List<Logger> result = new ArrayList<>();
             if (response.getData() != null) {
                 for (LoggerResource r : response.getData()) {

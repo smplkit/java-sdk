@@ -720,8 +720,10 @@ public final class LoggingClient {
         int page = 1;
         try {
             while (true) {
+                // Positional args: filterManaged, filterService, filterLastSeen,
+                // filterSearch, sort, pageNumber, pageSize, metaTotal.
                 LoggerListResponse loggerResp = loggersApi.listLoggers(
-                        null, null, null, null, page, RUNTIME_PAGE_SIZE, null);
+                        null, null, null, null, null, page, RUNTIME_PAGE_SIZE, null);
                 List<LoggerResource> rows = loggerResp.getData() != null
                         ? loggerResp.getData() : List.of();
                 for (LoggerResource r : rows) {
