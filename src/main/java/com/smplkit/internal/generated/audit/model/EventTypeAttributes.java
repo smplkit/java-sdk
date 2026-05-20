@@ -31,56 +31,56 @@ import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 
 import com.smplkit.internal.generated.audit.ApiClient;
 /**
- * ActionAttributes
+ * EventTypeAttributes
  */
 @JsonPropertyOrder({
-  ActionAttributes.JSON_PROPERTY_ACTION,
-  ActionAttributes.JSON_PROPERTY_CREATED_AT
+  EventTypeAttributes.JSON_PROPERTY_EVENT_TYPE,
+  EventTypeAttributes.JSON_PROPERTY_CREATED_AT
 })
 @jakarta.annotation.Generated(value = "org.openapitools.codegen.languages.JavaClientCodegen", comments = "Generator version: 7.21.0")
-public class ActionAttributes {
-  public static final String JSON_PROPERTY_ACTION = "action";
+public class EventTypeAttributes {
+  public static final String JSON_PROPERTY_EVENT_TYPE = "event_type";
   @jakarta.annotation.Nonnull
-  private String action;
+  private String eventType;
 
   public static final String JSON_PROPERTY_CREATED_AT = "created_at";
   @jakarta.annotation.Nonnull
   private OffsetDateTime createdAt;
 
-  public ActionAttributes() { 
+  public EventTypeAttributes() { 
   }
 
-  public ActionAttributes action(@jakarta.annotation.Nonnull String action) {
-    this.action = action;
+  public EventTypeAttributes eventType(@jakarta.annotation.Nonnull String eventType) {
+    this.eventType = eventType;
     return this;
   }
 
   /**
-   * The action slug. Same as the JSON:API &#x60;&#x60;id&#x60;&#x60;.
-   * @return action
+   * The event_type slug. Same as the JSON:API &#x60;&#x60;id&#x60;&#x60;.
+   * @return eventType
    */
   @jakarta.annotation.Nonnull
-  @JsonProperty(value = JSON_PROPERTY_ACTION, required = true)
+  @JsonProperty(value = JSON_PROPERTY_EVENT_TYPE, required = true)
   @JsonInclude(value = JsonInclude.Include.ALWAYS)
-  public String getAction() {
-    return action;
+  public String getEventType() {
+    return eventType;
   }
 
 
-  @JsonProperty(value = JSON_PROPERTY_ACTION, required = true)
+  @JsonProperty(value = JSON_PROPERTY_EVENT_TYPE, required = true)
   @JsonInclude(value = JsonInclude.Include.ALWAYS)
-  public void setAction(@jakarta.annotation.Nonnull String action) {
-    this.action = action;
+  public void setEventType(@jakarta.annotation.Nonnull String eventType) {
+    this.eventType = eventType;
   }
 
 
-  public ActionAttributes createdAt(@jakarta.annotation.Nonnull OffsetDateTime createdAt) {
+  public EventTypeAttributes createdAt(@jakarta.annotation.Nonnull OffsetDateTime createdAt) {
     this.createdAt = createdAt;
     return this;
   }
 
   /**
-   * First sighting of this action for the account. When the request includes &#x60;&#x60;filter[resource_type]&#x60;&#x60;, this is the first sighting of the (action, resource_type) triple rather than the action overall.
+   * First sighting of this event_type for the account. When the request includes &#x60;&#x60;filter[resource_type]&#x60;&#x60;, this is the first sighting of the (event_type, resource_type) triple rather than the event_type overall.
    * @return createdAt
    */
   @jakarta.annotation.Nonnull
@@ -99,7 +99,7 @@ public class ActionAttributes {
 
 
   /**
-   * Return true if this ActionAttributes object is equal to o.
+   * Return true if this EventTypeAttributes object is equal to o.
    */
   @Override
   public boolean equals(Object o) {
@@ -109,21 +109,21 @@ public class ActionAttributes {
     if (o == null || getClass() != o.getClass()) {
       return false;
     }
-    ActionAttributes actionAttributes = (ActionAttributes) o;
-    return Objects.equals(this.action, actionAttributes.action) &&
-        Objects.equals(this.createdAt, actionAttributes.createdAt);
+    EventTypeAttributes eventTypeAttributes = (EventTypeAttributes) o;
+    return Objects.equals(this.eventType, eventTypeAttributes.eventType) &&
+        Objects.equals(this.createdAt, eventTypeAttributes.createdAt);
   }
 
   @Override
   public int hashCode() {
-    return Objects.hash(action, createdAt);
+    return Objects.hash(eventType, createdAt);
   }
 
   @Override
   public String toString() {
     StringBuilder sb = new StringBuilder();
-    sb.append("class ActionAttributes {\n");
-    sb.append("    action: ").append(toIndentedString(action)).append("\n");
+    sb.append("class EventTypeAttributes {\n");
+    sb.append("    eventType: ").append(toIndentedString(eventType)).append("\n");
     sb.append("    createdAt: ").append(toIndentedString(createdAt)).append("\n");
     sb.append("}");
     return sb.toString();
@@ -169,9 +169,9 @@ public class ActionAttributes {
 
     StringJoiner joiner = new StringJoiner("&");
 
-    // add `action` to the URL query string
-    if (getAction() != null) {
-      joiner.add(String.format(java.util.Locale.ROOT, "%saction%s=%s", prefix, suffix, ApiClient.urlEncode(ApiClient.valueToString(getAction()))));
+    // add `event_type` to the URL query string
+    if (getEventType() != null) {
+      joiner.add(String.format(java.util.Locale.ROOT, "%sevent_type%s=%s", prefix, suffix, ApiClient.urlEncode(ApiClient.valueToString(getEventType()))));
     }
 
     // add `created_at` to the URL query string

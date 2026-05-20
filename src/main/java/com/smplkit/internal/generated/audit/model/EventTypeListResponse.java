@@ -24,7 +24,7 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonTypeName;
 import com.fasterxml.jackson.annotation.JsonValue;
-import com.smplkit.internal.generated.audit.model.ActionResource;
+import com.smplkit.internal.generated.audit.model.EventTypeResource;
 import com.smplkit.internal.generated.audit.model.ListMeta;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -34,31 +34,31 @@ import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 
 import com.smplkit.internal.generated.audit.ApiClient;
 /**
- * ActionListResponse
+ * EventTypeListResponse
  */
 @JsonPropertyOrder({
-  ActionListResponse.JSON_PROPERTY_DATA,
-  ActionListResponse.JSON_PROPERTY_META
+  EventTypeListResponse.JSON_PROPERTY_DATA,
+  EventTypeListResponse.JSON_PROPERTY_META
 })
 @jakarta.annotation.Generated(value = "org.openapitools.codegen.languages.JavaClientCodegen", comments = "Generator version: 7.21.0")
-public class ActionListResponse {
+public class EventTypeListResponse {
   public static final String JSON_PROPERTY_DATA = "data";
   @jakarta.annotation.Nonnull
-  private List<ActionResource> data = new ArrayList<>();
+  private List<EventTypeResource> data = new ArrayList<>();
 
   public static final String JSON_PROPERTY_META = "meta";
   @jakarta.annotation.Nonnull
   private ListMeta meta;
 
-  public ActionListResponse() { 
+  public EventTypeListResponse() { 
   }
 
-  public ActionListResponse data(@jakarta.annotation.Nonnull List<ActionResource> data) {
+  public EventTypeListResponse data(@jakarta.annotation.Nonnull List<EventTypeResource> data) {
     this.data = data;
     return this;
   }
 
-  public ActionListResponse addDataItem(ActionResource dataItem) {
+  public EventTypeListResponse addDataItem(EventTypeResource dataItem) {
     if (this.data == null) {
       this.data = new ArrayList<>();
     }
@@ -73,19 +73,19 @@ public class ActionListResponse {
   @jakarta.annotation.Nonnull
   @JsonProperty(value = JSON_PROPERTY_DATA, required = true)
   @JsonInclude(value = JsonInclude.Include.ALWAYS)
-  public List<ActionResource> getData() {
+  public List<EventTypeResource> getData() {
     return data;
   }
 
 
   @JsonProperty(value = JSON_PROPERTY_DATA, required = true)
   @JsonInclude(value = JsonInclude.Include.ALWAYS)
-  public void setData(@jakarta.annotation.Nonnull List<ActionResource> data) {
+  public void setData(@jakarta.annotation.Nonnull List<EventTypeResource> data) {
     this.data = data;
   }
 
 
-  public ActionListResponse meta(@jakarta.annotation.Nonnull ListMeta meta) {
+  public EventTypeListResponse meta(@jakarta.annotation.Nonnull ListMeta meta) {
     this.meta = meta;
     return this;
   }
@@ -110,7 +110,7 @@ public class ActionListResponse {
 
 
   /**
-   * Return true if this ActionListResponse object is equal to o.
+   * Return true if this EventTypeListResponse object is equal to o.
    */
   @Override
   public boolean equals(Object o) {
@@ -120,9 +120,9 @@ public class ActionListResponse {
     if (o == null || getClass() != o.getClass()) {
       return false;
     }
-    ActionListResponse actionListResponse = (ActionListResponse) o;
-    return Objects.equals(this.data, actionListResponse.data) &&
-        Objects.equals(this.meta, actionListResponse.meta);
+    EventTypeListResponse eventTypeListResponse = (EventTypeListResponse) o;
+    return Objects.equals(this.data, eventTypeListResponse.data) &&
+        Objects.equals(this.meta, eventTypeListResponse.meta);
   }
 
   @Override
@@ -133,7 +133,7 @@ public class ActionListResponse {
   @Override
   public String toString() {
     StringBuilder sb = new StringBuilder();
-    sb.append("class ActionListResponse {\n");
+    sb.append("class EventTypeListResponse {\n");
     sb.append("    data: ").append(toIndentedString(data)).append("\n");
     sb.append("    meta: ").append(toIndentedString(meta)).append("\n");
     sb.append("}");

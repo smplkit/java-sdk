@@ -40,7 +40,7 @@ import com.smplkit.internal.generated.audit.ApiClient;
  * An audit event — a record that something happened, attributed to an actor and a resource.  When recording a snapshot of the resource at the time of the event, place it inside &#x60;data&#x60;. smplkit&#39;s own integrations nest it under &#x60;data.snapshot&#x60;, but the slot is yours to use however you like.
  */
 @JsonPropertyOrder({
-  Event.JSON_PROPERTY_ACTION,
+  Event.JSON_PROPERTY_EVENT_TYPE,
   Event.JSON_PROPERTY_RESOURCE_TYPE,
   Event.JSON_PROPERTY_RESOURCE_ID,
   Event.JSON_PROPERTY_DESCRIPTION,
@@ -55,9 +55,9 @@ import com.smplkit.internal.generated.audit.ApiClient;
 })
 @jakarta.annotation.Generated(value = "org.openapitools.codegen.languages.JavaClientCodegen", comments = "Generator version: 7.21.0")
 public class Event {
-  public static final String JSON_PROPERTY_ACTION = "action";
+  public static final String JSON_PROPERTY_EVENT_TYPE = "event_type";
   @jakarta.annotation.Nonnull
-  private String action;
+  private String eventType;
 
   public static final String JSON_PROPERTY_RESOURCE_TYPE = "resource_type";
   @jakarta.annotation.Nonnull
@@ -109,27 +109,27 @@ public class Event {
     this.idempotencyKey = idempotencyKey == null ? JsonNullable.<String>undefined() : JsonNullable.of(idempotencyKey);
   }
 
-  public Event action(@jakarta.annotation.Nonnull String action) {
-    this.action = action;
+  public Event eventType(@jakarta.annotation.Nonnull String eventType) {
+    this.eventType = eventType;
     return this;
   }
 
   /**
    * What happened, e.g. &#x60;user.created&#x60;. Any non-empty string.
-   * @return action
+   * @return eventType
    */
   @jakarta.annotation.Nonnull
-  @JsonProperty(value = JSON_PROPERTY_ACTION, required = true)
+  @JsonProperty(value = JSON_PROPERTY_EVENT_TYPE, required = true)
   @JsonInclude(value = JsonInclude.Include.ALWAYS)
-  public String getAction() {
-    return action;
+  public String getEventType() {
+    return eventType;
   }
 
 
-  @JsonProperty(value = JSON_PROPERTY_ACTION, required = true)
+  @JsonProperty(value = JSON_PROPERTY_EVENT_TYPE, required = true)
   @JsonInclude(value = JsonInclude.Include.ALWAYS)
-  public void setAction(@jakarta.annotation.Nonnull String action) {
-    this.action = action;
+  public void setEventType(@jakarta.annotation.Nonnull String eventType) {
+    this.eventType = eventType;
   }
 
 
@@ -465,7 +465,7 @@ public class Event {
       return false;
     }
     Event event = (Event) o;
-    return Objects.equals(this.action, event.action) &&
+    return Objects.equals(this.eventType, event.eventType) &&
         Objects.equals(this.resourceType, event.resourceType) &&
         Objects.equals(this.resourceId, event.resourceId) &&
         equalsNullable(this.description, event.description) &&
@@ -485,7 +485,7 @@ public class Event {
 
   @Override
   public int hashCode() {
-    return Objects.hash(action, resourceType, resourceId, hashCodeNullable(description), hashCodeNullable(occurredAt), hashCodeNullable(actorType), hashCodeNullable(actorId), hashCodeNullable(actorLabel), data, doNotForward, hashCodeNullable(createdAt), hashCodeNullable(idempotencyKey));
+    return Objects.hash(eventType, resourceType, resourceId, hashCodeNullable(description), hashCodeNullable(occurredAt), hashCodeNullable(actorType), hashCodeNullable(actorId), hashCodeNullable(actorLabel), data, doNotForward, hashCodeNullable(createdAt), hashCodeNullable(idempotencyKey));
   }
 
   private static <T> int hashCodeNullable(JsonNullable<T> a) {
@@ -499,7 +499,7 @@ public class Event {
   public String toString() {
     StringBuilder sb = new StringBuilder();
     sb.append("class Event {\n");
-    sb.append("    action: ").append(toIndentedString(action)).append("\n");
+    sb.append("    eventType: ").append(toIndentedString(eventType)).append("\n");
     sb.append("    resourceType: ").append(toIndentedString(resourceType)).append("\n");
     sb.append("    resourceId: ").append(toIndentedString(resourceId)).append("\n");
     sb.append("    description: ").append(toIndentedString(description)).append("\n");
@@ -555,9 +555,9 @@ public class Event {
 
     StringJoiner joiner = new StringJoiner("&");
 
-    // add `action` to the URL query string
-    if (getAction() != null) {
-      joiner.add(String.format(java.util.Locale.ROOT, "%saction%s=%s", prefix, suffix, ApiClient.urlEncode(ApiClient.valueToString(getAction()))));
+    // add `event_type` to the URL query string
+    if (getEventType() != null) {
+      joiner.add(String.format(java.util.Locale.ROOT, "%sevent_type%s=%s", prefix, suffix, ApiClient.urlEncode(ApiClient.valueToString(getEventType()))));
     }
 
     // add `resource_type` to the URL query string

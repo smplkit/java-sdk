@@ -24,44 +24,44 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonTypeName;
 import com.fasterxml.jackson.annotation.JsonValue;
-import com.smplkit.internal.generated.audit.model.ActionAttributes;
+import com.smplkit.internal.generated.audit.model.EventTypeAttributes;
 import java.util.Arrays;
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 
 
 import com.smplkit.internal.generated.audit.ApiClient;
 /**
- * ActionResource
+ * EventTypeResource
  */
 @JsonPropertyOrder({
-  ActionResource.JSON_PROPERTY_ID,
-  ActionResource.JSON_PROPERTY_TYPE,
-  ActionResource.JSON_PROPERTY_ATTRIBUTES
+  EventTypeResource.JSON_PROPERTY_ID,
+  EventTypeResource.JSON_PROPERTY_TYPE,
+  EventTypeResource.JSON_PROPERTY_ATTRIBUTES
 })
 @jakarta.annotation.Generated(value = "org.openapitools.codegen.languages.JavaClientCodegen", comments = "Generator version: 7.21.0")
-public class ActionResource {
+public class EventTypeResource {
   public static final String JSON_PROPERTY_ID = "id";
   @jakarta.annotation.Nonnull
   private String id;
 
   public static final String JSON_PROPERTY_TYPE = "type";
   @jakarta.annotation.Nullable
-  private String type = "action";
+  private String type = "event_type";
 
   public static final String JSON_PROPERTY_ATTRIBUTES = "attributes";
   @jakarta.annotation.Nonnull
-  private ActionAttributes attributes;
+  private EventTypeAttributes attributes;
 
-  public ActionResource() { 
+  public EventTypeResource() { 
   }
 
-  public ActionResource id(@jakarta.annotation.Nonnull String id) {
+  public EventTypeResource id(@jakarta.annotation.Nonnull String id) {
     this.id = id;
     return this;
   }
 
   /**
-   * The action slug.
+   * The event_type slug.
    * @return id
    */
   @jakarta.annotation.Nonnull
@@ -79,7 +79,7 @@ public class ActionResource {
   }
 
 
-  public ActionResource type(@jakarta.annotation.Nullable String type) {
+  public EventTypeResource type(@jakarta.annotation.Nullable String type) {
     this.type = type;
     return this;
   }
@@ -103,7 +103,7 @@ public class ActionResource {
   }
 
 
-  public ActionResource attributes(@jakarta.annotation.Nonnull ActionAttributes attributes) {
+  public EventTypeResource attributes(@jakarta.annotation.Nonnull EventTypeAttributes attributes) {
     this.attributes = attributes;
     return this;
   }
@@ -115,20 +115,20 @@ public class ActionResource {
   @jakarta.annotation.Nonnull
   @JsonProperty(value = JSON_PROPERTY_ATTRIBUTES, required = true)
   @JsonInclude(value = JsonInclude.Include.ALWAYS)
-  public ActionAttributes getAttributes() {
+  public EventTypeAttributes getAttributes() {
     return attributes;
   }
 
 
   @JsonProperty(value = JSON_PROPERTY_ATTRIBUTES, required = true)
   @JsonInclude(value = JsonInclude.Include.ALWAYS)
-  public void setAttributes(@jakarta.annotation.Nonnull ActionAttributes attributes) {
+  public void setAttributes(@jakarta.annotation.Nonnull EventTypeAttributes attributes) {
     this.attributes = attributes;
   }
 
 
   /**
-   * Return true if this ActionResource object is equal to o.
+   * Return true if this EventTypeResource object is equal to o.
    */
   @Override
   public boolean equals(Object o) {
@@ -138,10 +138,10 @@ public class ActionResource {
     if (o == null || getClass() != o.getClass()) {
       return false;
     }
-    ActionResource actionResource = (ActionResource) o;
-    return Objects.equals(this.id, actionResource.id) &&
-        Objects.equals(this.type, actionResource.type) &&
-        Objects.equals(this.attributes, actionResource.attributes);
+    EventTypeResource eventTypeResource = (EventTypeResource) o;
+    return Objects.equals(this.id, eventTypeResource.id) &&
+        Objects.equals(this.type, eventTypeResource.type) &&
+        Objects.equals(this.attributes, eventTypeResource.attributes);
   }
 
   @Override
@@ -152,7 +152,7 @@ public class ActionResource {
   @Override
   public String toString() {
     StringBuilder sb = new StringBuilder();
-    sb.append("class ActionResource {\n");
+    sb.append("class EventTypeResource {\n");
     sb.append("    id: ").append(toIndentedString(id)).append("\n");
     sb.append("    type: ").append(toIndentedString(type)).append("\n");
     sb.append("    attributes: ").append(toIndentedString(attributes)).append("\n");

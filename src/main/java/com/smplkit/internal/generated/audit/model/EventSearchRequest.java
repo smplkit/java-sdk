@@ -40,7 +40,7 @@ import com.smplkit.internal.generated.audit.ApiClient;
  */
 @JsonPropertyOrder({
   EventSearchRequest.JSON_PROPERTY_FILTER,
-  EventSearchRequest.JSON_PROPERTY_FILTER_ACTION,
+  EventSearchRequest.JSON_PROPERTY_FILTER_EVENT_TYPE,
   EventSearchRequest.JSON_PROPERTY_FILTER_RESOURCE_TYPE,
   EventSearchRequest.JSON_PROPERTY_FILTER_RESOURCE_ID,
   EventSearchRequest.JSON_PROPERTY_FILTER_ACTOR_TYPE,
@@ -57,8 +57,8 @@ public class EventSearchRequest {
   public static final String JSON_PROPERTY_FILTER = "filter";
   private JsonNullable<Map<String, Object>> filter = JsonNullable.<Map<String, Object>>undefined();
 
-  public static final String JSON_PROPERTY_FILTER_ACTION = "filter[action]";
-  private JsonNullable<String> filterAction = JsonNullable.<String>undefined();
+  public static final String JSON_PROPERTY_FILTER_EVENT_TYPE = "filter[event_type]";
+  private JsonNullable<String> filterEventType = JsonNullable.<String>undefined();
 
   public static final String JSON_PROPERTY_FILTER_RESOURCE_TYPE = "filter[resource_type]";
   private JsonNullable<String> filterResourceType = JsonNullable.<String>undefined();
@@ -139,35 +139,35 @@ public class EventSearchRequest {
   }
 
 
-  public EventSearchRequest filterAction(@jakarta.annotation.Nullable String filterAction) {
-    this.filterAction = JsonNullable.<String>of(filterAction);
+  public EventSearchRequest filterEventType(@jakarta.annotation.Nullable String filterEventType) {
+    this.filterEventType = JsonNullable.<String>of(filterEventType);
     return this;
   }
 
   /**
-   * Exact match on the event&#39;s &#x60;action&#x60; field.
-   * @return filterAction
+   * Exact match on the event&#39;s &#x60;event_type&#x60; field.
+   * @return filterEventType
    */
   @jakarta.annotation.Nullable
   @JsonIgnore
-  public String getFilterAction() {
-        return filterAction.orElse(null);
+  public String getFilterEventType() {
+        return filterEventType.orElse(null);
   }
 
-  @JsonProperty(value = JSON_PROPERTY_FILTER_ACTION, required = false)
+  @JsonProperty(value = JSON_PROPERTY_FILTER_EVENT_TYPE, required = false)
   @JsonInclude(value = JsonInclude.Include.USE_DEFAULTS)
 
-  public JsonNullable<String> getFilterAction_JsonNullable() {
-    return filterAction;
+  public JsonNullable<String> getFilterEventType_JsonNullable() {
+    return filterEventType;
   }
   
-  @JsonProperty(JSON_PROPERTY_FILTER_ACTION)
-  public void setFilterAction_JsonNullable(JsonNullable<String> filterAction) {
-    this.filterAction = filterAction;
+  @JsonProperty(JSON_PROPERTY_FILTER_EVENT_TYPE)
+  public void setFilterEventType_JsonNullable(JsonNullable<String> filterEventType) {
+    this.filterEventType = filterEventType;
   }
 
-  public void setFilterAction(@jakarta.annotation.Nullable String filterAction) {
-    this.filterAction = JsonNullable.<String>of(filterAction);
+  public void setFilterEventType(@jakarta.annotation.Nullable String filterEventType) {
+    this.filterEventType = JsonNullable.<String>of(filterEventType);
   }
 
 
@@ -490,7 +490,7 @@ public class EventSearchRequest {
     }
     EventSearchRequest eventSearchRequest = (EventSearchRequest) o;
     return equalsNullable(this.filter, eventSearchRequest.filter) &&
-        equalsNullable(this.filterAction, eventSearchRequest.filterAction) &&
+        equalsNullable(this.filterEventType, eventSearchRequest.filterEventType) &&
         equalsNullable(this.filterResourceType, eventSearchRequest.filterResourceType) &&
         equalsNullable(this.filterResourceId, eventSearchRequest.filterResourceId) &&
         equalsNullable(this.filterActorType, eventSearchRequest.filterActorType) &&
@@ -509,7 +509,7 @@ public class EventSearchRequest {
 
   @Override
   public int hashCode() {
-    return Objects.hash(hashCodeNullable(filter), hashCodeNullable(filterAction), hashCodeNullable(filterResourceType), hashCodeNullable(filterResourceId), hashCodeNullable(filterActorType), hashCodeNullable(filterActorId), hashCodeNullable(filterOccurredAt), hashCodeNullable(filterSearch), hashCodeNullable(filterDoNotForward), pageSize, hashCodeNullable(pageAfter), sort);
+    return Objects.hash(hashCodeNullable(filter), hashCodeNullable(filterEventType), hashCodeNullable(filterResourceType), hashCodeNullable(filterResourceId), hashCodeNullable(filterActorType), hashCodeNullable(filterActorId), hashCodeNullable(filterOccurredAt), hashCodeNullable(filterSearch), hashCodeNullable(filterDoNotForward), pageSize, hashCodeNullable(pageAfter), sort);
   }
 
   private static <T> int hashCodeNullable(JsonNullable<T> a) {
@@ -524,7 +524,7 @@ public class EventSearchRequest {
     StringBuilder sb = new StringBuilder();
     sb.append("class EventSearchRequest {\n");
     sb.append("    filter: ").append(toIndentedString(filter)).append("\n");
-    sb.append("    filterAction: ").append(toIndentedString(filterAction)).append("\n");
+    sb.append("    filterEventType: ").append(toIndentedString(filterEventType)).append("\n");
     sb.append("    filterResourceType: ").append(toIndentedString(filterResourceType)).append("\n");
     sb.append("    filterResourceId: ").append(toIndentedString(filterResourceId)).append("\n");
     sb.append("    filterActorType: ").append(toIndentedString(filterActorType)).append("\n");
@@ -588,9 +588,9 @@ public class EventSearchRequest {
       }
     }
 
-    // add `filter[action]` to the URL query string
-    if (getFilterAction() != null) {
-      joiner.add(String.format(java.util.Locale.ROOT, "%sfilter[action]%s=%s", prefix, suffix, ApiClient.urlEncode(ApiClient.valueToString(getFilterAction()))));
+    // add `filter[event_type]` to the URL query string
+    if (getFilterEventType() != null) {
+      joiner.add(String.format(java.util.Locale.ROOT, "%sfilter[event_type]%s=%s", prefix, suffix, ApiClient.urlEncode(ApiClient.valueToString(getFilterEventType()))));
     }
 
     // add `filter[resource_type]` to the URL query string
