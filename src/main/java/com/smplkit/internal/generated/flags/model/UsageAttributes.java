@@ -60,7 +60,7 @@ public class UsageAttributes {
   }
 
   /**
-   * Identifier of the metered limit, e.g. &#x60;flags.items&#x60;.
+   * Identifier of the metered limit, e.g. &#x60;flags.managed_flags&#x60;.
    * @return limitKey
    */
   @jakarta.annotation.Nonnull
