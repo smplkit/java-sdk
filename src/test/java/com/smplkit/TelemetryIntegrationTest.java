@@ -191,8 +191,14 @@ class TelemetryIntegrationTest {
     @Test
     void configResolveRecordsMetric() throws Exception {
         ConfigsApi configsApi = mock(ConfigsApi.class);
+        // Seed with a config so get() finds it in the cache (post-NotFoundError change).
+        ConfigResource resource = new ConfigResource();
+        resource.setId("my-config");
+        Config attrs = new Config();
+        attrs.setName("My Config");
+        resource.setAttributes(attrs);
         ConfigListResponse listResp = new ConfigListResponse();
-        listResp.setData(List.of());
+        listResp.setData(List.of(resource));
         when(configsApi.listConfigs(any(), any(), any(), any(), any(), any())).thenReturn(listResp);
 
         ConfigClient config = new ConfigClient(configsApi, mockHttpClient, "key");
@@ -214,8 +220,14 @@ class TelemetryIntegrationTest {
     @Test
     void configResolveWithModelRecordsMetric() throws Exception {
         ConfigsApi configsApi = mock(ConfigsApi.class);
+        // Seed with a config so get() finds it (post-NotFoundError change).
+        ConfigResource resource = new ConfigResource();
+        resource.setId("my-config");
+        Config attrs = new Config();
+        attrs.setName("My Config");
+        resource.setAttributes(attrs);
         ConfigListResponse listResp = new ConfigListResponse();
-        listResp.setData(List.of());
+        listResp.setData(List.of(resource));
         when(configsApi.listConfigs(any(), any(), any(), any(), any(), any())).thenReturn(listResp);
 
         ConfigClient config = new ConfigClient(configsApi, mockHttpClient, "key");

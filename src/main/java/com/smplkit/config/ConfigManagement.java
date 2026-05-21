@@ -2,13 +2,20 @@ package com.smplkit.config;
 
 import com.smplkit.Helpers;
 import com.smplkit.internal.generated.config.ApiException;
+import com.smplkit.internal.generated.config.model.ConfigBulkItem;
+import com.smplkit.internal.generated.config.model.ConfigBulkRequest;
+import com.smplkit.internal.generated.config.model.ConfigItemDefinition;
 import com.smplkit.internal.generated.config.model.ConfigListResponse;
 import com.smplkit.internal.generated.config.model.ConfigResource;
 import com.smplkit.internal.generated.config.model.ConfigResponse;
+import com.smplkit.internal.Debug;
+import com.smplkit.management.ConfigRegistrationBuffer;
 
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Map;
 
 /**
  * Management-plane API for configs: CRUD operations and factory methods.
@@ -17,10 +24,107 @@ import java.util.List;
  */
 public final class ConfigManagement {
 
+    private static final int REGISTRATION_FLUSH_SIZE = 50;
+
     private final ConfigClient client;
+    private final ConfigRegistrationBuffer buffer = new ConfigRegistrationBuffer();
 
     ConfigManagement(ConfigClient client) {
         this.client = client;
+    }
+
+    // -----------------------------------------------------------------------
+    // Discovery: declare + add_item + flush (ADR-037 §2.13/§2.14)
+    // -----------------------------------------------------------------------
+
+    /**
+     * Queue a configuration declaration for bulk-discovery upload.
+     * Called by {@link ConfigClient#getOrCreate}.
+     */
+    public void registerConfig(String configId, String service, String environment,
+                               String parent, String name, String description) {
+        buffer.declare(configId, service, environment, parent, name, description);
+        if (buffer.pendingCount() >= REGISTRATION_FLUSH_SIZE) {
+            triggerBackgroundFlush();
+        }
+    }
+
+    /**
+     * Queue a config item declaration. Called by typed getters on
+     * {@link LiveConfigProxy}.
+     */
+    public void registerConfigItem(String configId, String itemKey, String itemType,
+                                   Object defaultValue, String description) {
+        buffer.addItem(configId, itemKey, itemType, defaultValue, description);
+        if (buffer.pendingCount() >= REGISTRATION_FLUSH_SIZE) {
+            triggerBackgroundFlush();
+        }
+    }
+
+    /** Number of pending config declarations awaiting flush. */
+    public int pendingCount() {
+        return buffer.pendingCount();
+    }
+
+    /**
+     * Sends any pending config declarations to {@code POST /api/v1/configs/bulk}.
+     * Per ADR-024 §2.9 the bulk endpoint is plan-limit-exempt; failures here
+     * never propagate to customer code. Drained entries are not requeued.
+     */
+    public void flush() {
+        List<ConfigRegistrationBuffer.Entry> batch = buffer.drain();
+        if (batch.isEmpty()) return;
+
+        ConfigBulkRequest body = new ConfigBulkRequest();
+        List<ConfigBulkItem> items = new ArrayList<>(batch.size());
+        for (ConfigRegistrationBuffer.Entry entry : batch) {
+            ConfigBulkItem item = new ConfigBulkItem();
+            item.setId(entry.id);
+            if (entry.service != null) item.setService(entry.service);
+            if (entry.environment != null) item.setEnvironment(entry.environment);
+            if (entry.parent != null) item.setParent(entry.parent);
+            if (entry.name != null) item.setName(entry.name);
+            if (entry.description != null) item.setDescription(entry.description);
+            if (!entry.items.isEmpty()) {
+                Map<String, ConfigItemDefinition> defs = new LinkedHashMap<>();
+                for (Map.Entry<String, ConfigRegistrationBuffer.ItemEntry> e : entry.items.entrySet()) {
+                    ConfigItemDefinition def = new ConfigItemDefinition();
+                    def.setValue(e.getValue().defaultValue);
+                    def.setType(toTypeEnum(e.getValue().itemType));
+                    if (e.getValue().description != null) {
+                        def.setDescription(e.getValue().description);
+                    }
+                    defs.put(e.getKey(), def);
+                }
+                item.setItems(defs);
+            }
+            items.add(item);
+        }
+        body.setConfigs(items);
+        try {
+            client.configsApi.bulkRegisterConfigs(body);
+        } catch (Exception ex) {
+            // Fire-and-forget per ADR-024 §2.9.
+            Debug.log("registration", "bulk register failed: " + ex.getMessage());
+        }
+    }
+
+    private void triggerBackgroundFlush() {
+        Thread t = new Thread(() -> {
+            try { flush(); } catch (Exception ignored) { }
+        }, "smplkit-config-flush");
+        t.setDaemon(true);
+        t.start();
+    }
+
+    private static ConfigItemDefinition.TypeEnum toTypeEnum(String itemType) {
+        return switch (itemType) {
+            case "STRING" -> ConfigItemDefinition.TypeEnum.STRING;
+            case "NUMBER" -> ConfigItemDefinition.TypeEnum.NUMBER;
+            case "BOOLEAN" -> ConfigItemDefinition.TypeEnum.BOOLEAN;
+            case "JSON" -> ConfigItemDefinition.TypeEnum.JSON;
+            default -> null;
+        };
     }
 
     // -----------------------------------------------------------------------

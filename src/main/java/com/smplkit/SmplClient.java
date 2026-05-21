@@ -109,6 +109,7 @@ public final class SmplClient implements AutoCloseable {
         ContextRegistrationBuffer contextBuffer = new ContextRegistrationBuffer();
         this.config = buildConfigClient(httpClient, apiKey, extraHeaders, timeout, configBaseUrl);
         this.config.setEnvironment(environment);
+        this.config.setService(service);
         this.config.setMetrics(metrics);
         this.config.setSharedWs(this.sharedWs);
         this.flags = buildFlagsClient(httpClient, apiKey, extraHeaders, timeout, sharedWs,

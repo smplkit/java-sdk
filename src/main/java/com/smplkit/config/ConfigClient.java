@@ -43,6 +43,7 @@ public final class ConfigClient {
     final ConfigsApi configsApi;
     private volatile boolean connected;
     private volatile String environment;
+    private volatile String service;
     private volatile com.smplkit.MetricsReporter metrics;
     private Map<String, Map<String, Object>> configCache = new HashMap<>();
     /** Raw Config objects keyed by id, kept around so a single-config
@@ -95,6 +96,11 @@ public final class ConfigClient {
      */
     public void setEnvironment(String environment) {
         this.environment = environment;
+    }
+
+    /** Sets the owner service identifier (used to attribute discovery rows). */
+    public void setService(String service) {
+        this.service = service;
     }
 
     /** Sets the metrics reporter. Package-private. */
@@ -191,10 +197,82 @@ public final class ConfigClient {
      */
     public LiveConfigProxy get(String id) {
         _connectInternal();
+        if (!configCache.containsKey(id)) {
+            throw new com.smplkit.errors.NotFoundError(
+                    "Config with id '" + id + "' not found in cache.", null);
+        }
         if (metrics != null) {
             metrics.record("config.resolutions", "resolutions", Map.of("config", id));
         }
+        return cachedProxy(id);
+    }
+
+    /**
+     * Declare a configuration from code; return a live, dict-like view.
+     *
+     * <p>Idempotent — repeat calls with the same id return the same
+     * {@link LiveConfigProxy} instance, so callers can hold one as a parent
+     * reference. The first call queues a discovery payload (the config and
+     * any items declared via typed getters on the returned handle) for
+     * upload to {@code POST /api/v1/configs/bulk} on next flush. Unlike
+     * {@link #get(String)}, this method does <b>not</b> throw on missing
+     * configs — discovery handles that case.</p>
+     *
+     * @param id          the config id to declare
+     * @param parent      optional parent: a string id, a {@link LiveConfigProxy}, or null
+     * @param name        optional display name (defaults to humanized id server-side)
+     * @param description optional description
+     */
+    public LiveConfigProxy getOrCreate(String id, Object parent, String name, String description) {
+        String parentId;
+        if (parent == null) {
+            parentId = null;
+        } else if (parent instanceof String s) {
+            parentId = s;
+        } else if (parent instanceof LiveConfigProxy p) {
+            parentId = p.configId();
+        } else {
+            throw new IllegalArgumentException(
+                    "parent must be a String id or LiveConfigProxy; got "
+                            + parent.getClass().getSimpleName());
+        }
+        _observeConfigDeclaration(id, parentId, name, description);
+        _connectInternal();
+        return cachedProxy(id);
+    }
+
+    /** Overload — discover with just an id. */
+    public LiveConfigProxy getOrCreate(String id) {
+        return getOrCreate(id, null, null, null);
+    }
+
+    /** Overload — discover with a description. */
+    public LiveConfigProxy getOrCreate(String id, String description) {
+        return getOrCreate(id, null, null, description);
+    }
+
+    /** Overload — discover with a parent reference and description. */
+    public LiveConfigProxy getOrCreate(String id, LiveConfigProxy parent, String description) {
+        return getOrCreate(id, (Object) parent, null, description);
+    }
+
+    private LiveConfigProxy cachedProxy(String id) {
         return proxyCache.computeIfAbsent(id, k -> new LiveConfigProxy(this, k));
+    }
+
+    /** Internal: queue a config declaration with the management buffer. */
+    void _observeConfigDeclaration(String configId, String parent, String name, String description) {
+        // The runtime client doesn't know the runtime owner's service /
+        // environment — those live on SmplClient. Discovery rows omit them
+        // for now and the server treats them as null. Mirrors the wire
+        // contract used by other SDKs.
+        management.registerConfig(configId, service, environment, parent, name, description);
+    }
+
+    /** Internal: queue a config item declaration with the management buffer. */
+    public void _observeItemDeclaration(String configId, String itemKey, String itemType,
+                                        Object defaultValue, String description) {
+        management.registerConfigItem(configId, itemKey, itemType, defaultValue, description);
     }
 
     /**
@@ -291,6 +369,12 @@ public final class ConfigClient {
         if (env == null) return;
 
         Debug.log("websocket", "config runtime initializing");
+
+        // Per ADR-037 §2.14: flush any buffered discovery declarations
+        // BEFORE the initial fetch so newly-discovered configs appear in
+        // the cache. The flush itself swallows network/server failures.
+        management.flush();
+
         configCache = buildCache(env);
 
         SharedWebSocket ws = this.wsManager;

@@ -122,12 +122,13 @@ class ConfigPrescriptiveTest {
     }
 
     @Test
-    void resolve_unknownKey_returnsEmptyMap() throws ApiException {
+    void resolve_unknownKey_throws() throws ApiException {
         setupListResponse(makeResource(APP_ID, "App", null, Map.of(), Map.of()));
 
-        Map<String, Object> values = configClient.get("nonexistent");
-
-        assertTrue(values.isEmpty());
+        // Per ADR-024 §2.13: get() throws on a config not cached locally;
+        // declarative discovery via getOrCreate() handles the unknown case.
+        assertThrows(com.smplkit.errors.NotFoundError.class,
+                () -> configClient.get("nonexistent"));
     }
 
     @Test
@@ -187,10 +188,10 @@ class ConfigPrescriptiveTest {
         ConfigClient noEnvClient = new ConfigClient(mockApi, HttpClient.newHttpClient(), "test-key");
         // No setEnvironment()
 
-        Map<String, Object> values = noEnvClient.get("app");
-
+        // No environment → lazy init bails before populating the cache,
+        // so get() throws NotFoundError for any id.
+        assertThrows(com.smplkit.errors.NotFoundError.class, () -> noEnvClient.get("app"));
         assertFalse(noEnvClient.isConnected());
-        assertTrue(values.isEmpty());
     }
 
     // -----------------------------------------------------------------------

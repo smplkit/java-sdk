@@ -50,8 +50,10 @@ class Phase2CoverageTest {
         ConfigsApi mockApi = mock(ConfigsApi.class);
         ConfigClient configClient = new ConfigClient(mockApi, HttpClient.newHttpClient(), "test-key");
 
-        Map<String, Object> values = configClient.get("my-config");
-        assertTrue(values.isEmpty());
+        // Per ADR-024 §2.9 / §2.13 update: a not-yet-cached config throws
+        // rather than silently returning an empty proxy. Discovery (via
+        // getOrCreate) is the supported path for code-declared configs.
+        assertThrows(com.smplkit.errors.NotFoundError.class, () -> configClient.get("my-config"));
     }
 
     @Test
@@ -80,9 +82,9 @@ class Phase2CoverageTest {
                 ConfigListResponse.class);
         when(mockApi.listConfigs(isNull(), isNull(), isNull(), any(), any(), isNull())).thenReturn(listResponse);
 
-        // Without setEnvironment, get returns empty (no lazy init)
+        // Without setEnvironment, get throws (no lazy init, nothing cached)
         ConfigClient noEnvClient = new ConfigClient(mockApi, HttpClient.newHttpClient(), "test-key");
-        assertTrue(noEnvClient.get("db-config").isEmpty());
+        assertThrows(com.smplkit.errors.NotFoundError.class, () -> noEnvClient.get("db-config"));
 
         // With setEnvironment, resolve triggers lazy init and returns data
         ConfigClient configClient = new ConfigClient(mockApi, HttpClient.newHttpClient(), "test-key");
@@ -93,7 +95,7 @@ class Phase2CoverageTest {
         assertEquals(5432, resolved.get("port"));
 
         // Nonexistent config
-        assertTrue(configClient.get("nonexistent-config").isEmpty());
+        assertThrows(com.smplkit.errors.NotFoundError.class, () -> configClient.get("nonexistent-config"));
     }
 
     @Test
@@ -120,7 +122,7 @@ class Phase2CoverageTest {
         assertNotNull(values);
         assertEquals("Default Title", values.get("title"));
 
-        assertTrue(configClient.get("unknown").isEmpty());
+        assertThrows(com.smplkit.errors.NotFoundError.class, () -> configClient.get("unknown"));
     }
 
     // --- Service context auto-injection in flag evaluation ---

@@ -3,10 +3,7 @@
  *
  * Prerequisites:
  *     - smplkit-sdk on the classpath
- *     - A valid smplkit API key, provided via one of:
- *         - SMPLKIT_API_KEY environment variable
- *         - ~/.smplkit configuration file (see SDK docs)
- *     - The smplkit Config service running and reachable
+ *     - A valid smplkit API key (env or ~/.smplkit)
  *
  * Usage:
  *     ./gradlew :examples:run -PmainClass=com.smplkit.examples.ConfigRuntimeShowcase
@@ -14,7 +11,6 @@
 package com.smplkit.examples;
 
 import com.smplkit.SmplClient;
-import com.smplkit.config.Config;
 import com.smplkit.config.ConfigChangeEvent;
 import com.smplkit.config.LiveConfigProxy;
 import com.smplkit.examples.setup.ConfigRuntimeSetup;
@@ -25,74 +21,62 @@ import java.util.List;
 public final class ConfigRuntimeShowcase {
 
     public static void main(String[] args) throws Exception {
-        // create the client (use SmplClient for synchronous use)
+        // create the client
         try (SmplClient client = SmplClient.builder()
-                .environment("production").service("showcase-service").build()) {
+                .environment("production").service("showcase-billing").build()) {
+
             ConfigRuntimeSetup.setup(client.manage());
 
-            // Block until the live-updates WebSocket subscription is registered
-            // server-side. Without this, writes fired immediately afterward can
-            // race the broadcast of their own change events (the SDK isn't in
-            // the subscriber registry yet) and silently miss them. Mirrors
-            // `await client.wait_until_ready()` in the Python showcase.
-            client.waitUntilReady();
+            // declare a common/shared configuration
+            LiveConfigProxy common = client.config().getOrCreate(
+                    "showcase-common",
+                    "Shared defaults for showcase services.");
 
-            // get a config as a plain dict
-            LiveConfigProxy userSvcConfigDict = client.config().get("showcase-user-service");
-            System.out.println("Total resolved keys: " + userSvcConfigDict.size());
-            System.out.println("database.host = " + userSvcConfigDict.get("database.host"));
-            System.out.println("max_retries = " + userSvcConfigDict.get("max_retries"));
-            System.out.println("cache_ttl_seconds = " + userSvcConfigDict.get("cache_ttl_seconds"));
-            System.out.println("pagination_default_page_size = "
-                    + userSvcConfigDict.get("pagination_default_page_size"));
-            System.out.println("enable_signup = " + userSvcConfigDict.get("enable_signup"));
-            System.out.println("nonexistent_key = " + userSvcConfigDict.get("nonexistent_key"));
+            // declare a configuration that inherits from some parent
+            LiveConfigProxy billing = client.config().getOrCreate(
+                    "showcase-billing", common,
+                    "Plan-limit configuration discovered from code.");
 
-            // production overrides resolve through the inheritance chain
-            assert "prod-users-rds.internal.acme.dev".equals(userSvcConfigDict.get("database.host"));
-            assert userSvcConfigDict.get("nonexistent_key") == null;
+            // get a configured value
+            String appName = common.getString("app.name", "Acme SaaS");
+            String supportEmail = common.getString("support.email", "support@acme.dev");
+            int maxSeats = billing.getInt("plan.max_seats", 5, "Maximum seats per organization.");
+            int trialDays = billing.getInt("plan.trial_days", 14);
+            String tier = billing.getString("plan.tier", "free");
 
+            System.out.println("app.name = " + appName);
+            System.out.println("support.email = " + supportEmail);
+            System.out.println("plan.max_seats = " + maxSeats);
+            System.out.println("plan.trial_days = " + trialDays);
+            System.out.println("plan.tier = " + tier);
+
+            // listen for changes
             List<ConfigChangeEvent> changes = new ArrayList<>();
-            List<ConfigChangeEvent> retriesChanges = new ArrayList<>();
-
-            // global listener — fires when ANY config item changes
-            client.config().onChange(event -> {
-                changes.add(event);
-                System.out.println("    [CHANGE] " + event.configId() + "."
-                        + event.itemKey() + ": " + event.oldValue()
-                        + " -> " + event.newValue());
+            billing.onChange("plan.max_seats", evt -> {
+                changes.add(evt);
+                System.out.println("    [CHANGE] " + evt.configId() + "."
+                        + evt.itemKey() + ": " + evt.oldValue()
+                        + " -> " + evt.newValue());
             });
 
-            // item-scoped listener via the live-proxy handle
-            LiveConfigProxy commonCfg = client.config().get("showcase-common");
-            commonCfg.onChange("max_retries", retriesChanges::add);
+            // simulate someone overriding a value in the console
+            ConfigRuntimeSetup.simulateAdminOverride(client.manage());
 
-            // simulate someone making a change to trigger listeners
-            updateMaxRetries(client, 7);
-
-            // wait for the WebSocket change event to be delivered
-            long deadline = System.currentTimeMillis() + 3000;
-            while (changes.isEmpty() && System.currentTimeMillis() < deadline) {
-                Thread.sleep(50);
+            // wait for the WebSocket push to deliver the change, then refetch
+            long deadline = System.currentTimeMillis() + 10_000;
+            while (System.currentTimeMillis() < deadline
+                    && billing.getInt("plan.max_seats", 5) != 25) {
+                Thread.sleep(100);
             }
 
-            // userSvcConfigDict always reflects the latest values
-            System.out.println("max_retries after update = " + userSvcConfigDict.get("max_retries"));
-            System.out.println("Global changes received: " + changes.size());
-            System.out.println("Retries-specific changes received: " + retriesChanges.size());
-
-            assert ((Number) userSvcConfigDict.get("max_retries")).intValue() == 7;
-            assert !changes.isEmpty();
-            assert !retriesChanges.isEmpty();
+            // get the latest value
+            int updatedSeats = billing.getInt("plan.max_seats", 5);
+            System.out.println("plan.max_seats after override = " + updatedSeats);
+            assert updatedSeats == 25 : "Expected 25, got " + updatedSeats;
+            assert !changes.isEmpty() : "Expected at least one change event";
 
             ConfigRuntimeSetup.cleanup(client.manage());
             System.out.println("Done!");
         }
-    }
-
-    private static void updateMaxRetries(SmplClient client, int maxRetries) {
-        Config commonCfg = client.manage().config.get("showcase-common");
-        commonCfg.setNumber("max_retries", maxRetries, "production");
-        commonCfg.save();
     }
 }

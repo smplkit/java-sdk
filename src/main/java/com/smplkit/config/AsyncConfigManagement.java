@@ -41,4 +41,25 @@ public final class AsyncConfigManagement {
     public CompletableFuture<Void> delete(String id) {
         return CompletableFuture.runAsync(() -> sync.delete(id), executor);
     }
+
+    // ------------------------------------------------------------------
+    // Discovery passthroughs (sync internally — operate on an in-memory
+    // buffer and only hit the network on flush).
+    // ------------------------------------------------------------------
+
+    public void registerConfig(String configId, String service, String environment,
+                               String parent, String name, String description) {
+        sync.registerConfig(configId, service, environment, parent, name, description);
+    }
+
+    public void registerConfigItem(String configId, String itemKey, String itemType,
+                                   Object defaultValue, String description) {
+        sync.registerConfigItem(configId, itemKey, itemType, defaultValue, description);
+    }
+
+    public int pendingCount() { return sync.pendingCount(); }
+
+    public CompletableFuture<Void> flush() {
+        return CompletableFuture.runAsync(sync::flush, executor);
+    }
 }

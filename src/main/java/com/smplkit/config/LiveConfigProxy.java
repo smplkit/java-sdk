@@ -74,6 +74,93 @@ public final class LiveConfigProxy implements Map<String, Object> {
         client.onChange(configId, itemKey, listener);
     }
 
+    // ------------------------------------------------------------------
+    // Typed getters (ADR-037 §2.13)
+    //
+    // Each registers the item (key, type, default, description) on first
+    // call within the process, then returns the resolved value. When the
+    // resolved value cannot be coerced to the getter's type — including
+    // the "not yet set on the server" case — the in-code default is
+    // returned and a structured warning is logged.
+    // ------------------------------------------------------------------
+
+    private void registerItem(String key, String itemType, Object defaultValue, String description) {
+        client._observeItemDeclaration(configId, key, itemType, defaultValue, description);
+    }
+
+    /** Read a BOOLEAN item, registering the declaration on first call. */
+    public boolean getBool(String key, boolean defaultValue) { return getBool(key, defaultValue, null); }
+
+    public boolean getBool(String key, boolean defaultValue, String description) {
+        registerItem(key, "BOOLEAN", defaultValue, description);
+        Map<String, Object> values = currentValues();
+        if (!values.containsKey(key)) return defaultValue;
+        Object value = values.get(key);
+        if (value instanceof Boolean b) return b;
+        warnMismatch(key, "BOOLEAN", value);
+        return defaultValue;
+    }
+
+    /** Read a NUMBER item as int, registering the declaration on first call. */
+    public int getInt(String key, int defaultValue) { return getInt(key, defaultValue, null); }
+
+    public int getInt(String key, int defaultValue, String description) {
+        registerItem(key, "NUMBER", defaultValue, description);
+        Map<String, Object> values = currentValues();
+        if (!values.containsKey(key)) return defaultValue;
+        Object value = values.get(key);
+        if (!(value instanceof Boolean)) {
+            if (value instanceof Integer i) return i;
+            if (value instanceof Long l) return l.intValue();
+            if (value instanceof Double d && d == Math.floor(d)) return d.intValue();
+            if (value instanceof Float f && f == Math.floor(f)) return f.intValue();
+        }
+        warnMismatch(key, "NUMBER (int)", value);
+        return defaultValue;
+    }
+
+    /** Read a NUMBER item as double, registering the declaration on first call. */
+    public double getFloat(String key, double defaultValue) { return getFloat(key, defaultValue, null); }
+
+    public double getFloat(String key, double defaultValue, String description) {
+        registerItem(key, "NUMBER", defaultValue, description);
+        Map<String, Object> values = currentValues();
+        if (!values.containsKey(key)) return defaultValue;
+        Object value = values.get(key);
+        if (!(value instanceof Boolean) && value instanceof Number n) return n.doubleValue();
+        warnMismatch(key, "NUMBER (float)", value);
+        return defaultValue;
+    }
+
+    /** Read a STRING item, registering the declaration on first call. */
+    public String getString(String key, String defaultValue) { return getString(key, defaultValue, null); }
+
+    public String getString(String key, String defaultValue, String description) {
+        registerItem(key, "STRING", defaultValue, description);
+        Map<String, Object> values = currentValues();
+        if (!values.containsKey(key)) return defaultValue;
+        Object value = values.get(key);
+        if (value instanceof String s) return s;
+        warnMismatch(key, "STRING", value);
+        return defaultValue;
+    }
+
+    /** Read a JSON item, registering the declaration on first call. */
+    public Object getJson(String key, Object defaultValue) { return getJson(key, defaultValue, null); }
+
+    public Object getJson(String key, Object defaultValue, String description) {
+        registerItem(key, "JSON", defaultValue, description);
+        Map<String, Object> values = currentValues();
+        return values.containsKey(key) ? values.get(key) : defaultValue;
+    }
+
+    private void warnMismatch(String key, String expected, Object value) {
+        String got = value != null ? value.getClass().getSimpleName() : "null";
+        java.util.logging.Logger.getLogger("smplkit.config").warning(
+                "config " + configId + " item " + key + ": expected " + expected
+                        + ", got " + got + "; returning default");
+    }
+
     private Map<String, Object> currentValues() {
         return client._getResolvedCache(configId);
     }
