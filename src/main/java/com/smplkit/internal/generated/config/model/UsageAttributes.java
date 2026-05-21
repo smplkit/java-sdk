@@ -60,7 +60,7 @@ public class UsageAttributes {
   }
 
   /**
-   * Identifier of the metered limit, e.g. &#x60;config.items&#x60; or &#x60;config.inheritance_depth&#x60;.
+   * Identifier of the metered limit, e.g. &#x60;config.managed_configurations&#x60; or &#x60;config.inheritance_depth&#x60;.
    * @return limitKey
    */
   @jakarta.annotation.Nonnull
