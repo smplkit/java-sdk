@@ -258,12 +258,9 @@ class ConfigDiscoveryTest {
         for (int i = 0; i < 51; i++) {
             client.management().registerConfig("cfg-" + i, "svc", "prod", null, null, null);
         }
-        // Background flush runs on a daemon thread — give it time.
-        long deadline = System.currentTimeMillis() + 3000;
-        while (System.currentTimeMillis() < deadline) {
-            try { verify(mockApi, times(1)).bulkRegisterConfigs(any(ConfigBulkRequest.class)); break; }
-            catch (Throwable ignored) { Thread.sleep(50); }
-        }
+        Thread t = client.management().lastFlushThread;
+        assertNotNull(t, "expected a background flush thread to be spawned");
+        t.join(5000);
         verify(mockApi, times(1)).bulkRegisterConfigs(any(ConfigBulkRequest.class));
     }
 
@@ -275,11 +272,9 @@ class ConfigDiscoveryTest {
         }
         client.management().registerConfig("cfg-extra", "svc", "prod", null, null, null);
         client.management().registerConfigItem("cfg-extra", "k", "STRING", "v", null);
-        long deadline = System.currentTimeMillis() + 3000;
-        while (System.currentTimeMillis() < deadline) {
-            try { verify(mockApi).bulkRegisterConfigs(any(ConfigBulkRequest.class)); break; }
-            catch (Throwable ignored) { Thread.sleep(50); }
-        }
+        Thread t = client.management().lastFlushThread;
+        assertNotNull(t);
+        t.join(5000);
         verify(mockApi, Mockito.atLeastOnce()).bulkRegisterConfigs(any(ConfigBulkRequest.class));
     }
 

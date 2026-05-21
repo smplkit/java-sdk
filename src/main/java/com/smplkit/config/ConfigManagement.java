@@ -109,11 +109,17 @@ public final class ConfigManagement {
         }
     }
 
-    private void triggerBackgroundFlush() {
+    /** Latest in-flight background-flush thread; package-private for test waits. */
+    volatile Thread lastFlushThread;
+
+    private synchronized void triggerBackgroundFlush() {
+        Thread existing = lastFlushThread;
+        if (existing != null && existing.isAlive()) return; // Coalesce — one in-flight flush at a time.
         Thread t = new Thread(() -> {
             try { flush(); } catch (Exception ignored) { }
         }, "smplkit-config-flush");
         t.setDaemon(true);
+        lastFlushThread = t;
         t.start();
     }
 
