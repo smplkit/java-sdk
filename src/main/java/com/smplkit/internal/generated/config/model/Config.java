@@ -47,6 +47,7 @@ import com.smplkit.internal.generated.config.ApiClient;
   Config.JSON_PROPERTY_PARENT,
   Config.JSON_PROPERTY_ITEMS,
   Config.JSON_PROPERTY_ENVIRONMENTS,
+  Config.JSON_PROPERTY_MANAGED,
   Config.JSON_PROPERTY_CREATED_AT,
   Config.JSON_PROPERTY_UPDATED_AT
 })
@@ -67,6 +68,9 @@ public class Config {
 
   public static final String JSON_PROPERTY_ENVIRONMENTS = "environments";
   private JsonNullable<Map<String, EnvironmentOverride>> environments = JsonNullable.<Map<String, EnvironmentOverride>>undefined();
+
+  public static final String JSON_PROPERTY_MANAGED = "managed";
+  private JsonNullable<Boolean> managed = JsonNullable.<Boolean>undefined();
 
   public static final String JSON_PROPERTY_CREATED_AT = "created_at";
   private JsonNullable<OffsetDateTime> createdAt = JsonNullable.<OffsetDateTime>undefined();
@@ -263,6 +267,38 @@ public class Config {
   }
 
 
+  public Config managed(@jakarta.annotation.Nullable Boolean managed) {
+    this.managed = JsonNullable.<Boolean>of(managed);
+    return this;
+  }
+
+  /**
+   * Whether this config is admin-managed (&#x60;true&#x60;) or auto-discovered by an SDK and not yet claimed (&#x60;false&#x60;). Configs created through the console or &#x60;POST /api/v1/configs&#x60; are always managed. Configs registered via &#x60;POST /api/v1/configs/bulk&#x60; land unmanaged. Setting this field to &#x60;true&#x60; on a PUT promotes a discovered config to managed, which consumes a slot of the &#x60;config.managed_configurations&#x60; entitlement.
+   * @return managed
+   */
+  @jakarta.annotation.Nullable
+  @JsonIgnore
+  public Boolean getManaged() {
+        return managed.orElse(null);
+  }
+
+  @JsonProperty(value = JSON_PROPERTY_MANAGED, required = false)
+  @JsonInclude(value = JsonInclude.Include.USE_DEFAULTS)
+
+  public JsonNullable<Boolean> getManaged_JsonNullable() {
+    return managed;
+  }
+  
+  @JsonProperty(JSON_PROPERTY_MANAGED)
+  public void setManaged_JsonNullable(JsonNullable<Boolean> managed) {
+    this.managed = managed;
+  }
+
+  public void setManaged(@jakarta.annotation.Nullable Boolean managed) {
+    this.managed = JsonNullable.<Boolean>of(managed);
+  }
+
+
   /**
    * When the config was created.
    * @return createdAt
@@ -336,6 +372,7 @@ public class Config {
         equalsNullable(this.parent, config.parent) &&
         equalsNullable(this.items, config.items) &&
         equalsNullable(this.environments, config.environments) &&
+        equalsNullable(this.managed, config.managed) &&
         equalsNullable(this.createdAt, config.createdAt) &&
         equalsNullable(this.updatedAt, config.updatedAt);
   }
@@ -346,7 +383,7 @@ public class Config {
 
   @Override
   public int hashCode() {
-    return Objects.hash(name, hashCodeNullable(description), hashCodeNullable(parent), hashCodeNullable(items), hashCodeNullable(environments), hashCodeNullable(createdAt), hashCodeNullable(updatedAt));
+    return Objects.hash(name, hashCodeNullable(description), hashCodeNullable(parent), hashCodeNullable(items), hashCodeNullable(environments), hashCodeNullable(managed), hashCodeNullable(createdAt), hashCodeNullable(updatedAt));
   }
 
   private static <T> int hashCodeNullable(JsonNullable<T> a) {
@@ -365,6 +402,7 @@ public class Config {
     sb.append("    parent: ").append(toIndentedString(parent)).append("\n");
     sb.append("    items: ").append(toIndentedString(items)).append("\n");
     sb.append("    environments: ").append(toIndentedString(environments)).append("\n");
+    sb.append("    managed: ").append(toIndentedString(managed)).append("\n");
     sb.append("    createdAt: ").append(toIndentedString(createdAt)).append("\n");
     sb.append("    updatedAt: ").append(toIndentedString(updatedAt)).append("\n");
     sb.append("}");
@@ -444,6 +482,11 @@ public class Config {
               "".equals(suffix) ? "" : String.format(java.util.Locale.ROOT, "%s%d%s", containerPrefix, _key, containerSuffix))));
         }
       }
+    }
+
+    // add `managed` to the URL query string
+    if (getManaged() != null) {
+      joiner.add(String.format(java.util.Locale.ROOT, "%smanaged%s=%s", prefix, suffix, ApiClient.urlEncode(ApiClient.valueToString(getManaged()))));
     }
 
     // add `created_at` to the URL query string

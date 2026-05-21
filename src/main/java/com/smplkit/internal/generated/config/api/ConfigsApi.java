@@ -18,6 +18,8 @@ import com.smplkit.internal.generated.config.ApiResponse;
 import com.smplkit.internal.generated.config.Configuration;
 import com.smplkit.internal.generated.config.Pair;
 
+import com.smplkit.internal.generated.config.model.ConfigBulkRequest;
+import com.smplkit.internal.generated.config.model.ConfigBulkResponse;
 import com.smplkit.internal.generated.config.model.ConfigListResponse;
 import com.smplkit.internal.generated.config.model.ConfigRequest;
 import com.smplkit.internal.generated.config.model.ConfigResponse;
@@ -162,6 +164,129 @@ public class ConfigsApi {
       file.deleteOnExit(); // best effort cleanup
     }
     return file;
+  }
+
+  /**
+   * Bulk Register Configs
+   * Register configs declared by an SDK.  For each item in the batch: - If no config with that key exists, create one with &#x60;&#x60;managed&#x3D;false&#x60;&#x60;   (auto-discovered) using the declared items, parent, name, and   description. - If a config with that key already exists, leave the config row   untouched (per ADR-024 §2.9). - Either way, upsert a &#x60;&#x60;config_source&#x60;&#x60; row for &#x60;&#x60;(config, service,   environment)&#x60;&#x60; and refresh its &#x60;&#x60;last_seen&#x60;&#x60; timestamp.  Per ADR-022 §2.11 rule 2 this endpoint never enforces &#x60;&#x60;config.managed_configurations&#x60;&#x60; — discovered configs do not consume a managed slot.
+   * @param configBulkRequest  (required)
+   * @return ConfigBulkResponse
+   * @throws ApiException if fails to make API call
+   */
+  public ConfigBulkResponse bulkRegisterConfigs(@jakarta.annotation.Nonnull ConfigBulkRequest configBulkRequest) throws ApiException {
+    return bulkRegisterConfigs(configBulkRequest, null);
+  }
+
+  /**
+   * Bulk Register Configs
+   * Register configs declared by an SDK.  For each item in the batch: - If no config with that key exists, create one with &#x60;&#x60;managed&#x3D;false&#x60;&#x60;   (auto-discovered) using the declared items, parent, name, and   description. - If a config with that key already exists, leave the config row   untouched (per ADR-024 §2.9). - Either way, upsert a &#x60;&#x60;config_source&#x60;&#x60; row for &#x60;&#x60;(config, service,   environment)&#x60;&#x60; and refresh its &#x60;&#x60;last_seen&#x60;&#x60; timestamp.  Per ADR-022 §2.11 rule 2 this endpoint never enforces &#x60;&#x60;config.managed_configurations&#x60;&#x60; — discovered configs do not consume a managed slot.
+   * @param configBulkRequest  (required)
+   * @param headers Optional headers to include in the request
+   * @return ConfigBulkResponse
+   * @throws ApiException if fails to make API call
+   */
+  public ConfigBulkResponse bulkRegisterConfigs(@jakarta.annotation.Nonnull ConfigBulkRequest configBulkRequest, Map<String, String> headers) throws ApiException {
+    ApiResponse<ConfigBulkResponse> localVarResponse = bulkRegisterConfigsWithHttpInfo(configBulkRequest, headers);
+    return localVarResponse.getData();
+  }
+
+  /**
+   * Bulk Register Configs
+   * Register configs declared by an SDK.  For each item in the batch: - If no config with that key exists, create one with &#x60;&#x60;managed&#x3D;false&#x60;&#x60;   (auto-discovered) using the declared items, parent, name, and   description. - If a config with that key already exists, leave the config row   untouched (per ADR-024 §2.9). - Either way, upsert a &#x60;&#x60;config_source&#x60;&#x60; row for &#x60;&#x60;(config, service,   environment)&#x60;&#x60; and refresh its &#x60;&#x60;last_seen&#x60;&#x60; timestamp.  Per ADR-022 §2.11 rule 2 this endpoint never enforces &#x60;&#x60;config.managed_configurations&#x60;&#x60; — discovered configs do not consume a managed slot.
+   * @param configBulkRequest  (required)
+   * @return ApiResponse&lt;ConfigBulkResponse&gt;
+   * @throws ApiException if fails to make API call
+   */
+  public ApiResponse<ConfigBulkResponse> bulkRegisterConfigsWithHttpInfo(@jakarta.annotation.Nonnull ConfigBulkRequest configBulkRequest) throws ApiException {
+    return bulkRegisterConfigsWithHttpInfo(configBulkRequest, null);
+  }
+
+  /**
+   * Bulk Register Configs
+   * Register configs declared by an SDK.  For each item in the batch: - If no config with that key exists, create one with &#x60;&#x60;managed&#x3D;false&#x60;&#x60;   (auto-discovered) using the declared items, parent, name, and   description. - If a config with that key already exists, leave the config row   untouched (per ADR-024 §2.9). - Either way, upsert a &#x60;&#x60;config_source&#x60;&#x60; row for &#x60;&#x60;(config, service,   environment)&#x60;&#x60; and refresh its &#x60;&#x60;last_seen&#x60;&#x60; timestamp.  Per ADR-022 §2.11 rule 2 this endpoint never enforces &#x60;&#x60;config.managed_configurations&#x60;&#x60; — discovered configs do not consume a managed slot.
+   * @param configBulkRequest  (required)
+   * @param headers Optional headers to include in the request
+   * @return ApiResponse&lt;ConfigBulkResponse&gt;
+   * @throws ApiException if fails to make API call
+   */
+  public ApiResponse<ConfigBulkResponse> bulkRegisterConfigsWithHttpInfo(@jakarta.annotation.Nonnull ConfigBulkRequest configBulkRequest, Map<String, String> headers) throws ApiException {
+    HttpRequest.Builder localVarRequestBuilder = bulkRegisterConfigsRequestBuilder(configBulkRequest, headers);
+    try {
+      HttpResponse<InputStream> localVarResponse = memberVarHttpClient.send(
+          localVarRequestBuilder.build(),
+          HttpResponse.BodyHandlers.ofInputStream());
+      if (memberVarResponseInterceptor != null) {
+        memberVarResponseInterceptor.accept(localVarResponse);
+      }
+      InputStream localVarResponseBody = null;
+      try {
+        if (localVarResponse.statusCode()/ 100 != 2) {
+          throw getApiException("bulkRegisterConfigs", localVarResponse);
+        }
+        localVarResponseBody = ApiClient.getResponseBody(localVarResponse);
+        if (localVarResponseBody == null) {
+          return new ApiResponse<ConfigBulkResponse>(
+              localVarResponse.statusCode(),
+              localVarResponse.headers().map(),
+              null
+          );
+        }
+
+        
+        
+        String responseBody = new String(localVarResponseBody.readAllBytes());
+        ConfigBulkResponse responseValue = responseBody.isBlank()? null: memberVarObjectMapper.readValue(responseBody, new TypeReference<ConfigBulkResponse>() {});
+        
+
+        return new ApiResponse<ConfigBulkResponse>(
+            localVarResponse.statusCode(),
+            localVarResponse.headers().map(),
+            responseValue
+        );
+      } finally {
+        if (localVarResponseBody != null) {
+          localVarResponseBody.close();
+        }
+      }
+    } catch (IOException e) {
+      throw new ApiException(e);
+    }
+    catch (InterruptedException e) {
+      Thread.currentThread().interrupt();
+      throw new ApiException(e);
+    }
+  }
+
+  private HttpRequest.Builder bulkRegisterConfigsRequestBuilder(@jakarta.annotation.Nonnull ConfigBulkRequest configBulkRequest, Map<String, String> headers) throws ApiException {
+    // verify the required parameter 'configBulkRequest' is set
+    if (configBulkRequest == null) {
+      throw new ApiException(400, "Missing the required parameter 'configBulkRequest' when calling bulkRegisterConfigs");
+    }
+
+    HttpRequest.Builder localVarRequestBuilder = HttpRequest.newBuilder();
+
+    String localVarPath = "/api/v1/configs/bulk";
+
+    localVarRequestBuilder.uri(URI.create(memberVarBaseUri + localVarPath));
+
+    localVarRequestBuilder.header("Content-Type", "application/vnd.api+json");
+    localVarRequestBuilder.header("Accept", "application/vnd.api+json");
+
+    try {
+      byte[] localVarPostBody = memberVarObjectMapper.writeValueAsBytes(configBulkRequest);
+      localVarRequestBuilder.method("POST", HttpRequest.BodyPublishers.ofByteArray(localVarPostBody));
+    } catch (IOException e) {
+      throw new ApiException(e);
+    }
+    if (memberVarReadTimeout != null) {
+      localVarRequestBuilder.timeout(memberVarReadTimeout);
+    }
+    // Add custom headers if provided
+    localVarRequestBuilder = HttpRequestBuilderExtensions.withAdditionalHeaders(localVarRequestBuilder, headers);
+    if (memberVarInterceptor != null) {
+      memberVarInterceptor.accept(localVarRequestBuilder);
+    }
+    return localVarRequestBuilder;
   }
 
   /**
