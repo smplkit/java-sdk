@@ -79,16 +79,8 @@ public final class ApiExceptionHandler {
                 JsonNode metaNode = errorNode.get("meta");
                 if (metaNode != null && metaNode.isObject()) {
                     final Map<String, Object> metaMap = new LinkedHashMap<>();
-                    metaNode.fields().forEachRemaining(entry -> {
-                        JsonNode v = entry.getValue();
-                        if (v.isTextual()) metaMap.put(entry.getKey(), v.asText());
-                        else if (v.isInt()) metaMap.put(entry.getKey(), v.asInt());
-                        else if (v.isLong()) metaMap.put(entry.getKey(), v.asLong());
-                        else if (v.isDouble() || v.isFloat()) metaMap.put(entry.getKey(), v.asDouble());
-                        else if (v.isBoolean()) metaMap.put(entry.getKey(), v.asBoolean());
-                        else if (v.isNull()) metaMap.put(entry.getKey(), null);
-                        else metaMap.put(entry.getKey(), v.toString());
-                    });
+                    metaNode.fields().forEachRemaining(entry ->
+                        metaMap.put(entry.getKey(), decodeMetaValue(entry.getValue())));
                     meta = metaMap;
                 } else {
                     meta = null;
@@ -100,6 +92,23 @@ public final class ApiExceptionHandler {
         } catch (Exception e) {
             return Collections.emptyList();
         }
+    }
+
+    /**
+     * Convert a JsonNode meta value into a native Java object — String,
+     * Boolean, Number, null, or fallback toString(). Jackson's
+     * {@code numberValue()} returns the right boxed numeric type
+     * (Integer / Long / Double / BigDecimal) so we don't have to
+     * dispatch on {@code isInt}/{@code isLong}/{@code isDouble}
+     * separately — which collapses the branch / coverage explosion the
+     * earlier if-else chain produced under JaCoCo on JDK 21.
+     */
+    private static Object decodeMetaValue(JsonNode v) {
+        if (v.isNull()) return null;
+        if (v.isTextual()) return v.asText();
+        if (v.isBoolean()) return v.asBoolean();
+        if (v.isNumber()) return v.numberValue();
+        return v.toString();
     }
 
     private static String textOrNull(JsonNode node, String field) {
