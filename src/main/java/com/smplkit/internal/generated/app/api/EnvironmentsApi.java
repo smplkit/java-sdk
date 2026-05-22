@@ -650,9 +650,10 @@ public class EnvironmentsApi {
 
   /**
    * List Environments
-   * List all environments for the authenticated account. &#x60;filter[search]&#x60; does a case-insensitive substring match against the environment &#x60;key&#x60; and &#x60;name&#x60;. &#x60;filter[classification]&#x60; narrows the result to one classification (&#x60;STANDARD&#x60; or &#x60;AD_HOC&#x60;).
+   * List all environments for the authenticated account. &#x60;filter[search]&#x60; does a case-insensitive substring match against the environment &#x60;key&#x60; and &#x60;name&#x60;. &#x60;filter[classification]&#x60; narrows the result to one classification (&#x60;STANDARD&#x60; or &#x60;AD_HOC&#x60;). &#x60;filter[managed]&#x60; narrows by managed state (&#x60;true&#x60; or &#x60;false&#x60;).
    * @param filterSearch Case-insensitive substring match against the environment &#x60;key&#x60; and &#x60;name&#x60;. An environment is returned if either field contains the search term. (optional)
    * @param filterClassification Narrow the result to environments with the given classification. One of &#x60;STANDARD&#x60; or &#x60;AD_HOC&#x60;. (optional)
+   * @param filterManaged Narrow the result to managed (&#x60;true&#x60;) or unmanaged (&#x60;false&#x60;) environments. Omit to return both. (optional)
    * @param sort Field to sort by. Prefix with &#x60;-&#x60; for descending order. Default: &#x60;name&#x60;. Allowed values: &#x60;created_at&#x60;, &#x60;-created_at&#x60;, &#x60;key&#x60;, &#x60;-key&#x60;, &#x60;name&#x60;, &#x60;-name&#x60;, &#x60;updated_at&#x60;, &#x60;-updated_at&#x60;. (optional, default to name)
    * @param pageNumber 1-based page number to return. Optional; defaults to &#x60;1&#x60; when omitted. Must be &#x60;&gt;&#x3D; 1&#x60; — requests with a smaller value are rejected with a 400 error. (optional, default to 1)
    * @param pageSize Number of items per page. Optional; defaults to &#x60;1000&#x60; when omitted. Must be between &#x60;1&#x60; and &#x60;1000&#x60; inclusive — requests outside that range are rejected with a 400 error. (optional, default to 1000)
@@ -660,15 +661,16 @@ public class EnvironmentsApi {
    * @return EnvironmentListResponse
    * @throws ApiException if fails to make API call
    */
-  public EnvironmentListResponse listEnvironments(@jakarta.annotation.Nullable String filterSearch, @jakarta.annotation.Nullable String filterClassification, @jakarta.annotation.Nullable String sort, @jakarta.annotation.Nullable Integer pageNumber, @jakarta.annotation.Nullable Integer pageSize, @jakarta.annotation.Nullable Boolean metaTotal) throws ApiException {
-    return listEnvironments(filterSearch, filterClassification, sort, pageNumber, pageSize, metaTotal, null);
+  public EnvironmentListResponse listEnvironments(@jakarta.annotation.Nullable String filterSearch, @jakarta.annotation.Nullable String filterClassification, @jakarta.annotation.Nullable Boolean filterManaged, @jakarta.annotation.Nullable String sort, @jakarta.annotation.Nullable Integer pageNumber, @jakarta.annotation.Nullable Integer pageSize, @jakarta.annotation.Nullable Boolean metaTotal) throws ApiException {
+    return listEnvironments(filterSearch, filterClassification, filterManaged, sort, pageNumber, pageSize, metaTotal, null);
   }
 
   /**
    * List Environments
-   * List all environments for the authenticated account. &#x60;filter[search]&#x60; does a case-insensitive substring match against the environment &#x60;key&#x60; and &#x60;name&#x60;. &#x60;filter[classification]&#x60; narrows the result to one classification (&#x60;STANDARD&#x60; or &#x60;AD_HOC&#x60;).
+   * List all environments for the authenticated account. &#x60;filter[search]&#x60; does a case-insensitive substring match against the environment &#x60;key&#x60; and &#x60;name&#x60;. &#x60;filter[classification]&#x60; narrows the result to one classification (&#x60;STANDARD&#x60; or &#x60;AD_HOC&#x60;). &#x60;filter[managed]&#x60; narrows by managed state (&#x60;true&#x60; or &#x60;false&#x60;).
    * @param filterSearch Case-insensitive substring match against the environment &#x60;key&#x60; and &#x60;name&#x60;. An environment is returned if either field contains the search term. (optional)
    * @param filterClassification Narrow the result to environments with the given classification. One of &#x60;STANDARD&#x60; or &#x60;AD_HOC&#x60;. (optional)
+   * @param filterManaged Narrow the result to managed (&#x60;true&#x60;) or unmanaged (&#x60;false&#x60;) environments. Omit to return both. (optional)
    * @param sort Field to sort by. Prefix with &#x60;-&#x60; for descending order. Default: &#x60;name&#x60;. Allowed values: &#x60;created_at&#x60;, &#x60;-created_at&#x60;, &#x60;key&#x60;, &#x60;-key&#x60;, &#x60;name&#x60;, &#x60;-name&#x60;, &#x60;updated_at&#x60;, &#x60;-updated_at&#x60;. (optional, default to name)
    * @param pageNumber 1-based page number to return. Optional; defaults to &#x60;1&#x60; when omitted. Must be &#x60;&gt;&#x3D; 1&#x60; — requests with a smaller value are rejected with a 400 error. (optional, default to 1)
    * @param pageSize Number of items per page. Optional; defaults to &#x60;1000&#x60; when omitted. Must be between &#x60;1&#x60; and &#x60;1000&#x60; inclusive — requests outside that range are rejected with a 400 error. (optional, default to 1000)
@@ -677,16 +679,17 @@ public class EnvironmentsApi {
    * @return EnvironmentListResponse
    * @throws ApiException if fails to make API call
    */
-  public EnvironmentListResponse listEnvironments(@jakarta.annotation.Nullable String filterSearch, @jakarta.annotation.Nullable String filterClassification, @jakarta.annotation.Nullable String sort, @jakarta.annotation.Nullable Integer pageNumber, @jakarta.annotation.Nullable Integer pageSize, @jakarta.annotation.Nullable Boolean metaTotal, Map<String, String> headers) throws ApiException {
-    ApiResponse<EnvironmentListResponse> localVarResponse = listEnvironmentsWithHttpInfo(filterSearch, filterClassification, sort, pageNumber, pageSize, metaTotal, headers);
+  public EnvironmentListResponse listEnvironments(@jakarta.annotation.Nullable String filterSearch, @jakarta.annotation.Nullable String filterClassification, @jakarta.annotation.Nullable Boolean filterManaged, @jakarta.annotation.Nullable String sort, @jakarta.annotation.Nullable Integer pageNumber, @jakarta.annotation.Nullable Integer pageSize, @jakarta.annotation.Nullable Boolean metaTotal, Map<String, String> headers) throws ApiException {
+    ApiResponse<EnvironmentListResponse> localVarResponse = listEnvironmentsWithHttpInfo(filterSearch, filterClassification, filterManaged, sort, pageNumber, pageSize, metaTotal, headers);
     return localVarResponse.getData();
   }
 
   /**
    * List Environments
-   * List all environments for the authenticated account. &#x60;filter[search]&#x60; does a case-insensitive substring match against the environment &#x60;key&#x60; and &#x60;name&#x60;. &#x60;filter[classification]&#x60; narrows the result to one classification (&#x60;STANDARD&#x60; or &#x60;AD_HOC&#x60;).
+   * List all environments for the authenticated account. &#x60;filter[search]&#x60; does a case-insensitive substring match against the environment &#x60;key&#x60; and &#x60;name&#x60;. &#x60;filter[classification]&#x60; narrows the result to one classification (&#x60;STANDARD&#x60; or &#x60;AD_HOC&#x60;). &#x60;filter[managed]&#x60; narrows by managed state (&#x60;true&#x60; or &#x60;false&#x60;).
    * @param filterSearch Case-insensitive substring match against the environment &#x60;key&#x60; and &#x60;name&#x60;. An environment is returned if either field contains the search term. (optional)
    * @param filterClassification Narrow the result to environments with the given classification. One of &#x60;STANDARD&#x60; or &#x60;AD_HOC&#x60;. (optional)
+   * @param filterManaged Narrow the result to managed (&#x60;true&#x60;) or unmanaged (&#x60;false&#x60;) environments. Omit to return both. (optional)
    * @param sort Field to sort by. Prefix with &#x60;-&#x60; for descending order. Default: &#x60;name&#x60;. Allowed values: &#x60;created_at&#x60;, &#x60;-created_at&#x60;, &#x60;key&#x60;, &#x60;-key&#x60;, &#x60;name&#x60;, &#x60;-name&#x60;, &#x60;updated_at&#x60;, &#x60;-updated_at&#x60;. (optional, default to name)
    * @param pageNumber 1-based page number to return. Optional; defaults to &#x60;1&#x60; when omitted. Must be &#x60;&gt;&#x3D; 1&#x60; — requests with a smaller value are rejected with a 400 error. (optional, default to 1)
    * @param pageSize Number of items per page. Optional; defaults to &#x60;1000&#x60; when omitted. Must be between &#x60;1&#x60; and &#x60;1000&#x60; inclusive — requests outside that range are rejected with a 400 error. (optional, default to 1000)
@@ -694,15 +697,16 @@ public class EnvironmentsApi {
    * @return ApiResponse&lt;EnvironmentListResponse&gt;
    * @throws ApiException if fails to make API call
    */
-  public ApiResponse<EnvironmentListResponse> listEnvironmentsWithHttpInfo(@jakarta.annotation.Nullable String filterSearch, @jakarta.annotation.Nullable String filterClassification, @jakarta.annotation.Nullable String sort, @jakarta.annotation.Nullable Integer pageNumber, @jakarta.annotation.Nullable Integer pageSize, @jakarta.annotation.Nullable Boolean metaTotal) throws ApiException {
-    return listEnvironmentsWithHttpInfo(filterSearch, filterClassification, sort, pageNumber, pageSize, metaTotal, null);
+  public ApiResponse<EnvironmentListResponse> listEnvironmentsWithHttpInfo(@jakarta.annotation.Nullable String filterSearch, @jakarta.annotation.Nullable String filterClassification, @jakarta.annotation.Nullable Boolean filterManaged, @jakarta.annotation.Nullable String sort, @jakarta.annotation.Nullable Integer pageNumber, @jakarta.annotation.Nullable Integer pageSize, @jakarta.annotation.Nullable Boolean metaTotal) throws ApiException {
+    return listEnvironmentsWithHttpInfo(filterSearch, filterClassification, filterManaged, sort, pageNumber, pageSize, metaTotal, null);
   }
 
   /**
    * List Environments
-   * List all environments for the authenticated account. &#x60;filter[search]&#x60; does a case-insensitive substring match against the environment &#x60;key&#x60; and &#x60;name&#x60;. &#x60;filter[classification]&#x60; narrows the result to one classification (&#x60;STANDARD&#x60; or &#x60;AD_HOC&#x60;).
+   * List all environments for the authenticated account. &#x60;filter[search]&#x60; does a case-insensitive substring match against the environment &#x60;key&#x60; and &#x60;name&#x60;. &#x60;filter[classification]&#x60; narrows the result to one classification (&#x60;STANDARD&#x60; or &#x60;AD_HOC&#x60;). &#x60;filter[managed]&#x60; narrows by managed state (&#x60;true&#x60; or &#x60;false&#x60;).
    * @param filterSearch Case-insensitive substring match against the environment &#x60;key&#x60; and &#x60;name&#x60;. An environment is returned if either field contains the search term. (optional)
    * @param filterClassification Narrow the result to environments with the given classification. One of &#x60;STANDARD&#x60; or &#x60;AD_HOC&#x60;. (optional)
+   * @param filterManaged Narrow the result to managed (&#x60;true&#x60;) or unmanaged (&#x60;false&#x60;) environments. Omit to return both. (optional)
    * @param sort Field to sort by. Prefix with &#x60;-&#x60; for descending order. Default: &#x60;name&#x60;. Allowed values: &#x60;created_at&#x60;, &#x60;-created_at&#x60;, &#x60;key&#x60;, &#x60;-key&#x60;, &#x60;name&#x60;, &#x60;-name&#x60;, &#x60;updated_at&#x60;, &#x60;-updated_at&#x60;. (optional, default to name)
    * @param pageNumber 1-based page number to return. Optional; defaults to &#x60;1&#x60; when omitted. Must be &#x60;&gt;&#x3D; 1&#x60; — requests with a smaller value are rejected with a 400 error. (optional, default to 1)
    * @param pageSize Number of items per page. Optional; defaults to &#x60;1000&#x60; when omitted. Must be between &#x60;1&#x60; and &#x60;1000&#x60; inclusive — requests outside that range are rejected with a 400 error. (optional, default to 1000)
@@ -711,8 +715,8 @@ public class EnvironmentsApi {
    * @return ApiResponse&lt;EnvironmentListResponse&gt;
    * @throws ApiException if fails to make API call
    */
-  public ApiResponse<EnvironmentListResponse> listEnvironmentsWithHttpInfo(@jakarta.annotation.Nullable String filterSearch, @jakarta.annotation.Nullable String filterClassification, @jakarta.annotation.Nullable String sort, @jakarta.annotation.Nullable Integer pageNumber, @jakarta.annotation.Nullable Integer pageSize, @jakarta.annotation.Nullable Boolean metaTotal, Map<String, String> headers) throws ApiException {
-    HttpRequest.Builder localVarRequestBuilder = listEnvironmentsRequestBuilder(filterSearch, filterClassification, sort, pageNumber, pageSize, metaTotal, headers);
+  public ApiResponse<EnvironmentListResponse> listEnvironmentsWithHttpInfo(@jakarta.annotation.Nullable String filterSearch, @jakarta.annotation.Nullable String filterClassification, @jakarta.annotation.Nullable Boolean filterManaged, @jakarta.annotation.Nullable String sort, @jakarta.annotation.Nullable Integer pageNumber, @jakarta.annotation.Nullable Integer pageSize, @jakarta.annotation.Nullable Boolean metaTotal, Map<String, String> headers) throws ApiException {
+    HttpRequest.Builder localVarRequestBuilder = listEnvironmentsRequestBuilder(filterSearch, filterClassification, filterManaged, sort, pageNumber, pageSize, metaTotal, headers);
     try {
       HttpResponse<InputStream> localVarResponse = memberVarHttpClient.send(
           localVarRequestBuilder.build(),
@@ -759,7 +763,7 @@ public class EnvironmentsApi {
     }
   }
 
-  private HttpRequest.Builder listEnvironmentsRequestBuilder(@jakarta.annotation.Nullable String filterSearch, @jakarta.annotation.Nullable String filterClassification, @jakarta.annotation.Nullable String sort, @jakarta.annotation.Nullable Integer pageNumber, @jakarta.annotation.Nullable Integer pageSize, @jakarta.annotation.Nullable Boolean metaTotal, Map<String, String> headers) throws ApiException {
+  private HttpRequest.Builder listEnvironmentsRequestBuilder(@jakarta.annotation.Nullable String filterSearch, @jakarta.annotation.Nullable String filterClassification, @jakarta.annotation.Nullable Boolean filterManaged, @jakarta.annotation.Nullable String sort, @jakarta.annotation.Nullable Integer pageNumber, @jakarta.annotation.Nullable Integer pageSize, @jakarta.annotation.Nullable Boolean metaTotal, Map<String, String> headers) throws ApiException {
 
     HttpRequest.Builder localVarRequestBuilder = HttpRequest.newBuilder();
 
@@ -772,6 +776,8 @@ public class EnvironmentsApi {
     localVarQueryParams.addAll(ApiClient.parameterToPairs("filter[search]", filterSearch));
     localVarQueryParameterBaseName = "filter[classification]";
     localVarQueryParams.addAll(ApiClient.parameterToPairs("filter[classification]", filterClassification));
+    localVarQueryParameterBaseName = "filter[managed]";
+    localVarQueryParams.addAll(ApiClient.parameterToPairs("filter[managed]", filterManaged));
     localVarQueryParameterBaseName = "sort";
     localVarQueryParams.addAll(ApiClient.parameterToPairs("sort", sort));
     localVarQueryParameterBaseName = "page[number]";
