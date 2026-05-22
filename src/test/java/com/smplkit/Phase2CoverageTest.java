@@ -80,7 +80,7 @@ class Phase2CoverageTest {
                         "attributes", configData
                 ))),
                 ConfigListResponse.class);
-        when(mockApi.listConfigs(isNull(), isNull(), isNull(), any(), any(), isNull())).thenReturn(listResponse);
+        when(mockApi.listConfigs(isNull(), isNull(), isNull(), isNull(), any(), any(), isNull())).thenReturn(listResponse);
 
         // Without setEnvironment, get throws (no lazy init, nothing cached)
         ConfigClient noEnvClient = new ConfigClient(mockApi, HttpClient.newHttpClient(), "test-key");
@@ -113,7 +113,7 @@ class Phase2CoverageTest {
                         )
                 ))),
                 ConfigListResponse.class);
-        when(mockApi.listConfigs(isNull(), isNull(), isNull(), any(), any(), isNull())).thenReturn(listResponse);
+        when(mockApi.listConfigs(isNull(), isNull(), isNull(), isNull(), any(), any(), isNull())).thenReturn(listResponse);
 
         ConfigClient configClient = new ConfigClient(mockApi, HttpClient.newHttpClient(), "test-key");
         configClient.setEnvironment("staging");

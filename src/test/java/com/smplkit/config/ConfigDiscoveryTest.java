@@ -50,7 +50,7 @@ class ConfigDiscoveryTest {
         client.setEnvironment("production");
         client.setService("test-service");
         // Default stub so lazy init doesn't fail
-        when(mockApi.listConfigs(isNull(), isNull(), isNull(), any(), any(), isNull()))
+        when(mockApi.listConfigs(isNull(), isNull(), isNull(), isNull(), any(), any(), isNull()))
                 .thenReturn(new ConfigListResponse().data(List.of()));
         when(mockApi.bulkRegisterConfigs(any(ConfigBulkRequest.class)))
                 .thenReturn(new ConfigBulkResponse());
@@ -332,7 +332,7 @@ class ConfigDiscoveryTest {
         when(mockApi.bulkRegisterConfigs(any(ConfigBulkRequest.class))).thenAnswer(inv -> {
             calls.add("bulk"); return new ConfigBulkResponse();
         });
-        when(mockApi.listConfigs(isNull(), isNull(), isNull(), any(), any(), isNull()))
+        when(mockApi.listConfigs(isNull(), isNull(), isNull(), isNull(), any(), any(), isNull()))
                 .thenAnswer(inv -> { calls.add("list"); return new ConfigListResponse().data(List.of()); });
 
         client.getOrCreate("billing");

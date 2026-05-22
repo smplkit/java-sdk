@@ -636,9 +636,10 @@ public class ConfigsApi {
 
   /**
    * List Configs
-   * List configs for this account.  Default sort is &#x60;key&#x60; ascending. Pass &#x60;filter[parent]&#x3D;&lt;parent_key&gt;&#x60; to return only the direct children of a specific config, or &#x60;filter[search]&#x3D;&lt;term&gt;&#x60; to filter by a case-insensitive substring against &#x60;key&#x60; or &#x60;name&#x60;.
+   * List configs for this account.  Default sort is &#x60;key&#x60; ascending. Pass &#x60;filter[parent]&#x3D;&lt;parent_key&gt;&#x60; to return only the direct children of a specific config, &#x60;filter[search]&#x3D;&lt;term&gt;&#x60; to filter by a case-insensitive substring against &#x60;key&#x60; or &#x60;name&#x60;, or &#x60;filter[managed]&#x3D;true|false&#x60; to restrict to managed or discovered configs respectively.
    * @param filterParent  (optional)
    * @param filterSearch Case-insensitive substring match against the config &#x60;key&#x60; and &#x60;name&#x60;. A config is returned if either field contains the search term. (optional)
+   * @param filterManaged Restrict the result to managed (&#x60;true&#x60;) or discovered (&#x60;false&#x60;) configs. Omit to return both. Configs created via the console or &#x60;POST /api/v1/configs&#x60; are managed; configs registered via &#x60;POST /api/v1/configs/bulk&#x60; start out discovered. (optional)
    * @param sort Field to sort by. Prefix with &#x60;-&#x60; for descending order. Default: &#x60;key&#x60;. Allowed values: &#x60;created_at&#x60;, &#x60;-created_at&#x60;, &#x60;key&#x60;, &#x60;-key&#x60;, &#x60;name&#x60;, &#x60;-name&#x60;, &#x60;updated_at&#x60;, &#x60;-updated_at&#x60;. (optional, default to key)
    * @param pageNumber 1-based page number to return. Optional; defaults to &#x60;1&#x60; when omitted. Must be &#x60;&gt;&#x3D; 1&#x60; — requests with a smaller value are rejected with a 400 error. (optional, default to 1)
    * @param pageSize Number of items per page. Optional; defaults to &#x60;1000&#x60; when omitted. Must be between &#x60;1&#x60; and &#x60;1000&#x60; inclusive — requests outside that range are rejected with a 400 error. (optional, default to 1000)
@@ -646,15 +647,16 @@ public class ConfigsApi {
    * @return ConfigListResponse
    * @throws ApiException if fails to make API call
    */
-  public ConfigListResponse listConfigs(@jakarta.annotation.Nullable String filterParent, @jakarta.annotation.Nullable String filterSearch, @jakarta.annotation.Nullable String sort, @jakarta.annotation.Nullable Integer pageNumber, @jakarta.annotation.Nullable Integer pageSize, @jakarta.annotation.Nullable Boolean metaTotal) throws ApiException {
-    return listConfigs(filterParent, filterSearch, sort, pageNumber, pageSize, metaTotal, null);
+  public ConfigListResponse listConfigs(@jakarta.annotation.Nullable String filterParent, @jakarta.annotation.Nullable String filterSearch, @jakarta.annotation.Nullable Boolean filterManaged, @jakarta.annotation.Nullable String sort, @jakarta.annotation.Nullable Integer pageNumber, @jakarta.annotation.Nullable Integer pageSize, @jakarta.annotation.Nullable Boolean metaTotal) throws ApiException {
+    return listConfigs(filterParent, filterSearch, filterManaged, sort, pageNumber, pageSize, metaTotal, null);
   }
 
   /**
    * List Configs
-   * List configs for this account.  Default sort is &#x60;key&#x60; ascending. Pass &#x60;filter[parent]&#x3D;&lt;parent_key&gt;&#x60; to return only the direct children of a specific config, or &#x60;filter[search]&#x3D;&lt;term&gt;&#x60; to filter by a case-insensitive substring against &#x60;key&#x60; or &#x60;name&#x60;.
+   * List configs for this account.  Default sort is &#x60;key&#x60; ascending. Pass &#x60;filter[parent]&#x3D;&lt;parent_key&gt;&#x60; to return only the direct children of a specific config, &#x60;filter[search]&#x3D;&lt;term&gt;&#x60; to filter by a case-insensitive substring against &#x60;key&#x60; or &#x60;name&#x60;, or &#x60;filter[managed]&#x3D;true|false&#x60; to restrict to managed or discovered configs respectively.
    * @param filterParent  (optional)
    * @param filterSearch Case-insensitive substring match against the config &#x60;key&#x60; and &#x60;name&#x60;. A config is returned if either field contains the search term. (optional)
+   * @param filterManaged Restrict the result to managed (&#x60;true&#x60;) or discovered (&#x60;false&#x60;) configs. Omit to return both. Configs created via the console or &#x60;POST /api/v1/configs&#x60; are managed; configs registered via &#x60;POST /api/v1/configs/bulk&#x60; start out discovered. (optional)
    * @param sort Field to sort by. Prefix with &#x60;-&#x60; for descending order. Default: &#x60;key&#x60;. Allowed values: &#x60;created_at&#x60;, &#x60;-created_at&#x60;, &#x60;key&#x60;, &#x60;-key&#x60;, &#x60;name&#x60;, &#x60;-name&#x60;, &#x60;updated_at&#x60;, &#x60;-updated_at&#x60;. (optional, default to key)
    * @param pageNumber 1-based page number to return. Optional; defaults to &#x60;1&#x60; when omitted. Must be &#x60;&gt;&#x3D; 1&#x60; — requests with a smaller value are rejected with a 400 error. (optional, default to 1)
    * @param pageSize Number of items per page. Optional; defaults to &#x60;1000&#x60; when omitted. Must be between &#x60;1&#x60; and &#x60;1000&#x60; inclusive — requests outside that range are rejected with a 400 error. (optional, default to 1000)
@@ -663,16 +665,17 @@ public class ConfigsApi {
    * @return ConfigListResponse
    * @throws ApiException if fails to make API call
    */
-  public ConfigListResponse listConfigs(@jakarta.annotation.Nullable String filterParent, @jakarta.annotation.Nullable String filterSearch, @jakarta.annotation.Nullable String sort, @jakarta.annotation.Nullable Integer pageNumber, @jakarta.annotation.Nullable Integer pageSize, @jakarta.annotation.Nullable Boolean metaTotal, Map<String, String> headers) throws ApiException {
-    ApiResponse<ConfigListResponse> localVarResponse = listConfigsWithHttpInfo(filterParent, filterSearch, sort, pageNumber, pageSize, metaTotal, headers);
+  public ConfigListResponse listConfigs(@jakarta.annotation.Nullable String filterParent, @jakarta.annotation.Nullable String filterSearch, @jakarta.annotation.Nullable Boolean filterManaged, @jakarta.annotation.Nullable String sort, @jakarta.annotation.Nullable Integer pageNumber, @jakarta.annotation.Nullable Integer pageSize, @jakarta.annotation.Nullable Boolean metaTotal, Map<String, String> headers) throws ApiException {
+    ApiResponse<ConfigListResponse> localVarResponse = listConfigsWithHttpInfo(filterParent, filterSearch, filterManaged, sort, pageNumber, pageSize, metaTotal, headers);
     return localVarResponse.getData();
   }
 
   /**
    * List Configs
-   * List configs for this account.  Default sort is &#x60;key&#x60; ascending. Pass &#x60;filter[parent]&#x3D;&lt;parent_key&gt;&#x60; to return only the direct children of a specific config, or &#x60;filter[search]&#x3D;&lt;term&gt;&#x60; to filter by a case-insensitive substring against &#x60;key&#x60; or &#x60;name&#x60;.
+   * List configs for this account.  Default sort is &#x60;key&#x60; ascending. Pass &#x60;filter[parent]&#x3D;&lt;parent_key&gt;&#x60; to return only the direct children of a specific config, &#x60;filter[search]&#x3D;&lt;term&gt;&#x60; to filter by a case-insensitive substring against &#x60;key&#x60; or &#x60;name&#x60;, or &#x60;filter[managed]&#x3D;true|false&#x60; to restrict to managed or discovered configs respectively.
    * @param filterParent  (optional)
    * @param filterSearch Case-insensitive substring match against the config &#x60;key&#x60; and &#x60;name&#x60;. A config is returned if either field contains the search term. (optional)
+   * @param filterManaged Restrict the result to managed (&#x60;true&#x60;) or discovered (&#x60;false&#x60;) configs. Omit to return both. Configs created via the console or &#x60;POST /api/v1/configs&#x60; are managed; configs registered via &#x60;POST /api/v1/configs/bulk&#x60; start out discovered. (optional)
    * @param sort Field to sort by. Prefix with &#x60;-&#x60; for descending order. Default: &#x60;key&#x60;. Allowed values: &#x60;created_at&#x60;, &#x60;-created_at&#x60;, &#x60;key&#x60;, &#x60;-key&#x60;, &#x60;name&#x60;, &#x60;-name&#x60;, &#x60;updated_at&#x60;, &#x60;-updated_at&#x60;. (optional, default to key)
    * @param pageNumber 1-based page number to return. Optional; defaults to &#x60;1&#x60; when omitted. Must be &#x60;&gt;&#x3D; 1&#x60; — requests with a smaller value are rejected with a 400 error. (optional, default to 1)
    * @param pageSize Number of items per page. Optional; defaults to &#x60;1000&#x60; when omitted. Must be between &#x60;1&#x60; and &#x60;1000&#x60; inclusive — requests outside that range are rejected with a 400 error. (optional, default to 1000)
@@ -680,15 +683,16 @@ public class ConfigsApi {
    * @return ApiResponse&lt;ConfigListResponse&gt;
    * @throws ApiException if fails to make API call
    */
-  public ApiResponse<ConfigListResponse> listConfigsWithHttpInfo(@jakarta.annotation.Nullable String filterParent, @jakarta.annotation.Nullable String filterSearch, @jakarta.annotation.Nullable String sort, @jakarta.annotation.Nullable Integer pageNumber, @jakarta.annotation.Nullable Integer pageSize, @jakarta.annotation.Nullable Boolean metaTotal) throws ApiException {
-    return listConfigsWithHttpInfo(filterParent, filterSearch, sort, pageNumber, pageSize, metaTotal, null);
+  public ApiResponse<ConfigListResponse> listConfigsWithHttpInfo(@jakarta.annotation.Nullable String filterParent, @jakarta.annotation.Nullable String filterSearch, @jakarta.annotation.Nullable Boolean filterManaged, @jakarta.annotation.Nullable String sort, @jakarta.annotation.Nullable Integer pageNumber, @jakarta.annotation.Nullable Integer pageSize, @jakarta.annotation.Nullable Boolean metaTotal) throws ApiException {
+    return listConfigsWithHttpInfo(filterParent, filterSearch, filterManaged, sort, pageNumber, pageSize, metaTotal, null);
   }
 
   /**
    * List Configs
-   * List configs for this account.  Default sort is &#x60;key&#x60; ascending. Pass &#x60;filter[parent]&#x3D;&lt;parent_key&gt;&#x60; to return only the direct children of a specific config, or &#x60;filter[search]&#x3D;&lt;term&gt;&#x60; to filter by a case-insensitive substring against &#x60;key&#x60; or &#x60;name&#x60;.
+   * List configs for this account.  Default sort is &#x60;key&#x60; ascending. Pass &#x60;filter[parent]&#x3D;&lt;parent_key&gt;&#x60; to return only the direct children of a specific config, &#x60;filter[search]&#x3D;&lt;term&gt;&#x60; to filter by a case-insensitive substring against &#x60;key&#x60; or &#x60;name&#x60;, or &#x60;filter[managed]&#x3D;true|false&#x60; to restrict to managed or discovered configs respectively.
    * @param filterParent  (optional)
    * @param filterSearch Case-insensitive substring match against the config &#x60;key&#x60; and &#x60;name&#x60;. A config is returned if either field contains the search term. (optional)
+   * @param filterManaged Restrict the result to managed (&#x60;true&#x60;) or discovered (&#x60;false&#x60;) configs. Omit to return both. Configs created via the console or &#x60;POST /api/v1/configs&#x60; are managed; configs registered via &#x60;POST /api/v1/configs/bulk&#x60; start out discovered. (optional)
    * @param sort Field to sort by. Prefix with &#x60;-&#x60; for descending order. Default: &#x60;key&#x60;. Allowed values: &#x60;created_at&#x60;, &#x60;-created_at&#x60;, &#x60;key&#x60;, &#x60;-key&#x60;, &#x60;name&#x60;, &#x60;-name&#x60;, &#x60;updated_at&#x60;, &#x60;-updated_at&#x60;. (optional, default to key)
    * @param pageNumber 1-based page number to return. Optional; defaults to &#x60;1&#x60; when omitted. Must be &#x60;&gt;&#x3D; 1&#x60; — requests with a smaller value are rejected with a 400 error. (optional, default to 1)
    * @param pageSize Number of items per page. Optional; defaults to &#x60;1000&#x60; when omitted. Must be between &#x60;1&#x60; and &#x60;1000&#x60; inclusive — requests outside that range are rejected with a 400 error. (optional, default to 1000)
@@ -697,8 +701,8 @@ public class ConfigsApi {
    * @return ApiResponse&lt;ConfigListResponse&gt;
    * @throws ApiException if fails to make API call
    */
-  public ApiResponse<ConfigListResponse> listConfigsWithHttpInfo(@jakarta.annotation.Nullable String filterParent, @jakarta.annotation.Nullable String filterSearch, @jakarta.annotation.Nullable String sort, @jakarta.annotation.Nullable Integer pageNumber, @jakarta.annotation.Nullable Integer pageSize, @jakarta.annotation.Nullable Boolean metaTotal, Map<String, String> headers) throws ApiException {
-    HttpRequest.Builder localVarRequestBuilder = listConfigsRequestBuilder(filterParent, filterSearch, sort, pageNumber, pageSize, metaTotal, headers);
+  public ApiResponse<ConfigListResponse> listConfigsWithHttpInfo(@jakarta.annotation.Nullable String filterParent, @jakarta.annotation.Nullable String filterSearch, @jakarta.annotation.Nullable Boolean filterManaged, @jakarta.annotation.Nullable String sort, @jakarta.annotation.Nullable Integer pageNumber, @jakarta.annotation.Nullable Integer pageSize, @jakarta.annotation.Nullable Boolean metaTotal, Map<String, String> headers) throws ApiException {
+    HttpRequest.Builder localVarRequestBuilder = listConfigsRequestBuilder(filterParent, filterSearch, filterManaged, sort, pageNumber, pageSize, metaTotal, headers);
     try {
       HttpResponse<InputStream> localVarResponse = memberVarHttpClient.send(
           localVarRequestBuilder.build(),
@@ -745,7 +749,7 @@ public class ConfigsApi {
     }
   }
 
-  private HttpRequest.Builder listConfigsRequestBuilder(@jakarta.annotation.Nullable String filterParent, @jakarta.annotation.Nullable String filterSearch, @jakarta.annotation.Nullable String sort, @jakarta.annotation.Nullable Integer pageNumber, @jakarta.annotation.Nullable Integer pageSize, @jakarta.annotation.Nullable Boolean metaTotal, Map<String, String> headers) throws ApiException {
+  private HttpRequest.Builder listConfigsRequestBuilder(@jakarta.annotation.Nullable String filterParent, @jakarta.annotation.Nullable String filterSearch, @jakarta.annotation.Nullable Boolean filterManaged, @jakarta.annotation.Nullable String sort, @jakarta.annotation.Nullable Integer pageNumber, @jakarta.annotation.Nullable Integer pageSize, @jakarta.annotation.Nullable Boolean metaTotal, Map<String, String> headers) throws ApiException {
 
     HttpRequest.Builder localVarRequestBuilder = HttpRequest.newBuilder();
 
@@ -758,6 +762,8 @@ public class ConfigsApi {
     localVarQueryParams.addAll(ApiClient.parameterToPairs("filter[parent]", filterParent));
     localVarQueryParameterBaseName = "filter[search]";
     localVarQueryParams.addAll(ApiClient.parameterToPairs("filter[search]", filterSearch));
+    localVarQueryParameterBaseName = "filter[managed]";
+    localVarQueryParams.addAll(ApiClient.parameterToPairs("filter[managed]", filterManaged));
     localVarQueryParameterBaseName = "sort";
     localVarQueryParams.addAll(ApiClient.parameterToPairs("sort", sort));
     localVarQueryParameterBaseName = "page[number]";
