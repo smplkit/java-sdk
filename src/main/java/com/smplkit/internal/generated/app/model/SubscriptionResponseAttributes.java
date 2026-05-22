@@ -140,7 +140,7 @@ public class SubscriptionResponseAttributes {
   }
 
   /**
-   * Lifecycle state of the subscription. &#x60;ACTIVE&#x60; while billing is current; &#x60;PAST_DUE&#x60; after a failed charge; &#x60;CANCELED&#x60; once the subscription has ended; &#x60;null&#x60; when the subscription has no billing object (fully comped at 100% discount).
+   * Lifecycle state of the subscription. &#x60;ACTIVE&#x60; while billing is current; &#x60;PAST_DUE&#x60; after a failed charge; &#x60;CANCELED&#x60; once the subscription has ended; &#x60;null&#x60; when the subscription is fully discounted (&#x60;discount_override_pct&#x60; of 100) and has no billing-provider object.
    * @return status
    */
   @jakarta.annotation.Nullable
@@ -380,7 +380,7 @@ public class SubscriptionResponseAttributes {
   }
 
   /**
-   * Identifier of the default payment method used to bill this subscription. &#x60;null&#x60; when the subscription has no associated payment method (e.g. fully comped).
+   * Identifier of the default payment method used to bill this subscription. &#x60;null&#x60; when the subscription has no associated payment method (e.g. fully discounted via &#x60;discount_override_pct&#x60; of 100).
    * @return paymentMethod
    */
   @jakarta.annotation.Nullable
