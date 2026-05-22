@@ -100,11 +100,12 @@ class ManagementTest {
     void environment_getters() {
         Instant now = Instant.now();
         com.smplkit.management.Environment env = new com.smplkit.management.Environment(
-                null, "prod", "Production", "#ff0000", EnvironmentClassification.STANDARD, now, now);
+                null, "prod", "Production", "#ff0000", EnvironmentClassification.STANDARD, true, now, now);
         assertEquals("prod", env.getId());
         assertEquals("Production", env.getName());
         assertEquals("#ff0000", env.getColor());
         assertEquals(EnvironmentClassification.STANDARD, env.getClassification());
+        assertTrue(env.isManaged());
         assertEquals(now, env.getCreatedAt());
         assertEquals(now, env.getUpdatedAt());
     }
@@ -112,33 +113,36 @@ class ManagementTest {
     @Test
     void environment_setters() {
         com.smplkit.management.Environment env = new com.smplkit.management.Environment(
-                null, "prod", "Production", null, null, null, null);
+                null, "prod", "Production", null, null, true, null, null);
         env.setName("Prod 2");
         env.setColor("#00ff00");
         env.setClassification(EnvironmentClassification.AD_HOC);
+        env.setManaged(false);
         assertEquals("Prod 2", env.getName());
         assertEquals("#00ff00", env.getColor());
         assertEquals(EnvironmentClassification.AD_HOC, env.getClassification());
+        assertFalse(env.isManaged());
     }
 
     @Test
     void environment_classificationDefaultsToStandard() {
         com.smplkit.management.Environment env = new com.smplkit.management.Environment(
-                null, "prod", "Production", null, null, null, null);
+                null, "prod", "Production", null, null, true, null, null);
         assertEquals(EnvironmentClassification.STANDARD, env.getClassification());
     }
 
     @Test
     void environment_toString() {
         com.smplkit.management.Environment env = new com.smplkit.management.Environment(
-                null, "prod", "Production", null, EnvironmentClassification.STANDARD, null, null);
+                null, "prod", "Production", null, EnvironmentClassification.STANDARD, true, null, null);
         assertTrue(env.toString().contains("prod"));
+        assertTrue(env.toString().contains("managed=true"));
     }
 
     @Test
     void environment_save_withoutClient_throws() {
         com.smplkit.management.Environment env = new com.smplkit.management.Environment(
-                null, "prod", "Production", null, EnvironmentClassification.STANDARD, null, null);
+                null, "prod", "Production", null, EnvironmentClassification.STANDARD, true, null, null);
         assertThrows(IllegalStateException.class, env::save);
     }
 
@@ -421,7 +425,7 @@ class ManagementTest {
         EnvironmentResource r = buildEnvResource("prod", "Production", null, "STANDARD",
                 OffsetDateTime.now(), OffsetDateTime.now());
         resp.setData(List.of(r));
-        when(mockEnvApi.listEnvironments(null, null, null, null, null, null)).thenReturn(resp);
+        when(mockEnvApi.listEnvironments(null, null, null, null, null, null, null)).thenReturn(resp);
 
         List<com.smplkit.management.Environment> envs = envClient.list();
         assertEquals(1, envs.size());
@@ -432,7 +436,7 @@ class ManagementTest {
     void envClient_list_emptyData() throws Exception {
         EnvironmentListResponse resp = new EnvironmentListResponse();
         resp.setData(null);
-        when(mockEnvApi.listEnvironments(null, null, null, null, null, null)).thenReturn(resp);
+        when(mockEnvApi.listEnvironments(null, null, null, null, null, null, null)).thenReturn(resp);
         assertTrue(envClient.list().isEmpty());
     }
 
@@ -493,7 +497,7 @@ class ManagementTest {
 
         // Simulate an existing environment (has createdAt)
         com.smplkit.management.Environment env = new com.smplkit.management.Environment(
-                envClient, "prod", "Production", null, EnvironmentClassification.STANDARD,
+                envClient, "prod", "Production", null, EnvironmentClassification.STANDARD, true,
                 Instant.now(), Instant.now());
         env.setName("Production Updated");
         env.setColor("#00ff00");
@@ -519,13 +523,13 @@ class ManagementTest {
 
     @Test
     void envClient_apiException_mapped() throws Exception {
-        when(mockEnvApi.listEnvironments(null, null, null, null, null, null)).thenThrow(new ApiException(404, "not found"));
+        when(mockEnvApi.listEnvironments(null, null, null, null, null, null, null)).thenThrow(new ApiException(404, "not found"));
         assertThrows(SmplError.class, () -> envClient.list());
     }
 
     @Test
     void envClient_apiException_zeroCode() throws Exception {
-        when(mockEnvApi.listEnvironments(null, null, null, null, null, null)).thenThrow(new ApiException(0, "network error"));
+        when(mockEnvApi.listEnvironments(null, null, null, null, null, null, null)).thenThrow(new ApiException(0, "network error"));
         assertThrows(SmplError.class, () -> envClient.list());
     }
 
@@ -1050,7 +1054,7 @@ class ManagementTest {
         when(mockEnvApi.updateEnvironment(any(), any())).thenThrow(new ApiException(409, "conflict"));
         // Create env that looks persisted (createdAt != null) so save() calls _update
         com.smplkit.management.Environment env = new com.smplkit.management.Environment(
-                envClient, "prod", "Production", null, EnvironmentClassification.STANDARD,
+                envClient, "prod", "Production", null, EnvironmentClassification.STANDARD, true,
                 java.time.Instant.now(), java.time.Instant.now());
         assertThrows(SmplError.class, env::save);
     }

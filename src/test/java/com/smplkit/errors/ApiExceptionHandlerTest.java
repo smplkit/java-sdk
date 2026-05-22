@@ -50,6 +50,8 @@ class ApiExceptionHandlerTest {
         assertEquals("The 'name' field is required.", error.getDetail());
         assertNotNull(error.getSource());
         assertEquals("/data/attributes/name", error.getSource().getPointer());
+        assertNull(error.getCode());
+        assertNull(error.getMeta());
 
         // toString includes JSON
         String str = ex.toString();
@@ -107,6 +109,78 @@ class ApiExceptionHandlerTest {
     // -----------------------------------------------------------------------
     // 404 response
     // -----------------------------------------------------------------------
+
+    @Test
+    void errorWithCodeAndMeta_extractsBothFields() {
+        // Regression test: parseErrors must extract JSON:API ``code`` and
+        // ``meta`` so callers can branch without string-matching the human
+        // ``detail``. Before this fix, ``environment_unmanaged`` and the
+        // associated ``{environment: "staging"}`` context were dropped.
+        String body = """
+                {
+                  "errors": [
+                    {
+                      "status": "400",
+                      "code": "environment_unmanaged",
+                      "title": "Environment is unmanaged",
+                      "detail": "Environment 'staging' is unmanaged.",
+                      "meta": {
+                        "environment": "staging",
+                        "managed_count": 2,
+                        "is_default": false,
+                        "ratio": 0.5,
+                        "long_value": 12345678901,
+                        "nested": {"foo": "bar"},
+                        "null_value": null
+                      }
+                    }
+                  ]
+                }
+                """;
+
+        SmplError ex = ApiExceptionHandler.mapApiException(400, body);
+        List<ApiErrorDetail> errors = ex.getErrors();
+        assertEquals(1, errors.size());
+
+        ApiErrorDetail error = errors.get(0);
+        assertEquals("environment_unmanaged", error.getCode());
+        assertEquals("environment_unmanaged", error.code());
+        assertNotNull(error.getMeta());
+        assertNotNull(error.meta());
+        assertEquals("staging", error.getMeta().get("environment"));
+        assertEquals(2, error.getMeta().get("managed_count"));
+        assertEquals(false, error.getMeta().get("is_default"));
+        assertEquals(0.5, error.getMeta().get("ratio"));
+        assertEquals(12345678901L, error.getMeta().get("long_value"));
+        // Nested objects are coerced to their string form (toString fallback)
+        assertNotNull(error.getMeta().get("nested"));
+        assertTrue(error.getMeta().containsKey("null_value"));
+        assertNull(error.getMeta().get("null_value"));
+    }
+
+    @Test
+    void errorWithoutMetaObject_returnsNullMeta() {
+        // The meta extraction only fires when the meta node is an object.
+        // A string-valued meta is malformed; the parser must ignore it
+        // gracefully rather than throwing.
+        String body = """
+                {
+                  "errors": [
+                    {
+                      "status": "400",
+                      "code": "validation",
+                      "title": "Bad",
+                      "meta": "not-an-object"
+                    }
+                  ]
+                }
+                """;
+
+        SmplError ex = ApiExceptionHandler.mapApiException(400, body);
+        ApiErrorDetail error = ex.getErrors().get(0);
+        assertEquals("validation", error.getCode());
+        assertNull(error.getMeta());
+    }
 
     @Test
     void error404_throwsNotFoundException_withServerDetail() {

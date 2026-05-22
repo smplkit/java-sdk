@@ -12,16 +12,19 @@ public final class Environment {
     private String name;
     private String color;
     private EnvironmentClassification classification;
+    private boolean managed;
     private Instant createdAt;
     private Instant updatedAt;
 
     Environment(EnvironmentsClient client, String id, String name, String color,
-                EnvironmentClassification classification, Instant createdAt, Instant updatedAt) {
+                EnvironmentClassification classification, boolean managed,
+                Instant createdAt, Instant updatedAt) {
         this.client = client;
         this.id = id;
         this.name = name;
         this.color = color;
         this.classification = classification != null ? classification : EnvironmentClassification.STANDARD;
+        this.managed = managed;
         this.createdAt = createdAt;
         this.updatedAt = updatedAt;
     }
@@ -43,6 +46,14 @@ public final class Environment {
     }
 
     public EnvironmentClassification getClassification() { return classification; }
+    /**
+     * Returns whether this environment is managed. Unmanaged environments
+     * are view-only — per-environment resource values cannot be written
+     * to them. Managed environments count toward
+     * {@code platform.managed_environments}. {@code production} is always
+     * managed and cannot be demoted.
+     */
+    public boolean isManaged() { return managed; }
     public Instant getCreatedAt() { return createdAt; }
     public Instant getUpdatedAt() { return updatedAt; }
 
@@ -61,6 +72,13 @@ public final class Environment {
     }
 
     public void setClassification(EnvironmentClassification classification) { this.classification = classification; }
+
+    /**
+     * Sets whether this environment is managed. Promoting from
+     * {@code false} to {@code true} consumes a
+     * {@code platform.managed_environments} slot.
+     */
+    public void setManaged(boolean managed) { this.managed = managed; }
 
     /**
      * Creates or updates this environment on the server. Applies the server response back.
@@ -86,12 +104,14 @@ public final class Environment {
         this.name = other.name;
         this.color = other.color;
         this.classification = other.classification;
+        this.managed = other.managed;
         this.createdAt = other.createdAt;
         this.updatedAt = other.updatedAt;
     }
 
     @Override
     public String toString() {
-        return "Environment{id='" + id + "', name='" + name + "', classification=" + classification + "}";
+        return "Environment{id='" + id + "', name='" + name + "', classification="
+                + classification + ", managed=" + managed + "}";
     }
 }

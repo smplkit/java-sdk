@@ -41,6 +41,7 @@ import com.smplkit.internal.generated.app.ApiClient;
   Environment.JSON_PROPERTY_NAME,
   Environment.JSON_PROPERTY_COLOR,
   Environment.JSON_PROPERTY_CLASSIFICATION,
+  Environment.JSON_PROPERTY_MANAGED,
   Environment.JSON_PROPERTY_CREATED_AT,
   Environment.JSON_PROPERTY_UPDATED_AT
 })
@@ -54,7 +55,7 @@ public class Environment {
   private JsonNullable<String> color = JsonNullable.<String>undefined();
 
   /**
-   * &#x60;STANDARD&#x60; for environments the customer explicitly manages; &#x60;AD_HOC&#x60; for environments auto-created from SDK traffic. Case-insensitive on input.
+   * &#x60;STANDARD&#x60; for environments deliberately created (and shown by default in the environment grid); &#x60;AD_HOC&#x60; for auto-discovered environments seen in SDK traffic (hidden from the default view). Case-insensitive on input. Independent of the &#x60;managed&#x60; flag.
    */
   public enum ClassificationEnum {
     STANDARD(String.valueOf("STANDARD")),
@@ -90,7 +91,11 @@ public class Environment {
 
   public static final String JSON_PROPERTY_CLASSIFICATION = "classification";
   @jakarta.annotation.Nullable
-  private ClassificationEnum classification = ClassificationEnum.AD_HOC;
+  private ClassificationEnum classification = ClassificationEnum.STANDARD;
+
+  public static final String JSON_PROPERTY_MANAGED = "managed";
+  @jakarta.annotation.Nullable
+  private Boolean managed = false;
 
   public static final String JSON_PROPERTY_CREATED_AT = "created_at";
   private JsonNullable<OffsetDateTime> createdAt = JsonNullable.<OffsetDateTime>undefined();
@@ -173,7 +178,7 @@ public class Environment {
   }
 
   /**
-   * &#x60;STANDARD&#x60; for environments the customer explicitly manages; &#x60;AD_HOC&#x60; for environments auto-created from SDK traffic. Case-insensitive on input.
+   * &#x60;STANDARD&#x60; for environments deliberately created (and shown by default in the environment grid); &#x60;AD_HOC&#x60; for auto-discovered environments seen in SDK traffic (hidden from the default view). Case-insensitive on input. Independent of the &#x60;managed&#x60; flag.
    * @return classification
    */
   @jakarta.annotation.Nullable
@@ -188,6 +193,30 @@ public class Environment {
   @JsonInclude(value = JsonInclude.Include.USE_DEFAULTS)
   public void setClassification(@jakarta.annotation.Nullable ClassificationEnum classification) {
     this.classification = classification;
+  }
+
+
+  public Environment managed(@jakarta.annotation.Nullable Boolean managed) {
+    this.managed = managed;
+    return this;
+  }
+
+  /**
+   * When &#x60;true&#x60;, per-environment resource values can be set against this environment and it counts toward the account&#39;s managed-environments quota. When &#x60;false&#x60;, the environment is view-only: existing values are displayed for comparison but no new values can be written. Promotion and demotion flip this boolean via &#x60;PUT /api/v1/environments/{id}&#x60;; promotion is subject to the quota.
+   * @return managed
+   */
+  @jakarta.annotation.Nullable
+  @JsonProperty(value = JSON_PROPERTY_MANAGED, required = false)
+  @JsonInclude(value = JsonInclude.Include.USE_DEFAULTS)
+  public Boolean getManaged() {
+    return managed;
+  }
+
+
+  @JsonProperty(value = JSON_PROPERTY_MANAGED, required = false)
+  @JsonInclude(value = JsonInclude.Include.USE_DEFAULTS)
+  public void setManaged(@jakarta.annotation.Nullable Boolean managed) {
+    this.managed = managed;
   }
 
 
@@ -262,6 +291,7 @@ public class Environment {
     return Objects.equals(this.name, environment.name) &&
         equalsNullable(this.color, environment.color) &&
         Objects.equals(this.classification, environment.classification) &&
+        Objects.equals(this.managed, environment.managed) &&
         equalsNullable(this.createdAt, environment.createdAt) &&
         equalsNullable(this.updatedAt, environment.updatedAt);
   }
@@ -272,7 +302,7 @@ public class Environment {
 
   @Override
   public int hashCode() {
-    return Objects.hash(name, hashCodeNullable(color), classification, hashCodeNullable(createdAt), hashCodeNullable(updatedAt));
+    return Objects.hash(name, hashCodeNullable(color), classification, managed, hashCodeNullable(createdAt), hashCodeNullable(updatedAt));
   }
 
   private static <T> int hashCodeNullable(JsonNullable<T> a) {
@@ -289,6 +319,7 @@ public class Environment {
     sb.append("    name: ").append(toIndentedString(name)).append("\n");
     sb.append("    color: ").append(toIndentedString(color)).append("\n");
     sb.append("    classification: ").append(toIndentedString(classification)).append("\n");
+    sb.append("    managed: ").append(toIndentedString(managed)).append("\n");
     sb.append("    createdAt: ").append(toIndentedString(createdAt)).append("\n");
     sb.append("    updatedAt: ").append(toIndentedString(updatedAt)).append("\n");
     sb.append("}");
@@ -348,6 +379,11 @@ public class Environment {
     // add `classification` to the URL query string
     if (getClassification() != null) {
       joiner.add(String.format(java.util.Locale.ROOT, "%sclassification%s=%s", prefix, suffix, ApiClient.urlEncode(ApiClient.valueToString(getClassification()))));
+    }
+
+    // add `managed` to the URL query string
+    if (getManaged() != null) {
+      joiner.add(String.format(java.util.Locale.ROOT, "%smanaged%s=%s", prefix, suffix, ApiClient.urlEncode(ApiClient.valueToString(getManaged()))));
     }
 
     // add `created_at` to the URL query string
