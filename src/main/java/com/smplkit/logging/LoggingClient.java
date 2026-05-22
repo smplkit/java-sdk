@@ -916,9 +916,12 @@ public final class LoggingClient {
         }
         if (lg.getGroup() != null) attrs.setGroup(lg.getGroup());
         attrs.setManaged(lg.isManaged());
-        if (lg.getEnvironments() != null && !lg.getEnvironments().isEmpty()) {
-            attrs.setEnvironments(new HashMap<>(lg.getEnvironments()));
-        }
+        // Always include environments — even when empty — so a clearLevel()
+        // that drains the last override is carried to the server. Omitting
+        // the field is read by the JSON:API put as "no change," which
+        // strands the clear in client memory only.
+        attrs.setEnvironments(new HashMap<>(
+                lg.getEnvironments() != null ? lg.getEnvironments() : new HashMap<>()));
 
         LoggerResource data = new LoggerResource();
         data.setType(LoggerResource.TypeEnum.LOGGER);
@@ -937,9 +940,9 @@ public final class LoggingClient {
             attrs.setLevel(com.smplkit.internal.generated.logging.model.LogLevel.fromValue(grp.getLevel()));
         }
         if (grp.getGroup() != null) attrs.setParentId(grp.getGroup());
-        if (grp.getEnvironments() != null && !grp.getEnvironments().isEmpty()) {
-            attrs.setEnvironments(new HashMap<>(grp.getEnvironments()));
-        }
+        // Always include environments — see buildLoggerBody for rationale.
+        attrs.setEnvironments(new HashMap<>(
+                grp.getEnvironments() != null ? grp.getEnvironments() : new HashMap<>()));
 
         LogGroupResource data = new LogGroupResource();
         data.setType(LogGroupResource.TypeEnum.LOG_GROUP);
