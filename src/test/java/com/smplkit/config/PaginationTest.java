@@ -31,43 +31,43 @@ class PaginationTest {
 
     @Test
     void runtime_singlePageExit_stopsAfterShortPage() throws ApiException {
-        when(mockApi.listConfigs(isNull(), isNull(), isNull(), eq(1), eq(1000), isNull()))
+        when(mockApi.listConfigs(isNull(), isNull(), isNull(), isNull(), eq(1), eq(1000), isNull()))
                 .thenReturn(listOf(1));
 
         client._connectInternal();
 
-        verify(mockApi, times(1)).listConfigs(isNull(), isNull(), isNull(), eq(1), eq(1000), isNull());
+        verify(mockApi, times(1)).listConfigs(isNull(), isNull(), isNull(), isNull(), eq(1), eq(1000), isNull());
         assertTrue(client.isConnected());
     }
 
     @Test
     void runtime_multiPageExit_loopsUntilShortPage() throws ApiException {
-        when(mockApi.listConfigs(isNull(), isNull(), isNull(), eq(1), eq(1000), isNull()))
+        when(mockApi.listConfigs(isNull(), isNull(), isNull(), isNull(), eq(1), eq(1000), isNull()))
                 .thenReturn(listOf(1000));
-        when(mockApi.listConfigs(isNull(), isNull(), isNull(), eq(2), eq(1000), isNull()))
+        when(mockApi.listConfigs(isNull(), isNull(), isNull(), isNull(), eq(2), eq(1000), isNull()))
                 .thenReturn(listOf(3));
 
         client._connectInternal();
 
-        verify(mockApi, times(1)).listConfigs(isNull(), isNull(), isNull(), eq(1), eq(1000), isNull());
-        verify(mockApi, times(1)).listConfigs(isNull(), isNull(), isNull(), eq(2), eq(1000), isNull());
+        verify(mockApi, times(1)).listConfigs(isNull(), isNull(), isNull(), isNull(), eq(1), eq(1000), isNull());
+        verify(mockApi, times(1)).listConfigs(isNull(), isNull(), isNull(), isNull(), eq(2), eq(1000), isNull());
         assertTrue(client.isConnected());
     }
 
     @Test
     void management_listWithPaginationArgs_passesThrough() throws ApiException {
-        when(mockApi.listConfigs(isNull(), isNull(), isNull(), eq(2), eq(50), isNull()))
+        when(mockApi.listConfigs(isNull(), isNull(), isNull(), isNull(), eq(2), eq(50), isNull()))
                 .thenReturn(listOf(2));
 
         List<Config> result = client.management().list(2, 50);
 
         assertEquals(2, result.size());
-        verify(mockApi).listConfigs(isNull(), isNull(), isNull(), eq(2), eq(50), isNull());
+        verify(mockApi).listConfigs(isNull(), isNull(), isNull(), isNull(), eq(2), eq(50), isNull());
     }
 
     @Test
     void asyncManagement_listWithPagination_delegatesToSync() throws Exception {
-        when(mockApi.listConfigs(isNull(), isNull(), isNull(), eq(4), eq(10), isNull()))
+        when(mockApi.listConfigs(isNull(), isNull(), isNull(), isNull(), eq(4), eq(10), isNull()))
                 .thenReturn(listOf(1));
 
         AsyncConfigManagement async = new AsyncConfigManagement(
@@ -76,7 +76,7 @@ class PaginationTest {
         List<Config> result = async.list(4, 10).get();
 
         assertEquals(1, result.size());
-        verify(mockApi).listConfigs(isNull(), isNull(), isNull(), eq(4), eq(10), isNull());
+        verify(mockApi).listConfigs(isNull(), isNull(), isNull(), isNull(), eq(4), eq(10), isNull());
     }
 
     private static ConfigListResponse listOf(int count) {

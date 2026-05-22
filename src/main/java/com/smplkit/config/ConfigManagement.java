@@ -205,10 +205,10 @@ public final class ConfigManagement {
      */
     public List<Config> list(Integer pageNumber, Integer pageSize) {
         try {
-            // Positional args: filterParent, filterSearch, sort,
-            // pageNumber, pageSize, metaTotal.
+            // Positional args: filterParent, filterSearch, filterManaged,
+            // sort, pageNumber, pageSize, metaTotal.
             ConfigListResponse response = client.configsApi.listConfigs(
-                    null, null, null, pageNumber, pageSize, null);
+                    null, null, null, null, pageNumber, pageSize, null);
             List<ConfigResource> data = response.getData();
             if (data == null) {
                 return Collections.emptyList();
