@@ -6,7 +6,9 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import java.net.http.HttpConnectTimeoutException;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Map;
 
 /** Maps server error responses to the appropriate SDK exception. */
 public final class ApiExceptionHandler {
@@ -62,6 +64,7 @@ public final class ApiExceptionHandler {
             List<ApiErrorDetail> result = new ArrayList<>();
             for (JsonNode errorNode : errorsNode) {
                 String status = textOrNull(errorNode, "status");
+                String code = textOrNull(errorNode, "code");
                 String title = textOrNull(errorNode, "title");
                 String detail = textOrNull(errorNode, "detail");
                 ApiErrorDetail.Source source = null;
@@ -72,7 +75,26 @@ public final class ApiExceptionHandler {
                     source = new ApiErrorDetail.Source(pointer);
                 }
 
-                result.add(new ApiErrorDetail(status, title, detail, source));
+                final Map<String, Object> meta;
+                JsonNode metaNode = errorNode.get("meta");
+                if (metaNode != null && metaNode.isObject()) {
+                    final Map<String, Object> metaMap = new LinkedHashMap<>();
+                    metaNode.fields().forEachRemaining(entry -> {
+                        JsonNode v = entry.getValue();
+                        if (v.isTextual()) metaMap.put(entry.getKey(), v.asText());
+                        else if (v.isInt()) metaMap.put(entry.getKey(), v.asInt());
+                        else if (v.isLong()) metaMap.put(entry.getKey(), v.asLong());
+                        else if (v.isDouble() || v.isFloat()) metaMap.put(entry.getKey(), v.asDouble());
+                        else if (v.isBoolean()) metaMap.put(entry.getKey(), v.asBoolean());
+                        else if (v.isNull()) metaMap.put(entry.getKey(), null);
+                        else metaMap.put(entry.getKey(), v.toString());
+                    });
+                    meta = metaMap;
+                } else {
+                    meta = null;
+                }
+
+                result.add(new ApiErrorDetail(status, code, title, detail, source, meta));
             }
             return result;
         } catch (Exception e) {

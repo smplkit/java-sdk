@@ -28,9 +28,12 @@ public final class EnvironmentsClient {
     public com.smplkit.management.Environment new_(String id, String name,
                                                     String color,
                                                     EnvironmentClassification classification) {
+        // Defaults to managed=true: the management API is the
+        // explicit-managing-act surface (per ADR-051 §3.2). Callers who
+        // really want an unmanaged seed can flip with setManaged(false).
         return new com.smplkit.management.Environment(this, id, name, color,
                 classification != null ? classification : EnvironmentClassification.STANDARD,
-                null, null);
+                true, null, null);
     }
 
     /** Lists environments using the server's default pagination (first page, up to 1000 rows). */
@@ -46,10 +49,10 @@ public final class EnvironmentsClient {
      */
     public List<com.smplkit.management.Environment> list(Integer pageNumber, Integer pageSize) {
         try {
-            // Positional args: filterSearch, filterClassification, sort,
-            // pageNumber, pageSize, metaTotal.
+            // Positional args: filterSearch, filterClassification,
+            // filterManaged, sort, pageNumber, pageSize, metaTotal.
             EnvironmentListResponse resp = api.listEnvironments(
-                    null, null, null, pageNumber, pageSize, null);
+                    null, null, null, null, pageNumber, pageSize, null);
             List<com.smplkit.management.Environment> result = new ArrayList<>();
             if (resp.getData() != null) {
                 for (EnvironmentResource r : resp.getData()) {
@@ -105,13 +108,14 @@ public final class EnvironmentsClient {
         Environment attrs = new Environment();
         attrs.setName(env.getName());
         if (env.getColor() != null) attrs.setColor(env.getColor());
-        // Round-trip classification (get-mutate-put). The server requires
-        // admin only when classification is changing, so non-admin
-        // edits to name/color still work as long as we send the existing
-        // value back.
+        // Round-trip classification + managed (get-mutate-put). The server
+        // requires admin when classification or managed is changing, so
+        // non-admin edits to name/color still work as long as we send the
+        // existing values back.
         attrs.setClassification(env.getClassification() == EnvironmentClassification.AD_HOC
                 ? Environment.ClassificationEnum.AD_HOC
                 : Environment.ClassificationEnum.STANDARD);
+        attrs.setManaged(env.isManaged());
         EnvironmentResource data = new EnvironmentResource()
                 .id(env.getId())
                 .type(EnvironmentResource.TypeEnum.ENVIRONMENT)
@@ -132,11 +136,14 @@ public final class EnvironmentsClient {
         String name = attrs != null ? attrs.getName() : "";
         String color = attrs != null ? attrs.getColor() : null;
         EnvironmentClassification classification = EnvironmentClassification.STANDARD;
+        boolean managed = false;
         if (attrs != null) {
             Environment.ClassificationEnum cls = attrs.getClassification();
             if (cls == Environment.ClassificationEnum.AD_HOC) {
                 classification = EnvironmentClassification.AD_HOC;
             }
+            Boolean rawManaged = attrs.getManaged();
+            if (rawManaged != null) managed = rawManaged;
         }
         Instant createdAt = null;
         Instant updatedAt = null;
@@ -144,7 +151,7 @@ public final class EnvironmentsClient {
             if (attrs.getCreatedAt() != null) createdAt = attrs.getCreatedAt().toInstant();
             if (attrs.getUpdatedAt() != null) updatedAt = attrs.getUpdatedAt().toInstant();
         }
-        return new com.smplkit.management.Environment(this, id, name, color, classification, createdAt, updatedAt);
+        return new com.smplkit.management.Environment(this, id, name, color, classification, managed, createdAt, updatedAt);
     }
 
     private static com.smplkit.errors.SmplError mapException(ApiException e) {
