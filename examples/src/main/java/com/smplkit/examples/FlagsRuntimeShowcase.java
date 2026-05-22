@@ -76,7 +76,7 @@ public final class FlagsRuntimeShowcase {
     public static void main(String[] args) throws Exception {
         // create the client (use SmplClient for synchronous use)
         try (SmplClient client = SmplClient.builder()
-                .environment("staging").service("showcase-service").build()) {
+                .environment("production").service("showcase-service").build()) {
             FlagsRuntimeSetup.setup(client.manage());
 
             // Block until the live-updates WebSocket subscription is registered
@@ -165,7 +165,7 @@ public final class FlagsRuntimeShowcase {
     private static void updateRules(SmplClient client) {
         Flag<?> currentBanner = client.manage().flags.get("banner-color");
         currentBanner.addRule(new Rule("Red for small companies")
-                .environment("staging")
+                .environment("production")
                 .when("account.employee_count", "<", 50)
                 .serve("red").build());
         currentBanner.save();

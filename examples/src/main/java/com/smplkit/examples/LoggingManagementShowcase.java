@@ -45,20 +45,17 @@ public final class LoggingManagementShowcase {
                     + " (level=" + payments.getLevel() + ")");
             assert "WARN".equals(payments.getLevel());
 
-            // override log level for different environments
+            // override log level for the production environment
             root.setLevel(LogLevel.ERROR, "production");
-            root.setLevel(LogLevel.DEBUG, "staging");
             root.save();
             System.out.println("Set environment overrides: " + root.environments());
             assert root.environments().get("production").level() == LogLevel.ERROR;
-            assert root.environments().get("staging").level() == LogLevel.DEBUG;
 
             // clear environment override (inherits from the default level again)
-            root.clearLevel("staging");
+            root.clearLevel("production");
             root.save();
-            System.out.println("Cleared staging override: " + root.environments());
-            assert !root.environments().containsKey("staging");
-            assert root.environments().get("production").level() == LogLevel.ERROR;
+            System.out.println("Cleared production override: " + root.environments());
+            assert !root.environments().containsKey("production");
 
             // fetch a logger by id
             Logger fetched = manage.loggers.get("showcase");

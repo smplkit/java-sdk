@@ -66,23 +66,20 @@ public final class FlagsManagementShowcase {
             themeFlag.save();
             System.out.println("Created flag: " + themeFlag.getId());
 
-            // checkoutFlag (serve true in staging to enterprise US users)
-            checkoutFlag.enableRules("staging");
+            // checkoutFlag (serve true in production to enterprise US users)
+            checkoutFlag.enableRules("production");
             checkoutFlag.addRule(new Rule("Enable for enterprise users in US region")
-                    .environment("staging")
+                    .environment("production")
                     .when("user.plan", "==", "enterprise")
                     .when("account.region", "==", "us")
                     .serve(true).build());
 
-            // checkoutFlag (serve true in staging for beta testers)
+            // checkoutFlag (serve true in production for beta testers)
             checkoutFlag.addRule(new Rule("Enable for beta testers")
-                    .environment("staging")
+                    .environment("production")
                     .when("user.beta_tester", "==", true)
                     .serve(true).build());
 
-            // checkoutFlag (disabled rules; serve false in production)
-            checkoutFlag.disableRules("production");
-            checkoutFlag.setDefault(false, "production");
             checkoutFlag.save();
             System.out.println("Updated flag: " + checkoutFlag.getId());
 
@@ -98,9 +95,9 @@ public final class FlagsManagementShowcase {
             // get a flag
             Flag<?> fetched = manage.flags.get("checkout-v2");
             System.out.println("\nFetched by id: " + fetched.getId());
-            int stagingRules = fetched.environments().get("staging").rules().size();
+            int prodRules = fetched.environments().get("production").rules().size();
             boolean prodEnabled = fetched.environments().get("production").enabled();
-            System.out.println("  staging rules: " + stagingRules);
+            System.out.println("  production rules: " + prodRules);
             System.out.println("  production enabled: " + prodEnabled);
 
             // update a flag
@@ -115,11 +112,7 @@ public final class FlagsManagementShowcase {
             System.out.println("Updated flag: " + bannerFlag.getId() + "'");
 
             // delete all the rules of a flag
-            checkoutFlag.clearRules("staging");
-            checkoutFlag.save();
-
-            // revert production's default value back to the flag default
-            checkoutFlag.clearDefault("production");
+            checkoutFlag.clearRules("production");
             checkoutFlag.save();
             System.out.println("Updated flag: " + checkoutFlag.getId() + "'");
 
