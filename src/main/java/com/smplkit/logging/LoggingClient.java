@@ -8,6 +8,8 @@ import com.smplkit.internal.Debug;
 import com.smplkit.internal.generated.logging.ApiException;
 import com.smplkit.internal.generated.logging.api.LogGroupsApi;
 import com.smplkit.internal.generated.logging.api.LoggersApi;
+import com.smplkit.internal.generated.logging.model.LogGroupCreateRequest;
+import com.smplkit.internal.generated.logging.model.LogGroupCreateResource;
 import com.smplkit.internal.generated.logging.model.LogGroupListResponse;
 import com.smplkit.internal.generated.logging.model.LogGroupRequest;
 import com.smplkit.internal.generated.logging.model.LogGroupResource;
@@ -197,7 +199,7 @@ public final class LoggingClient {
     /** Creates a new group on the server. Called by {@link LogGroup#save()}. */
     LogGroup _createGroup(LogGroup grp) {
         try {
-            LogGroupRequest body = buildGroupBody(null, grp);
+            LogGroupCreateRequest body = buildCreateGroupBody(grp);
             LogGroupResponse response = logGroupsApi.createLogGroup(body);
             return logGroupResponseToModel(response);
         } catch (ApiException e) {
@@ -934,15 +936,7 @@ public final class LoggingClient {
     }
 
     private LogGroupRequest buildGroupBody(String groupId, LogGroup grp) {
-        var attrs = new com.smplkit.internal.generated.logging.model.LogGroup();
-        attrs.setName(grp.getName());
-        if (grp.getLevel() != null) {
-            attrs.setLevel(com.smplkit.internal.generated.logging.model.LogLevel.fromValue(grp.getLevel()));
-        }
-        if (grp.getGroup() != null) attrs.setParentId(grp.getGroup());
-        // Always include environments — see buildLoggerBody for rationale.
-        attrs.setEnvironments(new HashMap<>(
-                grp.getEnvironments() != null ? grp.getEnvironments() : new HashMap<>()));
+        var attrs = buildGroupAttrs(grp);
 
         LogGroupResource data = new LogGroupResource();
         data.setType(LogGroupResource.TypeEnum.LOG_GROUP);
@@ -952,6 +946,35 @@ public final class LoggingClient {
         LogGroupRequest body = new LogGroupRequest();
         body.setData(data);
         return body;
+    }
+
+    private LogGroupCreateRequest buildCreateGroupBody(LogGroup grp) {
+        var attrs = buildGroupAttrs(grp);
+
+        LogGroupCreateResource data = new LogGroupCreateResource();
+        data.setType(LogGroupCreateResource.TypeEnum.LOG_GROUP);
+        data.setAttributes(attrs);
+        // Create requires a client-supplied id. The server rejects a missing /
+        // empty id with 422; the LogGroup model exposes id as caller-required
+        // for new groups (per ADR-013 key-based identity).
+        data.setId(grp.getId());
+
+        LogGroupCreateRequest body = new LogGroupCreateRequest();
+        body.setData(data);
+        return body;
+    }
+
+    private com.smplkit.internal.generated.logging.model.LogGroup buildGroupAttrs(LogGroup grp) {
+        var attrs = new com.smplkit.internal.generated.logging.model.LogGroup();
+        attrs.setName(grp.getName());
+        if (grp.getLevel() != null) {
+            attrs.setLevel(com.smplkit.internal.generated.logging.model.LogLevel.fromValue(grp.getLevel()));
+        }
+        if (grp.getGroup() != null) attrs.setParentId(grp.getGroup());
+        // Always include environments — see buildLoggerBody for rationale.
+        attrs.setEnvironments(new HashMap<>(
+                grp.getEnvironments() != null ? grp.getEnvironments() : new HashMap<>()));
+        return attrs;
     }
 
     // -----------------------------------------------------------------------

@@ -5,6 +5,8 @@ import com.smplkit.SharedWebSocket;
 import com.smplkit.internal.generated.logging.ApiException;
 import com.smplkit.internal.generated.logging.api.LogGroupsApi;
 import com.smplkit.internal.generated.logging.api.LoggersApi;
+import com.smplkit.internal.generated.logging.model.LogGroupCreateRequest;
+import com.smplkit.internal.generated.logging.model.LogGroupCreateResource;
 import com.smplkit.internal.generated.logging.model.LogGroupListResponse;
 import com.smplkit.internal.generated.logging.model.LogGroupRequest;
 import com.smplkit.internal.generated.logging.model.LogGroupResource;
@@ -311,9 +313,10 @@ class LoggingClientTest {
     @Test
     void createGroup_postsAndReturnsModel() throws ApiException {
         LogGroupResponse resp = buildGroupResponse("new-grp-id", "key", "Name", null);
-        when(mockLogGroupsApi.createLogGroup(any(LogGroupRequest.class))).thenReturn(resp);
+        when(mockLogGroupsApi.createLogGroup(any(LogGroupCreateRequest.class))).thenReturn(resp);
 
-        LogGroup grp = new LogGroup(client, null, "Name", null, null, null, null, null);
+        // Create now requires a caller-supplied key as the resource id.
+        LogGroup grp = new LogGroup(client, "new-grp-id", "Name", null, null, null, null, null);
         LogGroup result = client._createGroup(grp);
 
         assertEquals("new-grp-id", result.getId());
@@ -338,7 +341,7 @@ class LoggingClientTest {
     @Test
     void logGroupActiveRecord_createFlow() throws ApiException {
         LogGroupResponse createResp = buildGroupResponse("created-grp", "infra", "Infra", null);
-        when(mockLogGroupsApi.createLogGroup(any(LogGroupRequest.class))).thenReturn(createResp);
+        when(mockLogGroupsApi.createLogGroup(any(LogGroupCreateRequest.class))).thenReturn(createResp);
 
         LogGroup grp = client.management().newGroup("infra");
         assertEquals("infra", grp.getId());
@@ -916,13 +919,23 @@ class LoggingClientTest {
     @Test
     void createGroup_includesEnvironmentsAndGroupInBody() throws ApiException {
         LogGroupResponse resp = buildGroupResponse("new-id", "key", "Name", null);
-        when(mockLogGroupsApi.createLogGroup(any(LogGroupRequest.class))).thenReturn(resp);
+        ArgumentCaptor<LogGroupCreateRequest> captor = ArgumentCaptor.forClass(LogGroupCreateRequest.class);
+        when(mockLogGroupsApi.createLogGroup(captor.capture())).thenReturn(resp);
 
-        LogGroup grp = new LogGroup(client, null, "Name", "INFO", "parent-id",
+        LogGroup grp = new LogGroup(client, "new-id", "Name", "INFO", "parent-id",
                 Map.of("prod", Map.of("level", "WARN")), null, null);
         client._createGroup(grp);
 
-        verify(mockLogGroupsApi).createLogGroup(any(LogGroupRequest.class));
+        LogGroupCreateRequest body = captor.getValue();
+        LogGroupCreateResource data = body.getData();
+        // The create envelope must carry the caller-supplied id.
+        assertEquals("new-id", data.getId());
+        assertEquals(LogGroupCreateResource.TypeEnum.LOG_GROUP, data.getType());
+        var attrs = data.getAttributes();
+        assertEquals("Name", attrs.getName());
+        assertEquals("parent-id", attrs.getParentId());
+        assertNotNull(attrs.getEnvironments());
+        assertEquals(Map.of("level", "WARN"), attrs.getEnvironments().get("prod"));
     }
 
     // -----------------------------------------------------------------------
