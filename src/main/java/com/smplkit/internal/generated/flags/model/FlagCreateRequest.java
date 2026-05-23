@@ -24,28 +24,28 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonTypeName;
 import com.fasterxml.jackson.annotation.JsonValue;
-import com.smplkit.internal.generated.flags.model.FlagResource;
+import com.smplkit.internal.generated.flags.model.FlagCreateResource;
 import java.util.Arrays;
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 
 
 import com.smplkit.internal.generated.flags.ApiClient;
 /**
- * JSON:API request envelope for updating a flag.
+ * JSON:API request envelope for creating a flag.  Distinct from :class:&#x60;FlagRequest&#x60; because create requires caller-supplied &#x60;&#x60;data.id&#x60;&#x60; while update does not.
  */
 @JsonPropertyOrder({
-  FlagRequest.JSON_PROPERTY_DATA
+  FlagCreateRequest.JSON_PROPERTY_DATA
 })
 @jakarta.annotation.Generated(value = "org.openapitools.codegen.languages.JavaClientCodegen", comments = "Generator version: 7.21.0")
-public class FlagRequest {
+public class FlagCreateRequest {
   public static final String JSON_PROPERTY_DATA = "data";
   @jakarta.annotation.Nonnull
-  private FlagResource data;
+  private FlagCreateResource data;
 
-  public FlagRequest() { 
+  public FlagCreateRequest() { 
   }
 
-  public FlagRequest data(@jakarta.annotation.Nonnull FlagResource data) {
+  public FlagCreateRequest data(@jakarta.annotation.Nonnull FlagCreateResource data) {
     this.data = data;
     return this;
   }
@@ -57,20 +57,20 @@ public class FlagRequest {
   @jakarta.annotation.Nonnull
   @JsonProperty(value = JSON_PROPERTY_DATA, required = true)
   @JsonInclude(value = JsonInclude.Include.ALWAYS)
-  public FlagResource getData() {
+  public FlagCreateResource getData() {
     return data;
   }
 
 
   @JsonProperty(value = JSON_PROPERTY_DATA, required = true)
   @JsonInclude(value = JsonInclude.Include.ALWAYS)
-  public void setData(@jakarta.annotation.Nonnull FlagResource data) {
+  public void setData(@jakarta.annotation.Nonnull FlagCreateResource data) {
     this.data = data;
   }
 
 
   /**
-   * Return true if this FlagRequest object is equal to o.
+   * Return true if this FlagCreateRequest object is equal to o.
    */
   @Override
   public boolean equals(Object o) {
@@ -80,8 +80,8 @@ public class FlagRequest {
     if (o == null || getClass() != o.getClass()) {
       return false;
     }
-    FlagRequest flagRequest = (FlagRequest) o;
-    return Objects.equals(this.data, flagRequest.data);
+    FlagCreateRequest flagCreateRequest = (FlagCreateRequest) o;
+    return Objects.equals(this.data, flagCreateRequest.data);
   }
 
   @Override
@@ -92,7 +92,7 @@ public class FlagRequest {
   @Override
   public String toString() {
     StringBuilder sb = new StringBuilder();
-    sb.append("class FlagRequest {\n");
+    sb.append("class FlagCreateRequest {\n");
     sb.append("    data: ").append(toIndentedString(data)).append("\n");
     sb.append("}");
     return sb.toString();

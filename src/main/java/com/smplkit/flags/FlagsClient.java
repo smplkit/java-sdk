@@ -15,6 +15,8 @@ import com.smplkit.internal.generated.flags.ApiException;
 import com.smplkit.internal.generated.flags.api.FlagsApi;
 import com.smplkit.internal.generated.flags.model.FlagBulkItem;
 import com.smplkit.internal.generated.flags.model.FlagBulkRequest;
+import com.smplkit.internal.generated.flags.model.FlagCreateRequest;
+import com.smplkit.internal.generated.flags.model.FlagCreateResource;
 import com.smplkit.internal.generated.flags.model.FlagEnvironment;
 import com.smplkit.internal.generated.flags.model.FlagListResponse;
 import com.smplkit.internal.generated.flags.model.FlagRequest;
@@ -903,8 +905,12 @@ public final class FlagsClient {
                 attrs.setEnvironments(buildEnvironments(flag.getEnvironments()));
             }
 
-            FlagResource data = new FlagResource().id(flag.getId()).type(FlagResource.TypeEnum.FLAG).attributes(attrs);
-            FlagRequest body = new FlagRequest().data(data);
+            // Create uses a dedicated envelope where the caller-supplied id is required.
+            FlagCreateResource data = new FlagCreateResource()
+                    .id(flag.getId())
+                    .type(FlagCreateResource.TypeEnum.FLAG)
+                    .attributes(attrs);
+            FlagCreateRequest body = new FlagCreateRequest().data(data);
             FlagResponse response = flagsApi.createFlag(body);
             Flag<?> result = parseSingleResponse(response);
             return (Flag<T>) result;
