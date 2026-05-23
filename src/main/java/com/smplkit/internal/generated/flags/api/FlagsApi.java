@@ -20,6 +20,7 @@ import com.smplkit.internal.generated.flags.Pair;
 
 import com.smplkit.internal.generated.flags.model.FlagBulkRequest;
 import com.smplkit.internal.generated.flags.model.FlagBulkResponse;
+import com.smplkit.internal.generated.flags.model.FlagCreateRequest;
 import com.smplkit.internal.generated.flags.model.FlagListResponse;
 import com.smplkit.internal.generated.flags.model.FlagRequest;
 import com.smplkit.internal.generated.flags.model.FlagResponse;
@@ -292,48 +293,48 @@ public class FlagsApi {
   /**
    * Create Flag
    * Create a new feature flag. The caller provides the id (the flag key) in the request body.
-   * @param flagRequest  (required)
+   * @param flagCreateRequest  (required)
    * @return FlagResponse
    * @throws ApiException if fails to make API call
    */
-  public FlagResponse createFlag(@jakarta.annotation.Nonnull FlagRequest flagRequest) throws ApiException {
-    return createFlag(flagRequest, null);
+  public FlagResponse createFlag(@jakarta.annotation.Nonnull FlagCreateRequest flagCreateRequest) throws ApiException {
+    return createFlag(flagCreateRequest, null);
   }
 
   /**
    * Create Flag
    * Create a new feature flag. The caller provides the id (the flag key) in the request body.
-   * @param flagRequest  (required)
+   * @param flagCreateRequest  (required)
    * @param headers Optional headers to include in the request
    * @return FlagResponse
    * @throws ApiException if fails to make API call
    */
-  public FlagResponse createFlag(@jakarta.annotation.Nonnull FlagRequest flagRequest, Map<String, String> headers) throws ApiException {
-    ApiResponse<FlagResponse> localVarResponse = createFlagWithHttpInfo(flagRequest, headers);
+  public FlagResponse createFlag(@jakarta.annotation.Nonnull FlagCreateRequest flagCreateRequest, Map<String, String> headers) throws ApiException {
+    ApiResponse<FlagResponse> localVarResponse = createFlagWithHttpInfo(flagCreateRequest, headers);
     return localVarResponse.getData();
   }
 
   /**
    * Create Flag
    * Create a new feature flag. The caller provides the id (the flag key) in the request body.
-   * @param flagRequest  (required)
+   * @param flagCreateRequest  (required)
    * @return ApiResponse&lt;FlagResponse&gt;
    * @throws ApiException if fails to make API call
    */
-  public ApiResponse<FlagResponse> createFlagWithHttpInfo(@jakarta.annotation.Nonnull FlagRequest flagRequest) throws ApiException {
-    return createFlagWithHttpInfo(flagRequest, null);
+  public ApiResponse<FlagResponse> createFlagWithHttpInfo(@jakarta.annotation.Nonnull FlagCreateRequest flagCreateRequest) throws ApiException {
+    return createFlagWithHttpInfo(flagCreateRequest, null);
   }
 
   /**
    * Create Flag
    * Create a new feature flag. The caller provides the id (the flag key) in the request body.
-   * @param flagRequest  (required)
+   * @param flagCreateRequest  (required)
    * @param headers Optional headers to include in the request
    * @return ApiResponse&lt;FlagResponse&gt;
    * @throws ApiException if fails to make API call
    */
-  public ApiResponse<FlagResponse> createFlagWithHttpInfo(@jakarta.annotation.Nonnull FlagRequest flagRequest, Map<String, String> headers) throws ApiException {
-    HttpRequest.Builder localVarRequestBuilder = createFlagRequestBuilder(flagRequest, headers);
+  public ApiResponse<FlagResponse> createFlagWithHttpInfo(@jakarta.annotation.Nonnull FlagCreateRequest flagCreateRequest, Map<String, String> headers) throws ApiException {
+    HttpRequest.Builder localVarRequestBuilder = createFlagRequestBuilder(flagCreateRequest, headers);
     try {
       HttpResponse<InputStream> localVarResponse = memberVarHttpClient.send(
           localVarRequestBuilder.build(),
@@ -380,10 +381,10 @@ public class FlagsApi {
     }
   }
 
-  private HttpRequest.Builder createFlagRequestBuilder(@jakarta.annotation.Nonnull FlagRequest flagRequest, Map<String, String> headers) throws ApiException {
-    // verify the required parameter 'flagRequest' is set
-    if (flagRequest == null) {
-      throw new ApiException(400, "Missing the required parameter 'flagRequest' when calling createFlag");
+  private HttpRequest.Builder createFlagRequestBuilder(@jakarta.annotation.Nonnull FlagCreateRequest flagCreateRequest, Map<String, String> headers) throws ApiException {
+    // verify the required parameter 'flagCreateRequest' is set
+    if (flagCreateRequest == null) {
+      throw new ApiException(400, "Missing the required parameter 'flagCreateRequest' when calling createFlag");
     }
 
     HttpRequest.Builder localVarRequestBuilder = HttpRequest.newBuilder();
@@ -396,7 +397,7 @@ public class FlagsApi {
     localVarRequestBuilder.header("Accept", "application/vnd.api+json");
 
     try {
-      byte[] localVarPostBody = memberVarObjectMapper.writeValueAsBytes(flagRequest);
+      byte[] localVarPostBody = memberVarObjectMapper.writeValueAsBytes(flagCreateRequest);
       localVarRequestBuilder.method("POST", HttpRequest.BodyPublishers.ofByteArray(localVarPostBody));
     } catch (IOException e) {
       throw new ApiException(e);
