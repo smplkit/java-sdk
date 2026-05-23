@@ -6,14 +6,7 @@ import com.smplkit.management.SmplManagementClient;
 
 import java.util.List;
 
-/**
- * Setup, simulation, and cleanup helpers for {@code ConfigRuntimeShowcase}.
- *
- * <p>The runtime showcase declares its own configs via
- * {@code client.config().bind()}, so this helper only handles cleanup and
- * the live admin-override simulation that stands in for an operator
- * editing values in the smplkit console.</p>
- */
+/** Setup and simulation helpers for {@code ConfigRuntimeShowcase}. */
 public final class ConfigRuntimeSetup {
 
     private static final List<String> DEMO_CONFIG_IDS = List.of(

@@ -1,19 +1,11 @@
 /*
  * Demonstrates the smplkit runtime SDK for Smpl Config.
  *
- * Headline pattern: declare configurations as Java POJOs, bind() them to
- * a config id, then use the returned objects directly — property access
- * stays in sync with the server via the SDK's in-memory cache and
- * WebSocket push.
- *
- * Also demonstrates three lower-friction patterns:
- *   - bind() with an untyped Map
- *   - get(id) for dict-like lookup of an entire config
- *   - get(id, key, default) for one-shot value reads with fallback
- *
  * Prerequisites:
  *     - smplkit-sdk on the classpath
- *     - A valid smplkit API key (env or ~/.smplkit)
+ *     - A valid smplkit API key, provided via one of:
+ *         - SMPLKIT_API_KEY environment variable
+ *         - ~/.smplkit configuration file (see SDK docs)
  *
  * Usage:
  *     make config_runtime_showcase
@@ -32,8 +24,8 @@ import java.util.Map;
 
 public final class ConfigRuntimeShowcase {
 
-    // Configuration shapes for the typed declarative path. Nested public
-    // fields flatten to dot-notation when registered with the server.
+    // Example POJO configuration classes to showcase how "code-first"
+    // configuration management works
 
     public static final class App {
         public String name = "Acme SaaS";
@@ -69,9 +61,7 @@ public final class ConfigRuntimeShowcase {
 
             ConfigRuntimeSetup.cleanup(client.manage());
 
-            // Pattern 1: typed declarative — bind a POJO. The class is the
-            // schema; the instance carries the in-code defaults. Nested
-            // POJO fields flatten to dot-notation (e.g. "plan.max_seats").
+            // bind POJOs
             Common common = client.config().bind("showcase-common", new Common());
             Billing billing = client.config().bind(
                     "showcase-billing", new Billing(), common);
@@ -81,7 +71,7 @@ public final class ConfigRuntimeShowcase {
             assert "Acme SaaS".equals(common.app.name);
             assert billing.plan.max_seats == 5;
 
-            // listen for changes
+            // add listeners if desired
             List<ConfigChangeEvent> changes = new ArrayList<>();
             client.config().onChange("showcase-billing", "plan.max_seats", evt -> {
                 changes.add(evt);
@@ -93,20 +83,20 @@ public final class ConfigRuntimeShowcase {
             // simulate someone making a change in smplkit console
             ConfigRuntimeSetup.simulateAdminOverride(client.manage());
 
-            // wait for the WebSocket push, then observe in-place mutation
             long deadline = System.currentTimeMillis() + 10_000;
             while (System.currentTimeMillis() < deadline
                     && billing.plan.max_seats != 25) {
                 Thread.sleep(100);
             }
+
+            // observe changes are automatically reflected in bound objects
             System.out.println("billing.plan.max_seats after override = "
                     + billing.plan.max_seats);
             assert billing.plan.max_seats == 25
                     : "Expected 25, got " + billing.plan.max_seats;
             assert !changes.isEmpty() : "Expected at least one change event";
 
-            // Pattern 2: untyped declarative — bind a Map (no class needed).
-            // Nested Maps flatten to dot-notation the same way nested POJOs do.
+            // you can also bind plain-old Maps
             Map<String, Object> primary = new LinkedHashMap<>();
             primary.put("host", "db.acme.example");
             primary.put("port", 5432);
@@ -123,8 +113,8 @@ public final class ConfigRuntimeShowcase {
             assert "db.acme.example".equals(primaryRef.get("host"));
             assert ((Number) dbBound.get("pool_size")).intValue() == 10;
 
-            // Pattern 3: get(id) — read-only lookup of an entire config
-            // (throws NotFoundError if missing).
+            // or get a config by ID (raises NotFoundError if not found; pass
+            // a default if you want a fallback)
             LiveConfigProxy commonView = client.config().get("showcase-common");
             System.out.println("showcase-common (via get):");
             for (Map.Entry<String, Object> entry : commonView.entrySet()) {
@@ -132,9 +122,7 @@ public final class ConfigRuntimeShowcase {
             }
             assert "Acme SaaS".equals(commonView.get("app.name"));
 
-            // Pattern 4: get(id, key, default) — one-shot value with default.
-            // Auto-registers the (config, key) so the reference shows up in
-            // the smplkit console even if no schema was declared via bind().
+            // or skip the POJO/Map and just fetch specific keys directly
             int slowQueryMs = ((Number) client.config().get(
                     "showcase-database", "slow_query_threshold_ms", 500)).intValue();
             System.out.println("showcase-database.slow_query_threshold_ms = "
