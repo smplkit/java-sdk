@@ -19,6 +19,7 @@ import com.smplkit.internal.generated.app.Configuration;
 import com.smplkit.internal.generated.app.Pair;
 
 import com.smplkit.internal.generated.app.model.ErrorResponse;
+import com.smplkit.internal.generated.app.model.ServiceCreateRequest;
 import com.smplkit.internal.generated.app.model.ServiceListResponse;
 import com.smplkit.internal.generated.app.model.ServiceRequest;
 import com.smplkit.internal.generated.app.model.ServiceResponse;
@@ -168,48 +169,48 @@ public class ServicesApi {
   /**
    * Create Service
    * Create a new service. The caller provides the id (key) in the request body.
-   * @param serviceRequest  (required)
+   * @param serviceCreateRequest  (required)
    * @return ServiceResponse
    * @throws ApiException if fails to make API call
    */
-  public ServiceResponse createService(@jakarta.annotation.Nonnull ServiceRequest serviceRequest) throws ApiException {
-    return createService(serviceRequest, null);
+  public ServiceResponse createService(@jakarta.annotation.Nonnull ServiceCreateRequest serviceCreateRequest) throws ApiException {
+    return createService(serviceCreateRequest, null);
   }
 
   /**
    * Create Service
    * Create a new service. The caller provides the id (key) in the request body.
-   * @param serviceRequest  (required)
+   * @param serviceCreateRequest  (required)
    * @param headers Optional headers to include in the request
    * @return ServiceResponse
    * @throws ApiException if fails to make API call
    */
-  public ServiceResponse createService(@jakarta.annotation.Nonnull ServiceRequest serviceRequest, Map<String, String> headers) throws ApiException {
-    ApiResponse<ServiceResponse> localVarResponse = createServiceWithHttpInfo(serviceRequest, headers);
+  public ServiceResponse createService(@jakarta.annotation.Nonnull ServiceCreateRequest serviceCreateRequest, Map<String, String> headers) throws ApiException {
+    ApiResponse<ServiceResponse> localVarResponse = createServiceWithHttpInfo(serviceCreateRequest, headers);
     return localVarResponse.getData();
   }
 
   /**
    * Create Service
    * Create a new service. The caller provides the id (key) in the request body.
-   * @param serviceRequest  (required)
+   * @param serviceCreateRequest  (required)
    * @return ApiResponse&lt;ServiceResponse&gt;
    * @throws ApiException if fails to make API call
    */
-  public ApiResponse<ServiceResponse> createServiceWithHttpInfo(@jakarta.annotation.Nonnull ServiceRequest serviceRequest) throws ApiException {
-    return createServiceWithHttpInfo(serviceRequest, null);
+  public ApiResponse<ServiceResponse> createServiceWithHttpInfo(@jakarta.annotation.Nonnull ServiceCreateRequest serviceCreateRequest) throws ApiException {
+    return createServiceWithHttpInfo(serviceCreateRequest, null);
   }
 
   /**
    * Create Service
    * Create a new service. The caller provides the id (key) in the request body.
-   * @param serviceRequest  (required)
+   * @param serviceCreateRequest  (required)
    * @param headers Optional headers to include in the request
    * @return ApiResponse&lt;ServiceResponse&gt;
    * @throws ApiException if fails to make API call
    */
-  public ApiResponse<ServiceResponse> createServiceWithHttpInfo(@jakarta.annotation.Nonnull ServiceRequest serviceRequest, Map<String, String> headers) throws ApiException {
-    HttpRequest.Builder localVarRequestBuilder = createServiceRequestBuilder(serviceRequest, headers);
+  public ApiResponse<ServiceResponse> createServiceWithHttpInfo(@jakarta.annotation.Nonnull ServiceCreateRequest serviceCreateRequest, Map<String, String> headers) throws ApiException {
+    HttpRequest.Builder localVarRequestBuilder = createServiceRequestBuilder(serviceCreateRequest, headers);
     try {
       HttpResponse<InputStream> localVarResponse = memberVarHttpClient.send(
           localVarRequestBuilder.build(),
@@ -256,10 +257,10 @@ public class ServicesApi {
     }
   }
 
-  private HttpRequest.Builder createServiceRequestBuilder(@jakarta.annotation.Nonnull ServiceRequest serviceRequest, Map<String, String> headers) throws ApiException {
-    // verify the required parameter 'serviceRequest' is set
-    if (serviceRequest == null) {
-      throw new ApiException(400, "Missing the required parameter 'serviceRequest' when calling createService");
+  private HttpRequest.Builder createServiceRequestBuilder(@jakarta.annotation.Nonnull ServiceCreateRequest serviceCreateRequest, Map<String, String> headers) throws ApiException {
+    // verify the required parameter 'serviceCreateRequest' is set
+    if (serviceCreateRequest == null) {
+      throw new ApiException(400, "Missing the required parameter 'serviceCreateRequest' when calling createService");
     }
 
     HttpRequest.Builder localVarRequestBuilder = HttpRequest.newBuilder();
@@ -272,7 +273,7 @@ public class ServicesApi {
     localVarRequestBuilder.header("Accept", "application/vnd.api+json");
 
     try {
-      byte[] localVarPostBody = memberVarObjectMapper.writeValueAsBytes(serviceRequest);
+      byte[] localVarPostBody = memberVarObjectMapper.writeValueAsBytes(serviceCreateRequest);
       localVarRequestBuilder.method("POST", HttpRequest.BodyPublishers.ofByteArray(localVarPostBody));
     } catch (IOException e) {
       throw new ApiException(e);

@@ -24,28 +24,28 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonTypeName;
 import com.fasterxml.jackson.annotation.JsonValue;
-import com.smplkit.internal.generated.app.model.EnvironmentResource;
+import com.smplkit.internal.generated.app.model.EnvironmentCreateResource;
 import java.util.Arrays;
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 
 
 import com.smplkit.internal.generated.app.ApiClient;
 /**
- * JSON:API request envelope for updating an environment.
+ * JSON:API request envelope for creating an environment.  Distinct from :class:&#x60;EnvironmentRequest&#x60; because create requires caller-supplied &#x60;&#x60;data.id&#x60;&#x60; while update does not (the id lives in the URL path).
  */
 @JsonPropertyOrder({
-  EnvironmentRequest.JSON_PROPERTY_DATA
+  EnvironmentCreateRequest.JSON_PROPERTY_DATA
 })
 @jakarta.annotation.Generated(value = "org.openapitools.codegen.languages.JavaClientCodegen", comments = "Generator version: 7.21.0")
-public class EnvironmentRequest {
+public class EnvironmentCreateRequest {
   public static final String JSON_PROPERTY_DATA = "data";
   @jakarta.annotation.Nonnull
-  private EnvironmentResource data;
+  private EnvironmentCreateResource data;
 
-  public EnvironmentRequest() { 
+  public EnvironmentCreateRequest() { 
   }
 
-  public EnvironmentRequest data(@jakarta.annotation.Nonnull EnvironmentResource data) {
+  public EnvironmentCreateRequest data(@jakarta.annotation.Nonnull EnvironmentCreateResource data) {
     this.data = data;
     return this;
   }
@@ -57,20 +57,20 @@ public class EnvironmentRequest {
   @jakarta.annotation.Nonnull
   @JsonProperty(value = JSON_PROPERTY_DATA, required = true)
   @JsonInclude(value = JsonInclude.Include.ALWAYS)
-  public EnvironmentResource getData() {
+  public EnvironmentCreateResource getData() {
     return data;
   }
 
 
   @JsonProperty(value = JSON_PROPERTY_DATA, required = true)
   @JsonInclude(value = JsonInclude.Include.ALWAYS)
-  public void setData(@jakarta.annotation.Nonnull EnvironmentResource data) {
+  public void setData(@jakarta.annotation.Nonnull EnvironmentCreateResource data) {
     this.data = data;
   }
 
 
   /**
-   * Return true if this EnvironmentRequest object is equal to o.
+   * Return true if this EnvironmentCreateRequest object is equal to o.
    */
   @Override
   public boolean equals(Object o) {
@@ -80,8 +80,8 @@ public class EnvironmentRequest {
     if (o == null || getClass() != o.getClass()) {
       return false;
     }
-    EnvironmentRequest environmentRequest = (EnvironmentRequest) o;
-    return Objects.equals(this.data, environmentRequest.data);
+    EnvironmentCreateRequest environmentCreateRequest = (EnvironmentCreateRequest) o;
+    return Objects.equals(this.data, environmentCreateRequest.data);
   }
 
   @Override
@@ -92,7 +92,7 @@ public class EnvironmentRequest {
   @Override
   public String toString() {
     StringBuilder sb = new StringBuilder();
-    sb.append("class EnvironmentRequest {\n");
+    sb.append("class EnvironmentCreateRequest {\n");
     sb.append("    data: ").append(toIndentedString(data)).append("\n");
     sb.append("}");
     return sb.toString();

@@ -19,6 +19,8 @@ import com.smplkit.internal.generated.app.model.ContextTypeListResponse;
 import com.smplkit.internal.generated.app.model.ContextTypeResource;
 import com.smplkit.internal.generated.app.model.ContextTypeResponse;
 import com.smplkit.internal.generated.app.model.Environment;
+import com.smplkit.internal.generated.app.model.EnvironmentCreateRequest;
+import com.smplkit.internal.generated.app.model.EnvironmentCreateResource;
 import com.smplkit.internal.generated.app.model.EnvironmentListResponse;
 import com.smplkit.internal.generated.app.model.EnvironmentResource;
 import com.smplkit.internal.generated.app.model.EnvironmentResponse;
@@ -477,7 +479,9 @@ class ManagementTest {
         EnvironmentResponse resp = new EnvironmentResponse();
         resp.setData(buildEnvResource("prod", "Production", null, "STANDARD",
                 OffsetDateTime.now(), OffsetDateTime.now()));
-        when(mockEnvApi.createEnvironment(any())).thenReturn(resp);
+        ArgumentCaptor<EnvironmentCreateRequest> captor =
+                ArgumentCaptor.forClass(EnvironmentCreateRequest.class);
+        when(mockEnvApi.createEnvironment(captor.capture())).thenReturn(resp);
 
         com.smplkit.management.Environment env = envClient.new_(
                 "prod", "Production", null, EnvironmentClassification.STANDARD);
@@ -485,7 +489,11 @@ class ManagementTest {
 
         assertEquals("prod", env.getId());
         assertNotNull(env.getCreatedAt());
-        verify(mockEnvApi).createEnvironment(any());
+        verify(mockEnvApi).createEnvironment(any(EnvironmentCreateRequest.class));
+        // Verify the create envelope carries the caller-supplied id.
+        EnvironmentCreateResource data = captor.getValue().getData();
+        assertEquals("prod", data.getId());
+        assertEquals(EnvironmentCreateResource.TypeEnum.ENVIRONMENT, data.getType());
     }
 
     @Test
