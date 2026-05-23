@@ -24,28 +24,28 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonTypeName;
 import com.fasterxml.jackson.annotation.JsonValue;
-import com.smplkit.internal.generated.logging.model.LogGroupResource;
+import com.smplkit.internal.generated.logging.model.LogGroupCreateResource;
 import java.util.Arrays;
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 
 
 import com.smplkit.internal.generated.logging.ApiClient;
 /**
- * JSON:API request envelope for updating a log group.
+ * JSON:API request envelope for creating a log group.  Distinct from :class:&#x60;LogGroupRequest&#x60; because create requires caller-supplied &#x60;&#x60;data.id&#x60;&#x60; while update does not.
  */
 @JsonPropertyOrder({
-  LogGroupRequest.JSON_PROPERTY_DATA
+  LogGroupCreateRequest.JSON_PROPERTY_DATA
 })
 @jakarta.annotation.Generated(value = "org.openapitools.codegen.languages.JavaClientCodegen", comments = "Generator version: 7.21.0")
-public class LogGroupRequest {
+public class LogGroupCreateRequest {
   public static final String JSON_PROPERTY_DATA = "data";
   @jakarta.annotation.Nonnull
-  private LogGroupResource data;
+  private LogGroupCreateResource data;
 
-  public LogGroupRequest() { 
+  public LogGroupCreateRequest() { 
   }
 
-  public LogGroupRequest data(@jakarta.annotation.Nonnull LogGroupResource data) {
+  public LogGroupCreateRequest data(@jakarta.annotation.Nonnull LogGroupCreateResource data) {
     this.data = data;
     return this;
   }
@@ -57,20 +57,20 @@ public class LogGroupRequest {
   @jakarta.annotation.Nonnull
   @JsonProperty(value = JSON_PROPERTY_DATA, required = true)
   @JsonInclude(value = JsonInclude.Include.ALWAYS)
-  public LogGroupResource getData() {
+  public LogGroupCreateResource getData() {
     return data;
   }
 
 
   @JsonProperty(value = JSON_PROPERTY_DATA, required = true)
   @JsonInclude(value = JsonInclude.Include.ALWAYS)
-  public void setData(@jakarta.annotation.Nonnull LogGroupResource data) {
+  public void setData(@jakarta.annotation.Nonnull LogGroupCreateResource data) {
     this.data = data;
   }
 
 
   /**
-   * Return true if this LogGroupRequest object is equal to o.
+   * Return true if this LogGroupCreateRequest object is equal to o.
    */
   @Override
   public boolean equals(Object o) {
@@ -80,8 +80,8 @@ public class LogGroupRequest {
     if (o == null || getClass() != o.getClass()) {
       return false;
     }
-    LogGroupRequest logGroupRequest = (LogGroupRequest) o;
-    return Objects.equals(this.data, logGroupRequest.data);
+    LogGroupCreateRequest logGroupCreateRequest = (LogGroupCreateRequest) o;
+    return Objects.equals(this.data, logGroupCreateRequest.data);
   }
 
   @Override
@@ -92,7 +92,7 @@ public class LogGroupRequest {
   @Override
   public String toString() {
     StringBuilder sb = new StringBuilder();
-    sb.append("class LogGroupRequest {\n");
+    sb.append("class LogGroupCreateRequest {\n");
     sb.append("    data: ").append(toIndentedString(data)).append("\n");
     sb.append("}");
     return sb.toString();
