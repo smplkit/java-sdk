@@ -39,7 +39,8 @@ public final class ConfigManagement {
 
     /**
      * Queue a configuration declaration for bulk-discovery upload.
-     * Called by {@link ConfigClient#getOrCreate}.
+     * Called by {@link ConfigClient#bind} and
+     * {@link ConfigClient#get(String, String, Object)}.
      */
     public void registerConfig(String configId, String service, String environment,
                                String parent, String name, String description) {
@@ -50,8 +51,10 @@ public final class ConfigManagement {
     }
 
     /**
-     * Queue a config item declaration. Called by typed getters on
-     * {@link LiveConfigProxy}.
+     * Queue a config item declaration. Called by {@link ConfigClient#bind}
+     * (for every leaf in the bound target) and
+     * {@link ConfigClient#get(String, String, Object)} (for the key being
+     * read with a default).
      */
     public void registerConfigItem(String configId, String itemKey, String itemType,
                                    Object defaultValue, String description) {
