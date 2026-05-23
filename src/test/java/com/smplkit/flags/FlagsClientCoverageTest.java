@@ -9,6 +9,7 @@ import com.smplkit.internal.generated.app.api.ContextsApi;
 import com.smplkit.internal.generated.app.model.ContextBulkRegister;
 import com.smplkit.internal.generated.flags.ApiException;
 import com.smplkit.internal.generated.flags.api.FlagsApi;
+import com.smplkit.internal.generated.flags.model.FlagCreateRequest;
 import com.smplkit.internal.generated.flags.model.FlagListResponse;
 import com.smplkit.internal.generated.flags.model.FlagResponse;
 import com.smplkit.internal.generated.flags.model.FlagRequest;
@@ -507,14 +508,14 @@ class FlagsClientCoverageTest {
                         "created_at", "2024-06-01T12:00:00Z", "updated_at", "2024-06-01T12:00:00Z"
                 )
         )), FlagResponse.class);
-        when(mockApi.createFlag(any(FlagRequest.class))).thenReturn(response);
+        when(mockApi.createFlag(any(FlagCreateRequest.class))).thenReturn(response);
 
         Flag<Boolean> flag = client.management().newBooleanFlag("my-flag", false, "My Flag", "A test flag");
         flag.setEnvironmentEnabled("staging", true);
         flag.save();
 
         assertEquals(FLAG_ID, flag.getId());
-        verify(mockApi).createFlag(any(FlagRequest.class));
+        verify(mockApi).createFlag(any(FlagCreateRequest.class));
     }
 
     // --- Context batch flush threshold ---
@@ -628,14 +629,14 @@ class FlagsClientCoverageTest {
                         "created_at", "2024-06-01T12:00:00Z", "updated_at", "2024-06-01T12:00:00Z"
                 )
         )), FlagResponse.class);
-        when(mockApi.createFlag(any(FlagRequest.class))).thenReturn(response);
+        when(mockApi.createFlag(any(FlagCreateRequest.class))).thenReturn(response);
 
         Flag<Boolean> flag = client.management().newBooleanFlag("my-flag", false);
         flag.setEnvironmentEnabled("staging", true);
         flag.setEnvironmentDefault("staging", true);
         flag.save();
 
-        verify(mockApi).createFlag(any(FlagRequest.class));
+        verify(mockApi).createFlag(any(FlagCreateRequest.class));
     }
 
     // --- Helpers ---

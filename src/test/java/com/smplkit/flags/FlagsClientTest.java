@@ -10,6 +10,8 @@ import com.smplkit.management.ContextRegistrationBuffer;
 import com.smplkit.internal.generated.app.api.ContextsApi;
 import com.smplkit.internal.generated.flags.ApiException;
 import com.smplkit.internal.generated.flags.api.FlagsApi;
+import com.smplkit.internal.generated.flags.model.FlagCreateRequest;
+import com.smplkit.internal.generated.flags.model.FlagCreateResource;
 import com.smplkit.internal.generated.flags.model.FlagListResponse;
 import com.smplkit.internal.generated.flags.model.FlagResponse;
 import com.smplkit.internal.generated.flags.model.FlagRequest;
@@ -211,14 +213,14 @@ class FlagsClientTest {
                         Map.of("name", "True", "value", true),
                         Map.of("name", "False", "value", false)
                 ), Map.of());
-        when(mockApi.createFlag(any(FlagRequest.class))).thenReturn(response);
+        when(mockApi.createFlag(any(FlagCreateRequest.class))).thenReturn(response);
 
         Flag<Boolean> newFlag = client.management().newBooleanFlag("my-flag", false, "My Flag", null);
         newFlag.save();
 
         assertNotNull(newFlag.getId());
         assertEquals("my-flag", newFlag.getId());
-        verify(mockApi).createFlag(any(FlagRequest.class));
+        verify(mockApi).createFlag(any(FlagCreateRequest.class));
     }
 
     // --- _updateFlag PUTs and returns updated flag ---
@@ -246,7 +248,7 @@ class FlagsClientTest {
     void createFlag_unconstrained_sendsNullValues() throws ApiException {
         FlagResponse response = makeFlagResponse("max-retries", "Max Retries",
                 "NUMERIC", 3, null, Map.of());
-        when(mockApi.createFlag(any(FlagRequest.class))).thenReturn(response);
+        when(mockApi.createFlag(any(FlagCreateRequest.class))).thenReturn(response);
 
         Flag<Number> newFlag = client.management().newNumberFlag("max-retries", 3, "Max Retries", null);
         assertNull(newFlag.getValues(), "unconstrained flag should have null values before save");
@@ -254,7 +256,7 @@ class FlagsClientTest {
 
         assertNotNull(newFlag.getId());
         assertNull(newFlag.getValues(), "unconstrained flag should have null values after save");
-        verify(mockApi).createFlag(any(FlagRequest.class));
+        verify(mockApi).createFlag(any(FlagCreateRequest.class));
     }
 
     @Test
@@ -284,7 +286,7 @@ class FlagsClientTest {
 
     @Test
     void apiException409_throwsConflictError() throws ApiException {
-        when(mockApi.createFlag(any(FlagRequest.class)))
+        when(mockApi.createFlag(any(FlagCreateRequest.class)))
                 .thenThrow(new ApiException(409, "Conflict"));
         Flag<Boolean> flag = client.management().newBooleanFlag("dup", false);
         assertThrows(com.smplkit.errors.ConflictError.class, flag::save);
@@ -292,7 +294,7 @@ class FlagsClientTest {
 
     @Test
     void apiException422_throwsValidationError() throws ApiException {
-        when(mockApi.createFlag(any(FlagRequest.class)))
+        when(mockApi.createFlag(any(FlagCreateRequest.class)))
                 .thenThrow(new ApiException(422, "Validation Error"));
         Flag<Boolean> flag = client.management().newBooleanFlag("bad-flag", false);
         assertThrows(ValidationError.class, flag::save);

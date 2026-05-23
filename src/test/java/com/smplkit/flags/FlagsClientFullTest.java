@@ -11,6 +11,7 @@ import com.smplkit.errors.ValidationError;
 import com.smplkit.internal.generated.app.api.ContextsApi;
 import com.smplkit.internal.generated.flags.ApiException;
 import com.smplkit.internal.generated.flags.api.FlagsApi;
+import com.smplkit.internal.generated.flags.model.FlagCreateRequest;
 import com.smplkit.internal.generated.flags.model.FlagListResponse;
 import com.smplkit.internal.generated.flags.model.FlagResponse;
 import com.smplkit.internal.generated.flags.model.FlagRequest;
@@ -61,7 +62,7 @@ class FlagsClientFullTest {
     @Test
     void flagSave_create_callsPostWhenCreatedAtNull() throws ApiException {
         FlagResponse response = makeResponse(FLAG_ID, "My Flag", "BOOLEAN", false);
-        when(mockApi.createFlag(any(FlagRequest.class))).thenReturn(response);
+        when(mockApi.createFlag(any(FlagCreateRequest.class))).thenReturn(response);
 
         Flag<Boolean> flag = client.management().newBooleanFlag("my-flag", false, "My Flag", null);
         assertNull(flag.getCreatedAt());
@@ -69,7 +70,7 @@ class FlagsClientFullTest {
         flag.save();
 
         assertEquals(FLAG_ID, flag.getId());
-        verify(mockApi).createFlag(any(FlagRequest.class));
+        verify(mockApi).createFlag(any(FlagCreateRequest.class));
         verify(mockApi, never()).updateFlag(any(), any());
     }
 
@@ -85,14 +86,14 @@ class FlagsClientFullTest {
                         "created_at", "2024-06-01T12:00:00Z", "updated_at", "2024-06-01T12:00:00Z"
                 )
         )), FlagResponse.class);
-        when(mockApi.createFlag(any(FlagRequest.class))).thenReturn(response);
+        when(mockApi.createFlag(any(FlagCreateRequest.class))).thenReturn(response);
 
         Flag<String> flag = client.management().newStringFlag("color", "red", "Color", "Pick a color",
                 List.of(Map.of("name", "Red", "value", "red"), Map.of("name", "Blue", "value", "blue")));
         flag.save();
 
         assertEquals("color", flag.getId());
-        verify(mockApi).createFlag(any(FlagRequest.class));
+        verify(mockApi).createFlag(any(FlagCreateRequest.class));
     }
 
     // --- Flag.save() update path (id set -> PUT) ---
@@ -118,7 +119,7 @@ class FlagsClientFullTest {
     @Test
     void flagAddRule_mutatesEnvironmentsLocally() throws ApiException {
         FlagResponse response = makeResponse(FLAG_ID, "My Flag", "BOOLEAN", false);
-        when(mockApi.createFlag(any(FlagRequest.class))).thenReturn(response);
+        when(mockApi.createFlag(any(FlagCreateRequest.class))).thenReturn(response);
         when(mockApi.updateFlag(eq(FLAG_ID), any(FlagRequest.class)))
                 .thenReturn(response);
 
@@ -143,7 +144,7 @@ class FlagsClientFullTest {
     @Test
     void flagAddRule_thenSave_callsCreate() throws ApiException {
         FlagResponse response = makeResponse(FLAG_ID, "My Flag", "BOOLEAN", false);
-        when(mockApi.createFlag(any(FlagRequest.class))).thenReturn(response);
+        when(mockApi.createFlag(any(FlagCreateRequest.class))).thenReturn(response);
 
         Flag<Boolean> flag = client.management().newBooleanFlag("my-flag", false);
         Map<String, Object> rule = new Rule("Enterprise")
@@ -154,7 +155,7 @@ class FlagsClientFullTest {
         flag.addRule(rule);
         flag.save();
 
-        verify(mockApi).createFlag(any(FlagRequest.class));
+        verify(mockApi).createFlag(any(FlagCreateRequest.class));
     }
 
     @Test
@@ -359,7 +360,7 @@ class FlagsClientFullTest {
 
     @Test
     void apiException409_throwsConflictError() throws ApiException {
-        when(mockApi.createFlag(any(FlagRequest.class)))
+        when(mockApi.createFlag(any(FlagCreateRequest.class)))
                 .thenThrow(new ApiException(409, "Conflict"));
 
         Flag<Boolean> flag = client.management().newBooleanFlag("dup-key", false);
@@ -368,7 +369,7 @@ class FlagsClientFullTest {
 
     @Test
     void apiExceptionGeneric_throwsSmplError() throws ApiException {
-        when(mockApi.createFlag(any(FlagRequest.class)))
+        when(mockApi.createFlag(any(FlagCreateRequest.class)))
                 .thenThrow(new ApiException(500, "Server Error"));
 
         Flag<Boolean> flag = client.management().newBooleanFlag("my-flag", false);
