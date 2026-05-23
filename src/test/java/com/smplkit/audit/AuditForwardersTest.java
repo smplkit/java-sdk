@@ -16,7 +16,6 @@ import java.io.IOException;
 import java.net.InetSocketAddress;
 import java.time.Duration;
 import java.util.Map;
-import java.util.UUID;
 import java.util.concurrent.atomic.AtomicReference;
 
 import static org.junit.jupiter.api.Assertions.*;
@@ -31,7 +30,7 @@ import static org.junit.jupiter.api.Assertions.*;
  */
 class AuditForwardersTest {
 
-    private static final UUID FWD_ID = UUID.fromString("11111111-2222-3333-4444-555555555555");
+    private static final String FWD_ID = "datadog-prod";
 
     private HttpServer server;
     private ForwardersApi forwardersApi;
@@ -104,7 +103,7 @@ class AuditForwardersTest {
                 "{\"data\":" + forwarderResource("Datadog production", "prod sink") + "}"));
         AuditForwarders fwds = new AuditForwarders(forwardersApi);
         Forwarder fwd = fwds.newForwarder(
-                "Datadog production", ForwarderType.DATADOG,
+                FWD_ID, "Datadog production", ForwarderType.DATADOG,
                 new HttpConfiguration("https://siem.example.com/in"),
                 TransformType.JSONATA, "$");
         fwd.description = "prod sink";
@@ -122,7 +121,7 @@ class AuditForwardersTest {
     void newForwarderWithTransform_nullTransformIsOk() {
         AuditForwarders fwds = new AuditForwarders(forwardersApi);
         // Passing both as null is valid (no transform configured).
-        Forwarder fwd = fwds.newForwarder("x", ForwarderType.HTTP,
+        Forwarder fwd = fwds.newForwarder("k", "x", ForwarderType.HTTP,
                 new HttpConfiguration("https://x"), null, null);
         assertNull(fwd.transformType);
         assertNull(fwd.transform);
@@ -132,14 +131,14 @@ class AuditForwardersTest {
     void newForwarderWithTransform_throwsWhenTypeMissing() {
         AuditForwarders fwds = new AuditForwarders(forwardersApi);
         assertThrows(IllegalArgumentException.class,
-                () -> fwds.newForwarder("x", ForwarderType.HTTP,
+                () -> fwds.newForwarder("k", "x", ForwarderType.HTTP,
                         new HttpConfiguration("https://x"), null, "$"));
     }
 
     @Test
     void save_throwsWhenTransformSetButTypeMissing() {
         AuditForwarders fwds = new AuditForwarders(forwardersApi);
-        Forwarder fwd = fwds.newForwarder("x", ForwarderType.HTTP, new HttpConfiguration("https://x"));
+        Forwarder fwd = fwds.newForwarder("k", "x", ForwarderType.HTTP, new HttpConfiguration("https://x"));
         fwd.transform = "$";
         assertThrows(IllegalArgumentException.class, fwd::save);
     }
@@ -149,7 +148,7 @@ class AuditForwardersTest {
         AuditForwarders fwds = new AuditForwarders(forwardersApi);
         // transformType set without transform → reject (both-or-neither).
         assertThrows(IllegalArgumentException.class,
-                () -> fwds.newForwarder("x", ForwarderType.HTTP,
+                () -> fwds.newForwarder("k", "x", ForwarderType.HTTP,
                         new HttpConfiguration("https://x"), TransformType.JSONATA, null));
     }
 
@@ -158,7 +157,7 @@ class AuditForwardersTest {
         AuditForwarders fwds = new AuditForwarders(forwardersApi);
         // JSONATA requires transform to be a String.
         assertThrows(IllegalArgumentException.class,
-                () -> fwds.newForwarder("x", ForwarderType.HTTP,
+                () -> fwds.newForwarder("k", "x", ForwarderType.HTTP,
                         new HttpConfiguration("https://x"),
                         TransformType.JSONATA, Map.of("template", "$")));
     }
@@ -166,7 +165,7 @@ class AuditForwardersTest {
     @Test
     void save_throwsWhenTransformTypeSetButTransformMissing() throws Exception {
         AuditForwarders fwds = new AuditForwarders(forwardersApi);
-        Forwarder fwd = fwds.newForwarder("x", ForwarderType.HTTP, new HttpConfiguration("https://x"));
+        Forwarder fwd = fwds.newForwarder("k", "x", ForwarderType.HTTP, new HttpConfiguration("https://x"));
         fwd.transformType = TransformType.JSONATA;
         assertThrows(IllegalArgumentException.class, fwd::save);
     }
@@ -174,10 +173,19 @@ class AuditForwardersTest {
     @Test
     void save_throwsWhenJsonataAndNonStringTransform() throws Exception {
         AuditForwarders fwds = new AuditForwarders(forwardersApi);
-        Forwarder fwd = fwds.newForwarder("x", ForwarderType.HTTP, new HttpConfiguration("https://x"));
+        Forwarder fwd = fwds.newForwarder("k", "x", ForwarderType.HTTP, new HttpConfiguration("https://x"));
         fwd.transformType = TransformType.JSONATA;
         fwd.transform = Map.of("template", "$");
         assertThrows(IllegalArgumentException.class, fwd::save);
+    }
+
+    @Test
+    void create_withoutId_throws() {
+        // Create requires a caller-supplied id; the wrapper rejects null
+        // before hitting the API so we can give a clear error.
+        AuditForwarders fwds = new AuditForwarders(forwardersApi);
+        Forwarder fwd = new Forwarder(fwds, null, "x", ForwarderType.HTTP, new HttpConfiguration("https://x"));
+        assertThrows(IllegalStateException.class, fwd::save);
     }
 
     @Test
@@ -209,28 +217,30 @@ class AuditForwardersTest {
 
     @Test
     void save_withoutClient_throws() {
-        Forwarder fwd = new Forwarder(null, "x", ForwarderType.HTTP, new HttpConfiguration("https://x"));
+        Forwarder fwd = new Forwarder(null, "k", "x", ForwarderType.HTTP, new HttpConfiguration("https://x"));
         assertThrows(IllegalStateException.class, fwd::save);
     }
 
     @Test
     void delete_withoutClient_throws() {
-        Forwarder fwd = new Forwarder(null, "x", ForwarderType.HTTP, new HttpConfiguration("https://x"));
-        fwd.id = FWD_ID;
+        Forwarder fwd = new Forwarder(null, FWD_ID, "x", ForwarderType.HTTP, new HttpConfiguration("https://x"));
         assertThrows(IllegalStateException.class, fwd::delete);
     }
 
     @Test
     void delete_withoutId_throws() throws Exception {
         AuditForwarders fwds = new AuditForwarders(forwardersApi);
-        Forwarder fwd = fwds.newForwarder("x", ForwarderType.HTTP, new HttpConfiguration("https://x"));
+        // Mimic a Forwarder that's bound to a client but lost its id (e.g. someone cleared the field).
+        Forwarder fwd = fwds.newForwarder("k", "x", ForwarderType.HTTP, new HttpConfiguration("https://x"));
+        fwd.id = null;
         assertThrows(IllegalStateException.class, fwd::delete);
     }
 
     @Test
     void update_withoutId_throws() throws Exception {
         AuditForwarders fwds = new AuditForwarders(forwardersApi);
-        Forwarder fwd = fwds.newForwarder("x", ForwarderType.HTTP, new HttpConfiguration("https://x"));
+        Forwarder fwd = fwds.newForwarder("k", "x", ForwarderType.HTTP, new HttpConfiguration("https://x"));
+        fwd.id = null;
         assertThrows(IllegalStateException.class, () -> fwds.update(fwd));
     }
 
@@ -347,7 +357,7 @@ class AuditForwardersTest {
                 + "\"created_at\":\"2026-05-07T12:00:00Z\","
                 + "\"updated_at\":\"2026-05-07T12:00:00Z\",\"version\":1}}}"));
         AuditForwarders fwds = new AuditForwarders(forwardersApi);
-        Forwarder fwd = fwds.newForwarder("x", null, new HttpConfiguration("https://x"));
+        Forwarder fwd = fwds.newForwarder("k", "x", null, new HttpConfiguration("https://x"));
         fwd.save();
         assertNull(fwd.forwarderType);
     }
@@ -395,7 +405,7 @@ class AuditForwardersTest {
         handler.set(ex -> respondJson(ex, 201,
                 "{\"data\":" + forwarderResource("x", "x") + "}"));
         AuditForwarders fwds = new AuditForwarders(forwardersApi);
-        Forwarder fwd = fwds.newForwarder("x", ForwarderType.HTTP, new HttpConfiguration("https://x"));
+        Forwarder fwd = fwds.newForwarder("k", "x", ForwarderType.HTTP, new HttpConfiguration("https://x"));
         fwd.transform = "$";
         fwd.transformType = TransformType.JSONATA;
         fwd.save();

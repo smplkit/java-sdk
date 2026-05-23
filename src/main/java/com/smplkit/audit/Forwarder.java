@@ -4,7 +4,6 @@ import com.smplkit.internal.generated.audit.ApiException;
 
 import java.time.OffsetDateTime;
 import java.util.Map;
-import java.util.UUID;
 
 /**
  * A SIEM streaming forwarder configured on the customer's account.
@@ -20,8 +19,14 @@ public final class Forwarder {
 
     private AuditForwarders client;
 
-    /** Server-assigned UUID. {@code null} until {@link #save()} has run for the first time. */
-    public UUID id;
+    /**
+     * Caller-supplied key for this forwarder (used as the JSON:API
+     * {@code data.id} and as the URL path-param). For a new instance built
+     * via {@link AuditForwarders#newForwarder}, this is the id passed in
+     * by the caller. May only be {@code null} for the (rare) case of a
+     * forwarder constructed without the active-record builders.
+     */
+    public String id;
     /** Display name. Free-form. */
     public String name;
     /** Optional free-text description. */
@@ -67,15 +72,16 @@ public final class Forwarder {
     /** Monotonic version counter; bumped on every server-side write. */
     public Integer version;
 
-    Forwarder(AuditForwarders client, String name, ForwarderType forwarderType,
+    Forwarder(AuditForwarders client, String id, String name, ForwarderType forwarderType,
               HttpConfiguration configuration) {
         this.client = client;
+        this.id = id;
         this.name = name;
         this.forwarderType = forwarderType;
         this.configuration = configuration;
     }
 
-    Forwarder(AuditForwarders client, UUID id, String name, String description,
+    Forwarder(AuditForwarders client, String id, String name, String description,
               ForwarderType forwarderType, boolean enabled, Map<String, Object> filter,
               TransformType transformType, Object transform, HttpConfiguration configuration,
               OffsetDateTime createdAt, OffsetDateTime updatedAt,

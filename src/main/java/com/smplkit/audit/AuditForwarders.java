@@ -2,6 +2,8 @@ package com.smplkit.audit;
 
 import com.smplkit.internal.generated.audit.ApiException;
 import com.smplkit.internal.generated.audit.api.ForwardersApi;
+import com.smplkit.internal.generated.audit.model.ForwarderCreateRequest;
+import com.smplkit.internal.generated.audit.model.ForwarderCreateResource;
 import com.smplkit.internal.generated.audit.model.ForwarderListResponse;
 import com.smplkit.internal.generated.audit.model.ForwarderRequest;
 import com.smplkit.internal.generated.audit.model.ForwarderResource;
@@ -11,7 +13,6 @@ import com.smplkit.internal.generated.audit.model.HttpHeader;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.UUID;
 
 /**
  * SIEM streaming forwarder CRUD for the authenticated account.
@@ -33,16 +34,17 @@ public final class AuditForwarders {
      * {@link Forwarder#save()} to persist.
      *
      * <p>If you also want to set a {@code transform} now, prefer the
-     * five-arg overload — {@link Forwarder#save()} rejects a forwarder
+     * six-arg overload — {@link Forwarder#save()} rejects a forwarder
      * with {@code transform} set but {@code transformType} unset.</p>
      *
+     * @param id stable caller-supplied key for the forwarder
      * @param name display name for the forwarder
      * @param forwarderType destination type
      * @param configuration destination request configuration
      */
-    public Forwarder newForwarder(String name, ForwarderType forwarderType,
+    public Forwarder newForwarder(String id, String name, ForwarderType forwarderType,
                                   com.smplkit.audit.HttpConfiguration configuration) {
-        return new Forwarder(this, name, forwarderType, configuration);
+        return new Forwarder(this, id, name, forwarderType, configuration);
     }
 
     /**
@@ -54,6 +56,7 @@ public final class AuditForwarders {
      * supported engine ({@link TransformType#JSONATA}), pass a {@code String}
      * containing the JSONata expression.</p>
      *
+     * @param id stable caller-supplied key for the forwarder
      * @param name display name for the forwarder
      * @param forwarderType destination type
      * @param configuration destination request configuration
@@ -64,11 +67,11 @@ public final class AuditForwarders {
      *     {@code transformType} is set, or if {@code transformType} is
      *     {@link TransformType#JSONATA} and {@code transform} is not a {@code String}
      */
-    public Forwarder newForwarder(String name, ForwarderType forwarderType,
+    public Forwarder newForwarder(String id, String name, ForwarderType forwarderType,
                                   com.smplkit.audit.HttpConfiguration configuration,
                                   TransformType transformType, Object transform) {
         Forwarder.validateTransform(transformType, transform);
-        Forwarder fwd = new Forwarder(this, name, forwarderType, configuration);
+        Forwarder fwd = new Forwarder(this, id, name, forwarderType, configuration);
         fwd.transformType = transformType;
         fwd.transform = transform;
         return fwd;
@@ -96,13 +99,13 @@ public final class AuditForwarders {
      * Fetch a single forwarder by id; the returned instance is bound to this
      * client so {@code forwarder.save()} and {@code forwarder.delete()} work.
      */
-    public Forwarder get(UUID forwarderId) throws ApiException {
+    public Forwarder get(String forwarderId) throws ApiException {
         ForwarderResponse resp = api.getForwarder(forwarderId);
         return fromResource(resp.getData());
     }
 
     /** Soft-delete a forwarder by id. */
-    public void delete(UUID forwarderId) throws ApiException {
+    public void delete(String forwarderId) throws ApiException {
         api.deleteForwarder(forwarderId);
     }
 
@@ -111,7 +114,10 @@ public final class AuditForwarders {
     // ------------------------------------------------------------------
 
     Forwarder create(Forwarder forwarder) throws ApiException {
-        ForwarderResponse resp = api.createForwarder(wrapRequest(null, forwarder));
+        if (forwarder.id == null) {
+            throw new IllegalStateException("cannot create a Forwarder with no id (caller must supply a stable key)");
+        }
+        ForwarderResponse resp = api.createForwarder(wrapCreateRequest(forwarder));
         return fromResource(resp.getData());
     }
 
@@ -127,7 +133,7 @@ public final class AuditForwarders {
     // Wire <-> wrapper conversions
     // ------------------------------------------------------------------
 
-    private static ForwarderRequest wrapRequest(UUID id, Forwarder forwarder) {
+    private static com.smplkit.internal.generated.audit.model.Forwarder buildAttrs(Forwarder forwarder) {
         com.smplkit.internal.generated.audit.model.Forwarder attrs =
                 new com.smplkit.internal.generated.audit.model.Forwarder();
         attrs.setName(forwarder.name);
@@ -141,11 +147,26 @@ public final class AuditForwarders {
                     .fromValue(forwarder.transformType.getValue()));
         }
         if (forwarder.transform != null) attrs.setTransform(forwarder.transform);
+        return attrs;
+    }
+
+    private static ForwarderRequest wrapRequest(String id, Forwarder forwarder) {
         ForwarderResource r = new ForwarderResource();
-        r.setId(id != null ? id.toString() : "");
+        r.setId(id != null ? id : "");
         r.setType("forwarder");
-        r.setAttributes(attrs);
+        r.setAttributes(buildAttrs(forwarder));
         ForwarderRequest body = new ForwarderRequest();
+        body.setData(r);
+        return body;
+    }
+
+    private static ForwarderCreateRequest wrapCreateRequest(Forwarder forwarder) {
+        // Create uses a dedicated envelope where the caller-supplied id is required.
+        ForwarderCreateResource r = new ForwarderCreateResource();
+        r.setId(forwarder.id);
+        r.setType(ForwarderCreateResource.TypeEnum.FORWARDER);
+        r.setAttributes(buildAttrs(forwarder));
+        ForwarderCreateRequest body = new ForwarderCreateRequest();
         body.setData(r);
         return body;
     }
@@ -173,7 +194,7 @@ public final class AuditForwarders {
     private Forwarder fromResource(ForwarderResource r) {
         com.smplkit.internal.generated.audit.model.Forwarder a = r.getAttributes();
         com.smplkit.audit.HttpConfiguration cfg = configurationFromGen(a.getConfiguration());
-        UUID id = (r.getId() != null && !r.getId().isEmpty()) ? UUID.fromString(r.getId()) : null;
+        String id = (r.getId() != null && !r.getId().isEmpty()) ? r.getId() : null;
         com.smplkit.internal.generated.audit.model.Forwarder.TransformTypeEnum tt = a.getTransformType();
         return new Forwarder(
                 this,
