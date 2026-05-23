@@ -7,6 +7,8 @@ import com.smplkit.errors.SmplError;
 import com.smplkit.internal.Debug;
 import com.smplkit.internal.generated.config.ApiException;
 import com.smplkit.internal.generated.config.api.ConfigsApi;
+import com.smplkit.internal.generated.config.model.ConfigCreateRequest;
+import com.smplkit.internal.generated.config.model.ConfigCreateResource;
 import com.smplkit.internal.generated.config.model.ConfigItemDefinition;
 import com.smplkit.internal.generated.config.model.ConfigItemOverride;
 import com.smplkit.internal.generated.config.model.ConfigListResponse;
@@ -159,11 +161,12 @@ public final class ConfigClient {
                 attrs.setEnvironments(wrapEnvironments(config.getEnvironments()));
             }
 
-            ConfigResource data = new ConfigResource()
+            // Create uses a dedicated envelope where the caller-supplied id is required.
+            ConfigCreateResource data = new ConfigCreateResource()
                     .id(config.getId())
-                    .type(ConfigResource.TypeEnum.CONFIG)
+                    .type(ConfigCreateResource.TypeEnum.CONFIG)
                     .attributes(attrs);
-            ConfigRequest body = new ConfigRequest().data(data);
+            ConfigCreateRequest body = new ConfigCreateRequest().data(data);
 
             ConfigResponse response = configsApi.createConfig(body);
             return parseResource(response.getData());
