@@ -53,7 +53,8 @@ public final class AuditManagementShowcase {
 
             // create a new forwarder
             Forwarder forwarder = manage.audit.forwarders.newForwarder(
-                    forwarderName,
+                    forwarderName,                              // id (caller-supplied key)
+                    forwarderName,                              // name (free-form display)
                     ForwarderType.HTTP,
                     new HttpConfiguration(
                             HttpMethod.POST,

@@ -24,28 +24,28 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonTypeName;
 import com.fasterxml.jackson.annotation.JsonValue;
-import com.smplkit.internal.generated.audit.model.ForwarderResource;
+import com.smplkit.internal.generated.audit.model.ForwarderCreateResource;
 import java.util.Arrays;
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 
 
 import com.smplkit.internal.generated.audit.ApiClient;
 /**
- * JSON:API request envelope for updating a forwarder.
+ * JSON:API request envelope for creating a forwarder.  Distinct from :class:&#x60;ForwarderRequest&#x60; because create requires caller-supplied &#x60;&#x60;data.id&#x60;&#x60; while update does not.
  */
 @JsonPropertyOrder({
-  ForwarderRequest.JSON_PROPERTY_DATA
+  ForwarderCreateRequest.JSON_PROPERTY_DATA
 })
 @jakarta.annotation.Generated(value = "org.openapitools.codegen.languages.JavaClientCodegen", comments = "Generator version: 7.21.0")
-public class ForwarderRequest {
+public class ForwarderCreateRequest {
   public static final String JSON_PROPERTY_DATA = "data";
   @jakarta.annotation.Nonnull
-  private ForwarderResource data;
+  private ForwarderCreateResource data;
 
-  public ForwarderRequest() { 
+  public ForwarderCreateRequest() { 
   }
 
-  public ForwarderRequest data(@jakarta.annotation.Nonnull ForwarderResource data) {
+  public ForwarderCreateRequest data(@jakarta.annotation.Nonnull ForwarderCreateResource data) {
     this.data = data;
     return this;
   }
@@ -57,20 +57,20 @@ public class ForwarderRequest {
   @jakarta.annotation.Nonnull
   @JsonProperty(value = JSON_PROPERTY_DATA, required = true)
   @JsonInclude(value = JsonInclude.Include.ALWAYS)
-  public ForwarderResource getData() {
+  public ForwarderCreateResource getData() {
     return data;
   }
 
 
   @JsonProperty(value = JSON_PROPERTY_DATA, required = true)
   @JsonInclude(value = JsonInclude.Include.ALWAYS)
-  public void setData(@jakarta.annotation.Nonnull ForwarderResource data) {
+  public void setData(@jakarta.annotation.Nonnull ForwarderCreateResource data) {
     this.data = data;
   }
 
 
   /**
-   * Return true if this ForwarderRequest object is equal to o.
+   * Return true if this ForwarderCreateRequest object is equal to o.
    */
   @Override
   public boolean equals(Object o) {
@@ -80,8 +80,8 @@ public class ForwarderRequest {
     if (o == null || getClass() != o.getClass()) {
       return false;
     }
-    ForwarderRequest forwarderRequest = (ForwarderRequest) o;
-    return Objects.equals(this.data, forwarderRequest.data);
+    ForwarderCreateRequest forwarderCreateRequest = (ForwarderCreateRequest) o;
+    return Objects.equals(this.data, forwarderCreateRequest.data);
   }
 
   @Override
@@ -92,7 +92,7 @@ public class ForwarderRequest {
   @Override
   public String toString() {
     StringBuilder sb = new StringBuilder();
-    sb.append("class ForwarderRequest {\n");
+    sb.append("class ForwarderCreateRequest {\n");
     sb.append("    data: ").append(toIndentedString(data)).append("\n");
     sb.append("}");
     return sb.toString();

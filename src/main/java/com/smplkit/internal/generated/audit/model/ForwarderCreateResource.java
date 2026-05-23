@@ -26,71 +26,93 @@ import com.fasterxml.jackson.annotation.JsonTypeName;
 import com.fasterxml.jackson.annotation.JsonValue;
 import com.smplkit.internal.generated.audit.model.Forwarder;
 import java.util.Arrays;
-import org.openapitools.jackson.nullable.JsonNullable;
-import com.fasterxml.jackson.annotation.JsonIgnore;
-import org.openapitools.jackson.nullable.JsonNullable;
-import java.util.NoSuchElementException;
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 
 
 import com.smplkit.internal.generated.audit.ApiClient;
 /**
- * JSON:API resource envelope for a forwarder.  The caller supplies &#x60;id&#x60; (the forwarder&#39;s key) on create.
+ * JSON:API resource envelope for creating a forwarder (id required).
  */
 @JsonPropertyOrder({
-  ForwarderResource.JSON_PROPERTY_ID,
-  ForwarderResource.JSON_PROPERTY_TYPE,
-  ForwarderResource.JSON_PROPERTY_ATTRIBUTES
+  ForwarderCreateResource.JSON_PROPERTY_ID,
+  ForwarderCreateResource.JSON_PROPERTY_TYPE,
+  ForwarderCreateResource.JSON_PROPERTY_ATTRIBUTES
 })
 @jakarta.annotation.Generated(value = "org.openapitools.codegen.languages.JavaClientCodegen", comments = "Generator version: 7.21.0")
-public class ForwarderResource {
+public class ForwarderCreateResource {
   public static final String JSON_PROPERTY_ID = "id";
-  private JsonNullable<String> id = JsonNullable.<String>undefined();
+  @jakarta.annotation.Nonnull
+  private String id;
+
+  /**
+   * Gets or Sets type
+   */
+  public enum TypeEnum {
+    FORWARDER(String.valueOf("forwarder"));
+
+    private String value;
+
+    TypeEnum(String value) {
+      this.value = value;
+    }
+
+    @JsonValue
+    public String getValue() {
+      return value;
+    }
+
+    @Override
+    public String toString() {
+      return String.valueOf(value);
+    }
+
+    @JsonCreator
+    public static TypeEnum fromValue(String value) {
+      for (TypeEnum b : TypeEnum.values()) {
+        if (b.value.equals(value)) {
+          return b;
+        }
+      }
+      throw new IllegalArgumentException("Unexpected value '" + value + "'");
+    }
+  }
 
   public static final String JSON_PROPERTY_TYPE = "type";
   @jakarta.annotation.Nullable
-  private String type = "forwarder";
+  private TypeEnum type = TypeEnum.FORWARDER;
 
   public static final String JSON_PROPERTY_ATTRIBUTES = "attributes";
   @jakarta.annotation.Nonnull
   private Forwarder attributes;
 
-  public ForwarderResource() { 
+  public ForwarderCreateResource() { 
   }
 
-  public ForwarderResource id(@jakarta.annotation.Nullable String id) {
-    this.id = JsonNullable.<String>of(id);
+  public ForwarderCreateResource id(@jakarta.annotation.Nonnull String id) {
+    this.id = id;
     return this;
   }
 
   /**
-   * Get id
+   * Client-supplied resource id.
    * @return id
    */
-  @jakarta.annotation.Nullable
-  @JsonIgnore
+  @jakarta.annotation.Nonnull
+  @JsonProperty(value = JSON_PROPERTY_ID, required = true)
+  @JsonInclude(value = JsonInclude.Include.ALWAYS)
   public String getId() {
-        return id.orElse(null);
-  }
-
-  @JsonProperty(value = JSON_PROPERTY_ID, required = false)
-  @JsonInclude(value = JsonInclude.Include.USE_DEFAULTS)
-
-  public JsonNullable<String> getId_JsonNullable() {
     return id;
   }
-  
-  @JsonProperty(JSON_PROPERTY_ID)
-  public void setId_JsonNullable(JsonNullable<String> id) {
+
+
+  @JsonProperty(value = JSON_PROPERTY_ID, required = true)
+  @JsonInclude(value = JsonInclude.Include.ALWAYS)
+  public void setId(@jakarta.annotation.Nonnull String id) {
     this.id = id;
   }
 
-  public void setId(@jakarta.annotation.Nullable String id) {
-    this.id = JsonNullable.<String>of(id);
-  }
 
-
-  public ForwarderResource type(@jakarta.annotation.Nullable String type) {
+  public ForwarderCreateResource type(@jakarta.annotation.Nullable TypeEnum type) {
     this.type = type;
     return this;
   }
@@ -102,19 +124,19 @@ public class ForwarderResource {
   @jakarta.annotation.Nullable
   @JsonProperty(value = JSON_PROPERTY_TYPE, required = false)
   @JsonInclude(value = JsonInclude.Include.USE_DEFAULTS)
-  public String getType() {
+  public TypeEnum getType() {
     return type;
   }
 
 
   @JsonProperty(value = JSON_PROPERTY_TYPE, required = false)
   @JsonInclude(value = JsonInclude.Include.USE_DEFAULTS)
-  public void setType(@jakarta.annotation.Nullable String type) {
+  public void setType(@jakarta.annotation.Nullable TypeEnum type) {
     this.type = type;
   }
 
 
-  public ForwarderResource attributes(@jakarta.annotation.Nonnull Forwarder attributes) {
+  public ForwarderCreateResource attributes(@jakarta.annotation.Nonnull Forwarder attributes) {
     this.attributes = attributes;
     return this;
   }
@@ -139,7 +161,7 @@ public class ForwarderResource {
 
 
   /**
-   * Return true if this ForwarderResource object is equal to o.
+   * Return true if this ForwarderCreateResource object is equal to o.
    */
   @Override
   public boolean equals(Object o) {
@@ -149,32 +171,21 @@ public class ForwarderResource {
     if (o == null || getClass() != o.getClass()) {
       return false;
     }
-    ForwarderResource forwarderResource = (ForwarderResource) o;
-    return equalsNullable(this.id, forwarderResource.id) &&
-        Objects.equals(this.type, forwarderResource.type) &&
-        Objects.equals(this.attributes, forwarderResource.attributes);
-  }
-
-  private static <T> boolean equalsNullable(JsonNullable<T> a, JsonNullable<T> b) {
-    return a == b || (a != null && b != null && a.isPresent() && b.isPresent() && Objects.deepEquals(a.get(), b.get()));
+    ForwarderCreateResource forwarderCreateResource = (ForwarderCreateResource) o;
+    return Objects.equals(this.id, forwarderCreateResource.id) &&
+        Objects.equals(this.type, forwarderCreateResource.type) &&
+        Objects.equals(this.attributes, forwarderCreateResource.attributes);
   }
 
   @Override
   public int hashCode() {
-    return Objects.hash(hashCodeNullable(id), type, attributes);
-  }
-
-  private static <T> int hashCodeNullable(JsonNullable<T> a) {
-    if (a == null) {
-      return 1;
-    }
-    return a.isPresent() ? Arrays.deepHashCode(new Object[]{a.get()}) : 31;
+    return Objects.hash(id, type, attributes);
   }
 
   @Override
   public String toString() {
     StringBuilder sb = new StringBuilder();
-    sb.append("class ForwarderResource {\n");
+    sb.append("class ForwarderCreateResource {\n");
     sb.append("    id: ").append(toIndentedString(id)).append("\n");
     sb.append("    type: ").append(toIndentedString(type)).append("\n");
     sb.append("    attributes: ").append(toIndentedString(attributes)).append("\n");
