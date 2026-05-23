@@ -18,6 +18,7 @@ import com.smplkit.internal.generated.app.ApiResponse;
 import com.smplkit.internal.generated.app.Configuration;
 import com.smplkit.internal.generated.app.Pair;
 
+import com.smplkit.internal.generated.app.model.EnvironmentCreateRequest;
 import com.smplkit.internal.generated.app.model.EnvironmentListResponse;
 import com.smplkit.internal.generated.app.model.EnvironmentRequest;
 import com.smplkit.internal.generated.app.model.EnvironmentResponse;
@@ -169,48 +170,48 @@ public class EnvironmentsApi {
   /**
    * Create Environment
    * Create a new environment. The caller provides the id (key) in the request body.
-   * @param environmentRequest  (required)
+   * @param environmentCreateRequest  (required)
    * @return EnvironmentResponse
    * @throws ApiException if fails to make API call
    */
-  public EnvironmentResponse createEnvironment(@jakarta.annotation.Nonnull EnvironmentRequest environmentRequest) throws ApiException {
-    return createEnvironment(environmentRequest, null);
+  public EnvironmentResponse createEnvironment(@jakarta.annotation.Nonnull EnvironmentCreateRequest environmentCreateRequest) throws ApiException {
+    return createEnvironment(environmentCreateRequest, null);
   }
 
   /**
    * Create Environment
    * Create a new environment. The caller provides the id (key) in the request body.
-   * @param environmentRequest  (required)
+   * @param environmentCreateRequest  (required)
    * @param headers Optional headers to include in the request
    * @return EnvironmentResponse
    * @throws ApiException if fails to make API call
    */
-  public EnvironmentResponse createEnvironment(@jakarta.annotation.Nonnull EnvironmentRequest environmentRequest, Map<String, String> headers) throws ApiException {
-    ApiResponse<EnvironmentResponse> localVarResponse = createEnvironmentWithHttpInfo(environmentRequest, headers);
+  public EnvironmentResponse createEnvironment(@jakarta.annotation.Nonnull EnvironmentCreateRequest environmentCreateRequest, Map<String, String> headers) throws ApiException {
+    ApiResponse<EnvironmentResponse> localVarResponse = createEnvironmentWithHttpInfo(environmentCreateRequest, headers);
     return localVarResponse.getData();
   }
 
   /**
    * Create Environment
    * Create a new environment. The caller provides the id (key) in the request body.
-   * @param environmentRequest  (required)
+   * @param environmentCreateRequest  (required)
    * @return ApiResponse&lt;EnvironmentResponse&gt;
    * @throws ApiException if fails to make API call
    */
-  public ApiResponse<EnvironmentResponse> createEnvironmentWithHttpInfo(@jakarta.annotation.Nonnull EnvironmentRequest environmentRequest) throws ApiException {
-    return createEnvironmentWithHttpInfo(environmentRequest, null);
+  public ApiResponse<EnvironmentResponse> createEnvironmentWithHttpInfo(@jakarta.annotation.Nonnull EnvironmentCreateRequest environmentCreateRequest) throws ApiException {
+    return createEnvironmentWithHttpInfo(environmentCreateRequest, null);
   }
 
   /**
    * Create Environment
    * Create a new environment. The caller provides the id (key) in the request body.
-   * @param environmentRequest  (required)
+   * @param environmentCreateRequest  (required)
    * @param headers Optional headers to include in the request
    * @return ApiResponse&lt;EnvironmentResponse&gt;
    * @throws ApiException if fails to make API call
    */
-  public ApiResponse<EnvironmentResponse> createEnvironmentWithHttpInfo(@jakarta.annotation.Nonnull EnvironmentRequest environmentRequest, Map<String, String> headers) throws ApiException {
-    HttpRequest.Builder localVarRequestBuilder = createEnvironmentRequestBuilder(environmentRequest, headers);
+  public ApiResponse<EnvironmentResponse> createEnvironmentWithHttpInfo(@jakarta.annotation.Nonnull EnvironmentCreateRequest environmentCreateRequest, Map<String, String> headers) throws ApiException {
+    HttpRequest.Builder localVarRequestBuilder = createEnvironmentRequestBuilder(environmentCreateRequest, headers);
     try {
       HttpResponse<InputStream> localVarResponse = memberVarHttpClient.send(
           localVarRequestBuilder.build(),
@@ -257,10 +258,10 @@ public class EnvironmentsApi {
     }
   }
 
-  private HttpRequest.Builder createEnvironmentRequestBuilder(@jakarta.annotation.Nonnull EnvironmentRequest environmentRequest, Map<String, String> headers) throws ApiException {
-    // verify the required parameter 'environmentRequest' is set
-    if (environmentRequest == null) {
-      throw new ApiException(400, "Missing the required parameter 'environmentRequest' when calling createEnvironment");
+  private HttpRequest.Builder createEnvironmentRequestBuilder(@jakarta.annotation.Nonnull EnvironmentCreateRequest environmentCreateRequest, Map<String, String> headers) throws ApiException {
+    // verify the required parameter 'environmentCreateRequest' is set
+    if (environmentCreateRequest == null) {
+      throw new ApiException(400, "Missing the required parameter 'environmentCreateRequest' when calling createEnvironment");
     }
 
     HttpRequest.Builder localVarRequestBuilder = HttpRequest.newBuilder();
@@ -273,7 +274,7 @@ public class EnvironmentsApi {
     localVarRequestBuilder.header("Accept", "application/vnd.api+json");
 
     try {
-      byte[] localVarPostBody = memberVarObjectMapper.writeValueAsBytes(environmentRequest);
+      byte[] localVarPostBody = memberVarObjectMapper.writeValueAsBytes(environmentCreateRequest);
       localVarRequestBuilder.method("POST", HttpRequest.BodyPublishers.ofByteArray(localVarPostBody));
     } catch (IOException e) {
       throw new ApiException(e);
