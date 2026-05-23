@@ -7,11 +7,14 @@ import com.smplkit.errors.ValidationError;
 import com.smplkit.errors.SmplError;
 import com.smplkit.internal.generated.config.ApiException;
 import com.smplkit.internal.generated.config.api.ConfigsApi;
+import com.smplkit.internal.generated.config.model.ConfigCreateRequest;
+import com.smplkit.internal.generated.config.model.ConfigCreateResource;
 import com.smplkit.internal.generated.config.model.ConfigItemDefinition;
 import com.smplkit.internal.generated.config.model.ConfigItemOverride;
 import com.smplkit.internal.generated.config.model.ConfigListResponse;
 import com.smplkit.internal.generated.config.model.ConfigResource;
 import com.smplkit.internal.generated.config.model.ConfigResponse;
+import org.mockito.ArgumentCaptor;
 import com.smplkit.internal.generated.config.model.EnvironmentOverride;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -156,7 +159,8 @@ class ConfigClientTest {
                 "Main user service config", null,
                 Map.of("timeout", itemDef(30, ConfigItemDefinition.TypeEnum.NUMBER)),
                 Map.of(), null, null);
-        when(mockApi.createConfig(any())).thenReturn(singleResponse(resource));
+        ArgumentCaptor<ConfigCreateRequest> captor = ArgumentCaptor.forClass(ConfigCreateRequest.class);
+        when(mockApi.createConfig(captor.capture())).thenReturn(singleResponse(resource));
 
         Config config = configClient.management().new_("user_service");
         config.setDescription("Main user service config");
@@ -165,7 +169,11 @@ class ConfigClientTest {
 
         assertEquals(CONFIG_ID, config.getId());
         assertEquals("User Service", config.getName());
-        verify(mockApi).createConfig(any());
+        verify(mockApi).createConfig(any(ConfigCreateRequest.class));
+        // Verify the create envelope carries the caller-supplied id.
+        ConfigCreateResource data = captor.getValue().getData();
+        assertEquals("user_service", data.getId());
+        assertEquals(ConfigCreateResource.TypeEnum.CONFIG, data.getType());
     }
 
     @Test

@@ -24,28 +24,28 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonTypeName;
 import com.fasterxml.jackson.annotation.JsonValue;
-import com.smplkit.internal.generated.config.model.ConfigResource;
+import com.smplkit.internal.generated.config.model.ConfigCreateResource;
 import java.util.Arrays;
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 
 
 import com.smplkit.internal.generated.config.ApiClient;
 /**
- * JSON:API request envelope for updating a config.
+ * JSON:API request envelope for creating a config.  Distinct from :class:&#x60;ConfigRequest&#x60; because create requires caller-supplied &#x60;&#x60;data.id&#x60;&#x60; while update does not.
  */
 @JsonPropertyOrder({
-  ConfigRequest.JSON_PROPERTY_DATA
+  ConfigCreateRequest.JSON_PROPERTY_DATA
 })
 @jakarta.annotation.Generated(value = "org.openapitools.codegen.languages.JavaClientCodegen", comments = "Generator version: 7.21.0")
-public class ConfigRequest {
+public class ConfigCreateRequest {
   public static final String JSON_PROPERTY_DATA = "data";
   @jakarta.annotation.Nonnull
-  private ConfigResource data;
+  private ConfigCreateResource data;
 
-  public ConfigRequest() { 
+  public ConfigCreateRequest() { 
   }
 
-  public ConfigRequest data(@jakarta.annotation.Nonnull ConfigResource data) {
+  public ConfigCreateRequest data(@jakarta.annotation.Nonnull ConfigCreateResource data) {
     this.data = data;
     return this;
   }
@@ -57,20 +57,20 @@ public class ConfigRequest {
   @jakarta.annotation.Nonnull
   @JsonProperty(value = JSON_PROPERTY_DATA, required = true)
   @JsonInclude(value = JsonInclude.Include.ALWAYS)
-  public ConfigResource getData() {
+  public ConfigCreateResource getData() {
     return data;
   }
 
 
   @JsonProperty(value = JSON_PROPERTY_DATA, required = true)
   @JsonInclude(value = JsonInclude.Include.ALWAYS)
-  public void setData(@jakarta.annotation.Nonnull ConfigResource data) {
+  public void setData(@jakarta.annotation.Nonnull ConfigCreateResource data) {
     this.data = data;
   }
 
 
   /**
-   * Return true if this ConfigRequest object is equal to o.
+   * Return true if this ConfigCreateRequest object is equal to o.
    */
   @Override
   public boolean equals(Object o) {
@@ -80,8 +80,8 @@ public class ConfigRequest {
     if (o == null || getClass() != o.getClass()) {
       return false;
     }
-    ConfigRequest configRequest = (ConfigRequest) o;
-    return Objects.equals(this.data, configRequest.data);
+    ConfigCreateRequest configCreateRequest = (ConfigCreateRequest) o;
+    return Objects.equals(this.data, configCreateRequest.data);
   }
 
   @Override
@@ -92,7 +92,7 @@ public class ConfigRequest {
   @Override
   public String toString() {
     StringBuilder sb = new StringBuilder();
-    sb.append("class ConfigRequest {\n");
+    sb.append("class ConfigCreateRequest {\n");
     sb.append("    data: ").append(toIndentedString(data)).append("\n");
     sb.append("}");
     return sb.toString();
