@@ -5,6 +5,8 @@ import com.smplkit.internal.generated.app.ApiClient;
 import com.smplkit.internal.generated.app.ApiException;
 import com.smplkit.internal.generated.app.api.EnvironmentsApi;
 import com.smplkit.internal.generated.app.model.Environment;
+import com.smplkit.internal.generated.app.model.EnvironmentCreateRequest;
+import com.smplkit.internal.generated.app.model.EnvironmentCreateResource;
 import com.smplkit.internal.generated.app.model.EnvironmentListResponse;
 import com.smplkit.internal.generated.app.model.EnvironmentResource;
 import com.smplkit.internal.generated.app.model.EnvironmentRequest;
@@ -86,7 +88,7 @@ public final class EnvironmentsClient {
 
     com.smplkit.management.Environment _create(com.smplkit.management.Environment env) {
         try {
-            EnvironmentRequest body = buildRequest(env);
+            EnvironmentCreateRequest body = buildCreateRequest(env);
             EnvironmentResponse resp = api.createEnvironment(body);
             return responseToModel(resp);
         } catch (ApiException e) {
@@ -104,7 +106,7 @@ public final class EnvironmentsClient {
         }
     }
 
-    private EnvironmentRequest buildRequest(com.smplkit.management.Environment env) {
+    private Environment buildAttrs(com.smplkit.management.Environment env) {
         Environment attrs = new Environment();
         attrs.setName(env.getName());
         if (env.getColor() != null) attrs.setColor(env.getColor());
@@ -116,11 +118,24 @@ public final class EnvironmentsClient {
                 ? Environment.ClassificationEnum.AD_HOC
                 : Environment.ClassificationEnum.STANDARD);
         attrs.setManaged(env.isManaged());
+        return attrs;
+    }
+
+    private EnvironmentRequest buildRequest(com.smplkit.management.Environment env) {
         EnvironmentResource data = new EnvironmentResource()
                 .id(env.getId())
                 .type(EnvironmentResource.TypeEnum.ENVIRONMENT)
-                .attributes(attrs);
+                .attributes(buildAttrs(env));
         return new EnvironmentRequest().data(data);
+    }
+
+    private EnvironmentCreateRequest buildCreateRequest(com.smplkit.management.Environment env) {
+        // Create uses a dedicated envelope where the caller-supplied id is required.
+        EnvironmentCreateResource data = new EnvironmentCreateResource()
+                .id(env.getId())
+                .type(EnvironmentCreateResource.TypeEnum.ENVIRONMENT)
+                .attributes(buildAttrs(env));
+        return new EnvironmentCreateRequest().data(data);
     }
 
     private com.smplkit.management.Environment responseToModel(EnvironmentResponse resp) {
