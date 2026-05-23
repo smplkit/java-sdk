@@ -1,8 +1,8 @@
 package com.smplkit.config;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
 import com.smplkit.SharedWebSocket;
 import com.smplkit.errors.ApiExceptionHandler;
+import com.smplkit.errors.NotFoundError;
 import com.smplkit.errors.SmplError;
 import com.smplkit.internal.Debug;
 import com.smplkit.internal.generated.config.ApiException;
@@ -15,6 +15,8 @@ import com.smplkit.internal.generated.config.model.ConfigRequest;
 import com.smplkit.internal.generated.config.model.ConfigResponse;
 import com.smplkit.internal.generated.config.model.EnvironmentOverride;
 
+import java.lang.reflect.Field;
+import java.lang.reflect.Modifier;
 import java.time.Instant;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -32,9 +34,22 @@ import java.util.logging.Logger;
 /**
  * Client for the Smpl Config service.
  *
- * <p>Provides runtime config access ({@link #get(String)},
- * {@link #subscribe(String)}, {@link #onChange}) and management operations
- * via {@link #management()}.</p>
+ * <p>Two ways to read config values:</p>
+ * <ul>
+ *   <li>{@link #bind(String, Object) bind(id, target)} — declarative,
+ *       schema-first. Pass a Java object (POJO with mutable fields) or
+ *       a {@link Map}; the SDK registers the schema and values, then
+ *       mutates the <i>same</i> target in place when the server pushes
+ *       updates. Property access on the target always sees the live
+ *       resolved value.</li>
+ *   <li>{@link #get(String)} — lookup-only escape hatch. Returns a
+ *       {@link LiveConfigProxy} (a read-only, {@link Map}-like view of
+ *       the resolved values). Throws {@link NotFoundError} on missing
+ *       configs. Two- and three-argument overloads read a single value
+ *       with optional default fallback and code-first auto-registration.</li>
+ * </ul>
+ *
+ * <p>Management/CRUD lives on {@code client.manage().config}.</p>
  */
 public final class ConfigClient {
 
@@ -54,8 +69,11 @@ public final class ConfigClient {
     private Map<String, Config> configStore = new HashMap<>();
     /** Identity-stable proxy cache: same id → same proxy instance across calls. */
     private final Map<String, LiveConfigProxy> proxyCache = new ConcurrentHashMap<>();
+    /** Targets bound via {@link #bind} keyed by config id. Mutated in
+     * place on WebSocket events. */
+    private final Map<String, Object> bindings = new ConcurrentHashMap<>();
     private final List<ListenerEntry> listeners = Collections.synchronizedList(new ArrayList<>());
-    private final ConfigManagement management;
+    private volatile ConfigManagement management;
     private volatile SharedWebSocket wsManager;
     private final Consumer<Map<String, Object>> configChangedHandler;
     private final Consumer<Map<String, Object>> configDeletedHandler;
@@ -78,22 +96,16 @@ public final class ConfigClient {
 
     /**
      * Returns the management-plane API for config CRUD operations.
-     *
-     * @return the {@link ConfigManagement} instance
      */
     public ConfigManagement management() {
         return management;
     }
 
     // -----------------------------------------------------------------------
-    // Environment
+    // Environment + dependencies
     // -----------------------------------------------------------------------
 
-    /**
-     * Sets the target environment for config resolution.
-     *
-     * @param environment the environment name (e.g. "production")
-     */
+    /** Sets the target environment for config resolution. */
     public void setEnvironment(String environment) {
         this.environment = environment;
     }
@@ -103,7 +115,7 @@ public final class ConfigClient {
         this.service = service;
     }
 
-    /** Sets the metrics reporter. Package-private. */
+    /** Sets the metrics reporter. */
     public void setMetrics(com.smplkit.MetricsReporter metrics) {
         this.metrics = metrics;
     }
@@ -111,6 +123,18 @@ public final class ConfigClient {
     /** Sets the shared WebSocket for real-time config updates. */
     public void setSharedWs(SharedWebSocket ws) {
         this.wsManager = ws;
+    }
+
+    /**
+     * Swap this client's {@link ConfigManagement} (and its registration
+     * buffer) for an external one — used by {@link com.smplkit.SmplClient}
+     * to share a single buffer with {@code client.manage().config}. With
+     * a shared buffer, declarations queued by {@link #bind} and
+     * {@link #get(String, String, Object)} drain whenever <em>either</em>
+     * side calls {@code flush()}.
+     */
+    public void setManagement(ConfigManagement management) {
+        this.management = management;
     }
 
     // -----------------------------------------------------------------------
@@ -180,25 +204,132 @@ public final class ConfigClient {
     }
 
     // -----------------------------------------------------------------------
-    // Runtime: get / subscribe
+    // Public API: bind, get, start
     // -----------------------------------------------------------------------
 
     /**
-     * Returns a {@link LiveConfigProxy} for the given config id.
+     * Bind a target (POJO or {@link Map}) to a config id; return the same
+     * target back, live. Convenience for {@link #bind(String, Object, Object)}
+     * with no parent.
+     */
+    public <T> T bind(String id, T target) {
+        return bind(id, target, null);
+    }
+
+    /**
+     * Bind a target to a config id with an optional parent reference.
      *
-     * <p>Mirrors Python rule 10: the proxy is dict-like (read-through against
-     * the resolved-config cache, picks up WebSocket updates automatically),
-     * read-only (mutation paths raise), and identity-stable (calling
-     * {@code get(id)} twice returns the same proxy instance). For typed access,
-     * call {@link LiveConfigProxy#into(Class)}.</p>
+     * <p>Declarative, code-first API. The target's fields (or Map keys) are
+     * the schema; their values are the in-code defaults. On first call:</p>
+     * <ol>
+     *   <li>Every leaf (recursively through nested POJO fields and nested
+     *       {@link Map} entries) is registered with the server as a config
+     *       item, with its value as the in-code default and a type inferred
+     *       from {@code instanceof}.</li>
+     *   <li>After the SDK's cache is populated, any server-side overrides
+     *       for this config are applied to the target in place.</li>
+     * </ol>
      *
-     * @param id the config id
-     * @return a live proxy reading through the resolved-config cache
+     * <p>On every WebSocket-delivered change thereafter the target is
+     * mutated in place — readers of {@code target.foo} always see the
+     * current resolved value. The returned reference is the same one you
+     * passed in (referential identity preserved).</p>
+     *
+     * <p>Idempotent. Repeated calls with the same id return the
+     * originally-bound target; the new {@code target} argument is ignored.</p>
+     *
+     * <p><strong>POJO vs. Map.</strong> Use a {@link Map} when you want
+     * omit-to-inherit semantics — keys present are explicit overrides,
+     * absent keys inherit from the parent. POJO targets register every
+     * non-static, non-transient field as explicit (Java does not preserve
+     * a "did the caller construct this field explicitly?" bit, so the
+     * field set is the override set).</p>
+     *
+     * <p><strong>Mutability.</strong> Bound POJOs must expose mutable
+     * fields (the SDK assigns via {@code Field.setAccessible(true)} +
+     * {@code Field.set}). {@code final} fields and {@code record}
+     * components cannot be live-updated; bind them with a {@link Map}
+     * instead, or use a mutable holder.</p>
+     *
+     * @param id     the config id to register under
+     * @param target a POJO with mutable fields or a {@link Map} carrying
+     *               the in-code defaults
+     * @param parent optional — a target previously returned from
+     *               {@link #bind} on this client; activates parent-chain
+     *               inheritance for keys this target omits
+     * @param <T>    inferred from {@code target}; the return is the same
+     *               reference passed in
+     * @return the same {@code target} reference, registered and live
+     * @throws IllegalArgumentException if {@code target} is null, or if
+     *         {@code parent} is non-null but was not previously bound
+     */
+    public <T> T bind(String id, T target, Object parent) {
+        if (target == null) {
+            throw new IllegalArgumentException("bind() requires a non-null target");
+        }
+
+        String parentId = null;
+        if (parent != null) {
+            parentId = configIdForBinding(parent);
+            if (parentId == null) {
+                throw new IllegalArgumentException(
+                        "bind(): parent must be a target previously returned from bind(). "
+                                + "Bind the parent first.");
+            }
+        }
+
+        // Derive a console display name from the class (for POJO targets)
+        // or leave null (Map targets carry no class metadata).
+        String name = null;
+        String description = null;
+        if (!(target instanceof Map)) {
+            String simple = target.getClass().getSimpleName();
+            if (simple != null && !simple.isEmpty()) name = simple;
+        }
+        _observeConfigDeclaration(id, parentId, name, description);
+
+        // Walk the target shape and register every leaf.
+        List<Item> items = new ArrayList<>();
+        iterTargetItemsInto(target, "", items);
+        for (Item item : items) {
+            _observeItemDeclaration(id, item.key, item.type, item.value, null);
+        }
+
+        // Race-safe: only one putIfAbsent winner per id; losers reuse the
+        // existing binding (the buffer dedups duplicate item declarations).
+        Object prior = bindings.putIfAbsent(id, target);
+        if (prior != null) {
+            @SuppressWarnings("unchecked")
+            T existingBound = (T) prior;
+            return existingBound;
+        }
+
+        _connectInternal();
+        syncTargetFromCache(target, id);
+        return target;
+    }
+
+    /**
+     * Eagerly initialize the config subclient — fetch all configs, resolve
+     * the environment-scoped values into the local cache, and subscribe to
+     * the shared WebSocket for live updates. Idempotent. Called automatically
+     * on first {@link #get} / {@link #bind}.
+     */
+    public void start() {
+        _connectInternal();
+    }
+
+    /**
+     * Returns a {@link LiveConfigProxy} — a read-only, {@link Map}-like
+     * view of {@code id}'s resolved values. The proxy is identity-stable:
+     * calling {@code get(id)} twice returns the same instance.
+     *
+     * @throws NotFoundError if {@code id} is not in the cache
      */
     public LiveConfigProxy get(String id) {
         _connectInternal();
         if (!configCache.containsKey(id)) {
-            throw new com.smplkit.errors.NotFoundError(
+            throw new NotFoundError(
                     "Config with id '" + id + "' not found in cache.", null);
         }
         if (metrics != null) {
@@ -208,52 +339,65 @@ public final class ConfigClient {
     }
 
     /**
-     * Declare a configuration from code; return a live, dict-like view.
+     * Read a single value from {@code id}. Throws {@link NotFoundError}
+     * if the config or the key is missing. No registration.
      *
-     * <p>Idempotent — repeat calls with the same id return the same
-     * {@link LiveConfigProxy} instance, so callers can hold one as a parent
-     * reference. The first call queues a discovery payload (the config and
-     * any items declared via typed getters on the returned handle) for
-     * upload to {@code POST /api/v1/configs/bulk} on next flush. Unlike
-     * {@link #get(String)}, this method does <b>not</b> throw on missing
-     * configs — discovery handles that case.</p>
-     *
-     * @param id          the config id to declare
-     * @param parent      optional parent: a string id, a {@link LiveConfigProxy}, or null
-     * @param name        optional display name (defaults to humanized id server-side)
-     * @param description optional description
+     * <p>For typed/declarative access, use {@link #bind} instead.</p>
      */
-    public LiveConfigProxy getOrCreate(String id, Object parent, String name, String description) {
-        String parentId;
-        if (parent == null) {
-            parentId = null;
-        } else if (parent instanceof String s) {
-            parentId = s;
-        } else if (parent instanceof LiveConfigProxy p) {
-            parentId = p.configId();
-        } else {
-            throw new IllegalArgumentException(
-                    "parent must be a String id or LiveConfigProxy; got "
-                            + parent.getClass().getSimpleName());
-        }
-        _observeConfigDeclaration(id, parentId, name, description);
+    public Object get(String id, String key) {
         _connectInternal();
-        return cachedProxy(id);
+        if (!configCache.containsKey(id)) {
+            throw new NotFoundError(
+                    "Config with id '" + id + "' not found in cache.", null);
+        }
+        Map<String, Object> values = configCache.get(id);
+        if (!values.containsKey(key)) {
+            throw new NotFoundError(
+                    "Config item '" + key + "' not found in config '" + id + "'.", null);
+        }
+        return values.get(key);
     }
 
-    /** Overload — discover with just an id. */
-    public LiveConfigProxy getOrCreate(String id) {
-        return getOrCreate(id, null, null, null);
+    /**
+     * Read a single value, falling back to {@code defaultValue} when the
+     * config or the key is missing. Never throws.
+     *
+     * <p><strong>Side effect:</strong> registers the config (if new) and
+     * the key (with {@code defaultValue} as its default value) for
+     * code-first console observability. The buffer is idempotent at the
+     * {@code (configId, itemKey)} level, so repeat calls do not pile up.</p>
+     */
+    public Object get(String id, String key, Object defaultValue) {
+        _connectInternal();
+        // Register the reference so code-declared keys appear in the console
+        // alongside bind()-declared ones.
+        _observeConfigDeclaration(id, null, null, null);
+        _observeItemDeclaration(id, key, inferItemType(defaultValue), defaultValue, null);
+
+        if (!configCache.containsKey(id)) return defaultValue;
+        Map<String, Object> values = configCache.get(id);
+        return values.containsKey(key) ? values.get(key) : defaultValue;
     }
 
-    /** Overload — discover with a description. */
-    public LiveConfigProxy getOrCreate(String id, String description) {
-        return getOrCreate(id, null, null, description);
+    // -----------------------------------------------------------------------
+    // Binding helpers (internal)
+    // -----------------------------------------------------------------------
+
+    /** Return the config id this target was bound under, or null. */
+    private String configIdForBinding(Object target) {
+        for (Map.Entry<String, Object> e : bindings.entrySet()) {
+            if (e.getValue() == target) return e.getKey();
+        }
+        return null;
     }
 
-    /** Overload — discover with a parent reference and description. */
-    public LiveConfigProxy getOrCreate(String id, LiveConfigProxy parent, String description) {
-        return getOrCreate(id, (Object) parent, null, description);
+    /** Apply current cached values to a freshly-bound target in place. */
+    private void syncTargetFromCache(Object target, String configId) {
+        Map<String, Object> cache = configCache.get(configId);
+        if (cache == null || cache.isEmpty()) return;
+        for (Map.Entry<String, Object> e : cache.entrySet()) {
+            applyChangeToTarget(target, e.getKey(), e.getValue());
+        }
     }
 
     private LiveConfigProxy cachedProxy(String id) {
@@ -262,10 +406,6 @@ public final class ConfigClient {
 
     /** Internal: queue a config declaration with the management buffer. */
     void _observeConfigDeclaration(String configId, String parent, String name, String description) {
-        // The runtime client doesn't know the runtime owner's service /
-        // environment — those live on SmplClient. Discovery rows omit them
-        // for now and the server treats them as null. Mirrors the wire
-        // contract used by other SDKs.
         management.registerConfig(configId, service, environment, parent, name, description);
     }
 
@@ -275,41 +415,198 @@ public final class ConfigClient {
         management.registerConfigItem(configId, itemKey, itemType, defaultValue, description);
     }
 
+    /** A single flattened leaf in a bound target. */
+    private record Item(String key, String type, Object value) {}
+
     /**
-     * Convenience: returns a typed model instance from the live proxy.
+     * Map a runtime value (bind value or get default) to a config item type.
+     * Mirrors the python / typescript inference: {@code boolean → BOOLEAN},
+     * any {@link Number} → {@code NUMBER}, {@link CharSequence} → {@code STRING},
+     * everything else → {@code STRING} (safest fallback — admins can retype
+     * to {@code JSON}, {@code NUMBER}, or {@code BOOLEAN} in the console).
      *
-     * <p>Equivalent to {@code get(id).into(model)} — preserved as a one-call
-     * shortcut. Each invocation maps fresh from the current cache, so the
-     * returned model reflects the values at this call. For an always-fresh
-     * typed view, hold onto the proxy and call {@code proxy.into(model)} at
-     * the read site.</p>
+     * <p>{@code Boolean} is checked before {@code Number} for symmetry with
+     * other SDKs (in Python, {@code bool} is a subclass of {@code int}).</p>
      */
-    public <T> T get(String id, Class<T> model) {
-        return get(id).into(model);
+    private static String inferItemType(Object value) {
+        if (value instanceof Boolean) return "BOOLEAN";
+        if (value instanceof Number) return "NUMBER";
+        if (value instanceof CharSequence) return "STRING";
+        return "STRING";
     }
 
     /**
-     * @deprecated mirrors Python rule 10: subscription semantics are now
-     * folded into {@link #get(String)}. Use {@code get(id)} (returns a live
-     * {@link LiveConfigProxy}) and call {@link LiveConfigProxy#onChange} for
-     * listener registration.
+     * Walk a bound target (POJO or {@link Map}) and append every leaf to
+     * {@code out} as a dotted-key {@code Item}. Nested {@link Map} entries
+     * and nested POJO fields are descended into; primitives, strings,
+     * collections, dates, and other JDK built-ins are treated as opaque
+     * leaves.
      */
-    @Deprecated
+    private static void iterTargetItemsInto(Object obj, String prefix, List<Item> out) {
+        if (obj instanceof Map<?, ?> map) {
+            for (Map.Entry<?, ?> e : map.entrySet()) {
+                String key = String.valueOf(e.getKey());
+                String flat = prefix + key;
+                Object value = e.getValue();
+                if (value instanceof Map<?, ?>) {
+                    iterTargetItemsInto(value, flat + ".", out);
+                } else {
+                    out.add(new Item(flat, inferItemType(value), value));
+                }
+            }
+            return;
+        }
+        for (Field field : allInstanceFields(obj.getClass())) {
+            Object value = readField(field, obj);
+            String flat = prefix + field.getName();
+            if (isNestedNamespace(value)) {
+                iterTargetItemsInto(value, flat + ".", out);
+            } else {
+                out.add(new Item(flat, inferItemType(value), value));
+            }
+        }
+    }
+
+    /**
+     * True when {@code value} is a nested namespace (Map or user POJO) we
+     * should descend into; false for leaves. JDK built-ins (collections,
+     * dates, arrays, primitives) are leaves so we don't accidentally
+     * dot-flatten a complex object's internals into config keys.
+     */
+    private static boolean isNestedNamespace(Object value) {
+        if (value == null) return false;
+        if (value instanceof Map<?, ?>) return true;
+        if (value instanceof CharSequence) return false;
+        if (value instanceof Number) return false;
+        if (value instanceof Boolean) return false;
+        if (value instanceof Character) return false;
+        if (value instanceof Enum<?>) return false;
+        if (value instanceof Iterable<?>) return false;
+        if (value instanceof java.time.temporal.Temporal) return false;
+        if (value instanceof java.util.Date) return false;
+        Class<?> c = value.getClass();
+        if (c.isArray()) return false;
+        if (c.isPrimitive()) return false;
+        // JDK built-ins (java.*, javax.*) are always leaves — only descend
+        // into user-defined classes.
+        String n = c.getName();
+        if (n.startsWith("java.") || n.startsWith("javax.")) return false;
+        return true;
+    }
+
+    private static List<Field> allInstanceFields(Class<?> cls) {
+        List<Field> out = new ArrayList<>();
+        Class<?> c = cls;
+        while (c != null && c != Object.class) {
+            for (Field f : c.getDeclaredFields()) {
+                int mods = f.getModifiers();
+                if (Modifier.isStatic(mods) || Modifier.isTransient(mods)) continue;
+                if (f.isSynthetic()) continue;
+                out.add(f);
+            }
+            c = c.getSuperclass();
+        }
+        return out;
+    }
+
+    /**
+     * Apply a server-pushed value to a bound target in place. Walks the
+     * dotted key path to the leaf's parent, then assigns the value via
+     * {@link Map#put} or reflection. Bails silently if any intermediate
+     * is missing or the target field cannot be assigned (e.g. {@code final}
+     * fields the JVM refuses to mutate, or a primitive field receiving
+     * {@code null}).
+     */
     @SuppressWarnings("unchecked")
-    public LiveConfig<Map<String, Object>> subscribe(String id) {
-        _connectInternal();
-        return new LiveConfig<>(this, id, null);
+    static void applyChangeToTarget(Object target, String dottedKey, Object value) {
+        String[] parts = dottedKey.split("\\.");
+        Object current = target;
+        for (int i = 0; i < parts.length - 1; i++) {
+            current = stepInto(current, parts[i]);
+            if (current == null) return;
+        }
+        String last = parts[parts.length - 1];
+        if (current instanceof Map<?, ?> leafMap) {
+            ((Map<String, Object>) leafMap).put(last, value);
+            return;
+        }
+        Field f = findField(current.getClass(), last);
+        if (f == null) return;
+        writeField(f, current, coerce(f.getType(), value));
     }
 
-    /**
-     * @deprecated use {@code get(id).into(model)} — returns a live proxy whose
-     * {@code into(model)} call is equivalent to the previous {@code subscribe(id, model).get()}
-     * with the additional benefit of identity-stability across calls.
-     */
-    @Deprecated
-    public <T> LiveConfig<T> subscribe(String id, Class<T> model) {
-        _connectInternal();
-        return new LiveConfig<>(this, id, model);
+    /** Walk one step into a namespace. Returns null if the step cannot be
+     *  taken (missing key/field) so the caller bails the dotted walk. */
+    @SuppressWarnings("unchecked")
+    private static Object stepInto(Object current, String part) {
+        if (current instanceof Map<?, ?> mapNode) {
+            if (!mapNode.containsKey(part)) return null;
+            return ((Map<String, Object>) mapNode).get(part);
+        }
+        Field f = findField(current.getClass(), part);
+        if (f == null) return null;
+        return readField(f, current);
+    }
+
+    /** Read a field, bypassing access controls. Any reflective failure
+     *  (including {@link IllegalAccessException} which would only occur in
+     *  unusual JVM configurations after {@code setAccessible}) is wrapped
+     *  as {@link IllegalStateException}. */
+    static Object readField(Field field, Object owner) {
+        try {
+            field.setAccessible(true);
+            return field.get(owner);
+        } catch (Exception ex) {
+            throw new IllegalStateException(
+                    "Could not read field " + field.getDeclaringClass().getName()
+                            + "." + field.getName(), ex);
+        }
+    }
+
+    /** Write a field, bypassing access controls. Silently skips and logs at
+     *  FINE level on reflective failure (final fields the JVM refuses to
+     *  mutate, type mismatch, primitive-null) so server pushes never crash
+     *  the runtime. */
+    static void writeField(Field field, Object owner, Object value) {
+        try {
+            field.setAccessible(true);
+            field.set(owner, value);
+        } catch (Exception ex) {
+            LOG.log(Level.FINE,
+                    "Could not write field " + field.getDeclaringClass().getName()
+                            + "." + field.getName() + " = " + value, ex);
+        }
+    }
+
+    private static Field findField(Class<?> cls, String name) {
+        Class<?> c = cls;
+        while (c != null && c != Object.class) {
+            try {
+                return c.getDeclaredField(name);
+            } catch (NoSuchFieldException ignored) {
+                c = c.getSuperclass();
+            }
+        }
+        return null;
+    }
+
+    /** Widen / narrow a server value into the target field's type. */
+    private static Object coerce(Class<?> fieldType, Object value) {
+        if (value == null) return null;
+        if (fieldType.isInstance(value)) return value;
+        if (value instanceof Number n) {
+            if (fieldType == int.class || fieldType == Integer.class) return n.intValue();
+            if (fieldType == long.class || fieldType == Long.class) return n.longValue();
+            if (fieldType == double.class || fieldType == Double.class) return n.doubleValue();
+            if (fieldType == float.class || fieldType == Float.class) return n.floatValue();
+            if (fieldType == short.class || fieldType == Short.class) return n.shortValue();
+            if (fieldType == byte.class || fieldType == Byte.class) return n.byteValue();
+        }
+        if ((fieldType == boolean.class || fieldType == Boolean.class) && value instanceof Boolean) {
+            return value;
+        }
+        if (fieldType == String.class) return value.toString();
+        return value;
     }
 
     // -----------------------------------------------------------------------
@@ -330,32 +627,17 @@ public final class ConfigClient {
         diffAndFire(oldCache, newCache, "manual");
     }
 
-    /**
-     * Registers a global change listener that fires when any config value changes.
-     *
-     * @param listener called with a {@link ConfigChangeEvent} on each change
-     */
+    /** Registers a global change listener. */
     public void onChange(Consumer<ConfigChangeEvent> listener) {
         listeners.add(new ListenerEntry(null, null, listener));
     }
 
-    /**
-     * Registers a config-scoped change listener.
-     *
-     * @param configId only fire for changes to this config
-     * @param listener called with a {@link ConfigChangeEvent} on each matching change
-     */
+    /** Registers a config-scoped change listener. */
     public void onChange(String configId, Consumer<ConfigChangeEvent> listener) {
         listeners.add(new ListenerEntry(configId, null, listener));
     }
 
-    /**
-     * Registers an item-scoped change listener.
-     *
-     * @param configId only fire for changes to this config
-     * @param itemKey  only fire for changes to this item
-     * @param listener called with a {@link ConfigChangeEvent} on each matching change
-     */
+    /** Registers an item-scoped change listener. */
     public void onChange(String configId, String itemKey, Consumer<ConfigChangeEvent> listener) {
         listeners.add(new ListenerEntry(configId, itemKey, listener));
     }
@@ -406,7 +688,6 @@ public final class ConfigClient {
         // local raw store, then rebuild every config's resolved cache from
         // the store. This handles the cascade case: any config that has
         // `configKey` in its parent chain has a stale resolved value.
-        // Mirrors Python's _handle_config_changed -> _rebuild_resolved_cache.
         Config fetched;
         try {
             fetched = management.get(configKey);
@@ -435,42 +716,35 @@ public final class ConfigClient {
         }
         Debug.log("websocket", "config_deleted event received, key=" + configKey);
 
-        // Remove from cache — no HTTP fetch
         Map<String, Map<String, Object>> oldCache = configCache;
         Map<String, Map<String, Object>> newCache = new HashMap<>(configCache);
         Map<String, Object> removed = newCache.remove(configKey);
         configCache = newCache;
 
         if (removed != null) {
-            // Fire listener with deleted=true for each item that existed
             for (String itemKey : removed.keySet()) {
                 ConfigChangeEvent event = new ConfigChangeEvent(configKey, itemKey,
                         removed.get(itemKey), null, "websocket", true);
-                for (ListenerEntry entry : listeners) {
-                    if (entry.configId != null && !entry.configId.equals(configKey)) continue;
-                    if (entry.itemKey != null && !entry.itemKey.equals(itemKey)) continue;
-                    try {
-                        entry.listener.accept(event);
-                    } catch (Exception e) {
-                        LOG.log(Level.WARNING,
-                                "Exception in onChange listener for deleted config " + configKey, e);
-                    }
-                }
+                fireListenersFor(event);
             }
-            // Also fire global listener for the delete, even if no items
             if (removed.isEmpty()) {
                 ConfigChangeEvent event = new ConfigChangeEvent(configKey, null,
                         null, null, "websocket", true);
-                for (ListenerEntry entry : listeners) {
-                    if (entry.configId != null && !entry.configId.equals(configKey)) continue;
-                    if (entry.itemKey != null) continue;
-                    try {
-                        entry.listener.accept(event);
-                    } catch (Exception e) {
-                        LOG.log(Level.WARNING,
-                                "Exception in onChange listener for deleted config " + configKey, e);
-                    }
-                }
+                fireListenersFor(event);
+            }
+        }
+    }
+
+    private void fireListenersFor(ConfigChangeEvent event) {
+        for (ListenerEntry entry : listeners) {
+            if (entry.configId != null && !entry.configId.equals(event.configId())) continue;
+            if (entry.itemKey != null && !entry.itemKey.equals(event.itemKey())) continue;
+            try {
+                entry.listener.accept(event);
+            } catch (Exception e) {
+                LOG.log(Level.WARNING,
+                        "Exception in onChange listener for "
+                                + event.configId() + "/" + event.itemKey(), e);
             }
         }
     }
@@ -526,7 +800,8 @@ public final class ConfigClient {
     // Internal: diff and fire
     // -----------------------------------------------------------------------
 
-    /** Fires change listeners for any values that differ between old and new snapshots. */
+    /** Fires change listeners (and updates bound targets) for any values
+     *  that differ between old and new snapshots. */
     void diffAndFire(
             Map<String, Map<String, Object>> oldCache,
             Map<String, Map<String, Object>> newCache,
@@ -544,31 +819,30 @@ public final class ConfigClient {
             allItemKeys.addAll(oldItems.keySet());
             allItemKeys.addAll(newItems.keySet());
 
+            Object target = bindings.get(cfgId);
+
             for (String itemKey : allItemKeys) {
                 Object oldVal = oldItems.get(itemKey);
                 Object newVal = newItems.get(itemKey);
                 if (Objects.equals(oldVal, newVal)) continue;
 
+                // Apply to bound target first so listeners reading the
+                // target see the new value.
+                if (target != null) {
+                    applyChangeToTarget(target, itemKey, newVal);
+                }
+
                 if (metrics != null) {
                     metrics.record("config.changes", "changes", Map.of("config", cfgId));
                 }
                 ConfigChangeEvent event = new ConfigChangeEvent(cfgId, itemKey, oldVal, newVal, source);
-                for (ListenerEntry entry : listeners) {
-                    if (entry.configId != null && !entry.configId.equals(cfgId)) continue;
-                    if (entry.itemKey != null && !entry.itemKey.equals(itemKey)) continue;
-                    try {
-                        entry.listener.accept(event);
-                    } catch (Exception e) {
-                        LOG.log(Level.WARNING,
-                                "Exception in onChange listener for " + cfgId + "/" + itemKey, e);
-                    }
-                }
+                fireListenersFor(event);
             }
         }
     }
 
     // -----------------------------------------------------------------------
-    // Package-private: cache access (for LiveConfig)
+    // Package-private: cache access (for LiveConfigProxy)
     // -----------------------------------------------------------------------
 
     /** Returns resolved values for a config id. */
@@ -586,9 +860,7 @@ public final class ConfigClient {
     // -----------------------------------------------------------------------
 
     private static Resolver.ChainEntry toChainEntry(Config config) {
-        // Resolver needs resolved items (plain values) and environments
         Map<String, Object> resolvedItems = config.getResolvedItems();
-        @SuppressWarnings("unchecked")
         Map<String, Map<String, Object>> envMap = new HashMap<>();
         for (Map.Entry<String, Object> entry : config.getEnvironments().entrySet()) {
             if (entry.getValue() instanceof Map) {
@@ -612,7 +884,6 @@ public final class ConfigClient {
         String description = attrs.getDescription();
         String parent = attrs.getParent();
 
-        // Store the FULL typed shape: {key: {value, type, description}}
         Map<String, Object> items = new HashMap<>();
         Map<String, ConfigItemDefinition> rawItems = attrs.getItems();
         if (rawItems != null) {
@@ -629,7 +900,6 @@ public final class ConfigClient {
             }
         }
 
-        // Extract environments
         Map<String, Object> environments = new HashMap<>();
         Map<String, EnvironmentOverride> rawEnvs = attrs.getEnvironments();
         if (rawEnvs != null) {
@@ -687,10 +957,6 @@ public final class ConfigClient {
                     Map<String, ConfigItemOverride> wrappedValues = new HashMap<>();
                     for (Map.Entry<String, Object> valEntry : valuesMap.entrySet()) {
                         ConfigItemOverride itemOverride = new ConfigItemOverride();
-                        // The per-env setters (setString/setNumber/setBoolean/setJson)
-                        // store {value, type} for symmetry with base items. The server
-                        // override only carries the scalar — unwrap it here, mirroring
-                        // getResolvedItems() / environments() on the base side.
                         Object raw = valEntry.getValue();
                         if (raw instanceof Map<?, ?> typed && typed.containsKey("value")) {
                             itemOverride.setValue(typed.get("value"));
@@ -707,7 +973,7 @@ public final class ConfigClient {
         return result;
     }
 
-    /** Returns the type enum for a value. */
+    /** Returns the type enum for a value (used for setX-built items). */
     static ConfigItemDefinition.TypeEnum inferType(Object value) {
         if (value instanceof String) return ConfigItemDefinition.TypeEnum.STRING;
         if (value instanceof Number) return ConfigItemDefinition.TypeEnum.NUMBER;

@@ -25,8 +25,8 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 /**
- * Tests for the prescriptive config access pattern: resolve(), subscribe(),
- * onChange(), refresh(), lazy init, and LiveConfig.
+ * Tests for the prescriptive config access pattern: get(), get(id, key),
+ * refresh(), onChange, lazy init, and the {@link Resolver}.
  */
 class ConfigPrescriptiveTest {
 
@@ -94,11 +94,11 @@ class ConfigPrescriptiveTest {
     }
 
     // -----------------------------------------------------------------------
-    // resolve()
+    // get(id)
     // -----------------------------------------------------------------------
 
     @Test
-    void resolve_returnsResolvedValues() throws ApiException {
+    void get_returnsResolvedValues() throws ApiException {
         setupListResponse(makeResource(APP_ID, "App", null,
                 Map.of("name", itemDef("Acme", ConfigItemDefinition.TypeEnum.STRING),
                         "retries", itemDef(3, ConfigItemDefinition.TypeEnum.NUMBER)),
@@ -111,7 +111,7 @@ class ConfigPrescriptiveTest {
     }
 
     @Test
-    void resolve_withEnvironmentOverrides() throws ApiException {
+    void get_withEnvironmentOverrides() throws ApiException {
         setupListResponse(makeResource(APP_ID, "App", null,
                 Map.of("retries", itemDef(3, ConfigItemDefinition.TypeEnum.NUMBER)),
                 Map.of("production", envOverride(Map.of("retries", 5)))));
@@ -122,39 +122,42 @@ class ConfigPrescriptiveTest {
     }
 
     @Test
-    void resolve_unknownKey_throws() throws ApiException {
+    void get_unknownKey_throws() throws ApiException {
         setupListResponse(makeResource(APP_ID, "App", null, Map.of(), Map.of()));
 
-        // Per ADR-024 §2.13: get() throws on a config not cached locally;
-        // declarative discovery via getOrCreate() handles the unknown case.
+        // The id is not in the cache → NotFoundError. Declarative discovery
+        // via bind() / get(id, key, default) handles the unknown case.
         assertThrows(com.smplkit.errors.NotFoundError.class,
                 () -> configClient.get("nonexistent"));
     }
 
+    // -----------------------------------------------------------------------
+    // get(id, key) — two-argument form, throws on miss
+    // -----------------------------------------------------------------------
+
     @Test
-    void resolve_withModelType() throws ApiException {
+    void get_byKey_returnsValue() throws ApiException {
         setupListResponse(makeResource(APP_ID, "App", null,
-                Map.of("host", itemDef("localhost", ConfigItemDefinition.TypeEnum.STRING),
-                        "port", itemDef(5432, ConfigItemDefinition.TypeEnum.NUMBER)),
+                Map.of("retries", itemDef(3, ConfigItemDefinition.TypeEnum.NUMBER)),
                 Map.of()));
 
-        SimpleConfig model = configClient.get("app", SimpleConfig.class);
-
-        assertEquals("localhost", model.host);
-        assertEquals(5432, model.port);
+        assertEquals(3, configClient.get("app", "retries"));
     }
 
     @Test
-    void resolve_withModelType_unflattensDotNotation() throws ApiException {
+    void get_byKey_missingConfig_throws() throws ApiException {
+        setupListResponse(makeResource(APP_ID, "App", null, Map.of(), Map.of()));
+        assertThrows(com.smplkit.errors.NotFoundError.class,
+                () -> configClient.get("missing", "key"));
+    }
+
+    @Test
+    void get_byKey_missingKey_throws() throws ApiException {
         setupListResponse(makeResource(APP_ID, "App", null,
-                Map.of("database.host", itemDef("localhost", ConfigItemDefinition.TypeEnum.STRING),
-                        "database.port", itemDef(5432, ConfigItemDefinition.TypeEnum.NUMBER)),
+                Map.of("retries", itemDef(3, ConfigItemDefinition.TypeEnum.NUMBER)),
                 Map.of()));
-
-        NestedConfig model = configClient.get("app", NestedConfig.class);
-
-        assertEquals("localhost", model.database.get("host"));
-        assertEquals(5432, model.database.get("port"));
+        assertThrows(com.smplkit.errors.NotFoundError.class,
+                () -> configClient.get("app", "missing"));
     }
 
     // -----------------------------------------------------------------------
@@ -179,17 +182,12 @@ class ConfigPrescriptiveTest {
         configClient.get("app");
         configClient.get("app");
 
-        // Only one list call (lazy init is idempotent)
         verify(mockApi, times(1)).listConfigs(isNull(), isNull(), isNull(), isNull(), any(), any(), isNull());
     }
 
     @Test
     void resolve_noEnvironment_doesNotConnect() {
         ConfigClient noEnvClient = new ConfigClient(mockApi, HttpClient.newHttpClient(), "test-key");
-        // No setEnvironment()
-
-        // No environment → lazy init bails before populating the cache,
-        // so get() throws NotFoundError for any id.
         assertThrows(com.smplkit.errors.NotFoundError.class, () -> noEnvClient.get("app"));
         assertFalse(noEnvClient.isConnected());
     }
@@ -212,84 +210,8 @@ class ConfigPrescriptiveTest {
 
         Map<String, Object> values = configClient.get("service");
 
-        // Child overrides parent retries, inherits timeout
         assertEquals(5, values.get("retries"));
         assertEquals(1000, values.get("timeout"));
-    }
-
-    // -----------------------------------------------------------------------
-    // subscribe()
-    // -----------------------------------------------------------------------
-
-    @Test
-    void subscribe_returnsLiveConfigMap() throws ApiException {
-        setupListResponse(makeResource(APP_ID, "App", null,
-                Map.of("retries", itemDef(3, ConfigItemDefinition.TypeEnum.NUMBER)),
-                Map.of()));
-
-        LiveConfig<Map<String, Object>> live = configClient.subscribe("app");
-
-        assertNotNull(live);
-        assertEquals("app", live.getId());
-        assertNull(live.getModelType());
-        assertEquals(3, live.getAsMap().get("retries"));
-    }
-
-    @Test
-    void subscribe_withModelType() throws ApiException {
-        setupListResponse(makeResource(APP_ID, "App", null,
-                Map.of("host", itemDef("localhost", ConfigItemDefinition.TypeEnum.STRING),
-                        "port", itemDef(5432, ConfigItemDefinition.TypeEnum.NUMBER)),
-                Map.of()));
-
-        LiveConfig<SimpleConfig> live = configClient.subscribe("app", SimpleConfig.class);
-
-        assertNotNull(live);
-        assertEquals("app", live.getId());
-        assertEquals(SimpleConfig.class, live.getModelType());
-
-        SimpleConfig model = live.get();
-        assertEquals("localhost", model.host);
-        assertEquals(5432, model.port);
-    }
-
-    @Test
-    void subscribe_triggersLazyInit() throws ApiException {
-        setupListResponse(makeResource(APP_ID, "App", null, Map.of(), Map.of()));
-
-        assertFalse(configClient.isConnected());
-        configClient.subscribe("app");
-        assertTrue(configClient.isConnected());
-    }
-
-    @Test
-    void subscribe_liveConfigUpdatesOnRefresh() throws ApiException {
-        setupListResponse(makeResource(APP_ID, "App", null,
-                Map.of("retries", itemDef(3, ConfigItemDefinition.TypeEnum.NUMBER)),
-                Map.of()));
-
-        LiveConfig<Map<String, Object>> live = configClient.subscribe("app");
-        assertEquals(3, live.getAsMap().get("retries"));
-
-        // Update mock for refresh
-        when(mockApi.listConfigs(isNull(), isNull(), isNull(), isNull(), any(), any(), isNull()))
-                .thenReturn(listResponse(List.of(
-                        makeResource(APP_ID, "App", null,
-                                Map.of("retries", itemDef(7, ConfigItemDefinition.TypeEnum.NUMBER)),
-                                Map.of()))));
-
-        configClient.refresh();
-
-        assertEquals(7, live.getAsMap().get("retries"));
-    }
-
-    @Test
-    void liveConfig_getWithoutModelType_throws() throws ApiException {
-        setupListResponse(makeResource(APP_ID, "App", null, Map.of(), Map.of()));
-
-        LiveConfig<Map<String, Object>> live = configClient.subscribe("app");
-
-        assertThrows(IllegalStateException.class, live::get);
     }
 
     // -----------------------------------------------------------------------
@@ -329,7 +251,6 @@ class ConfigPrescriptiveTest {
         setupListResponse(parent, child);
         assertEquals(1000, configClient.get("service").get("timeout"));
 
-        // After refresh, parent timeout changes
         ConfigResource parentUpdated = makeResource(PARENT_ID, "Common", null,
                 Map.of("timeout", itemDef(2000, ConfigItemDefinition.TypeEnum.NUMBER)),
                 Map.of());
@@ -357,7 +278,7 @@ class ConfigPrescriptiveTest {
                 Map.of("retries", itemDef(3, ConfigItemDefinition.TypeEnum.NUMBER)),
                 Map.of()));
 
-        configClient.get("app"); // trigger lazy init
+        configClient.get("app");
 
         List<ConfigChangeEvent> events = new ArrayList<>();
         configClient.onChange(events::add);
@@ -425,7 +346,6 @@ class ConfigPrescriptiveTest {
 
         configClient.refresh();
 
-        // Should only get the retries change, not timeout
         assertEquals(1, retriesEvents.size());
         assertEquals("retries", retriesEvents.get(0).itemKey());
     }
@@ -540,7 +460,6 @@ class ConfigPrescriptiveTest {
         Map<String, Object> override = new HashMap<>();
         override.put("db", new HashMap<>(Map.of("host", "prod", "ssl", true)));
 
-        @SuppressWarnings("unchecked")
         Map<String, Object> result = Resolver.deepMerge(base, override);
         @SuppressWarnings("unchecked")
         Map<String, Object> db = (Map<String, Object>) result.get("db");
@@ -577,18 +496,5 @@ class ConfigPrescriptiveTest {
         assertNotNull(entry.environments);
         assertTrue(entry.values.isEmpty());
         assertTrue(entry.environments.isEmpty());
-    }
-
-    // -----------------------------------------------------------------------
-    // Test model classes for resolve with model type
-    // -----------------------------------------------------------------------
-
-    public static class SimpleConfig {
-        public String host;
-        public int port;
-    }
-
-    public static class NestedConfig {
-        public Map<String, Object> database;
     }
 }

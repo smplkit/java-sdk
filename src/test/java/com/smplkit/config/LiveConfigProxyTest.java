@@ -1,6 +1,5 @@
 package com.smplkit.config;
 
-import com.smplkit.SmplClient;
 import com.smplkit.internal.generated.config.api.ConfigsApi;
 import org.junit.jupiter.api.Test;
 
@@ -12,17 +11,15 @@ import java.util.concurrent.atomic.AtomicInteger;
 import static org.junit.jupiter.api.Assertions.*;
 
 /**
- * Mirrors Python rule 10: {@code client.config().get(id)} returns a live,
- * read-only, identity-stable proxy.
+ * {@code client.config().get(id)} returns a live, read-only,
+ * identity-stable proxy backed by the resolved-config cache.
  */
 class LiveConfigProxyTest {
 
     private ConfigClient newClient() {
-        // ConfigsApi is a generated class with a no-arg behavior we can mock simply
         ConfigsApi api = org.mockito.Mockito.mock(ConfigsApi.class);
         ConfigClient client = new ConfigClient(api, java.net.http.HttpClient.newHttpClient(), "test-key");
         client.setEnvironment("staging");
-        // Mark connected so we don't trigger lazy fetch
         try {
             Field f = ConfigClient.class.getDeclaredField("connected");
             f.setAccessible(true);
@@ -82,10 +79,7 @@ class LiveConfigProxyTest {
         LiveConfigProxy proxy = client.get("user-svc");
         assertEquals(3, proxy.get("max_retries"));
 
-        // Simulate a WebSocket event updating the cache.
         seedCache(client, "user-svc", Map.of("max_retries", 7));
-
-        // Same proxy instance — but the read returns the new value.
         assertEquals(7, proxy.get("max_retries"));
     }
 
@@ -105,22 +99,6 @@ class LiveConfigProxyTest {
     }
 
     @Test
-    void proxy_into_returnsTypedSnapshot() {
-        ConfigClient client = newClient();
-        seedCache(client, "user-svc", Map.of(
-                "database.host", "prod-db",
-                "database.port", 5432,
-                "max_retries", 5));
-
-        LiveConfigProxy proxy = client.get("user-svc");
-        UserServiceCfg cfg = proxy.into(UserServiceCfg.class);
-        assertNotNull(cfg);
-        assertEquals("prod-db", cfg.database.host);
-        assertEquals(5432, cfg.database.port);
-        assertEquals(5, cfg.max_retries);
-    }
-
-    @Test
     void proxy_onChange_delegatesToClient_globalForm() {
         ConfigClient client = newClient();
         seedCache(client, "user-svc", Map.of("k", "v"));
@@ -129,10 +107,6 @@ class LiveConfigProxyTest {
         AtomicInteger fired = new AtomicInteger(0);
         proxy.onChange(evt -> fired.incrementAndGet());
 
-        // Inject a synthetic listener firing — exercise the registered listener
-        ConfigChangeEvent evt = new ConfigChangeEvent(
-                "user-svc", "k", "v", "v2", "manual");
-        // Reach the listener list via reflection
         try {
             Field f = ConfigClient.class.getDeclaredField("listeners");
             f.setAccessible(true);
@@ -160,16 +134,5 @@ class LiveConfigProxyTest {
         assertEquals(2, entries.size());
         var values = proxy.values();
         assertEquals(2, values.size());
-    }
-
-    /** Minimal POJO used as a target for {@link LiveConfigProxy#into(Class)}. */
-    public static class UserServiceCfg {
-        public Database database;
-        public int max_retries;
-
-        public static class Database {
-            public String host;
-            public int port;
-        }
     }
 }

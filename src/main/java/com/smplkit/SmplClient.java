@@ -126,6 +126,9 @@ public final class SmplClient implements AutoCloseable {
                 new ConfigResolver.ResolvedManagementConfig(
                         apiKey, resolvedConfig.baseDomain, resolvedConfig.scheme, resolvedConfig.debug),
                 timeout, httpClient, contextBuffer);
+        // Share the runtime + management registration buffer so bind()
+        // declarations are visible to {@code client.manage().config.flush()}.
+        this.config.setManagement(this.manage.config);
 
         String maskedKey = apiKey.length() > 10 ? apiKey.substring(0, 10) + "..." : apiKey + "...";
         Debug.log("lifecycle", "SmplClient created (api_key=" + maskedKey + ", environment=" + environment + ", service=" + service + ")");
@@ -160,6 +163,7 @@ public final class SmplClient implements AutoCloseable {
         this.manage = SmplManagementClient.sharedWith(
                 new ConfigResolver.ResolvedManagementConfig(apiKey, DEFAULT_BASE_DOMAIN, DEFAULT_SCHEME, false),
                 timeout, httpClient, contextBuffer);
+        this.config.setManagement(this.manage.config);
     }
 
     /**
@@ -190,6 +194,7 @@ public final class SmplClient implements AutoCloseable {
         this.manage = SmplManagementClient.sharedWith(
                 new ConfigResolver.ResolvedManagementConfig(apiKey, DEFAULT_BASE_DOMAIN, DEFAULT_SCHEME, false),
                 timeout, httpClient, contextBuffer);
+        this.config.setManagement(this.manage.config);
     }
 
     /**
@@ -218,6 +223,7 @@ public final class SmplClient implements AutoCloseable {
         this.manage = SmplManagementClient.sharedWith(
                 new ConfigResolver.ResolvedManagementConfig(apiKey, DEFAULT_BASE_DOMAIN, DEFAULT_SCHEME, false),
                 timeout, httpClient, contextBuffer);
+        this.config.setManagement(this.manage.config);
 
         // Synchronous registration for testability (contextsApi is injected)
         registerServiceContext();

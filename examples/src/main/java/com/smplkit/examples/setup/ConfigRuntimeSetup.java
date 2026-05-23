@@ -9,40 +9,24 @@ import java.util.List;
 /**
  * Setup, simulation, and cleanup helpers for {@code ConfigRuntimeShowcase}.
  *
- * <p>The runtime showcase is intentionally runtime-only — declarations,
- * typed getters, change listeners. In a real deployment the configs
- * would either already exist (admin-curated) or be created by the SDK's
- * discovery on first run. Here we pre-create them through the management
- * API so the showcase can also demonstrate a live admin override end-to-end
- * in a single process.</p>
+ * <p>The runtime showcase declares its own configs via
+ * {@code client.config().bind()}, so this helper only handles cleanup and
+ * the live admin-override simulation that stands in for an operator
+ * editing values in the smplkit console.</p>
  */
 public final class ConfigRuntimeSetup {
 
     private static final List<String> DEMO_CONFIG_IDS = List.of(
-            "showcase-billing", "showcase-common");
+            "showcase-billing", "showcase-common", "showcase-database");
 
     private ConfigRuntimeSetup() {}
 
-    public static void setup(SmplManagementClient manage) {
-        cleanup(manage);
-
-        Config common = manage.config.new_(
-                "showcase-common", null,
-                "Shared defaults for showcase services.", (String) null);
-        common.setString("app.name", "Acme SaaS");
-        common.setString("support.email", "support@acme.dev");
-        common.save();
-
-        Config billing = manage.config.new_(
-                "showcase-billing", null,
-                "Plan-limit configuration for billing.", "showcase-common");
-        billing.setNumber("plan.max_seats", 5);
-        billing.setNumber("plan.trial_days", 14);
-        billing.setString("plan.tier", "free");
-        billing.save();
-    }
-
     public static void simulateAdminOverride(SmplManagementClient manage) {
+        // Real customers never read back through the management API
+        // immediately after binding via the runtime client — this is a
+        // simulation-only step. Push pending runtime-side registrations
+        // through so the lookup below can find the freshly-declared config.
+        manage.config.flush();
         Config billing = manage.config.get("showcase-billing");
         billing.setNumber("plan.max_seats", 25, "production");
         billing.save();

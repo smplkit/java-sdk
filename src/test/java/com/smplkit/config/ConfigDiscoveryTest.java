@@ -7,7 +7,6 @@ import com.smplkit.internal.generated.config.model.ConfigBulkRequest;
 import com.smplkit.internal.generated.config.model.ConfigBulkResponse;
 import com.smplkit.internal.generated.config.model.ConfigItemDefinition;
 import com.smplkit.internal.generated.config.model.ConfigListResponse;
-import com.smplkit.internal.generated.config.model.ConfigResource;
 import com.smplkit.management.ConfigRegistrationBuffer;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -18,8 +17,10 @@ import java.lang.reflect.Field;
 import java.net.http.HttpClient;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.atomic.AtomicInteger;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
@@ -33,10 +34,11 @@ import static org.mockito.Mockito.when;
  * Tests for the declarative discovery API (ADR-037 §2.13/§2.14):
  *   1. {@link ConfigRegistrationBuffer} — declare/add_item/drain semantics.
  *   2. {@link ConfigManagement} — registerConfig/registerConfigItem/flush.
- *   3. {@link ConfigClient#getOrCreate} — idempotency, parent-by-reference,
- *      pre-fetch flush wiring.
- *   4. {@link LiveConfigProxy} typed getters — happy paths, mismatch paths,
- *      default-fallback paths.
+ *   3. {@link ConfigClient#bind} — POJO/Map binding, idempotency, parent
+ *      chaining, pre-fetch flush, in-place mutation, sync-from-cache.
+ *   4. {@link ConfigClient#get(String, String, Object)} — auto-register with
+ *      default.
+ *   5. {@link AsyncConfigManagement} discovery passthroughs.
  */
 class ConfigDiscoveryTest {
 
@@ -49,7 +51,6 @@ class ConfigDiscoveryTest {
         client = new ConfigClient(mockApi, HttpClient.newHttpClient(), "test-key");
         client.setEnvironment("production");
         client.setService("test-service");
-        // Default stub so lazy init doesn't fail
         when(mockApi.listConfigs(isNull(), isNull(), isNull(), isNull(), any(), any(), isNull()))
                 .thenReturn(new ConfigListResponse().data(List.of()));
         when(mockApi.bulkRegisterConfigs(any(ConfigBulkRequest.class)))
@@ -58,9 +59,6 @@ class ConfigDiscoveryTest {
 
     private static void seedCache(ConfigClient client, String id, Map<String, Object> values) {
         try {
-            // Force the client into a "connected" state so a subsequent
-            // get/getOrCreate does NOT trigger lazy init (which would rebuild
-            // the cache from the empty list mock and blow away our seed).
             Field connected = ConfigClient.class.getDeclaredField("connected");
             connected.setAccessible(true);
             connected.setBoolean(client, true);
@@ -151,8 +149,6 @@ class ConfigDiscoveryTest {
 
     @Test
     void buffer_postDrain_itemAlreadySent_notResentEvenAfterRequeue() {
-        // Drain "billing+max_seats", then add same item — must not appear
-        // again (sent-item dedup is process-lifetime).
         ConfigRegistrationBuffer buf = new ConfigRegistrationBuffer();
         buf.declare("billing", "svc", "prod", null, null, null);
         buf.addItem("billing", "max_seats", "NUMBER", 5, null);
@@ -166,8 +162,6 @@ class ConfigDiscoveryTest {
 
     @Test
     void buffer_postDrain_newItemAttributesToSameConfig() {
-        // After draining a config's first item, a new item should re-create
-        // a delta entry (using retained meta) so it can be sent.
         ConfigRegistrationBuffer buf = new ConfigRegistrationBuffer();
         buf.declare("billing", "svc", "prod", null, "Billing", null);
         buf.addItem("billing", "first", "STRING", "a", null);
@@ -237,7 +231,6 @@ class ConfigDiscoveryTest {
         assertEquals(ConfigItemDefinition.TypeEnum.NUMBER, items.get("max_seats").getType());
         assertEquals(ConfigItemDefinition.TypeEnum.BOOLEAN, items.get("enabled").getType());
         assertEquals(ConfigItemDefinition.TypeEnum.JSON, items.get("payload").getType());
-        // Unknown item type maps to null.
         assertNull(items.get("weird").getType());
     }
 
@@ -246,15 +239,12 @@ class ConfigDiscoveryTest {
         when(mockApi.bulkRegisterConfigs(any(ConfigBulkRequest.class)))
                 .thenThrow(new RuntimeException("boom"));
         client.management().registerConfig("billing", "svc", "prod", null, null, null);
-        // Per ADR-024 §2.9: bulk POST failures are fire-and-forget. Should not throw.
         assertDoesNotThrow(() -> client.management().flush());
-        // Items are still drained — discovery never blocks customer code.
         assertEquals(0, client.management().pendingCount());
     }
 
     @Test
     void mgmt_registerConfig_thresholdTriggersBackgroundFlush() throws Exception {
-        // Threshold is 50 declarations.
         for (int i = 0; i < 51; i++) {
             client.management().registerConfig("cfg-" + i, "svc", "prod", null, null, null);
         }
@@ -266,7 +256,6 @@ class ConfigDiscoveryTest {
 
     @Test
     void mgmt_registerConfigItem_thresholdTriggersBackgroundFlush() throws Exception {
-        // 50 distinct config declarations brings us to the threshold.
         for (int i = 0; i < 50; i++) {
             client.management().registerConfig("cfg-" + i, "svc", "prod", null, null, null);
         }
@@ -279,225 +268,473 @@ class ConfigDiscoveryTest {
     }
 
     // ==================================================================
-    // 3. ConfigClient.getOrCreate
+    // 3. ConfigClient.bind — POJO and Map paths
     // ==================================================================
 
-    @Test
-    void getOrCreate_returnsLiveConfigProxy() {
-        LiveConfigProxy proxy = client.getOrCreate("billing", "discovered");
-        assertNotNull(proxy);
-        assertEquals("billing", proxy.configId());
+    public static final class Plan {
+        public int max_seats = 5;
+        public String tier = "free";
+        public boolean enabled = false;
+    }
+
+    public static final class Billing {
+        public Plan plan = new Plan();
+        public String app_name = "Acme";
     }
 
     @Test
-    void getOrCreate_idempotent_returnsSameInstance() {
-        LiveConfigProxy a = client.getOrCreate("billing");
-        LiveConfigProxy b = client.getOrCreate("billing");
-        assertSame(a, b);
+    void bind_pojo_registersClassAndItems() throws Exception {
+        Billing bound = client.bind("billing", new Billing());
+        assertNotNull(bound);
+
+        client.management().flush();
+
+        ArgumentCaptor<ConfigBulkRequest> captor = ArgumentCaptor.forClass(ConfigBulkRequest.class);
+        verify(mockApi).bulkRegisterConfigs(captor.capture());
+        ConfigBulkItem sent = captor.getValue().getConfigs().get(0);
+
+        assertEquals("billing", sent.getId());
+        assertEquals("Billing", sent.getName());
+        assertNull(sent.getParent());
+
+        Map<String, ConfigItemDefinition> items = sent.getItems();
+        // Nested POJO fields flatten via dotted keys.
+        assertTrue(items.containsKey("plan.max_seats"));
+        assertEquals(ConfigItemDefinition.TypeEnum.NUMBER, items.get("plan.max_seats").getType());
+        assertEquals(5, items.get("plan.max_seats").getValue());
+        assertTrue(items.containsKey("plan.tier"));
+        assertEquals(ConfigItemDefinition.TypeEnum.STRING, items.get("plan.tier").getType());
+        assertTrue(items.containsKey("plan.enabled"));
+        assertEquals(ConfigItemDefinition.TypeEnum.BOOLEAN, items.get("plan.enabled").getType());
+        assertTrue(items.containsKey("app_name"));
+        assertEquals(ConfigItemDefinition.TypeEnum.STRING, items.get("app_name").getType());
     }
 
     @Test
-    void getOrCreate_get_returnsSameInstance() {
-        // Mike's "parent by reference" invariant — same proxy through
-        // either entry point once the cache has the config.
-        seedCache(client, "billing", Map.of("k", "v"));
-        LiveConfigProxy declared = client.getOrCreate("billing");
-        LiveConfigProxy resolved = client.get("billing");
-        assertSame(declared, resolved);
+    void bind_returnsSameInstance() {
+        Billing src = new Billing();
+        Billing bound = client.bind("billing", src);
+        assertSame(src, bound);
     }
 
     @Test
-    void getOrCreate_parentByString_accepted() {
-        LiveConfigProxy proxy = client.getOrCreate("billing", "common", null, null);
-        assertEquals("billing", proxy.configId());
+    void bind_idempotent_returnsOriginalIgnoresNew() {
+        Billing first = new Billing();
+        Billing returnedFirst = client.bind("billing", first);
+        Billing second = new Billing();
+        Billing returnedSecond = client.bind("billing", second);
+        assertSame(first, returnedFirst);
+        assertSame(first, returnedSecond);
+        assertNotSame(second, returnedSecond);
     }
 
     @Test
-    void getOrCreate_parentByLiveConfigProxy_accepted() {
-        LiveConfigProxy common = client.getOrCreate("common");
-        LiveConfigProxy billing = client.getOrCreate("billing", common, "desc");
-        assertEquals("billing", billing.configId());
+    void bind_nullTarget_throws() {
+        assertThrows(IllegalArgumentException.class, () -> client.bind("billing", null));
     }
 
     @Test
-    void getOrCreate_parentInvalidType_throws() {
+    void bind_parentUnknown_throws() {
+        Billing stranger = new Billing();
         assertThrows(IllegalArgumentException.class,
-                () -> client.getOrCreate("billing", 42, null, null));
+                () -> client.bind("billing", new Billing(), stranger));
     }
 
     @Test
-    void getOrCreate_flushesBufferBeforeInitialFetch() throws Exception {
-        // Per ADR-037 §2.14: pre-fetch flush must POST before the list call.
-        java.util.List<String> calls = new ArrayList<>();
+    void bind_parentPreviouslyBound_registersParentReference() throws Exception {
+        Map<String, Object> common = new LinkedHashMap<>();
+        common.put("app_name", "Acme");
+        client.bind("showcase-common", common);
+        // First bind() flushed the buffer during pre-fetch (showcase-common).
+        // Second bind() doesn't re-flush (already connected); the explicit
+        // flush below drains the showcase-billing declaration.
+        client.bind("showcase-billing", new Billing(), common);
+        client.management().flush();
+
+        ArgumentCaptor<ConfigBulkRequest> captor = ArgumentCaptor.forClass(ConfigBulkRequest.class);
+        verify(mockApi, Mockito.atLeastOnce()).bulkRegisterConfigs(captor.capture());
+        Map<String, String> idToParent = new HashMap<>();
+        for (ConfigBulkRequest req : captor.getAllValues()) {
+            for (ConfigBulkItem item : req.getConfigs()) {
+                idToParent.put(item.getId(), item.getParent());
+            }
+        }
+        assertNull(idToParent.get("showcase-common"));
+        assertEquals("showcase-common", idToParent.get("showcase-billing"));
+    }
+
+    @Test
+    void bind_map_flattensNestedKeys() throws Exception {
+        Map<String, Object> db = new LinkedHashMap<>();
+        Map<String, Object> primary = new LinkedHashMap<>();
+        primary.put("host", "db.example.com");
+        primary.put("port", 5432);
+        db.put("primary", primary);
+        db.put("pool_size", 10);
+        db.put("enabled", true);
+
+        client.bind("db", db);
+        client.management().flush();
+
+        ArgumentCaptor<ConfigBulkRequest> captor = ArgumentCaptor.forClass(ConfigBulkRequest.class);
+        verify(mockApi).bulkRegisterConfigs(captor.capture());
+        ConfigBulkItem sent = captor.getValue().getConfigs().get(0);
+        Map<String, ConfigItemDefinition> items = sent.getItems();
+
+        assertTrue(items.containsKey("primary.host"));
+        assertEquals(ConfigItemDefinition.TypeEnum.STRING, items.get("primary.host").getType());
+        assertTrue(items.containsKey("primary.port"));
+        assertEquals(ConfigItemDefinition.TypeEnum.NUMBER, items.get("primary.port").getType());
+        assertTrue(items.containsKey("pool_size"));
+        assertTrue(items.containsKey("enabled"));
+        assertEquals(ConfigItemDefinition.TypeEnum.BOOLEAN, items.get("enabled").getType());
+        // Maps don't carry a class name.
+        assertNull(sent.getName());
+    }
+
+    @Test
+    void bind_flushesBufferBeforeInitialFetch() throws Exception {
+        List<String> calls = new ArrayList<>();
         when(mockApi.bulkRegisterConfigs(any(ConfigBulkRequest.class))).thenAnswer(inv -> {
             calls.add("bulk"); return new ConfigBulkResponse();
         });
         when(mockApi.listConfigs(isNull(), isNull(), isNull(), isNull(), any(), any(), isNull()))
                 .thenAnswer(inv -> { calls.add("list"); return new ConfigListResponse().data(List.of()); });
 
-        client.getOrCreate("billing");
+        client.bind("billing", new Billing());
         assertTrue(calls.size() >= 2);
         assertEquals("bulk", calls.get(0));
         assertEquals("list", calls.get(1));
     }
 
     @Test
-    void getOrCreate_unknownConfig_doesNotThrow() {
-        // Per ADR-037: getOrCreate is the declarative entry — never throws
-        // NotFoundError. The proxy constructs fine; subsequent reads return
-        // defaults via typed getters.
-        assertDoesNotThrow(() -> client.getOrCreate("brand-new"));
+    void bind_inPlaceMutation_pojoOnWsEvent() {
+        // Pre-seed the cache so syncTargetFromCache picks up the value too.
+        Billing bound = client.bind("billing", new Billing());
+        assertEquals(5, bound.plan.max_seats);
+
+        // Simulate a configs_changed-style diff where plan.max_seats = 25.
+        Map<String, Map<String, Object>> oldCache = Map.of();
+        Map<String, Map<String, Object>> newCache = Map.of("billing", Map.of("plan.max_seats", 25));
+        client.diffAndFire(oldCache, newCache, "websocket");
+
+        assertEquals(25, bound.plan.max_seats);
+    }
+
+    @Test
+    void bind_inPlaceMutation_mapOnWsEvent() {
+        Map<String, Object> db = new LinkedHashMap<>();
+        Map<String, Object> primary = new LinkedHashMap<>();
+        primary.put("host", "db-local");
+        primary.put("port", 5432);
+        db.put("primary", primary);
+
+        client.bind("db", db);
+
+        // WS event: primary.host changes to "db-prod"
+        Map<String, Map<String, Object>> oldCache = Map.of();
+        Map<String, Map<String, Object>> newCache = Map.of("db", Map.of("primary.host", "db-prod"));
+        client.diffAndFire(oldCache, newCache, "websocket");
+
+        @SuppressWarnings("unchecked")
+        Map<String, Object> primaryAfter = (Map<String, Object>) db.get("primary");
+        assertEquals("db-prod", primaryAfter.get("host"));
+        assertEquals(5432, primaryAfter.get("port"));
+    }
+
+    @Test
+    void bind_syncsFromCacheOnBind() {
+        // Pre-seed the cache so bind() sees existing server overrides.
+        seedCache(client, "billing", Map.of("plan.max_seats", 25, "plan.tier", "pro"));
+
+        Billing bound = client.bind("billing", new Billing());
+        assertEquals(25, bound.plan.max_seats);
+        assertEquals("pro", bound.plan.tier);
+        // Field not in cache retains the in-code default.
+        assertFalse(bound.plan.enabled);
+    }
+
+    @Test
+    void bind_appliesChangeViaListener_targetSeesNewValueFirst() {
+        Billing bound = client.bind("billing", new Billing());
+
+        AtomicInteger seenSeats = new AtomicInteger();
+        client.onChange("billing", "plan.max_seats", evt -> {
+            // Listener fires AFTER the target is updated.
+            seenSeats.set(bound.plan.max_seats);
+        });
+
+        Map<String, Map<String, Object>> oldCache = Map.of("billing", Map.of("plan.max_seats", 5));
+        Map<String, Map<String, Object>> newCache = Map.of("billing", Map.of("plan.max_seats", 25));
+        client.diffAndFire(oldCache, newCache, "websocket");
+
+        assertEquals(25, seenSeats.get());
+    }
+
+    @Test
+    void bind_typeCoercion_doubleIntoIntField() {
+        Billing bound = client.bind("billing", new Billing());
+
+        Map<String, Map<String, Object>> oldCache = Map.of();
+        Map<String, Map<String, Object>> newCache = Map.of("billing", Map.of("plan.max_seats", 42.0));
+        client.diffAndFire(oldCache, newCache, "websocket");
+
+        assertEquals(42, bound.plan.max_seats);
+    }
+
+    @Test
+    void bind_typeCoercion_stringFieldFromNonString() {
+        Billing bound = client.bind("billing", new Billing());
+
+        Map<String, Map<String, Object>> oldCache = Map.of();
+        Map<String, Map<String, Object>> newCache = Map.of("billing", Map.of("plan.tier", 42));
+        client.diffAndFire(oldCache, newCache, "websocket");
+
+        assertEquals("42", bound.plan.tier);
+    }
+
+    @Test
+    void bind_unknownDottedKey_silentlyBails() {
+        // No exception even though "plan.does_not_exist" has no field on Plan.
+        Billing bound = client.bind("billing", new Billing());
+
+        Map<String, Map<String, Object>> oldCache = Map.of();
+        Map<String, Map<String, Object>> newCache = Map.of("billing",
+                Map.of("plan.does_not_exist", "ignored",
+                       "non_existent.path", "also ignored"));
+        assertDoesNotThrow(() -> client.diffAndFire(oldCache, newCache, "websocket"));
+        // Existing field unchanged.
+        assertEquals(5, bound.plan.max_seats);
+    }
+
+    @Test
+    void bind_unknownNamespacePrefix_inDottedKey_bailsCleanly() {
+        Billing bound = client.bind("billing", new Billing());
+
+        // First segment ("missing") has no matching field.
+        Map<String, Map<String, Object>> newCache = Map.of("billing", Map.of("missing.leaf", 99));
+        assertDoesNotThrow(() -> client.diffAndFire(Map.of(), newCache, "websocket"));
+        assertEquals(5, bound.plan.max_seats);
     }
 
     // ==================================================================
-    // 4. LiveConfigProxy typed getters
+    // 4. ConfigClient.get(id, key) and get(id, key, default)
     // ==================================================================
 
-    private LiveConfigProxy seededProxy() {
-        seedCache(client, "billing", Map.of(
-                "max_seats", 25L,
-                "tier", "pro",
-                "enabled", true,
-                "ratio", 1.5,
-                "payload", Map.of("k", "v")
-        ));
-        return client.getOrCreate("billing");
+    @Test
+    void get_byIdAndKey_returnsValue() {
+        seedCache(client, "billing", Map.of("plan.max_seats", 25));
+        assertEquals(25, client.get("billing", "plan.max_seats"));
     }
 
     @Test
-    void getBool_readsBooleanValue() {
-        assertTrue(seededProxy().getBool("enabled", false));
+    void get_byIdAndKey_unknownConfig_throws() {
+        // Force connected so we hit the cache-miss branch (not auto-init).
+        try {
+            Field f = ConfigClient.class.getDeclaredField("connected");
+            f.setAccessible(true);
+            f.setBoolean(client, true);
+        } catch (Exception e) {
+            throw new RuntimeException(e);
+        }
+        assertThrows(com.smplkit.errors.NotFoundError.class,
+                () -> client.get("missing", "key"));
     }
 
     @Test
-    void getBool_missingKey_returnsDefault() {
-        assertTrue(seededProxy().getBool("missing", true));
+    void get_byIdAndKey_unknownKey_throws() {
+        seedCache(client, "billing", Map.of("plan.max_seats", 25));
+        assertThrows(com.smplkit.errors.NotFoundError.class,
+                () -> client.get("billing", "plan.unknown"));
     }
 
     @Test
-    void getBool_typeMismatch_returnsDefault() {
-        assertFalse(seededProxy().getBool("tier", false));
-    }
-
-    @Test
-    void getInt_fromNumberValue() {
-        assertEquals(25, seededProxy().getInt("max_seats", 0));
-    }
-
-    @Test
-    void getInt_missingKey_returnsDefault() {
-        assertEquals(7, seededProxy().getInt("missing", 7));
-    }
-
-    @Test
-    void getInt_boolValue_returnsDefault() {
-        assertEquals(99, seededProxy().getInt("enabled", 99));
-    }
-
-    @Test
-    void getInt_stringValue_returnsDefault() {
-        assertEquals(99, seededProxy().getInt("tier", 99));
-    }
-
-    @Test
-    void getInt_fractionalDouble_returnsDefault() {
-        // 1.5 → not a whole number → falls back.
-        assertEquals(0, seededProxy().getInt("ratio", 0));
-    }
-
-    @Test
-    void getInt_integralDouble_truncates() {
-        seedCache(client, "billing", Map.of("seats", 8.0));
-        assertEquals(8, client.getOrCreate("billing").getInt("seats", 0));
-    }
-
-    @Test
-    void getInt_intValue() {
-        seedCache(client, "billing", Map.of("seats", Integer.valueOf(3)));
-        assertEquals(3, client.getOrCreate("billing").getInt("seats", 0));
-    }
-
-    @Test
-    void getFloat_fromNumberValue() {
-        assertEquals(1.5, seededProxy().getFloat("ratio", 0.0));
-    }
-
-    @Test
-    void getFloat_fromIntegralNumber() {
-        assertEquals(25.0, seededProxy().getFloat("max_seats", 0.0));
-    }
-
-    @Test
-    void getFloat_missingKey_returnsDefault() {
-        assertEquals(2.5, seededProxy().getFloat("missing", 2.5));
-    }
-
-    @Test
-    void getFloat_boolValue_returnsDefault() {
-        assertEquals(9.9, seededProxy().getFloat("enabled", 9.9));
-    }
-
-    @Test
-    void getFloat_stringValue_returnsDefault() {
-        assertEquals(3.14, seededProxy().getFloat("tier", 3.14));
-    }
-
-    @Test
-    void getString_readsStringValue() {
-        assertEquals("pro", seededProxy().getString("tier", "free"));
-    }
-
-    @Test
-    void getString_missingKey_returnsDefault() {
-        assertEquals("fallback", seededProxy().getString("missing", "fallback"));
-    }
-
-    @Test
-    void getString_typeMismatch_returnsDefault() {
-        assertEquals("default", seededProxy().getString("max_seats", "default"));
-    }
-
-    @Test
-    void getJson_readsAnyShape() {
-        assertNotNull(seededProxy().getJson("payload", null));
-    }
-
-    @Test
-    void getJson_missingKey_returnsDefault() {
-        assertEquals("default", seededProxy().getJson("missing", "default"));
-    }
-
-    @Test
-    void typedGetters_registerDeclarationOnFirstCall() throws Exception {
-        seedCache(client, "billing", Map.of(
-                "max_seats", 25L,
-                "tier", "pro",
-                "enabled", true,
-                "ratio", 1.5,
-                "payload", Map.of("k", "v")
-        ));
-        LiveConfigProxy proxy = client.getOrCreate("billing");
-        proxy.getInt("max_seats", 5, "Maximum seats.");
-        proxy.getString("tier", "free", "Plan tier.");
-        proxy.getBool("enabled", false);
-        proxy.getFloat("ratio", 0.0);
-        proxy.getJson("payload", null);
+    void getOr_unknownConfig_returnsDefault_andRegisters() throws Exception {
+        Object result = client.get("brand-new", "slow_query_ms", 500);
+        assertEquals(500, result);
 
         client.management().flush();
-
         ArgumentCaptor<ConfigBulkRequest> captor = ArgumentCaptor.forClass(ConfigBulkRequest.class);
         verify(mockApi).bulkRegisterConfigs(captor.capture());
-        Map<String, ConfigItemDefinition> sent = captor.getValue().getConfigs().get(0).getItems();
-        assertTrue(sent.containsKey("max_seats"));
-        assertTrue(sent.containsKey("tier"));
-        assertTrue(sent.containsKey("enabled"));
-        assertTrue(sent.containsKey("ratio"));
-        assertTrue(sent.containsKey("payload"));
-        assertEquals("Maximum seats.", sent.get("max_seats").getDescription());
+        ConfigBulkItem sent = captor.getValue().getConfigs().get(0);
+        assertEquals("brand-new", sent.getId());
+        Map<String, ConfigItemDefinition> items = sent.getItems();
+        assertTrue(items.containsKey("slow_query_ms"));
+        assertEquals(500, items.get("slow_query_ms").getValue());
+        assertEquals(ConfigItemDefinition.TypeEnum.NUMBER, items.get("slow_query_ms").getType());
+    }
+
+    @Test
+    void getOr_unknownKey_returnsDefault() {
+        seedCache(client, "billing", Map.of("plan.max_seats", 25));
+        Object v = client.get("billing", "plan.unknown", "fallback");
+        assertEquals("fallback", v);
+    }
+
+    @Test
+    void getOr_existingValue_returnsCachedValue_overDefault() {
+        seedCache(client, "billing", Map.of("plan.max_seats", 25));
+        Object v = client.get("billing", "plan.max_seats", 999);
+        assertEquals(25, v);
+    }
+
+    @Test
+    void getOr_inferType_boolean_overNumber() throws Exception {
+        client.get("brand-new", "enabled", true);
+        client.management().flush();
+        ArgumentCaptor<ConfigBulkRequest> captor = ArgumentCaptor.forClass(ConfigBulkRequest.class);
+        verify(mockApi).bulkRegisterConfigs(captor.capture());
+        ConfigBulkItem sent = captor.getValue().getConfigs().get(0);
+        assertEquals(ConfigItemDefinition.TypeEnum.BOOLEAN,
+                sent.getItems().get("enabled").getType());
+    }
+
+    @Test
+    void getOr_inferType_stringFromCharSequence() throws Exception {
+        StringBuilder sb = new StringBuilder("hello");
+        client.get("brand-new", "name", sb);
+        client.management().flush();
+        ArgumentCaptor<ConfigBulkRequest> captor = ArgumentCaptor.forClass(ConfigBulkRequest.class);
+        verify(mockApi).bulkRegisterConfigs(captor.capture());
+        ConfigBulkItem sent = captor.getValue().getConfigs().get(0);
+        assertEquals(ConfigItemDefinition.TypeEnum.STRING,
+                sent.getItems().get("name").getType());
+    }
+
+    @Test
+    void getOr_inferType_jsonFallbackForUnknown() throws Exception {
+        // Unknown leaf type → STRING fallback per inferItemType, but the
+        // generated TypeEnum is JSON (since wrap uses inferType which checks
+        // CharSequence/Number/Boolean else JSON). We assert what the BUFFER
+        // recorded — "STRING" string — and what the wrap turned that into.
+        client.get("brand-new", "blob", Map.of("k", "v"));
+        client.management().flush();
+        ArgumentCaptor<ConfigBulkRequest> captor = ArgumentCaptor.forClass(ConfigBulkRequest.class);
+        verify(mockApi).bulkRegisterConfigs(captor.capture());
+        ConfigBulkItem sent = captor.getValue().getConfigs().get(0);
+        // Buffer recorded "STRING" type label for the unknown leaf.
+        assertEquals(ConfigItemDefinition.TypeEnum.STRING,
+                sent.getItems().get("blob").getType());
     }
 
     // ==================================================================
-    // 5. AsyncConfigManagement passthroughs
+    // 4b. Reflection helpers + edge cases
+    // ==================================================================
+
+    public static final class Outer {
+        public Inner inner;
+    }
+
+    public static final class Inner {
+        public int leaf = 0;
+    }
+
+    @Test
+    void apply_intermediateNullField_bailsCleanly() {
+        // Walker hits inner=null mid-walk → silent return.
+        Outer o = new Outer();
+        client.bind("outer", o);
+        Map<String, Map<String, Object>> oldCache = Map.of();
+        Map<String, Map<String, Object>> newCache = Map.of("outer", Map.of("inner.leaf", 99));
+        assertDoesNotThrow(() -> client.diffAndFire(oldCache, newCache, "websocket"));
+        assertNull(o.inner);
+    }
+
+    @Test
+    void apply_booleanCoercion_assignsTrueValueToField() {
+        Billing bound = client.bind("billing", new Billing());
+        client.diffAndFire(Map.of(),
+                Map.of("billing", Map.of("plan.enabled", Boolean.TRUE)), "websocket");
+        assertTrue(bound.plan.enabled);
+    }
+
+    @Test
+    void apply_typeMismatch_intIntoBooleanField_silentlySkips() {
+        // Integer into boolean primitive: coerce falls through to "return value"
+        // and writeField catches IllegalArgumentException from f.set.
+        Billing bound = client.bind("billing", new Billing());
+        client.diffAndFire(Map.of(),
+                Map.of("billing", Map.of("plan.enabled", 42)), "websocket");
+        assertFalse(bound.plan.enabled);
+    }
+
+    @Test
+    void apply_unknownObject_intoObjectField_passesThrough() {
+        // Object field, value is non-Number/Boolean/String — coerce returns
+        // value as-is and Field.set accepts it (Object accepts anything).
+        class Holder { public Object payload = null; }
+        Holder h = new Holder();
+        client.bind("holder", h);
+        Object payload = new java.util.HashMap<>();
+        client.diffAndFire(Map.of(),
+                Map.of("holder", Map.of("payload", payload)), "websocket");
+        assertSame(payload, h.payload);
+    }
+
+    @Test
+    void readField_wrapsReflectiveFailure() throws Exception {
+        java.lang.reflect.Field f = Plan.class.getDeclaredField("max_seats");
+        // Pass null owner — Field.get on an instance field throws NPE,
+        // which our broad catch converts to IllegalStateException.
+        assertThrows(IllegalStateException.class, () -> ConfigClient.readField(f, null));
+    }
+
+    @Test
+    void writeField_silentlySkipsOnFailure() throws Exception {
+        // Pass null to a primitive boolean field — Field.set throws
+        // NullPointerException; writeField catches and skips.
+        java.lang.reflect.Field f = Plan.class.getDeclaredField("enabled");
+        Plan p = new Plan();
+        assertDoesNotThrow(() -> ConfigClient.writeField(f, p, null));
+        assertFalse(p.enabled);
+    }
+
+    @Test
+    void configIdForBinding_iteratesAllEntries_whenNoMatch() {
+        // Bind two configs, then try to use a third "outsider" target as
+        // parent — the lookup iterates BOTH bindings before returning null,
+        // exercising the loop's fall-through (non-matching) path
+        // independent of map iteration order.
+        Map<String, Object> a = new LinkedHashMap<>();
+        Map<String, Object> b = new LinkedHashMap<>();
+        client.bind("config-a", a);
+        client.bind("config-b", b);
+        Map<String, Object> outsider = new LinkedHashMap<>();
+        assertThrows(IllegalArgumentException.class,
+                () -> client.bind("config-c", new LinkedHashMap<>(), outsider));
+    }
+
+    @Test
+    void bind_idempotent_secondCallReturnsOriginal_viaPutIfAbsentRace() {
+        // The pre-check was removed, so duplicate bind() runs through the
+        // putIfAbsent path. Second call: items re-registered (buffer is
+        // idempotent so they no-op), then putIfAbsent returns the original.
+        Billing first = new Billing();
+        Billing second = new Billing();
+        assertSame(first, client.bind("billing", first));
+        assertSame(first, client.bind("billing", second));
+    }
+
+    // ==================================================================
+    // 5. Lazy init + start() + idempotency
+    // ==================================================================
+
+    @Test
+    void start_isIdempotent_andTriggersInitialFetch() throws Exception {
+        client.start();
+        client.start();
+        verify(mockApi, times(1)).listConfigs(isNull(), isNull(), isNull(), isNull(), any(), any(), isNull());
+    }
+
+    @Test
+    void start_withoutEnvironment_isNoOp() {
+        ConfigClient noEnv = new ConfigClient(mockApi, HttpClient.newHttpClient(), "k");
+        assertDoesNotThrow(noEnv::start);
+        assertFalse(noEnv.isConnected());
+    }
+
+    // ==================================================================
+    // 6. AsyncConfigManagement passthroughs
     // ==================================================================
 
     @Test

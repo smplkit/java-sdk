@@ -234,7 +234,7 @@ class TelemetryIntegrationTest {
         config.setEnvironment("production");
         config.setMetrics(reporter);
 
-        config.get("my-config", Map.class);
+        config.get("my-config");
 
         reporter.flush();
 
