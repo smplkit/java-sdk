@@ -18,6 +18,7 @@ import com.smplkit.internal.generated.audit.ApiResponse;
 import com.smplkit.internal.generated.audit.Configuration;
 import com.smplkit.internal.generated.audit.Pair;
 
+import com.smplkit.internal.generated.audit.model.ForwarderCreateRequest;
 import com.smplkit.internal.generated.audit.model.ForwarderDeliveryListResponse;
 import com.smplkit.internal.generated.audit.model.ForwarderDeliveryResponse;
 import com.smplkit.internal.generated.audit.model.ForwarderListResponse;
@@ -172,49 +173,49 @@ public class ForwardersApi {
 
   /**
    * Create Forwarder
-   * Create a forwarder for this account.
-   * @param forwarderRequest  (required)
+   * Create a forwarder for this account.  The caller supplies the forwarder&#39;s key as &#x60;data.id&#x60;. Keys are unique within an account and immutable for the lifetime of the forwarder.
+   * @param forwarderCreateRequest  (required)
    * @return ForwarderResponse
    * @throws ApiException if fails to make API call
    */
-  public ForwarderResponse createForwarder(@jakarta.annotation.Nonnull ForwarderRequest forwarderRequest) throws ApiException {
-    return createForwarder(forwarderRequest, null);
+  public ForwarderResponse createForwarder(@jakarta.annotation.Nonnull ForwarderCreateRequest forwarderCreateRequest) throws ApiException {
+    return createForwarder(forwarderCreateRequest, null);
   }
 
   /**
    * Create Forwarder
-   * Create a forwarder for this account.
-   * @param forwarderRequest  (required)
+   * Create a forwarder for this account.  The caller supplies the forwarder&#39;s key as &#x60;data.id&#x60;. Keys are unique within an account and immutable for the lifetime of the forwarder.
+   * @param forwarderCreateRequest  (required)
    * @param headers Optional headers to include in the request
    * @return ForwarderResponse
    * @throws ApiException if fails to make API call
    */
-  public ForwarderResponse createForwarder(@jakarta.annotation.Nonnull ForwarderRequest forwarderRequest, Map<String, String> headers) throws ApiException {
-    ApiResponse<ForwarderResponse> localVarResponse = createForwarderWithHttpInfo(forwarderRequest, headers);
+  public ForwarderResponse createForwarder(@jakarta.annotation.Nonnull ForwarderCreateRequest forwarderCreateRequest, Map<String, String> headers) throws ApiException {
+    ApiResponse<ForwarderResponse> localVarResponse = createForwarderWithHttpInfo(forwarderCreateRequest, headers);
     return localVarResponse.getData();
   }
 
   /**
    * Create Forwarder
-   * Create a forwarder for this account.
-   * @param forwarderRequest  (required)
+   * Create a forwarder for this account.  The caller supplies the forwarder&#39;s key as &#x60;data.id&#x60;. Keys are unique within an account and immutable for the lifetime of the forwarder.
+   * @param forwarderCreateRequest  (required)
    * @return ApiResponse&lt;ForwarderResponse&gt;
    * @throws ApiException if fails to make API call
    */
-  public ApiResponse<ForwarderResponse> createForwarderWithHttpInfo(@jakarta.annotation.Nonnull ForwarderRequest forwarderRequest) throws ApiException {
-    return createForwarderWithHttpInfo(forwarderRequest, null);
+  public ApiResponse<ForwarderResponse> createForwarderWithHttpInfo(@jakarta.annotation.Nonnull ForwarderCreateRequest forwarderCreateRequest) throws ApiException {
+    return createForwarderWithHttpInfo(forwarderCreateRequest, null);
   }
 
   /**
    * Create Forwarder
-   * Create a forwarder for this account.
-   * @param forwarderRequest  (required)
+   * Create a forwarder for this account.  The caller supplies the forwarder&#39;s key as &#x60;data.id&#x60;. Keys are unique within an account and immutable for the lifetime of the forwarder.
+   * @param forwarderCreateRequest  (required)
    * @param headers Optional headers to include in the request
    * @return ApiResponse&lt;ForwarderResponse&gt;
    * @throws ApiException if fails to make API call
    */
-  public ApiResponse<ForwarderResponse> createForwarderWithHttpInfo(@jakarta.annotation.Nonnull ForwarderRequest forwarderRequest, Map<String, String> headers) throws ApiException {
-    HttpRequest.Builder localVarRequestBuilder = createForwarderRequestBuilder(forwarderRequest, headers);
+  public ApiResponse<ForwarderResponse> createForwarderWithHttpInfo(@jakarta.annotation.Nonnull ForwarderCreateRequest forwarderCreateRequest, Map<String, String> headers) throws ApiException {
+    HttpRequest.Builder localVarRequestBuilder = createForwarderRequestBuilder(forwarderCreateRequest, headers);
     try {
       HttpResponse<InputStream> localVarResponse = memberVarHttpClient.send(
           localVarRequestBuilder.build(),
@@ -261,10 +262,10 @@ public class ForwardersApi {
     }
   }
 
-  private HttpRequest.Builder createForwarderRequestBuilder(@jakarta.annotation.Nonnull ForwarderRequest forwarderRequest, Map<String, String> headers) throws ApiException {
-    // verify the required parameter 'forwarderRequest' is set
-    if (forwarderRequest == null) {
-      throw new ApiException(400, "Missing the required parameter 'forwarderRequest' when calling createForwarder");
+  private HttpRequest.Builder createForwarderRequestBuilder(@jakarta.annotation.Nonnull ForwarderCreateRequest forwarderCreateRequest, Map<String, String> headers) throws ApiException {
+    // verify the required parameter 'forwarderCreateRequest' is set
+    if (forwarderCreateRequest == null) {
+      throw new ApiException(400, "Missing the required parameter 'forwarderCreateRequest' when calling createForwarder");
     }
 
     HttpRequest.Builder localVarRequestBuilder = HttpRequest.newBuilder();
@@ -277,7 +278,7 @@ public class ForwardersApi {
     localVarRequestBuilder.header("Accept", "application/vnd.api+json");
 
     try {
-      byte[] localVarPostBody = memberVarObjectMapper.writeValueAsBytes(forwarderRequest);
+      byte[] localVarPostBody = memberVarObjectMapper.writeValueAsBytes(forwarderCreateRequest);
       localVarRequestBuilder.method("POST", HttpRequest.BodyPublishers.ofByteArray(localVarPostBody));
     } catch (IOException e) {
       throw new ApiException(e);
@@ -295,45 +296,45 @@ public class ForwardersApi {
 
   /**
    * Delete Forwarder
-   * Delete a forwarder.  Past delivery log entries are retained. A new forwarder may be created later under the same name.
+   * Delete a forwarder.  Past delivery log entries are retained. A new forwarder may be created later under the same id.
    * @param forwarderId  (required)
    * @throws ApiException if fails to make API call
    */
-  public void deleteForwarder(@jakarta.annotation.Nonnull UUID forwarderId) throws ApiException {
+  public void deleteForwarder(@jakarta.annotation.Nonnull String forwarderId) throws ApiException {
     deleteForwarder(forwarderId, null);
   }
 
   /**
    * Delete Forwarder
-   * Delete a forwarder.  Past delivery log entries are retained. A new forwarder may be created later under the same name.
+   * Delete a forwarder.  Past delivery log entries are retained. A new forwarder may be created later under the same id.
    * @param forwarderId  (required)
    * @param headers Optional headers to include in the request
    * @throws ApiException if fails to make API call
    */
-  public void deleteForwarder(@jakarta.annotation.Nonnull UUID forwarderId, Map<String, String> headers) throws ApiException {
+  public void deleteForwarder(@jakarta.annotation.Nonnull String forwarderId, Map<String, String> headers) throws ApiException {
     deleteForwarderWithHttpInfo(forwarderId, headers);
   }
 
   /**
    * Delete Forwarder
-   * Delete a forwarder.  Past delivery log entries are retained. A new forwarder may be created later under the same name.
+   * Delete a forwarder.  Past delivery log entries are retained. A new forwarder may be created later under the same id.
    * @param forwarderId  (required)
    * @return ApiResponse&lt;Void&gt;
    * @throws ApiException if fails to make API call
    */
-  public ApiResponse<Void> deleteForwarderWithHttpInfo(@jakarta.annotation.Nonnull UUID forwarderId) throws ApiException {
+  public ApiResponse<Void> deleteForwarderWithHttpInfo(@jakarta.annotation.Nonnull String forwarderId) throws ApiException {
     return deleteForwarderWithHttpInfo(forwarderId, null);
   }
 
   /**
    * Delete Forwarder
-   * Delete a forwarder.  Past delivery log entries are retained. A new forwarder may be created later under the same name.
+   * Delete a forwarder.  Past delivery log entries are retained. A new forwarder may be created later under the same id.
    * @param forwarderId  (required)
    * @param headers Optional headers to include in the request
    * @return ApiResponse&lt;Void&gt;
    * @throws ApiException if fails to make API call
    */
-  public ApiResponse<Void> deleteForwarderWithHttpInfo(@jakarta.annotation.Nonnull UUID forwarderId, Map<String, String> headers) throws ApiException {
+  public ApiResponse<Void> deleteForwarderWithHttpInfo(@jakarta.annotation.Nonnull String forwarderId, Map<String, String> headers) throws ApiException {
     HttpRequest.Builder localVarRequestBuilder = deleteForwarderRequestBuilder(forwarderId, headers);
     try {
       HttpResponse<InputStream> localVarResponse = memberVarHttpClient.send(
@@ -370,7 +371,7 @@ public class ForwardersApi {
     }
   }
 
-  private HttpRequest.Builder deleteForwarderRequestBuilder(@jakarta.annotation.Nonnull UUID forwarderId, Map<String, String> headers) throws ApiException {
+  private HttpRequest.Builder deleteForwarderRequestBuilder(@jakarta.annotation.Nonnull String forwarderId, Map<String, String> headers) throws ApiException {
     // verify the required parameter 'forwarderId' is set
     if (forwarderId == null) {
       throw new ApiException(400, "Missing the required parameter 'forwarderId' when calling deleteForwarder");
@@ -527,7 +528,7 @@ public class ForwardersApi {
    * @return ForwarderResponse
    * @throws ApiException if fails to make API call
    */
-  public ForwarderResponse getForwarder(@jakarta.annotation.Nonnull UUID forwarderId) throws ApiException {
+  public ForwarderResponse getForwarder(@jakarta.annotation.Nonnull String forwarderId) throws ApiException {
     return getForwarder(forwarderId, null);
   }
 
@@ -539,7 +540,7 @@ public class ForwardersApi {
    * @return ForwarderResponse
    * @throws ApiException if fails to make API call
    */
-  public ForwarderResponse getForwarder(@jakarta.annotation.Nonnull UUID forwarderId, Map<String, String> headers) throws ApiException {
+  public ForwarderResponse getForwarder(@jakarta.annotation.Nonnull String forwarderId, Map<String, String> headers) throws ApiException {
     ApiResponse<ForwarderResponse> localVarResponse = getForwarderWithHttpInfo(forwarderId, headers);
     return localVarResponse.getData();
   }
@@ -551,7 +552,7 @@ public class ForwardersApi {
    * @return ApiResponse&lt;ForwarderResponse&gt;
    * @throws ApiException if fails to make API call
    */
-  public ApiResponse<ForwarderResponse> getForwarderWithHttpInfo(@jakarta.annotation.Nonnull UUID forwarderId) throws ApiException {
+  public ApiResponse<ForwarderResponse> getForwarderWithHttpInfo(@jakarta.annotation.Nonnull String forwarderId) throws ApiException {
     return getForwarderWithHttpInfo(forwarderId, null);
   }
 
@@ -563,7 +564,7 @@ public class ForwardersApi {
    * @return ApiResponse&lt;ForwarderResponse&gt;
    * @throws ApiException if fails to make API call
    */
-  public ApiResponse<ForwarderResponse> getForwarderWithHttpInfo(@jakarta.annotation.Nonnull UUID forwarderId, Map<String, String> headers) throws ApiException {
+  public ApiResponse<ForwarderResponse> getForwarderWithHttpInfo(@jakarta.annotation.Nonnull String forwarderId, Map<String, String> headers) throws ApiException {
     HttpRequest.Builder localVarRequestBuilder = getForwarderRequestBuilder(forwarderId, headers);
     try {
       HttpResponse<InputStream> localVarResponse = memberVarHttpClient.send(
@@ -611,7 +612,7 @@ public class ForwardersApi {
     }
   }
 
-  private HttpRequest.Builder getForwarderRequestBuilder(@jakarta.annotation.Nonnull UUID forwarderId, Map<String, String> headers) throws ApiException {
+  private HttpRequest.Builder getForwarderRequestBuilder(@jakarta.annotation.Nonnull String forwarderId, Map<String, String> headers) throws ApiException {
     // verify the required parameter 'forwarderId' is set
     if (forwarderId == null) {
       throw new ApiException(400, "Missing the required parameter 'forwarderId' when calling getForwarder");
@@ -651,7 +652,7 @@ public class ForwardersApi {
    * @return ForwarderDeliveryListResponse
    * @throws ApiException if fails to make API call
    */
-  public ForwarderDeliveryListResponse listForwarderDeliveries(@jakarta.annotation.Nonnull UUID forwarderId, @jakarta.annotation.Nullable String filterStatus, @jakarta.annotation.Nullable String filterCreatedAt, @jakarta.annotation.Nullable String filterEventId, @jakarta.annotation.Nullable Integer pageSize, @jakarta.annotation.Nullable String pageAfter, @jakarta.annotation.Nullable String sort) throws ApiException {
+  public ForwarderDeliveryListResponse listForwarderDeliveries(@jakarta.annotation.Nonnull String forwarderId, @jakarta.annotation.Nullable String filterStatus, @jakarta.annotation.Nullable String filterCreatedAt, @jakarta.annotation.Nullable String filterEventId, @jakarta.annotation.Nullable Integer pageSize, @jakarta.annotation.Nullable String pageAfter, @jakarta.annotation.Nullable String sort) throws ApiException {
     return listForwarderDeliveries(forwarderId, filterStatus, filterCreatedAt, filterEventId, pageSize, pageAfter, sort, null);
   }
 
@@ -669,7 +670,7 @@ public class ForwardersApi {
    * @return ForwarderDeliveryListResponse
    * @throws ApiException if fails to make API call
    */
-  public ForwarderDeliveryListResponse listForwarderDeliveries(@jakarta.annotation.Nonnull UUID forwarderId, @jakarta.annotation.Nullable String filterStatus, @jakarta.annotation.Nullable String filterCreatedAt, @jakarta.annotation.Nullable String filterEventId, @jakarta.annotation.Nullable Integer pageSize, @jakarta.annotation.Nullable String pageAfter, @jakarta.annotation.Nullable String sort, Map<String, String> headers) throws ApiException {
+  public ForwarderDeliveryListResponse listForwarderDeliveries(@jakarta.annotation.Nonnull String forwarderId, @jakarta.annotation.Nullable String filterStatus, @jakarta.annotation.Nullable String filterCreatedAt, @jakarta.annotation.Nullable String filterEventId, @jakarta.annotation.Nullable Integer pageSize, @jakarta.annotation.Nullable String pageAfter, @jakarta.annotation.Nullable String sort, Map<String, String> headers) throws ApiException {
     ApiResponse<ForwarderDeliveryListResponse> localVarResponse = listForwarderDeliveriesWithHttpInfo(forwarderId, filterStatus, filterCreatedAt, filterEventId, pageSize, pageAfter, sort, headers);
     return localVarResponse.getData();
   }
@@ -687,7 +688,7 @@ public class ForwardersApi {
    * @return ApiResponse&lt;ForwarderDeliveryListResponse&gt;
    * @throws ApiException if fails to make API call
    */
-  public ApiResponse<ForwarderDeliveryListResponse> listForwarderDeliveriesWithHttpInfo(@jakarta.annotation.Nonnull UUID forwarderId, @jakarta.annotation.Nullable String filterStatus, @jakarta.annotation.Nullable String filterCreatedAt, @jakarta.annotation.Nullable String filterEventId, @jakarta.annotation.Nullable Integer pageSize, @jakarta.annotation.Nullable String pageAfter, @jakarta.annotation.Nullable String sort) throws ApiException {
+  public ApiResponse<ForwarderDeliveryListResponse> listForwarderDeliveriesWithHttpInfo(@jakarta.annotation.Nonnull String forwarderId, @jakarta.annotation.Nullable String filterStatus, @jakarta.annotation.Nullable String filterCreatedAt, @jakarta.annotation.Nullable String filterEventId, @jakarta.annotation.Nullable Integer pageSize, @jakarta.annotation.Nullable String pageAfter, @jakarta.annotation.Nullable String sort) throws ApiException {
     return listForwarderDeliveriesWithHttpInfo(forwarderId, filterStatus, filterCreatedAt, filterEventId, pageSize, pageAfter, sort, null);
   }
 
@@ -705,7 +706,7 @@ public class ForwardersApi {
    * @return ApiResponse&lt;ForwarderDeliveryListResponse&gt;
    * @throws ApiException if fails to make API call
    */
-  public ApiResponse<ForwarderDeliveryListResponse> listForwarderDeliveriesWithHttpInfo(@jakarta.annotation.Nonnull UUID forwarderId, @jakarta.annotation.Nullable String filterStatus, @jakarta.annotation.Nullable String filterCreatedAt, @jakarta.annotation.Nullable String filterEventId, @jakarta.annotation.Nullable Integer pageSize, @jakarta.annotation.Nullable String pageAfter, @jakarta.annotation.Nullable String sort, Map<String, String> headers) throws ApiException {
+  public ApiResponse<ForwarderDeliveryListResponse> listForwarderDeliveriesWithHttpInfo(@jakarta.annotation.Nonnull String forwarderId, @jakarta.annotation.Nullable String filterStatus, @jakarta.annotation.Nullable String filterCreatedAt, @jakarta.annotation.Nullable String filterEventId, @jakarta.annotation.Nullable Integer pageSize, @jakarta.annotation.Nullable String pageAfter, @jakarta.annotation.Nullable String sort, Map<String, String> headers) throws ApiException {
     HttpRequest.Builder localVarRequestBuilder = listForwarderDeliveriesRequestBuilder(forwarderId, filterStatus, filterCreatedAt, filterEventId, pageSize, pageAfter, sort, headers);
     try {
       HttpResponse<InputStream> localVarResponse = memberVarHttpClient.send(
@@ -753,7 +754,7 @@ public class ForwardersApi {
     }
   }
 
-  private HttpRequest.Builder listForwarderDeliveriesRequestBuilder(@jakarta.annotation.Nonnull UUID forwarderId, @jakarta.annotation.Nullable String filterStatus, @jakarta.annotation.Nullable String filterCreatedAt, @jakarta.annotation.Nullable String filterEventId, @jakarta.annotation.Nullable Integer pageSize, @jakarta.annotation.Nullable String pageAfter, @jakarta.annotation.Nullable String sort, Map<String, String> headers) throws ApiException {
+  private HttpRequest.Builder listForwarderDeliveriesRequestBuilder(@jakarta.annotation.Nonnull String forwarderId, @jakarta.annotation.Nullable String filterStatus, @jakarta.annotation.Nullable String filterCreatedAt, @jakarta.annotation.Nullable String filterEventId, @jakarta.annotation.Nullable Integer pageSize, @jakarta.annotation.Nullable String pageAfter, @jakarta.annotation.Nullable String sort, Map<String, String> headers) throws ApiException {
     // verify the required parameter 'forwarderId' is set
     if (forwarderId == null) {
       throw new ApiException(400, "Missing the required parameter 'forwarderId' when calling listForwarderDeliveries");
@@ -970,7 +971,7 @@ public class ForwardersApi {
    * @return RetryFailedDeliveriesSummary
    * @throws ApiException if fails to make API call
    */
-  public RetryFailedDeliveriesSummary retryFailedForwarderDeliveries(@jakarta.annotation.Nonnull UUID forwarderId) throws ApiException {
+  public RetryFailedDeliveriesSummary retryFailedForwarderDeliveries(@jakarta.annotation.Nonnull String forwarderId) throws ApiException {
     return retryFailedForwarderDeliveries(forwarderId, null);
   }
 
@@ -982,7 +983,7 @@ public class ForwardersApi {
    * @return RetryFailedDeliveriesSummary
    * @throws ApiException if fails to make API call
    */
-  public RetryFailedDeliveriesSummary retryFailedForwarderDeliveries(@jakarta.annotation.Nonnull UUID forwarderId, Map<String, String> headers) throws ApiException {
+  public RetryFailedDeliveriesSummary retryFailedForwarderDeliveries(@jakarta.annotation.Nonnull String forwarderId, Map<String, String> headers) throws ApiException {
     ApiResponse<RetryFailedDeliveriesSummary> localVarResponse = retryFailedForwarderDeliveriesWithHttpInfo(forwarderId, headers);
     return localVarResponse.getData();
   }
@@ -994,7 +995,7 @@ public class ForwardersApi {
    * @return ApiResponse&lt;RetryFailedDeliveriesSummary&gt;
    * @throws ApiException if fails to make API call
    */
-  public ApiResponse<RetryFailedDeliveriesSummary> retryFailedForwarderDeliveriesWithHttpInfo(@jakarta.annotation.Nonnull UUID forwarderId) throws ApiException {
+  public ApiResponse<RetryFailedDeliveriesSummary> retryFailedForwarderDeliveriesWithHttpInfo(@jakarta.annotation.Nonnull String forwarderId) throws ApiException {
     return retryFailedForwarderDeliveriesWithHttpInfo(forwarderId, null);
   }
 
@@ -1006,7 +1007,7 @@ public class ForwardersApi {
    * @return ApiResponse&lt;RetryFailedDeliveriesSummary&gt;
    * @throws ApiException if fails to make API call
    */
-  public ApiResponse<RetryFailedDeliveriesSummary> retryFailedForwarderDeliveriesWithHttpInfo(@jakarta.annotation.Nonnull UUID forwarderId, Map<String, String> headers) throws ApiException {
+  public ApiResponse<RetryFailedDeliveriesSummary> retryFailedForwarderDeliveriesWithHttpInfo(@jakarta.annotation.Nonnull String forwarderId, Map<String, String> headers) throws ApiException {
     HttpRequest.Builder localVarRequestBuilder = retryFailedForwarderDeliveriesRequestBuilder(forwarderId, headers);
     try {
       HttpResponse<InputStream> localVarResponse = memberVarHttpClient.send(
@@ -1054,7 +1055,7 @@ public class ForwardersApi {
     }
   }
 
-  private HttpRequest.Builder retryFailedForwarderDeliveriesRequestBuilder(@jakarta.annotation.Nonnull UUID forwarderId, Map<String, String> headers) throws ApiException {
+  private HttpRequest.Builder retryFailedForwarderDeliveriesRequestBuilder(@jakarta.annotation.Nonnull String forwarderId, Map<String, String> headers) throws ApiException {
     // verify the required parameter 'forwarderId' is set
     if (forwarderId == null) {
       throw new ApiException(400, "Missing the required parameter 'forwarderId' when calling retryFailedForwarderDeliveries");
@@ -1089,7 +1090,7 @@ public class ForwardersApi {
    * @return ForwarderDeliveryResponse
    * @throws ApiException if fails to make API call
    */
-  public ForwarderDeliveryResponse retryForwarderDelivery(@jakarta.annotation.Nonnull UUID forwarderId, @jakarta.annotation.Nonnull UUID deliveryId) throws ApiException {
+  public ForwarderDeliveryResponse retryForwarderDelivery(@jakarta.annotation.Nonnull String forwarderId, @jakarta.annotation.Nonnull UUID deliveryId) throws ApiException {
     return retryForwarderDelivery(forwarderId, deliveryId, null);
   }
 
@@ -1102,7 +1103,7 @@ public class ForwardersApi {
    * @return ForwarderDeliveryResponse
    * @throws ApiException if fails to make API call
    */
-  public ForwarderDeliveryResponse retryForwarderDelivery(@jakarta.annotation.Nonnull UUID forwarderId, @jakarta.annotation.Nonnull UUID deliveryId, Map<String, String> headers) throws ApiException {
+  public ForwarderDeliveryResponse retryForwarderDelivery(@jakarta.annotation.Nonnull String forwarderId, @jakarta.annotation.Nonnull UUID deliveryId, Map<String, String> headers) throws ApiException {
     ApiResponse<ForwarderDeliveryResponse> localVarResponse = retryForwarderDeliveryWithHttpInfo(forwarderId, deliveryId, headers);
     return localVarResponse.getData();
   }
@@ -1115,7 +1116,7 @@ public class ForwardersApi {
    * @return ApiResponse&lt;ForwarderDeliveryResponse&gt;
    * @throws ApiException if fails to make API call
    */
-  public ApiResponse<ForwarderDeliveryResponse> retryForwarderDeliveryWithHttpInfo(@jakarta.annotation.Nonnull UUID forwarderId, @jakarta.annotation.Nonnull UUID deliveryId) throws ApiException {
+  public ApiResponse<ForwarderDeliveryResponse> retryForwarderDeliveryWithHttpInfo(@jakarta.annotation.Nonnull String forwarderId, @jakarta.annotation.Nonnull UUID deliveryId) throws ApiException {
     return retryForwarderDeliveryWithHttpInfo(forwarderId, deliveryId, null);
   }
 
@@ -1128,7 +1129,7 @@ public class ForwardersApi {
    * @return ApiResponse&lt;ForwarderDeliveryResponse&gt;
    * @throws ApiException if fails to make API call
    */
-  public ApiResponse<ForwarderDeliveryResponse> retryForwarderDeliveryWithHttpInfo(@jakarta.annotation.Nonnull UUID forwarderId, @jakarta.annotation.Nonnull UUID deliveryId, Map<String, String> headers) throws ApiException {
+  public ApiResponse<ForwarderDeliveryResponse> retryForwarderDeliveryWithHttpInfo(@jakarta.annotation.Nonnull String forwarderId, @jakarta.annotation.Nonnull UUID deliveryId, Map<String, String> headers) throws ApiException {
     HttpRequest.Builder localVarRequestBuilder = retryForwarderDeliveryRequestBuilder(forwarderId, deliveryId, headers);
     try {
       HttpResponse<InputStream> localVarResponse = memberVarHttpClient.send(
@@ -1176,7 +1177,7 @@ public class ForwardersApi {
     }
   }
 
-  private HttpRequest.Builder retryForwarderDeliveryRequestBuilder(@jakarta.annotation.Nonnull UUID forwarderId, @jakarta.annotation.Nonnull UUID deliveryId, Map<String, String> headers) throws ApiException {
+  private HttpRequest.Builder retryForwarderDeliveryRequestBuilder(@jakarta.annotation.Nonnull String forwarderId, @jakarta.annotation.Nonnull UUID deliveryId, Map<String, String> headers) throws ApiException {
     // verify the required parameter 'forwarderId' is set
     if (forwarderId == null) {
       throw new ApiException(400, "Missing the required parameter 'forwarderId' when calling retryForwarderDelivery");
@@ -1216,7 +1217,7 @@ public class ForwardersApi {
    * @return ForwarderResponse
    * @throws ApiException if fails to make API call
    */
-  public ForwarderResponse updateForwarder(@jakarta.annotation.Nonnull UUID forwarderId, @jakarta.annotation.Nonnull ForwarderRequest forwarderRequest) throws ApiException {
+  public ForwarderResponse updateForwarder(@jakarta.annotation.Nonnull String forwarderId, @jakarta.annotation.Nonnull ForwarderRequest forwarderRequest) throws ApiException {
     return updateForwarder(forwarderId, forwarderRequest, null);
   }
 
@@ -1229,7 +1230,7 @@ public class ForwardersApi {
    * @return ForwarderResponse
    * @throws ApiException if fails to make API call
    */
-  public ForwarderResponse updateForwarder(@jakarta.annotation.Nonnull UUID forwarderId, @jakarta.annotation.Nonnull ForwarderRequest forwarderRequest, Map<String, String> headers) throws ApiException {
+  public ForwarderResponse updateForwarder(@jakarta.annotation.Nonnull String forwarderId, @jakarta.annotation.Nonnull ForwarderRequest forwarderRequest, Map<String, String> headers) throws ApiException {
     ApiResponse<ForwarderResponse> localVarResponse = updateForwarderWithHttpInfo(forwarderId, forwarderRequest, headers);
     return localVarResponse.getData();
   }
@@ -1242,7 +1243,7 @@ public class ForwardersApi {
    * @return ApiResponse&lt;ForwarderResponse&gt;
    * @throws ApiException if fails to make API call
    */
-  public ApiResponse<ForwarderResponse> updateForwarderWithHttpInfo(@jakarta.annotation.Nonnull UUID forwarderId, @jakarta.annotation.Nonnull ForwarderRequest forwarderRequest) throws ApiException {
+  public ApiResponse<ForwarderResponse> updateForwarderWithHttpInfo(@jakarta.annotation.Nonnull String forwarderId, @jakarta.annotation.Nonnull ForwarderRequest forwarderRequest) throws ApiException {
     return updateForwarderWithHttpInfo(forwarderId, forwarderRequest, null);
   }
 
@@ -1255,7 +1256,7 @@ public class ForwardersApi {
    * @return ApiResponse&lt;ForwarderResponse&gt;
    * @throws ApiException if fails to make API call
    */
-  public ApiResponse<ForwarderResponse> updateForwarderWithHttpInfo(@jakarta.annotation.Nonnull UUID forwarderId, @jakarta.annotation.Nonnull ForwarderRequest forwarderRequest, Map<String, String> headers) throws ApiException {
+  public ApiResponse<ForwarderResponse> updateForwarderWithHttpInfo(@jakarta.annotation.Nonnull String forwarderId, @jakarta.annotation.Nonnull ForwarderRequest forwarderRequest, Map<String, String> headers) throws ApiException {
     HttpRequest.Builder localVarRequestBuilder = updateForwarderRequestBuilder(forwarderId, forwarderRequest, headers);
     try {
       HttpResponse<InputStream> localVarResponse = memberVarHttpClient.send(
@@ -1303,7 +1304,7 @@ public class ForwardersApi {
     }
   }
 
-  private HttpRequest.Builder updateForwarderRequestBuilder(@jakarta.annotation.Nonnull UUID forwarderId, @jakarta.annotation.Nonnull ForwarderRequest forwarderRequest, Map<String, String> headers) throws ApiException {
+  private HttpRequest.Builder updateForwarderRequestBuilder(@jakarta.annotation.Nonnull String forwarderId, @jakarta.annotation.Nonnull ForwarderRequest forwarderRequest, Map<String, String> headers) throws ApiException {
     // verify the required parameter 'forwarderId' is set
     if (forwarderId == null) {
       throw new ApiException(400, "Missing the required parameter 'forwarderId' when calling updateForwarder");
