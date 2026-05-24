@@ -45,6 +45,8 @@ import com.smplkit.internal.generated.audit.ApiClient;
   TestForwarderRequest.JSON_PROPERTY_HEADERS,
   TestForwarderRequest.JSON_PROPERTY_SUCCESS_STATUS,
   TestForwarderRequest.JSON_PROPERTY_TIMEOUT_MS,
+  TestForwarderRequest.JSON_PROPERTY_TLS_VERIFY,
+  TestForwarderRequest.JSON_PROPERTY_CA_CERT,
   TestForwarderRequest.JSON_PROPERTY_BODY
 })
 @jakarta.annotation.Generated(value = "org.openapitools.codegen.languages.JavaClientCodegen", comments = "Generator version: 7.21.0")
@@ -108,6 +110,13 @@ public class TestForwarderRequest {
 
   public static final String JSON_PROPERTY_TIMEOUT_MS = "timeout_ms";
   private JsonNullable<Integer> timeoutMs = JsonNullable.<Integer>undefined();
+
+  public static final String JSON_PROPERTY_TLS_VERIFY = "tls_verify";
+  @jakarta.annotation.Nullable
+  private Boolean tlsVerify = true;
+
+  public static final String JSON_PROPERTY_CA_CERT = "ca_cert";
+  private JsonNullable<String> caCert = JsonNullable.<String>undefined();
 
   public static final String JSON_PROPERTY_BODY = "body";
   private JsonNullable<String> body = JsonNullable.<String>undefined();
@@ -253,6 +262,62 @@ public class TestForwarderRequest {
   }
 
 
+  public TestForwarderRequest tlsVerify(@jakarta.annotation.Nullable Boolean tlsVerify) {
+    this.tlsVerify = tlsVerify;
+    return this;
+  }
+
+  /**
+   * Whether to verify the destination server&#39;s TLS certificate. Mirrors the parent forwarder field of the same name — see its description for security guidance. Defaults to &#x60;true&#x60;.
+   * @return tlsVerify
+   */
+  @jakarta.annotation.Nullable
+  @JsonProperty(value = JSON_PROPERTY_TLS_VERIFY, required = false)
+  @JsonInclude(value = JsonInclude.Include.USE_DEFAULTS)
+  public Boolean getTlsVerify() {
+    return tlsVerify;
+  }
+
+
+  @JsonProperty(value = JSON_PROPERTY_TLS_VERIFY, required = false)
+  @JsonInclude(value = JsonInclude.Include.USE_DEFAULTS)
+  public void setTlsVerify(@jakarta.annotation.Nullable Boolean tlsVerify) {
+    this.tlsVerify = tlsVerify;
+  }
+
+
+  public TestForwarderRequest caCert(@jakarta.annotation.Nullable String caCert) {
+    this.caCert = JsonNullable.<String>of(caCert);
+    return this;
+  }
+
+  /**
+   * Optional PEM-encoded certificate (or bundle) used to verify the destination server&#39;s TLS certificate. Mirrors the parent forwarder field. Must contain one or more &#x60;-----BEGIN CERTIFICATE-----&#x60; blocks.
+   * @return caCert
+   */
+  @jakarta.annotation.Nullable
+  @JsonIgnore
+  public String getCaCert() {
+        return caCert.orElse(null);
+  }
+
+  @JsonProperty(value = JSON_PROPERTY_CA_CERT, required = false)
+  @JsonInclude(value = JsonInclude.Include.USE_DEFAULTS)
+
+  public JsonNullable<String> getCaCert_JsonNullable() {
+    return caCert;
+  }
+  
+  @JsonProperty(JSON_PROPERTY_CA_CERT)
+  public void setCaCert_JsonNullable(JsonNullable<String> caCert) {
+    this.caCert = caCert;
+  }
+
+  public void setCaCert(@jakarta.annotation.Nullable String caCert) {
+    this.caCert = JsonNullable.<String>of(caCert);
+  }
+
+
   public TestForwarderRequest body(@jakarta.annotation.Nullable String body) {
     this.body = JsonNullable.<String>of(body);
     return this;
@@ -302,6 +367,8 @@ public class TestForwarderRequest {
         Objects.equals(this.headers, testForwarderRequest.headers) &&
         Objects.equals(this.successStatus, testForwarderRequest.successStatus) &&
         equalsNullable(this.timeoutMs, testForwarderRequest.timeoutMs) &&
+        Objects.equals(this.tlsVerify, testForwarderRequest.tlsVerify) &&
+        equalsNullable(this.caCert, testForwarderRequest.caCert) &&
         equalsNullable(this.body, testForwarderRequest.body);
   }
 
@@ -311,7 +378,7 @@ public class TestForwarderRequest {
 
   @Override
   public int hashCode() {
-    return Objects.hash(method, url, headers, successStatus, hashCodeNullable(timeoutMs), hashCodeNullable(body));
+    return Objects.hash(method, url, headers, successStatus, hashCodeNullable(timeoutMs), tlsVerify, hashCodeNullable(caCert), hashCodeNullable(body));
   }
 
   private static <T> int hashCodeNullable(JsonNullable<T> a) {
@@ -330,6 +397,8 @@ public class TestForwarderRequest {
     sb.append("    headers: ").append(toIndentedString(headers)).append("\n");
     sb.append("    successStatus: ").append(toIndentedString(successStatus)).append("\n");
     sb.append("    timeoutMs: ").append(toIndentedString(timeoutMs)).append("\n");
+    sb.append("    tlsVerify: ").append(toIndentedString(tlsVerify)).append("\n");
+    sb.append("    caCert: ").append(toIndentedString(caCert)).append("\n");
     sb.append("    body: ").append(toIndentedString(body)).append("\n");
     sb.append("}");
     return sb.toString();
@@ -403,6 +472,16 @@ public class TestForwarderRequest {
     // add `timeout_ms` to the URL query string
     if (getTimeoutMs() != null) {
       joiner.add(String.format(java.util.Locale.ROOT, "%stimeout_ms%s=%s", prefix, suffix, ApiClient.urlEncode(ApiClient.valueToString(getTimeoutMs()))));
+    }
+
+    // add `tls_verify` to the URL query string
+    if (getTlsVerify() != null) {
+      joiner.add(String.format(java.util.Locale.ROOT, "%stls_verify%s=%s", prefix, suffix, ApiClient.urlEncode(ApiClient.valueToString(getTlsVerify()))));
+    }
+
+    // add `ca_cert` to the URL query string
+    if (getCaCert() != null) {
+      joiner.add(String.format(java.util.Locale.ROOT, "%sca_cert%s=%s", prefix, suffix, ApiClient.urlEncode(ApiClient.valueToString(getCaCert()))));
     }
 
     // add `body` to the URL query string

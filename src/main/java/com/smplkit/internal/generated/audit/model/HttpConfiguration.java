@@ -28,6 +28,10 @@ import com.smplkit.internal.generated.audit.model.HttpHeader;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import org.openapitools.jackson.nullable.JsonNullable;
+import com.fasterxml.jackson.annotation.JsonIgnore;
+import org.openapitools.jackson.nullable.JsonNullable;
+import java.util.NoSuchElementException;
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 
 
@@ -39,7 +43,9 @@ import com.smplkit.internal.generated.audit.ApiClient;
   HttpConfiguration.JSON_PROPERTY_METHOD,
   HttpConfiguration.JSON_PROPERTY_URL,
   HttpConfiguration.JSON_PROPERTY_HEADERS,
-  HttpConfiguration.JSON_PROPERTY_SUCCESS_STATUS
+  HttpConfiguration.JSON_PROPERTY_SUCCESS_STATUS,
+  HttpConfiguration.JSON_PROPERTY_TLS_VERIFY,
+  HttpConfiguration.JSON_PROPERTY_CA_CERT
 })
 @jakarta.annotation.Generated(value = "org.openapitools.codegen.languages.JavaClientCodegen", comments = "Generator version: 7.21.0")
 public class HttpConfiguration {
@@ -99,6 +105,13 @@ public class HttpConfiguration {
   public static final String JSON_PROPERTY_SUCCESS_STATUS = "success_status";
   @jakarta.annotation.Nullable
   private String successStatus = "2xx";
+
+  public static final String JSON_PROPERTY_TLS_VERIFY = "tls_verify";
+  @jakarta.annotation.Nullable
+  private Boolean tlsVerify = true;
+
+  public static final String JSON_PROPERTY_CA_CERT = "ca_cert";
+  private JsonNullable<String> caCert = JsonNullable.<String>undefined();
 
   public HttpConfiguration() { 
   }
@@ -207,6 +220,62 @@ public class HttpConfiguration {
   }
 
 
+  public HttpConfiguration tlsVerify(@jakarta.annotation.Nullable Boolean tlsVerify) {
+    this.tlsVerify = tlsVerify;
+    return this;
+  }
+
+  /**
+   * Whether to verify the destination server&#39;s TLS certificate against trusted certificate authorities. Defaults to &#x60;true&#x60; and should be left on for any production destination. Set to &#x60;false&#x60; only for development or short-lived testing against a destination that presents an untrusted certificate (e.g. a Splunk Cloud trial stack on &#x60;:8088&#x60; serving its default self-signed certificate). When &#x60;false&#x60;, deliveries proceed without certificate verification — they are vulnerable to man-in-the-middle attacks. For long-lived self-signed setups, pin the issuing CA via &#x60;ca_cert&#x60; instead of disabling verification entirely.
+   * @return tlsVerify
+   */
+  @jakarta.annotation.Nullable
+  @JsonProperty(value = JSON_PROPERTY_TLS_VERIFY, required = false)
+  @JsonInclude(value = JsonInclude.Include.USE_DEFAULTS)
+  public Boolean getTlsVerify() {
+    return tlsVerify;
+  }
+
+
+  @JsonProperty(value = JSON_PROPERTY_TLS_VERIFY, required = false)
+  @JsonInclude(value = JsonInclude.Include.USE_DEFAULTS)
+  public void setTlsVerify(@jakarta.annotation.Nullable Boolean tlsVerify) {
+    this.tlsVerify = tlsVerify;
+  }
+
+
+  public HttpConfiguration caCert(@jakarta.annotation.Nullable String caCert) {
+    this.caCert = JsonNullable.<String>of(caCert);
+    return this;
+  }
+
+  /**
+   * Optional PEM-encoded certificate (or bundle) used to verify the destination server&#39;s TLS certificate, in addition to the system trust store. Use this to pin a private or self-signed CA (e.g. Splunk&#39;s default &#x60;SplunkCommonCA&#x60;) without disabling verification entirely via &#x60;tls_verify&#x60;. Must contain one or more &#x60;-----BEGIN CERTIFICATE-----&#x60; blocks. Ignored when &#x60;tls_verify&#x60; is &#x60;false&#x60;.
+   * @return caCert
+   */
+  @jakarta.annotation.Nullable
+  @JsonIgnore
+  public String getCaCert() {
+        return caCert.orElse(null);
+  }
+
+  @JsonProperty(value = JSON_PROPERTY_CA_CERT, required = false)
+  @JsonInclude(value = JsonInclude.Include.USE_DEFAULTS)
+
+  public JsonNullable<String> getCaCert_JsonNullable() {
+    return caCert;
+  }
+  
+  @JsonProperty(JSON_PROPERTY_CA_CERT)
+  public void setCaCert_JsonNullable(JsonNullable<String> caCert) {
+    this.caCert = caCert;
+  }
+
+  public void setCaCert(@jakarta.annotation.Nullable String caCert) {
+    this.caCert = JsonNullable.<String>of(caCert);
+  }
+
+
   /**
    * Return true if this HttpConfiguration object is equal to o.
    */
@@ -222,12 +291,25 @@ public class HttpConfiguration {
     return Objects.equals(this.method, httpConfiguration.method) &&
         Objects.equals(this.url, httpConfiguration.url) &&
         Objects.equals(this.headers, httpConfiguration.headers) &&
-        Objects.equals(this.successStatus, httpConfiguration.successStatus);
+        Objects.equals(this.successStatus, httpConfiguration.successStatus) &&
+        Objects.equals(this.tlsVerify, httpConfiguration.tlsVerify) &&
+        equalsNullable(this.caCert, httpConfiguration.caCert);
+  }
+
+  private static <T> boolean equalsNullable(JsonNullable<T> a, JsonNullable<T> b) {
+    return a == b || (a != null && b != null && a.isPresent() && b.isPresent() && Objects.deepEquals(a.get(), b.get()));
   }
 
   @Override
   public int hashCode() {
-    return Objects.hash(method, url, headers, successStatus);
+    return Objects.hash(method, url, headers, successStatus, tlsVerify, hashCodeNullable(caCert));
+  }
+
+  private static <T> int hashCodeNullable(JsonNullable<T> a) {
+    if (a == null) {
+      return 1;
+    }
+    return a.isPresent() ? Arrays.deepHashCode(new Object[]{a.get()}) : 31;
   }
 
   @Override
@@ -238,6 +320,8 @@ public class HttpConfiguration {
     sb.append("    url: ").append(toIndentedString(url)).append("\n");
     sb.append("    headers: ").append(toIndentedString(headers)).append("\n");
     sb.append("    successStatus: ").append(toIndentedString(successStatus)).append("\n");
+    sb.append("    tlsVerify: ").append(toIndentedString(tlsVerify)).append("\n");
+    sb.append("    caCert: ").append(toIndentedString(caCert)).append("\n");
     sb.append("}");
     return sb.toString();
   }
@@ -305,6 +389,16 @@ public class HttpConfiguration {
     // add `success_status` to the URL query string
     if (getSuccessStatus() != null) {
       joiner.add(String.format(java.util.Locale.ROOT, "%ssuccess_status%s=%s", prefix, suffix, ApiClient.urlEncode(ApiClient.valueToString(getSuccessStatus()))));
+    }
+
+    // add `tls_verify` to the URL query string
+    if (getTlsVerify() != null) {
+      joiner.add(String.format(java.util.Locale.ROOT, "%stls_verify%s=%s", prefix, suffix, ApiClient.urlEncode(ApiClient.valueToString(getTlsVerify()))));
+    }
+
+    // add `ca_cert` to the URL query string
+    if (getCaCert() != null) {
+      joiner.add(String.format(java.util.Locale.ROOT, "%sca_cert%s=%s", prefix, suffix, ApiClient.urlEncode(ApiClient.valueToString(getCaCert()))));
     }
 
     return joiner.toString();
