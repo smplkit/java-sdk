@@ -608,4 +608,67 @@ class AuditForwardersTest {
         assertEquals(0, page.eventTypes.size());
         assertSame(info, page.pagination);
     }
+
+    // -----------------------------------------------------------------
+    // TLS verification + custom CA cert per forwarder.
+    // -----------------------------------------------------------------
+
+    @Test
+    void httpConfiguration_defaultsTlsVerifyTrueAndCaCertNull() {
+        HttpConfiguration cfg = new HttpConfiguration("https://x");
+        assertTrue(cfg.tlsVerify);
+        assertNull(cfg.caCert);
+    }
+
+    @Test
+    void saveForwarder_sendsTlsVerifyAndCaCert_onWire() throws Exception {
+        AtomicReference<String> body = new AtomicReference<>();
+        handler.set(ex -> {
+            byte[] in = ex.getRequestBody().readAllBytes();
+            body.set(new String(in));
+            respondJson(ex, 201,
+                    "{\"data\":" + forwarderResource("Datadog production", "prod sink") + "}");
+        });
+        AuditForwarders fwds = new AuditForwarders(forwardersApi);
+        HttpConfiguration cfg = new HttpConfiguration("https://siem.example.com/in");
+        cfg.tlsVerify = false;
+        cfg.caCert = "-----BEGIN CERTIFICATE-----\nfoo\n-----END CERTIFICATE-----";
+        Forwarder fwd = fwds.newForwarder(FWD_ID, "Datadog production",
+                ForwarderType.DATADOG, cfg);
+        fwd.save();
+        assertTrue(body.get().contains("\"tls_verify\":false"),
+                "expected tls_verify on wire, got: " + body.get());
+        assertTrue(body.get().contains("\"ca_cert\":\"-----BEGIN CERTIFICATE-----"),
+                "expected ca_cert on wire, got: " + body.get());
+    }
+
+    @Test
+    void getForwarder_readsTlsVerifyAndCaCert_fromWire() throws Exception {
+        String resource = "{\"id\":\"" + FWD_ID + "\",\"type\":\"forwarder\",\"attributes\":{"
+                + "\"name\":\"n\",\"description\":\"d\","
+                + "\"forwarder_type\":\"datadog\",\"enabled\":true,"
+                + "\"configuration\":{\"method\":\"POST\",\"url\":\"https://x\","
+                + "\"headers\":[],\"success_status\":\"2xx\","
+                + "\"tls_verify\":false,"
+                + "\"ca_cert\":\"-----BEGIN CERTIFICATE-----\\nfoo\\n-----END CERTIFICATE-----\"},"
+                + "\"data\":{},\"created_at\":\"2026-05-07T12:00:00Z\","
+                + "\"updated_at\":\"2026-05-07T12:00:00Z\",\"version\":1}}";
+        handler.set(ex -> respondJson(ex, 200, "{\"data\":" + resource + "}"));
+        AuditForwarders fwds = new AuditForwarders(forwardersApi);
+        Forwarder fwd = fwds.get(FWD_ID);
+        assertFalse(fwd.configuration.tlsVerify);
+        assertTrue(fwd.configuration.caCert.contains("BEGIN CERTIFICATE"));
+    }
+
+    @Test
+    void getForwarder_defaultsTlsVerifyTrueWhenWireOmitsIt() throws Exception {
+        // Forwarders persisted before the field landed must read back as
+        // tls_verify=true so they keep their prior secure default.
+        handler.set(ex -> respondJson(ex, 200,
+                "{\"data\":" + forwarderResource("n", "d") + "}"));
+        AuditForwarders fwds = new AuditForwarders(forwardersApi);
+        Forwarder fwd = fwds.get(FWD_ID);
+        assertTrue(fwd.configuration.tlsVerify);
+        assertNull(fwd.configuration.caCert);
+    }
 }

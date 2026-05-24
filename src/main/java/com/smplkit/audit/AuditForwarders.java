@@ -178,6 +178,8 @@ public final class AuditForwarders {
         }
         out.setUrl(src.url);
         if (src.successStatus != null) out.setSuccessStatus(src.successStatus);
+        out.setTlsVerify(src.tlsVerify);
+        out.setCaCert(src.caCert);
         if (src.headers != null) {
             List<HttpHeader> hh = new ArrayList<>();
             for (com.smplkit.audit.HttpHeader h : src.headers) {
@@ -231,6 +233,11 @@ public final class AuditForwarders {
         if (src.getMethod() != null) out.method = HttpMethod.fromValue(src.getMethod().getValue());
         out.url = src.getUrl() != null ? src.getUrl() : "";
         if (src.getSuccessStatus() != null) out.successStatus = src.getSuccessStatus();
+        // Absent ``tls_verify`` on the wire means a forwarder persisted
+        // before the field landed — default to verifying so its prior
+        // secure behaviour is preserved.
+        out.tlsVerify = src.getTlsVerify() == null ? true : src.getTlsVerify();
+        out.caCert = src.getCaCert();
         out.headers = new ArrayList<>();
         if (src.getHeaders() != null) {
             for (HttpHeader h : src.getHeaders()) {

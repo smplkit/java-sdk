@@ -27,6 +27,20 @@ public final class HttpConfiguration {
      * ({@code "2xx"}, {@code "4xx"}). Defaults to {@code "2xx"}.
      */
     public String successStatus = "2xx";
+    /**
+     * Whether to verify the destination's TLS certificate chain. Defaults
+     * to {@code true}; flip to {@code false} only for short-lived testing
+     * against a destination that serves an untrusted certificate. Prefer
+     * pinning the issuing CA via {@link #caCert} for long-lived self-signed
+     * setups.
+     */
+    public boolean tlsVerify = true;
+    /**
+     * Optional PEM-encoded certificate (or bundle) trusted in addition to
+     * the system CA store. Ignored when {@link #tlsVerify} is {@code false}.
+     * {@code null} (the default) means "use system CAs only".
+     */
+    public String caCert = null;
 
     public HttpConfiguration() {}
 
