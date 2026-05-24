@@ -361,7 +361,7 @@ class ConfigClientWsEventsTest {
 
     private ConfigResource makeResourceWithParent(String id, String name,
                                                    Map<String, ConfigItemDefinition> items,
-                                                   Map<String, com.smplkit.internal.generated.config.model.EnvironmentOverride> envs,
+                                                   Map<String, Map<String, Object>> envs,
                                                    String parent) {
         var attrs = new com.smplkit.internal.generated.config.model.Config(null, null);
         attrs.setName(name);
@@ -378,7 +378,7 @@ class ConfigClientWsEventsTest {
 
     private ConfigResource makeResource(String id, String name,
                                          Map<String, ConfigItemDefinition> items,
-                                         Map<String, com.smplkit.internal.generated.config.model.EnvironmentOverride> envs) {
+                                         Map<String, Map<String, Object>> envs) {
         var attrs = new com.smplkit.internal.generated.config.model.Config(null, null);
         attrs.setName(name);
         if (!items.isEmpty()) attrs.setItems(items);

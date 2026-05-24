@@ -38,13 +38,13 @@ class ConfigEnvironmentTest {
 
     @Test
     void config_environments_returnsTypedView() {
+        // Per ADR-024 §2.4 each env entry IS the flat override map of
+        // {key: rawValue}. ConfigEnvironment.values() returns the same map.
         Map<String, Object> production = new HashMap<>();
-        Map<String, Object> values = new HashMap<>();
-        values.put("max_retries", Map.of("value", 5, "type", "NUMBER"));
-        values.put("database.host", Map.of("value", "prod-db", "type", "STRING"));
-        production.put("values", values);
+        production.put("max_retries", 5);
+        production.put("database.host", "prod-db");
 
-        Map<String, Object> envs = new HashMap<>();
+        Map<String, Map<String, Object>> envs = new HashMap<>();
         envs.put("production", production);
 
         Config cfg = new Config(null, "user-service", "User Service");

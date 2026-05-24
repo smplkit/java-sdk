@@ -66,12 +66,9 @@ class Phase2CoverageTest {
                 "host", Map.of("type", "STRING", "value", "localhost"),
                 "port", Map.of("type", "NUMBER", "value", 5432)
         ));
+        // Per ADR-024 §2.4 the wire shape is flat: {env: {key: rawValue}}.
         configData.put("environments", Map.of(
-                "production", Map.of(
-                        "values", Map.of(
-                                "host", Map.of("value", "prod-db.example.com")
-                        )
-                )
+                "production", Map.of("host", "prod-db.example.com")
         ));
 
         ConfigListResponse listResponse = OBJECT_MAPPER.convertValue(

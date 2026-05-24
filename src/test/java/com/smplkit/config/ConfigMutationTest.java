@@ -166,42 +166,30 @@ class ConfigMutationTest {
     }
 
     @Test
-    void remove_perEnv_envWithoutValuesIsNoOp() {
+    void remove_perEnv_keyAbsentIsNoOp() {
         Config c = newConfig();
-        // Plant an environment entry without a "values" key
-        Map<String, Object> envs = new HashMap<>();
-        Map<String, Object> envWithoutValues = new HashMap<>();
-        envWithoutValues.put("other", "metadata");
-        envs.put("prod", envWithoutValues);
+        // Plant an environment entry that doesn't contain the key being removed.
+        Map<String, Map<String, Object>> envs = new HashMap<>();
+        Map<String, Object> existing = new HashMap<>();
+        existing.put("other", "metadata");
+        envs.put("prod", existing);
         c.setEnvironments(envs);
 
         // Should be a no-op rather than NPE
         c.remove("anything", "prod");
-        assertTrue(c.environments().get("prod").values().isEmpty());
+        // The other key is left alone.
+        assertEquals("metadata", c.environments().get("prod").values().get("other"));
     }
 
     // --- environments() defensive branch coverage ---
 
     @Test
-    void environments_envValueNotMap_isSkipped() {
+    void environments_nullEnvValue_yieldsEmptyEnvironment() {
         Config c = newConfig();
-        Map<String, Object> envs = new HashMap<>();
-        envs.put("legit", Map.of("values", Map.of("k", "v")));
-        envs.put("garbage", "not a map");
-        c.setEnvironments(envs);
-
-        Map<String, ConfigEnvironment> typed = c.environments();
-        assertTrue(typed.containsKey("legit"));
-        assertFalse(typed.containsKey("garbage"));
-    }
-
-    @Test
-    void environments_valuesNotMap_yieldsEmptyEnvironment() {
-        Config c = newConfig();
-        Map<String, Object> envs = new HashMap<>();
-        Map<String, Object> envEntry = new HashMap<>();
-        envEntry.put("values", "garbage");
-        envs.put("prod", envEntry);
+        // Per ADR-024 §2.4 each env entry IS the flat override map. A null
+        // entry should degrade to an empty ConfigEnvironment rather than NPE.
+        Map<String, Map<String, Object>> envs = new HashMap<>();
+        envs.put("prod", null);
         c.setEnvironments(envs);
 
         ConfigEnvironment env = c.environments().get("prod");
@@ -211,14 +199,14 @@ class ConfigMutationTest {
     }
 
     @Test
-    void environments_valueWithoutValueKey_isPassedThroughAsRaw() {
+    void environments_flatShape_isPassedThrough() {
         Config c = newConfig();
-        Map<String, Object> envs = new HashMap<>();
+        // Per ADR-024 §2.4 each env entry is {key: rawValue}, no "values"
+        // sub-map and no per-override envelope.
+        Map<String, Map<String, Object>> envs = new HashMap<>();
         Map<String, Object> values = new HashMap<>();
-        values.put("inline-string", "directly stored");  // not a {value, type} map
-        Map<String, Object> envEntry = new HashMap<>();
-        envEntry.put("values", values);
-        envs.put("prod", envEntry);
+        values.put("inline-string", "directly stored");
+        envs.put("prod", values);
         c.setEnvironments(envs);
 
         ConfigEnvironment env = c.environments().get("prod");
