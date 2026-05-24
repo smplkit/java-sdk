@@ -25,7 +25,6 @@ import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonTypeName;
 import com.fasterxml.jackson.annotation.JsonValue;
 import com.smplkit.internal.generated.config.model.ConfigItemDefinition;
-import com.smplkit.internal.generated.config.model.EnvironmentOverride;
 import java.time.OffsetDateTime;
 import java.util.Arrays;
 import java.util.HashMap;
@@ -67,7 +66,7 @@ public class Config {
   private JsonNullable<Map<String, ConfigItemDefinition>> items = JsonNullable.<Map<String, ConfigItemDefinition>>undefined();
 
   public static final String JSON_PROPERTY_ENVIRONMENTS = "environments";
-  private JsonNullable<Map<String, EnvironmentOverride>> environments = JsonNullable.<Map<String, EnvironmentOverride>>undefined();
+  private JsonNullable<Map<String, Map<String, Object>>> environments = JsonNullable.<Map<String, Map<String, Object>>>undefined();
 
   public static final String JSON_PROPERTY_MANAGED = "managed";
   private JsonNullable<Boolean> managed = JsonNullable.<Boolean>undefined();
@@ -223,14 +222,14 @@ public class Config {
   }
 
 
-  public Config environments(@jakarta.annotation.Nullable Map<String, EnvironmentOverride> environments) {
-    this.environments = JsonNullable.<Map<String, EnvironmentOverride>>of(environments);
+  public Config environments(@jakarta.annotation.Nullable Map<String, Map<String, Object>> environments) {
+    this.environments = JsonNullable.<Map<String, Map<String, Object>>>of(environments);
     return this;
   }
 
-  public Config putEnvironmentsItem(String key, EnvironmentOverride environmentsItem) {
+  public Config putEnvironmentsItem(String key, Map<String, Object> environmentsItem) {
     if (this.environments == null || !this.environments.isPresent()) {
-      this.environments = JsonNullable.<Map<String, EnvironmentOverride>>of(new HashMap<>());
+      this.environments = JsonNullable.<Map<String, Map<String, Object>>>of(new HashMap<>());
     }
     try {
       this.environments.get().put(key, environmentsItem);
@@ -241,29 +240,29 @@ public class Config {
   }
 
   /**
-   * Map of environment keys to per-environment override sets. An environment override applies when this config is resolved against that environment.
+   * Map of environment keys to per-environment overrides. Each environment maps to a flat object of item key to override value (e.g. &#x60;{\&quot;production\&quot;: {\&quot;database.host\&quot;: \&quot;db-prod.internal\&quot;}}&#x60;). Only the keys being overridden need to be present. Override values must conform to the item&#39;s declared &#x60;type&#x60;; &#x60;type&#x60; and &#x60;description&#x60; are always resolved from the defining configuration and are never redeclared on an override.
    * @return environments
    */
   @jakarta.annotation.Nullable
   @JsonIgnore
-  public Map<String, EnvironmentOverride> getEnvironments() {
+  public Map<String, Map<String, Object>> getEnvironments() {
         return environments.orElse(null);
   }
 
   @JsonProperty(value = JSON_PROPERTY_ENVIRONMENTS, required = false)
   @JsonInclude(value = JsonInclude.Include.USE_DEFAULTS)
 
-  public JsonNullable<Map<String, EnvironmentOverride>> getEnvironments_JsonNullable() {
+  public JsonNullable<Map<String, Map<String, Object>>> getEnvironments_JsonNullable() {
     return environments;
   }
   
   @JsonProperty(JSON_PROPERTY_ENVIRONMENTS)
-  public void setEnvironments_JsonNullable(JsonNullable<Map<String, EnvironmentOverride>> environments) {
+  public void setEnvironments_JsonNullable(JsonNullable<Map<String, Map<String, Object>>> environments) {
     this.environments = environments;
   }
 
-  public void setEnvironments(@jakarta.annotation.Nullable Map<String, EnvironmentOverride> environments) {
-    this.environments = JsonNullable.<Map<String, EnvironmentOverride>>of(environments);
+  public void setEnvironments(@jakarta.annotation.Nullable Map<String, Map<String, Object>> environments) {
+    this.environments = JsonNullable.<Map<String, Map<String, Object>>>of(environments);
   }
 
 
@@ -477,10 +476,9 @@ public class Config {
     // add `environments` to the URL query string
     if (getEnvironments() != null) {
       for (String _key : getEnvironments().keySet()) {
-        if (getEnvironments().get(_key) != null) {
-          joiner.add(getEnvironments().get(_key).toUrlQueryString(String.format(java.util.Locale.ROOT, "%senvironments%s%s", prefix, suffix,
-              "".equals(suffix) ? "" : String.format(java.util.Locale.ROOT, "%s%d%s", containerPrefix, _key, containerSuffix))));
-        }
+        joiner.add(String.format(java.util.Locale.ROOT, "%senvironments%s%s=%s", prefix, suffix,
+            "".equals(suffix) ? "" : String.format(java.util.Locale.ROOT, "%s%d%s", containerPrefix, _key, containerSuffix),
+            getEnvironments().get(_key), ApiClient.urlEncode(ApiClient.valueToString(getEnvironments().get(_key)))));
       }
     }
 
