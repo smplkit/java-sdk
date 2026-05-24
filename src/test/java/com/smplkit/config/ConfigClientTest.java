@@ -10,12 +10,10 @@ import com.smplkit.internal.generated.config.api.ConfigsApi;
 import com.smplkit.internal.generated.config.model.ConfigCreateRequest;
 import com.smplkit.internal.generated.config.model.ConfigCreateResource;
 import com.smplkit.internal.generated.config.model.ConfigItemDefinition;
-import com.smplkit.internal.generated.config.model.ConfigItemOverride;
 import com.smplkit.internal.generated.config.model.ConfigListResponse;
 import com.smplkit.internal.generated.config.model.ConfigResource;
 import com.smplkit.internal.generated.config.model.ConfigResponse;
 import org.mockito.ArgumentCaptor;
-import com.smplkit.internal.generated.config.model.EnvironmentOverride;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;
@@ -60,7 +58,7 @@ class ConfigClientTest {
 
     private ConfigResource makeResource(String id, String name, String description,
                                         String parent, Map<String, ConfigItemDefinition> items,
-                                        Map<String, EnvironmentOverride> environments,
+                                        Map<String, Map<String, Object>> environments,
                                         OffsetDateTime createdAt, OffsetDateTime updatedAt) {
         var attrs = new com.smplkit.internal.generated.config.model.Config(createdAt, updatedAt);
         if (name != null) attrs.setName(name); else attrs.setName("");
@@ -91,18 +89,13 @@ class ConfigClientTest {
         return def;
     }
 
-    private static EnvironmentOverride envOverride(Map<String, Object> rawValues) {
-        EnvironmentOverride override = new EnvironmentOverride();
-        if (rawValues != null) {
-            Map<String, ConfigItemOverride> wrapped = new HashMap<>();
-            for (Map.Entry<String, Object> entry : rawValues.entrySet()) {
-                ConfigItemOverride item = new ConfigItemOverride();
-                item.setValue(entry.getValue());
-                wrapped.put(entry.getKey(), item);
-            }
-            override.setValues(wrapped);
-        }
-        return override;
+    /**
+     * Per ADR-024 §2.4 the wire-shape per-env override IS the flat
+     * {@code {key: rawValue}} map. Kept as a helper so call sites continue to
+     * read "envOverride(...)" the same way they always have.
+     */
+    private static Map<String, Object> envOverride(Map<String, Object> rawValues) {
+        return rawValues != null ? new HashMap<>(rawValues) : new HashMap<>();
     }
 
     private ConfigResponse singleResponse(ConfigResource resource) {
@@ -228,7 +221,7 @@ class ConfigClientTest {
 
         Config config = configClient.management().new_("svc");
         Map<String, Object> envData = new HashMap<>();
-        envData.put("values", Map.of("timeout", 60));
+        envData.put("timeout", 60);
         config.setEnvironments(Map.of("production", envData));
         config.save();
 
@@ -374,7 +367,7 @@ class ConfigClientTest {
 
     @Test
     void get_resourceWithEmptyEnvironmentOverride_handledGracefully() throws ApiException {
-        EnvironmentOverride emptyOverride = new EnvironmentOverride();
+        Map<String, Object> emptyOverride = new HashMap<>();
 
         ConfigResource resource = makeResource(CONFIG_ID, "Name", null,
                 null, Map.of(), Map.of("production", envOverride(Map.of("a", 1)),
@@ -582,7 +575,7 @@ class ConfigClientTest {
         source.setDescription("src desc");
         source.setParent("src-parent");
         source.setItems(Map.of("k", "v"));
-        source.setEnvironments(Map.of("prod", Map.of()));
+        source.setEnvironments(Map.of("prod", Map.<String, Object>of()));
         source.setCreatedAt(java.time.Instant.now());
         source.setUpdatedAt(java.time.Instant.now());
 
@@ -601,7 +594,7 @@ class ConfigClientTest {
     void config_apply_copiesItemsAndEnvironments() {
         Config source = new Config(configClient, "src", "Src");
         source.setItems(Map.of("k", "v"));
-        source.setEnvironments(Map.of("prod", Map.of()));
+        source.setEnvironments(Map.of("prod", Map.<String, Object>of()));
 
         Config target = configClient.management().new_("tgt");
         target._apply(source);

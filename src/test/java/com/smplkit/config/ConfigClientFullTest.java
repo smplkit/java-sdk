@@ -4,11 +4,9 @@ import com.smplkit.errors.SmplError;
 import com.smplkit.internal.generated.config.ApiException;
 import com.smplkit.internal.generated.config.api.ConfigsApi;
 import com.smplkit.internal.generated.config.model.ConfigItemDefinition;
-import com.smplkit.internal.generated.config.model.ConfigItemOverride;
 import com.smplkit.internal.generated.config.model.ConfigListResponse;
 import com.smplkit.internal.generated.config.model.ConfigResource;
 import com.smplkit.internal.generated.config.model.ConfigResponse;
-import com.smplkit.internal.generated.config.model.EnvironmentOverride;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;
@@ -45,13 +43,13 @@ class ConfigClientFullTest {
 
     private ConfigResource makeResource(String id, String name, String description,
                                         String parent, Map<String, ConfigItemDefinition> items,
-                                        Map<String, EnvironmentOverride> environments) {
+                                        Map<String, Map<String, Object>> environments) {
         return makeResource(id, name, description, parent, items, environments, null, null);
     }
 
     private ConfigResource makeResource(String id, String name, String description,
                                         String parent, Map<String, ConfigItemDefinition> items,
-                                        Map<String, EnvironmentOverride> environments,
+                                        Map<String, Map<String, Object>> environments,
                                         OffsetDateTime createdAt, OffsetDateTime updatedAt) {
         var attrs = new com.smplkit.internal.generated.config.model.Config(createdAt, updatedAt);
         if (name != null) attrs.setName(name); else attrs.setName("");
@@ -74,18 +72,13 @@ class ConfigClientFullTest {
         return def;
     }
 
-    private static EnvironmentOverride envOverride(Map<String, Object> rawValues) {
-        EnvironmentOverride override = new EnvironmentOverride();
-        if (rawValues != null) {
-            Map<String, ConfigItemOverride> wrapped = new HashMap<>();
-            for (Map.Entry<String, Object> entry : rawValues.entrySet()) {
-                ConfigItemOverride item = new ConfigItemOverride();
-                item.setValue(entry.getValue());
-                wrapped.put(entry.getKey(), item);
-            }
-            override.setValues(wrapped);
-        }
-        return override;
+    /**
+     * Per ADR-024 §2.4 the wire-shape per-env override IS the flat
+     * {@code {key: rawValue}} map. Kept as a helper so call sites continue to
+     * read "envOverride(...)" the same way they always have.
+     */
+    private static Map<String, Object> envOverride(Map<String, Object> rawValues) {
+        return rawValues != null ? new HashMap<>(rawValues) : new HashMap<>();
     }
 
     private ConfigResponse singleResponse(ConfigResource resource) {
@@ -206,7 +199,7 @@ class ConfigClientFullTest {
         when(mockApi.updateConfig(any(), any())).thenReturn(singleResponse(updated));
 
         Map<String, Object> envData = new HashMap<>();
-        envData.put("values", Map.of("k", "v"));
+        envData.put("k", "v");
         config.setEnvironments(Map.of("production", envData));
         config.save();
 
@@ -235,61 +228,49 @@ class ConfigClientFullTest {
     }
 
     // -----------------------------------------------------------------------
-    // wrapEnvironments edge cases
+    // wrapEnvironments — flat shape per ADR-024 §2.4
     // -----------------------------------------------------------------------
 
     @Test
-    void wrapEnvironments_handlesNonMapValue() {
-        Map<String, Object> envs = new HashMap<>();
-        envs.put("staging", "not-a-map");
-
-        Map<String, EnvironmentOverride> wrapped = ConfigClient.wrapEnvironments(envs);
-
-        assertNotNull(wrapped.get("staging"));
-        // Should not throw, just produce an empty override
-    }
-
-    @Test
-    void wrapEnvironments_handlesMapWithoutValuesKey() {
-        Map<String, Object> envData = new HashMap<>();
-        envData.put("other", "data");
-
-        Map<String, Object> envs = Map.of("staging", envData);
-        Map<String, EnvironmentOverride> wrapped = ConfigClient.wrapEnvironments(envs);
-
-        assertNotNull(wrapped.get("staging"));
-    }
-
-    @Test
-    void wrapEnvironments_unwrapsTypedMapShape() {
-        // Per-env setters (setNumber/setString/etc.) store {value, type} for
-        // symmetry with base items. The server override expects the scalar,
-        // not the typed wrapper — wrapEnvironments must unwrap.
+    void wrapEnvironments_passesThroughFlatShape() {
+        // Per-env setters (setNumber/setString/etc.) write raw scalars directly
+        // into env[key]. wrapEnvironments is then a defensive shallow copy.
         Config cfg = new Config(null, "k", "K");
         cfg.setNumber("max_retries", 5, "production");
         cfg.setString("env_label", "prod", "production");
 
-        Map<String, EnvironmentOverride> wrapped =
+        Map<String, Map<String, Object>> wrapped =
                 ConfigClient.wrapEnvironments(cfg.getEnvironments());
 
-        EnvironmentOverride prod = wrapped.get("production");
+        Map<String, Object> prod = wrapped.get("production");
         assertNotNull(prod);
-        assertEquals(5, prod.getValues().get("max_retries").getValue());
-        assertEquals("prod", prod.getValues().get("env_label").getValue());
+        assertEquals(5, prod.get("max_retries"));
+        assertEquals("prod", prod.get("env_label"));
     }
 
     @Test
-    void wrapEnvironments_passesThroughPlainScalar() {
-        // If a per-env value is already a plain scalar (no {value, type}
-        // wrapper), pass it through unchanged.
-        Map<String, Object> values = new HashMap<>();
-        values.put("plain", "hello");
-        Map<String, Object> envData = new HashMap<>();
-        envData.put("values", values);
-        Map<String, Object> envs = Map.of("staging", envData);
+    void wrapEnvironments_isDefensiveCopy() {
+        // Mutating the returned map must not mutate the source.
+        Map<String, Object> source = new HashMap<>();
+        source.put("k", "v");
+        Map<String, Map<String, Object>> envs = new HashMap<>();
+        envs.put("staging", source);
 
-        Map<String, EnvironmentOverride> wrapped = ConfigClient.wrapEnvironments(envs);
-        assertEquals("hello", wrapped.get("staging").getValues().get("plain").getValue());
+        Map<String, Map<String, Object>> wrapped = ConfigClient.wrapEnvironments(envs);
+        wrapped.get("staging").put("hacked", true);
+
+        assertFalse(source.containsKey("hacked"));
+    }
+
+    @Test
+    void wrapEnvironments_handlesNullEnvValue() {
+        Map<String, Map<String, Object>> envs = new HashMap<>();
+        envs.put("staging", null);
+
+        Map<String, Map<String, Object>> wrapped = ConfigClient.wrapEnvironments(envs);
+
+        assertNotNull(wrapped.get("staging"));
+        assertTrue(wrapped.get("staging").isEmpty());
     }
 
     // -----------------------------------------------------------------------

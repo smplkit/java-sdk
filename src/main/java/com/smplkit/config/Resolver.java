@@ -29,23 +29,16 @@ final class Resolver {
     /**
      * Resolves the full configuration for an environment from an inheritance chain.
      */
-    @SuppressWarnings("unchecked")
     static Map<String, Object> resolve(List<ChainEntry> chain, String environment) {
         Map<String, Object> accumulated = new HashMap<>();
         // Walk root-first (chain is child-first, so iterate in reverse)
         for (int i = chain.size() - 1; i >= 0; i--) {
             ChainEntry entry = chain.get(i);
             Map<String, Object> base = entry.values != null ? entry.values : Map.of();
-            Map<String, Object> envData = entry.environments != null
-                    ? entry.environments.get(environment)
-                    : null;
-            Map<String, Object> envValues = Map.of();
-            if (envData != null) {
-                Object rawEnvValues = envData.get("values");
-                if (rawEnvValues instanceof Map) {
-                    envValues = (Map<String, Object>) rawEnvValues;
-                }
-            }
+            // Per ADR-024 §2.4 each env entry IS the flat override map.
+            Map<String, Object> envValues = entry.environments != null
+                    ? entry.environments.getOrDefault(environment, Map.of())
+                    : Map.of();
             Map<String, Object> configResolved = deepMerge(base, envValues);
             accumulated = deepMerge(accumulated, configResolved);
         }

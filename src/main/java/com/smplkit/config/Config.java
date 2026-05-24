@@ -21,7 +21,8 @@ public final class Config {
     private String description;
     private String parent;      // parent config slug or null
     private Map<String, Object> items;  // {key: {value, type, description}} - the raw typed shape
-    private Map<String, Object> environments;
+    // Per-env overrides in flat shape per ADR-024 §2.4: {env: {key: rawValue}}.
+    private Map<String, Map<String, Object>> environments;
     private Instant createdAt;
     private Instant updatedAt;
 
@@ -58,11 +59,16 @@ public final class Config {
     public Map<String, Object> getItems() { return items; }
 
     /**
+     * Returns the raw per-environment override map.
+     *
+     * <p>The shape is {@code {env: {key: rawValue}}} per ADR-024 §2.4.
+     * Use {@link #environments()} for the typed view.</p>
+     *
      * @deprecated use {@link #environments()} for the typed view returning
      * {@code Map<String, ConfigEnvironment>}.
      */
     @Deprecated
-    public Map<String, Object> getEnvironments() { return environments; }
+    public Map<String, Map<String, Object>> getEnvironments() { return environments; }
 
     /**
      * Returns a typed, immutable per-environment view (mirrors Python rule 8).
@@ -70,30 +76,19 @@ public final class Config {
      * <p>{@code config.environments().get("production").values()} returns the
      * resolved {@code key -> value} map for that environment;
      * {@code config.environments().get("production").valuesRaw()} returns the
-     * full {@code key -> {value, type, description}} typed map.</p>
+     * same map (per ADR-024 §2.4 the wire shape no longer carries per-override
+     * {value, type} envelopes, so {@code values} and {@code valuesRaw} are
+     * equivalent).</p>
      */
-    @SuppressWarnings("unchecked")
     public Map<String, ConfigEnvironment> environments() {
         Map<String, ConfigEnvironment> out = new HashMap<>();
-        for (Map.Entry<String, Object> e : environments.entrySet()) {
-            if (!(e.getValue() instanceof Map)) continue;
-            Map<String, Object> envMap = (Map<String, Object>) e.getValue();
-            Object rawValues = envMap.getOrDefault("values", Map.of());
-            if (!(rawValues instanceof Map)) {
+        for (Map.Entry<String, Map<String, Object>> e : environments.entrySet()) {
+            Map<String, Object> envMap = e.getValue();
+            if (envMap == null) {
                 out.put(e.getKey(), new ConfigEnvironment(Map.of(), Map.of()));
-                continue;
+            } else {
+                out.put(e.getKey(), new ConfigEnvironment(envMap, envMap));
             }
-            Map<String, Object> valuesRawMap = (Map<String, Object>) rawValues;
-            Map<String, Object> valuesPlain = new HashMap<>();
-            for (Map.Entry<String, Object> v : valuesRawMap.entrySet()) {
-                Object val = v.getValue();
-                if (val instanceof Map && ((Map<String, Object>) val).containsKey("value")) {
-                    valuesPlain.put(v.getKey(), ((Map<String, Object>) val).get("value"));
-                } else {
-                    valuesPlain.put(v.getKey(), val);
-                }
-            }
-            out.put(e.getKey(), new ConfigEnvironment(valuesPlain, valuesRawMap));
         }
         return Map.copyOf(out);
     }
@@ -119,8 +114,12 @@ public final class Config {
         this.items = items != null ? new HashMap<>(items) : new HashMap<>();
     }
 
-    /** Sets the environments map. */
-    public void setEnvironments(Map<String, Object> environments) {
+    /**
+     * Sets the environments map. The shape is {@code {env: {key: rawValue}}}
+     * per ADR-024 §2.4 — pass raw scalars, not the legacy {@code {value, type}}
+     * wrapper or a {@code "values"} sub-map.
+     */
+    public void setEnvironments(Map<String, Map<String, Object>> environments) {
         this.environments = environments != null ? new HashMap<>(environments) : new HashMap<>();
     }
 
@@ -135,16 +134,11 @@ public final class Config {
     }
 
     /** Sets a string item; {@code environment=null} sets the base, otherwise the per-env override. */
-    @SuppressWarnings("unchecked")
     public void setString(String name, String value, String environment) {
         if (environment == null) {
             items.put(name, Map.of("value", value, "type", "STRING"));
         } else {
-            Map<String, Object> env = (Map<String, Object>)
-                    environments.computeIfAbsent(environment, k -> new HashMap<String, Object>());
-            Map<String, Object> values = (Map<String, Object>)
-                    env.computeIfAbsent("values", k -> new HashMap<String, Object>());
-            values.put(name, Map.of("value", value, "type", "STRING"));
+            environments.computeIfAbsent(environment, k -> new HashMap<>()).put(name, value);
         }
     }
 
@@ -154,16 +148,11 @@ public final class Config {
     }
 
     /** Sets a number item; {@code environment=null} sets the base. */
-    @SuppressWarnings("unchecked")
     public void setNumber(String name, Number value, String environment) {
         if (environment == null) {
             items.put(name, Map.of("value", value, "type", "NUMBER"));
         } else {
-            Map<String, Object> env = (Map<String, Object>)
-                    environments.computeIfAbsent(environment, k -> new HashMap<String, Object>());
-            Map<String, Object> values = (Map<String, Object>)
-                    env.computeIfAbsent("values", k -> new HashMap<String, Object>());
-            values.put(name, Map.of("value", value, "type", "NUMBER"));
+            environments.computeIfAbsent(environment, k -> new HashMap<>()).put(name, value);
         }
     }
 
@@ -173,16 +162,11 @@ public final class Config {
     }
 
     /** Sets a boolean item; {@code environment=null} sets the base. */
-    @SuppressWarnings("unchecked")
     public void setBoolean(String name, boolean value, String environment) {
         if (environment == null) {
             items.put(name, Map.of("value", value, "type", "BOOLEAN"));
         } else {
-            Map<String, Object> env = (Map<String, Object>)
-                    environments.computeIfAbsent(environment, k -> new HashMap<String, Object>());
-            Map<String, Object> values = (Map<String, Object>)
-                    env.computeIfAbsent("values", k -> new HashMap<String, Object>());
-            values.put(name, Map.of("value", value, "type", "BOOLEAN"));
+            environments.computeIfAbsent(environment, k -> new HashMap<>()).put(name, value);
         }
     }
 
@@ -192,30 +176,21 @@ public final class Config {
     }
 
     /** Sets a JSON item; {@code environment=null} sets the base. */
-    @SuppressWarnings("unchecked")
     public void setJson(String name, Object value, String environment) {
         if (environment == null) {
             items.put(name, Map.of("value", value, "type", "JSON"));
         } else {
-            Map<String, Object> env = (Map<String, Object>)
-                    environments.computeIfAbsent(environment, k -> new HashMap<String, Object>());
-            Map<String, Object> values = (Map<String, Object>)
-                    env.computeIfAbsent("values", k -> new HashMap<String, Object>());
-            values.put(name, Map.of("value", value, "type", "JSON"));
+            environments.computeIfAbsent(environment, k -> new HashMap<>()).put(name, value);
         }
     }
 
     /** Removes an item; {@code environment=null} removes from base. */
-    @SuppressWarnings("unchecked")
     public void remove(String name, String environment) {
         if (environment == null) {
             items.remove(name);
         } else {
-            Map<String, Object> env = (Map<String, Object>) environments.get(environment);
-            if (env != null) {
-                Map<String, Object> values = (Map<String, Object>) env.get("values");
-                if (values != null) values.remove(name);
-            }
+            Map<String, Object> env = environments.get(environment);
+            if (env != null) env.remove(name);
         }
     }
 

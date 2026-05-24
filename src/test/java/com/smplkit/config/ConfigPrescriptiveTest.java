@@ -3,10 +3,8 @@ package com.smplkit.config;
 import com.smplkit.internal.generated.config.ApiException;
 import com.smplkit.internal.generated.config.api.ConfigsApi;
 import com.smplkit.internal.generated.config.model.ConfigItemDefinition;
-import com.smplkit.internal.generated.config.model.ConfigItemOverride;
 import com.smplkit.internal.generated.config.model.ConfigListResponse;
 import com.smplkit.internal.generated.config.model.ConfigResource;
-import com.smplkit.internal.generated.config.model.EnvironmentOverride;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;
@@ -47,7 +45,7 @@ class ConfigPrescriptiveTest {
     private ConfigResource makeResource(String id, String name,
                                         String parent,
                                         Map<String, ConfigItemDefinition> items,
-                                        Map<String, EnvironmentOverride> environments) {
+                                        Map<String, Map<String, Object>> environments) {
         var attrs = new com.smplkit.internal.generated.config.model.Config(null, null);
         attrs.setName(name != null ? name : "");
         if (parent != null) attrs.setParent(parent);
@@ -68,18 +66,12 @@ class ConfigPrescriptiveTest {
         return def;
     }
 
-    private static EnvironmentOverride envOverride(Map<String, Object> rawValues) {
-        EnvironmentOverride override = new EnvironmentOverride();
-        if (rawValues != null) {
-            Map<String, ConfigItemOverride> wrapped = new HashMap<>();
-            for (Map.Entry<String, Object> entry : rawValues.entrySet()) {
-                ConfigItemOverride item = new ConfigItemOverride();
-                item.setValue(entry.getValue());
-                wrapped.put(entry.getKey(), item);
-            }
-            override.setValues(wrapped);
-        }
-        return override;
+    /**
+     * Per ADR-024 §2.4 the wire-shape per-env override IS the flat
+     * {@code {key: rawValue}} map.
+     */
+    private static Map<String, Object> envOverride(Map<String, Object> rawValues) {
+        return rawValues != null ? new HashMap<>(rawValues) : new HashMap<>();
     }
 
     private ConfigListResponse listResponse(List<ConfigResource> resources) {
@@ -476,14 +468,14 @@ class ConfigPrescriptiveTest {
 
     @Test
     void resolver_resolve_envOverridesBase() {
-        Map<String, Object> envValues = Map.of("a", 99);
-        Map<String, Object> envData = new HashMap<>();
-        envData.put("values", envValues);
+        // Per ADR-024 §2.4 the env override IS the flat {key: rawValue} map.
+        Map<String, Object> envValues = new HashMap<>();
+        envValues.put("a", 99);
 
         Resolver.ChainEntry entry = new Resolver.ChainEntry(
                 "id1",
                 Map.of("a", 1, "b", 2),
-                Map.of("production", envData));
+                Map.of("production", envValues));
         Map<String, Object> result = Resolver.resolve(List.of(entry), "production");
         assertEquals(99, result.get("a"));
         assertEquals(2, result.get("b"));

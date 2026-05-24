@@ -10,12 +10,10 @@ import com.smplkit.internal.generated.config.api.ConfigsApi;
 import com.smplkit.internal.generated.config.model.ConfigCreateRequest;
 import com.smplkit.internal.generated.config.model.ConfigCreateResource;
 import com.smplkit.internal.generated.config.model.ConfigItemDefinition;
-import com.smplkit.internal.generated.config.model.ConfigItemOverride;
 import com.smplkit.internal.generated.config.model.ConfigListResponse;
 import com.smplkit.internal.generated.config.model.ConfigResource;
 import com.smplkit.internal.generated.config.model.ConfigRequest;
 import com.smplkit.internal.generated.config.model.ConfigResponse;
-import com.smplkit.internal.generated.config.model.EnvironmentOverride;
 
 import java.lang.reflect.Field;
 import java.lang.reflect.Modifier;
@@ -864,14 +862,9 @@ public final class ConfigClient {
 
     private static Resolver.ChainEntry toChainEntry(Config config) {
         Map<String, Object> resolvedItems = config.getResolvedItems();
-        Map<String, Map<String, Object>> envMap = new HashMap<>();
-        for (Map.Entry<String, Object> entry : config.getEnvironments().entrySet()) {
-            if (entry.getValue() instanceof Map) {
-                @SuppressWarnings("unchecked")
-                Map<String, Object> val = (Map<String, Object>) entry.getValue();
-                envMap.put(entry.getKey(), val);
-            }
-        }
+        // Per ADR-024 §2.4 environments are flat: {env: {key: rawValue}}.
+        // Pass straight through to the resolver — no wrapper extraction.
+        Map<String, Map<String, Object>> envMap = new HashMap<>(config.getEnvironments());
         return new Resolver.ChainEntry(
                 config.getId() != null ? config.getId() : "",
                 resolvedItems,
@@ -903,21 +896,16 @@ public final class ConfigClient {
             }
         }
 
-        Map<String, Object> environments = new HashMap<>();
-        Map<String, EnvironmentOverride> rawEnvs = attrs.getEnvironments();
+        // Per ADR-024 §2.4 the wire shape is flat: {env: {key: rawValue}}.
+        // The generated client already returns Map<String, Map<String, Object>>,
+        // so this is a defensive shallow copy preserving the in-memory shape.
+        Map<String, Map<String, Object>> environments = new HashMap<>();
+        Map<String, Map<String, Object>> rawEnvs = attrs.getEnvironments();
         if (rawEnvs != null) {
-            for (Map.Entry<String, EnvironmentOverride> envEntry : rawEnvs.entrySet()) {
-                EnvironmentOverride override = envEntry.getValue();
-                Map<String, Object> envData = new HashMap<>();
-                Map<String, ConfigItemOverride> envValues = override.getValues();
-                if (envValues != null) {
-                    Map<String, Object> extractedValues = new HashMap<>();
-                    for (Map.Entry<String, ConfigItemOverride> valEntry : envValues.entrySet()) {
-                        extractedValues.put(valEntry.getKey(), valEntry.getValue().getValue());
-                    }
-                    envData.put("values", extractedValues);
-                }
-                environments.put(envEntry.getKey(), envData);
+            for (Map.Entry<String, Map<String, Object>> envEntry : rawEnvs.entrySet()) {
+                Map<String, Object> envValues = envEntry.getValue();
+                environments.put(envEntry.getKey(),
+                        envValues != null ? new HashMap<>(envValues) : new HashMap<>());
             }
         }
 
@@ -946,32 +934,17 @@ public final class ConfigClient {
         return items;
     }
 
-    /** Wraps environments for the server. */
-    @SuppressWarnings("unchecked")
-    static Map<String, EnvironmentOverride> wrapEnvironments(Map<String, Object> environments) {
-        Map<String, EnvironmentOverride> result = new HashMap<>();
-        for (Map.Entry<String, Object> entry : environments.entrySet()) {
-            EnvironmentOverride override = new EnvironmentOverride();
-            if (entry.getValue() instanceof Map) {
-                Map<String, Object> envData = (Map<String, Object>) entry.getValue();
-                Object rawValues = envData.get("values");
-                if (rawValues instanceof Map) {
-                    Map<String, Object> valuesMap = (Map<String, Object>) rawValues;
-                    Map<String, ConfigItemOverride> wrappedValues = new HashMap<>();
-                    for (Map.Entry<String, Object> valEntry : valuesMap.entrySet()) {
-                        ConfigItemOverride itemOverride = new ConfigItemOverride();
-                        Object raw = valEntry.getValue();
-                        if (raw instanceof Map<?, ?> typed && typed.containsKey("value")) {
-                            itemOverride.setValue(typed.get("value"));
-                        } else {
-                            itemOverride.setValue(raw);
-                        }
-                        wrappedValues.put(valEntry.getKey(), itemOverride);
-                    }
-                    override.setValues(wrappedValues);
-                }
-            }
-            result.put(entry.getKey(), override);
+    /**
+     * Copy environments for the wire. Per ADR-024 §2.4 the wire shape is the
+     * flat in-memory shape, so this is a defensive shallow copy.
+     */
+    static Map<String, Map<String, Object>> wrapEnvironments(
+            Map<String, Map<String, Object>> environments) {
+        Map<String, Map<String, Object>> result = new HashMap<>();
+        for (Map.Entry<String, Map<String, Object>> entry : environments.entrySet()) {
+            Map<String, Object> envValues = entry.getValue();
+            result.put(entry.getKey(),
+                    envValues != null ? new HashMap<>(envValues) : new HashMap<>());
         }
         return result;
     }
