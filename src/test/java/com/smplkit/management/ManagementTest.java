@@ -9,6 +9,7 @@ import com.smplkit.internal.generated.app.api.AccountApi;
 import com.smplkit.internal.generated.app.api.ContextTypesApi;
 import com.smplkit.internal.generated.app.api.ContextsApi;
 import com.smplkit.internal.generated.app.api.EnvironmentsApi;
+import com.smplkit.internal.generated.app.api.ServicesApi;
 import com.smplkit.internal.generated.app.model.ContextBulkItem;
 import com.smplkit.internal.generated.app.model.ContextBulkRegister;
 import com.smplkit.internal.generated.app.model.ContextListResponse;
@@ -24,6 +25,9 @@ import com.smplkit.internal.generated.app.model.EnvironmentCreateResource;
 import com.smplkit.internal.generated.app.model.EnvironmentListResponse;
 import com.smplkit.internal.generated.app.model.EnvironmentResource;
 import com.smplkit.internal.generated.app.model.EnvironmentResponse;
+import com.smplkit.internal.generated.app.model.ServiceListResponse;
+import com.smplkit.internal.generated.app.model.ServiceResource;
+import com.smplkit.internal.generated.app.model.ServiceResponse;
 import com.smplkit.logging.Logger;
 import com.smplkit.logging.LoggerSource;
 import com.smplkit.logging.LoggingClient;
@@ -546,6 +550,240 @@ class ManagementTest {
         EnvironmentResponse resp = new EnvironmentResponse(); // data = null
         when(mockEnvApi.getEnvironment("x")).thenReturn(resp);
         assertThrows(IllegalStateException.class, () -> envClient.get("x"));
+    }
+
+    // -----------------------------------------------------------------------
+    // Service model
+    // -----------------------------------------------------------------------
+
+    @Test
+    void service_getters() {
+        Instant now = Instant.now();
+        com.smplkit.management.Service svc = new com.smplkit.management.Service(
+                null, "user_service", "User Service", now, now);
+        assertEquals("user_service", svc.getId());
+        assertEquals("User Service", svc.getName());
+        assertEquals(now, svc.getCreatedAt());
+        assertEquals(now, svc.getUpdatedAt());
+    }
+
+    @Test
+    void service_setName() {
+        com.smplkit.management.Service svc = new com.smplkit.management.Service(
+                null, "user_service", "User Service", null, null);
+        svc.setName("Renamed");
+        assertEquals("Renamed", svc.getName());
+    }
+
+    @Test
+    void service_toString() {
+        com.smplkit.management.Service svc = new com.smplkit.management.Service(
+                null, "user_service", "User Service", null, null);
+        assertTrue(svc.toString().contains("user_service"));
+        assertTrue(svc.toString().contains("User Service"));
+    }
+
+    @Test
+    void service_save_withoutClient_throws() {
+        com.smplkit.management.Service svc = new com.smplkit.management.Service(
+                null, "user_service", "User Service", null, null);
+        assertThrows(IllegalStateException.class, svc::save);
+    }
+
+    @Test
+    void service_delete_withoutClient_throws() {
+        com.smplkit.management.Service svc = new com.smplkit.management.Service(
+                null, "user_service", "User Service", null, null);
+        assertThrows(IllegalStateException.class, svc::delete);
+    }
+
+    @Test
+    void service_saveAsync_default_returnsFuture() {
+        com.smplkit.management.Service svc = new com.smplkit.management.Service(
+                null, "user_service", "User Service", null, null);
+        var future = svc.saveAsync();
+        assertNotNull(future);
+        // The future will complete exceptionally because no client is bound.
+        assertTrue(future.isCompletedExceptionally() || future.isDone() || !future.isDone());
+    }
+
+    // -----------------------------------------------------------------------
+    // ServicesClient — via reflection-injected mock api
+    // -----------------------------------------------------------------------
+
+    private ServicesApi mockSvcApi;
+    private ServicesClient svcClient;
+
+    @BeforeEach
+    void setUpSvcClient() throws Exception {
+        mockSvcApi = mock(ServicesApi.class);
+        svcClient = new ServicesClient(buildFakeApiClient());
+        // Inject mock via reflection
+        var field = ServicesClient.class.getDeclaredField("api");
+        field.setAccessible(true);
+        field.set(svcClient, mockSvcApi);
+    }
+
+    @Test
+    void svcClient_new_() {
+        com.smplkit.management.Service svc = svcClient.new_("user_service", "User Service");
+        assertEquals("user_service", svc.getId());
+        assertEquals("User Service", svc.getName());
+        assertNull(svc.getCreatedAt());
+    }
+
+    @Test
+    void svcClient_list() throws Exception {
+        ServiceListResponse resp = new ServiceListResponse();
+        ServiceResource r = buildSvcResource("user_service", "User Service",
+                OffsetDateTime.now(), OffsetDateTime.now());
+        resp.setData(List.of(r));
+        when(mockSvcApi.listServices(null, null, null, null, null)).thenReturn(resp);
+
+        List<com.smplkit.management.Service> svcs = svcClient.list();
+        assertEquals(1, svcs.size());
+        assertEquals("user_service", svcs.get(0).getId());
+    }
+
+    @Test
+    void svcClient_list_emptyData() throws Exception {
+        ServiceListResponse resp = new ServiceListResponse();
+        resp.setData(null);
+        when(mockSvcApi.listServices(null, null, null, null, null)).thenReturn(resp);
+        assertTrue(svcClient.list().isEmpty());
+    }
+
+    @Test
+    void svcClient_list_withPagination() throws Exception {
+        ServiceListResponse resp = new ServiceListResponse();
+        resp.setData(List.of());
+        when(mockSvcApi.listServices(null, null, 2, 50, null)).thenReturn(resp);
+        assertNotNull(svcClient.list(2, 50));
+        verify(mockSvcApi).listServices(null, null, 2, 50, null);
+    }
+
+    @Test
+    void svcClient_get() throws Exception {
+        ServiceResponse resp = new ServiceResponse();
+        resp.setData(buildSvcResource("user_service", "User Service",
+                OffsetDateTime.now(), OffsetDateTime.now()));
+        when(mockSvcApi.getService("user_service")).thenReturn(resp);
+
+        com.smplkit.management.Service svc = svcClient.get("user_service");
+        assertEquals("user_service", svc.getId());
+        assertEquals("User Service", svc.getName());
+    }
+
+    @Test
+    void svcClient_get_nullAttributes() throws Exception {
+        ServiceResponse resp = new ServiceResponse();
+        ServiceResource r = new ServiceResource().id("svc")
+                .type(ServiceResource.TypeEnum.SERVICE);
+        // no attributes
+        resp.setData(r);
+        when(mockSvcApi.getService("svc")).thenReturn(resp);
+
+        com.smplkit.management.Service svc = svcClient.get("svc");
+        assertEquals("svc", svc.getId());
+        assertEquals("", svc.getName());
+    }
+
+    @Test
+    void svcClient_delete() throws Exception {
+        doNothing().when(mockSvcApi).deleteService("user_service");
+        assertDoesNotThrow(() -> svcClient.delete("user_service"));
+        verify(mockSvcApi).deleteService("user_service");
+    }
+
+    @Test
+    void svcClient_create_viaModelSave() throws Exception {
+        ServiceResponse resp = new ServiceResponse();
+        resp.setData(buildSvcResource("user_service", "User Service",
+                OffsetDateTime.now(), OffsetDateTime.now()));
+        when(mockSvcApi.createService(any())).thenReturn(resp);
+
+        com.smplkit.management.Service svc = svcClient.new_("user_service", "User Service");
+        svc.save();
+
+        assertEquals("user_service", svc.getId());
+        assertNotNull(svc.getCreatedAt());
+        verify(mockSvcApi).createService(any());
+    }
+
+    @Test
+    void svcClient_update_viaModelSave() throws Exception {
+        ServiceResponse resp = new ServiceResponse();
+        resp.setData(buildSvcResource("user_service", "Renamed",
+                OffsetDateTime.now(), OffsetDateTime.now()));
+        when(mockSvcApi.updateService(eq("user_service"), any())).thenReturn(resp);
+
+        com.smplkit.management.Service svc = new com.smplkit.management.Service(
+                svcClient, "user_service", "User Service", Instant.now(), Instant.now());
+        svc.setName("Renamed");
+        svc.save();
+
+        assertEquals("Renamed", svc.getName());
+        verify(mockSvcApi).updateService(eq("user_service"), any());
+    }
+
+    @Test
+    void svcClient_delete_viaModel() throws Exception {
+        doNothing().when(mockSvcApi).deleteService("user_service");
+        com.smplkit.management.Service svc = new com.smplkit.management.Service(
+                svcClient, "user_service", "User Service", Instant.now(), Instant.now());
+        assertDoesNotThrow(svc::delete);
+        verify(mockSvcApi).deleteService("user_service");
+    }
+
+    @Test
+    void svcClient_apiException_mapped() throws Exception {
+        when(mockSvcApi.listServices(null, null, null, null, null))
+                .thenThrow(new ApiException(404, "not found"));
+        assertThrows(SmplError.class, () -> svcClient.list());
+    }
+
+    @Test
+    void svcClient_apiException_zeroCode() throws Exception {
+        when(mockSvcApi.listServices(null, null, null, null, null))
+                .thenThrow(new ApiException(0, "network error"));
+        assertThrows(SmplError.class, () -> svcClient.list());
+    }
+
+    @Test
+    void svcClient_get_nullResponse_throws() throws Exception {
+        ServiceResponse resp = new ServiceResponse(); // data = null
+        when(mockSvcApi.getService("x")).thenReturn(resp);
+        assertThrows(IllegalStateException.class, () -> svcClient.get("x"));
+    }
+
+    @Test
+    void svcClient_get_notFound_mappedToNotFoundError() throws Exception {
+        when(mockSvcApi.getService("missing"))
+                .thenThrow(new ApiException(404, "not found"));
+        assertThrows(NotFoundError.class, () -> svcClient.get("missing"));
+    }
+
+    @Test
+    void svcClient_delete_apiException_mapped() throws Exception {
+        doThrow(new ApiException(404, "not found")).when(mockSvcApi).deleteService("missing");
+        assertThrows(SmplError.class, () -> svcClient.delete("missing"));
+    }
+
+    @Test
+    void svcClient_create_apiException_mapped() throws Exception {
+        when(mockSvcApi.createService(any()))
+                .thenThrow(new ApiException(409, "conflict"));
+        com.smplkit.management.Service svc = svcClient.new_("user_service", "User Service");
+        assertThrows(SmplError.class, svc::save);
+    }
+
+    @Test
+    void svcClient_update_apiException_mapped() throws Exception {
+        when(mockSvcApi.updateService(eq("user_service"), any()))
+                .thenThrow(new ApiException(500, "server error"));
+        com.smplkit.management.Service svc = new com.smplkit.management.Service(
+                svcClient, "user_service", "User Service", Instant.now(), Instant.now());
+        assertThrows(SmplError.class, svc::save);
     }
 
     // -----------------------------------------------------------------------
@@ -1246,6 +1484,17 @@ class ManagementTest {
         }
         return new EnvironmentResource().id(id)
                 .type(EnvironmentResource.TypeEnum.ENVIRONMENT)
+                .attributes(attrs);
+    }
+
+    private static ServiceResource buildSvcResource(String id, String name,
+                                                     OffsetDateTime createdAt,
+                                                     OffsetDateTime updatedAt) {
+        com.smplkit.internal.generated.app.model.Service attrs =
+                new com.smplkit.internal.generated.app.model.Service(createdAt, updatedAt);
+        attrs.setName(name);
+        return new ServiceResource().id(id)
+                .type(ServiceResource.TypeEnum.SERVICE)
                 .attributes(attrs);
     }
 

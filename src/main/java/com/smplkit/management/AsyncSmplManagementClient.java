@@ -37,6 +37,8 @@ public final class AsyncSmplManagementClient implements AutoCloseable {
     public final AsyncContextTypesClient contextTypes;
     /** Async environment CRUD. */
     public final AsyncEnvironmentsClient environments;
+    /** Async service CRUD. */
+    public final AsyncServicesClient services;
     /** Async account-level settings. */
     public final AsyncAccountSettingsClient accountSettings;
     /** Async config CRUD ({@code asyncMgmt.config}). */
@@ -56,6 +58,7 @@ public final class AsyncSmplManagementClient implements AutoCloseable {
         this.contexts = new AsyncContextsClient(delegate.contexts, executor);
         this.contextTypes = new AsyncContextTypesClient(delegate.contextTypes, executor);
         this.environments = new AsyncEnvironmentsClient(delegate.environments, executor);
+        this.services = new AsyncServicesClient(delegate.services, executor);
         this.accountSettings = new AsyncAccountSettingsClient(delegate.accountSettings, executor);
         this.config = new AsyncConfigManagement(delegate.config, executor);
         this.flags = new AsyncFlagsManagement(delegate.flags, executor);

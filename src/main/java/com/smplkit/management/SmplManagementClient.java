@@ -40,6 +40,7 @@ import java.time.Duration;
  *   <li>{@link #contexts} — context-entity CRUD</li>
  *   <li>{@link #contextTypes} — context-type schemas</li>
  *   <li>{@link #environments} — environment CRUD</li>
+ *   <li>{@link #services} — service CRUD</li>
  *   <li>{@link #accountSettings} — account-level settings</li>
  *   <li>{@link #config} — config CRUD (singular, mirrors Python {@code mgmt.config})</li>
  *   <li>{@link #flags} — flag CRUD</li>
@@ -62,6 +63,8 @@ public final class SmplManagementClient implements AutoCloseable {
     public final ContextTypesClient contextTypes;
     /** Environment CRUD ({@code mgmt.environments}). */
     public final EnvironmentsClient environments;
+    /** Service CRUD ({@code mgmt.services}). */
+    public final ServicesClient services;
     /** Account-level settings ({@code mgmt.account_settings}). */
     public final AccountSettingsClient accountSettings;
     /** Config CRUD ({@code mgmt.config} — singular, matches Python). */
@@ -117,6 +120,7 @@ public final class SmplManagementClient implements AutoCloseable {
 
         // Direct namespaces on app service
         this.environments = new EnvironmentsClient(appApiClient);
+        this.services = new ServicesClient(appApiClient);
         this.contextTypes = new ContextTypesClient(appApiClient);
         this.contexts = new ContextsClient(appApiClient, contextBuffer);
         this.accountSettings = new AccountSettingsClient(appApiClient, appBaseUrl, cfg.apiKey);

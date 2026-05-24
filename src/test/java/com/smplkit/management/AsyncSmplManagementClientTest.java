@@ -21,6 +21,7 @@ class AsyncSmplManagementClientTest {
             assertNotNull(mc.contexts);
             assertNotNull(mc.contextTypes);
             assertNotNull(mc.environments);
+            assertNotNull(mc.services);
             assertNotNull(mc.accountSettings);
             assertNotNull(mc.config);
             assertNotNull(mc.flags);

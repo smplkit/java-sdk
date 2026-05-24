@@ -69,6 +69,20 @@ class AsyncDelegationTest {
     }
 
     @Test
+    void asyncServicesClient_allOverloadsReturnFutures() {
+        try (AsyncSmplManagementClient mc = AsyncSmplManagementClient.create("test-key")) {
+            AsyncServicesClient async = mc.services;
+            // Sync construction
+            assertNotNull(async.new_("user_service", "User Service"));
+            // Futures
+            assertNotNull(async.list());
+            assertNotNull(async.list(1, 100));
+            assertNotNull(async.get("user_service"));
+            assertNotNull(async.delete("user_service"));
+        }
+    }
+
+    @Test
     void asyncAccountSettingsClient_getReturnsFuture() {
         try (AsyncSmplManagementClient mc = AsyncSmplManagementClient.create("test-key")) {
             AsyncAccountSettingsClient async = mc.accountSettings;
