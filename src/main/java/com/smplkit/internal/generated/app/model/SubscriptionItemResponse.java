@@ -126,7 +126,7 @@ public class SubscriptionItemResponse {
   }
 
   /**
-   * Current plan for this product (e.g. &#x60;STANDARD&#x60;, &#x60;PRO&#x60;).
+   * Current plan for this product (e.g. &#x60;standard&#x60;, &#x60;pro&#x60;).
    * @return plan
    */
   @jakarta.annotation.Nonnull
@@ -174,7 +174,7 @@ public class SubscriptionItemResponse {
   }
 
   /**
-   * When a plan change is scheduled for the end of the current billing period, this is the plan that will take effect. Otherwise &#x60;null&#x60;. The value &#x60;FREE&#x60; indicates the enrollment will be dropped.
+   * When a plan change is scheduled for the end of the current billing period, this is the plan that will take effect. Otherwise &#x60;null&#x60;. The value &#x60;free&#x60; indicates the enrollment will be dropped.
    * @return pendingPlanChange
    */
   @jakarta.annotation.Nullable
