@@ -79,7 +79,7 @@ public class SubscriptionItemRequest {
   }
 
   /**
-   * Target plan for this product. Must be a paid plan such as &#x60;STANDARD&#x60; or &#x60;PRO&#x60;; the free plan is implicit when a product is not listed.
+   * Target plan for this product. Must be a paid plan such as &#x60;standard&#x60; or &#x60;pro&#x60;; the free plan is implicit when a product is not listed.
    * @return plan
    */
   @jakarta.annotation.Nonnull
