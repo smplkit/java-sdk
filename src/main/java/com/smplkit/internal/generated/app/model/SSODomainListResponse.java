@@ -24,81 +24,93 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonTypeName;
 import com.fasterxml.jackson.annotation.JsonValue;
+import com.smplkit.internal.generated.app.model.ListMeta;
+import com.smplkit.internal.generated.app.model.SSODomainResource;
+import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.List;
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 
 
 import com.smplkit.internal.generated.app.ApiClient;
 /**
- * One product enrollment as supplied by the caller.  The caller supplies the *desired* (product, plan) pair for each product they want enrolled. Products absent from the request are interpreted as scheduled-for-drop at the end of the current billing period.
+ * JSON:API collection response for SSO domains on an account.
  */
 @JsonPropertyOrder({
-  SubscriptionItemRequest.JSON_PROPERTY_PRODUCT,
-  SubscriptionItemRequest.JSON_PROPERTY_PLAN
+  SSODomainListResponse.JSON_PROPERTY_DATA,
+  SSODomainListResponse.JSON_PROPERTY_META
 })
 @jakarta.annotation.Generated(value = "org.openapitools.codegen.languages.JavaClientCodegen", comments = "Generator version: 7.21.0")
-public class SubscriptionItemRequest {
-  public static final String JSON_PROPERTY_PRODUCT = "product";
+public class SSODomainListResponse {
+  public static final String JSON_PROPERTY_DATA = "data";
   @jakarta.annotation.Nonnull
-  private String product;
+  private List<SSODomainResource> data = new ArrayList<>();
 
-  public static final String JSON_PROPERTY_PLAN = "plan";
+  public static final String JSON_PROPERTY_META = "meta";
   @jakarta.annotation.Nonnull
-  private String plan;
+  private ListMeta meta;
 
-  public SubscriptionItemRequest() { 
+  public SSODomainListResponse() { 
   }
 
-  public SubscriptionItemRequest product(@jakarta.annotation.Nonnull String product) {
-    this.product = product;
+  public SSODomainListResponse data(@jakarta.annotation.Nonnull List<SSODomainResource> data) {
+    this.data = data;
+    return this;
+  }
+
+  public SSODomainListResponse addDataItem(SSODomainResource dataItem) {
+    if (this.data == null) {
+      this.data = new ArrayList<>();
+    }
+    this.data.add(dataItem);
     return this;
   }
 
   /**
-   * Product key (e.g. &#x60;audit&#x60;, &#x60;config&#x60;, &#x60;flags&#x60;, &#x60;logging&#x60;).
-   * @return product
+   * Get data
+   * @return data
    */
   @jakarta.annotation.Nonnull
-  @JsonProperty(value = JSON_PROPERTY_PRODUCT, required = true)
+  @JsonProperty(value = JSON_PROPERTY_DATA, required = true)
   @JsonInclude(value = JsonInclude.Include.ALWAYS)
-  public String getProduct() {
-    return product;
+  public List<SSODomainResource> getData() {
+    return data;
   }
 
 
-  @JsonProperty(value = JSON_PROPERTY_PRODUCT, required = true)
+  @JsonProperty(value = JSON_PROPERTY_DATA, required = true)
   @JsonInclude(value = JsonInclude.Include.ALWAYS)
-  public void setProduct(@jakarta.annotation.Nonnull String product) {
-    this.product = product;
+  public void setData(@jakarta.annotation.Nonnull List<SSODomainResource> data) {
+    this.data = data;
   }
 
 
-  public SubscriptionItemRequest plan(@jakarta.annotation.Nonnull String plan) {
-    this.plan = plan;
+  public SSODomainListResponse meta(@jakarta.annotation.Nonnull ListMeta meta) {
+    this.meta = meta;
     return this;
   }
 
   /**
-   * Target plan for this product. Must be a paid plan such as &#x60;standard&#x60; or &#x60;pro&#x60;; the free plan is implicit when a product is not listed.
-   * @return plan
+   * Get meta
+   * @return meta
    */
   @jakarta.annotation.Nonnull
-  @JsonProperty(value = JSON_PROPERTY_PLAN, required = true)
+  @JsonProperty(value = JSON_PROPERTY_META, required = true)
   @JsonInclude(value = JsonInclude.Include.ALWAYS)
-  public String getPlan() {
-    return plan;
+  public ListMeta getMeta() {
+    return meta;
   }
 
 
-  @JsonProperty(value = JSON_PROPERTY_PLAN, required = true)
+  @JsonProperty(value = JSON_PROPERTY_META, required = true)
   @JsonInclude(value = JsonInclude.Include.ALWAYS)
-  public void setPlan(@jakarta.annotation.Nonnull String plan) {
-    this.plan = plan;
+  public void setMeta(@jakarta.annotation.Nonnull ListMeta meta) {
+    this.meta = meta;
   }
 
 
   /**
-   * Return true if this SubscriptionItemRequest object is equal to o.
+   * Return true if this SSODomainListResponse object is equal to o.
    */
   @Override
   public boolean equals(Object o) {
@@ -108,22 +120,22 @@ public class SubscriptionItemRequest {
     if (o == null || getClass() != o.getClass()) {
       return false;
     }
-    SubscriptionItemRequest subscriptionItemRequest = (SubscriptionItemRequest) o;
-    return Objects.equals(this.product, subscriptionItemRequest.product) &&
-        Objects.equals(this.plan, subscriptionItemRequest.plan);
+    SSODomainListResponse ssODomainListResponse = (SSODomainListResponse) o;
+    return Objects.equals(this.data, ssODomainListResponse.data) &&
+        Objects.equals(this.meta, ssODomainListResponse.meta);
   }
 
   @Override
   public int hashCode() {
-    return Objects.hash(product, plan);
+    return Objects.hash(data, meta);
   }
 
   @Override
   public String toString() {
     StringBuilder sb = new StringBuilder();
-    sb.append("class SubscriptionItemRequest {\n");
-    sb.append("    product: ").append(toIndentedString(product)).append("\n");
-    sb.append("    plan: ").append(toIndentedString(plan)).append("\n");
+    sb.append("class SSODomainListResponse {\n");
+    sb.append("    data: ").append(toIndentedString(data)).append("\n");
+    sb.append("    meta: ").append(toIndentedString(meta)).append("\n");
     sb.append("}");
     return sb.toString();
   }
@@ -168,14 +180,19 @@ public class SubscriptionItemRequest {
 
     StringJoiner joiner = new StringJoiner("&");
 
-    // add `product` to the URL query string
-    if (getProduct() != null) {
-      joiner.add(String.format(java.util.Locale.ROOT, "%sproduct%s=%s", prefix, suffix, ApiClient.urlEncode(ApiClient.valueToString(getProduct()))));
+    // add `data` to the URL query string
+    if (getData() != null) {
+      for (int i = 0; i < getData().size(); i++) {
+        if (getData().get(i) != null) {
+          joiner.add(getData().get(i).toUrlQueryString(String.format(java.util.Locale.ROOT, "%sdata%s%s", prefix, suffix,
+          "".equals(suffix) ? "" : String.format(java.util.Locale.ROOT, "%s%d%s", containerPrefix, i, containerSuffix))));
+        }
+      }
     }
 
-    // add `plan` to the URL query string
-    if (getPlan() != null) {
-      joiner.add(String.format(java.util.Locale.ROOT, "%splan%s=%s", prefix, suffix, ApiClient.urlEncode(ApiClient.valueToString(getPlan()))));
+    // add `meta` to the URL query string
+    if (getMeta() != null) {
+      joiner.add(getMeta().toUrlQueryString(prefix + "meta" + suffix));
     }
 
     return joiner.toString();
