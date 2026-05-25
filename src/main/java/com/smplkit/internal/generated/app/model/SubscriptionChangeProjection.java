@@ -142,7 +142,7 @@ public class SubscriptionChangeProjection {
   }
 
   /**
-   * Current plan for this product, or &#x60;FREE&#x60; if it is being added.
+   * Current plan for this product, or &#x60;free&#x60; if it is being added.
    * @return fromPlan
    */
   @jakarta.annotation.Nonnull
@@ -166,7 +166,7 @@ public class SubscriptionChangeProjection {
   }
 
   /**
-   * Plan the product will be on after the change. &#x60;FREE&#x60; indicates the enrollment will be dropped.
+   * Plan the product will be on after the change. &#x60;free&#x60; indicates the enrollment will be dropped.
    * @return toPlan
    */
   @jakarta.annotation.Nonnull
