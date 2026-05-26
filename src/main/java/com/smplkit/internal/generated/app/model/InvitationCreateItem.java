@@ -24,7 +24,13 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonTypeName;
 import com.fasterxml.jackson.annotation.JsonValue;
+import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.List;
+import org.openapitools.jackson.nullable.JsonNullable;
+import com.fasterxml.jackson.annotation.JsonIgnore;
+import org.openapitools.jackson.nullable.JsonNullable;
+import java.util.NoSuchElementException;
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 
 
@@ -34,7 +40,8 @@ import com.smplkit.internal.generated.app.ApiClient;
  */
 @JsonPropertyOrder({
   InvitationCreateItem.JSON_PROPERTY_EMAIL,
-  InvitationCreateItem.JSON_PROPERTY_ROLE
+  InvitationCreateItem.JSON_PROPERTY_ROLE,
+  InvitationCreateItem.JSON_PROPERTY_GROUPS
 })
 @jakarta.annotation.Generated(value = "org.openapitools.codegen.languages.JavaClientCodegen", comments = "Generator version: 7.21.0")
 public class InvitationCreateItem {
@@ -45,6 +52,9 @@ public class InvitationCreateItem {
   public static final String JSON_PROPERTY_ROLE = "role";
   @jakarta.annotation.Nullable
   private String role = "MEMBER";
+
+  public static final String JSON_PROPERTY_GROUPS = "groups";
+  private JsonNullable<List<String>> groups = JsonNullable.<List<String>>undefined();
 
   public InvitationCreateItem() { 
   }
@@ -97,6 +107,50 @@ public class InvitationCreateItem {
   }
 
 
+  public InvitationCreateItem groups(@jakarta.annotation.Nullable List<String> groups) {
+    this.groups = JsonNullable.<List<String>>of(groups);
+    return this;
+  }
+
+  public InvitationCreateItem addGroupsItem(String groupsItem) {
+    if (this.groups == null || !this.groups.isPresent()) {
+      this.groups = JsonNullable.<List<String>>of(new ArrayList<>());
+    }
+    try {
+      this.groups.get().add(groupsItem);
+    } catch (java.util.NoSuchElementException e) {
+      // this can never happen, as we make sure above that the value is present
+    }
+    return this;
+  }
+
+  /**
+   * Optional list of Environment Access Group ids to add the invitee to on acceptance. Every accepted invitation also yields the reserved &#x60;default&#x60; membership, regardless of this field. Unknown group ids are rejected at create time with &#x60;422&#x60;.
+   * @return groups
+   */
+  @jakarta.annotation.Nullable
+  @JsonIgnore
+  public List<String> getGroups() {
+        return groups.orElse(null);
+  }
+
+  @JsonProperty(value = JSON_PROPERTY_GROUPS, required = false)
+  @JsonInclude(value = JsonInclude.Include.USE_DEFAULTS)
+
+  public JsonNullable<List<String>> getGroups_JsonNullable() {
+    return groups;
+  }
+  
+  @JsonProperty(JSON_PROPERTY_GROUPS)
+  public void setGroups_JsonNullable(JsonNullable<List<String>> groups) {
+    this.groups = groups;
+  }
+
+  public void setGroups(@jakarta.annotation.Nullable List<String> groups) {
+    this.groups = JsonNullable.<List<String>>of(groups);
+  }
+
+
   /**
    * Return true if this InvitationCreateItem object is equal to o.
    */
@@ -110,12 +164,24 @@ public class InvitationCreateItem {
     }
     InvitationCreateItem invitationCreateItem = (InvitationCreateItem) o;
     return Objects.equals(this.email, invitationCreateItem.email) &&
-        Objects.equals(this.role, invitationCreateItem.role);
+        Objects.equals(this.role, invitationCreateItem.role) &&
+        equalsNullable(this.groups, invitationCreateItem.groups);
+  }
+
+  private static <T> boolean equalsNullable(JsonNullable<T> a, JsonNullable<T> b) {
+    return a == b || (a != null && b != null && a.isPresent() && b.isPresent() && Objects.deepEquals(a.get(), b.get()));
   }
 
   @Override
   public int hashCode() {
-    return Objects.hash(email, role);
+    return Objects.hash(email, role, hashCodeNullable(groups));
+  }
+
+  private static <T> int hashCodeNullable(JsonNullable<T> a) {
+    if (a == null) {
+      return 1;
+    }
+    return a.isPresent() ? Arrays.deepHashCode(new Object[]{a.get()}) : 31;
   }
 
   @Override
@@ -124,6 +190,7 @@ public class InvitationCreateItem {
     sb.append("class InvitationCreateItem {\n");
     sb.append("    email: ").append(toIndentedString(email)).append("\n");
     sb.append("    role: ").append(toIndentedString(role)).append("\n");
+    sb.append("    groups: ").append(toIndentedString(groups)).append("\n");
     sb.append("}");
     return sb.toString();
   }
@@ -176,6 +243,15 @@ public class InvitationCreateItem {
     // add `role` to the URL query string
     if (getRole() != null) {
       joiner.add(String.format(java.util.Locale.ROOT, "%srole%s=%s", prefix, suffix, ApiClient.urlEncode(ApiClient.valueToString(getRole()))));
+    }
+
+    // add `groups` to the URL query string
+    if (getGroups() != null) {
+      for (int i = 0; i < getGroups().size(); i++) {
+        joiner.add(String.format(java.util.Locale.ROOT, "%sgroups%s%s=%s", prefix, suffix,
+            "".equals(suffix) ? "" : String.format(java.util.Locale.ROOT, "%s%d%s", containerPrefix, i, containerSuffix),
+            ApiClient.urlEncode(ApiClient.valueToString(getGroups().get(i)))));
+      }
     }
 
     return joiner.toString();

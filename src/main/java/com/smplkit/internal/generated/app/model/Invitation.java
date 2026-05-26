@@ -25,7 +25,9 @@ import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonTypeName;
 import com.fasterxml.jackson.annotation.JsonValue;
 import java.time.OffsetDateTime;
+import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.List;
 import org.openapitools.jackson.nullable.JsonNullable;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import org.openapitools.jackson.nullable.JsonNullable;
@@ -42,6 +44,7 @@ import com.smplkit.internal.generated.app.ApiClient;
   Invitation.JSON_PROPERTY_ROLE,
   Invitation.JSON_PROPERTY_STATUS,
   Invitation.JSON_PROPERTY_INVITED_BY,
+  Invitation.JSON_PROPERTY_GROUPS,
   Invitation.JSON_PROPERTY_ACCOUNT_NAME,
   Invitation.JSON_PROPERTY_INVITER_DISPLAY_NAME,
   Invitation.JSON_PROPERTY_TOKEN,
@@ -62,6 +65,9 @@ public class Invitation {
 
   public static final String JSON_PROPERTY_INVITED_BY = "invited_by";
   private JsonNullable<String> invitedBy = JsonNullable.<String>undefined();
+
+  public static final String JSON_PROPERTY_GROUPS = "groups";
+  private JsonNullable<List<String>> groups = JsonNullable.<List<String>>undefined();
 
   public static final String JSON_PROPERTY_ACCOUNT_NAME = "account_name";
   private JsonNullable<String> accountName = JsonNullable.<String>undefined();
@@ -90,6 +96,7 @@ public class Invitation {
     @JsonProperty(JSON_PROPERTY_ROLE) String role, 
     @JsonProperty(JSON_PROPERTY_STATUS) String status, 
     @JsonProperty(JSON_PROPERTY_INVITED_BY) String invitedBy, 
+    @JsonProperty(JSON_PROPERTY_GROUPS) List<String> groups, 
     @JsonProperty(JSON_PROPERTY_ACCOUNT_NAME) String accountName, 
     @JsonProperty(JSON_PROPERTY_INVITER_DISPLAY_NAME) String inviterDisplayName, 
     @JsonProperty(JSON_PROPERTY_TOKEN) String token, 
@@ -102,6 +109,7 @@ public class Invitation {
     this.role = role == null ? JsonNullable.<String>undefined() : JsonNullable.of(role);
     this.status = status == null ? JsonNullable.<String>undefined() : JsonNullable.of(status);
     this.invitedBy = invitedBy == null ? JsonNullable.<String>undefined() : JsonNullable.of(invitedBy);
+    this.groups = groups == null ? JsonNullable.<List<String>>undefined() : JsonNullable.of(groups);
     this.accountName = accountName == null ? JsonNullable.<String>undefined() : JsonNullable.of(accountName);
     this.inviterDisplayName = inviterDisplayName == null ? JsonNullable.<String>undefined() : JsonNullable.of(inviterDisplayName);
     this.token = token == null ? JsonNullable.<String>undefined() : JsonNullable.of(token);
@@ -218,6 +226,34 @@ public class Invitation {
   @JsonProperty(JSON_PROPERTY_INVITED_BY)
   private void setInvitedBy_JsonNullable(JsonNullable<String> invitedBy) {
     this.invitedBy = invitedBy;
+  }
+
+
+
+  /**
+   * Environment Access Group ids the invitee will be added to on acceptance, in addition to the always-applied &#x60;default&#x60; group. Empty array or &#x60;null&#x60; means default-only.
+   * @return groups
+   */
+  @jakarta.annotation.Nullable
+  @JsonIgnore
+  public List<String> getGroups() {
+    
+    if (groups == null) {
+      groups = JsonNullable.<List<String>>undefined();
+    }
+    return groups.orElse(null);
+  }
+
+  @JsonProperty(value = JSON_PROPERTY_GROUPS, required = false)
+  @JsonInclude(value = JsonInclude.Include.USE_DEFAULTS)
+
+  public JsonNullable<List<String>> getGroups_JsonNullable() {
+    return groups;
+  }
+  
+  @JsonProperty(JSON_PROPERTY_GROUPS)
+  private void setGroups_JsonNullable(JsonNullable<List<String>> groups) {
+    this.groups = groups;
   }
 
 
@@ -406,6 +442,7 @@ public class Invitation {
         equalsNullable(this.role, invitation.role) &&
         equalsNullable(this.status, invitation.status) &&
         equalsNullable(this.invitedBy, invitation.invitedBy) &&
+        equalsNullable(this.groups, invitation.groups) &&
         equalsNullable(this.accountName, invitation.accountName) &&
         equalsNullable(this.inviterDisplayName, invitation.inviterDisplayName) &&
         equalsNullable(this.token, invitation.token) &&
@@ -420,7 +457,7 @@ public class Invitation {
 
   @Override
   public int hashCode() {
-    return Objects.hash(hashCodeNullable(email), hashCodeNullable(role), hashCodeNullable(status), hashCodeNullable(invitedBy), hashCodeNullable(accountName), hashCodeNullable(inviterDisplayName), hashCodeNullable(token), hashCodeNullable(expiresAt), hashCodeNullable(createdAt), hashCodeNullable(updatedAt));
+    return Objects.hash(hashCodeNullable(email), hashCodeNullable(role), hashCodeNullable(status), hashCodeNullable(invitedBy), hashCodeNullable(groups), hashCodeNullable(accountName), hashCodeNullable(inviterDisplayName), hashCodeNullable(token), hashCodeNullable(expiresAt), hashCodeNullable(createdAt), hashCodeNullable(updatedAt));
   }
 
   private static <T> int hashCodeNullable(JsonNullable<T> a) {
@@ -438,6 +475,7 @@ public class Invitation {
     sb.append("    role: ").append(toIndentedString(role)).append("\n");
     sb.append("    status: ").append(toIndentedString(status)).append("\n");
     sb.append("    invitedBy: ").append(toIndentedString(invitedBy)).append("\n");
+    sb.append("    groups: ").append(toIndentedString(groups)).append("\n");
     sb.append("    accountName: ").append(toIndentedString(accountName)).append("\n");
     sb.append("    inviterDisplayName: ").append(toIndentedString(inviterDisplayName)).append("\n");
     sb.append("    token: ").append(toIndentedString(token)).append("\n");
@@ -506,6 +544,15 @@ public class Invitation {
     // add `invited_by` to the URL query string
     if (getInvitedBy() != null) {
       joiner.add(String.format(java.util.Locale.ROOT, "%sinvited_by%s=%s", prefix, suffix, ApiClient.urlEncode(ApiClient.valueToString(getInvitedBy()))));
+    }
+
+    // add `groups` to the URL query string
+    if (getGroups() != null) {
+      for (int i = 0; i < getGroups().size(); i++) {
+        joiner.add(String.format(java.util.Locale.ROOT, "%sgroups%s%s=%s", prefix, suffix,
+            "".equals(suffix) ? "" : String.format(java.util.Locale.ROOT, "%s%d%s", containerPrefix, i, containerSuffix),
+            ApiClient.urlEncode(ApiClient.valueToString(getGroups().get(i)))));
+      }
     }
 
     // add `account_name` to the URL query string
