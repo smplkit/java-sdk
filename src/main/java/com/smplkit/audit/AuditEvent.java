@@ -21,6 +21,13 @@ public final class AuditEvent {
     public final String resourceType;
     /** Customer-facing id of the resource the event operated on. */
     public final String resourceId;
+    /**
+     * Severity. One of {@code TRACE}, {@code DEBUG}, {@code INFO}, {@code WARN},
+     * {@code ERROR}, {@code FATAL}. Always present on read.
+     */
+    public final String severity;
+    /** Optional free-form bucket label. {@code null} when not supplied. */
+    public final String category;
     /** When the event actually happened, as reported by the source. */
     public final OffsetDateTime occurredAt;
     /** When the audit service first ingested this event. */
@@ -60,6 +67,7 @@ public final class AuditEvent {
     public final boolean doNotForward;
 
     public AuditEvent(UUID id, String eventType, String resourceType, String resourceId,
+                      String severity, String category,
                       OffsetDateTime occurredAt, OffsetDateTime createdAt,
                       String actorType, String actorId, String actorLabel,
                       Map<String, Object> data,
@@ -68,6 +76,8 @@ public final class AuditEvent {
         this.eventType = eventType;
         this.resourceType = resourceType;
         this.resourceId = resourceId;
+        this.severity = severity;
+        this.category = category;
         this.occurredAt = occurredAt;
         this.createdAt = createdAt;
         this.actorType = actorType;

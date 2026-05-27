@@ -2,6 +2,7 @@ package com.smplkit.audit;
 
 import com.smplkit.internal.generated.audit.ApiClient;
 import com.smplkit.internal.generated.audit.ApiException;
+import com.smplkit.internal.generated.audit.api.CategoriesApi;
 import com.smplkit.internal.generated.audit.api.EventTypesApi;
 import com.smplkit.internal.generated.audit.api.ForwardersApi;
 import com.smplkit.internal.generated.audit.api.ResourceTypesApi;
@@ -36,6 +37,7 @@ class AuditForwardersTest {
     private ForwardersApi forwardersApi;
     private ResourceTypesApi resourceTypesApi;
     private EventTypesApi eventTypesApi;
+    private CategoriesApi categoriesApi;
     private final AtomicReference<HttpHandler> handler = new AtomicReference<>();
 
     @BeforeEach
@@ -58,6 +60,7 @@ class AuditForwardersTest {
         forwardersApi = new ForwardersApi(apiClient);
         resourceTypesApi = new ResourceTypesApi(apiClient);
         eventTypesApi = new EventTypesApi(apiClient);
+        categoriesApi = new CategoriesApi(apiClient);
     }
 
     @AfterEach
@@ -670,5 +673,82 @@ class AuditForwardersTest {
         Forwarder fwd = fwds.get(FWD_ID);
         assertTrue(fwd.configuration.tlsVerify);
         assertNull(fwd.configuration.caCert);
+    }
+
+    // -----------------------------------------------------------------
+    // AuditCategoriesClient
+    // -----------------------------------------------------------------
+
+    @Test
+    void categories_list_returnsRows() throws Exception {
+        handler.set(ex -> respondJson(ex, 200,
+                "{\"data\":["
+                + "{\"id\":\"auth\",\"type\":\"category\","
+                + "\"attributes\":{\"category\":\"auth\",\"created_at\":\"2026-04-01T00:00:00Z\"}},"
+                + "{\"id\":\"billing\",\"type\":\"category\","
+                + "\"attributes\":{\"category\":\"billing\",\"created_at\":\"2026-04-02T00:00:00Z\"}}"
+                + "],\"meta\":{\"pagination\":{\"page\":1,\"size\":1000}}}"));
+        AuditCategoriesClient cc = new AuditCategoriesClient(categoriesApi);
+        ListCategoriesPage page = cc.list(new ListCategoriesInput());
+        assertEquals(2, page.categories.size());
+        assertEquals("auth", page.categories.get(0).id);
+        assertEquals("auth", page.categories.get(0).category);
+        assertNotNull(page.categories.get(0).createdAt);
+        assertEquals(1, page.pagination.page);
+        assertEquals(1000, page.pagination.size);
+    }
+
+    @Test
+    void categories_list_missingMeta_returnsNullPagination() throws Exception {
+        handler.set(ex -> respondJson(ex, 200, "{\"data\":[]}"));
+        AuditCategoriesClient cc = new AuditCategoriesClient(categoriesApi);
+        ListCategoriesPage page = cc.list(new ListCategoriesInput());
+        assertEquals(0, page.categories.size());
+        assertNull(page.pagination);
+    }
+
+    @Test
+    void categories_list_pageNumberAndMetaTotalForwardedToQuery() throws Exception {
+        java.util.concurrent.atomic.AtomicReference<String> lastUri = new java.util.concurrent.atomic.AtomicReference<>();
+        handler.set(ex -> {
+            lastUri.set(ex.getRequestURI().getRawQuery());
+            respondJson(ex, 200,
+                    "{\"data\":[],\"meta\":{\"pagination\":{\"page\":2,\"size\":1,\"total\":3,\"total_pages\":3}}}");
+        });
+        AuditCategoriesClient cc = new AuditCategoriesClient(categoriesApi);
+        ListCategoriesInput in = new ListCategoriesInput();
+        in.pageNumber = 2;
+        in.pageSize = 1;
+        in.metaTotal = true;
+        ListCategoriesPage page = cc.list(in);
+        assertEquals(2, page.pagination.page);
+        assertEquals(3, page.pagination.total);
+        assertTrue(lastUri.get().contains("page%5Bnumber%5D=2"));
+    }
+
+    @Test
+    void auditCategory_constructorPopulatesFields() {
+        AuditCategory c = new AuditCategory("auth", "auth",
+                java.time.OffsetDateTime.parse("2026-04-01T00:00:00Z"));
+        assertEquals("auth", c.id);
+        assertEquals("auth", c.category);
+        assertNotNull(c.createdAt);
+    }
+
+    @Test
+    void listCategoriesInput_isInstantiable() {
+        ListCategoriesInput in = new ListCategoriesInput();
+        in.pageNumber = 2;
+        in.pageSize = 10;
+        in.metaTotal = true;
+        assertEquals(2, in.pageNumber);
+    }
+
+    @Test
+    void listCategoriesPage_constructorPopulatesFields() {
+        PageInfo info = new PageInfo(1, 1000, null, null);
+        ListCategoriesPage page = new ListCategoriesPage(java.util.List.of(), info);
+        assertEquals(0, page.categories.size());
+        assertSame(info, page.pagination);
     }
 }

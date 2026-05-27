@@ -3,6 +3,7 @@ package com.smplkit.audit;
 import com.smplkit.SmplClient;
 import com.smplkit.internal.HttpClients;
 import com.smplkit.internal.generated.audit.ApiClient;
+import com.smplkit.internal.generated.audit.api.CategoriesApi;
 import com.smplkit.internal.generated.audit.api.EventTypesApi;
 import com.smplkit.internal.generated.audit.api.EventsApi;
 import com.smplkit.internal.generated.audit.api.ResourceTypesApi;
@@ -27,6 +28,7 @@ public final class AuditClient implements AutoCloseable {
     private final AuditEvents events;
     private final AuditResourceTypesClient resourceTypes;
     private final AuditEventTypesClient eventTypes;
+    private final AuditCategoriesClient categories;
 
     public AuditClient(HttpClient httpClient, String apiKey, Map<String, String> extraHeaders,
                        Duration timeout, String baseUrl) {
@@ -38,6 +40,7 @@ public final class AuditClient implements AutoCloseable {
         this.events = new AuditEvents(new EventsApi(apiClient));
         this.resourceTypes = new AuditResourceTypesClient(new ResourceTypesApi(apiClient));
         this.eventTypes = new AuditEventTypesClient(new EventTypesApi(apiClient));
+        this.categories = new AuditCategoriesClient(new CategoriesApi(apiClient));
     }
 
     /** Returns the events sub-client (record, list, get). */
@@ -53,6 +56,11 @@ public final class AuditClient implements AutoCloseable {
     /** Returns the event-types sub-client (list). */
     public AuditEventTypesClient eventTypes() {
         return eventTypes;
+    }
+
+    /** Returns the categories sub-client (list). */
+    public AuditCategoriesClient categories() {
+        return categories;
     }
 
     @Override

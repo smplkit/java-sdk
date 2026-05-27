@@ -17,6 +17,10 @@ public final class ListEventsInput {
     public String actorType;
     /** Filter by actor id. Matches the literal string stored on the event — any identifier scheme works. */
     public String actorId;
+    /** Filter by severity. One of {@code TRACE}, {@code DEBUG}, {@code INFO}, {@code WARN}, {@code ERROR}, {@code FATAL}. */
+    public String severity;
+    /** Filter by category (exact match against whatever the recording call stored). */
+    public String category;
     /** Range filter on {@code occurredAt}, e.g. {@code "[2026-01-01T00:00:00Z,*)"}. */
     public String occurredAtRange;
     /**

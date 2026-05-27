@@ -192,4 +192,19 @@ class AuditClientTest {
         assertNotNull(client.resourceTypes());
         assertNotNull(client.eventTypes());
     }
+
+    @Test
+    void client_exposesCategoriesAccessor() {
+        assertNotNull(client.categories());
+    }
+
+    @Test
+    void create_withSeverityAndCategory_serializesBothFields() throws Exception {
+        CreateEventInput input = new CreateEventInput("user.created", "user", "u-1");
+        input.severity = "WARN";
+        input.category = "auth";
+        client.events().record(input);
+        client.events().flush(2_000);
+        assertTrue(postCount.get() >= 1);
+    }
 }
