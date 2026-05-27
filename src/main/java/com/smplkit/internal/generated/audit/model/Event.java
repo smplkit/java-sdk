@@ -24,6 +24,7 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonTypeName;
 import com.fasterxml.jackson.annotation.JsonValue;
+import com.smplkit.internal.generated.audit.model.Severity;
 import java.time.OffsetDateTime;
 import java.util.Arrays;
 import java.util.HashMap;
@@ -44,6 +45,8 @@ import com.smplkit.internal.generated.audit.ApiClient;
   Event.JSON_PROPERTY_RESOURCE_TYPE,
   Event.JSON_PROPERTY_RESOURCE_ID,
   Event.JSON_PROPERTY_DESCRIPTION,
+  Event.JSON_PROPERTY_SEVERITY,
+  Event.JSON_PROPERTY_CATEGORY,
   Event.JSON_PROPERTY_OCCURRED_AT,
   Event.JSON_PROPERTY_ACTOR_TYPE,
   Event.JSON_PROPERTY_ACTOR_ID,
@@ -69,6 +72,13 @@ public class Event {
 
   public static final String JSON_PROPERTY_DESCRIPTION = "description";
   private JsonNullable<String> description = JsonNullable.<String>undefined();
+
+  public static final String JSON_PROPERTY_SEVERITY = "severity";
+  @jakarta.annotation.Nullable
+  private Severity severity;
+
+  public static final String JSON_PROPERTY_CATEGORY = "category";
+  private JsonNullable<String> category = JsonNullable.<String>undefined();
 
   public static final String JSON_PROPERTY_OCCURRED_AT = "occurred_at";
   private JsonNullable<OffsetDateTime> occurredAt = JsonNullable.<OffsetDateTime>undefined();
@@ -210,6 +220,62 @@ public class Event {
 
   public void setDescription(@jakarta.annotation.Nullable String description) {
     this.description = JsonNullable.<String>of(description);
+  }
+
+
+  public Event severity(@jakarta.annotation.Nullable Severity severity) {
+    this.severity = severity;
+    return this;
+  }
+
+  /**
+   * Get severity
+   * @return severity
+   */
+  @jakarta.annotation.Nullable
+  @JsonProperty(value = JSON_PROPERTY_SEVERITY, required = false)
+  @JsonInclude(value = JsonInclude.Include.USE_DEFAULTS)
+  public Severity getSeverity() {
+    return severity;
+  }
+
+
+  @JsonProperty(value = JSON_PROPERTY_SEVERITY, required = false)
+  @JsonInclude(value = JsonInclude.Include.USE_DEFAULTS)
+  public void setSeverity(@jakarta.annotation.Nullable Severity severity) {
+    this.severity = severity;
+  }
+
+
+  public Event category(@jakarta.annotation.Nullable String category) {
+    this.category = JsonNullable.<String>of(category);
+    return this;
+  }
+
+  /**
+   * Free-form bucket label, e.g. &#x60;auth&#x60;, &#x60;billing&#x60;, &#x60;config-change&#x60;. Stored exactly as supplied. Drives the &#x60;filter[category]&#x60; filter and the &#x60;GET /api/v1/categories&#x60; discovery endpoint.
+   * @return category
+   */
+  @jakarta.annotation.Nullable
+  @JsonIgnore
+  public String getCategory() {
+        return category.orElse(null);
+  }
+
+  @JsonProperty(value = JSON_PROPERTY_CATEGORY, required = false)
+  @JsonInclude(value = JsonInclude.Include.USE_DEFAULTS)
+
+  public JsonNullable<String> getCategory_JsonNullable() {
+    return category;
+  }
+  
+  @JsonProperty(JSON_PROPERTY_CATEGORY)
+  public void setCategory_JsonNullable(JsonNullable<String> category) {
+    this.category = category;
+  }
+
+  public void setCategory(@jakarta.annotation.Nullable String category) {
+    this.category = JsonNullable.<String>of(category);
   }
 
 
@@ -469,6 +535,8 @@ public class Event {
         Objects.equals(this.resourceType, event.resourceType) &&
         Objects.equals(this.resourceId, event.resourceId) &&
         equalsNullable(this.description, event.description) &&
+        Objects.equals(this.severity, event.severity) &&
+        equalsNullable(this.category, event.category) &&
         equalsNullable(this.occurredAt, event.occurredAt) &&
         equalsNullable(this.actorType, event.actorType) &&
         equalsNullable(this.actorId, event.actorId) &&
@@ -485,7 +553,7 @@ public class Event {
 
   @Override
   public int hashCode() {
-    return Objects.hash(eventType, resourceType, resourceId, hashCodeNullable(description), hashCodeNullable(occurredAt), hashCodeNullable(actorType), hashCodeNullable(actorId), hashCodeNullable(actorLabel), data, doNotForward, hashCodeNullable(createdAt), hashCodeNullable(idempotencyKey));
+    return Objects.hash(eventType, resourceType, resourceId, hashCodeNullable(description), severity, hashCodeNullable(category), hashCodeNullable(occurredAt), hashCodeNullable(actorType), hashCodeNullable(actorId), hashCodeNullable(actorLabel), data, doNotForward, hashCodeNullable(createdAt), hashCodeNullable(idempotencyKey));
   }
 
   private static <T> int hashCodeNullable(JsonNullable<T> a) {
@@ -503,6 +571,8 @@ public class Event {
     sb.append("    resourceType: ").append(toIndentedString(resourceType)).append("\n");
     sb.append("    resourceId: ").append(toIndentedString(resourceId)).append("\n");
     sb.append("    description: ").append(toIndentedString(description)).append("\n");
+    sb.append("    severity: ").append(toIndentedString(severity)).append("\n");
+    sb.append("    category: ").append(toIndentedString(category)).append("\n");
     sb.append("    occurredAt: ").append(toIndentedString(occurredAt)).append("\n");
     sb.append("    actorType: ").append(toIndentedString(actorType)).append("\n");
     sb.append("    actorId: ").append(toIndentedString(actorId)).append("\n");
@@ -573,6 +643,16 @@ public class Event {
     // add `description` to the URL query string
     if (getDescription() != null) {
       joiner.add(String.format(java.util.Locale.ROOT, "%sdescription%s=%s", prefix, suffix, ApiClient.urlEncode(ApiClient.valueToString(getDescription()))));
+    }
+
+    // add `severity` to the URL query string
+    if (getSeverity() != null) {
+      joiner.add(String.format(java.util.Locale.ROOT, "%sseverity%s=%s", prefix, suffix, ApiClient.urlEncode(ApiClient.valueToString(getSeverity()))));
+    }
+
+    // add `category` to the URL query string
+    if (getCategory() != null) {
+      joiner.add(String.format(java.util.Locale.ROOT, "%scategory%s=%s", prefix, suffix, ApiClient.urlEncode(ApiClient.valueToString(getCategory()))));
     }
 
     // add `occurred_at` to the URL query string

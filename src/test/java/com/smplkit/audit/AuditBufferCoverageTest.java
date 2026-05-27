@@ -185,11 +185,14 @@ class AuditBufferCoverageTest {
                 "snapshot", java.util.Map.of("k", "v"),
                 "d", 1);
         var ev = new AuditEvent(id, "act", "rt", "rid",
+                "INFO", "auth",
                 OffsetDateTime.now(), OffsetDateTime.now(),
                 "USER", actorId, "label",
                 data, "ik", false);
         assertEquals(id, ev.id);
         assertEquals("act", ev.eventType);
+        assertEquals("INFO", ev.severity);
+        assertEquals("auth", ev.category);
         assertEquals(actorId, ev.actorId);
         assertEquals("ik", ev.idempotencyKey);
     }

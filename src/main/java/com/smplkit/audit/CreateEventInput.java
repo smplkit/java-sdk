@@ -16,6 +16,14 @@ public final class CreateEventInput {
     public String resourceType;
     /** Customer-facing id of the resource the event operated on. */
     public String resourceId;
+    /**
+     * Severity. One of {@code TRACE}, {@code DEBUG}, {@code INFO}, {@code WARN},
+     * {@code ERROR}, {@code FATAL}. Unknown values are rejected with a 400.
+     * {@code null} records the event at {@code INFO}.
+     */
+    public String severity;
+    /** Optional free-form bucket label. {@code null} round-trips as {@code null} on read. */
+    public String category;
     /** Optional; defaults to server-side {@code now()} if {@code null}. */
     public OffsetDateTime occurredAt;
     /**
