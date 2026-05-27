@@ -95,7 +95,8 @@ public final class AuditEvents {
                 input.doNotForward,
                 input.pageSize,
                 input.pageAfter,
-                null
+                null, // format — null = paginated JSON:API response (no streaming export)
+                null  // sort
         );
 
         List<AuditEvent> events = new ArrayList<>();

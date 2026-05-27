@@ -21,6 +21,8 @@ import com.smplkit.internal.generated.audit.Pair;
 import com.smplkit.internal.generated.audit.model.EventListResponse;
 import com.smplkit.internal.generated.audit.model.EventRequest;
 import com.smplkit.internal.generated.audit.model.EventResponse;
+import com.smplkit.internal.generated.audit.model.EventSearchRequest;
+import com.smplkit.internal.generated.audit.model.EventSearchResponse;
 import java.util.UUID;
 
 import com.fasterxml.jackson.core.type.TypeReference;
@@ -285,7 +287,7 @@ public class EventsApi {
 
   /**
    * List Events
-   * List audit events for this account.  Default sort is &#x60;-occurred_at&#x60; (newest occurrence first). Sort by &#x60;occurred_at&#x60; or &#x60;created_at&#x60;, ascending or descending — keep the same &#x60;sort&#x60; value across paginated requests so the cursor stays consistent. Filters are exact-match except &#x60;filter[occurred_at]&#x60;, which uses interval notation (e.g. &#x60;[2026-01-01T00:00:00Z,2026-01-31T00:00:00Z)&#x60;), and &#x60;filter[search]&#x60;, which is a case-insensitive substring match against &#x60;resource_id&#x60; or &#x60;description&#x60;.  Two filter-combination rules:  - &#x60;filter[resource_id]&#x60; must be accompanied by &#x60;filter[resource_type]&#x60;   (the index is keyed on the pair). - &#x60;filter[search]&#x60; must be accompanied by either &#x60;filter[occurred_at]&#x60;   or &#x60;filter[resource_type]&#x60; + &#x60;filter[resource_id]&#x60; (substring   matching has no index, so an unbounded substring scan is rejected).  No other filter combinations are required — calling the endpoint with no query parameters returns the latest events for the account, paginated.  &#x60;page[size]&#x60; defaults to 1000 and must not exceed 1000.
+   * List audit events for this account.  Default sort is &#x60;-occurred_at&#x60; (newest occurrence first). Sort by &#x60;occurred_at&#x60; or &#x60;created_at&#x60;, ascending or descending — keep the same &#x60;sort&#x60; value across paginated requests so the cursor stays consistent. Filters are exact-match except &#x60;filter[occurred_at]&#x60;, which uses interval notation (e.g. &#x60;[2026-01-01T00:00:00Z,2026-01-31T00:00:00Z)&#x60;), and &#x60;filter[search]&#x60;, which is a case-insensitive substring match against &#x60;resource_id&#x60; or &#x60;description&#x60;.  Two filter-combination rules:  - &#x60;filter[resource_id]&#x60; must be accompanied by &#x60;filter[resource_type]&#x60;   (the index is keyed on the pair). - &#x60;filter[search]&#x60; must be accompanied by either &#x60;filter[occurred_at]&#x60;   or &#x60;filter[resource_type]&#x60; + &#x60;filter[resource_id]&#x60; (substring   matching has no index, so an unbounded substring scan is rejected).  No other filter combinations are required — calling the endpoint with no query parameters returns the latest events for the account, paginated.  &#x60;page[size]&#x60; defaults to 1000 and must not exceed 1000.  Pass &#x60;format&#x3D;CSV&#x60; or &#x60;format&#x3D;JSONL&#x60; to stream a download of the full filtered result set instead of a paginated JSON:API response. The download honors every supplied filter and ignores &#x60;page[size]&#x60; and &#x60;page[after]&#x60;.
    * @param filterOccurredAt  (optional)
    * @param filterActorType  (optional)
    * @param filterActorId  (optional)
@@ -296,17 +298,18 @@ public class EventsApi {
    * @param filterDoNotForward When set, restrict to events whose &#x60;do_not_forward&#x60; flag matches the given boolean. Forwarder previews typically pass &#x60;false&#x60; to match live-pipeline semantics (events flagged &#x60;do_not_forward&#x3D;true&#x60; are skipped by the forwarder pipeline). (optional)
    * @param pageSize  (optional)
    * @param pageAfter  (optional)
+   * @param format When set, stream a download of the full filtered result set in the chosen format instead of returning a paginated JSON:API response. &#x60;page[size]&#x60; and &#x60;page[after]&#x60; are ignored in this mode; every event matching the supplied filters is emitted. &#x60;CSV&#x60; writes one row per event with the event payload (&#x60;data&#x60;) serialized as a single JSON-encoded cell. &#x60;JSONL&#x60; writes one JSON object per line with the event payload nested as a JSON object. Omit this parameter to receive the paginated JSON:API response. (optional)
    * @param sort Field to sort by. Prefix with &#x60;-&#x60; for descending order. Default: &#x60;-occurred_at&#x60;. Allowed values: &#x60;created_at&#x60;, &#x60;-created_at&#x60;, &#x60;occurred_at&#x60;, &#x60;-occurred_at&#x60;. (optional, default to -occurred_at)
    * @return EventListResponse
    * @throws ApiException if fails to make API call
    */
-  public EventListResponse listEvents(@jakarta.annotation.Nullable String filterOccurredAt, @jakarta.annotation.Nullable String filterActorType, @jakarta.annotation.Nullable String filterActorId, @jakarta.annotation.Nullable String filterEventType, @jakarta.annotation.Nullable String filterResourceType, @jakarta.annotation.Nullable String filterResourceId, @jakarta.annotation.Nullable String filterSearch, @jakarta.annotation.Nullable Boolean filterDoNotForward, @jakarta.annotation.Nullable Integer pageSize, @jakarta.annotation.Nullable String pageAfter, @jakarta.annotation.Nullable String sort) throws ApiException {
-    return listEvents(filterOccurredAt, filterActorType, filterActorId, filterEventType, filterResourceType, filterResourceId, filterSearch, filterDoNotForward, pageSize, pageAfter, sort, null);
+  public EventListResponse listEvents(@jakarta.annotation.Nullable String filterOccurredAt, @jakarta.annotation.Nullable String filterActorType, @jakarta.annotation.Nullable String filterActorId, @jakarta.annotation.Nullable String filterEventType, @jakarta.annotation.Nullable String filterResourceType, @jakarta.annotation.Nullable String filterResourceId, @jakarta.annotation.Nullable String filterSearch, @jakarta.annotation.Nullable Boolean filterDoNotForward, @jakarta.annotation.Nullable Integer pageSize, @jakarta.annotation.Nullable String pageAfter, @jakarta.annotation.Nullable String format, @jakarta.annotation.Nullable String sort) throws ApiException {
+    return listEvents(filterOccurredAt, filterActorType, filterActorId, filterEventType, filterResourceType, filterResourceId, filterSearch, filterDoNotForward, pageSize, pageAfter, format, sort, null);
   }
 
   /**
    * List Events
-   * List audit events for this account.  Default sort is &#x60;-occurred_at&#x60; (newest occurrence first). Sort by &#x60;occurred_at&#x60; or &#x60;created_at&#x60;, ascending or descending — keep the same &#x60;sort&#x60; value across paginated requests so the cursor stays consistent. Filters are exact-match except &#x60;filter[occurred_at]&#x60;, which uses interval notation (e.g. &#x60;[2026-01-01T00:00:00Z,2026-01-31T00:00:00Z)&#x60;), and &#x60;filter[search]&#x60;, which is a case-insensitive substring match against &#x60;resource_id&#x60; or &#x60;description&#x60;.  Two filter-combination rules:  - &#x60;filter[resource_id]&#x60; must be accompanied by &#x60;filter[resource_type]&#x60;   (the index is keyed on the pair). - &#x60;filter[search]&#x60; must be accompanied by either &#x60;filter[occurred_at]&#x60;   or &#x60;filter[resource_type]&#x60; + &#x60;filter[resource_id]&#x60; (substring   matching has no index, so an unbounded substring scan is rejected).  No other filter combinations are required — calling the endpoint with no query parameters returns the latest events for the account, paginated.  &#x60;page[size]&#x60; defaults to 1000 and must not exceed 1000.
+   * List audit events for this account.  Default sort is &#x60;-occurred_at&#x60; (newest occurrence first). Sort by &#x60;occurred_at&#x60; or &#x60;created_at&#x60;, ascending or descending — keep the same &#x60;sort&#x60; value across paginated requests so the cursor stays consistent. Filters are exact-match except &#x60;filter[occurred_at]&#x60;, which uses interval notation (e.g. &#x60;[2026-01-01T00:00:00Z,2026-01-31T00:00:00Z)&#x60;), and &#x60;filter[search]&#x60;, which is a case-insensitive substring match against &#x60;resource_id&#x60; or &#x60;description&#x60;.  Two filter-combination rules:  - &#x60;filter[resource_id]&#x60; must be accompanied by &#x60;filter[resource_type]&#x60;   (the index is keyed on the pair). - &#x60;filter[search]&#x60; must be accompanied by either &#x60;filter[occurred_at]&#x60;   or &#x60;filter[resource_type]&#x60; + &#x60;filter[resource_id]&#x60; (substring   matching has no index, so an unbounded substring scan is rejected).  No other filter combinations are required — calling the endpoint with no query parameters returns the latest events for the account, paginated.  &#x60;page[size]&#x60; defaults to 1000 and must not exceed 1000.  Pass &#x60;format&#x3D;CSV&#x60; or &#x60;format&#x3D;JSONL&#x60; to stream a download of the full filtered result set instead of a paginated JSON:API response. The download honors every supplied filter and ignores &#x60;page[size]&#x60; and &#x60;page[after]&#x60;.
    * @param filterOccurredAt  (optional)
    * @param filterActorType  (optional)
    * @param filterActorId  (optional)
@@ -317,19 +320,20 @@ public class EventsApi {
    * @param filterDoNotForward When set, restrict to events whose &#x60;do_not_forward&#x60; flag matches the given boolean. Forwarder previews typically pass &#x60;false&#x60; to match live-pipeline semantics (events flagged &#x60;do_not_forward&#x3D;true&#x60; are skipped by the forwarder pipeline). (optional)
    * @param pageSize  (optional)
    * @param pageAfter  (optional)
+   * @param format When set, stream a download of the full filtered result set in the chosen format instead of returning a paginated JSON:API response. &#x60;page[size]&#x60; and &#x60;page[after]&#x60; are ignored in this mode; every event matching the supplied filters is emitted. &#x60;CSV&#x60; writes one row per event with the event payload (&#x60;data&#x60;) serialized as a single JSON-encoded cell. &#x60;JSONL&#x60; writes one JSON object per line with the event payload nested as a JSON object. Omit this parameter to receive the paginated JSON:API response. (optional)
    * @param sort Field to sort by. Prefix with &#x60;-&#x60; for descending order. Default: &#x60;-occurred_at&#x60;. Allowed values: &#x60;created_at&#x60;, &#x60;-created_at&#x60;, &#x60;occurred_at&#x60;, &#x60;-occurred_at&#x60;. (optional, default to -occurred_at)
    * @param headers Optional headers to include in the request
    * @return EventListResponse
    * @throws ApiException if fails to make API call
    */
-  public EventListResponse listEvents(@jakarta.annotation.Nullable String filterOccurredAt, @jakarta.annotation.Nullable String filterActorType, @jakarta.annotation.Nullable String filterActorId, @jakarta.annotation.Nullable String filterEventType, @jakarta.annotation.Nullable String filterResourceType, @jakarta.annotation.Nullable String filterResourceId, @jakarta.annotation.Nullable String filterSearch, @jakarta.annotation.Nullable Boolean filterDoNotForward, @jakarta.annotation.Nullable Integer pageSize, @jakarta.annotation.Nullable String pageAfter, @jakarta.annotation.Nullable String sort, Map<String, String> headers) throws ApiException {
-    ApiResponse<EventListResponse> localVarResponse = listEventsWithHttpInfo(filterOccurredAt, filterActorType, filterActorId, filterEventType, filterResourceType, filterResourceId, filterSearch, filterDoNotForward, pageSize, pageAfter, sort, headers);
+  public EventListResponse listEvents(@jakarta.annotation.Nullable String filterOccurredAt, @jakarta.annotation.Nullable String filterActorType, @jakarta.annotation.Nullable String filterActorId, @jakarta.annotation.Nullable String filterEventType, @jakarta.annotation.Nullable String filterResourceType, @jakarta.annotation.Nullable String filterResourceId, @jakarta.annotation.Nullable String filterSearch, @jakarta.annotation.Nullable Boolean filterDoNotForward, @jakarta.annotation.Nullable Integer pageSize, @jakarta.annotation.Nullable String pageAfter, @jakarta.annotation.Nullable String format, @jakarta.annotation.Nullable String sort, Map<String, String> headers) throws ApiException {
+    ApiResponse<EventListResponse> localVarResponse = listEventsWithHttpInfo(filterOccurredAt, filterActorType, filterActorId, filterEventType, filterResourceType, filterResourceId, filterSearch, filterDoNotForward, pageSize, pageAfter, format, sort, headers);
     return localVarResponse.getData();
   }
 
   /**
    * List Events
-   * List audit events for this account.  Default sort is &#x60;-occurred_at&#x60; (newest occurrence first). Sort by &#x60;occurred_at&#x60; or &#x60;created_at&#x60;, ascending or descending — keep the same &#x60;sort&#x60; value across paginated requests so the cursor stays consistent. Filters are exact-match except &#x60;filter[occurred_at]&#x60;, which uses interval notation (e.g. &#x60;[2026-01-01T00:00:00Z,2026-01-31T00:00:00Z)&#x60;), and &#x60;filter[search]&#x60;, which is a case-insensitive substring match against &#x60;resource_id&#x60; or &#x60;description&#x60;.  Two filter-combination rules:  - &#x60;filter[resource_id]&#x60; must be accompanied by &#x60;filter[resource_type]&#x60;   (the index is keyed on the pair). - &#x60;filter[search]&#x60; must be accompanied by either &#x60;filter[occurred_at]&#x60;   or &#x60;filter[resource_type]&#x60; + &#x60;filter[resource_id]&#x60; (substring   matching has no index, so an unbounded substring scan is rejected).  No other filter combinations are required — calling the endpoint with no query parameters returns the latest events for the account, paginated.  &#x60;page[size]&#x60; defaults to 1000 and must not exceed 1000.
+   * List audit events for this account.  Default sort is &#x60;-occurred_at&#x60; (newest occurrence first). Sort by &#x60;occurred_at&#x60; or &#x60;created_at&#x60;, ascending or descending — keep the same &#x60;sort&#x60; value across paginated requests so the cursor stays consistent. Filters are exact-match except &#x60;filter[occurred_at]&#x60;, which uses interval notation (e.g. &#x60;[2026-01-01T00:00:00Z,2026-01-31T00:00:00Z)&#x60;), and &#x60;filter[search]&#x60;, which is a case-insensitive substring match against &#x60;resource_id&#x60; or &#x60;description&#x60;.  Two filter-combination rules:  - &#x60;filter[resource_id]&#x60; must be accompanied by &#x60;filter[resource_type]&#x60;   (the index is keyed on the pair). - &#x60;filter[search]&#x60; must be accompanied by either &#x60;filter[occurred_at]&#x60;   or &#x60;filter[resource_type]&#x60; + &#x60;filter[resource_id]&#x60; (substring   matching has no index, so an unbounded substring scan is rejected).  No other filter combinations are required — calling the endpoint with no query parameters returns the latest events for the account, paginated.  &#x60;page[size]&#x60; defaults to 1000 and must not exceed 1000.  Pass &#x60;format&#x3D;CSV&#x60; or &#x60;format&#x3D;JSONL&#x60; to stream a download of the full filtered result set instead of a paginated JSON:API response. The download honors every supplied filter and ignores &#x60;page[size]&#x60; and &#x60;page[after]&#x60;.
    * @param filterOccurredAt  (optional)
    * @param filterActorType  (optional)
    * @param filterActorId  (optional)
@@ -340,17 +344,18 @@ public class EventsApi {
    * @param filterDoNotForward When set, restrict to events whose &#x60;do_not_forward&#x60; flag matches the given boolean. Forwarder previews typically pass &#x60;false&#x60; to match live-pipeline semantics (events flagged &#x60;do_not_forward&#x3D;true&#x60; are skipped by the forwarder pipeline). (optional)
    * @param pageSize  (optional)
    * @param pageAfter  (optional)
+   * @param format When set, stream a download of the full filtered result set in the chosen format instead of returning a paginated JSON:API response. &#x60;page[size]&#x60; and &#x60;page[after]&#x60; are ignored in this mode; every event matching the supplied filters is emitted. &#x60;CSV&#x60; writes one row per event with the event payload (&#x60;data&#x60;) serialized as a single JSON-encoded cell. &#x60;JSONL&#x60; writes one JSON object per line with the event payload nested as a JSON object. Omit this parameter to receive the paginated JSON:API response. (optional)
    * @param sort Field to sort by. Prefix with &#x60;-&#x60; for descending order. Default: &#x60;-occurred_at&#x60;. Allowed values: &#x60;created_at&#x60;, &#x60;-created_at&#x60;, &#x60;occurred_at&#x60;, &#x60;-occurred_at&#x60;. (optional, default to -occurred_at)
    * @return ApiResponse&lt;EventListResponse&gt;
    * @throws ApiException if fails to make API call
    */
-  public ApiResponse<EventListResponse> listEventsWithHttpInfo(@jakarta.annotation.Nullable String filterOccurredAt, @jakarta.annotation.Nullable String filterActorType, @jakarta.annotation.Nullable String filterActorId, @jakarta.annotation.Nullable String filterEventType, @jakarta.annotation.Nullable String filterResourceType, @jakarta.annotation.Nullable String filterResourceId, @jakarta.annotation.Nullable String filterSearch, @jakarta.annotation.Nullable Boolean filterDoNotForward, @jakarta.annotation.Nullable Integer pageSize, @jakarta.annotation.Nullable String pageAfter, @jakarta.annotation.Nullable String sort) throws ApiException {
-    return listEventsWithHttpInfo(filterOccurredAt, filterActorType, filterActorId, filterEventType, filterResourceType, filterResourceId, filterSearch, filterDoNotForward, pageSize, pageAfter, sort, null);
+  public ApiResponse<EventListResponse> listEventsWithHttpInfo(@jakarta.annotation.Nullable String filterOccurredAt, @jakarta.annotation.Nullable String filterActorType, @jakarta.annotation.Nullable String filterActorId, @jakarta.annotation.Nullable String filterEventType, @jakarta.annotation.Nullable String filterResourceType, @jakarta.annotation.Nullable String filterResourceId, @jakarta.annotation.Nullable String filterSearch, @jakarta.annotation.Nullable Boolean filterDoNotForward, @jakarta.annotation.Nullable Integer pageSize, @jakarta.annotation.Nullable String pageAfter, @jakarta.annotation.Nullable String format, @jakarta.annotation.Nullable String sort) throws ApiException {
+    return listEventsWithHttpInfo(filterOccurredAt, filterActorType, filterActorId, filterEventType, filterResourceType, filterResourceId, filterSearch, filterDoNotForward, pageSize, pageAfter, format, sort, null);
   }
 
   /**
    * List Events
-   * List audit events for this account.  Default sort is &#x60;-occurred_at&#x60; (newest occurrence first). Sort by &#x60;occurred_at&#x60; or &#x60;created_at&#x60;, ascending or descending — keep the same &#x60;sort&#x60; value across paginated requests so the cursor stays consistent. Filters are exact-match except &#x60;filter[occurred_at]&#x60;, which uses interval notation (e.g. &#x60;[2026-01-01T00:00:00Z,2026-01-31T00:00:00Z)&#x60;), and &#x60;filter[search]&#x60;, which is a case-insensitive substring match against &#x60;resource_id&#x60; or &#x60;description&#x60;.  Two filter-combination rules:  - &#x60;filter[resource_id]&#x60; must be accompanied by &#x60;filter[resource_type]&#x60;   (the index is keyed on the pair). - &#x60;filter[search]&#x60; must be accompanied by either &#x60;filter[occurred_at]&#x60;   or &#x60;filter[resource_type]&#x60; + &#x60;filter[resource_id]&#x60; (substring   matching has no index, so an unbounded substring scan is rejected).  No other filter combinations are required — calling the endpoint with no query parameters returns the latest events for the account, paginated.  &#x60;page[size]&#x60; defaults to 1000 and must not exceed 1000.
+   * List audit events for this account.  Default sort is &#x60;-occurred_at&#x60; (newest occurrence first). Sort by &#x60;occurred_at&#x60; or &#x60;created_at&#x60;, ascending or descending — keep the same &#x60;sort&#x60; value across paginated requests so the cursor stays consistent. Filters are exact-match except &#x60;filter[occurred_at]&#x60;, which uses interval notation (e.g. &#x60;[2026-01-01T00:00:00Z,2026-01-31T00:00:00Z)&#x60;), and &#x60;filter[search]&#x60;, which is a case-insensitive substring match against &#x60;resource_id&#x60; or &#x60;description&#x60;.  Two filter-combination rules:  - &#x60;filter[resource_id]&#x60; must be accompanied by &#x60;filter[resource_type]&#x60;   (the index is keyed on the pair). - &#x60;filter[search]&#x60; must be accompanied by either &#x60;filter[occurred_at]&#x60;   or &#x60;filter[resource_type]&#x60; + &#x60;filter[resource_id]&#x60; (substring   matching has no index, so an unbounded substring scan is rejected).  No other filter combinations are required — calling the endpoint with no query parameters returns the latest events for the account, paginated.  &#x60;page[size]&#x60; defaults to 1000 and must not exceed 1000.  Pass &#x60;format&#x3D;CSV&#x60; or &#x60;format&#x3D;JSONL&#x60; to stream a download of the full filtered result set instead of a paginated JSON:API response. The download honors every supplied filter and ignores &#x60;page[size]&#x60; and &#x60;page[after]&#x60;.
    * @param filterOccurredAt  (optional)
    * @param filterActorType  (optional)
    * @param filterActorId  (optional)
@@ -361,13 +366,14 @@ public class EventsApi {
    * @param filterDoNotForward When set, restrict to events whose &#x60;do_not_forward&#x60; flag matches the given boolean. Forwarder previews typically pass &#x60;false&#x60; to match live-pipeline semantics (events flagged &#x60;do_not_forward&#x3D;true&#x60; are skipped by the forwarder pipeline). (optional)
    * @param pageSize  (optional)
    * @param pageAfter  (optional)
+   * @param format When set, stream a download of the full filtered result set in the chosen format instead of returning a paginated JSON:API response. &#x60;page[size]&#x60; and &#x60;page[after]&#x60; are ignored in this mode; every event matching the supplied filters is emitted. &#x60;CSV&#x60; writes one row per event with the event payload (&#x60;data&#x60;) serialized as a single JSON-encoded cell. &#x60;JSONL&#x60; writes one JSON object per line with the event payload nested as a JSON object. Omit this parameter to receive the paginated JSON:API response. (optional)
    * @param sort Field to sort by. Prefix with &#x60;-&#x60; for descending order. Default: &#x60;-occurred_at&#x60;. Allowed values: &#x60;created_at&#x60;, &#x60;-created_at&#x60;, &#x60;occurred_at&#x60;, &#x60;-occurred_at&#x60;. (optional, default to -occurred_at)
    * @param headers Optional headers to include in the request
    * @return ApiResponse&lt;EventListResponse&gt;
    * @throws ApiException if fails to make API call
    */
-  public ApiResponse<EventListResponse> listEventsWithHttpInfo(@jakarta.annotation.Nullable String filterOccurredAt, @jakarta.annotation.Nullable String filterActorType, @jakarta.annotation.Nullable String filterActorId, @jakarta.annotation.Nullable String filterEventType, @jakarta.annotation.Nullable String filterResourceType, @jakarta.annotation.Nullable String filterResourceId, @jakarta.annotation.Nullable String filterSearch, @jakarta.annotation.Nullable Boolean filterDoNotForward, @jakarta.annotation.Nullable Integer pageSize, @jakarta.annotation.Nullable String pageAfter, @jakarta.annotation.Nullable String sort, Map<String, String> headers) throws ApiException {
-    HttpRequest.Builder localVarRequestBuilder = listEventsRequestBuilder(filterOccurredAt, filterActorType, filterActorId, filterEventType, filterResourceType, filterResourceId, filterSearch, filterDoNotForward, pageSize, pageAfter, sort, headers);
+  public ApiResponse<EventListResponse> listEventsWithHttpInfo(@jakarta.annotation.Nullable String filterOccurredAt, @jakarta.annotation.Nullable String filterActorType, @jakarta.annotation.Nullable String filterActorId, @jakarta.annotation.Nullable String filterEventType, @jakarta.annotation.Nullable String filterResourceType, @jakarta.annotation.Nullable String filterResourceId, @jakarta.annotation.Nullable String filterSearch, @jakarta.annotation.Nullable Boolean filterDoNotForward, @jakarta.annotation.Nullable Integer pageSize, @jakarta.annotation.Nullable String pageAfter, @jakarta.annotation.Nullable String format, @jakarta.annotation.Nullable String sort, Map<String, String> headers) throws ApiException {
+    HttpRequest.Builder localVarRequestBuilder = listEventsRequestBuilder(filterOccurredAt, filterActorType, filterActorId, filterEventType, filterResourceType, filterResourceId, filterSearch, filterDoNotForward, pageSize, pageAfter, format, sort, headers);
     try {
       HttpResponse<InputStream> localVarResponse = memberVarHttpClient.send(
           localVarRequestBuilder.build(),
@@ -414,7 +420,7 @@ public class EventsApi {
     }
   }
 
-  private HttpRequest.Builder listEventsRequestBuilder(@jakarta.annotation.Nullable String filterOccurredAt, @jakarta.annotation.Nullable String filterActorType, @jakarta.annotation.Nullable String filterActorId, @jakarta.annotation.Nullable String filterEventType, @jakarta.annotation.Nullable String filterResourceType, @jakarta.annotation.Nullable String filterResourceId, @jakarta.annotation.Nullable String filterSearch, @jakarta.annotation.Nullable Boolean filterDoNotForward, @jakarta.annotation.Nullable Integer pageSize, @jakarta.annotation.Nullable String pageAfter, @jakarta.annotation.Nullable String sort, Map<String, String> headers) throws ApiException {
+  private HttpRequest.Builder listEventsRequestBuilder(@jakarta.annotation.Nullable String filterOccurredAt, @jakarta.annotation.Nullable String filterActorType, @jakarta.annotation.Nullable String filterActorId, @jakarta.annotation.Nullable String filterEventType, @jakarta.annotation.Nullable String filterResourceType, @jakarta.annotation.Nullable String filterResourceId, @jakarta.annotation.Nullable String filterSearch, @jakarta.annotation.Nullable Boolean filterDoNotForward, @jakarta.annotation.Nullable Integer pageSize, @jakarta.annotation.Nullable String pageAfter, @jakarta.annotation.Nullable String format, @jakarta.annotation.Nullable String sort, Map<String, String> headers) throws ApiException {
 
     HttpRequest.Builder localVarRequestBuilder = HttpRequest.newBuilder();
 
@@ -443,6 +449,8 @@ public class EventsApi {
     localVarQueryParams.addAll(ApiClient.parameterToPairs("page[size]", pageSize));
     localVarQueryParameterBaseName = "page[after]";
     localVarQueryParams.addAll(ApiClient.parameterToPairs("page[after]", pageAfter));
+    localVarQueryParameterBaseName = "format";
+    localVarQueryParams.addAll(ApiClient.parameterToPairs("format", format));
     localVarQueryParameterBaseName = "sort";
     localVarQueryParams.addAll(ApiClient.parameterToPairs("sort", sort));
 
@@ -586,6 +594,129 @@ public class EventsApi {
 
     try {
       byte[] localVarPostBody = memberVarObjectMapper.writeValueAsBytes(eventRequest);
+      localVarRequestBuilder.method("POST", HttpRequest.BodyPublishers.ofByteArray(localVarPostBody));
+    } catch (IOException e) {
+      throw new ApiException(e);
+    }
+    if (memberVarReadTimeout != null) {
+      localVarRequestBuilder.timeout(memberVarReadTimeout);
+    }
+    // Add custom headers if provided
+    localVarRequestBuilder = HttpRequestBuilderExtensions.withAdditionalHeaders(localVarRequestBuilder, headers);
+    if (memberVarInterceptor != null) {
+      memberVarInterceptor.accept(localVarRequestBuilder);
+    }
+    return localVarRequestBuilder;
+  }
+
+  /**
+   * Search Events
+   * Search audit events with column filters and an optional JSON Logic expression.  Without a JSON Logic &#x60;filter&#x60;: behaves like &#x60;GET /api/v1/events&#x60; with the same column filters.  With a JSON Logic &#x60;filter&#x60;: the search is silently capped to the last 30 days by &#x60;occurred_at&#x60; (intersected with any explicit &#x60;filter[occurred_at]&#x60; the caller supplied), the column filters narrow the candidate set in SQL, and the JSON Logic expression runs in memory against each candidate row using the same &#x60;json-logic-qubit&#x60; evaluator the forwarder pipeline uses. Up to 50,000 rows are scanned per request; the response&#39;s &#x60;meta.scan&#x60; block reports the scan stats so a selective filter doesn&#39;t look like \&quot;0 matches\&quot; when the truth is \&quot;ceiling reached.\&quot;
+   * @param eventSearchRequest  (required)
+   * @return EventSearchResponse
+   * @throws ApiException if fails to make API call
+   */
+  public EventSearchResponse searchEvents(@jakarta.annotation.Nonnull EventSearchRequest eventSearchRequest) throws ApiException {
+    return searchEvents(eventSearchRequest, null);
+  }
+
+  /**
+   * Search Events
+   * Search audit events with column filters and an optional JSON Logic expression.  Without a JSON Logic &#x60;filter&#x60;: behaves like &#x60;GET /api/v1/events&#x60; with the same column filters.  With a JSON Logic &#x60;filter&#x60;: the search is silently capped to the last 30 days by &#x60;occurred_at&#x60; (intersected with any explicit &#x60;filter[occurred_at]&#x60; the caller supplied), the column filters narrow the candidate set in SQL, and the JSON Logic expression runs in memory against each candidate row using the same &#x60;json-logic-qubit&#x60; evaluator the forwarder pipeline uses. Up to 50,000 rows are scanned per request; the response&#39;s &#x60;meta.scan&#x60; block reports the scan stats so a selective filter doesn&#39;t look like \&quot;0 matches\&quot; when the truth is \&quot;ceiling reached.\&quot;
+   * @param eventSearchRequest  (required)
+   * @param headers Optional headers to include in the request
+   * @return EventSearchResponse
+   * @throws ApiException if fails to make API call
+   */
+  public EventSearchResponse searchEvents(@jakarta.annotation.Nonnull EventSearchRequest eventSearchRequest, Map<String, String> headers) throws ApiException {
+    ApiResponse<EventSearchResponse> localVarResponse = searchEventsWithHttpInfo(eventSearchRequest, headers);
+    return localVarResponse.getData();
+  }
+
+  /**
+   * Search Events
+   * Search audit events with column filters and an optional JSON Logic expression.  Without a JSON Logic &#x60;filter&#x60;: behaves like &#x60;GET /api/v1/events&#x60; with the same column filters.  With a JSON Logic &#x60;filter&#x60;: the search is silently capped to the last 30 days by &#x60;occurred_at&#x60; (intersected with any explicit &#x60;filter[occurred_at]&#x60; the caller supplied), the column filters narrow the candidate set in SQL, and the JSON Logic expression runs in memory against each candidate row using the same &#x60;json-logic-qubit&#x60; evaluator the forwarder pipeline uses. Up to 50,000 rows are scanned per request; the response&#39;s &#x60;meta.scan&#x60; block reports the scan stats so a selective filter doesn&#39;t look like \&quot;0 matches\&quot; when the truth is \&quot;ceiling reached.\&quot;
+   * @param eventSearchRequest  (required)
+   * @return ApiResponse&lt;EventSearchResponse&gt;
+   * @throws ApiException if fails to make API call
+   */
+  public ApiResponse<EventSearchResponse> searchEventsWithHttpInfo(@jakarta.annotation.Nonnull EventSearchRequest eventSearchRequest) throws ApiException {
+    return searchEventsWithHttpInfo(eventSearchRequest, null);
+  }
+
+  /**
+   * Search Events
+   * Search audit events with column filters and an optional JSON Logic expression.  Without a JSON Logic &#x60;filter&#x60;: behaves like &#x60;GET /api/v1/events&#x60; with the same column filters.  With a JSON Logic &#x60;filter&#x60;: the search is silently capped to the last 30 days by &#x60;occurred_at&#x60; (intersected with any explicit &#x60;filter[occurred_at]&#x60; the caller supplied), the column filters narrow the candidate set in SQL, and the JSON Logic expression runs in memory against each candidate row using the same &#x60;json-logic-qubit&#x60; evaluator the forwarder pipeline uses. Up to 50,000 rows are scanned per request; the response&#39;s &#x60;meta.scan&#x60; block reports the scan stats so a selective filter doesn&#39;t look like \&quot;0 matches\&quot; when the truth is \&quot;ceiling reached.\&quot;
+   * @param eventSearchRequest  (required)
+   * @param headers Optional headers to include in the request
+   * @return ApiResponse&lt;EventSearchResponse&gt;
+   * @throws ApiException if fails to make API call
+   */
+  public ApiResponse<EventSearchResponse> searchEventsWithHttpInfo(@jakarta.annotation.Nonnull EventSearchRequest eventSearchRequest, Map<String, String> headers) throws ApiException {
+    HttpRequest.Builder localVarRequestBuilder = searchEventsRequestBuilder(eventSearchRequest, headers);
+    try {
+      HttpResponse<InputStream> localVarResponse = memberVarHttpClient.send(
+          localVarRequestBuilder.build(),
+          HttpResponse.BodyHandlers.ofInputStream());
+      if (memberVarResponseInterceptor != null) {
+        memberVarResponseInterceptor.accept(localVarResponse);
+      }
+      InputStream localVarResponseBody = null;
+      try {
+        if (localVarResponse.statusCode()/ 100 != 2) {
+          throw getApiException("searchEvents", localVarResponse);
+        }
+        localVarResponseBody = ApiClient.getResponseBody(localVarResponse);
+        if (localVarResponseBody == null) {
+          return new ApiResponse<EventSearchResponse>(
+              localVarResponse.statusCode(),
+              localVarResponse.headers().map(),
+              null
+          );
+        }
+
+        
+        
+        String responseBody = new String(localVarResponseBody.readAllBytes());
+        EventSearchResponse responseValue = responseBody.isBlank()? null: memberVarObjectMapper.readValue(responseBody, new TypeReference<EventSearchResponse>() {});
+        
+
+        return new ApiResponse<EventSearchResponse>(
+            localVarResponse.statusCode(),
+            localVarResponse.headers().map(),
+            responseValue
+        );
+      } finally {
+        if (localVarResponseBody != null) {
+          localVarResponseBody.close();
+        }
+      }
+    } catch (IOException e) {
+      throw new ApiException(e);
+    }
+    catch (InterruptedException e) {
+      Thread.currentThread().interrupt();
+      throw new ApiException(e);
+    }
+  }
+
+  private HttpRequest.Builder searchEventsRequestBuilder(@jakarta.annotation.Nonnull EventSearchRequest eventSearchRequest, Map<String, String> headers) throws ApiException {
+    // verify the required parameter 'eventSearchRequest' is set
+    if (eventSearchRequest == null) {
+      throw new ApiException(400, "Missing the required parameter 'eventSearchRequest' when calling searchEvents");
+    }
+
+    HttpRequest.Builder localVarRequestBuilder = HttpRequest.newBuilder();
+
+    String localVarPath = "/api/v1/events/search";
+
+    localVarRequestBuilder.uri(URI.create(memberVarBaseUri + localVarPath));
+
+    localVarRequestBuilder.header("Content-Type", "application/json");
+    localVarRequestBuilder.header("Accept", "application/json");
+
+    try {
+      byte[] localVarPostBody = memberVarObjectMapper.writeValueAsBytes(eventSearchRequest);
       localVarRequestBuilder.method("POST", HttpRequest.BodyPublishers.ofByteArray(localVarPostBody));
     } catch (IOException e) {
       throw new ApiException(e);
