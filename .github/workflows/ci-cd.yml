@@ -58,11 +58,17 @@ jobs:
         run: ./gradlew build
 
       - name: Upload coverage report
-        if: matrix.java-version == 17
+        # Run on failure too so we can diagnose intermittent JDK 17 JaCoCo
+        # coverage-gate flakes — the report (HTML + XML + .exec) is generated
+        # by jacocoTestReport, which runs before jacocoTestCoverageVerification.
+        if: always() && matrix.java-version == 17
         uses: actions/upload-artifact@v4
         with:
           name: coverage-report
-          path: build/reports/jacoco/test/
+          path: |
+            build/reports/jacoco/test/
+            build/jacoco/test.exec
+            build/reports/tests/test/
 
       - name: Upload coverage to Codecov
         uses: codecov/codecov-action@v5
