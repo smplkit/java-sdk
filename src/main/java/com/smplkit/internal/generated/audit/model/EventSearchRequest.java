@@ -43,6 +43,8 @@ import com.smplkit.internal.generated.audit.ApiClient;
   EventSearchRequest.JSON_PROPERTY_FILTER_EVENT_TYPE,
   EventSearchRequest.JSON_PROPERTY_FILTER_RESOURCE_TYPE,
   EventSearchRequest.JSON_PROPERTY_FILTER_RESOURCE_ID,
+  EventSearchRequest.JSON_PROPERTY_FILTER_SEVERITY,
+  EventSearchRequest.JSON_PROPERTY_FILTER_CATEGORY,
   EventSearchRequest.JSON_PROPERTY_FILTER_ACTOR_TYPE,
   EventSearchRequest.JSON_PROPERTY_FILTER_ACTOR_ID,
   EventSearchRequest.JSON_PROPERTY_FILTER_OCCURRED_AT,
@@ -65,6 +67,12 @@ public class EventSearchRequest {
 
   public static final String JSON_PROPERTY_FILTER_RESOURCE_ID = "filter[resource_id]";
   private JsonNullable<String> filterResourceId = JsonNullable.<String>undefined();
+
+  public static final String JSON_PROPERTY_FILTER_SEVERITY = "filter[severity]";
+  private JsonNullable<String> filterSeverity = JsonNullable.<String>undefined();
+
+  public static final String JSON_PROPERTY_FILTER_CATEGORY = "filter[category]";
+  private JsonNullable<String> filterCategory = JsonNullable.<String>undefined();
 
   public static final String JSON_PROPERTY_FILTER_ACTOR_TYPE = "filter[actor_type]";
   private JsonNullable<String> filterActorType = JsonNullable.<String>undefined();
@@ -232,6 +240,70 @@ public class EventSearchRequest {
 
   public void setFilterResourceId(@jakarta.annotation.Nullable String filterResourceId) {
     this.filterResourceId = JsonNullable.<String>of(filterResourceId);
+  }
+
+
+  public EventSearchRequest filterSeverity(@jakarta.annotation.Nullable String filterSeverity) {
+    this.filterSeverity = JsonNullable.<String>of(filterSeverity);
+    return this;
+  }
+
+  /**
+   * Exact match on the event&#39;s &#x60;severity&#x60; field. One of &#x60;TRACE&#x60;, &#x60;DEBUG&#x60;, &#x60;INFO&#x60;, &#x60;WARN&#x60;, &#x60;ERROR&#x60;, &#x60;FATAL&#x60;.
+   * @return filterSeverity
+   */
+  @jakarta.annotation.Nullable
+  @JsonIgnore
+  public String getFilterSeverity() {
+        return filterSeverity.orElse(null);
+  }
+
+  @JsonProperty(value = JSON_PROPERTY_FILTER_SEVERITY, required = false)
+  @JsonInclude(value = JsonInclude.Include.USE_DEFAULTS)
+
+  public JsonNullable<String> getFilterSeverity_JsonNullable() {
+    return filterSeverity;
+  }
+  
+  @JsonProperty(JSON_PROPERTY_FILTER_SEVERITY)
+  public void setFilterSeverity_JsonNullable(JsonNullable<String> filterSeverity) {
+    this.filterSeverity = filterSeverity;
+  }
+
+  public void setFilterSeverity(@jakarta.annotation.Nullable String filterSeverity) {
+    this.filterSeverity = JsonNullable.<String>of(filterSeverity);
+  }
+
+
+  public EventSearchRequest filterCategory(@jakarta.annotation.Nullable String filterCategory) {
+    this.filterCategory = JsonNullable.<String>of(filterCategory);
+    return this;
+  }
+
+  /**
+   * Exact match on the event&#39;s &#x60;category&#x60; field.
+   * @return filterCategory
+   */
+  @jakarta.annotation.Nullable
+  @JsonIgnore
+  public String getFilterCategory() {
+        return filterCategory.orElse(null);
+  }
+
+  @JsonProperty(value = JSON_PROPERTY_FILTER_CATEGORY, required = false)
+  @JsonInclude(value = JsonInclude.Include.USE_DEFAULTS)
+
+  public JsonNullable<String> getFilterCategory_JsonNullable() {
+    return filterCategory;
+  }
+  
+  @JsonProperty(JSON_PROPERTY_FILTER_CATEGORY)
+  public void setFilterCategory_JsonNullable(JsonNullable<String> filterCategory) {
+    this.filterCategory = filterCategory;
+  }
+
+  public void setFilterCategory(@jakarta.annotation.Nullable String filterCategory) {
+    this.filterCategory = JsonNullable.<String>of(filterCategory);
   }
 
 
@@ -493,6 +565,8 @@ public class EventSearchRequest {
         equalsNullable(this.filterEventType, eventSearchRequest.filterEventType) &&
         equalsNullable(this.filterResourceType, eventSearchRequest.filterResourceType) &&
         equalsNullable(this.filterResourceId, eventSearchRequest.filterResourceId) &&
+        equalsNullable(this.filterSeverity, eventSearchRequest.filterSeverity) &&
+        equalsNullable(this.filterCategory, eventSearchRequest.filterCategory) &&
         equalsNullable(this.filterActorType, eventSearchRequest.filterActorType) &&
         equalsNullable(this.filterActorId, eventSearchRequest.filterActorId) &&
         equalsNullable(this.filterOccurredAt, eventSearchRequest.filterOccurredAt) &&
@@ -509,7 +583,7 @@ public class EventSearchRequest {
 
   @Override
   public int hashCode() {
-    return Objects.hash(hashCodeNullable(filter), hashCodeNullable(filterEventType), hashCodeNullable(filterResourceType), hashCodeNullable(filterResourceId), hashCodeNullable(filterActorType), hashCodeNullable(filterActorId), hashCodeNullable(filterOccurredAt), hashCodeNullable(filterSearch), hashCodeNullable(filterDoNotForward), pageSize, hashCodeNullable(pageAfter), sort);
+    return Objects.hash(hashCodeNullable(filter), hashCodeNullable(filterEventType), hashCodeNullable(filterResourceType), hashCodeNullable(filterResourceId), hashCodeNullable(filterSeverity), hashCodeNullable(filterCategory), hashCodeNullable(filterActorType), hashCodeNullable(filterActorId), hashCodeNullable(filterOccurredAt), hashCodeNullable(filterSearch), hashCodeNullable(filterDoNotForward), pageSize, hashCodeNullable(pageAfter), sort);
   }
 
   private static <T> int hashCodeNullable(JsonNullable<T> a) {
@@ -527,6 +601,8 @@ public class EventSearchRequest {
     sb.append("    filterEventType: ").append(toIndentedString(filterEventType)).append("\n");
     sb.append("    filterResourceType: ").append(toIndentedString(filterResourceType)).append("\n");
     sb.append("    filterResourceId: ").append(toIndentedString(filterResourceId)).append("\n");
+    sb.append("    filterSeverity: ").append(toIndentedString(filterSeverity)).append("\n");
+    sb.append("    filterCategory: ").append(toIndentedString(filterCategory)).append("\n");
     sb.append("    filterActorType: ").append(toIndentedString(filterActorType)).append("\n");
     sb.append("    filterActorId: ").append(toIndentedString(filterActorId)).append("\n");
     sb.append("    filterOccurredAt: ").append(toIndentedString(filterOccurredAt)).append("\n");
@@ -601,6 +677,16 @@ public class EventSearchRequest {
     // add `filter[resource_id]` to the URL query string
     if (getFilterResourceId() != null) {
       joiner.add(String.format(java.util.Locale.ROOT, "%sfilter[resource_id]%s=%s", prefix, suffix, ApiClient.urlEncode(ApiClient.valueToString(getFilterResourceId()))));
+    }
+
+    // add `filter[severity]` to the URL query string
+    if (getFilterSeverity() != null) {
+      joiner.add(String.format(java.util.Locale.ROOT, "%sfilter[severity]%s=%s", prefix, suffix, ApiClient.urlEncode(ApiClient.valueToString(getFilterSeverity()))));
+    }
+
+    // add `filter[category]` to the URL query string
+    if (getFilterCategory() != null) {
+      joiner.add(String.format(java.util.Locale.ROOT, "%sfilter[category]%s=%s", prefix, suffix, ApiClient.urlEncode(ApiClient.valueToString(getFilterCategory()))));
     }
 
     // add `filter[actor_type]` to the URL query string
