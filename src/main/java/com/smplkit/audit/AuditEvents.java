@@ -7,6 +7,7 @@ import com.smplkit.internal.generated.audit.model.EventListResponse;
 import com.smplkit.internal.generated.audit.model.EventRequest;
 import com.smplkit.internal.generated.audit.model.EventResource;
 import com.smplkit.internal.generated.audit.model.EventResponse;
+import com.smplkit.internal.generated.audit.model.Severity;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
@@ -50,6 +51,12 @@ public final class AuditEvents {
                 .eventType(input.eventType)
                 .resourceType(input.resourceType)
                 .resourceId(input.resourceId);
+        if (input.severity != null) {
+            attrs.severity(Severity.fromValue(input.severity));
+        }
+        if (input.category != null) {
+            attrs.category(input.category);
+        }
         if (input.occurredAt != null) {
             attrs.occurredAt(input.occurredAt);
         }
@@ -91,6 +98,8 @@ public final class AuditEvents {
                 input.eventType,
                 input.resourceType,
                 input.resourceId,
+                input.severity,
+                input.category,
                 input.search,
                 input.doNotForward,
                 input.pageSize,
@@ -137,6 +146,8 @@ public final class AuditEvents {
                 a.getEventType(),
                 a.getResourceType(),
                 a.getResourceId(),
+                a.getSeverity() != null ? a.getSeverity().getValue() : null,
+                a.getCategory(),
                 a.getOccurredAt(),
                 a.getCreatedAt(),
                 a.getActorType(),
