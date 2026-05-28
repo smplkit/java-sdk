@@ -18,6 +18,22 @@ repositories {
     mavenCentral()
 }
 
+// Customer floor verification: when CI passes `-PjacksonFloorOverride=2.17.0`
+// (or any version), force-resolve all Jackson deps to that version so we
+// can prove the SDK compiles + tests pass at the declared lower bound.
+// Without an override, normal MVS resolution picks the highest available.
+val jacksonFloorOverride = findProperty("jacksonFloorOverride") as String?
+if (jacksonFloorOverride != null) {
+    configurations.all {
+        resolutionStrategy.eachDependency {
+            if (requested.group == "com.fasterxml.jackson.core" ||
+                requested.group == "com.fasterxml.jackson.datatype") {
+                useVersion(jacksonFloorOverride)
+            }
+        }
+    }
+}
+
 dependencies {
     // Customer-facing implementation deps: declared as open lower-bound ranges
     // so consumers on older (but still supported) Jackson versions can resolve
