@@ -20,29 +20,29 @@ repositories {
 
 dependencies {
     // Generated client dependencies (Jackson-based, used by internal/generated/)
-    implementation("com.fasterxml.jackson.core:jackson-databind:2.17.1")
-    implementation("com.fasterxml.jackson.datatype:jackson-datatype-jsr310:2.17.1")
-    implementation("org.openapitools:jackson-databind-nullable:0.2.6")
+    implementation("com.fasterxml.jackson.core:jackson-databind:2.21.3")
+    implementation("com.fasterxml.jackson.datatype:jackson-datatype-jsr310:2.21.3")
+    implementation("org.openapitools:jackson-databind-nullable:0.2.10")
     compileOnly("jakarta.annotation:jakarta.annotation-api:2.1.1")
 
     // JSON Logic evaluation for flags runtime
-    implementation("io.github.jamsesso:json-logic-java:1.0.7")
+    implementation("io.github.jamsesso:json-logic-java:1.1.0")
 
     // Logging adapter dependencies — compileOnly so they're not transitive
-    compileOnly("ch.qos.logback:logback-classic:1.4.14")
-    compileOnly("org.slf4j:slf4j-api:2.0.12")
-    compileOnly("org.apache.logging.log4j:log4j-core:2.23.1")
-    compileOnly("org.apache.logging.log4j:log4j-api:2.23.1")
+    compileOnly("ch.qos.logback:logback-classic:1.5.33")
+    compileOnly("org.slf4j:slf4j-api:2.0.18")
+    compileOnly("org.apache.logging.log4j:log4j-core:2.26.0")
+    compileOnly("org.apache.logging.log4j:log4j-api:2.26.0")
 
     testImplementation("org.junit.jupiter:junit-jupiter:5.10.2")
-    testImplementation("org.mockito:mockito-core:5.11.0")
+    testImplementation("org.mockito:mockito-core:5.23.0")
     testRuntimeOnly("org.junit.platform:junit-platform-launcher")
 
     // Test dependencies for adapter tests
-    testImplementation("ch.qos.logback:logback-classic:1.4.14")
-    testImplementation("org.slf4j:slf4j-api:2.0.12")
-    testImplementation("org.apache.logging.log4j:log4j-core:2.23.1")
-    testImplementation("org.apache.logging.log4j:log4j-api:2.23.1")
+    testImplementation("ch.qos.logback:logback-classic:1.5.33")
+    testImplementation("org.slf4j:slf4j-api:2.0.18")
+    testImplementation("org.apache.logging.log4j:log4j-core:2.26.0")
+    testImplementation("org.apache.logging.log4j:log4j-api:2.26.0")
 }
 
 tasks.test {
