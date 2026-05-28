@@ -17,8 +17,8 @@ dependencies {
     // logback-classic is compileOnly in the SDK; examples need it at runtime so that
     // ServiceLoader can load Slf4jLogbackAdapter.  Log4j2 is not included here — the
     // loadAdaptersFromProviders catch block skips it gracefully when the jar is absent.
-    runtimeOnly("ch.qos.logback:logback-classic:1.4.14")
-    runtimeOnly("org.slf4j:slf4j-api:2.0.12")
+    runtimeOnly("ch.qos.logback:logback-classic:1.5.33")
+    runtimeOnly("org.slf4j:slf4j-api:2.0.18")
 }
 
 application {
