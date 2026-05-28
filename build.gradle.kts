@@ -18,35 +18,15 @@ repositories {
     mavenCentral()
 }
 
-// Customer floor verification: when CI passes `-PjacksonFloorOverride=2.17.0`
-// (or any version), force-resolve all Jackson deps to that version so we
-// can prove the SDK compiles + tests pass at the declared lower bound.
-// Without an override, normal MVS resolution picks the highest available.
-val jacksonFloorOverride = findProperty("jacksonFloorOverride") as String?
-if (jacksonFloorOverride != null) {
-    configurations.all {
-        resolutionStrategy.eachDependency {
-            if (requested.group == "com.fasterxml.jackson.core" ||
-                requested.group == "com.fasterxml.jackson.datatype") {
-                useVersion(jacksonFloorOverride)
-            }
-        }
-    }
-}
-
 dependencies {
-    // Customer-facing implementation deps: declared as open lower-bound ranges
-    // so consumers on older (but still supported) Jackson versions can resolve
-    // our SDK. The build picks the highest available; the published POM keeps
-    // the range so customers' MVS intersects with theirs. Floors are the
-    // versions we tested before the 2026-05-28 Dependabot rollout.
-    implementation("com.fasterxml.jackson.core:jackson-databind:[2.17.0,)")
-    implementation("com.fasterxml.jackson.datatype:jackson-datatype-jsr310:[2.17.0,)")
-    implementation("org.openapitools:jackson-databind-nullable:[0.2.6,)")
-    compileOnly("jakarta.annotation:jakarta.annotation-api:[2.1.1,)")
+    // Generated client dependencies (Jackson-based, used by internal/generated/)
+    implementation("com.fasterxml.jackson.core:jackson-databind:2.21.3")
+    implementation("com.fasterxml.jackson.datatype:jackson-datatype-jsr310:2.21.3")
+    implementation("org.openapitools:jackson-databind-nullable:0.2.10")
+    compileOnly("jakarta.annotation:jakarta.annotation-api:3.0.0")
 
     // JSON Logic evaluation for flags runtime
-    implementation("io.github.jamsesso:json-logic-java:[1.0.7,)")
+    implementation("io.github.jamsesso:json-logic-java:1.1.0")
 
     // Logging adapter dependencies — compileOnly so they're not transitive
     compileOnly("ch.qos.logback:logback-classic:1.5.33")
