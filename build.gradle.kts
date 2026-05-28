@@ -23,7 +23,7 @@ dependencies {
     implementation("com.fasterxml.jackson.core:jackson-databind:2.21.3")
     implementation("com.fasterxml.jackson.datatype:jackson-datatype-jsr310:2.21.3")
     implementation("org.openapitools:jackson-databind-nullable:0.2.10")
-    compileOnly("jakarta.annotation:jakarta.annotation-api:2.1.1")
+    compileOnly("jakarta.annotation:jakarta.annotation-api:3.0.0")
 
     // JSON Logic evaluation for flags runtime
     implementation("io.github.jamsesso:json-logic-java:1.1.0")
