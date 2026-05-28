@@ -27,7 +27,7 @@ jobs:
           distribution: temurin
 
       - name: Setup Gradle
-        uses: gradle/actions/setup-gradle@v3
+        uses: gradle/actions/setup-gradle@v6
 
       - name: Compile (lint)
         run: ./gradlew classes testClasses
@@ -52,7 +52,7 @@ jobs:
           distribution: temurin
 
       - name: Setup Gradle
-        uses: gradle/actions/setup-gradle@v3
+        uses: gradle/actions/setup-gradle@v6
 
       - name: Build and test
         run: ./gradlew build
@@ -120,7 +120,7 @@ jobs:
 
       - name: Setup Gradle
         if: steps.prep.outputs.released == 'true'
-        uses: gradle/actions/setup-gradle@v3
+        uses: gradle/actions/setup-gradle@v6
 
       - name: Publish to Maven Central
         if: steps.prep.outputs.released == 'true'
