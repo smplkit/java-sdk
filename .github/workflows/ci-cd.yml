@@ -63,7 +63,7 @@ jobs:
         # by jacocoTestReport, which runs before jacocoTestCoverageVerification.
         # Upload from both JDK 17 and JDK 21 since the flake can hit either.
         if: always()
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: coverage-report-jdk-${{ matrix.java-version }}
           path: |
