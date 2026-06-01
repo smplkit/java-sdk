@@ -305,7 +305,7 @@ public class SubscriptionPreviewAttributes {
   }
 
   /**
-   * Total amount that would be charged at confirmation time, in cents. The sum of &#x60;prorated_charge_today_cents&#x60; across &#x60;IMMEDIATE&#x60; changes.
+   * Total amount in cents that would be charged at confirmation time — the sum of &#x60;prorated_charge_today_cents&#x60; across all changes. &#x60;0&#x60; when there is no immediate charge (for example when changes apply to an already-active subscription and the prorated amounts are carried onto the next invoice instead).
    * @return totalChargeTodayCents
    */
   @jakarta.annotation.Nonnull
