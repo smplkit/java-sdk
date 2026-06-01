@@ -238,7 +238,7 @@ public class SubscriptionChangeProjection {
   }
 
   /**
-   * When &#x60;effect&#x60; is &#x60;IMMEDIATE&#x60;, the estimated prorated charge for the remainder of the current billing period in cents. Always &#x60;0&#x60; when &#x60;effect&#x60; is &#x60;NEXT_PERIOD&#x60;.
+   * Amount in cents that confirming this change would charge at confirmation time for this product. Reflects the discounted, prorated charge for the remainder of the current billing period. May be &#x60;0&#x60; even when &#x60;effect&#x60; is &#x60;IMMEDIATE&#x60; — when the product is being added to an already-active subscription the prorated amount is carried onto the next invoice rather than charged immediately. Always &#x60;0&#x60; when &#x60;effect&#x60; is &#x60;NEXT_PERIOD&#x60;.
    * @return proratedChargeTodayCents
    */
   @jakarta.annotation.Nullable
