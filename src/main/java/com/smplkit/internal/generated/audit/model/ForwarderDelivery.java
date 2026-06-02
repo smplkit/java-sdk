@@ -67,14 +67,12 @@ public class ForwarderDelivery {
   private Integer attemptNumber;
 
   /**
-   * Delivery outcome. &#x60;SUCCEEDED&#x60; and &#x60;FAILED&#x60; are the live-delivery outcomes; &#x60;FILTERED_OUT&#x60; is recorded when the forwarder&#39;s filter rejected the event.
+   * Delivery outcome. &#x60;SUCCEEDED&#x60; when the destination accepted the event, &#x60;FAILED&#x60; when the delivery attempt did not succeed. Events that a forwarder&#39;s filter rejected are not recorded as deliveries.
    */
   public enum StatusEnum {
     SUCCEEDED(String.valueOf("SUCCEEDED")),
     
-    FAILED(String.valueOf("FAILED")),
-    
-    FILTERED_OUT(String.valueOf("FILTERED_OUT"));
+    FAILED(String.valueOf("FAILED"));
 
     private String value;
 
@@ -206,7 +204,7 @@ public class ForwarderDelivery {
   }
 
   /**
-   * Delivery outcome. &#x60;SUCCEEDED&#x60; and &#x60;FAILED&#x60; are the live-delivery outcomes; &#x60;FILTERED_OUT&#x60; is recorded when the forwarder&#39;s filter rejected the event.
+   * Delivery outcome. &#x60;SUCCEEDED&#x60; when the destination accepted the event, &#x60;FAILED&#x60; when the delivery attempt did not succeed. Events that a forwarder&#39;s filter rejected are not recorded as deliveries.
    * @return status
    */
   @jakarta.annotation.Nonnull
