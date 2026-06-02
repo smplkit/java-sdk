@@ -445,7 +445,7 @@ public class Event {
   }
 
   /**
-   * When &#x60;true&#x60;, the event is recorded but not delivered to any forwarder. A delivery log entry with status &#x60;SKIPPED_DO_NOT_FORWARD&#x60; is written for each enabled forwarder so the skip is visible in the delivery log.
+   * When &#x60;true&#x60;, the event is recorded but not delivered to any forwarder, and no delivery log entries are created for it.
    * @return doNotForward
    */
   @jakarta.annotation.Nullable
