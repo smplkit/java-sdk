@@ -7,6 +7,7 @@ import org.apache.logging.log4j.core.config.Configurator;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.CopyOnWriteArrayList;
 
@@ -19,9 +20,33 @@ class Log4j2AdapterTest {
 
     private Log4j2Adapter adapter;
 
+    /**
+     * Strong references to loggers created during a test.
+     *
+     * <p>Log4j2 2.24+ keeps loggers as {@link java.lang.ref.WeakReference}s in its internal
+     * registry ({@code InternalLoggerRegistry}). A logger created via {@code LogManager.getLogger}
+     * whose reference is then dropped can be garbage-collected — and disappear from
+     * {@code context.getLoggers()} — before {@code discover()} or {@code pollForNewLoggers()} runs.
+     * Under CI memory pressure that made these tests intermittently fail (the logger was missing, so
+     * the {@code findFirst().orElseThrow()} threw {@code NoSuchElementException}). Real applications
+     * hold their loggers in static fields so they never vanish; pinning them here mirrors that and
+     * keeps discovery deterministic. {@code Configurator.setLevel} does <em>not</em> keep a logger
+     * alive — it creates a {@code LoggerConfig} (held by the configuration), not a reference back to
+     * the {@code Logger} object.</p>
+     */
+    private final List<Object> pinnedLoggers = new ArrayList<>();
+
     @BeforeEach
     void setUp() {
         adapter = new Log4j2Adapter();
+    }
+
+    /**
+     * Creates (or fetches) a Log4j2 logger and pins a strong reference for the lifetime of the
+     * test instance, so the weakly-registered logger survives GC until discovery runs.
+     */
+    private void createLogger(String name) {
+        pinnedLoggers.add(LogManager.getLogger(name));
     }
 
     @Test
@@ -32,8 +57,8 @@ class Log4j2AdapterTest {
     @Test
     void discover_findsExistingLoggers() {
         // Create Log4j2 loggers by getting them from LogManager (this creates the logger objects)
-        LogManager.getLogger("com.smplkit.log4j2.test1");
-        LogManager.getLogger("com.smplkit.log4j2.test2");
+        createLogger("com.smplkit.log4j2.test1");
+        createLogger("com.smplkit.log4j2.test2");
 
         List<DiscoveredLogger> discovered = adapter.discover();
 
@@ -43,7 +68,7 @@ class Log4j2AdapterTest {
 
     @Test
     void discover_returnsCorrectLevels() {
-        LogManager.getLogger("com.smplkit.log4j2.leveled");
+        createLogger("com.smplkit.log4j2.leveled");
         Configurator.setLevel("com.smplkit.log4j2.leveled", Level.WARN);
 
         List<DiscoveredLogger> discovered = adapter.discover();
@@ -59,7 +84,7 @@ class Log4j2AdapterTest {
     void discover_populatesBothLevelAndResolvedLevel() {
         // Create a logger with an explicit level set
         String name = "com.smplkit.log4j2.explicit." + System.nanoTime();
-        LogManager.getLogger(name);
+        createLogger(name);
         Configurator.setLevel(name, Level.ERROR);
 
         List<DiscoveredLogger> discovered = adapter.discover();
@@ -78,8 +103,8 @@ class Log4j2AdapterTest {
         // Ensure parent has a known level
         String parent = "com.smplkit.log4j2.inherit." + System.nanoTime();
         String child = parent + ".child";
-        LogManager.getLogger(parent);
-        LogManager.getLogger(child);
+        createLogger(parent);
+        createLogger(child);
         Configurator.setLevel(parent, Level.WARN);
         // Do not set explicit level on child — it should inherit from parent
 
@@ -200,7 +225,7 @@ class Log4j2AdapterTest {
 
         // Create a new logger after discovery (must use LogManager.getLogger to create the object)
         String newLoggerName = "com.smplkit.log4j2.polled." + System.nanoTime();
-        LogManager.getLogger(newLoggerName);
+        createLogger(newLoggerName);
 
         adapter.pollForNewLoggers();
 
@@ -215,7 +240,7 @@ class Log4j2AdapterTest {
         adapter.installHook((name, level) -> newNames.add(name));
 
         String newLoggerName = "com.smplkit.log4j2.nodup." + System.nanoTime();
-        LogManager.getLogger(newLoggerName);
+        createLogger(newLoggerName);
 
         adapter.pollForNewLoggers();
         long countAfterFirst = newNames.stream().filter(n -> n.equals(newLoggerName)).count();
@@ -230,7 +255,7 @@ class Log4j2AdapterTest {
     @Test
     void pollForNewLoggers_noOpWithoutHook() {
         adapter.discover();
-        LogManager.getLogger("com.smplkit.log4j2.nohook." + System.nanoTime());
+        createLogger("com.smplkit.log4j2.nohook." + System.nanoTime());
         adapter.pollForNewLoggers();
     }
 }
