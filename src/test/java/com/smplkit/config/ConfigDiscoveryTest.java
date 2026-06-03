@@ -256,13 +256,37 @@ class ConfigDiscoveryTest {
 
     @Test
     void mgmt_registerConfigItem_thresholdTriggersBackgroundFlush() throws Exception {
-        for (int i = 0; i < 50; i++) {
-            client.management().registerConfig("cfg-" + i, "svc", "prod", null, null, null);
+        ConfigManagement mgmt = client.management();
+
+        // Seed 50 configs into the buffer's known-config set, draining
+        // synchronously so the registerConfig path never crosses the flush
+        // threshold and never spawns its own background flush during setup.
+        // (Previously this test declared 50+ configs via registerConfig, which
+        // crossed the threshold and spawned a flush that drained the buffer in
+        // a thread race with the registerConfigItem call below. When that flush
+        // won the race, pendingCount() was < threshold by the time
+        // registerConfigItem checked it, so the registerConfigItem flush branch
+        // — ConfigManagement.triggerBackgroundFlush from registerConfigItem —
+        // was skipped, dropping a wrapper line and flaking the 100% coverage
+        // gate ~1 run in 3.)
+        for (int i = 0; i < 49; i++) {
+            mgmt.registerConfig("cfg-" + i, "svc", "prod", null, null, null);
         }
-        client.management().registerConfig("cfg-extra", "svc", "prod", null, null, null);
-        client.management().registerConfigItem("cfg-extra", "k", "STRING", "v", null);
-        Thread t = client.management().lastFlushThread;
-        assertNotNull(t);
+        mgmt.flush(); // synchronous drain: pending empties, all 49 stay known
+        mgmt.registerConfig("cfg-49", "svc", "prod", null, null, null);
+        assertEquals(1, mgmt.pendingCount());
+
+        // Re-attribute an item to each of the 49 drained configs. addItem
+        // re-creates the drained entry, growing pendingCount from 1 toward the
+        // threshold. The item attached to cfg-48 makes the 50th pending config
+        // and is the SOLE trigger for the background flush — deterministically
+        // exercising the registerConfigItem flush branch regardless of thread
+        // timing, since no competing flush is ever in flight.
+        for (int i = 0; i < 49; i++) {
+            mgmt.registerConfigItem("cfg-" + i, "k", "STRING", "v", null);
+        }
+        Thread t = mgmt.lastFlushThread;
+        assertNotNull(t, "expected registerConfigItem to spawn a background flush");
         t.join(5000);
         verify(mockApi, Mockito.atLeastOnce()).bulkRegisterConfigs(any(ConfigBulkRequest.class));
     }
