@@ -41,8 +41,8 @@ import com.smplkit.internal.generated.audit.ApiClient;
  * A log entry for one attempt to deliver an event to a forwarder.
  */
 @JsonPropertyOrder({
-  ForwarderDelivery.JSON_PROPERTY_FORWARDER_ID,
-  ForwarderDelivery.JSON_PROPERTY_EVENT_ID,
+  ForwarderDelivery.JSON_PROPERTY_FORWARDER,
+  ForwarderDelivery.JSON_PROPERTY_EVENT,
   ForwarderDelivery.JSON_PROPERTY_ATTEMPT_NUMBER,
   ForwarderDelivery.JSON_PROPERTY_STATUS,
   ForwarderDelivery.JSON_PROPERTY_REQUEST,
@@ -54,13 +54,13 @@ import com.smplkit.internal.generated.audit.ApiClient;
 })
 @jakarta.annotation.Generated(value = "org.openapitools.codegen.languages.JavaClientCodegen", comments = "Generator version: 7.21.0")
 public class ForwarderDelivery {
-  public static final String JSON_PROPERTY_FORWARDER_ID = "forwarder_id";
+  public static final String JSON_PROPERTY_FORWARDER = "forwarder";
   @jakarta.annotation.Nonnull
-  private UUID forwarderId;
+  private UUID forwarder;
 
-  public static final String JSON_PROPERTY_EVENT_ID = "event_id";
+  public static final String JSON_PROPERTY_EVENT = "event";
   @jakarta.annotation.Nonnull
-  private UUID eventId;
+  private UUID event;
 
   public static final String JSON_PROPERTY_ATTEMPT_NUMBER = "attempt_number";
   @jakarta.annotation.Nonnull
@@ -126,51 +126,51 @@ public class ForwarderDelivery {
   public ForwarderDelivery() { 
   }
 
-  public ForwarderDelivery forwarderId(@jakarta.annotation.Nonnull UUID forwarderId) {
-    this.forwarderId = forwarderId;
+  public ForwarderDelivery forwarder(@jakarta.annotation.Nonnull UUID forwarder) {
+    this.forwarder = forwarder;
     return this;
   }
 
   /**
    * Forwarder the delivery belongs to.
-   * @return forwarderId
+   * @return forwarder
    */
   @jakarta.annotation.Nonnull
-  @JsonProperty(value = JSON_PROPERTY_FORWARDER_ID, required = true)
+  @JsonProperty(value = JSON_PROPERTY_FORWARDER, required = true)
   @JsonInclude(value = JsonInclude.Include.ALWAYS)
-  public UUID getForwarderId() {
-    return forwarderId;
+  public UUID getForwarder() {
+    return forwarder;
   }
 
 
-  @JsonProperty(value = JSON_PROPERTY_FORWARDER_ID, required = true)
+  @JsonProperty(value = JSON_PROPERTY_FORWARDER, required = true)
   @JsonInclude(value = JsonInclude.Include.ALWAYS)
-  public void setForwarderId(@jakarta.annotation.Nonnull UUID forwarderId) {
-    this.forwarderId = forwarderId;
+  public void setForwarder(@jakarta.annotation.Nonnull UUID forwarder) {
+    this.forwarder = forwarder;
   }
 
 
-  public ForwarderDelivery eventId(@jakarta.annotation.Nonnull UUID eventId) {
-    this.eventId = eventId;
+  public ForwarderDelivery event(@jakarta.annotation.Nonnull UUID event) {
+    this.event = event;
     return this;
   }
 
   /**
    * Event that was being delivered.
-   * @return eventId
+   * @return event
    */
   @jakarta.annotation.Nonnull
-  @JsonProperty(value = JSON_PROPERTY_EVENT_ID, required = true)
+  @JsonProperty(value = JSON_PROPERTY_EVENT, required = true)
   @JsonInclude(value = JsonInclude.Include.ALWAYS)
-  public UUID getEventId() {
-    return eventId;
+  public UUID getEvent() {
+    return event;
   }
 
 
-  @JsonProperty(value = JSON_PROPERTY_EVENT_ID, required = true)
+  @JsonProperty(value = JSON_PROPERTY_EVENT, required = true)
   @JsonInclude(value = JsonInclude.Include.ALWAYS)
-  public void setEventId(@jakarta.annotation.Nonnull UUID eventId) {
-    this.eventId = eventId;
+  public void setEvent(@jakarta.annotation.Nonnull UUID event) {
+    this.event = event;
   }
 
 
@@ -438,8 +438,8 @@ public class ForwarderDelivery {
       return false;
     }
     ForwarderDelivery forwarderDelivery = (ForwarderDelivery) o;
-    return Objects.equals(this.forwarderId, forwarderDelivery.forwarderId) &&
-        Objects.equals(this.eventId, forwarderDelivery.eventId) &&
+    return Objects.equals(this.forwarder, forwarderDelivery.forwarder) &&
+        Objects.equals(this.event, forwarderDelivery.event) &&
         Objects.equals(this.attemptNumber, forwarderDelivery.attemptNumber) &&
         Objects.equals(this.status, forwarderDelivery.status) &&
         equalsNullable(this.request, forwarderDelivery.request) &&
@@ -456,7 +456,7 @@ public class ForwarderDelivery {
 
   @Override
   public int hashCode() {
-    return Objects.hash(forwarderId, eventId, attemptNumber, status, hashCodeNullable(request), hashCodeNullable(responseStatus), hashCodeNullable(responseBody), hashCodeNullable(latencyMs), hashCodeNullable(error), hashCodeNullable(createdAt));
+    return Objects.hash(forwarder, event, attemptNumber, status, hashCodeNullable(request), hashCodeNullable(responseStatus), hashCodeNullable(responseBody), hashCodeNullable(latencyMs), hashCodeNullable(error), hashCodeNullable(createdAt));
   }
 
   private static <T> int hashCodeNullable(JsonNullable<T> a) {
@@ -470,8 +470,8 @@ public class ForwarderDelivery {
   public String toString() {
     StringBuilder sb = new StringBuilder();
     sb.append("class ForwarderDelivery {\n");
-    sb.append("    forwarderId: ").append(toIndentedString(forwarderId)).append("\n");
-    sb.append("    eventId: ").append(toIndentedString(eventId)).append("\n");
+    sb.append("    forwarder: ").append(toIndentedString(forwarder)).append("\n");
+    sb.append("    event: ").append(toIndentedString(event)).append("\n");
     sb.append("    attemptNumber: ").append(toIndentedString(attemptNumber)).append("\n");
     sb.append("    status: ").append(toIndentedString(status)).append("\n");
     sb.append("    request: ").append(toIndentedString(request)).append("\n");
@@ -524,14 +524,14 @@ public class ForwarderDelivery {
 
     StringJoiner joiner = new StringJoiner("&");
 
-    // add `forwarder_id` to the URL query string
-    if (getForwarderId() != null) {
-      joiner.add(String.format(java.util.Locale.ROOT, "%sforwarder_id%s=%s", prefix, suffix, ApiClient.urlEncode(ApiClient.valueToString(getForwarderId()))));
+    // add `forwarder` to the URL query string
+    if (getForwarder() != null) {
+      joiner.add(String.format(java.util.Locale.ROOT, "%sforwarder%s=%s", prefix, suffix, ApiClient.urlEncode(ApiClient.valueToString(getForwarder()))));
     }
 
-    // add `event_id` to the URL query string
-    if (getEventId() != null) {
-      joiner.add(String.format(java.util.Locale.ROOT, "%sevent_id%s=%s", prefix, suffix, ApiClient.urlEncode(ApiClient.valueToString(getEventId()))));
+    // add `event` to the URL query string
+    if (getEvent() != null) {
+      joiner.add(String.format(java.util.Locale.ROOT, "%sevent%s=%s", prefix, suffix, ApiClient.urlEncode(ApiClient.valueToString(getEvent()))));
     }
 
     // add `attempt_number` to the URL query string
