@@ -167,42 +167,46 @@ public class AccountApi {
 
   /**
    * Delete Current Account
-   * Permanently delete the current account and all associated data.
+   * Delete the current account and all associated data. By default the account is soft-deleted and may be restored by contacting support. Set &#x60;purge&#x3D;true&#x60; to permanently and irreversibly erase the account and all of its data across every service, with no possibility of recovery.
+   * @param purge When true, permanently and irreversibly erase the account and all of its data with no possibility of recovery. When false (the default), the account is soft-deleted and may be restored. (optional, default to false)
    * @throws ApiException if fails to make API call
    */
-  public void deleteAccount() throws ApiException {
-    deleteAccount(null);
+  public void deleteAccount(@jakarta.annotation.Nullable Boolean purge) throws ApiException {
+    deleteAccount(purge, null);
   }
 
   /**
    * Delete Current Account
-   * Permanently delete the current account and all associated data.
+   * Delete the current account and all associated data. By default the account is soft-deleted and may be restored by contacting support. Set &#x60;purge&#x3D;true&#x60; to permanently and irreversibly erase the account and all of its data across every service, with no possibility of recovery.
+   * @param purge When true, permanently and irreversibly erase the account and all of its data with no possibility of recovery. When false (the default), the account is soft-deleted and may be restored. (optional, default to false)
    * @param headers Optional headers to include in the request
    * @throws ApiException if fails to make API call
    */
-  public void deleteAccount(Map<String, String> headers) throws ApiException {
-    deleteAccountWithHttpInfo(headers);
+  public void deleteAccount(@jakarta.annotation.Nullable Boolean purge, Map<String, String> headers) throws ApiException {
+    deleteAccountWithHttpInfo(purge, headers);
   }
 
   /**
    * Delete Current Account
-   * Permanently delete the current account and all associated data.
+   * Delete the current account and all associated data. By default the account is soft-deleted and may be restored by contacting support. Set &#x60;purge&#x3D;true&#x60; to permanently and irreversibly erase the account and all of its data across every service, with no possibility of recovery.
+   * @param purge When true, permanently and irreversibly erase the account and all of its data with no possibility of recovery. When false (the default), the account is soft-deleted and may be restored. (optional, default to false)
    * @return ApiResponse&lt;Void&gt;
    * @throws ApiException if fails to make API call
    */
-  public ApiResponse<Void> deleteAccountWithHttpInfo() throws ApiException {
-    return deleteAccountWithHttpInfo(null);
+  public ApiResponse<Void> deleteAccountWithHttpInfo(@jakarta.annotation.Nullable Boolean purge) throws ApiException {
+    return deleteAccountWithHttpInfo(purge, null);
   }
 
   /**
    * Delete Current Account
-   * Permanently delete the current account and all associated data.
+   * Delete the current account and all associated data. By default the account is soft-deleted and may be restored by contacting support. Set &#x60;purge&#x3D;true&#x60; to permanently and irreversibly erase the account and all of its data across every service, with no possibility of recovery.
+   * @param purge When true, permanently and irreversibly erase the account and all of its data with no possibility of recovery. When false (the default), the account is soft-deleted and may be restored. (optional, default to false)
    * @param headers Optional headers to include in the request
    * @return ApiResponse&lt;Void&gt;
    * @throws ApiException if fails to make API call
    */
-  public ApiResponse<Void> deleteAccountWithHttpInfo(Map<String, String> headers) throws ApiException {
-    HttpRequest.Builder localVarRequestBuilder = deleteAccountRequestBuilder(headers);
+  public ApiResponse<Void> deleteAccountWithHttpInfo(@jakarta.annotation.Nullable Boolean purge, Map<String, String> headers) throws ApiException {
+    HttpRequest.Builder localVarRequestBuilder = deleteAccountRequestBuilder(purge, headers);
     try {
       HttpResponse<InputStream> localVarResponse = memberVarHttpClient.send(
           localVarRequestBuilder.build(),
@@ -238,13 +242,28 @@ public class AccountApi {
     }
   }
 
-  private HttpRequest.Builder deleteAccountRequestBuilder(Map<String, String> headers) throws ApiException {
+  private HttpRequest.Builder deleteAccountRequestBuilder(@jakarta.annotation.Nullable Boolean purge, Map<String, String> headers) throws ApiException {
 
     HttpRequest.Builder localVarRequestBuilder = HttpRequest.newBuilder();
 
     String localVarPath = "/api/v1/accounts/current";
 
-    localVarRequestBuilder.uri(URI.create(memberVarBaseUri + localVarPath));
+    List<Pair> localVarQueryParams = new ArrayList<>();
+    StringJoiner localVarQueryStringJoiner = new StringJoiner("&");
+    String localVarQueryParameterBaseName;
+    localVarQueryParameterBaseName = "purge";
+    localVarQueryParams.addAll(ApiClient.parameterToPairs("purge", purge));
+
+    if (!localVarQueryParams.isEmpty() || localVarQueryStringJoiner.length() != 0) {
+      StringJoiner queryJoiner = new StringJoiner("&");
+      localVarQueryParams.forEach(p -> queryJoiner.add(p.getName() + '=' + p.getValue()));
+      if (localVarQueryStringJoiner.length() != 0) {
+        queryJoiner.add(localVarQueryStringJoiner.toString());
+      }
+      localVarRequestBuilder.uri(URI.create(memberVarBaseUri + localVarPath + '?' + queryJoiner.toString()));
+    } else {
+      localVarRequestBuilder.uri(URI.create(memberVarBaseUri + localVarPath));
+    }
 
     localVarRequestBuilder.header("Accept", "application/vnd.api+json");
 
