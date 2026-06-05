@@ -402,7 +402,7 @@ public class RunsApi {
 
   /**
    * List Runs
-   * List runs for this account, newest first (cursor paginated).  Use &#x60;filter[job]&#x3D;{slug}&#x60; for a single job&#39;s run history.
+   * List runs for this account, newest first (cursor paginated).  Use &#x60;filter[job]&#x3D;{id}&#x60; for a single job&#39;s run history.
    * @param filterJob  (optional)
    * @param pageSize  (optional)
    * @param pageAfter  (optional)
@@ -415,7 +415,7 @@ public class RunsApi {
 
   /**
    * List Runs
-   * List runs for this account, newest first (cursor paginated).  Use &#x60;filter[job]&#x3D;{slug}&#x60; for a single job&#39;s run history.
+   * List runs for this account, newest first (cursor paginated).  Use &#x60;filter[job]&#x3D;{id}&#x60; for a single job&#39;s run history.
    * @param filterJob  (optional)
    * @param pageSize  (optional)
    * @param pageAfter  (optional)
@@ -430,7 +430,7 @@ public class RunsApi {
 
   /**
    * List Runs
-   * List runs for this account, newest first (cursor paginated).  Use &#x60;filter[job]&#x3D;{slug}&#x60; for a single job&#39;s run history.
+   * List runs for this account, newest first (cursor paginated).  Use &#x60;filter[job]&#x3D;{id}&#x60; for a single job&#39;s run history.
    * @param filterJob  (optional)
    * @param pageSize  (optional)
    * @param pageAfter  (optional)
@@ -443,7 +443,7 @@ public class RunsApi {
 
   /**
    * List Runs
-   * List runs for this account, newest first (cursor paginated).  Use &#x60;filter[job]&#x3D;{slug}&#x60; for a single job&#39;s run history.
+   * List runs for this account, newest first (cursor paginated).  Use &#x60;filter[job]&#x3D;{id}&#x60; for a single job&#39;s run history.
    * @param filterJob  (optional)
    * @param pageSize  (optional)
    * @param pageAfter  (optional)

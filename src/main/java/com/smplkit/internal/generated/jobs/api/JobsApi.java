@@ -168,7 +168,7 @@ public class JobsApi {
 
   /**
    * Create Job
-   * Create a job for this account.  The caller supplies the job&#39;s id (a slug) as &#x60;data.id&#x60;. Slugs are unique within an account and immutable. An enabled job begins scheduling immediately.
+   * Create a job for this account.  The caller supplies the job&#39;s id as &#x60;data.id&#x60;. Ids are unique within an account and immutable. An enabled job begins scheduling immediately.
    * @param jobCreateRequest  (required)
    * @return JobResponse
    * @throws ApiException if fails to make API call
@@ -179,7 +179,7 @@ public class JobsApi {
 
   /**
    * Create Job
-   * Create a job for this account.  The caller supplies the job&#39;s id (a slug) as &#x60;data.id&#x60;. Slugs are unique within an account and immutable. An enabled job begins scheduling immediately.
+   * Create a job for this account.  The caller supplies the job&#39;s id as &#x60;data.id&#x60;. Ids are unique within an account and immutable. An enabled job begins scheduling immediately.
    * @param jobCreateRequest  (required)
    * @param headers Optional headers to include in the request
    * @return JobResponse
@@ -192,7 +192,7 @@ public class JobsApi {
 
   /**
    * Create Job
-   * Create a job for this account.  The caller supplies the job&#39;s id (a slug) as &#x60;data.id&#x60;. Slugs are unique within an account and immutable. An enabled job begins scheduling immediately.
+   * Create a job for this account.  The caller supplies the job&#39;s id as &#x60;data.id&#x60;. Ids are unique within an account and immutable. An enabled job begins scheduling immediately.
    * @param jobCreateRequest  (required)
    * @return ApiResponse&lt;JobResponse&gt;
    * @throws ApiException if fails to make API call
@@ -203,7 +203,7 @@ public class JobsApi {
 
   /**
    * Create Job
-   * Create a job for this account.  The caller supplies the job&#39;s id (a slug) as &#x60;data.id&#x60;. Slugs are unique within an account and immutable. An enabled job begins scheduling immediately.
+   * Create a job for this account.  The caller supplies the job&#39;s id as &#x60;data.id&#x60;. Ids are unique within an account and immutable. An enabled job begins scheduling immediately.
    * @param jobCreateRequest  (required)
    * @param headers Optional headers to include in the request
    * @return ApiResponse&lt;JobResponse&gt;
@@ -291,7 +291,7 @@ public class JobsApi {
 
   /**
    * Delete Job
-   * Delete a job. Its run history is retained; the slug may be reused later.
+   * Delete a job. Its run history is retained; the id may be reused later.
    * @param jobId  (required)
    * @throws ApiException if fails to make API call
    */
@@ -301,7 +301,7 @@ public class JobsApi {
 
   /**
    * Delete Job
-   * Delete a job. Its run history is retained; the slug may be reused later.
+   * Delete a job. Its run history is retained; the id may be reused later.
    * @param jobId  (required)
    * @param headers Optional headers to include in the request
    * @throws ApiException if fails to make API call
@@ -312,7 +312,7 @@ public class JobsApi {
 
   /**
    * Delete Job
-   * Delete a job. Its run history is retained; the slug may be reused later.
+   * Delete a job. Its run history is retained; the id may be reused later.
    * @param jobId  (required)
    * @return ApiResponse&lt;Void&gt;
    * @throws ApiException if fails to make API call
@@ -323,7 +323,7 @@ public class JobsApi {
 
   /**
    * Delete Job
-   * Delete a job. Its run history is retained; the slug may be reused later.
+   * Delete a job. Its run history is retained; the id may be reused later.
    * @param jobId  (required)
    * @param headers Optional headers to include in the request
    * @return ApiResponse&lt;Void&gt;
@@ -395,7 +395,7 @@ public class JobsApi {
 
   /**
    * Get Job
-   * Retrieve a single job by its id (slug).
+   * Retrieve a single job by its id.
    * @param jobId  (required)
    * @return JobResponse
    * @throws ApiException if fails to make API call
@@ -406,7 +406,7 @@ public class JobsApi {
 
   /**
    * Get Job
-   * Retrieve a single job by its id (slug).
+   * Retrieve a single job by its id.
    * @param jobId  (required)
    * @param headers Optional headers to include in the request
    * @return JobResponse
@@ -419,7 +419,7 @@ public class JobsApi {
 
   /**
    * Get Job
-   * Retrieve a single job by its id (slug).
+   * Retrieve a single job by its id.
    * @param jobId  (required)
    * @return ApiResponse&lt;JobResponse&gt;
    * @throws ApiException if fails to make API call
@@ -430,7 +430,7 @@ public class JobsApi {
 
   /**
    * Get Job
-   * Retrieve a single job by its id (slug).
+   * Retrieve a single job by its id.
    * @param jobId  (required)
    * @param headers Optional headers to include in the request
    * @return ApiResponse&lt;JobResponse&gt;
