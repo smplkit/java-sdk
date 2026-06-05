@@ -35,7 +35,7 @@ import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 
 import com.smplkit.internal.generated.jobs.ApiClient;
 /**
- * JSON:API resource envelope for a job. The caller supplies &#x60;id&#x60; (the slug) on create.
+ * JSON:API resource envelope for a job. The caller supplies &#x60;id&#x60; on create.
  */
 @JsonPropertyOrder({
   JobResource.JSON_PROPERTY_ID,

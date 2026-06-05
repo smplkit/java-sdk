@@ -241,7 +241,7 @@ public class Run {
   }
 
   /**
-   * The slug of the job this run belongs to.
+   * The id of the job this run belongs to.
    * @return job
    */
   @jakarta.annotation.Nonnull
