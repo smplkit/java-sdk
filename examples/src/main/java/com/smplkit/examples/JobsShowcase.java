@@ -8,7 +8,7 @@
  *         - ~/.smplkit configuration file (see SDK docs)
  *
  * Usage:
- *     ./gradlew :examples:run -PmainClass=com.smplkit.examples.JobsManagementShowcase
+ *     ./gradlew :examples:run -PmainClass=com.smplkit.examples.JobsShowcase
  */
 package com.smplkit.examples;
 
@@ -25,7 +25,7 @@ import com.smplkit.management.SmplManagementClient;
 import java.util.List;
 import java.util.UUID;
 
-public final class JobsManagementShowcase {
+public final class JobsShowcase {
 
     public static void main(String[] args) throws Exception {
 

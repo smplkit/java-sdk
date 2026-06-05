@@ -3,7 +3,7 @@
 	flags_runtime_showcase flags_management_showcase \
 	logging_runtime_showcase logging_management_showcase \
 	audit_runtime_showcase audit_management_showcase \
-	jobs_management_showcase
+	jobs_showcase
 
 install:
 	chmod +x gradlew
@@ -36,5 +36,5 @@ audit_runtime_showcase:
 audit_management_showcase:
 	./gradlew :examples:run -PmainClass=com.smplkit.examples.AuditManagementShowcase
 
-jobs_management_showcase:
-	./gradlew :examples:run -PmainClass=com.smplkit.examples.JobsManagementShowcase
+jobs_showcase:
+	./gradlew :examples:run -PmainClass=com.smplkit.examples.JobsShowcase
