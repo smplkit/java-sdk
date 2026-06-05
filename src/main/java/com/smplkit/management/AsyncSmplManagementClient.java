@@ -51,6 +51,8 @@ public final class AsyncSmplManagementClient implements AutoCloseable {
     public final AsyncLogGroupsClient logGroups;
     /** Audit SIEM forwarder CRUD — delegates to the sync surface today. */
     public final com.smplkit.audit.AuditManagementClient audit;
+    /** Smpl Jobs CRUD, runs, and usage — delegates to the sync surface today. */
+    public final com.smplkit.jobs.JobsManagementClient jobs;
 
     private AsyncSmplManagementClient(SmplManagementClient delegate, Executor executor) {
         this.delegate = delegate;
@@ -65,6 +67,7 @@ public final class AsyncSmplManagementClient implements AutoCloseable {
         this.loggers = new AsyncLoggersClient(delegate.loggers, executor);
         this.logGroups = new AsyncLogGroupsClient(delegate.logGroups, executor);
         this.audit = delegate.audit;
+        this.jobs = delegate.jobs;
     }
 
     /** Create with default credentials and the common-pool executor. */
