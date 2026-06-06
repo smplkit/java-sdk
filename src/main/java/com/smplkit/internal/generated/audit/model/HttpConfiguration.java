@@ -37,7 +37,7 @@ import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 
 import com.smplkit.internal.generated.audit.ApiClient;
 /**
- * HTTP request configuration used to deliver an event to the destination.  Used when the parent forwarder&#39;s &#x60;&#x60;forwarder_type&#x60;&#x60; is one of the HTTP-family destinations (&#x60;&#x60;HTTP&#x60;&#x60;, &#x60;&#x60;DATADOG&#x60;&#x60;, &#x60;&#x60;SPLUNK_HEC&#x60;&#x60;, &#x60;&#x60;SUMO_LOGIC&#x60;&#x60;, &#x60;&#x60;NEW_RELIC&#x60;&#x60;, &#x60;&#x60;HONEYCOMB&#x60;&#x60;, &#x60;&#x60;ELASTIC&#x60;&#x60;). When other transports land (&#x60;&#x60;FTP&#x60;&#x60;, &#x60;&#x60;SQS&#x60;&#x60;, …) their own configuration schemas will join this one as members of a discriminated union under the &#x60;&#x60;configuration&#x60;&#x60; field of &#x60;&#x60;Forwarder&#x60;&#x60;.
+ * HTTP request configuration for delivering a payload to a destination.  The shared base shape for any product that posts to a customer-supplied HTTP destination. Smpl Audit forwarders use it directly; Smpl Jobs extends it (adding &#x60;&#x60;body&#x60;&#x60; and &#x60;&#x60;timeout&#x60;&#x60;). When other transports land (&#x60;&#x60;FTP&#x60;&#x60;, &#x60;&#x60;SQS&#x60;&#x60;, …) their own configuration schemas will join this one as members of a discriminated union under a &#x60;&#x60;configuration&#x60;&#x60; field.
  */
 @JsonPropertyOrder({
   HttpConfiguration.JSON_PROPERTY_METHOD,
@@ -50,7 +50,7 @@ import com.smplkit.internal.generated.audit.ApiClient;
 @jakarta.annotation.Generated(value = "org.openapitools.codegen.languages.JavaClientCodegen", comments = "Generator version: 7.21.0")
 public class HttpConfiguration {
   /**
-   * HTTP method used when delivering an event.
+   * HTTP method used when delivering the request.
    */
   public enum MethodEnum {
     GET(String.valueOf("GET")),
@@ -122,7 +122,7 @@ public class HttpConfiguration {
   }
 
   /**
-   * HTTP method used when delivering an event.
+   * HTTP method used when delivering the request.
    * @return method
    */
   @jakarta.annotation.Nullable
@@ -178,7 +178,7 @@ public class HttpConfiguration {
   }
 
   /**
-   * HTTP headers attached to each delivery request.
+   * HTTP headers attached to each request.
    * @return headers
    */
   @jakarta.annotation.Nullable
@@ -202,7 +202,7 @@ public class HttpConfiguration {
   }
 
   /**
-   * HTTP response status that indicates a successful delivery. Either a specific status code (e.g. &#x60;200&#x60;, &#x60;204&#x60;) or a status class (&#x60;1xx&#x60;, &#x60;2xx&#x60;, &#x60;3xx&#x60;, &#x60;4xx&#x60;, &#x60;5xx&#x60;).
+   * HTTP response status that indicates success. Either a specific status code (e.g. &#x60;200&#x60;, &#x60;204&#x60;) or a status class (&#x60;1xx&#x60;, &#x60;2xx&#x60;, &#x60;3xx&#x60;, &#x60;4xx&#x60;, &#x60;5xx&#x60;).
    * @return successStatus
    */
   @jakarta.annotation.Nullable
