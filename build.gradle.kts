@@ -20,8 +20,8 @@ repositories {
 
 dependencies {
     // Generated client dependencies (Jackson-based, used by internal/generated/)
-    implementation("com.fasterxml.jackson.core:jackson-databind:2.21.3")
-    implementation("com.fasterxml.jackson.datatype:jackson-datatype-jsr310:2.21.3")
+    implementation("com.fasterxml.jackson.core:jackson-databind:2.22.0")
+    implementation("com.fasterxml.jackson.datatype:jackson-datatype-jsr310:2.22.0")
     implementation("org.openapitools:jackson-databind-nullable:0.2.10")
     compileOnly("jakarta.annotation:jakarta.annotation-api:3.0.0")
 
@@ -29,7 +29,7 @@ dependencies {
     implementation("io.github.jamsesso:json-logic-java:1.1.0")
 
     // Logging adapter dependencies — compileOnly so they're not transitive
-    compileOnly("ch.qos.logback:logback-classic:1.5.33")
+    compileOnly("ch.qos.logback:logback-classic:1.5.34")
     compileOnly("org.slf4j:slf4j-api:2.0.18")
     compileOnly("org.apache.logging.log4j:log4j-core:2.26.0")
     compileOnly("org.apache.logging.log4j:log4j-api:2.26.0")
@@ -39,7 +39,7 @@ dependencies {
     testRuntimeOnly("org.junit.platform:junit-platform-launcher")
 
     // Test dependencies for adapter tests
-    testImplementation("ch.qos.logback:logback-classic:1.5.33")
+    testImplementation("ch.qos.logback:logback-classic:1.5.34")
     testImplementation("org.slf4j:slf4j-api:2.0.18")
     testImplementation("org.apache.logging.log4j:log4j-core:2.26.0")
     testImplementation("org.apache.logging.log4j:log4j-api:2.26.0")
