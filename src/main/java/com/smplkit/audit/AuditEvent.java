@@ -65,13 +65,23 @@ public final class AuditEvent {
      * forwarder delivery regardless of any matching forwarder filter.
      */
     public final boolean doNotForward;
+    /**
+     * The environment the event was recorded in. Read-only and always
+     * present on reads — the audit service resolves it when the event is
+     * recorded (from a single-environment credential, or from the runtime
+     * SDK's configured environment, which the SDK sends on every recording
+     * call via the {@code X-Smplkit-Environment} header). {@code null} only
+     * for an event that predates environment scoping. Never set on the
+     * recording request body.
+     */
+    public final String environment;
 
     public AuditEvent(UUID id, String eventType, String resourceType, String resourceId,
                       String severity, String category,
                       OffsetDateTime occurredAt, OffsetDateTime createdAt,
                       String actorType, String actorId, String actorLabel,
                       Map<String, Object> data,
-                      String idempotencyKey, boolean doNotForward) {
+                      String idempotencyKey, boolean doNotForward, String environment) {
         this.id = id;
         this.eventType = eventType;
         this.resourceType = resourceType;
@@ -86,5 +96,6 @@ public final class AuditEvent {
         this.data = data;
         this.idempotencyKey = idempotencyKey;
         this.doNotForward = doNotForward;
+        this.environment = environment;
     }
 }

@@ -30,18 +30,30 @@ class AuditClientTest {
     private AuditClient client;
     private AtomicInteger postCount;
     private AtomicReference<String> lastIdempotencyKey;
+    private AtomicReference<String> lastEnvironmentHeader;
     private CountDownLatch firstPostSeen;
+    private String baseUrl;
 
     @BeforeEach
     void start() throws Exception {
         postCount = new AtomicInteger();
         lastIdempotencyKey = new AtomicReference<>();
+        lastEnvironmentHeader = new AtomicReference<>();
         firstPostSeen = new CountDownLatch(1);
         server = HttpServer.create(new InetSocketAddress("127.0.0.1", 0), 0);
         installDefaultHandlers();
         server.start();
-        String baseUrl = "http://127.0.0.1:" + server.getAddress().getPort();
+        baseUrl = "http://127.0.0.1:" + server.getAddress().getPort();
         client = new AuditClient(HttpClient.newHttpClient(), "sk_api_test", Map.of(), Duration.ofSeconds(5), baseUrl);
+    }
+
+    private String firstHeader(HttpExchange ex, String name) {
+        for (var entry : ex.getRequestHeaders().entrySet()) {
+            if (entry.getKey().equalsIgnoreCase(name)) {
+                return entry.getValue().isEmpty() ? null : entry.getValue().get(0);
+            }
+        }
+        return null;
     }
 
     @AfterEach
@@ -57,15 +69,9 @@ class AuditClientTest {
                 if (ex.getRequestURI().getPath().equals("/api/v1/events")
                         && ex.getRequestMethod().equals("POST")) {
                     // JDK HttpServer normalizes header keys (e.g. "Idempotency-key");
-                    // case-insensitive lookup via getFirst.
-                    String found = null;
-                    for (var entry : ex.getRequestHeaders().entrySet()) {
-                        if (entry.getKey().equalsIgnoreCase("Idempotency-Key")) {
-                            found = entry.getValue().isEmpty() ? null : entry.getValue().get(0);
-                            break;
-                        }
-                    }
-                    lastIdempotencyKey.set(found);
+                    // case-insensitive lookup.
+                    lastIdempotencyKey.set(firstHeader(ex, "Idempotency-Key"));
+                    lastEnvironmentHeader.set(firstHeader(ex, "X-Smplkit-Environment"));
                     postCount.incrementAndGet();
                     firstPostSeen.countDown();
                     String body = "{\"data\":{\"id\":\"00000000-0000-0000-0000-000000000001\",\"type\":\"event\",\"attributes\":{\"event_type\":\"x.created\",\"resource_type\":\"x\",\"resource_id\":\"1\",\"occurred_at\":\"2026-05-06T12:00:00Z\",\"created_at\":\"2026-05-06T12:00:01Z\",\"actor_type\":\"API_KEY\",\"actor_id\":null,\"actor_label\":\"\",\"data\":{},\"idempotency_key\":\"\"}}}";
@@ -77,7 +83,8 @@ class AuditClientTest {
                     return;
                 }
                 if (ex.getRequestMethod().equals("GET")) {
-                    String body = "{\"data\":{\"id\":\"11111111-2222-3333-4444-555555555555\",\"type\":\"event\",\"attributes\":{\"event_type\":\"x.created\",\"resource_type\":\"x\",\"resource_id\":\"1\",\"occurred_at\":\"2026-05-06T12:00:00Z\",\"created_at\":\"2026-05-06T12:00:01Z\",\"actor_type\":\"API_KEY\",\"actor_id\":null,\"actor_label\":\"\",\"data\":{},\"idempotency_key\":\"k\"}}}";
+                    lastEnvironmentHeader.set(firstHeader(ex, "X-Smplkit-Environment"));
+                    String body = "{\"data\":{\"id\":\"11111111-2222-3333-4444-555555555555\",\"type\":\"event\",\"attributes\":{\"event_type\":\"x.created\",\"resource_type\":\"x\",\"resource_id\":\"1\",\"occurred_at\":\"2026-05-06T12:00:00Z\",\"created_at\":\"2026-05-06T12:00:01Z\",\"actor_type\":\"API_KEY\",\"actor_id\":null,\"actor_label\":\"\",\"data\":{},\"idempotency_key\":\"k\",\"environment\":\"production\"}}}";
                     byte[] resp = body.getBytes();
                     ex.getResponseHeaders().add("Content-Type", "application/vnd.api+json");
                     ex.sendResponseHeaders(200, resp.length);
@@ -140,6 +147,7 @@ class AuditClientTest {
         assertEquals("x.created", ev.eventType);
         assertEquals("API_KEY", ev.actorType);
         assertNull(ev.actorId);
+        assertEquals("production", ev.environment);
     }
 
     @Test
@@ -206,5 +214,56 @@ class AuditClientTest {
         client.events().record(input);
         client.events().flush(2_000);
         assertTrue(postCount.get() >= 1);
+    }
+
+    // -----------------------------------------------------------------
+    // Environment-header injection (ADR-055)
+    // -----------------------------------------------------------------
+
+    @Test
+    void record_injectsConfiguredEnvironmentHeader() throws Exception {
+        // The default client (set up in @BeforeEach) carries no environment;
+        // build one bound to "production" against the same server.
+        try (AuditClient envClient = new AuditClient(HttpClient.newHttpClient(), "sk_api_test",
+                Map.of(), Duration.ofSeconds(5), baseUrl, "production")) {
+            CreateEventInput input = new CreateEventInput("user.created", "user", "u-1");
+            envClient.events().record(input);
+            envClient.events().flush(2_000);
+            Thread.interrupted();
+            assertTrue(firstPostSeen.await(15, java.util.concurrent.TimeUnit.SECONDS),
+                    "test server never received the POST");
+            assertEquals("production", lastEnvironmentHeader.get());
+        }
+    }
+
+    @Test
+    void get_injectsConfiguredEnvironmentHeader() throws Exception {
+        try (AuditClient envClient = new AuditClient(HttpClient.newHttpClient(), "sk_api_test",
+                Map.of(), Duration.ofSeconds(5), baseUrl, "staging")) {
+            UUID id = UUID.fromString("11111111-2222-3333-4444-555555555555");
+            envClient.events().get(id);
+            assertEquals("staging", lastEnvironmentHeader.get());
+        }
+    }
+
+    @Test
+    void noEnvironment_omitsEnvironmentHeader() throws Exception {
+        // The default client has no environment configured (null path).
+        UUID id = UUID.fromString("11111111-2222-3333-4444-555555555555");
+        client.events().get(id);
+        assertNull(lastEnvironmentHeader.get());
+    }
+
+    @Test
+    void explicitEnvironmentHeader_overridesConfiguredEnvironment() throws Exception {
+        // A caller-supplied X-Smplkit-Environment in extraHeaders wins over
+        // the SDK's configured environment.
+        try (AuditClient envClient = new AuditClient(HttpClient.newHttpClient(), "sk_api_test",
+                Map.of("X-Smplkit-Environment", "explicit-override"), Duration.ofSeconds(5),
+                baseUrl, "production")) {
+            UUID id = UUID.fromString("11111111-2222-3333-4444-555555555555");
+            envClient.events().get(id);
+            assertEquals("explicit-override", lastEnvironmentHeader.get());
+        }
     }
 }

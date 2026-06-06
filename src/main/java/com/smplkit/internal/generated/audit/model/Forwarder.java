@@ -24,6 +24,7 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonTypeName;
 import com.fasterxml.jackson.annotation.JsonValue;
+import com.smplkit.internal.generated.audit.model.ForwarderEnvironment;
 import com.smplkit.internal.generated.audit.model.ForwarderType;
 import com.smplkit.internal.generated.audit.model.HttpConfiguration;
 import java.time.OffsetDateTime;
@@ -50,6 +51,7 @@ import com.smplkit.internal.generated.audit.ApiClient;
   Forwarder.JSON_PROPERTY_TRANSFORM_TYPE,
   Forwarder.JSON_PROPERTY_TRANSFORM,
   Forwarder.JSON_PROPERTY_CONFIGURATION,
+  Forwarder.JSON_PROPERTY_ENVIRONMENTS,
   Forwarder.JSON_PROPERTY_CREATED_AT,
   Forwarder.JSON_PROPERTY_UPDATED_AT,
   Forwarder.JSON_PROPERTY_DELETED_AT,
@@ -70,7 +72,7 @@ public class Forwarder {
 
   public static final String JSON_PROPERTY_ENABLED = "enabled";
   @jakarta.annotation.Nullable
-  private Boolean enabled = true;
+  private Boolean enabled = false;
 
   public static final String JSON_PROPERTY_FILTER = "filter";
   private JsonNullable<Map<String, Object>> filter = JsonNullable.<Map<String, Object>>undefined();
@@ -118,6 +120,10 @@ public class Forwarder {
   @jakarta.annotation.Nonnull
   private HttpConfiguration _configuration;
 
+  public static final String JSON_PROPERTY_ENVIRONMENTS = "environments";
+  @jakarta.annotation.Nullable
+  private Map<String, ForwarderEnvironment> environments = new HashMap<>();
+
   public static final String JSON_PROPERTY_CREATED_AT = "created_at";
   private JsonNullable<OffsetDateTime> createdAt = JsonNullable.<OffsetDateTime>undefined();
 
@@ -135,12 +141,14 @@ public class Forwarder {
 
   @JsonCreator
   public Forwarder(
+    @JsonProperty(JSON_PROPERTY_ENABLED) Boolean enabled, 
     @JsonProperty(JSON_PROPERTY_CREATED_AT) OffsetDateTime createdAt, 
     @JsonProperty(JSON_PROPERTY_UPDATED_AT) OffsetDateTime updatedAt, 
     @JsonProperty(JSON_PROPERTY_DELETED_AT) OffsetDateTime deletedAt, 
     @JsonProperty(JSON_PROPERTY_VERSION) Integer version
   ) {
   this();
+    this.enabled = enabled;
     this.createdAt = createdAt == null ? JsonNullable.<OffsetDateTime>undefined() : JsonNullable.of(createdAt);
     this.updatedAt = updatedAt == null ? JsonNullable.<OffsetDateTime>undefined() : JsonNullable.of(updatedAt);
     this.deletedAt = deletedAt == null ? JsonNullable.<OffsetDateTime>undefined() : JsonNullable.of(deletedAt);
@@ -227,13 +235,8 @@ public class Forwarder {
   }
 
 
-  public Forwarder enabled(@jakarta.annotation.Nullable Boolean enabled) {
-    this.enabled = enabled;
-    return this;
-  }
-
   /**
-   * Whether the forwarder is currently delivering events. Set to &#x60;false&#x60; to pause deliveries without deleting the forwarder.
+   * Always false. Enablement is per-environment: a forwarder delivers in an environment only when &#x60;environments[&lt;env&gt;].enabled&#x60; is true. The base value is pinned false and cannot be set.
    * @return enabled
    */
   @jakarta.annotation.Nullable
@@ -244,11 +247,6 @@ public class Forwarder {
   }
 
 
-  @JsonProperty(value = JSON_PROPERTY_ENABLED, required = false)
-  @JsonInclude(value = JsonInclude.Include.USE_DEFAULTS)
-  public void setEnabled(@jakarta.annotation.Nullable Boolean enabled) {
-    this.enabled = enabled;
-  }
 
 
   public Forwarder filter(@jakarta.annotation.Nullable Map<String, Object> filter) {
@@ -380,6 +378,38 @@ public class Forwarder {
   @JsonInclude(value = JsonInclude.Include.ALWAYS)
   public void setConfiguration(@jakarta.annotation.Nonnull HttpConfiguration _configuration) {
     this._configuration = _configuration;
+  }
+
+
+  public Forwarder environments(@jakarta.annotation.Nullable Map<String, ForwarderEnvironment> environments) {
+    this.environments = environments;
+    return this;
+  }
+
+  public Forwarder putEnvironmentsItem(String key, ForwarderEnvironment environmentsItem) {
+    if (this.environments == null) {
+      this.environments = new HashMap<>();
+    }
+    this.environments.put(key, environmentsItem);
+    return this;
+  }
+
+  /**
+   * Per-environment overrides keyed by environment key (e.g. &#x60;production&#x60;, &#x60;staging&#x60;). Each entry sets &#x60;enabled&#x60; (whether the forwarder delivers in that environment) and an optional &#x60;configuration&#x60; override (omit to inherit the base &#x60;configuration&#x60;). A forwarder with no entry for an environment is disabled there. Every referenced environment must exist and be managed for the account.
+   * @return environments
+   */
+  @jakarta.annotation.Nullable
+  @JsonProperty(value = JSON_PROPERTY_ENVIRONMENTS, required = false)
+  @JsonInclude(value = JsonInclude.Include.USE_DEFAULTS)
+  public Map<String, ForwarderEnvironment> getEnvironments() {
+    return environments;
+  }
+
+
+  @JsonProperty(value = JSON_PROPERTY_ENVIRONMENTS, required = false)
+  @JsonInclude(value = JsonInclude.Include.USE_DEFAULTS)
+  public void setEnvironments(@jakarta.annotation.Nullable Map<String, ForwarderEnvironment> environments) {
+    this.environments = environments;
   }
 
 
@@ -515,6 +545,7 @@ public class Forwarder {
         equalsNullable(this.transformType, forwarder.transformType) &&
         equalsNullable(this.transform, forwarder.transform) &&
         Objects.equals(this._configuration, forwarder._configuration) &&
+        Objects.equals(this.environments, forwarder.environments) &&
         equalsNullable(this.createdAt, forwarder.createdAt) &&
         equalsNullable(this.updatedAt, forwarder.updatedAt) &&
         equalsNullable(this.deletedAt, forwarder.deletedAt) &&
@@ -527,7 +558,7 @@ public class Forwarder {
 
   @Override
   public int hashCode() {
-    return Objects.hash(name, hashCodeNullable(description), forwarderType, enabled, hashCodeNullable(filter), hashCodeNullable(transformType), hashCodeNullable(transform), _configuration, hashCodeNullable(createdAt), hashCodeNullable(updatedAt), hashCodeNullable(deletedAt), hashCodeNullable(version));
+    return Objects.hash(name, hashCodeNullable(description), forwarderType, enabled, hashCodeNullable(filter), hashCodeNullable(transformType), hashCodeNullable(transform), _configuration, environments, hashCodeNullable(createdAt), hashCodeNullable(updatedAt), hashCodeNullable(deletedAt), hashCodeNullable(version));
   }
 
   private static <T> int hashCodeNullable(JsonNullable<T> a) {
@@ -549,6 +580,7 @@ public class Forwarder {
     sb.append("    transformType: ").append(toIndentedString(transformType)).append("\n");
     sb.append("    transform: ").append(toIndentedString(transform)).append("\n");
     sb.append("    _configuration: ").append(toIndentedString(_configuration)).append("\n");
+    sb.append("    environments: ").append(toIndentedString(environments)).append("\n");
     sb.append("    createdAt: ").append(toIndentedString(createdAt)).append("\n");
     sb.append("    updatedAt: ").append(toIndentedString(updatedAt)).append("\n");
     sb.append("    deletedAt: ").append(toIndentedString(deletedAt)).append("\n");
@@ -639,6 +671,16 @@ public class Forwarder {
     // add `configuration` to the URL query string
     if (getConfiguration() != null) {
       joiner.add(getConfiguration().toUrlQueryString(prefix + "configuration" + suffix));
+    }
+
+    // add `environments` to the URL query string
+    if (getEnvironments() != null) {
+      for (String _key : getEnvironments().keySet()) {
+        if (getEnvironments().get(_key) != null) {
+          joiner.add(getEnvironments().get(_key).toUrlQueryString(String.format(java.util.Locale.ROOT, "%senvironments%s%s", prefix, suffix,
+              "".equals(suffix) ? "" : String.format(java.util.Locale.ROOT, "%s%d%s", containerPrefix, _key, containerSuffix))));
+        }
+      }
     }
 
     // add `created_at` to the URL query string

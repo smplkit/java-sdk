@@ -173,7 +173,7 @@ public class ForwardersApi {
 
   /**
    * Create Forwarder
-   * Create a forwarder for this account.  The caller supplies the forwarder&#39;s key as &#x60;data.id&#x60;. Keys are unique within an account and immutable for the lifetime of the forwarder.
+   * Create a forwarder for this account.  The caller supplies the forwarder&#39;s key as &#x60;data.id&#x60;. Keys are unique within an account and immutable for the lifetime of the forwarder.  Enablement is per-environment: a forwarder is enabled in an environment only via &#x60;environments[&lt;env&gt;].enabled&#x60;; the base &#x60;enabled&#x60; is always false. Every environment referenced in &#x60;environments&#x60; must exist and be managed for the account.
    * @param forwarderCreateRequest  (required)
    * @return ForwarderResponse
    * @throws ApiException if fails to make API call
@@ -184,7 +184,7 @@ public class ForwardersApi {
 
   /**
    * Create Forwarder
-   * Create a forwarder for this account.  The caller supplies the forwarder&#39;s key as &#x60;data.id&#x60;. Keys are unique within an account and immutable for the lifetime of the forwarder.
+   * Create a forwarder for this account.  The caller supplies the forwarder&#39;s key as &#x60;data.id&#x60;. Keys are unique within an account and immutable for the lifetime of the forwarder.  Enablement is per-environment: a forwarder is enabled in an environment only via &#x60;environments[&lt;env&gt;].enabled&#x60;; the base &#x60;enabled&#x60; is always false. Every environment referenced in &#x60;environments&#x60; must exist and be managed for the account.
    * @param forwarderCreateRequest  (required)
    * @param headers Optional headers to include in the request
    * @return ForwarderResponse
@@ -197,7 +197,7 @@ public class ForwardersApi {
 
   /**
    * Create Forwarder
-   * Create a forwarder for this account.  The caller supplies the forwarder&#39;s key as &#x60;data.id&#x60;. Keys are unique within an account and immutable for the lifetime of the forwarder.
+   * Create a forwarder for this account.  The caller supplies the forwarder&#39;s key as &#x60;data.id&#x60;. Keys are unique within an account and immutable for the lifetime of the forwarder.  Enablement is per-environment: a forwarder is enabled in an environment only via &#x60;environments[&lt;env&gt;].enabled&#x60;; the base &#x60;enabled&#x60; is always false. Every environment referenced in &#x60;environments&#x60; must exist and be managed for the account.
    * @param forwarderCreateRequest  (required)
    * @return ApiResponse&lt;ForwarderResponse&gt;
    * @throws ApiException if fails to make API call
@@ -208,7 +208,7 @@ public class ForwardersApi {
 
   /**
    * Create Forwarder
-   * Create a forwarder for this account.  The caller supplies the forwarder&#39;s key as &#x60;data.id&#x60;. Keys are unique within an account and immutable for the lifetime of the forwarder.
+   * Create a forwarder for this account.  The caller supplies the forwarder&#39;s key as &#x60;data.id&#x60;. Keys are unique within an account and immutable for the lifetime of the forwarder.  Enablement is per-environment: a forwarder is enabled in an environment only via &#x60;environments[&lt;env&gt;].enabled&#x60;; the base &#x60;enabled&#x60; is always false. Every environment referenced in &#x60;environments&#x60; must exist and be managed for the account.
    * @param forwarderCreateRequest  (required)
    * @param headers Optional headers to include in the request
    * @return ApiResponse&lt;ForwarderResponse&gt;
@@ -523,7 +523,7 @@ public class ForwardersApi {
 
   /**
    * Get Forwarder
-   * Retrieve a single forwarder by id.  Header values are returned in plaintext so the resource can be round-tripped with &#x60;GET&#x60;, mutate, &#x60;PUT&#x60; without re-entering secrets.
+   * Retrieve a single forwarder by id.  Header values are returned in plaintext so the resource can be round-tripped with &#x60;GET&#x60;, mutate, &#x60;PUT&#x60; without re-entering secrets. The &#x60;environments&#x60; override map is scoped to the caller&#39;s environment groups.
    * @param forwarderId  (required)
    * @return ForwarderResponse
    * @throws ApiException if fails to make API call
@@ -534,7 +534,7 @@ public class ForwardersApi {
 
   /**
    * Get Forwarder
-   * Retrieve a single forwarder by id.  Header values are returned in plaintext so the resource can be round-tripped with &#x60;GET&#x60;, mutate, &#x60;PUT&#x60; without re-entering secrets.
+   * Retrieve a single forwarder by id.  Header values are returned in plaintext so the resource can be round-tripped with &#x60;GET&#x60;, mutate, &#x60;PUT&#x60; without re-entering secrets. The &#x60;environments&#x60; override map is scoped to the caller&#39;s environment groups.
    * @param forwarderId  (required)
    * @param headers Optional headers to include in the request
    * @return ForwarderResponse
@@ -547,7 +547,7 @@ public class ForwardersApi {
 
   /**
    * Get Forwarder
-   * Retrieve a single forwarder by id.  Header values are returned in plaintext so the resource can be round-tripped with &#x60;GET&#x60;, mutate, &#x60;PUT&#x60; without re-entering secrets.
+   * Retrieve a single forwarder by id.  Header values are returned in plaintext so the resource can be round-tripped with &#x60;GET&#x60;, mutate, &#x60;PUT&#x60; without re-entering secrets. The &#x60;environments&#x60; override map is scoped to the caller&#39;s environment groups.
    * @param forwarderId  (required)
    * @return ApiResponse&lt;ForwarderResponse&gt;
    * @throws ApiException if fails to make API call
@@ -558,7 +558,7 @@ public class ForwardersApi {
 
   /**
    * Get Forwarder
-   * Retrieve a single forwarder by id.  Header values are returned in plaintext so the resource can be round-tripped with &#x60;GET&#x60;, mutate, &#x60;PUT&#x60; without re-entering secrets.
+   * Retrieve a single forwarder by id.  Header values are returned in plaintext so the resource can be round-tripped with &#x60;GET&#x60;, mutate, &#x60;PUT&#x60; without re-entering secrets. The &#x60;environments&#x60; override map is scoped to the caller&#39;s environment groups.
    * @param forwarderId  (required)
    * @param headers Optional headers to include in the request
    * @return ApiResponse&lt;ForwarderResponse&gt;
@@ -641,7 +641,7 @@ public class ForwardersApi {
 
   /**
    * List Forwarder Deliveries
-   * List delivery log entries for a forwarder.  Default sort is &#x60;-created_at&#x60; (newest first). Filter by &#x60;status&#x60; (&#x60;SUCCEEDED&#x60; or &#x60;FAILED&#x60;, case-insensitive), by &#x60;event&#x60;, or by a &#x60;created_at&#x60; range using interval notation (e.g. &#x60;[2026-01-01T00:00:00Z,*)&#x60;).
+   * List delivery log entries for a forwarder.  Scoped to the resolved environment — only that environment&#39;s deliveries for the forwarder are shown. Default sort is &#x60;-created_at&#x60; (newest first). Filter by &#x60;status&#x60; (&#x60;SUCCEEDED&#x60; or &#x60;FAILED&#x60;, case-insensitive), by &#x60;event&#x60;, or by a &#x60;created_at&#x60; range using interval notation (e.g. &#x60;[2026-01-01T00:00:00Z,*)&#x60;).
    * @param forwarderId  (required)
    * @param filterStatus  (optional)
    * @param filterCreatedAt  (optional)
@@ -658,7 +658,7 @@ public class ForwardersApi {
 
   /**
    * List Forwarder Deliveries
-   * List delivery log entries for a forwarder.  Default sort is &#x60;-created_at&#x60; (newest first). Filter by &#x60;status&#x60; (&#x60;SUCCEEDED&#x60; or &#x60;FAILED&#x60;, case-insensitive), by &#x60;event&#x60;, or by a &#x60;created_at&#x60; range using interval notation (e.g. &#x60;[2026-01-01T00:00:00Z,*)&#x60;).
+   * List delivery log entries for a forwarder.  Scoped to the resolved environment — only that environment&#39;s deliveries for the forwarder are shown. Default sort is &#x60;-created_at&#x60; (newest first). Filter by &#x60;status&#x60; (&#x60;SUCCEEDED&#x60; or &#x60;FAILED&#x60;, case-insensitive), by &#x60;event&#x60;, or by a &#x60;created_at&#x60; range using interval notation (e.g. &#x60;[2026-01-01T00:00:00Z,*)&#x60;).
    * @param forwarderId  (required)
    * @param filterStatus  (optional)
    * @param filterCreatedAt  (optional)
@@ -677,7 +677,7 @@ public class ForwardersApi {
 
   /**
    * List Forwarder Deliveries
-   * List delivery log entries for a forwarder.  Default sort is &#x60;-created_at&#x60; (newest first). Filter by &#x60;status&#x60; (&#x60;SUCCEEDED&#x60; or &#x60;FAILED&#x60;, case-insensitive), by &#x60;event&#x60;, or by a &#x60;created_at&#x60; range using interval notation (e.g. &#x60;[2026-01-01T00:00:00Z,*)&#x60;).
+   * List delivery log entries for a forwarder.  Scoped to the resolved environment — only that environment&#39;s deliveries for the forwarder are shown. Default sort is &#x60;-created_at&#x60; (newest first). Filter by &#x60;status&#x60; (&#x60;SUCCEEDED&#x60; or &#x60;FAILED&#x60;, case-insensitive), by &#x60;event&#x60;, or by a &#x60;created_at&#x60; range using interval notation (e.g. &#x60;[2026-01-01T00:00:00Z,*)&#x60;).
    * @param forwarderId  (required)
    * @param filterStatus  (optional)
    * @param filterCreatedAt  (optional)
@@ -694,7 +694,7 @@ public class ForwardersApi {
 
   /**
    * List Forwarder Deliveries
-   * List delivery log entries for a forwarder.  Default sort is &#x60;-created_at&#x60; (newest first). Filter by &#x60;status&#x60; (&#x60;SUCCEEDED&#x60; or &#x60;FAILED&#x60;, case-insensitive), by &#x60;event&#x60;, or by a &#x60;created_at&#x60; range using interval notation (e.g. &#x60;[2026-01-01T00:00:00Z,*)&#x60;).
+   * List delivery log entries for a forwarder.  Scoped to the resolved environment — only that environment&#39;s deliveries for the forwarder are shown. Default sort is &#x60;-created_at&#x60; (newest first). Filter by &#x60;status&#x60; (&#x60;SUCCEEDED&#x60; or &#x60;FAILED&#x60;, case-insensitive), by &#x60;event&#x60;, or by a &#x60;created_at&#x60; range using interval notation (e.g. &#x60;[2026-01-01T00:00:00Z,*)&#x60;).
    * @param forwarderId  (required)
    * @param filterStatus  (optional)
    * @param filterCreatedAt  (optional)
@@ -808,9 +808,8 @@ public class ForwardersApi {
 
   /**
    * List Forwarders
-   * List forwarders for this account.  Default sort is &#x60;-created_at&#x60; (newest first).
+   * List forwarders for this account.  Default sort is &#x60;-created_at&#x60; (newest first). Each forwarder&#39;s &#x60;environments&#x60; override map is scoped to the caller&#39;s environment groups.
    * @param filterForwarderType  (optional)
-   * @param filterEnabled  (optional)
    * @param sort Field to sort by. Prefix with &#x60;-&#x60; for descending order. Default: &#x60;-created_at&#x60;. Allowed values: &#x60;created_at&#x60;, &#x60;-created_at&#x60;, &#x60;updated_at&#x60;, &#x60;-updated_at&#x60;. (optional, default to -created_at)
    * @param pageNumber 1-based page number to return. Optional; defaults to &#x60;1&#x60; when omitted. Must be &#x60;&gt;&#x3D; 1&#x60; — requests with a smaller value are rejected with a 400 error. (optional, default to 1)
    * @param pageSize Number of items per page. Optional; defaults to &#x60;1000&#x60; when omitted. Must be between &#x60;1&#x60; and &#x60;1000&#x60; inclusive — requests outside that range are rejected with a 400 error. (optional, default to 1000)
@@ -818,15 +817,14 @@ public class ForwardersApi {
    * @return ForwarderListResponse
    * @throws ApiException if fails to make API call
    */
-  public ForwarderListResponse listForwarders(@jakarta.annotation.Nullable String filterForwarderType, @jakarta.annotation.Nullable Boolean filterEnabled, @jakarta.annotation.Nullable String sort, @jakarta.annotation.Nullable Integer pageNumber, @jakarta.annotation.Nullable Integer pageSize, @jakarta.annotation.Nullable Boolean metaTotal) throws ApiException {
-    return listForwarders(filterForwarderType, filterEnabled, sort, pageNumber, pageSize, metaTotal, null);
+  public ForwarderListResponse listForwarders(@jakarta.annotation.Nullable String filterForwarderType, @jakarta.annotation.Nullable String sort, @jakarta.annotation.Nullable Integer pageNumber, @jakarta.annotation.Nullable Integer pageSize, @jakarta.annotation.Nullable Boolean metaTotal) throws ApiException {
+    return listForwarders(filterForwarderType, sort, pageNumber, pageSize, metaTotal, null);
   }
 
   /**
    * List Forwarders
-   * List forwarders for this account.  Default sort is &#x60;-created_at&#x60; (newest first).
+   * List forwarders for this account.  Default sort is &#x60;-created_at&#x60; (newest first). Each forwarder&#39;s &#x60;environments&#x60; override map is scoped to the caller&#39;s environment groups.
    * @param filterForwarderType  (optional)
-   * @param filterEnabled  (optional)
    * @param sort Field to sort by. Prefix with &#x60;-&#x60; for descending order. Default: &#x60;-created_at&#x60;. Allowed values: &#x60;created_at&#x60;, &#x60;-created_at&#x60;, &#x60;updated_at&#x60;, &#x60;-updated_at&#x60;. (optional, default to -created_at)
    * @param pageNumber 1-based page number to return. Optional; defaults to &#x60;1&#x60; when omitted. Must be &#x60;&gt;&#x3D; 1&#x60; — requests with a smaller value are rejected with a 400 error. (optional, default to 1)
    * @param pageSize Number of items per page. Optional; defaults to &#x60;1000&#x60; when omitted. Must be between &#x60;1&#x60; and &#x60;1000&#x60; inclusive — requests outside that range are rejected with a 400 error. (optional, default to 1000)
@@ -835,16 +833,15 @@ public class ForwardersApi {
    * @return ForwarderListResponse
    * @throws ApiException if fails to make API call
    */
-  public ForwarderListResponse listForwarders(@jakarta.annotation.Nullable String filterForwarderType, @jakarta.annotation.Nullable Boolean filterEnabled, @jakarta.annotation.Nullable String sort, @jakarta.annotation.Nullable Integer pageNumber, @jakarta.annotation.Nullable Integer pageSize, @jakarta.annotation.Nullable Boolean metaTotal, Map<String, String> headers) throws ApiException {
-    ApiResponse<ForwarderListResponse> localVarResponse = listForwardersWithHttpInfo(filterForwarderType, filterEnabled, sort, pageNumber, pageSize, metaTotal, headers);
+  public ForwarderListResponse listForwarders(@jakarta.annotation.Nullable String filterForwarderType, @jakarta.annotation.Nullable String sort, @jakarta.annotation.Nullable Integer pageNumber, @jakarta.annotation.Nullable Integer pageSize, @jakarta.annotation.Nullable Boolean metaTotal, Map<String, String> headers) throws ApiException {
+    ApiResponse<ForwarderListResponse> localVarResponse = listForwardersWithHttpInfo(filterForwarderType, sort, pageNumber, pageSize, metaTotal, headers);
     return localVarResponse.getData();
   }
 
   /**
    * List Forwarders
-   * List forwarders for this account.  Default sort is &#x60;-created_at&#x60; (newest first).
+   * List forwarders for this account.  Default sort is &#x60;-created_at&#x60; (newest first). Each forwarder&#39;s &#x60;environments&#x60; override map is scoped to the caller&#39;s environment groups.
    * @param filterForwarderType  (optional)
-   * @param filterEnabled  (optional)
    * @param sort Field to sort by. Prefix with &#x60;-&#x60; for descending order. Default: &#x60;-created_at&#x60;. Allowed values: &#x60;created_at&#x60;, &#x60;-created_at&#x60;, &#x60;updated_at&#x60;, &#x60;-updated_at&#x60;. (optional, default to -created_at)
    * @param pageNumber 1-based page number to return. Optional; defaults to &#x60;1&#x60; when omitted. Must be &#x60;&gt;&#x3D; 1&#x60; — requests with a smaller value are rejected with a 400 error. (optional, default to 1)
    * @param pageSize Number of items per page. Optional; defaults to &#x60;1000&#x60; when omitted. Must be between &#x60;1&#x60; and &#x60;1000&#x60; inclusive — requests outside that range are rejected with a 400 error. (optional, default to 1000)
@@ -852,15 +849,14 @@ public class ForwardersApi {
    * @return ApiResponse&lt;ForwarderListResponse&gt;
    * @throws ApiException if fails to make API call
    */
-  public ApiResponse<ForwarderListResponse> listForwardersWithHttpInfo(@jakarta.annotation.Nullable String filterForwarderType, @jakarta.annotation.Nullable Boolean filterEnabled, @jakarta.annotation.Nullable String sort, @jakarta.annotation.Nullable Integer pageNumber, @jakarta.annotation.Nullable Integer pageSize, @jakarta.annotation.Nullable Boolean metaTotal) throws ApiException {
-    return listForwardersWithHttpInfo(filterForwarderType, filterEnabled, sort, pageNumber, pageSize, metaTotal, null);
+  public ApiResponse<ForwarderListResponse> listForwardersWithHttpInfo(@jakarta.annotation.Nullable String filterForwarderType, @jakarta.annotation.Nullable String sort, @jakarta.annotation.Nullable Integer pageNumber, @jakarta.annotation.Nullable Integer pageSize, @jakarta.annotation.Nullable Boolean metaTotal) throws ApiException {
+    return listForwardersWithHttpInfo(filterForwarderType, sort, pageNumber, pageSize, metaTotal, null);
   }
 
   /**
    * List Forwarders
-   * List forwarders for this account.  Default sort is &#x60;-created_at&#x60; (newest first).
+   * List forwarders for this account.  Default sort is &#x60;-created_at&#x60; (newest first). Each forwarder&#39;s &#x60;environments&#x60; override map is scoped to the caller&#39;s environment groups.
    * @param filterForwarderType  (optional)
-   * @param filterEnabled  (optional)
    * @param sort Field to sort by. Prefix with &#x60;-&#x60; for descending order. Default: &#x60;-created_at&#x60;. Allowed values: &#x60;created_at&#x60;, &#x60;-created_at&#x60;, &#x60;updated_at&#x60;, &#x60;-updated_at&#x60;. (optional, default to -created_at)
    * @param pageNumber 1-based page number to return. Optional; defaults to &#x60;1&#x60; when omitted. Must be &#x60;&gt;&#x3D; 1&#x60; — requests with a smaller value are rejected with a 400 error. (optional, default to 1)
    * @param pageSize Number of items per page. Optional; defaults to &#x60;1000&#x60; when omitted. Must be between &#x60;1&#x60; and &#x60;1000&#x60; inclusive — requests outside that range are rejected with a 400 error. (optional, default to 1000)
@@ -869,8 +865,8 @@ public class ForwardersApi {
    * @return ApiResponse&lt;ForwarderListResponse&gt;
    * @throws ApiException if fails to make API call
    */
-  public ApiResponse<ForwarderListResponse> listForwardersWithHttpInfo(@jakarta.annotation.Nullable String filterForwarderType, @jakarta.annotation.Nullable Boolean filterEnabled, @jakarta.annotation.Nullable String sort, @jakarta.annotation.Nullable Integer pageNumber, @jakarta.annotation.Nullable Integer pageSize, @jakarta.annotation.Nullable Boolean metaTotal, Map<String, String> headers) throws ApiException {
-    HttpRequest.Builder localVarRequestBuilder = listForwardersRequestBuilder(filterForwarderType, filterEnabled, sort, pageNumber, pageSize, metaTotal, headers);
+  public ApiResponse<ForwarderListResponse> listForwardersWithHttpInfo(@jakarta.annotation.Nullable String filterForwarderType, @jakarta.annotation.Nullable String sort, @jakarta.annotation.Nullable Integer pageNumber, @jakarta.annotation.Nullable Integer pageSize, @jakarta.annotation.Nullable Boolean metaTotal, Map<String, String> headers) throws ApiException {
+    HttpRequest.Builder localVarRequestBuilder = listForwardersRequestBuilder(filterForwarderType, sort, pageNumber, pageSize, metaTotal, headers);
     try {
       HttpResponse<InputStream> localVarResponse = memberVarHttpClient.send(
           localVarRequestBuilder.build(),
@@ -917,7 +913,7 @@ public class ForwardersApi {
     }
   }
 
-  private HttpRequest.Builder listForwardersRequestBuilder(@jakarta.annotation.Nullable String filterForwarderType, @jakarta.annotation.Nullable Boolean filterEnabled, @jakarta.annotation.Nullable String sort, @jakarta.annotation.Nullable Integer pageNumber, @jakarta.annotation.Nullable Integer pageSize, @jakarta.annotation.Nullable Boolean metaTotal, Map<String, String> headers) throws ApiException {
+  private HttpRequest.Builder listForwardersRequestBuilder(@jakarta.annotation.Nullable String filterForwarderType, @jakarta.annotation.Nullable String sort, @jakarta.annotation.Nullable Integer pageNumber, @jakarta.annotation.Nullable Integer pageSize, @jakarta.annotation.Nullable Boolean metaTotal, Map<String, String> headers) throws ApiException {
 
     HttpRequest.Builder localVarRequestBuilder = HttpRequest.newBuilder();
 
@@ -928,8 +924,6 @@ public class ForwardersApi {
     String localVarQueryParameterBaseName;
     localVarQueryParameterBaseName = "filter[forwarder_type]";
     localVarQueryParams.addAll(ApiClient.parameterToPairs("filter[forwarder_type]", filterForwarderType));
-    localVarQueryParameterBaseName = "filter[enabled]";
-    localVarQueryParams.addAll(ApiClient.parameterToPairs("filter[enabled]", filterEnabled));
     localVarQueryParameterBaseName = "sort";
     localVarQueryParams.addAll(ApiClient.parameterToPairs("sort", sort));
     localVarQueryParameterBaseName = "page[number]";
@@ -966,7 +960,7 @@ public class ForwardersApi {
 
   /**
    * Retry Failed Forwarder Deliveries
-   * Retry every failed delivery for this forwarder.  Each failed delivery is re-attempted using the forwarder&#39;s current configuration and the original event. Returns the counts.
+   * Retry every failed delivery for this forwarder in the resolved environment.  Scoped to the resolved environment (a single-environment credential implies it; otherwise send the &#x60;X-Smplkit-Environment&#x60; header): only that environment&#39;s failed deliveries are re-attempted, each using the forwarder&#39;s effective configuration for that environment and the original event. Returns the counts.
    * @param forwarderId  (required)
    * @return RetryFailedDeliveriesSummary
    * @throws ApiException if fails to make API call
@@ -977,7 +971,7 @@ public class ForwardersApi {
 
   /**
    * Retry Failed Forwarder Deliveries
-   * Retry every failed delivery for this forwarder.  Each failed delivery is re-attempted using the forwarder&#39;s current configuration and the original event. Returns the counts.
+   * Retry every failed delivery for this forwarder in the resolved environment.  Scoped to the resolved environment (a single-environment credential implies it; otherwise send the &#x60;X-Smplkit-Environment&#x60; header): only that environment&#39;s failed deliveries are re-attempted, each using the forwarder&#39;s effective configuration for that environment and the original event. Returns the counts.
    * @param forwarderId  (required)
    * @param headers Optional headers to include in the request
    * @return RetryFailedDeliveriesSummary
@@ -990,7 +984,7 @@ public class ForwardersApi {
 
   /**
    * Retry Failed Forwarder Deliveries
-   * Retry every failed delivery for this forwarder.  Each failed delivery is re-attempted using the forwarder&#39;s current configuration and the original event. Returns the counts.
+   * Retry every failed delivery for this forwarder in the resolved environment.  Scoped to the resolved environment (a single-environment credential implies it; otherwise send the &#x60;X-Smplkit-Environment&#x60; header): only that environment&#39;s failed deliveries are re-attempted, each using the forwarder&#39;s effective configuration for that environment and the original event. Returns the counts.
    * @param forwarderId  (required)
    * @return ApiResponse&lt;RetryFailedDeliveriesSummary&gt;
    * @throws ApiException if fails to make API call
@@ -1001,7 +995,7 @@ public class ForwardersApi {
 
   /**
    * Retry Failed Forwarder Deliveries
-   * Retry every failed delivery for this forwarder.  Each failed delivery is re-attempted using the forwarder&#39;s current configuration and the original event. Returns the counts.
+   * Retry every failed delivery for this forwarder in the resolved environment.  Scoped to the resolved environment (a single-environment credential implies it; otherwise send the &#x60;X-Smplkit-Environment&#x60; header): only that environment&#39;s failed deliveries are re-attempted, each using the forwarder&#39;s effective configuration for that environment and the original event. Returns the counts.
    * @param forwarderId  (required)
    * @param headers Optional headers to include in the request
    * @return ApiResponse&lt;RetryFailedDeliveriesSummary&gt;
@@ -1084,7 +1078,7 @@ public class ForwardersApi {
 
   /**
    * Retry Forwarder Delivery
-   * Retry a single failed delivery.  Returns the new delivery log entry. The prior entry is left in place.
+   * Retry a single failed delivery.  The delivery is named by id, so it is authorized against the caller&#39;s permitted environment set: a delivery in an environment the caller can&#39;t access returns &#x60;404&#x60; (existence never leaks). Returns the new delivery log entry. The prior entry is left in place.
    * @param forwarderId  (required)
    * @param deliveryId  (required)
    * @return ForwarderDeliveryResponse
@@ -1096,7 +1090,7 @@ public class ForwardersApi {
 
   /**
    * Retry Forwarder Delivery
-   * Retry a single failed delivery.  Returns the new delivery log entry. The prior entry is left in place.
+   * Retry a single failed delivery.  The delivery is named by id, so it is authorized against the caller&#39;s permitted environment set: a delivery in an environment the caller can&#39;t access returns &#x60;404&#x60; (existence never leaks). Returns the new delivery log entry. The prior entry is left in place.
    * @param forwarderId  (required)
    * @param deliveryId  (required)
    * @param headers Optional headers to include in the request
@@ -1110,7 +1104,7 @@ public class ForwardersApi {
 
   /**
    * Retry Forwarder Delivery
-   * Retry a single failed delivery.  Returns the new delivery log entry. The prior entry is left in place.
+   * Retry a single failed delivery.  The delivery is named by id, so it is authorized against the caller&#39;s permitted environment set: a delivery in an environment the caller can&#39;t access returns &#x60;404&#x60; (existence never leaks). Returns the new delivery log entry. The prior entry is left in place.
    * @param forwarderId  (required)
    * @param deliveryId  (required)
    * @return ApiResponse&lt;ForwarderDeliveryResponse&gt;
@@ -1122,7 +1116,7 @@ public class ForwardersApi {
 
   /**
    * Retry Forwarder Delivery
-   * Retry a single failed delivery.  Returns the new delivery log entry. The prior entry is left in place.
+   * Retry a single failed delivery.  The delivery is named by id, so it is authorized against the caller&#39;s permitted environment set: a delivery in an environment the caller can&#39;t access returns &#x60;404&#x60; (existence never leaks). Returns the new delivery log entry. The prior entry is left in place.
    * @param forwarderId  (required)
    * @param deliveryId  (required)
    * @param headers Optional headers to include in the request
@@ -1211,7 +1205,7 @@ public class ForwardersApi {
 
   /**
    * Update Forwarder
-   * Replace an existing forwarder. Every writable field is overwritten.
+   * Replace an existing forwarder. Every writable field is overwritten.  The &#x60;environments&#x60; override map is a full replace for the environments you can manage; overrides for environments outside your access (which were hidden from your read) are preserved. Every environment referenced in &#x60;environments&#x60; must exist and be managed.
    * @param forwarderId  (required)
    * @param forwarderRequest  (required)
    * @return ForwarderResponse
@@ -1223,7 +1217,7 @@ public class ForwardersApi {
 
   /**
    * Update Forwarder
-   * Replace an existing forwarder. Every writable field is overwritten.
+   * Replace an existing forwarder. Every writable field is overwritten.  The &#x60;environments&#x60; override map is a full replace for the environments you can manage; overrides for environments outside your access (which were hidden from your read) are preserved. Every environment referenced in &#x60;environments&#x60; must exist and be managed.
    * @param forwarderId  (required)
    * @param forwarderRequest  (required)
    * @param headers Optional headers to include in the request
@@ -1237,7 +1231,7 @@ public class ForwardersApi {
 
   /**
    * Update Forwarder
-   * Replace an existing forwarder. Every writable field is overwritten.
+   * Replace an existing forwarder. Every writable field is overwritten.  The &#x60;environments&#x60; override map is a full replace for the environments you can manage; overrides for environments outside your access (which were hidden from your read) are preserved. Every environment referenced in &#x60;environments&#x60; must exist and be managed.
    * @param forwarderId  (required)
    * @param forwarderRequest  (required)
    * @return ApiResponse&lt;ForwarderResponse&gt;
@@ -1249,7 +1243,7 @@ public class ForwardersApi {
 
   /**
    * Update Forwarder
-   * Replace an existing forwarder. Every writable field is overwritten.
+   * Replace an existing forwarder. Every writable field is overwritten.  The &#x60;environments&#x60; override map is a full replace for the environments you can manage; overrides for environments outside your access (which were hidden from your read) are preserved. Every environment referenced in &#x60;environments&#x60; must exist and be managed.
    * @param forwarderId  (required)
    * @param forwarderRequest  (required)
    * @param headers Optional headers to include in the request

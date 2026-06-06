@@ -41,6 +41,7 @@ import com.smplkit.internal.generated.audit.ApiClient;
  * A log entry for one attempt to deliver an event to a forwarder.
  */
 @JsonPropertyOrder({
+  ForwarderDelivery.JSON_PROPERTY_ENVIRONMENT,
   ForwarderDelivery.JSON_PROPERTY_FORWARDER,
   ForwarderDelivery.JSON_PROPERTY_EVENT,
   ForwarderDelivery.JSON_PROPERTY_ATTEMPT_NUMBER,
@@ -54,6 +55,10 @@ import com.smplkit.internal.generated.audit.ApiClient;
 })
 @jakarta.annotation.Generated(value = "org.openapitools.codegen.languages.JavaClientCodegen", comments = "Generator version: 7.21.0")
 public class ForwarderDelivery {
+  public static final String JSON_PROPERTY_ENVIRONMENT = "environment";
+  @jakarta.annotation.Nonnull
+  private String environment;
+
   public static final String JSON_PROPERTY_FORWARDER = "forwarder";
   @jakarta.annotation.Nonnull
   private UUID forwarder;
@@ -125,6 +130,30 @@ public class ForwarderDelivery {
 
   public ForwarderDelivery() { 
   }
+
+  public ForwarderDelivery environment(@jakarta.annotation.Nonnull String environment) {
+    this.environment = environment;
+    return this;
+  }
+
+  /**
+   * Environment the delivered event occurred in. Deliveries are scoped to one environment.
+   * @return environment
+   */
+  @jakarta.annotation.Nonnull
+  @JsonProperty(value = JSON_PROPERTY_ENVIRONMENT, required = true)
+  @JsonInclude(value = JsonInclude.Include.ALWAYS)
+  public String getEnvironment() {
+    return environment;
+  }
+
+
+  @JsonProperty(value = JSON_PROPERTY_ENVIRONMENT, required = true)
+  @JsonInclude(value = JsonInclude.Include.ALWAYS)
+  public void setEnvironment(@jakarta.annotation.Nonnull String environment) {
+    this.environment = environment;
+  }
+
 
   public ForwarderDelivery forwarder(@jakarta.annotation.Nonnull UUID forwarder) {
     this.forwarder = forwarder;
@@ -438,7 +467,8 @@ public class ForwarderDelivery {
       return false;
     }
     ForwarderDelivery forwarderDelivery = (ForwarderDelivery) o;
-    return Objects.equals(this.forwarder, forwarderDelivery.forwarder) &&
+    return Objects.equals(this.environment, forwarderDelivery.environment) &&
+        Objects.equals(this.forwarder, forwarderDelivery.forwarder) &&
         Objects.equals(this.event, forwarderDelivery.event) &&
         Objects.equals(this.attemptNumber, forwarderDelivery.attemptNumber) &&
         Objects.equals(this.status, forwarderDelivery.status) &&
@@ -456,7 +486,7 @@ public class ForwarderDelivery {
 
   @Override
   public int hashCode() {
-    return Objects.hash(forwarder, event, attemptNumber, status, hashCodeNullable(request), hashCodeNullable(responseStatus), hashCodeNullable(responseBody), hashCodeNullable(latencyMs), hashCodeNullable(error), hashCodeNullable(createdAt));
+    return Objects.hash(environment, forwarder, event, attemptNumber, status, hashCodeNullable(request), hashCodeNullable(responseStatus), hashCodeNullable(responseBody), hashCodeNullable(latencyMs), hashCodeNullable(error), hashCodeNullable(createdAt));
   }
 
   private static <T> int hashCodeNullable(JsonNullable<T> a) {
@@ -470,6 +500,7 @@ public class ForwarderDelivery {
   public String toString() {
     StringBuilder sb = new StringBuilder();
     sb.append("class ForwarderDelivery {\n");
+    sb.append("    environment: ").append(toIndentedString(environment)).append("\n");
     sb.append("    forwarder: ").append(toIndentedString(forwarder)).append("\n");
     sb.append("    event: ").append(toIndentedString(event)).append("\n");
     sb.append("    attemptNumber: ").append(toIndentedString(attemptNumber)).append("\n");
@@ -523,6 +554,11 @@ public class ForwarderDelivery {
     }
 
     StringJoiner joiner = new StringJoiner("&");
+
+    // add `environment` to the URL query string
+    if (getEnvironment() != null) {
+      joiner.add(String.format(java.util.Locale.ROOT, "%senvironment%s=%s", prefix, suffix, ApiClient.urlEncode(ApiClient.valueToString(getEnvironment()))));
+    }
 
     // add `forwarder` to the URL query string
     if (getForwarder() != null) {

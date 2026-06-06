@@ -65,7 +65,12 @@ public final class AuditRuntimeShowcase {
             assert event.id.equals(recordedEventId) : "event id mismatch";
             assert event.resourceId.equals(someResourceId) : "resource_id mismatch";
             assert "invoice.created".equals(event.eventType) : "event type mismatch";
-            System.out.println("Fetched event " + event.id + ": " + event.eventType);
+            // The event is stamped with the environment it was recorded in.
+            // The SDK sends the configured runtime environment on every
+            // recording call, so the read-back event carries it.
+            assert "production".equals(event.environment) : "expected environment=production";
+            System.out.println("Fetched event " + event.id + ": " + event.eventType
+                    + " (environment=" + event.environment + ")");
 
             // list resource types observed
             ListResourceTypesPage resourceTypes = client.audit().resourceTypes().list(new ListResourceTypesInput());

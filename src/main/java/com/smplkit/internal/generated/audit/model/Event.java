@@ -53,6 +53,7 @@ import com.smplkit.internal.generated.audit.ApiClient;
   Event.JSON_PROPERTY_ACTOR_LABEL,
   Event.JSON_PROPERTY_DATA,
   Event.JSON_PROPERTY_DO_NOT_FORWARD,
+  Event.JSON_PROPERTY_ENVIRONMENT,
   Event.JSON_PROPERTY_CREATED_AT,
   Event.JSON_PROPERTY_IDEMPOTENCY_KEY
 })
@@ -100,6 +101,9 @@ public class Event {
   @jakarta.annotation.Nullable
   private Boolean doNotForward = false;
 
+  public static final String JSON_PROPERTY_ENVIRONMENT = "environment";
+  private JsonNullable<String> environment = JsonNullable.<String>undefined();
+
   public static final String JSON_PROPERTY_CREATED_AT = "created_at";
   private JsonNullable<OffsetDateTime> createdAt = JsonNullable.<OffsetDateTime>undefined();
 
@@ -111,10 +115,12 @@ public class Event {
 
   @JsonCreator
   public Event(
+    @JsonProperty(JSON_PROPERTY_ENVIRONMENT) String environment, 
     @JsonProperty(JSON_PROPERTY_CREATED_AT) OffsetDateTime createdAt, 
     @JsonProperty(JSON_PROPERTY_IDEMPOTENCY_KEY) String idempotencyKey
   ) {
   this();
+    this.environment = environment == null ? JsonNullable.<String>undefined() : JsonNullable.of(environment);
     this.createdAt = createdAt == null ? JsonNullable.<OffsetDateTime>undefined() : JsonNullable.of(createdAt);
     this.idempotencyKey = idempotencyKey == null ? JsonNullable.<String>undefined() : JsonNullable.of(idempotencyKey);
   }
@@ -464,6 +470,34 @@ public class Event {
 
 
   /**
+   * The environment the event occurred in. Always present on read. Resolved when the event is recorded — from a single-environment credential, or the &#x60;X-Smplkit-Environment&#x60; header for multi-environment credentials — and never set on the request body. The same content recorded in two environments produces two distinct events.
+   * @return environment
+   */
+  @jakarta.annotation.Nullable
+  @JsonIgnore
+  public String getEnvironment() {
+    
+    if (environment == null) {
+      environment = JsonNullable.<String>undefined();
+    }
+    return environment.orElse(null);
+  }
+
+  @JsonProperty(value = JSON_PROPERTY_ENVIRONMENT, required = false)
+  @JsonInclude(value = JsonInclude.Include.USE_DEFAULTS)
+
+  public JsonNullable<String> getEnvironment_JsonNullable() {
+    return environment;
+  }
+  
+  @JsonProperty(JSON_PROPERTY_ENVIRONMENT)
+  private void setEnvironment_JsonNullable(JsonNullable<String> environment) {
+    this.environment = environment;
+  }
+
+
+
+  /**
    * When the event was received and recorded.
    * @return createdAt
    */
@@ -543,6 +577,7 @@ public class Event {
         equalsNullable(this.actorLabel, event.actorLabel) &&
         Objects.equals(this.data, event.data) &&
         Objects.equals(this.doNotForward, event.doNotForward) &&
+        equalsNullable(this.environment, event.environment) &&
         equalsNullable(this.createdAt, event.createdAt) &&
         equalsNullable(this.idempotencyKey, event.idempotencyKey);
   }
@@ -553,7 +588,7 @@ public class Event {
 
   @Override
   public int hashCode() {
-    return Objects.hash(eventType, resourceType, resourceId, hashCodeNullable(description), severity, hashCodeNullable(category), hashCodeNullable(occurredAt), hashCodeNullable(actorType), hashCodeNullable(actorId), hashCodeNullable(actorLabel), data, doNotForward, hashCodeNullable(createdAt), hashCodeNullable(idempotencyKey));
+    return Objects.hash(eventType, resourceType, resourceId, hashCodeNullable(description), severity, hashCodeNullable(category), hashCodeNullable(occurredAt), hashCodeNullable(actorType), hashCodeNullable(actorId), hashCodeNullable(actorLabel), data, doNotForward, hashCodeNullable(environment), hashCodeNullable(createdAt), hashCodeNullable(idempotencyKey));
   }
 
   private static <T> int hashCodeNullable(JsonNullable<T> a) {
@@ -579,6 +614,7 @@ public class Event {
     sb.append("    actorLabel: ").append(toIndentedString(actorLabel)).append("\n");
     sb.append("    data: ").append(toIndentedString(data)).append("\n");
     sb.append("    doNotForward: ").append(toIndentedString(doNotForward)).append("\n");
+    sb.append("    environment: ").append(toIndentedString(environment)).append("\n");
     sb.append("    createdAt: ").append(toIndentedString(createdAt)).append("\n");
     sb.append("    idempotencyKey: ").append(toIndentedString(idempotencyKey)).append("\n");
     sb.append("}");
@@ -687,6 +723,11 @@ public class Event {
     // add `do_not_forward` to the URL query string
     if (getDoNotForward() != null) {
       joiner.add(String.format(java.util.Locale.ROOT, "%sdo_not_forward%s=%s", prefix, suffix, ApiClient.urlEncode(ApiClient.valueToString(getDoNotForward()))));
+    }
+
+    // add `environment` to the URL query string
+    if (getEnvironment() != null) {
+      joiner.add(String.format(java.util.Locale.ROOT, "%senvironment%s=%s", prefix, suffix, ApiClient.urlEncode(ApiClient.valueToString(getEnvironment()))));
     }
 
     // add `created_at` to the URL query string

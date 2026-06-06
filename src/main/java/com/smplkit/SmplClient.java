@@ -120,7 +120,7 @@ public final class SmplClient implements AutoCloseable {
                 service, loggingBaseUrl);
         this.logging.setMetrics(metrics);
         this.logging.setSharedWs(this.sharedWs);
-        this.audit = new com.smplkit.audit.AuditClient(httpClient, apiKey, extraHeaders, timeout, auditBaseUrl);
+        this.audit = new com.smplkit.audit.AuditClient(httpClient, apiKey, extraHeaders, timeout, auditBaseUrl, environment);
 
         this.manage = SmplManagementClient.sharedWith(
                 new ConfigResolver.ResolvedManagementConfig(
@@ -159,7 +159,7 @@ public final class SmplClient implements AutoCloseable {
         this.logging = buildLoggingClient(httpClient, apiKey, Map.of(), timeout, environment,
                 service, loggingBaseUrl);
         this.audit = new com.smplkit.audit.AuditClient(httpClient, apiKey, Map.of(), timeout,
-                serviceUrl(DEFAULT_SCHEME, "audit", DEFAULT_BASE_DOMAIN));
+                serviceUrl(DEFAULT_SCHEME, "audit", DEFAULT_BASE_DOMAIN), environment);
         this.manage = SmplManagementClient.sharedWith(
                 new ConfigResolver.ResolvedManagementConfig(apiKey, DEFAULT_BASE_DOMAIN, DEFAULT_SCHEME, false),
                 timeout, httpClient, contextBuffer);
@@ -190,7 +190,7 @@ public final class SmplClient implements AutoCloseable {
         this.logging = buildLoggingClient(httpClient, apiKey, Map.of(), timeout, environment,
                 service, loggingBaseUrl);
         this.audit = new com.smplkit.audit.AuditClient(httpClient, apiKey, Map.of(), timeout,
-                serviceUrl(DEFAULT_SCHEME, "audit", DEFAULT_BASE_DOMAIN));
+                serviceUrl(DEFAULT_SCHEME, "audit", DEFAULT_BASE_DOMAIN), environment);
         this.manage = SmplManagementClient.sharedWith(
                 new ConfigResolver.ResolvedManagementConfig(apiKey, DEFAULT_BASE_DOMAIN, DEFAULT_SCHEME, false),
                 timeout, httpClient, contextBuffer);

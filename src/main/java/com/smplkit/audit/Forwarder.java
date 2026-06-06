@@ -3,6 +3,7 @@ package com.smplkit.audit;
 import com.smplkit.internal.generated.audit.ApiException;
 
 import java.time.OffsetDateTime;
+import java.util.HashMap;
 import java.util.Map;
 
 /**
@@ -34,10 +35,23 @@ public final class Forwarder {
     /** Destination type — see {@link ForwarderType}. */
     public ForwarderType forwarderType;
     /**
-     * When {@code false}, the audit service skips delivery for this
-     * forwarder but still records {@code filtered_out} deliveries.
+     * Read-only. Always {@code false} — the base enablement is pinned off
+     * server-side. Whether a forwarder actually delivers is decided per
+     * environment via {@link #environments}; mutating this field has no
+     * effect on the server.
      */
-    public boolean enabled = true;
+    public boolean enabled = false;
+    /**
+     * Per-environment overrides keyed by environment key (e.g.
+     * {@code "production"}, {@code "staging"}). A forwarder delivers in an
+     * environment only when {@code environments.get(env).enabled} is
+     * {@code true}. Each entry may carry an optional
+     * {@link HttpConfiguration} override; omit it (leave
+     * {@code configuration} null) to inherit the base
+     * {@link #configuration}. Every referenced environment must exist and
+     * be managed for the account.
+     */
+    public Map<String, ForwarderEnvironment> environments = new HashMap<>();
     /**
      * Optional JSON Logic expression evaluated per event. When set, events
      * that don't match are recorded as {@code filtered_out} deliveries
@@ -82,7 +96,8 @@ public final class Forwarder {
     }
 
     Forwarder(AuditForwarders client, String id, String name, String description,
-              ForwarderType forwarderType, boolean enabled, Map<String, Object> filter,
+              ForwarderType forwarderType, boolean enabled,
+              Map<String, ForwarderEnvironment> environments, Map<String, Object> filter,
               TransformType transformType, Object transform, HttpConfiguration configuration,
               OffsetDateTime createdAt, OffsetDateTime updatedAt,
               OffsetDateTime deletedAt, Integer version) {
@@ -92,6 +107,7 @@ public final class Forwarder {
         this.description = description;
         this.forwarderType = forwarderType;
         this.enabled = enabled;
+        this.environments = environments != null ? environments : new HashMap<>();
         this.filter = filter;
         this.transformType = transformType;
         this.transform = transform;
@@ -150,6 +166,7 @@ public final class Forwarder {
         this.description = other.description;
         this.forwarderType = other.forwarderType;
         this.enabled = other.enabled;
+        this.environments = other.environments;
         this.filter = other.filter;
         this.transformType = other.transformType;
         this.transform = other.transform;

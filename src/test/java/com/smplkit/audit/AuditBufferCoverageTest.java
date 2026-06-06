@@ -188,13 +188,14 @@ class AuditBufferCoverageTest {
                 "INFO", "auth",
                 OffsetDateTime.now(), OffsetDateTime.now(),
                 "USER", actorId, "label",
-                data, "ik", false);
+                data, "ik", false, "production");
         assertEquals(id, ev.id);
         assertEquals("act", ev.eventType);
         assertEquals("INFO", ev.severity);
         assertEquals("auth", ev.category);
         assertEquals(actorId, ev.actorId);
         assertEquals("ik", ev.idempotencyKey);
+        assertEquals("production", ev.environment);
     }
 
     @Test
