@@ -196,7 +196,7 @@ public class ApiKey {
   }
 
   /**
-   * Scope restrictions applied to the key. Empty object grants full account access; populated forms are reserved for future scope syntax.
+   * Scope restrictions applied to the key, as a JSON object mapping dimension names to arrays of allowed values. An empty object (the default) grants unrestricted access. The &#x60;environments&#x60; dimension lists the environment keys the key may operate in (for example &#x60;{\&quot;environments\&quot;: [\&quot;production\&quot;]}&#x60;); a request&#39;s environment must be one of them. A dimension that is absent or set to an empty array is unrestricted in that dimension.
    * @return scopes
    */
   @jakarta.annotation.Nullable
