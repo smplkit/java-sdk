@@ -197,10 +197,10 @@ class AuditForwardersTest {
                 "{\"data\":" + forwarderResource("Renamed", "renamed sink", false, "2026-05-07T12:00:00Z") + "}"));
         AuditForwarders fwds = new AuditForwarders(forwardersApi);
         Forwarder fwd = fwds.get(FWD_ID);  // first GET handler also returns the same body
-        fwd.enabled = false;
         fwd.name = "Renamed";
         fwd.save();
         assertEquals("Renamed", fwd.name);
+        // The base ``enabled`` is server-pinned false (read-only).
         assertFalse(fwd.enabled);
     }
 
@@ -278,7 +278,6 @@ class AuditForwardersTest {
         AuditForwarders fwds = new AuditForwarders(forwardersApi);
         ListForwardersInput in1 = new ListForwardersInput();
         in1.forwarderType = ForwarderType.DATADOG;
-        in1.enabled = true;
         in1.pageNumber = 1;
         in1.pageSize = 1;
         in1.metaTotal = true;
@@ -413,6 +412,114 @@ class AuditForwardersTest {
         fwd.transformType = TransformType.JSONATA;
         fwd.save();
         // Round-trip succeeds (server response is forwarderResource which carries no transform fields).
+    }
+
+    // -----------------------------------------------------------------
+    // Per-environment enablement (ADR-055)
+    // -----------------------------------------------------------------
+
+    @Test
+    void forwarderEnvironment_constructors_populateFields() {
+        ForwarderEnvironment defaults = new ForwarderEnvironment();
+        assertFalse(defaults.enabled);
+        assertNull(defaults.configuration);
+
+        ForwarderEnvironment enabledOnly = new ForwarderEnvironment(true);
+        assertTrue(enabledOnly.enabled);
+        assertNull(enabledOnly.configuration);
+
+        HttpConfiguration cfg = new HttpConfiguration("https://override.example.com");
+        ForwarderEnvironment withCfg = new ForwarderEnvironment(true, cfg);
+        assertTrue(withCfg.enabled);
+        assertSame(cfg, withCfg.configuration);
+    }
+
+    @Test
+    void saveForwarder_sendsEnvironmentsMap_onWire() throws Exception {
+        AtomicReference<String> body = new AtomicReference<>();
+        handler.set(ex -> {
+            byte[] in = ex.getRequestBody().readAllBytes();
+            body.set(new String(in));
+            respondJson(ex, 201,
+                    "{\"data\":" + forwarderResource("Datadog production", "prod sink") + "}");
+        });
+        AuditForwarders fwds = new AuditForwarders(forwardersApi);
+        Forwarder fwd = fwds.newForwarder(FWD_ID, "Datadog production",
+                ForwarderType.DATADOG, new HttpConfiguration("https://siem.example.com/in"));
+        // production: enabled with a per-environment configuration override.
+        HttpConfiguration prodOverride = new HttpConfiguration("https://prod-override.example.com");
+        fwd.environments.put("production", new ForwarderEnvironment(true, prodOverride));
+        // staging: enabled, no override (inherits base configuration).
+        fwd.environments.put("staging", new ForwarderEnvironment(true));
+        fwd.save();
+        assertTrue(body.get().contains("\"environments\""),
+                "expected environments map on wire, got: " + body.get());
+        assertTrue(body.get().contains("\"production\""),
+                "expected production entry on wire, got: " + body.get());
+        assertTrue(body.get().contains("https://prod-override.example.com"),
+                "expected per-environment config override on wire, got: " + body.get());
+        // Per-environment enablement IS sent (inside the environments map).
+        assertTrue(body.get().contains("\"enabled\":true"),
+                "expected per-environment enabled=true on wire, got: " + body.get());
+        // The wrapper never sets the base ``enabled`` (it's server-pinned false
+        // and read-only); the generated model leaves it at its false default, so
+        // the base attributes carry at most ``"enabled":false`` and never
+        // ``enabled:true`` outside the environments map.
+        String wire = body.get();
+        int envIdx = wire.indexOf("\"environments\"");
+        assertTrue(envIdx > 0, "environments must be present");
+        assertFalse(wire.substring(0, envIdx).contains("\"enabled\":true"),
+                "base attributes must not carry enabled=true before environments: " + wire);
+    }
+
+    @Test
+    void getForwarder_readsEnvironmentsMap_fromWire() throws Exception {
+        String resource = "{\"id\":\"" + FWD_ID + "\",\"type\":\"forwarder\",\"attributes\":{"
+                + "\"name\":\"n\",\"description\":\"d\","
+                + "\"forwarder_type\":\"datadog\",\"enabled\":false,"
+                + "\"configuration\":{\"method\":\"POST\",\"url\":\"https://base.example.com\","
+                + "\"headers\":[],\"success_status\":\"2xx\"},"
+                + "\"environments\":{"
+                + "\"production\":{\"enabled\":true,\"configuration\":{\"method\":\"POST\","
+                + "\"url\":\"https://prod-override.example.com\",\"headers\":[],\"success_status\":\"2xx\"}},"
+                + "\"staging\":{\"enabled\":false}"
+                + "},"
+                + "\"data\":{},\"created_at\":\"2026-05-07T12:00:00Z\","
+                + "\"updated_at\":\"2026-05-07T12:00:00Z\",\"version\":1}}";
+        handler.set(ex -> respondJson(ex, 200, "{\"data\":" + resource + "}"));
+        AuditForwarders fwds = new AuditForwarders(forwardersApi);
+        Forwarder fwd = fwds.get(FWD_ID);
+        assertFalse(fwd.enabled);
+        assertEquals(2, fwd.environments.size());
+        ForwarderEnvironment prod = fwd.environments.get("production");
+        assertTrue(prod.enabled);
+        assertNotNull(prod.configuration);
+        assertEquals("https://prod-override.example.com", prod.configuration.url);
+        ForwarderEnvironment staging = fwd.environments.get("staging");
+        assertFalse(staging.enabled);
+        assertNull(staging.configuration);
+    }
+
+    @Test
+    void getForwarder_absentEnvironments_yieldsEmptyMap() throws Exception {
+        // forwarderResource() emits no environments key — exercises the
+        // environmentsFromGen(null) path.
+        handler.set(ex -> respondJson(ex, 200,
+                "{\"data\":" + forwarderResource("n", "d") + "}"));
+        AuditForwarders fwds = new AuditForwarders(forwardersApi);
+        Forwarder fwd = fwds.get(FWD_ID);
+        assertNotNull(fwd.environments);
+        assertTrue(fwd.environments.isEmpty());
+    }
+
+    @Test
+    void forwarder_fullArgsConstructor_nullEnvironmentsDefaultsToEmptyMap() {
+        AuditForwarders fwds = new AuditForwarders(forwardersApi);
+        Forwarder fwd = new Forwarder(fwds, FWD_ID, "n", "d", ForwarderType.HTTP, false,
+                null, null, null, null, new HttpConfiguration("https://x"),
+                null, null, null, null);
+        assertNotNull(fwd.environments);
+        assertTrue(fwd.environments.isEmpty());
     }
 
     // -----------------------------------------------------------------

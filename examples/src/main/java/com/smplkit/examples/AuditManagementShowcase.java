@@ -13,6 +13,7 @@
 package com.smplkit.examples;
 
 import com.smplkit.audit.Forwarder;
+import com.smplkit.audit.ForwarderEnvironment;
 import com.smplkit.audit.ForwarderType;
 import com.smplkit.audit.HttpConfiguration;
 import com.smplkit.audit.HttpHeader;
@@ -63,6 +64,10 @@ public final class AuditManagementShowcase {
                     TransformType.JSONATA,
                     SIEM_TRANSFORM);
             forwarder.filter = INVOICE_FILTER;
+            // Enablement is per-environment: a forwarder delivers in an
+            // environment only when that environment's entry is enabled. The
+            // base `enabled` field is read-only and always false.
+            forwarder.environments.put("production", new ForwarderEnvironment(true));
             forwarder.save();
             System.out.println("Created forwarder: " + forwarder.name + " (id=" + forwarder.id + ")");
 
@@ -75,14 +80,19 @@ public final class AuditManagementShowcase {
             // get a forwarder
             Forwarder fetched = manage.audit.forwarders.get(forwarder.id);
             assert fetched.id.equals(forwarder.id) : "fetched id mismatch";
-            assert fetched.enabled : "expected enabled=true";
-            System.out.println("Fetched forwarder: " + fetched.name);
+            assert fetched.environments.containsKey("production")
+                    && fetched.environments.get("production").enabled
+                    : "expected forwarder enabled in production";
+            System.out.println("Fetched forwarder: " + fetched.name
+                    + " (enabled in: " + fetched.environments.entrySet().stream()
+                            .filter(e -> e.getValue().enabled).map(Map.Entry::getKey).toList() + ")");
 
-            // update a forwarder
-            fetched.enabled = false;
+            // disable the forwarder in production (per-environment)
+            fetched.environments.put("production", new ForwarderEnvironment(false));
             fetched.save();
-            assert !fetched.enabled : "expected enabled=false";
-            System.out.println("Disabled forwarder: " + fetched.name + " (enabled=" + fetched.enabled + ")");
+            assert !fetched.environments.get("production").enabled
+                    : "expected production disabled";
+            System.out.println("Disabled forwarder in production: " + fetched.name);
 
             // delete a forwarder
             fetched.delete();

@@ -12,7 +12,9 @@ import com.smplkit.internal.generated.audit.model.HttpConfiguration;
 import com.smplkit.internal.generated.audit.model.HttpHeader;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 /**
  * SIEM streaming forwarder CRUD for the authenticated account.
@@ -86,7 +88,7 @@ public final class AuditForwarders {
     public ListForwardersPage list(ListForwardersInput input) throws ApiException {
         String filterType = input.forwarderType == null ? null : input.forwarderType.getValue();
         ForwarderListResponse resp = api.listForwarders(
-                filterType, input.enabled, null, input.pageNumber, input.pageSize, input.metaTotal);
+                filterType, null, input.pageNumber, input.pageSize, input.metaTotal);
         List<Forwarder> out = new ArrayList<>();
         if (resp.getData() != null) {
             for (ForwarderResource r : resp.getData()) out.add(fromResource(r));
@@ -139,8 +141,12 @@ public final class AuditForwarders {
         attrs.setName(forwarder.name);
         if (forwarder.description != null) attrs.setDescription(forwarder.description);
         attrs.setForwarderType(toGenForwarderType(forwarder.forwarderType));
-        attrs.setEnabled(forwarder.enabled);
+        // The base ``enabled`` is server-pinned false (ADR-055); it's read-only,
+        // so we never send it. Enablement travels entirely through ``environments``.
         attrs.setConfiguration(toGenConfiguration(forwarder.configuration));
+        if (forwarder.environments != null && !forwarder.environments.isEmpty()) {
+            attrs.setEnvironments(environmentsToGen(forwarder.environments));
+        }
         if (forwarder.filter != null) attrs.setFilter(forwarder.filter);
         if (forwarder.transformType != null) {
             attrs.setTransformType(com.smplkit.internal.generated.audit.model.Forwarder.TransformTypeEnum
@@ -204,7 +210,10 @@ public final class AuditForwarders {
                 a.getName(),
                 a.getDescription(),
                 fromGenForwarderType(a.getForwarderType()),
-                a.getEnabled() != null ? a.getEnabled() : true,
+                // The base ``enabled`` is server-pinned false; round-trip whatever
+                // the server returned (always false) without assuming a default of true.
+                a.getEnabled() != null ? a.getEnabled() : false,
+                environmentsFromGen(a.getEnvironments()),
                 a.getFilter(),
                 tt != null ? TransformType.fromValue(tt.getValue()) : null,
                 a.getTransform(),
@@ -213,6 +222,47 @@ public final class AuditForwarders {
                 a.getUpdatedAt(),
                 a.getDeletedAt(),
                 a.getVersion());
+    }
+
+    /**
+     * Convert the wrapper {@code environments} map to the generated model.
+     * Per-environment {@code configuration} overrides are sent as full
+     * {@link com.smplkit.audit.HttpConfiguration} payloads (plaintext headers
+     * in), mirroring the base configuration's round-trip semantics.
+     */
+    private static Map<String, com.smplkit.internal.generated.audit.model.ForwarderEnvironment>
+            environmentsToGen(Map<String, ForwarderEnvironment> environments) {
+        Map<String, com.smplkit.internal.generated.audit.model.ForwarderEnvironment> out = new HashMap<>();
+        for (Map.Entry<String, ForwarderEnvironment> e : environments.entrySet()) {
+            ForwarderEnvironment env = e.getValue();
+            com.smplkit.internal.generated.audit.model.ForwarderEnvironment gen =
+                    new com.smplkit.internal.generated.audit.model.ForwarderEnvironment();
+            gen.setEnabled(env.enabled);
+            if (env.configuration != null) {
+                gen.setConfiguration(toGenConfiguration(env.configuration));
+            }
+            out.put(e.getKey(), gen);
+        }
+        return out;
+    }
+
+    /** Convert the generated {@code environments} map to wrapper instances. */
+    private static Map<String, ForwarderEnvironment> environmentsFromGen(
+            Map<String, com.smplkit.internal.generated.audit.model.ForwarderEnvironment> environments) {
+        Map<String, ForwarderEnvironment> out = new HashMap<>();
+        if (environments == null) return out;
+        for (Map.Entry<String, com.smplkit.internal.generated.audit.model.ForwarderEnvironment> e
+                : environments.entrySet()) {
+            com.smplkit.internal.generated.audit.model.ForwarderEnvironment gen = e.getValue();
+            ForwarderEnvironment env = new ForwarderEnvironment();
+            if (gen != null) {
+                env.enabled = gen.getEnabled() != null ? gen.getEnabled() : false;
+                env.configuration = gen.getConfiguration() != null
+                        ? configurationFromGen(gen.getConfiguration()) : null;
+            }
+            out.put(e.getKey(), env);
+        }
+        return out;
     }
 
     private static com.smplkit.internal.generated.audit.model.ForwarderType toGenForwarderType(

@@ -10,6 +10,7 @@ import com.smplkit.internal.generated.audit.api.ResourceTypesApi;
 
 import java.net.http.HttpClient;
 import java.time.Duration;
+import java.util.HashMap;
 import java.util.Map;
 
 /**
@@ -32,10 +33,34 @@ public final class AuditClient implements AutoCloseable {
 
     public AuditClient(HttpClient httpClient, String apiKey, Map<String, String> extraHeaders,
                        Duration timeout, String baseUrl) {
+        this(httpClient, apiKey, extraHeaders, timeout, baseUrl, null);
+    }
+
+    /**
+     * Runtime audit ops are environment-scoped (ADR-055): record / list /
+     * get / discovery all resolve their environment from the
+     * {@code X-Smplkit-Environment} request header. We stamp it once at the
+     * client level from the SDK's configured runtime {@code environment} so
+     * every generated call carries it. A caller-supplied {@code extraHeaders}
+     * entry of the same name wins (explicit override).
+     *
+     * @param environment the SDK's configured runtime environment, or
+     *     {@code null} to omit the header (e.g. a single-environment
+     *     credential resolves the environment server-side)
+     */
+    public AuditClient(HttpClient httpClient, String apiKey, Map<String, String> extraHeaders,
+                       Duration timeout, String baseUrl, String environment) {
         ApiClient apiClient = new ApiClient();
         apiClient.setHttpClientBuilder(HttpClients.builder());
         apiClient.updateBaseUri(baseUrl);
-        apiClient.setRequestInterceptor(SmplClient.compositeInterceptor(apiKey, extraHeaders));
+        Map<String, String> headers = new HashMap<>();
+        if (environment != null) {
+            headers.put("X-Smplkit-Environment", environment);
+        }
+        if (extraHeaders != null) {
+            headers.putAll(extraHeaders); // explicit caller override wins
+        }
+        apiClient.setRequestInterceptor(SmplClient.compositeInterceptor(apiKey, headers));
         apiClient.setReadTimeout(timeout);
         this.events = new AuditEvents(new EventsApi(apiClient));
         this.resourceTypes = new AuditResourceTypesClient(new ResourceTypesApi(apiClient));

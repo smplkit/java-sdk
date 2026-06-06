@@ -155,7 +155,8 @@ public final class AuditEvents {
                 a.getActorLabel(),
                 a.getData(),
                 a.getIdempotencyKey(),
-                a.getDoNotForward() != null ? a.getDoNotForward() : false
+                a.getDoNotForward() != null ? a.getDoNotForward() : false,
+                a.getEnvironment()
         );
     }
 }
