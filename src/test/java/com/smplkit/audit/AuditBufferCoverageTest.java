@@ -411,4 +411,38 @@ class AuditBufferCoverageTest {
         assertTrue(true);
     }
 
+    @Test
+    void auditEvents_listWithEnvironments_forwardsFilterEnvironmentParam() throws Exception {
+        // Verifies ListEventsInput.environments is joined comma-separated and
+        // passed to listEvents as the filter[environment] query parameter.
+        var capturedQuery = new java.util.concurrent.atomic.AtomicReference<String>();
+        HttpServer envServer = HttpServer.create(new InetSocketAddress("127.0.0.1", 0), 0);
+        envServer.createContext("/api/v1/events", ex -> {
+            capturedQuery.set(ex.getRequestURI().getRawQuery());
+            byte[] resp = "{\"data\":[],\"meta\":{\"page_size\":1}}".getBytes();
+            ex.getResponseHeaders().add("Content-Type", "application/vnd.api+json");
+            ex.sendResponseHeaders(200, resp.length);
+            ex.getResponseBody().write(resp);
+            ex.close();
+        });
+        envServer.start();
+        try {
+            var envApiClient = new ApiClient();
+            envApiClient.updateBaseUri("http://127.0.0.1:" + envServer.getAddress().getPort());
+            envApiClient.setReadTimeout(Duration.ofSeconds(2));
+            AuditEvents events = new AuditEvents(new EventsApi(envApiClient));
+            var input = new ListEventsInput();
+            input.environments = java.util.List.of("production", "staging");
+            var page = events.list(input);
+            assertNotNull(page);
+            String q = capturedQuery.get();
+            assertNotNull(q);
+            assertTrue(q.contains("filter%5Benvironment%5D=production%2Cstaging"),
+                    "expected filter[environment]=production,staging in query, got: " + q);
+            events.close();
+        } finally {
+            envServer.stop(0);
+        }
+    }
+
 }

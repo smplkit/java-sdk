@@ -858,4 +858,75 @@ class AuditForwardersTest {
         assertEquals(0, page.categories.size());
         assertSame(info, page.pagination);
     }
+
+    // -----------------------------------------------------------------
+    // filter[environment] forwarding (additive, comma-separated)
+    // -----------------------------------------------------------------
+
+    @Test
+    void resourceTypes_list_environmentsForwardedAsCsvFilter() throws Exception {
+        AtomicReference<String> lastUri = new AtomicReference<>();
+        handler.set(ex -> {
+            lastUri.set(ex.getRequestURI().getRawQuery());
+            respondJson(ex, 200, "{\"data\":[]}");
+        });
+        AuditResourceTypesClient rt = new AuditResourceTypesClient(resourceTypesApi);
+        ListResourceTypesInput in = new ListResourceTypesInput();
+        in.environments = java.util.List.of("production", "staging");
+        rt.list(in);
+        assertTrue(lastUri.get().contains("filter%5Benvironment%5D=production%2Cstaging"),
+                "expected filter[environment]=production,staging: " + lastUri.get());
+    }
+
+    @Test
+    void eventTypes_list_environmentsForwardedAsCsvFilter() throws Exception {
+        AtomicReference<String> lastUri = new AtomicReference<>();
+        handler.set(ex -> {
+            lastUri.set(ex.getRequestURI().getRawQuery());
+            respondJson(ex, 200, "{\"data\":[]}");
+        });
+        AuditEventTypesClient ac = new AuditEventTypesClient(eventTypesApi);
+        ListEventTypesInput in = new ListEventTypesInput();
+        in.environments = java.util.List.of("production", "smplkit");
+        ac.list(in);
+        assertTrue(lastUri.get().contains("filter%5Benvironment%5D=production%2Csmplkit"),
+                "expected filter[environment]=production,smplkit: " + lastUri.get());
+    }
+
+    @Test
+    void categories_list_environmentsForwardedAsCsvFilter() throws Exception {
+        AtomicReference<String> lastUri = new AtomicReference<>();
+        handler.set(ex -> {
+            lastUri.set(ex.getRequestURI().getRawQuery());
+            respondJson(ex, 200, "{\"data\":[]}");
+        });
+        AuditCategoriesClient cc = new AuditCategoriesClient(categoriesApi);
+        ListCategoriesInput in = new ListCategoriesInput();
+        in.environments = java.util.List.of("production");
+        cc.list(in);
+        assertTrue(lastUri.get().contains("filter%5Benvironment%5D=production"),
+                "expected filter[environment]=production: " + lastUri.get());
+    }
+
+    @Test
+    void joinEnvironments_nullList_returnsNull() {
+        assertNull(AuditResourceTypesClient.joinEnvironments(null));
+    }
+
+    @Test
+    void joinEnvironments_emptyList_returnsNull() {
+        assertNull(AuditResourceTypesClient.joinEnvironments(java.util.List.of()));
+    }
+
+    @Test
+    void joinEnvironments_allBlankEntries_returnsNull() {
+        assertNull(AuditResourceTypesClient.joinEnvironments(
+                java.util.Arrays.asList(null, "", "   ")));
+    }
+
+    @Test
+    void joinEnvironments_dropsBlankEntriesAndJoinsRest() {
+        assertEquals("production,staging", AuditResourceTypesClient.joinEnvironments(
+                java.util.Arrays.asList("production", "", null, "staging")));
+    }
 }

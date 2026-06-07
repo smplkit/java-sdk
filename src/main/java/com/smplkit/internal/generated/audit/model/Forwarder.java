@@ -47,6 +47,7 @@ import com.smplkit.internal.generated.audit.ApiClient;
   Forwarder.JSON_PROPERTY_DESCRIPTION,
   Forwarder.JSON_PROPERTY_FORWARDER_TYPE,
   Forwarder.JSON_PROPERTY_ENABLED,
+  Forwarder.JSON_PROPERTY_FORWARD_SMPLKIT_EVENTS,
   Forwarder.JSON_PROPERTY_FILTER,
   Forwarder.JSON_PROPERTY_TRANSFORM_TYPE,
   Forwarder.JSON_PROPERTY_TRANSFORM,
@@ -73,6 +74,10 @@ public class Forwarder {
   public static final String JSON_PROPERTY_ENABLED = "enabled";
   @jakarta.annotation.Nullable
   private Boolean enabled = false;
+
+  public static final String JSON_PROPERTY_FORWARD_SMPLKIT_EVENTS = "forward_smplkit_events";
+  @jakarta.annotation.Nullable
+  private Boolean forwardSmplkitEvents = false;
 
   public static final String JSON_PROPERTY_FILTER = "filter";
   private JsonNullable<Map<String, Object>> filter = JsonNullable.<Map<String, Object>>undefined();
@@ -247,6 +252,30 @@ public class Forwarder {
   }
 
 
+
+
+  public Forwarder forwardSmplkitEvents(@jakarta.annotation.Nullable Boolean forwardSmplkitEvents) {
+    this.forwardSmplkitEvents = forwardSmplkitEvents;
+    return this;
+  }
+
+  /**
+   * When true, this forwarder also receives platform change events that smplkit records about your own resources (flag, configuration, and similar changes). Each such event is delivered through every environment this forwarder is enabled in, using that environment&#39;s resolved configuration. Defaults to false — platform change events are not forwarded unless you opt in. Independent of the per-environment &#x60;enabled&#x60; settings, since platform change events are not tied to a deployment environment.
+   * @return forwardSmplkitEvents
+   */
+  @jakarta.annotation.Nullable
+  @JsonProperty(value = JSON_PROPERTY_FORWARD_SMPLKIT_EVENTS, required = false)
+  @JsonInclude(value = JsonInclude.Include.USE_DEFAULTS)
+  public Boolean getForwardSmplkitEvents() {
+    return forwardSmplkitEvents;
+  }
+
+
+  @JsonProperty(value = JSON_PROPERTY_FORWARD_SMPLKIT_EVENTS, required = false)
+  @JsonInclude(value = JsonInclude.Include.USE_DEFAULTS)
+  public void setForwardSmplkitEvents(@jakarta.annotation.Nullable Boolean forwardSmplkitEvents) {
+    this.forwardSmplkitEvents = forwardSmplkitEvents;
+  }
 
 
   public Forwarder filter(@jakarta.annotation.Nullable Map<String, Object> filter) {
@@ -541,6 +570,7 @@ public class Forwarder {
         equalsNullable(this.description, forwarder.description) &&
         Objects.equals(this.forwarderType, forwarder.forwarderType) &&
         Objects.equals(this.enabled, forwarder.enabled) &&
+        Objects.equals(this.forwardSmplkitEvents, forwarder.forwardSmplkitEvents) &&
         equalsNullable(this.filter, forwarder.filter) &&
         equalsNullable(this.transformType, forwarder.transformType) &&
         equalsNullable(this.transform, forwarder.transform) &&
@@ -558,7 +588,7 @@ public class Forwarder {
 
   @Override
   public int hashCode() {
-    return Objects.hash(name, hashCodeNullable(description), forwarderType, enabled, hashCodeNullable(filter), hashCodeNullable(transformType), hashCodeNullable(transform), _configuration, environments, hashCodeNullable(createdAt), hashCodeNullable(updatedAt), hashCodeNullable(deletedAt), hashCodeNullable(version));
+    return Objects.hash(name, hashCodeNullable(description), forwarderType, enabled, forwardSmplkitEvents, hashCodeNullable(filter), hashCodeNullable(transformType), hashCodeNullable(transform), _configuration, environments, hashCodeNullable(createdAt), hashCodeNullable(updatedAt), hashCodeNullable(deletedAt), hashCodeNullable(version));
   }
 
   private static <T> int hashCodeNullable(JsonNullable<T> a) {
@@ -576,6 +606,7 @@ public class Forwarder {
     sb.append("    description: ").append(toIndentedString(description)).append("\n");
     sb.append("    forwarderType: ").append(toIndentedString(forwarderType)).append("\n");
     sb.append("    enabled: ").append(toIndentedString(enabled)).append("\n");
+    sb.append("    forwardSmplkitEvents: ").append(toIndentedString(forwardSmplkitEvents)).append("\n");
     sb.append("    filter: ").append(toIndentedString(filter)).append("\n");
     sb.append("    transformType: ").append(toIndentedString(transformType)).append("\n");
     sb.append("    transform: ").append(toIndentedString(transform)).append("\n");
@@ -647,6 +678,11 @@ public class Forwarder {
     // add `enabled` to the URL query string
     if (getEnabled() != null) {
       joiner.add(String.format(java.util.Locale.ROOT, "%senabled%s=%s", prefix, suffix, ApiClient.urlEncode(ApiClient.valueToString(getEnabled()))));
+    }
+
+    // add `forward_smplkit_events` to the URL query string
+    if (getForwardSmplkitEvents() != null) {
+      joiner.add(String.format(java.util.Locale.ROOT, "%sforward_smplkit_events%s=%s", prefix, suffix, ApiClient.urlEncode(ApiClient.valueToString(getForwardSmplkitEvents()))));
     }
 
     // add `filter` to the URL query string

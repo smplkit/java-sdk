@@ -40,6 +40,7 @@ import com.smplkit.internal.generated.audit.ApiClient;
  */
 @JsonPropertyOrder({
   EventSearchRequest.JSON_PROPERTY_FILTER,
+  EventSearchRequest.JSON_PROPERTY_FILTER_ENVIRONMENT,
   EventSearchRequest.JSON_PROPERTY_FILTER_EVENT_TYPE,
   EventSearchRequest.JSON_PROPERTY_FILTER_RESOURCE_TYPE,
   EventSearchRequest.JSON_PROPERTY_FILTER_RESOURCE_ID,
@@ -58,6 +59,9 @@ import com.smplkit.internal.generated.audit.ApiClient;
 public class EventSearchRequest {
   public static final String JSON_PROPERTY_FILTER = "filter";
   private JsonNullable<Map<String, Object>> filter = JsonNullable.<Map<String, Object>>undefined();
+
+  public static final String JSON_PROPERTY_FILTER_ENVIRONMENT = "filter[environment]";
+  private JsonNullable<String> filterEnvironment = JsonNullable.<String>undefined();
 
   public static final String JSON_PROPERTY_FILTER_EVENT_TYPE = "filter[event_type]";
   private JsonNullable<String> filterEventType = JsonNullable.<String>undefined();
@@ -144,6 +148,38 @@ public class EventSearchRequest {
 
   public void setFilter(@jakarta.annotation.Nullable Map<String, Object> filter) {
     this.filter = JsonNullable.<Map<String, Object>>of(filter);
+  }
+
+
+  public EventSearchRequest filterEnvironment(@jakarta.annotation.Nullable String filterEnvironment) {
+    this.filterEnvironment = JsonNullable.<String>of(filterEnvironment);
+    return this;
+  }
+
+  /**
+   * Comma-separated list of environment keys to scope results to (e.g. &#x60;production,staging&#x60;). When omitted, results are scoped to your single accessible environment; send the &#x60;X-Smplkit-Environment&#x60; header instead if you can access more than one. The reserved value &#x60;smplkit&#x60; selects platform change events that smplkit records about your own resources (flags, configuration, and so on); these are not tied to a deployment environment and are readable regardless of which environments you manage.
+   * @return filterEnvironment
+   */
+  @jakarta.annotation.Nullable
+  @JsonIgnore
+  public String getFilterEnvironment() {
+        return filterEnvironment.orElse(null);
+  }
+
+  @JsonProperty(value = JSON_PROPERTY_FILTER_ENVIRONMENT, required = false)
+  @JsonInclude(value = JsonInclude.Include.USE_DEFAULTS)
+
+  public JsonNullable<String> getFilterEnvironment_JsonNullable() {
+    return filterEnvironment;
+  }
+  
+  @JsonProperty(JSON_PROPERTY_FILTER_ENVIRONMENT)
+  public void setFilterEnvironment_JsonNullable(JsonNullable<String> filterEnvironment) {
+    this.filterEnvironment = filterEnvironment;
+  }
+
+  public void setFilterEnvironment(@jakarta.annotation.Nullable String filterEnvironment) {
+    this.filterEnvironment = JsonNullable.<String>of(filterEnvironment);
   }
 
 
@@ -562,6 +598,7 @@ public class EventSearchRequest {
     }
     EventSearchRequest eventSearchRequest = (EventSearchRequest) o;
     return equalsNullable(this.filter, eventSearchRequest.filter) &&
+        equalsNullable(this.filterEnvironment, eventSearchRequest.filterEnvironment) &&
         equalsNullable(this.filterEventType, eventSearchRequest.filterEventType) &&
         equalsNullable(this.filterResourceType, eventSearchRequest.filterResourceType) &&
         equalsNullable(this.filterResourceId, eventSearchRequest.filterResourceId) &&
@@ -583,7 +620,7 @@ public class EventSearchRequest {
 
   @Override
   public int hashCode() {
-    return Objects.hash(hashCodeNullable(filter), hashCodeNullable(filterEventType), hashCodeNullable(filterResourceType), hashCodeNullable(filterResourceId), hashCodeNullable(filterSeverity), hashCodeNullable(filterCategory), hashCodeNullable(filterActorType), hashCodeNullable(filterActorId), hashCodeNullable(filterOccurredAt), hashCodeNullable(filterSearch), hashCodeNullable(filterDoNotForward), pageSize, hashCodeNullable(pageAfter), sort);
+    return Objects.hash(hashCodeNullable(filter), hashCodeNullable(filterEnvironment), hashCodeNullable(filterEventType), hashCodeNullable(filterResourceType), hashCodeNullable(filterResourceId), hashCodeNullable(filterSeverity), hashCodeNullable(filterCategory), hashCodeNullable(filterActorType), hashCodeNullable(filterActorId), hashCodeNullable(filterOccurredAt), hashCodeNullable(filterSearch), hashCodeNullable(filterDoNotForward), pageSize, hashCodeNullable(pageAfter), sort);
   }
 
   private static <T> int hashCodeNullable(JsonNullable<T> a) {
@@ -598,6 +635,7 @@ public class EventSearchRequest {
     StringBuilder sb = new StringBuilder();
     sb.append("class EventSearchRequest {\n");
     sb.append("    filter: ").append(toIndentedString(filter)).append("\n");
+    sb.append("    filterEnvironment: ").append(toIndentedString(filterEnvironment)).append("\n");
     sb.append("    filterEventType: ").append(toIndentedString(filterEventType)).append("\n");
     sb.append("    filterResourceType: ").append(toIndentedString(filterResourceType)).append("\n");
     sb.append("    filterResourceId: ").append(toIndentedString(filterResourceId)).append("\n");
@@ -662,6 +700,11 @@ public class EventSearchRequest {
             "".equals(suffix) ? "" : String.format(java.util.Locale.ROOT, "%s%d%s", containerPrefix, _key, containerSuffix),
             getFilter().get(_key), ApiClient.urlEncode(ApiClient.valueToString(getFilter().get(_key)))));
       }
+    }
+
+    // add `filter[environment]` to the URL query string
+    if (getFilterEnvironment() != null) {
+      joiner.add(String.format(java.util.Locale.ROOT, "%sfilter[environment]%s=%s", prefix, suffix, ApiClient.urlEncode(ApiClient.valueToString(getFilterEnvironment()))));
     }
 
     // add `filter[event_type]` to the URL query string

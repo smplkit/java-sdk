@@ -1,5 +1,7 @@
 package com.smplkit.audit;
 
+import java.util.List;
+
 /**
  * Filters and pagination cursor for {@link AuditEvents#list(ListEventsInput)}.
  *
@@ -7,6 +9,15 @@ package com.smplkit.audit;
  * {@code occurredAtRange}, e.g. {@code [2026-01-01T00:00:00Z,*)}.</p>
  */
 public final class ListEventsInput {
+    /**
+     * Environment keys to scope the results to. When non-empty, the keys are
+     * sent as a comma-separated {@code filter[environment]} query parameter
+     * (e.g. {@code ["production", "staging"]}). When {@code null} or empty the
+     * filter is left unset, preserving the prior single-environment behavior.
+     * The reserved value {@code "smplkit"} selects platform change events
+     * smplkit records about your own resources.
+     */
+    public List<String> environments;
     /** Filter by event type slug — e.g. {@code "user.created"}. */
     public String eventType;
     /** Filter by resource type — e.g. {@code "invoice"}. */

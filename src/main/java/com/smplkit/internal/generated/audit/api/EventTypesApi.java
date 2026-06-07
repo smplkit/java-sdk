@@ -164,7 +164,8 @@ public class EventTypesApi {
 
   /**
    * List Event Types
-   * List the distinct &#x60;event_type&#x60; slugs recorded for this account.  Default sort is &#x60;key&#x60; ascending; pass &#x60;sort&#x3D;-key&#x60; for descending. Scoped to the resolved environment. Without &#x60;filter[resource_type]&#x60;, returns one row per distinct event_type. With &#x60;filter[resource_type]&#x60;, returns the event_types recorded for that specific resource type.
+   * List the distinct &#x60;event_type&#x60; slugs recorded for this account.  Default sort is &#x60;key&#x60; ascending; pass &#x60;sort&#x3D;-key&#x60; for descending. Scoped to the selected environments (see &#x60;filter[environment]&#x60;). Without &#x60;filter[resource_type]&#x60;, returns one row per distinct event_type. With &#x60;filter[resource_type]&#x60;, returns the event_types recorded for that specific resource type.
+   * @param filterEnvironment Comma-separated list of environment keys to scope results to (e.g. &#x60;production,staging&#x60;). When omitted, results are scoped to your single accessible environment; send the &#x60;X-Smplkit-Environment&#x60; header instead if you can access more than one. The reserved value &#x60;smplkit&#x60; selects platform change events that smplkit records about your own resources (flags, configuration, and so on); these are not tied to a deployment environment and are readable regardless of which environments you manage. (optional)
    * @param filterResourceType  (optional)
    * @param sort Field to sort by. Prefix with &#x60;-&#x60; for descending order. Default: &#x60;key&#x60;. Allowed values: &#x60;key&#x60;, &#x60;-key&#x60;. (optional, default to key)
    * @param pageNumber 1-based page number to return. Optional; defaults to &#x60;1&#x60; when omitted. Must be &#x60;&gt;&#x3D; 1&#x60; — requests with a smaller value are rejected with a 400 error. (optional, default to 1)
@@ -173,13 +174,14 @@ public class EventTypesApi {
    * @return EventTypeListResponse
    * @throws ApiException if fails to make API call
    */
-  public EventTypeListResponse listEventTypes(@jakarta.annotation.Nullable String filterResourceType, @jakarta.annotation.Nullable String sort, @jakarta.annotation.Nullable Integer pageNumber, @jakarta.annotation.Nullable Integer pageSize, @jakarta.annotation.Nullable Boolean metaTotal) throws ApiException {
-    return listEventTypes(filterResourceType, sort, pageNumber, pageSize, metaTotal, null);
+  public EventTypeListResponse listEventTypes(@jakarta.annotation.Nullable String filterEnvironment, @jakarta.annotation.Nullable String filterResourceType, @jakarta.annotation.Nullable String sort, @jakarta.annotation.Nullable Integer pageNumber, @jakarta.annotation.Nullable Integer pageSize, @jakarta.annotation.Nullable Boolean metaTotal) throws ApiException {
+    return listEventTypes(filterEnvironment, filterResourceType, sort, pageNumber, pageSize, metaTotal, null);
   }
 
   /**
    * List Event Types
-   * List the distinct &#x60;event_type&#x60; slugs recorded for this account.  Default sort is &#x60;key&#x60; ascending; pass &#x60;sort&#x3D;-key&#x60; for descending. Scoped to the resolved environment. Without &#x60;filter[resource_type]&#x60;, returns one row per distinct event_type. With &#x60;filter[resource_type]&#x60;, returns the event_types recorded for that specific resource type.
+   * List the distinct &#x60;event_type&#x60; slugs recorded for this account.  Default sort is &#x60;key&#x60; ascending; pass &#x60;sort&#x3D;-key&#x60; for descending. Scoped to the selected environments (see &#x60;filter[environment]&#x60;). Without &#x60;filter[resource_type]&#x60;, returns one row per distinct event_type. With &#x60;filter[resource_type]&#x60;, returns the event_types recorded for that specific resource type.
+   * @param filterEnvironment Comma-separated list of environment keys to scope results to (e.g. &#x60;production,staging&#x60;). When omitted, results are scoped to your single accessible environment; send the &#x60;X-Smplkit-Environment&#x60; header instead if you can access more than one. The reserved value &#x60;smplkit&#x60; selects platform change events that smplkit records about your own resources (flags, configuration, and so on); these are not tied to a deployment environment and are readable regardless of which environments you manage. (optional)
    * @param filterResourceType  (optional)
    * @param sort Field to sort by. Prefix with &#x60;-&#x60; for descending order. Default: &#x60;key&#x60;. Allowed values: &#x60;key&#x60;, &#x60;-key&#x60;. (optional, default to key)
    * @param pageNumber 1-based page number to return. Optional; defaults to &#x60;1&#x60; when omitted. Must be &#x60;&gt;&#x3D; 1&#x60; — requests with a smaller value are rejected with a 400 error. (optional, default to 1)
@@ -189,14 +191,15 @@ public class EventTypesApi {
    * @return EventTypeListResponse
    * @throws ApiException if fails to make API call
    */
-  public EventTypeListResponse listEventTypes(@jakarta.annotation.Nullable String filterResourceType, @jakarta.annotation.Nullable String sort, @jakarta.annotation.Nullable Integer pageNumber, @jakarta.annotation.Nullable Integer pageSize, @jakarta.annotation.Nullable Boolean metaTotal, Map<String, String> headers) throws ApiException {
-    ApiResponse<EventTypeListResponse> localVarResponse = listEventTypesWithHttpInfo(filterResourceType, sort, pageNumber, pageSize, metaTotal, headers);
+  public EventTypeListResponse listEventTypes(@jakarta.annotation.Nullable String filterEnvironment, @jakarta.annotation.Nullable String filterResourceType, @jakarta.annotation.Nullable String sort, @jakarta.annotation.Nullable Integer pageNumber, @jakarta.annotation.Nullable Integer pageSize, @jakarta.annotation.Nullable Boolean metaTotal, Map<String, String> headers) throws ApiException {
+    ApiResponse<EventTypeListResponse> localVarResponse = listEventTypesWithHttpInfo(filterEnvironment, filterResourceType, sort, pageNumber, pageSize, metaTotal, headers);
     return localVarResponse.getData();
   }
 
   /**
    * List Event Types
-   * List the distinct &#x60;event_type&#x60; slugs recorded for this account.  Default sort is &#x60;key&#x60; ascending; pass &#x60;sort&#x3D;-key&#x60; for descending. Scoped to the resolved environment. Without &#x60;filter[resource_type]&#x60;, returns one row per distinct event_type. With &#x60;filter[resource_type]&#x60;, returns the event_types recorded for that specific resource type.
+   * List the distinct &#x60;event_type&#x60; slugs recorded for this account.  Default sort is &#x60;key&#x60; ascending; pass &#x60;sort&#x3D;-key&#x60; for descending. Scoped to the selected environments (see &#x60;filter[environment]&#x60;). Without &#x60;filter[resource_type]&#x60;, returns one row per distinct event_type. With &#x60;filter[resource_type]&#x60;, returns the event_types recorded for that specific resource type.
+   * @param filterEnvironment Comma-separated list of environment keys to scope results to (e.g. &#x60;production,staging&#x60;). When omitted, results are scoped to your single accessible environment; send the &#x60;X-Smplkit-Environment&#x60; header instead if you can access more than one. The reserved value &#x60;smplkit&#x60; selects platform change events that smplkit records about your own resources (flags, configuration, and so on); these are not tied to a deployment environment and are readable regardless of which environments you manage. (optional)
    * @param filterResourceType  (optional)
    * @param sort Field to sort by. Prefix with &#x60;-&#x60; for descending order. Default: &#x60;key&#x60;. Allowed values: &#x60;key&#x60;, &#x60;-key&#x60;. (optional, default to key)
    * @param pageNumber 1-based page number to return. Optional; defaults to &#x60;1&#x60; when omitted. Must be &#x60;&gt;&#x3D; 1&#x60; — requests with a smaller value are rejected with a 400 error. (optional, default to 1)
@@ -205,13 +208,14 @@ public class EventTypesApi {
    * @return ApiResponse&lt;EventTypeListResponse&gt;
    * @throws ApiException if fails to make API call
    */
-  public ApiResponse<EventTypeListResponse> listEventTypesWithHttpInfo(@jakarta.annotation.Nullable String filterResourceType, @jakarta.annotation.Nullable String sort, @jakarta.annotation.Nullable Integer pageNumber, @jakarta.annotation.Nullable Integer pageSize, @jakarta.annotation.Nullable Boolean metaTotal) throws ApiException {
-    return listEventTypesWithHttpInfo(filterResourceType, sort, pageNumber, pageSize, metaTotal, null);
+  public ApiResponse<EventTypeListResponse> listEventTypesWithHttpInfo(@jakarta.annotation.Nullable String filterEnvironment, @jakarta.annotation.Nullable String filterResourceType, @jakarta.annotation.Nullable String sort, @jakarta.annotation.Nullable Integer pageNumber, @jakarta.annotation.Nullable Integer pageSize, @jakarta.annotation.Nullable Boolean metaTotal) throws ApiException {
+    return listEventTypesWithHttpInfo(filterEnvironment, filterResourceType, sort, pageNumber, pageSize, metaTotal, null);
   }
 
   /**
    * List Event Types
-   * List the distinct &#x60;event_type&#x60; slugs recorded for this account.  Default sort is &#x60;key&#x60; ascending; pass &#x60;sort&#x3D;-key&#x60; for descending. Scoped to the resolved environment. Without &#x60;filter[resource_type]&#x60;, returns one row per distinct event_type. With &#x60;filter[resource_type]&#x60;, returns the event_types recorded for that specific resource type.
+   * List the distinct &#x60;event_type&#x60; slugs recorded for this account.  Default sort is &#x60;key&#x60; ascending; pass &#x60;sort&#x3D;-key&#x60; for descending. Scoped to the selected environments (see &#x60;filter[environment]&#x60;). Without &#x60;filter[resource_type]&#x60;, returns one row per distinct event_type. With &#x60;filter[resource_type]&#x60;, returns the event_types recorded for that specific resource type.
+   * @param filterEnvironment Comma-separated list of environment keys to scope results to (e.g. &#x60;production,staging&#x60;). When omitted, results are scoped to your single accessible environment; send the &#x60;X-Smplkit-Environment&#x60; header instead if you can access more than one. The reserved value &#x60;smplkit&#x60; selects platform change events that smplkit records about your own resources (flags, configuration, and so on); these are not tied to a deployment environment and are readable regardless of which environments you manage. (optional)
    * @param filterResourceType  (optional)
    * @param sort Field to sort by. Prefix with &#x60;-&#x60; for descending order. Default: &#x60;key&#x60;. Allowed values: &#x60;key&#x60;, &#x60;-key&#x60;. (optional, default to key)
    * @param pageNumber 1-based page number to return. Optional; defaults to &#x60;1&#x60; when omitted. Must be &#x60;&gt;&#x3D; 1&#x60; — requests with a smaller value are rejected with a 400 error. (optional, default to 1)
@@ -221,8 +225,8 @@ public class EventTypesApi {
    * @return ApiResponse&lt;EventTypeListResponse&gt;
    * @throws ApiException if fails to make API call
    */
-  public ApiResponse<EventTypeListResponse> listEventTypesWithHttpInfo(@jakarta.annotation.Nullable String filterResourceType, @jakarta.annotation.Nullable String sort, @jakarta.annotation.Nullable Integer pageNumber, @jakarta.annotation.Nullable Integer pageSize, @jakarta.annotation.Nullable Boolean metaTotal, Map<String, String> headers) throws ApiException {
-    HttpRequest.Builder localVarRequestBuilder = listEventTypesRequestBuilder(filterResourceType, sort, pageNumber, pageSize, metaTotal, headers);
+  public ApiResponse<EventTypeListResponse> listEventTypesWithHttpInfo(@jakarta.annotation.Nullable String filterEnvironment, @jakarta.annotation.Nullable String filterResourceType, @jakarta.annotation.Nullable String sort, @jakarta.annotation.Nullable Integer pageNumber, @jakarta.annotation.Nullable Integer pageSize, @jakarta.annotation.Nullable Boolean metaTotal, Map<String, String> headers) throws ApiException {
+    HttpRequest.Builder localVarRequestBuilder = listEventTypesRequestBuilder(filterEnvironment, filterResourceType, sort, pageNumber, pageSize, metaTotal, headers);
     try {
       HttpResponse<InputStream> localVarResponse = memberVarHttpClient.send(
           localVarRequestBuilder.build(),
@@ -269,7 +273,7 @@ public class EventTypesApi {
     }
   }
 
-  private HttpRequest.Builder listEventTypesRequestBuilder(@jakarta.annotation.Nullable String filterResourceType, @jakarta.annotation.Nullable String sort, @jakarta.annotation.Nullable Integer pageNumber, @jakarta.annotation.Nullable Integer pageSize, @jakarta.annotation.Nullable Boolean metaTotal, Map<String, String> headers) throws ApiException {
+  private HttpRequest.Builder listEventTypesRequestBuilder(@jakarta.annotation.Nullable String filterEnvironment, @jakarta.annotation.Nullable String filterResourceType, @jakarta.annotation.Nullable String sort, @jakarta.annotation.Nullable Integer pageNumber, @jakarta.annotation.Nullable Integer pageSize, @jakarta.annotation.Nullable Boolean metaTotal, Map<String, String> headers) throws ApiException {
 
     HttpRequest.Builder localVarRequestBuilder = HttpRequest.newBuilder();
 
@@ -278,6 +282,8 @@ public class EventTypesApi {
     List<Pair> localVarQueryParams = new ArrayList<>();
     StringJoiner localVarQueryStringJoiner = new StringJoiner("&");
     String localVarQueryParameterBaseName;
+    localVarQueryParameterBaseName = "filter[environment]";
+    localVarQueryParams.addAll(ApiClient.parameterToPairs("filter[environment]", filterEnvironment));
     localVarQueryParameterBaseName = "filter[resource_type]";
     localVarQueryParams.addAll(ApiClient.parameterToPairs("filter[resource_type]", filterResourceType));
     localVarQueryParameterBaseName = "sort";

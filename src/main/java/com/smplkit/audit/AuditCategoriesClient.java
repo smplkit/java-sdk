@@ -28,7 +28,8 @@ public final class AuditCategoriesClient {
     /** List the distinct category values seen in the account. */
     public ListCategoriesPage list(ListCategoriesInput input) throws ApiException {
         CategoryListResponse resp = api.listCategories(
-                null, input.pageNumber, input.pageSize, input.metaTotal);
+                AuditResourceTypesClient.joinEnvironments(input.environments), null,
+                input.pageNumber, input.pageSize, input.metaTotal);
         List<AuditCategory> rows = new ArrayList<>();
         if (resp.getData() != null) {
             for (CategoryResource r : resp.getData()) {

@@ -8,6 +8,7 @@ import com.smplkit.internal.generated.audit.model.ResourceTypeResource;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.stream.Collectors;
 
 /**
  * Distinct resource-type slugs seen for the account — accessed via
@@ -30,7 +31,8 @@ public final class AuditResourceTypesClient {
     /** List the distinct resource_type slugs seen in the account. */
     public ListResourceTypesPage list(ListResourceTypesInput input) throws ApiException {
         ResourceTypeListResponse resp = api.listResourceTypes(
-                null, input.pageNumber, input.pageSize, input.metaTotal);
+                joinEnvironments(input.environments), null,
+                input.pageNumber, input.pageSize, input.metaTotal);
         List<AuditResourceType> rows = new ArrayList<>();
         if (resp.getData() != null) {
             for (ResourceTypeResource r : resp.getData()) {
@@ -53,5 +55,21 @@ public final class AuditResourceTypesClient {
     static PageInfo extractPagination(PaginationMeta meta) {
         if (meta == null) return null;
         return new PageInfo(meta.getPage(), meta.getSize(), meta.getTotal(), meta.getTotalPages());
+    }
+
+    /**
+     * Join environment keys into the comma-separated string the generated
+     * {@code filter[environment]} parameter expects. Returns {@code null} when
+     * the list is {@code null} or contains no non-blank entries, leaving the
+     * filter unset on the wire (prior behavior). Blank entries are dropped.
+     */
+    static String joinEnvironments(List<String> environments) {
+        if (environments == null || environments.isEmpty()) {
+            return null;
+        }
+        String joined = environments.stream()
+                .filter(e -> e != null && !e.isBlank())
+                .collect(Collectors.joining(","));
+        return joined.isEmpty() ? null : joined;
     }
 }
