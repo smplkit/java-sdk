@@ -516,10 +516,129 @@ class AuditForwardersTest {
     void forwarder_fullArgsConstructor_nullEnvironmentsDefaultsToEmptyMap() {
         AuditForwarders fwds = new AuditForwarders(forwardersApi);
         Forwarder fwd = new Forwarder(fwds, FWD_ID, "n", "d", ForwarderType.HTTP, false,
-                null, null, null, null, new HttpConfiguration("https://x"),
+                null, null, null, null, false, new HttpConfiguration("https://x"),
                 null, null, null, null);
         assertNotNull(fwd.environments);
         assertTrue(fwd.environments.isEmpty());
+    }
+
+    // -----------------------------------------------------------------
+    // forward_smplkit_events (base-level platform-event opt-in)
+    // -----------------------------------------------------------------
+
+    @Test
+    void forwarder_defaultsForwardSmplkitEventsFalse() {
+        AuditForwarders fwds = new AuditForwarders(forwardersApi);
+        Forwarder fwd = fwds.newForwarder(FWD_ID, "x", ForwarderType.HTTP,
+                new HttpConfiguration("https://x"));
+        assertFalse(fwd.forwardSmplkitEvents);
+    }
+
+    @Test
+    void saveForwarder_defaultsForwardSmplkitEventsFalse_onWire() throws Exception {
+        AtomicReference<String> body = new AtomicReference<>();
+        handler.set(ex -> {
+            byte[] in = ex.getRequestBody().readAllBytes();
+            body.set(new String(in));
+            respondJson(ex, 201, "{\"data\":" + forwarderResource("x", "x") + "}");
+        });
+        AuditForwarders fwds = new AuditForwarders(forwardersApi);
+        // Caller leaves forwardSmplkitEvents untouched — wire carries the false default.
+        Forwarder fwd = fwds.newForwarder(FWD_ID, "x", ForwarderType.HTTP,
+                new HttpConfiguration("https://x"));
+        fwd.save();
+        assertTrue(body.get().contains("\"forward_smplkit_events\":false"),
+                "expected forward_smplkit_events=false on wire, got: " + body.get());
+    }
+
+    @Test
+    void saveForwarder_sendsForwardSmplkitEventsTrue_onWire() throws Exception {
+        AtomicReference<String> body = new AtomicReference<>();
+        handler.set(ex -> {
+            byte[] in = ex.getRequestBody().readAllBytes();
+            body.set(new String(in));
+            respondJson(ex, 201,
+                    "{\"data\":" + forwarderResourceWithSmplkitEvents("x", true) + "}");
+        });
+        AuditForwarders fwds = new AuditForwarders(forwardersApi);
+        Forwarder fwd = fwds.newForwarder(FWD_ID, "x", ForwarderType.HTTP,
+                new HttpConfiguration("https://x"));
+        fwd.forwardSmplkitEvents = true;
+        fwd.save();
+        assertTrue(body.get().contains("\"forward_smplkit_events\":true"),
+                "expected forward_smplkit_events=true on wire, got: " + body.get());
+        // create applied the server response back onto the instance.
+        assertTrue(fwd.forwardSmplkitEvents);
+    }
+
+    @Test
+    void updateForwarder_changesForwardSmplkitEvents_onWire() throws Exception {
+        AtomicReference<String> body = new AtomicReference<>();
+        AtomicReference<String> method = new AtomicReference<>();
+        java.util.concurrent.atomic.AtomicInteger calls = new java.util.concurrent.atomic.AtomicInteger();
+        handler.set(ex -> {
+            int n = calls.incrementAndGet();
+            if (n == 1) {
+                // initial GET: forwarder currently has forward_smplkit_events=false.
+                try {
+                    respondJson(ex, 200,
+                            "{\"data\":" + forwarderResourceWithSmplkitEvents("x", false) + "}");
+                } catch (IOException e) {
+                    throw new RuntimeException(e);
+                }
+            } else {
+                // the PUT: capture method + body, return the toggled value.
+                method.set(ex.getRequestMethod());
+                byte[] in;
+                try {
+                    in = ex.getRequestBody().readAllBytes();
+                    body.set(new String(in));
+                    respondJson(ex, 200,
+                            "{\"data\":" + forwarderResourceWithSmplkitEvents("x", true) + "}");
+                } catch (IOException e) {
+                    throw new RuntimeException(e);
+                }
+            }
+        });
+        AuditForwarders fwds = new AuditForwarders(forwardersApi);
+        Forwarder fwd = fwds.get(FWD_ID);
+        assertFalse(fwd.forwardSmplkitEvents);
+        fwd.forwardSmplkitEvents = true;
+        fwd.save();
+        assertEquals("PUT", method.get());
+        assertTrue(body.get().contains("\"forward_smplkit_events\":true"),
+                "expected forward_smplkit_events=true on update wire, got: " + body.get());
+        assertTrue(fwd.forwardSmplkitEvents);
+    }
+
+    @Test
+    void getForwarder_readsForwardSmplkitEventsTrue_fromWire() throws Exception {
+        handler.set(ex -> respondJson(ex, 200,
+                "{\"data\":" + forwarderResourceWithSmplkitEvents("x", true) + "}"));
+        AuditForwarders fwds = new AuditForwarders(forwardersApi);
+        Forwarder fwd = fwds.get(FWD_ID);
+        assertTrue(fwd.forwardSmplkitEvents);
+    }
+
+    @Test
+    void getForwarder_defaultsForwardSmplkitEventsFalseWhenWireOmitsIt() throws Exception {
+        // forwarderResource() emits no forward_smplkit_events key — a forwarder
+        // persisted before the field landed reads back as false.
+        handler.set(ex -> respondJson(ex, 200,
+                "{\"data\":" + forwarderResource("n", "d") + "}"));
+        AuditForwarders fwds = new AuditForwarders(forwardersApi);
+        Forwarder fwd = fwds.get(FWD_ID);
+        assertFalse(fwd.forwardSmplkitEvents);
+    }
+
+    private static String forwarderResourceWithSmplkitEvents(String name, boolean forwardSmplkitEvents) {
+        return "{\"id\":\"" + FWD_ID + "\",\"type\":\"forwarder\",\"attributes\":{"
+                + "\"name\":\"" + name + "\",\"forwarder_type\":\"http\",\"enabled\":false,"
+                + "\"forward_smplkit_events\":" + forwardSmplkitEvents + ","
+                + "\"configuration\":{\"method\":\"POST\",\"url\":\"https://x\","
+                + "\"success_status\":\"2xx\"},"
+                + "\"created_at\":\"2026-05-07T12:00:00Z\","
+                + "\"updated_at\":\"2026-05-07T12:00:00Z\",\"version\":1}}";
     }
 
     // -----------------------------------------------------------------

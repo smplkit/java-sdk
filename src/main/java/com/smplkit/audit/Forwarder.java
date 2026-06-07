@@ -75,6 +75,15 @@ public final class Forwarder {
      * a forwarder where exactly one of the two is set.
      */
     public TransformType transformType;
+    /**
+     * When {@code true}, this forwarder also receives smplkit's own platform
+     * change events (flag/config/etc. changes), delivered through every
+     * environment it is enabled in. Defaults to {@code false}. This is a
+     * base-level forwarder setting, parallel to {@link #filter} and
+     * {@link #transform} — not part of the per-environment
+     * {@link #environments} override map.
+     */
+    public boolean forwardSmplkitEvents = false;
     /** Destination request configuration. */
     public HttpConfiguration configuration;
     /** When the audit service first persisted this forwarder. {@code null} for an unsaved instance. */
@@ -98,7 +107,8 @@ public final class Forwarder {
     Forwarder(AuditForwarders client, String id, String name, String description,
               ForwarderType forwarderType, boolean enabled,
               Map<String, ForwarderEnvironment> environments, Map<String, Object> filter,
-              TransformType transformType, Object transform, HttpConfiguration configuration,
+              TransformType transformType, Object transform, boolean forwardSmplkitEvents,
+              HttpConfiguration configuration,
               OffsetDateTime createdAt, OffsetDateTime updatedAt,
               OffsetDateTime deletedAt, Integer version) {
         this.client = client;
@@ -111,6 +121,7 @@ public final class Forwarder {
         this.filter = filter;
         this.transformType = transformType;
         this.transform = transform;
+        this.forwardSmplkitEvents = forwardSmplkitEvents;
         this.configuration = configuration;
         this.createdAt = createdAt;
         this.updatedAt = updatedAt;
@@ -170,6 +181,7 @@ public final class Forwarder {
         this.filter = other.filter;
         this.transformType = other.transformType;
         this.transform = other.transform;
+        this.forwardSmplkitEvents = other.forwardSmplkitEvents;
         this.configuration = other.configuration;
         this.createdAt = other.createdAt;
         this.updatedAt = other.updatedAt;

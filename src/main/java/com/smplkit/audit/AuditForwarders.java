@@ -153,6 +153,7 @@ public final class AuditForwarders {
                     .fromValue(forwarder.transformType.getValue()));
         }
         if (forwarder.transform != null) attrs.setTransform(forwarder.transform);
+        attrs.setForwardSmplkitEvents(forwarder.forwardSmplkitEvents);
         return attrs;
     }
 
@@ -217,6 +218,9 @@ public final class AuditForwarders {
                 a.getFilter(),
                 tt != null ? TransformType.fromValue(tt.getValue()) : null,
                 a.getTransform(),
+                // Absent on the wire means a forwarder persisted before the
+                // field landed — default to false (no platform events).
+                a.getForwardSmplkitEvents() != null ? a.getForwardSmplkitEvents() : false,
                 cfg,
                 a.getCreatedAt(),
                 a.getUpdatedAt(),
