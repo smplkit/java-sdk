@@ -164,7 +164,8 @@ public class CategoriesApi {
 
   /**
    * List Categories
-   * List the distinct &#x60;category&#x60; values recorded for this account.  The resource &#x60;id&#x60; is the category value itself. Default sort is &#x60;key&#x60; ascending; pass &#x60;sort&#x3D;-key&#x60; for descending. Scoped to the resolved environment. Useful for populating filter dropdowns in a UI.
+   * List the distinct &#x60;category&#x60; values recorded for this account.  The resource &#x60;id&#x60; is the category value itself. Default sort is &#x60;key&#x60; ascending; pass &#x60;sort&#x3D;-key&#x60; for descending. Scoped to the selected environments (see &#x60;filter[environment]&#x60;). Useful for populating filter dropdowns in a UI.
+   * @param filterEnvironment Comma-separated list of environment keys to scope results to (e.g. &#x60;production,staging&#x60;). When omitted, results are scoped to your single accessible environment; send the &#x60;X-Smplkit-Environment&#x60; header instead if you can access more than one. The reserved value &#x60;smplkit&#x60; selects platform change events that smplkit records about your own resources (flags, configuration, and so on); these are not tied to a deployment environment and are readable regardless of which environments you manage. (optional)
    * @param sort Field to sort by. Prefix with &#x60;-&#x60; for descending order. Default: &#x60;key&#x60;. Allowed values: &#x60;key&#x60;, &#x60;-key&#x60;. (optional, default to key)
    * @param pageNumber 1-based page number to return. Optional; defaults to &#x60;1&#x60; when omitted. Must be &#x60;&gt;&#x3D; 1&#x60; — requests with a smaller value are rejected with a 400 error. (optional, default to 1)
    * @param pageSize Number of items per page. Optional; defaults to &#x60;1000&#x60; when omitted. Must be between &#x60;1&#x60; and &#x60;1000&#x60; inclusive — requests outside that range are rejected with a 400 error. (optional, default to 1000)
@@ -172,13 +173,14 @@ public class CategoriesApi {
    * @return CategoryListResponse
    * @throws ApiException if fails to make API call
    */
-  public CategoryListResponse listCategories(@jakarta.annotation.Nullable String sort, @jakarta.annotation.Nullable Integer pageNumber, @jakarta.annotation.Nullable Integer pageSize, @jakarta.annotation.Nullable Boolean metaTotal) throws ApiException {
-    return listCategories(sort, pageNumber, pageSize, metaTotal, null);
+  public CategoryListResponse listCategories(@jakarta.annotation.Nullable String filterEnvironment, @jakarta.annotation.Nullable String sort, @jakarta.annotation.Nullable Integer pageNumber, @jakarta.annotation.Nullable Integer pageSize, @jakarta.annotation.Nullable Boolean metaTotal) throws ApiException {
+    return listCategories(filterEnvironment, sort, pageNumber, pageSize, metaTotal, null);
   }
 
   /**
    * List Categories
-   * List the distinct &#x60;category&#x60; values recorded for this account.  The resource &#x60;id&#x60; is the category value itself. Default sort is &#x60;key&#x60; ascending; pass &#x60;sort&#x3D;-key&#x60; for descending. Scoped to the resolved environment. Useful for populating filter dropdowns in a UI.
+   * List the distinct &#x60;category&#x60; values recorded for this account.  The resource &#x60;id&#x60; is the category value itself. Default sort is &#x60;key&#x60; ascending; pass &#x60;sort&#x3D;-key&#x60; for descending. Scoped to the selected environments (see &#x60;filter[environment]&#x60;). Useful for populating filter dropdowns in a UI.
+   * @param filterEnvironment Comma-separated list of environment keys to scope results to (e.g. &#x60;production,staging&#x60;). When omitted, results are scoped to your single accessible environment; send the &#x60;X-Smplkit-Environment&#x60; header instead if you can access more than one. The reserved value &#x60;smplkit&#x60; selects platform change events that smplkit records about your own resources (flags, configuration, and so on); these are not tied to a deployment environment and are readable regardless of which environments you manage. (optional)
    * @param sort Field to sort by. Prefix with &#x60;-&#x60; for descending order. Default: &#x60;key&#x60;. Allowed values: &#x60;key&#x60;, &#x60;-key&#x60;. (optional, default to key)
    * @param pageNumber 1-based page number to return. Optional; defaults to &#x60;1&#x60; when omitted. Must be &#x60;&gt;&#x3D; 1&#x60; — requests with a smaller value are rejected with a 400 error. (optional, default to 1)
    * @param pageSize Number of items per page. Optional; defaults to &#x60;1000&#x60; when omitted. Must be between &#x60;1&#x60; and &#x60;1000&#x60; inclusive — requests outside that range are rejected with a 400 error. (optional, default to 1000)
@@ -187,14 +189,15 @@ public class CategoriesApi {
    * @return CategoryListResponse
    * @throws ApiException if fails to make API call
    */
-  public CategoryListResponse listCategories(@jakarta.annotation.Nullable String sort, @jakarta.annotation.Nullable Integer pageNumber, @jakarta.annotation.Nullable Integer pageSize, @jakarta.annotation.Nullable Boolean metaTotal, Map<String, String> headers) throws ApiException {
-    ApiResponse<CategoryListResponse> localVarResponse = listCategoriesWithHttpInfo(sort, pageNumber, pageSize, metaTotal, headers);
+  public CategoryListResponse listCategories(@jakarta.annotation.Nullable String filterEnvironment, @jakarta.annotation.Nullable String sort, @jakarta.annotation.Nullable Integer pageNumber, @jakarta.annotation.Nullable Integer pageSize, @jakarta.annotation.Nullable Boolean metaTotal, Map<String, String> headers) throws ApiException {
+    ApiResponse<CategoryListResponse> localVarResponse = listCategoriesWithHttpInfo(filterEnvironment, sort, pageNumber, pageSize, metaTotal, headers);
     return localVarResponse.getData();
   }
 
   /**
    * List Categories
-   * List the distinct &#x60;category&#x60; values recorded for this account.  The resource &#x60;id&#x60; is the category value itself. Default sort is &#x60;key&#x60; ascending; pass &#x60;sort&#x3D;-key&#x60; for descending. Scoped to the resolved environment. Useful for populating filter dropdowns in a UI.
+   * List the distinct &#x60;category&#x60; values recorded for this account.  The resource &#x60;id&#x60; is the category value itself. Default sort is &#x60;key&#x60; ascending; pass &#x60;sort&#x3D;-key&#x60; for descending. Scoped to the selected environments (see &#x60;filter[environment]&#x60;). Useful for populating filter dropdowns in a UI.
+   * @param filterEnvironment Comma-separated list of environment keys to scope results to (e.g. &#x60;production,staging&#x60;). When omitted, results are scoped to your single accessible environment; send the &#x60;X-Smplkit-Environment&#x60; header instead if you can access more than one. The reserved value &#x60;smplkit&#x60; selects platform change events that smplkit records about your own resources (flags, configuration, and so on); these are not tied to a deployment environment and are readable regardless of which environments you manage. (optional)
    * @param sort Field to sort by. Prefix with &#x60;-&#x60; for descending order. Default: &#x60;key&#x60;. Allowed values: &#x60;key&#x60;, &#x60;-key&#x60;. (optional, default to key)
    * @param pageNumber 1-based page number to return. Optional; defaults to &#x60;1&#x60; when omitted. Must be &#x60;&gt;&#x3D; 1&#x60; — requests with a smaller value are rejected with a 400 error. (optional, default to 1)
    * @param pageSize Number of items per page. Optional; defaults to &#x60;1000&#x60; when omitted. Must be between &#x60;1&#x60; and &#x60;1000&#x60; inclusive — requests outside that range are rejected with a 400 error. (optional, default to 1000)
@@ -202,13 +205,14 @@ public class CategoriesApi {
    * @return ApiResponse&lt;CategoryListResponse&gt;
    * @throws ApiException if fails to make API call
    */
-  public ApiResponse<CategoryListResponse> listCategoriesWithHttpInfo(@jakarta.annotation.Nullable String sort, @jakarta.annotation.Nullable Integer pageNumber, @jakarta.annotation.Nullable Integer pageSize, @jakarta.annotation.Nullable Boolean metaTotal) throws ApiException {
-    return listCategoriesWithHttpInfo(sort, pageNumber, pageSize, metaTotal, null);
+  public ApiResponse<CategoryListResponse> listCategoriesWithHttpInfo(@jakarta.annotation.Nullable String filterEnvironment, @jakarta.annotation.Nullable String sort, @jakarta.annotation.Nullable Integer pageNumber, @jakarta.annotation.Nullable Integer pageSize, @jakarta.annotation.Nullable Boolean metaTotal) throws ApiException {
+    return listCategoriesWithHttpInfo(filterEnvironment, sort, pageNumber, pageSize, metaTotal, null);
   }
 
   /**
    * List Categories
-   * List the distinct &#x60;category&#x60; values recorded for this account.  The resource &#x60;id&#x60; is the category value itself. Default sort is &#x60;key&#x60; ascending; pass &#x60;sort&#x3D;-key&#x60; for descending. Scoped to the resolved environment. Useful for populating filter dropdowns in a UI.
+   * List the distinct &#x60;category&#x60; values recorded for this account.  The resource &#x60;id&#x60; is the category value itself. Default sort is &#x60;key&#x60; ascending; pass &#x60;sort&#x3D;-key&#x60; for descending. Scoped to the selected environments (see &#x60;filter[environment]&#x60;). Useful for populating filter dropdowns in a UI.
+   * @param filterEnvironment Comma-separated list of environment keys to scope results to (e.g. &#x60;production,staging&#x60;). When omitted, results are scoped to your single accessible environment; send the &#x60;X-Smplkit-Environment&#x60; header instead if you can access more than one. The reserved value &#x60;smplkit&#x60; selects platform change events that smplkit records about your own resources (flags, configuration, and so on); these are not tied to a deployment environment and are readable regardless of which environments you manage. (optional)
    * @param sort Field to sort by. Prefix with &#x60;-&#x60; for descending order. Default: &#x60;key&#x60;. Allowed values: &#x60;key&#x60;, &#x60;-key&#x60;. (optional, default to key)
    * @param pageNumber 1-based page number to return. Optional; defaults to &#x60;1&#x60; when omitted. Must be &#x60;&gt;&#x3D; 1&#x60; — requests with a smaller value are rejected with a 400 error. (optional, default to 1)
    * @param pageSize Number of items per page. Optional; defaults to &#x60;1000&#x60; when omitted. Must be between &#x60;1&#x60; and &#x60;1000&#x60; inclusive — requests outside that range are rejected with a 400 error. (optional, default to 1000)
@@ -217,8 +221,8 @@ public class CategoriesApi {
    * @return ApiResponse&lt;CategoryListResponse&gt;
    * @throws ApiException if fails to make API call
    */
-  public ApiResponse<CategoryListResponse> listCategoriesWithHttpInfo(@jakarta.annotation.Nullable String sort, @jakarta.annotation.Nullable Integer pageNumber, @jakarta.annotation.Nullable Integer pageSize, @jakarta.annotation.Nullable Boolean metaTotal, Map<String, String> headers) throws ApiException {
-    HttpRequest.Builder localVarRequestBuilder = listCategoriesRequestBuilder(sort, pageNumber, pageSize, metaTotal, headers);
+  public ApiResponse<CategoryListResponse> listCategoriesWithHttpInfo(@jakarta.annotation.Nullable String filterEnvironment, @jakarta.annotation.Nullable String sort, @jakarta.annotation.Nullable Integer pageNumber, @jakarta.annotation.Nullable Integer pageSize, @jakarta.annotation.Nullable Boolean metaTotal, Map<String, String> headers) throws ApiException {
+    HttpRequest.Builder localVarRequestBuilder = listCategoriesRequestBuilder(filterEnvironment, sort, pageNumber, pageSize, metaTotal, headers);
     try {
       HttpResponse<InputStream> localVarResponse = memberVarHttpClient.send(
           localVarRequestBuilder.build(),
@@ -265,7 +269,7 @@ public class CategoriesApi {
     }
   }
 
-  private HttpRequest.Builder listCategoriesRequestBuilder(@jakarta.annotation.Nullable String sort, @jakarta.annotation.Nullable Integer pageNumber, @jakarta.annotation.Nullable Integer pageSize, @jakarta.annotation.Nullable Boolean metaTotal, Map<String, String> headers) throws ApiException {
+  private HttpRequest.Builder listCategoriesRequestBuilder(@jakarta.annotation.Nullable String filterEnvironment, @jakarta.annotation.Nullable String sort, @jakarta.annotation.Nullable Integer pageNumber, @jakarta.annotation.Nullable Integer pageSize, @jakarta.annotation.Nullable Boolean metaTotal, Map<String, String> headers) throws ApiException {
 
     HttpRequest.Builder localVarRequestBuilder = HttpRequest.newBuilder();
 
@@ -274,6 +278,8 @@ public class CategoriesApi {
     List<Pair> localVarQueryParams = new ArrayList<>();
     StringJoiner localVarQueryStringJoiner = new StringJoiner("&");
     String localVarQueryParameterBaseName;
+    localVarQueryParameterBaseName = "filter[environment]";
+    localVarQueryParams.addAll(ApiClient.parameterToPairs("filter[environment]", filterEnvironment));
     localVarQueryParameterBaseName = "sort";
     localVarQueryParams.addAll(ApiClient.parameterToPairs("sort", sort));
     localVarQueryParameterBaseName = "page[number]";
