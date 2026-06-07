@@ -291,7 +291,7 @@ public class GroupMembershipsApi {
 
   /**
    * Delete Group Membership
-   * Remove a user from a group. Returns &#x60;409&#x60; when the membership is the user&#39;s &#x60;default&#x60; membership — every user must remain in the &#x60;default&#x60; group per ADR-055 §4.
+   * Remove a user from a group. Returns &#x60;409&#x60; when removing the membership would leave the user with no group memberships in this account — every user must belong to at least one group.
    * @param id  (required)
    * @throws ApiException if fails to make API call
    */
@@ -301,7 +301,7 @@ public class GroupMembershipsApi {
 
   /**
    * Delete Group Membership
-   * Remove a user from a group. Returns &#x60;409&#x60; when the membership is the user&#39;s &#x60;default&#x60; membership — every user must remain in the &#x60;default&#x60; group per ADR-055 §4.
+   * Remove a user from a group. Returns &#x60;409&#x60; when removing the membership would leave the user with no group memberships in this account — every user must belong to at least one group.
    * @param id  (required)
    * @param headers Optional headers to include in the request
    * @throws ApiException if fails to make API call
@@ -312,7 +312,7 @@ public class GroupMembershipsApi {
 
   /**
    * Delete Group Membership
-   * Remove a user from a group. Returns &#x60;409&#x60; when the membership is the user&#39;s &#x60;default&#x60; membership — every user must remain in the &#x60;default&#x60; group per ADR-055 §4.
+   * Remove a user from a group. Returns &#x60;409&#x60; when removing the membership would leave the user with no group memberships in this account — every user must belong to at least one group.
    * @param id  (required)
    * @return ApiResponse&lt;Void&gt;
    * @throws ApiException if fails to make API call
@@ -323,7 +323,7 @@ public class GroupMembershipsApi {
 
   /**
    * Delete Group Membership
-   * Remove a user from a group. Returns &#x60;409&#x60; when the membership is the user&#39;s &#x60;default&#x60; membership — every user must remain in the &#x60;default&#x60; group per ADR-055 §4.
+   * Remove a user from a group. Returns &#x60;409&#x60; when removing the membership would leave the user with no group memberships in this account — every user must belong to at least one group.
    * @param id  (required)
    * @param headers Optional headers to include in the request
    * @return ApiResponse&lt;Void&gt;
