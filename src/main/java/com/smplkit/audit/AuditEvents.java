@@ -92,6 +92,7 @@ public final class AuditEvents {
     /** List events with filters and cursor pagination. */
     public ListEventsPage list(ListEventsInput input) throws ApiException {
         EventListResponse resp = api.listEvents(
+                AuditResourceTypesClient.joinEnvironments(input.environments),
                 input.occurredAtRange,
                 input.actorType,
                 input.actorId,

@@ -30,6 +30,7 @@ public final class AuditEventTypesClient {
     /** List the distinct event type slugs seen in the account. */
     public EventTypeListPage list(ListEventTypesInput input) throws ApiException {
         EventTypeListResponse resp = api.listEventTypes(
+                AuditResourceTypesClient.joinEnvironments(input.environments),
                 input.filterResourceType, null, input.pageNumber, input.pageSize, input.metaTotal);
         List<AuditEventType> rows = new ArrayList<>();
         if (resp.getData() != null) {
