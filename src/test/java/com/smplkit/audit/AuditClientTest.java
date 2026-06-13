@@ -216,6 +216,72 @@ class AuditClientTest {
     }
 
     // -----------------------------------------------------------------
+    // Inline flush on record() — parity with canonical record(flush=...)
+    // -----------------------------------------------------------------
+
+    @Test
+    void record_flushTrue_blocksUntilDurable() {
+        // The default handler responds 201 synchronously. With flush=true the
+        // call must not return until the buffered POST has completed, so the
+        // count is observable immediately — no separate flush(), no sleep.
+        CreateEventInput input = new CreateEventInput("invoice.created", "invoice", "inv-1");
+        client.events().record(input, true, 2_000);
+        assertEquals(1, postCount.get(), "record(flush=true) must block until the event is durable");
+        assertEquals(0, firstPostSeen.getCount(), "POST should have been observed by the server");
+    }
+
+    @Test
+    void record_flushTrue_defaultTimeoutOverload_blocksUntilDurable() {
+        // The two-arg overload applies the 5s default timeout; same durability
+        // guarantee as the explicit-timeout overload.
+        CreateEventInput input = new CreateEventInput("invoice.created", "invoice", "inv-2");
+        client.events().record(input, true);
+        assertEquals(1, postCount.get(), "record(flush=true) must block until the event is durable");
+    }
+
+    @Test
+    void record_flushFalse_doesNotBlockUntilDurable() throws Exception {
+        // Gate the server so the POST cannot complete until released. A
+        // fire-and-forget record returns without draining the buffer (a single
+        // enqueue is below the worker's watermark), so durability has NOT
+        // happened — observable as postCount still 0. An explicit flush() then
+        // drives the drain and makes the event durable. The gate keeps the
+        // "still 0" assertion deterministic even if the periodic timer fires.
+        CountDownLatch gate = new CountDownLatch(1);
+        server.removeContext("/api/v1/events");
+        server.createContext("/api/v1/events", ex -> {
+            if (ex.getRequestMethod().equals("POST")) {
+                try {
+                    gate.await(10, java.util.concurrent.TimeUnit.SECONDS);
+                } catch (InterruptedException e) {
+                    Thread.currentThread().interrupt();
+                }
+                postCount.incrementAndGet();
+                String body = "{\"data\":{\"id\":\"00000000-0000-0000-0000-000000000001\",\"type\":\"event\",\"attributes\":{\"event_type\":\"x.created\",\"resource_type\":\"x\",\"resource_id\":\"1\",\"occurred_at\":\"2026-05-06T12:00:00Z\",\"created_at\":\"2026-05-06T12:00:01Z\",\"actor_type\":\"API_KEY\",\"actor_id\":null,\"actor_label\":\"\",\"data\":{},\"idempotency_key\":\"\"}}}";
+                byte[] resp = body.getBytes();
+                ex.getResponseHeaders().add("Content-Type", "application/vnd.api+json");
+                ex.sendResponseHeaders(201, resp.length);
+                ex.getResponseBody().write(resp);
+                ex.close();
+            } else {
+                ex.sendResponseHeaders(405, -1);
+                ex.close();
+            }
+        });
+
+        CreateEventInput input = new CreateEventInput("invoice.created", "invoice", "inv-3");
+        client.events().record(input, false);
+        // Durability is gated server-side; a fire-and-forget record must not
+        // have waited for it.
+        assertEquals(0, postCount.get(), "record(flush=false) must not block until durable");
+
+        gate.countDown();
+        client.events().flush(5_000);
+        Thread.interrupted();
+        assertEquals(1, postCount.get(), "event should be durable after release + flush");
+    }
+
+    // -----------------------------------------------------------------
     // Environment-header injection (ADR-055)
     // -----------------------------------------------------------------
 

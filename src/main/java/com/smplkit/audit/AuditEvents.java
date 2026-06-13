@@ -16,10 +16,21 @@ import java.util.UUID;
  *
  * <p>{@link #record(CreateEventInput)} is fire-and-forget — the call
  * enqueues the event onto an in-memory bounded buffer and returns
- * immediately. Reads ({@link #list(ListEventsInput)}, {@link #get(UUID)})
- * are synchronous.</p>
+ * immediately. Pass {@code flush=true} to
+ * {@link #record(CreateEventInput, boolean)} (or
+ * {@link #record(CreateEventInput, boolean, long)}) to instead block until
+ * the event is durable — useful from CLI tools, tests, and any flow about
+ * to exit the process. Reads ({@link #list(ListEventsInput)},
+ * {@link #get(UUID)}) are synchronous.</p>
  */
 public final class AuditEvents {
+
+    /**
+     * Default upper bound on an inline flush, in milliseconds (5s) — matches
+     * the timeout {@link AuditClient#close()} applies at shutdown and the
+     * canonical SDK default.
+     */
+    public static final long DEFAULT_FLUSH_TIMEOUT_MS = 5_000L;
 
     private final EventsApi api;
     private final AuditEventBuffer buffer;
@@ -32,6 +43,12 @@ public final class AuditEvents {
     /**
      * Enqueue an audit event for asynchronous delivery. Returns immediately.
      *
+     * <p>Fire-and-forget: equivalent to
+     * {@link #record(CreateEventInput, boolean) record(input, false)}. The
+     * event is appended to an in-memory bounded buffer drained by a
+     * background worker, so this returns without awaiting any network
+     * round-trip.</p>
+     *
      * <p>Customer attempts to record events with {@code resourceType}
      * starting with {@code smpl.} are rejected by the server with a 403
      * (the buffer logs the permanent failure and drops the item).</p>
@@ -42,6 +59,58 @@ public final class AuditEvents {
      *     are missing
      */
     public void record(CreateEventInput input) {
+        record(input, false, DEFAULT_FLUSH_TIMEOUT_MS);
+    }
+
+    /**
+     * Enqueue an audit event, optionally blocking until it is durable.
+     *
+     * <p>When {@code flush} is {@code false} this is fire-and-forget and
+     * returns immediately. When {@code flush} is {@code true} the call blocks
+     * until the buffer has drained or the default timeout
+     * ({@value #DEFAULT_FLUSH_TIMEOUT_MS}ms) elapses — equivalent to
+     * {@link #record(CreateEventInput, boolean, long)
+     * record(input, true, DEFAULT_FLUSH_TIMEOUT_MS)}.</p>
+     *
+     * @param input the event to record; per-field semantics live on
+     *     {@link CreateEventInput}
+     * @param flush when {@code true}, block until the buffer drains (or the
+     *     default timeout elapses) before returning; when {@code false},
+     *     return immediately
+     * @throws IllegalArgumentException if eventType / resourceType / resourceId
+     *     are missing
+     */
+    public void record(CreateEventInput input, boolean flush) {
+        record(input, flush, DEFAULT_FLUSH_TIMEOUT_MS);
+    }
+
+    /**
+     * Enqueue an audit event, optionally blocking until it is durable with an
+     * explicit timeout.
+     *
+     * <p>The event is always appended to the in-memory buffer first. When
+     * {@code flush} is {@code true}, this call then blocks until the buffer
+     * has drained or {@code flushTimeoutMs} elapses; use it when the caller
+     * needs the event durable before continuing — typical examples are CLI
+     * tools, in-test assertions, and any flow about to exit the process. The
+     * fire-and-forget default ({@code flush=false}) remains the right choice
+     * on the request-handling hot path.</p>
+     *
+     * <p>Customer attempts to record events with {@code resourceType}
+     * starting with {@code smpl.} are rejected by the server with a 403
+     * (the buffer logs the permanent failure and drops the item).</p>
+     *
+     * @param input the event to record; per-field semantics live on
+     *     {@link CreateEventInput}
+     * @param flush when {@code true}, block until the buffer drains (or
+     *     {@code flushTimeoutMs} elapses) before returning; when {@code false},
+     *     return immediately and ignore {@code flushTimeoutMs}
+     * @param flushTimeoutMs upper bound on the blocking flush, in
+     *     milliseconds; ignored when {@code flush} is {@code false}
+     * @throws IllegalArgumentException if eventType / resourceType / resourceId
+     *     are missing
+     */
+    public void record(CreateEventInput input, boolean flush, long flushTimeoutMs) {
         if (input.eventType == null || input.eventType.isEmpty()
                 || input.resourceType == null || input.resourceType.isEmpty()
                 || input.resourceId == null || input.resourceId.isEmpty()) {
@@ -79,6 +148,9 @@ public final class AuditEvents {
                 .attributes(attrs);
         EventRequest body = new EventRequest().data(resource);
         buffer.enqueue(body, input.idempotencyKey);
+        if (flush) {
+            buffer.flush(flushTimeoutMs);
+        }
     }
 
     /**

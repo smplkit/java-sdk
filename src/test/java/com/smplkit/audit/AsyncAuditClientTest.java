@@ -20,6 +20,7 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ForkJoinPool;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicReference;
 
 import static org.junit.jupiter.api.Assertions.*;
@@ -161,6 +162,57 @@ class AsyncAuditClientTest {
         async.events().record(new CreateEventInput("x.created", "x", "1"));
         async.events().flush(2_000).get(5, TimeUnit.SECONDS);
         assertTrue(firstPostSeen.await(10, TimeUnit.SECONDS), "POST never reached the server");
+    }
+
+    @Test
+    void events_recordFlushTrue_completesAfterDurable() throws Exception {
+        // The flush=true future completes only after the buffer drains, so the
+        // POST round-trip is done by the time get() returns.
+        AtomicInteger posts = new AtomicInteger();
+        handler.set(ex -> {
+            posts.incrementAndGet();
+            respondJson(ex, 201, "{\"data\":" + eventResource("00000000-0000-0000-0000-000000000001") + "}");
+        });
+        async.events().record(new CreateEventInput("x.created", "x", "1"), true, 2_000)
+                .get(5, TimeUnit.SECONDS);
+        assertEquals(1, posts.get(), "record(flush=true) future must await durability");
+    }
+
+    @Test
+    void events_recordFlushTrue_defaultTimeoutOverload() throws Exception {
+        // Two-arg overload applies the 5s default timeout; same guarantee.
+        AtomicInteger posts = new AtomicInteger();
+        handler.set(ex -> {
+            posts.incrementAndGet();
+            respondJson(ex, 201, "{\"data\":" + eventResource("00000000-0000-0000-0000-000000000001") + "}");
+        });
+        async.events().record(new CreateEventInput("x.created", "x", "1"), true)
+                .get(5, TimeUnit.SECONDS);
+        assertEquals(1, posts.get(), "record(flush=true) future must await durability");
+    }
+
+    @Test
+    void events_recordFlushFalse_completesWithoutAwaitingDurability() throws Exception {
+        // Gate the POST so durability cannot complete until released. flush=false
+        // returns an already-completed future, so get() returns while the worker
+        // is still parked on the gate — observable as posts still 0.
+        AtomicInteger posts = new AtomicInteger();
+        CountDownLatch gate = new CountDownLatch(1);
+        handler.set(ex -> {
+            try {
+                gate.await(10, TimeUnit.SECONDS);
+            } catch (InterruptedException e) {
+                Thread.currentThread().interrupt();
+            }
+            posts.incrementAndGet();
+            respondJson(ex, 201, "{\"data\":" + eventResource("00000000-0000-0000-0000-000000000001") + "}");
+        });
+        async.events().record(new CreateEventInput("x.created", "x", "1"), false, 2_000)
+                .get(5, TimeUnit.SECONDS);
+        assertEquals(0, posts.get(), "record(flush=false) future must not await durability");
+        gate.countDown();
+        async.events().flush(5_000).get(5, TimeUnit.SECONDS);
+        assertEquals(1, posts.get(), "event durable after release + flush");
     }
 
     @Test

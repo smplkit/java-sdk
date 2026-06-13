@@ -13,9 +13,11 @@ import java.util.UUID;
  *
  * <p>Genuinely async: event reads, discovery, and forwarder CRUD perform their
  * network round-trips on the wrapper's {@link Executor} and return a
- * {@code CompletableFuture<T>}; only {@code events.record} is fire-and-forget
- * (it enqueues onto a background worker thread and returns without awaiting),
- * which is the correct shape for the hot path. The forwarder factory
+ * {@code CompletableFuture<T>}; the fire-and-forget {@code events.record(input)}
+ * overload returns {@code void} (it enqueues onto a background worker thread and
+ * returns without awaiting), which is the correct shape for the hot path — pass
+ * {@code flush=true} to the {@code CompletableFuture}-returning {@code record}
+ * overloads to await durability instead. The forwarder factory
  * ({@code forwarders.newForwarder}) stays synchronous — it performs no I/O.</p>
  *
  * <p>Holds a sync {@link AuditClient} as the single source of truth for state.
@@ -138,6 +140,61 @@ public final class AsyncAuditClient implements AutoCloseable {
          */
         public void record(CreateEventInput input) {
             delegate.events().record(input);
+        }
+
+        /**
+         * Enqueue an audit event, optionally awaiting durability.
+         *
+         * <p>When {@code flush} is {@code false} this is fire-and-forget and
+         * the returned future completes as soon as the event is buffered.
+         * When {@code flush} is {@code true} the future completes once the
+         * buffer has drained (or the default timeout, see
+         * {@link AuditEvents#DEFAULT_FLUSH_TIMEOUT_MS}, elapses) — the drain is
+         * awaited on the wrapper's executor, never on the caller's thread.</p>
+         *
+         * @param input the event to record; per-field semantics live on
+         *     {@link CreateEventInput}
+         * @param flush when {@code true}, complete only after the buffer drains
+         *     (or the default timeout elapses); when {@code false}, complete as
+         *     soon as the event is buffered
+         * @return a future that completes when the event is buffered and, when
+         *     {@code flush} is {@code true}, after the buffer drains
+         * @throws IllegalArgumentException if eventType / resourceType /
+         *     resourceId are missing
+         */
+        public CompletableFuture<Void> record(CreateEventInput input, boolean flush) {
+            return record(input, flush, AuditEvents.DEFAULT_FLUSH_TIMEOUT_MS);
+        }
+
+        /**
+         * Enqueue an audit event, optionally awaiting durability with an
+         * explicit timeout.
+         *
+         * <p>The event is buffered synchronously on the calling thread (a fast,
+         * non-blocking append). When {@code flush} is {@code true} the returned
+         * future then completes once the buffer has drained or
+         * {@code flushTimeoutMs} elapses, with the drain performed on the
+         * wrapper's executor. Use it when the caller needs the event durable
+         * before continuing — CLI tools, tests, and flows about to exit.</p>
+         *
+         * @param input the event to record; per-field semantics live on
+         *     {@link CreateEventInput}
+         * @param flush when {@code true}, complete only after the buffer drains
+         *     (or {@code flushTimeoutMs} elapses); when {@code false}, complete
+         *     as soon as the event is buffered and ignore {@code flushTimeoutMs}
+         * @param flushTimeoutMs upper bound on the awaited flush, in
+         *     milliseconds; ignored when {@code flush} is {@code false}
+         * @return a future that completes when the event is buffered and, when
+         *     {@code flush} is {@code true}, after the buffer drains
+         * @throws IllegalArgumentException if eventType / resourceType /
+         *     resourceId are missing
+         */
+        public CompletableFuture<Void> record(CreateEventInput input, boolean flush, long flushTimeoutMs) {
+            delegate.events().record(input);
+            if (flush) {
+                return flush(flushTimeoutMs);
+            }
+            return CompletableFuture.completedFuture(null);
         }
 
         /**
