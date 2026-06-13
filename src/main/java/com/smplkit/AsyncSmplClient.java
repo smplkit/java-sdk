@@ -184,12 +184,19 @@ public final class AsyncSmplClient implements AutoCloseable {
      * deduplicated via an LRU and sent in the background. An empty list clears
      * any registration step.</p>
      *
+     * <p>Holding the returned {@link ContextScope} and closing it — most
+     * naturally via try-with-resources — restores the context that was active
+     * before this call; ignoring it leaves the new context in place
+     * (fire-and-forget).</p>
+     *
      * @param contexts the contexts to make active for the current thread (e.g.
      *     the request's user and account); an empty list clears any
      *     registration step
+     * @return a {@link ContextScope} that may be ignored for fire-and-forget use,
+     *     or closed to restore the context that was active before this call
      */
-    public void setContext(List<Context> contexts) {
-        delegate.setContext(contexts);
+    public ContextScope setContext(List<Context> contexts) {
+        return delegate.setContext(contexts);
     }
 
     /**

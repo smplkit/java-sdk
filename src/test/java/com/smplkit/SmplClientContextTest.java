@@ -66,4 +66,67 @@ class SmplClientContextTest {
             assertDoesNotThrow(client::clearContext);
         }
     }
+
+    @Test
+    void setContext_returnedScope_restoresPriorContextOnClose() {
+        try (SmplClient client = newClient()) {
+            client.clearContext();
+
+            List<Context> outer = List.of(new Context("user", "outer", Map.of()));
+            List<Context> inner = List.of(new Context("user", "inner", Map.of()));
+
+            client.setContext(outer);
+            assertSame(outer, client.currentContextForTesting());
+
+            // Scoped override: inside the try-with-resources the inner context is
+            // active; on close the previous (outer) context is restored.
+            try (ContextScope scope = client.setContext(inner)) {
+                assertNotNull(scope);
+                assertSame(inner, client.currentContextForTesting());
+            }
+            assertSame(outer, client.currentContextForTesting());
+
+            client.clearContext();
+        }
+    }
+
+    @Test
+    void setContext_returnedScope_restoresEmptyWhenNoPriorContext() {
+        try (SmplClient client = newClient()) {
+            client.clearContext();
+            assertTrue(client.currentContextForTesting().isEmpty());
+
+            try (ContextScope scope = client.setContext(
+                    List.of(new Context("user", "u-1", Map.of())))) {
+                assertEquals(1, client.currentContextForTesting().size());
+            }
+            // Closing restores the empty pre-call context.
+            assertTrue(client.currentContextForTesting().isEmpty());
+        }
+    }
+
+    @Test
+    void contextScope_closeIsIdempotent() {
+        try (SmplClient client = newClient()) {
+            client.clearContext();
+
+            ContextScope scope =
+                    client.setContext(List.of(new Context("user", "first", Map.of())));
+
+            List<Context> second = List.of(new Context("user", "second", Map.of()));
+            client.setContext(second);
+            assertSame(second, client.currentContextForTesting());
+
+            // First close restores the empty context captured when the scope was created.
+            scope.close();
+            assertTrue(client.currentContextForTesting().isEmpty());
+
+            // A second close must be a no-op — it must NOT clobber the now-current context.
+            client.setContext(second);
+            scope.close();
+            assertSame(second, client.currentContextForTesting());
+
+            client.clearContext();
+        }
+    }
 }

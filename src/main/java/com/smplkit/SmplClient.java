@@ -462,17 +462,36 @@ public final class SmplClient implements AutoCloseable {
      * deduplicated via an LRU and sent in the background. An empty list clears
      * any registration step.</p>
      *
+     * <p>Two usage shapes:</p>
+     * <pre>{@code
+     * // Fire-and-forget (typical middleware) — ignore the return value
+     * client.setContext(List.of(new Context("user", "u-1"),
+     *                           new Context("account", "a-1")));
+     *
+     * // Scoped block (e.g. impersonation or one-off override)
+     * try (ContextScope scope = client.setContext(
+     *         List.of(new Context("user", "impersonated")))) {
+     *     // ...
+     * }
+     * // the previous context is restored here
+     * }</pre>
+     *
      * @param contexts the contexts to make active for the current thread (e.g.
      *     the request's user and account); an empty list clears any
      *     registration step
+     * @return a {@link ContextScope} that may be ignored for fire-and-forget use,
+     *     or closed (most naturally via try-with-resources) to restore the
+     *     context that was active before this call
      */
-    public void setContext(List<Context> contexts) {
+    public ContextScope setContext(List<Context> contexts) {
         ensureStarted();
+        List<Context> previous = CURRENT_CONTEXT.get();
         if (contexts != null && !contexts.isEmpty()) {
             platform.contexts.register(contexts);
         }
         CURRENT_CONTEXT.set(contexts != null ? contexts : java.util.Collections.emptyList());
         flags.setContextProvider(CURRENT_CONTEXT::get);
+        return new ContextScope(CURRENT_CONTEXT, previous);
     }
 
     /** Clears the current thread's evaluation context, so subsequent
@@ -480,6 +499,12 @@ public final class SmplClient implements AutoCloseable {
      * {@link #setContext}. */
     public void clearContext() {
         CURRENT_CONTEXT.remove();
+    }
+
+    /** Test-only accessor for the current thread's evaluation context. Lets
+     * tests assert that {@link ContextScope#close()} restores the prior value. */
+    List<Context> currentContextForTesting() {
+        return CURRENT_CONTEXT.get();
     }
 
     /**
