@@ -1,7 +1,7 @@
 package com.smplkit.flags;
 
 /**
- * Event fired when a flag definition changes.
+ * Describes a flag definition change. Frozen — fields are set at construction.
  *
  * @param id      the flag id that changed
  * @param source  the change source ({@code "websocket"} or {@code "manual"})
@@ -9,7 +9,7 @@ package com.smplkit.flags;
  */
 public record FlagChangeEvent(String id, String source, boolean deleted) {
 
-    /** Convenience constructor for non-delete events. */
+    /** Convenience constructor for non-delete events ({@code deleted = false}). */
     public FlagChangeEvent(String id, String source) {
         this(id, source, false);
     }

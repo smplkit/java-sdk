@@ -13,32 +13,33 @@
 package com.smplkit.examples;
 
 import com.smplkit.LogLevel;
+import com.smplkit.SmplClient;
 import com.smplkit.examples.setup.LoggingManagementSetup;
 import com.smplkit.logging.Logger;
-import com.smplkit.management.SmplManagementClient;
 
 public final class LoggingManagementShowcase {
 
     public static void main(String[] args) {
-        // create the client (use SmplManagementClient for synchronous use)
-        try (SmplManagementClient manage = SmplManagementClient.create()) {
-            LoggingManagementSetup.setup(manage);
+
+        // or AsyncSmplClient for asynchronous use
+        try (SmplClient client = SmplClient.create()) {
+            LoggingManagementSetup.setup(client);
 
             // create a parent logger with a default level
-            Logger root = manage.loggers.new_("showcase");
+            Logger root = client.logging.loggers.new_("showcase");
             root.setLevel(LogLevel.INFO);
             root.save();
             System.out.println("Created: " + root.getId() + " (level=" + root.getLevel() + ")");
             assert "INFO".equals(root.getLevel());
 
             // child logger with no level (inherits from parent)
-            Logger db = manage.loggers.new_("showcase.db");
+            Logger db = client.logging.loggers.new_("showcase.db");
             db.save();
             System.out.println("Created: " + db.getId() + " (inherits)");
             assert db.getLevel() == null;
 
             // child logger with explicit level (overrides parent)
-            Logger payments = manage.loggers.new_("showcase.payments");
+            Logger payments = client.logging.loggers.new_("showcase.payments");
             payments.setLevel(LogLevel.WARN);
             payments.save();
             System.out.println("Created: " + payments.getId()
@@ -57,11 +58,11 @@ public final class LoggingManagementShowcase {
             System.out.println("Cleared production override: " + root.environments());
             assert !root.environments().containsKey("production");
 
-            // fetch a logger by id
-            Logger fetched = manage.loggers.get("showcase");
+            // get a logger
+            Logger fetched = client.logging.loggers.get("showcase");
             assert "INFO".equals(fetched.getLevel());
 
-            LoggingManagementSetup.cleanup(manage);
+            LoggingManagementSetup.cleanup(client);
             System.out.println("Done!");
         }
     }

@@ -7,11 +7,8 @@ import java.util.Map;
 import java.util.Set;
 
 /**
- * Level resolution algorithm per ADR-034 §3.1.
- *
- * <p>Pure, side-effect-free static functions. The runtime client passes its
- * loggers and groups caches; this class owns the chain-walking logic. Mirrors
- * the Python SDK's {@code _resolution.py} module.</p>
+ * Computes a logger's effective level from its own level, its environment
+ * overrides, its group chain, and dot-notation ancestry.
  */
 final class Resolution {
 
@@ -20,17 +17,23 @@ final class Resolution {
     private Resolution() {}
 
     /**
-     * Resolves the effective log level for a logger in an environment.
+     * Resolve the effective log level for a logger in an environment.
      *
      * <p>Resolution chain (first non-null wins):</p>
      * <ol>
      *   <li>Logger's own {@code environments[env].level}</li>
      *   <li>Logger's own {@code level}</li>
-     *   <li>Group chain (recursive: group's env level → group's level → parent group…)</li>
-     *   <li>Dot-notation ancestry (walk {@code com.acme.payments} → {@code com.acme} → {@code com},
+     *   <li>Group chain (recursive: group's env level -&gt; group's level -&gt; parent group...)</li>
+     *   <li>Dot-notation ancestry (walk {@code com.acme.payments} -&gt; {@code com.acme} -&gt; {@code com},
      *       applying steps 1-3 at each)</li>
      *   <li>System fallback: {@code "INFO"}</li>
      * </ol>
+     *
+     * @param loggerId    The normalized logger id (slug).
+     * @param environment The current environment name.
+     * @param loggers     Map of all loggers keyed by {@code id}.
+     * @param groups      Map of all log groups keyed by {@code id}.
+     * @return The resolved smplkit level string.
      */
     static String resolveLevel(String loggerId, String environment,
                                Map<String, Map<String, Object>> loggers,
@@ -58,9 +61,10 @@ final class Resolution {
     }
 
     /**
-     * Returns a human-readable string describing which resolution step produced
-     * the level for the given {@code loggerId}. Re-runs the same checks as
-     * {@link #resolveLevel} for debug output.
+     * Return a human-readable string describing which resolution step produced the level.
+     *
+     * <p>Only called when debug is enabled — re-runs the same checks as
+     * {@code resolveForEntry} to identify the winning step.</p>
      */
     static String findResolutionSource(String loggerId, String environment,
                                        Map<String, Map<String, Object>> loggers,
@@ -117,8 +121,18 @@ final class Resolution {
         return null;
     }
 
+    /**
+     * Extract the environment-specific level from an entry, if present.
+     *
+     * <p>With no environment (server derives it from the API key) there is no
+     * env-scoped override to apply, so resolution falls through to the entry's
+     * base level / group chain / system default.</p>
+     */
     @SuppressWarnings("unchecked")
     private static String extractEnvLevel(Map<String, Object> entry, String env) {
+        if (env == null) {
+            return null;
+        }
         Object envs = entry.get("environments");
         if (envs instanceof Map<?, ?> envMap) {
             Object envData = ((Map<String, Object>) envMap).get(env);

@@ -1,10 +1,13 @@
 package com.smplkit;
 
+import com.smplkit.account.AccountClient;
+import com.smplkit.audit.AuditClient;
 import com.smplkit.config.ConfigClient;
 import com.smplkit.flags.FlagsClient;
+import com.smplkit.jobs.JobsClient;
 import com.smplkit.logging.LoggingClient;
-import com.smplkit.management.ContextRegistrationBuffer;
-import com.smplkit.management.SmplManagementClient;
+import com.smplkit.platform.PlatformClient;
+import com.smplkit.internal.ContextRegistrationBuffer;
 import com.smplkit.internal.generated.app.api.ContextsApi;
 import com.smplkit.internal.generated.app.model.ContextBulkItem;
 import com.smplkit.internal.generated.app.model.ContextBulkRegister;
@@ -14,33 +17,38 @@ import com.smplkit.internal.generated.flags.api.FlagsApi;
 import com.smplkit.internal.generated.logging.api.LogGroupsApi;
 import com.smplkit.internal.generated.logging.api.LoggersApi;
 
+import com.smplkit.internal.ConfigResolver;
 import com.smplkit.internal.Debug;
 import com.smplkit.internal.HttpClients;
 
 import java.net.http.HttpClient;
-import java.net.http.HttpRequest;
 import java.time.Duration;
+import java.util.ArrayList;
 import java.util.List;
-import java.util.Locale;
 import java.util.Map;
-import java.util.Set;
-import java.util.function.Consumer;
+import java.util.Timer;
+import java.util.TimerTask;
 import java.util.logging.Logger;
 
 /**
- * Top-level entry point for the smplkit Java SDK.
+ * Synchronous entry point for the smplkit SDK.
  *
- * <p>Use the {@link #builder()} method to construct an instance:</p>
+ * <p>Usage:</p>
  * <pre>{@code
  * try (SmplClient client = SmplClient.builder()
- *         .apiKey("sk_api_...")
  *         .environment("production")
- *         .service("my-service")
+ *         .service("my-svc")
  *         .build()) {
- *     Flag<Boolean> flag = client.flags().booleanFlag("my-flag", false);
- *     boolean enabled = flag.get();
+ *     Flag<Boolean> checkoutV2 = client.flags.booleanFlag("checkout-v2", false);
+ *     if (checkoutV2.get()) { ... }
  * }
  * }</pre>
+ *
+ * <p>All parameters are optional. When omitted, the SDK resolves each one in
+ * precedence order, lowest to highest: built-in defaults, then the
+ * {@code ~/.smplkit} configuration file, then {@code SMPLKIT_*} environment
+ * variables, then the explicit builder arguments (a value supplied at a higher
+ * level overrides the lower ones).</p>
  *
  * <p>Implements {@link AutoCloseable} so it can be used in try-with-resources.</p>
  */
@@ -53,16 +61,33 @@ public final class SmplClient implements AutoCloseable {
     /** Default URL scheme used when none is specified via the builder. */
     static final String DEFAULT_SCHEME = "https";
 
+    /**
+     * Periodic flush of all sub-client registration buffers (contexts, flags,
+     * loggers, config). Threshold flushes still fire immediately when buffers
+     * fill up; this timer is the liveness guarantee for the tail.
+     */
+    private static final long PERIODIC_FLUSH_INTERVAL_MS = 60_000L;
+
     /** Computes a service base URL from scheme, subdomain, and base domain. */
     static String serviceUrl(String scheme, String subdomain, String baseDomain) {
         return ConfigResolver.serviceUrl(scheme, subdomain, baseDomain);
     }
 
-    private ConfigClient config;
-    private FlagsClient flags;
-    private LoggingClient logging;
-    private com.smplkit.audit.AuditClient audit;
-    private SmplManagementClient manage;
+    /** Platform's cross-cutting CRUD on one client (environments, services, contexts, contextTypes). */
+    public final PlatformClient platform;
+    /** Account-level settings on one client. */
+    public final AccountClient account;
+    /** Config's full surface on one client. */
+    public final ConfigClient config;
+    /** Flags' full surface on one client. */
+    public final FlagsClient flags;
+    /** Logging's full surface on one client. */
+    public final LoggingClient logging;
+    /** Audit's full surface on one client. */
+    public final AuditClient audit;
+    /** Jobs' full surface on one client. */
+    public final JobsClient jobs;
+
     private final SharedWebSocket sharedWs;
     private final HttpClient httpClient;
     private final ContextsApi contextsApi;
@@ -71,16 +96,33 @@ public final class SmplClient implements AutoCloseable {
     private final String apiKey;
     private final Duration timeout;
     private final MetricsReporter metrics;
-    private volatile boolean serviceContextRegistered;
 
-    /** Headers the SDK always sets; users cannot override these via extraHeaders. */
-    private static final Set<String> SDK_MANAGED_HEADERS = Set.of("authorization", "accept", "content-type");
+    // Deferred background machinery (see ensureStarted): no threads, no
+    // background network at construction. An audit-only or jobs-only customer
+    // pays zero threads and zero network until the first config/flags/logging
+    // operation, set_context, or wait_until_ready.
+    private volatile boolean closed;
+    private volatile boolean started;
+    private final Object startLock = new Object();
+    private Timer flushTimer;
 
     /**
      * Creates a new SmplClient from resolved config. Package-private; use {@link #builder()}.
      */
     SmplClient(ConfigResolver.ResolvedConfig resolvedConfig, Duration timeout,
                Map<String, String> extraHeaders) {
+        this(resolvedConfig, timeout, extraHeaders, HttpClients.http11(timeout), null);
+    }
+
+    /**
+     * Package-private constructor that injects the HTTP transport (and optionally
+     * the app {@link ContextsApi} used for service-context registration). Unit
+     * tests use this and the convenience seams below to drive the client with a
+     * mock transport so no real socket is ever opened.
+     */
+    SmplClient(ConfigResolver.ResolvedConfig resolvedConfig, Duration timeout,
+               Map<String, String> extraHeaders, HttpClient httpClient,
+               ContextsApi injectedContextsApi) {
         this.apiKey = resolvedConfig.apiKey;
         this.environment = resolvedConfig.environment;
         this.service = resolvedConfig.service;
@@ -91,155 +133,164 @@ public final class SmplClient implements AutoCloseable {
         String appBaseUrl = ConfigResolver.serviceUrl(resolvedConfig.scheme, "app", resolvedConfig.baseDomain);
         String loggingBaseUrl = ConfigResolver.serviceUrl(resolvedConfig.scheme, "logging", resolvedConfig.baseDomain);
         String auditBaseUrl = ConfigResolver.serviceUrl(resolvedConfig.scheme, "audit", resolvedConfig.baseDomain);
+        String jobsBaseUrl = ConfigResolver.serviceUrl(resolvedConfig.scheme, "jobs", resolvedConfig.baseDomain);
 
         if (resolvedConfig.debug) {
             Debug.enable();
         }
 
-        this.httpClient = HttpClients.http11(timeout);
+        this.httpClient = httpClient;
         this.metrics = resolvedConfig.disableTelemetry ? null
                 : new MetricsReporter(httpClient, appBaseUrl, apiKey, environment, service);
         this.sharedWs = new SharedWebSocket(httpClient, appBaseUrl, apiKey, metrics);
-        this.contextsApi = buildContextsApi(appBaseUrl, apiKey, extraHeaders, timeout);
 
-        // SmplClient owns its own runtime sub-clients with their own generated
-        // ApiClients. The management client is constructed as an *independent peer*
-        // sharing only the JDK HttpClient and ContextRegistrationBuffer through
-        // a package-private factory — neither owns the other's transports.
+        // Build the per-service HTTP transports + the context-registration
+        // buffer. Side-effect-free: each transport connects lazily on first
+        // call. platform owns the buffer; config/flags/logging borrow their
+        // transports from here.
+        com.smplkit.internal.generated.app.ApiClient appApiClient = buildAppApiClient(appBaseUrl, apiKey, extraHeaders, timeout);
+        this.contextsApi = injectedContextsApi != null ? injectedContextsApi : new ContextsApi(appApiClient);
         ContextRegistrationBuffer contextBuffer = new ContextRegistrationBuffer();
+
+        // Platform's cross-cutting CRUD on one client; wired into this parent
+        // so it borrows the shared app transport, and shares the
+        // context-registration buffer. Built BEFORE flags so the contexts
+        // seam below is available.
+        this.platform = PlatformClient.wired(appApiClient, contextBuffer);
+        // Account-level settings on one client; built from the app url + api
+        // key (the settings sub-client uses HTTP directly).
+        this.account = new AccountClient(apiKey, appBaseUrl, extraHeaders);
+        // Config's full surface on one client; wired into this parent so it
+        // borrows the shared config transport and WebSocket.
         this.config = buildConfigClient(httpClient, apiKey, extraHeaders, timeout, configBaseUrl);
         this.config.setEnvironment(environment);
         this.config.setService(service);
         this.config.setMetrics(metrics);
         this.config.setSharedWs(this.sharedWs);
+        this.config.setEnsureStarted(this::ensureStarted);
+        // Flags' full surface on one client; wired into this parent so it
+        // borrows the shared flags transport and WebSocket. The context
+        // buffer is the seam for evaluation-context registration, shared with
+        // client.platform.contexts.
         this.flags = buildFlagsClient(httpClient, apiKey, extraHeaders, timeout, sharedWs,
                 environment, service, flagsBaseUrl, appBaseUrl);
         this.flags.setMetrics(metrics);
         this.flags.setContextBuffer(contextBuffer);
+        this.flags.setEnsureStarted(this::ensureStarted);
+        // Logging's full surface on one client; the two management sub-clients
+        // live at client.logging.loggers / client.logging.logGroups.
         this.logging = buildLoggingClient(httpClient, apiKey, extraHeaders, timeout, environment,
                 service, loggingBaseUrl);
         this.logging.setMetrics(metrics);
         this.logging.setSharedWs(this.sharedWs);
-        this.audit = new com.smplkit.audit.AuditClient(httpClient, apiKey, extraHeaders, timeout, auditBaseUrl, environment);
+        this.logging.setEnsureStarted(this::ensureStarted);
+        // Audit's full surface on one client; this runtime instance carries
+        // the configured environment as X-Smplkit-Environment and owns its
+        // own transport (closed in close()).
+        this.audit = new AuditClient(httpClient, apiKey, extraHeaders, timeout, auditBaseUrl, environment);
+        // Jobs has no runtime/management split — reuse the shared jobs
+        // transport so client.jobs is one-stop.
+        this.jobs = new JobsClient(apiKey, extraHeaders, timeout, jobsBaseUrl);
 
-        this.manage = SmplManagementClient.sharedWith(
-                new ConfigResolver.ResolvedManagementConfig(
-                        apiKey, resolvedConfig.baseDomain, resolvedConfig.scheme, resolvedConfig.debug),
-                timeout, httpClient, contextBuffer);
-        // Share the runtime + management registration buffer so bind()
-        // declarations are visible to {@code client.manage().config.flush()}.
-        this.config.setManagement(this.manage.config);
+        this.closed = false;
+        this.started = false;
 
         String maskedKey = apiKey.length() > 10 ? apiKey.substring(0, 10) + "..." : apiKey + "...";
         Debug.log("lifecycle", "SmplClient created (api_key=" + maskedKey + ", environment=" + environment + ", service=" + service + ")");
     }
 
     /**
-     * Package-private constructor for testing with a custom HttpClient.
+     * Package-private test seam — builds a client with the default domain/scheme,
+     * telemetry disabled, and the supplied transport injected. Used by unit tests
+     * to exercise the client without opening a real socket.
      */
     SmplClient(HttpClient httpClient, String apiKey, String environment, String service, Duration timeout) {
-        this.apiKey = apiKey;
-        this.environment = environment;
-        this.service = service;
-        this.timeout = timeout;
-        this.httpClient = httpClient;
-        this.metrics = null;
-        String appBaseUrl = serviceUrl(DEFAULT_SCHEME, "app", DEFAULT_BASE_DOMAIN);
-        String configBaseUrl = serviceUrl(DEFAULT_SCHEME, "config", DEFAULT_BASE_DOMAIN);
-        String flagsBaseUrl = serviceUrl(DEFAULT_SCHEME, "flags", DEFAULT_BASE_DOMAIN);
-        String loggingBaseUrl = serviceUrl(DEFAULT_SCHEME, "logging", DEFAULT_BASE_DOMAIN);
-        this.sharedWs = new SharedWebSocket(httpClient, appBaseUrl, apiKey);
-        this.contextsApi = buildContextsApi(appBaseUrl, apiKey, Map.of(), timeout);
-        ContextRegistrationBuffer contextBuffer = new ContextRegistrationBuffer();
-        this.config = buildConfigClient(httpClient, apiKey, Map.of(), timeout, configBaseUrl);
-        this.config.setEnvironment(environment);
-        this.flags = buildFlagsClient(httpClient, apiKey, Map.of(), timeout, sharedWs, environment,
-                service, flagsBaseUrl, appBaseUrl);
-        this.flags.setContextBuffer(contextBuffer);
-        this.logging = buildLoggingClient(httpClient, apiKey, Map.of(), timeout, environment,
-                service, loggingBaseUrl);
-        this.audit = new com.smplkit.audit.AuditClient(httpClient, apiKey, Map.of(), timeout,
-                serviceUrl(DEFAULT_SCHEME, "audit", DEFAULT_BASE_DOMAIN), environment);
-        this.manage = SmplManagementClient.sharedWith(
-                new ConfigResolver.ResolvedManagementConfig(apiKey, DEFAULT_BASE_DOMAIN, DEFAULT_SCHEME, false),
-                timeout, httpClient, contextBuffer);
-        this.config.setManagement(this.manage.config);
+        this(httpClient, apiKey, environment, service, timeout, null);
     }
 
     /**
-     * Package-private constructor for testing with injectable sub-clients.
+     * Package-private test seam — as above, but also injects the app
+     * {@link ContextsApi} so a test can drive service-context registration
+     * against a mock without opening a real socket.
      */
     SmplClient(HttpClient httpClient, String apiKey, String environment, String service,
-               Duration timeout, FlagsClient flags, ConfigClient config) {
-        this.apiKey = apiKey;
-        this.environment = environment;
-        this.service = service;
-        this.timeout = timeout;
-        this.httpClient = httpClient;
-        this.metrics = null;
-        String appBaseUrl = serviceUrl(DEFAULT_SCHEME, "app", DEFAULT_BASE_DOMAIN);
-        String loggingBaseUrl = serviceUrl(DEFAULT_SCHEME, "logging", DEFAULT_BASE_DOMAIN);
-        this.sharedWs = new SharedWebSocket(httpClient, appBaseUrl, apiKey);
-        this.contextsApi = buildContextsApi(appBaseUrl, apiKey, Map.of(), timeout);
-        ContextRegistrationBuffer contextBuffer = new ContextRegistrationBuffer();
-        this.config = config;
-        this.flags = flags;
-        this.flags.setParentService(service);
-        this.flags.setEnvironment(environment);
-        this.flags.setContextBuffer(contextBuffer);
-        this.logging = buildLoggingClient(httpClient, apiKey, Map.of(), timeout, environment,
-                service, loggingBaseUrl);
-        this.audit = new com.smplkit.audit.AuditClient(httpClient, apiKey, Map.of(), timeout,
-                serviceUrl(DEFAULT_SCHEME, "audit", DEFAULT_BASE_DOMAIN), environment);
-        this.manage = SmplManagementClient.sharedWith(
-                new ConfigResolver.ResolvedManagementConfig(apiKey, DEFAULT_BASE_DOMAIN, DEFAULT_SCHEME, false),
-                timeout, httpClient, contextBuffer);
-        this.config.setManagement(this.manage.config);
+               Duration timeout, ContextsApi injectedContextsApi) {
+        this(new ConfigResolver.ResolvedConfig(apiKey, DEFAULT_BASE_DOMAIN, DEFAULT_SCHEME,
+                        environment, service, false, true),
+                timeout, java.util.Collections.emptyMap(), httpClient, injectedContextsApi);
     }
 
     /**
-     * Package-private constructor for testing with injectable sub-clients and contextsApi.
+     * Start the deferred background machinery exactly once.
+     *
+     * <p>Idempotent and thread-safe (lock + flag); a no-op after {@link #close()}.
+     * Triggered by the first config/flags/logging operation, {@link #setContext},
+     * {@link #waitUntilReady}, or WebSocket open — never at construction.</p>
      */
-    SmplClient(HttpClient httpClient, String apiKey, String environment, String service,
-               Duration timeout, FlagsClient flags, ConfigClient config, ContextsApi contextsApi) {
-        this.apiKey = apiKey;
-        this.environment = environment;
-        this.service = service;
-        this.timeout = timeout;
-        this.httpClient = httpClient;
-        this.metrics = null;
-        String appBaseUrl = serviceUrl(DEFAULT_SCHEME, "app", DEFAULT_BASE_DOMAIN);
-        String loggingBaseUrl = serviceUrl(DEFAULT_SCHEME, "logging", DEFAULT_BASE_DOMAIN);
-        this.sharedWs = new SharedWebSocket(httpClient, appBaseUrl, apiKey);
-        this.contextsApi = contextsApi;
-        ContextRegistrationBuffer contextBuffer = new ContextRegistrationBuffer();
-        this.config = config;
-        this.flags = flags;
-        this.flags.setParentService(service);
-        this.flags.setEnvironment(environment);
-        this.flags.setContextBuffer(contextBuffer);
-        this.logging = buildLoggingClient(httpClient, apiKey, Map.of(), timeout, environment,
-                service, loggingBaseUrl);
-        this.manage = SmplManagementClient.sharedWith(
-                new ConfigResolver.ResolvedManagementConfig(apiKey, DEFAULT_BASE_DOMAIN, DEFAULT_SCHEME, false),
-                timeout, httpClient, contextBuffer);
-        this.config.setManagement(this.manage.config);
-
-        // Synchronous registration for testability (contextsApi is injected)
-        registerServiceContext();
+    void ensureStarted() {
+        synchronized (startLock) {
+            if (started || closed) {
+                return;
+            }
+            started = true;
+        }
+        schedulePeriodicFlush();
+        Thread initThread = new Thread(this::registerServiceContext, "smplkit-svc-ctx");
+        initThread.setDaemon(true);
+        initThread.start();
     }
 
+    /** Tick the periodic registration-buffer flush. Self-rescheduling. */
+    private void schedulePeriodicFlush() {
+        this.flushTimer = new Timer("smplkit-periodic-flush", true);
+        flushTimer.schedule(new TimerTask() {
+            @Override
+            public void run() {
+                if (closed) {
+                    return;
+                }
+                try {
+                    platform.contexts.flush();
+                    flags.flush();
+                    logging.loggers.flush();
+                    config.flush();
+                } catch (Exception exc) {
+                    LOG.warning("Periodic registration flush failed: " + exc);
+                    Debug.log("registration", String.valueOf(exc));
+                }
+            }
+        }, PERIODIC_FLUSH_INTERVAL_MS, PERIODIC_FLUSH_INTERVAL_MS);
+    }
+
+    /** Drain every registration buffer one last time on close. */
+    private void finalFlush() {
+        try { platform.contexts.flush(); } catch (Exception e) { Debug.log("registration", String.valueOf(e)); }
+        try { flags.flush(); } catch (Exception e) { Debug.log("registration", String.valueOf(e)); }
+        try { logging.loggers.flush(); } catch (Exception e) { Debug.log("registration", String.valueOf(e)); }
+        try { config.flush(); } catch (Exception e) { Debug.log("registration", String.valueOf(e)); }
+    }
+
+    /**
+     * Register the environment and/or service as context instances.
+     *
+     * <p>Only the values that are set are registered; if neither environment
+     * nor service was provided the POST is skipped entirely (an audit/jobs-only
+     * customer has nothing to register).</p>
+     */
     private void registerServiceContext() {
         try {
-            ContextBulkItem envItem = new ContextBulkItem()
-                    .type("environment")
-                    .key(environment);
-            ContextBulkItem svcItem = new ContextBulkItem()
-                    .type("service")
-                    .key(service)
-                    .attributes(Map.of("name", service));
-            ContextBulkRegister reqBody = new ContextBulkRegister()
-                    .contexts(List.of(envItem, svcItem));
+            List<ContextBulkItem> items = new ArrayList<>();
+            if (environment != null) {
+                items.add(new ContextBulkItem().type("environment").key(environment));
+            }
+            if (service != null) {
+                items.add(new ContextBulkItem().type("service").key(service)
+                        .attributes(Map.of("name", service)));
+            }
+            if (items.isEmpty()) {
+                return;
+            }
+            ContextBulkRegister reqBody = new ContextBulkRegister().contexts(items);
             contextsApi.bulkRegisterContexts(reqBody);
         } catch (Exception e) {
             LOG.warning("Failed to register service context: " + e.getMessage());
@@ -253,7 +304,7 @@ public final class SmplClient implements AutoCloseable {
         ApiClient apiClient = new ApiClient();
         apiClient.setHttpClientBuilder(HttpClients.builder());
         apiClient.updateBaseUri(configBaseUrl);
-        apiClient.setRequestInterceptor(compositeInterceptor(apiKey, extraHeaders));
+        apiClient.setRequestInterceptor(HttpClients.compositeInterceptor(apiKey, extraHeaders));
         apiClient.setReadTimeout(timeout);
         ConfigsApi configsApi = new ConfigsApi(apiClient);
         return new ConfigClient(configsApi, httpClient, apiKey);
@@ -268,17 +319,11 @@ public final class SmplClient implements AutoCloseable {
                 new com.smplkit.internal.generated.flags.ApiClient();
         flagsApiClient.setHttpClientBuilder(HttpClients.builder());
         flagsApiClient.updateBaseUri(flagsBaseUrl);
-        flagsApiClient.setRequestInterceptor(compositeInterceptor(apiKey, extraHeaders));
+        flagsApiClient.setRequestInterceptor(HttpClients.compositeInterceptor(apiKey, extraHeaders));
         flagsApiClient.setReadTimeout(timeout);
         FlagsApi flagsApi = new FlagsApi(flagsApiClient);
 
-        com.smplkit.internal.generated.app.ApiClient appApiClient =
-                new com.smplkit.internal.generated.app.ApiClient();
-        appApiClient.setHttpClientBuilder(HttpClients.builder());
-        appApiClient.updateBaseUri(appBaseUrl);
-        appApiClient.setRequestInterceptor(compositeInterceptor(apiKey, extraHeaders));
-        appApiClient.setReadTimeout(timeout);
-        ContextsApi contextsApi = new ContextsApi(appApiClient);
+        ContextsApi contextsApi = new ContextsApi(buildAppApiClient(appBaseUrl, apiKey, extraHeaders, timeout));
 
         FlagsClient client = new FlagsClient(flagsApi, contextsApi,
                 httpClient, apiKey, flagsBaseUrl, appBaseUrl, timeout);
@@ -288,38 +333,15 @@ public final class SmplClient implements AutoCloseable {
         return client;
     }
 
-    private static ContextsApi buildContextsApi(String baseUrl, String apiKey,
-                                                 Map<String, String> extraHeaders, Duration timeout) {
+    private static com.smplkit.internal.generated.app.ApiClient buildAppApiClient(
+            String baseUrl, String apiKey, Map<String, String> extraHeaders, Duration timeout) {
         com.smplkit.internal.generated.app.ApiClient appApiClient =
                 new com.smplkit.internal.generated.app.ApiClient();
         appApiClient.setHttpClientBuilder(HttpClients.builder());
         appApiClient.updateBaseUri(baseUrl);
-        appApiClient.setRequestInterceptor(compositeInterceptor(apiKey, extraHeaders));
+        appApiClient.setRequestInterceptor(HttpClients.compositeInterceptor(apiKey, extraHeaders));
         appApiClient.setReadTimeout(timeout);
-        return new ContextsApi(appApiClient);
-    }
-
-    /**
-     * Builds a request interceptor that sets extra headers (excluding SDK-managed ones),
-     * then always sets the Authorization header. SDK headers win on collision.
-     */
-    public static Consumer<HttpRequest.Builder> compositeInterceptor(String apiKey,
-                                                               Map<String, String> extraHeaders) {
-        return builder -> {
-            if (extraHeaders != null) {
-                extraHeaders.forEach((k, v) -> {
-                    if (!SDK_MANAGED_HEADERS.contains(k.toLowerCase(Locale.ROOT))) {
-                        builder.header(k, v);
-                    }
-                });
-            }
-            builder.header("Authorization", "Bearer " + apiKey);
-        };
-    }
-
-    /** Builds the auth-only interceptor (no extra headers). */
-    static Consumer<HttpRequest.Builder> authInterceptor(String apiKey) {
-        return builder -> builder.header("Authorization", "Bearer " + apiKey);
+        return appApiClient;
     }
 
     private static LoggingClient buildLoggingClient(HttpClient httpClient, String apiKey,
@@ -330,7 +352,7 @@ public final class SmplClient implements AutoCloseable {
                 new com.smplkit.internal.generated.logging.ApiClient();
         loggingApiClient.setHttpClientBuilder(HttpClients.builder());
         loggingApiClient.updateBaseUri(loggingBaseUrl);
-        loggingApiClient.setRequestInterceptor(compositeInterceptor(apiKey, extraHeaders));
+        loggingApiClient.setRequestInterceptor(HttpClients.compositeInterceptor(apiKey, extraHeaders));
         loggingApiClient.setReadTimeout(timeout);
         LoggersApi loggersApi = new LoggersApi(loggingApiClient);
         LogGroupsApi logGroupsApi = new LogGroupsApi(loggingApiClient);
@@ -340,73 +362,31 @@ public final class SmplClient implements AutoCloseable {
         return client;
     }
 
-    /** Returns the config client. */
-    public ConfigClient config() {
-        ensureServiceContextRegistered();
-        return config;
-    }
-
-    /** Returns the flags client. */
-    public FlagsClient flags() {
-        ensureServiceContextRegistered();
-        return flags;
-    }
-
-    /** Returns the logging client. */
-    public LoggingClient logging() {
-        ensureServiceContextRegistered();
-        return logging;
-    }
-
-    /**
-     * Returns the audit client (ADR-047). Use
-     * {@code client.audit().events().create(...)} to record an event;
-     * the call is fire-and-forget and returns immediately while a
-     * background worker thread issues the POST and retries transient
-     * failures.
-     */
-    public com.smplkit.audit.AuditClient audit() {
-        ensureServiceContextRegistered();
-        return audit;
-    }
-
-    /**
-     * Returns the management client.
-     *
-     * <p>Mirrors Python's {@code client.manage}: a strict-CRUD entry point with
-     * the eight namespaces (contexts, context_types, environments,
-     * account_settings, config, flags, loggers, log_groups). Construction has
-     * zero side effects.</p>
-     */
-    public SmplManagementClient manage() {
-        return manage;
-    }
-
     /** Default deadline for {@link #waitUntilReady(Duration)}. */
     private static final Duration DEFAULT_WAIT_UNTIL_READY = Duration.ofSeconds(10);
 
     /**
-     * Eagerly opens the live-updates WebSocket and blocks until the server
-     * has accepted the upgrade, validated the API key, and registered the
-     * subscription. After this returns, on-change listeners are guaranteed
-     * to receive every server event from this point forward — including
-     * events triggered by writes the caller fires immediately afterward.
+     * Optionally pre-warm the SDK and block until the live socket is up.
      *
-     * <p>Without this, code that constructs a SmplClient and immediately
-     * calls a management write (Save / Delete / SetX+Save) can race the
-     * broadcast of the resulting change event and silently miss it: the
-     * SDK has not yet appeared in the server's subscriber registry when
-     * the broadcast runs, so the broadcast goes to zero subscribers.</p>
+     * <p>Eagerly opens the live-updates WebSocket and waits for the handshake
+     * to complete. After this returns, any {@code onChange} listeners receive
+     * every server event from this point forward — including events triggered
+     * by writes the caller fires immediately afterward.</p>
      *
-     * <p>Mirrors Python's {@code client.wait_until_ready()} and TypeScript's
-     * {@code client.waitUntilReady()}.</p>
+     * <p>Optional: config and flags connect lazily on first live use, so this
+     * is purely a pre-warm / WebSocket-ready barrier. Logging integration is
+     * <em>not</em> connected here — call {@code client.logging.install()}
+     * separately if you want it (it installs adapters and hooks into your
+     * application's logger, which should be opt-in).</p>
      *
-     * @throws com.smplkit.errors.TimeoutError If the WebSocket fails to
-     *     connect within the given timeout.
-     * @throws InterruptedException If the calling thread is interrupted.
+     * @param timeout the maximum time to wait for the live-updates WebSocket
+     *     handshake before giving up
+     * @throws com.smplkit.errors.TimeoutError if the WebSocket fails to
+     *     connect within {@code timeout}
+     * @throws InterruptedException if the calling thread is interrupted while waiting
      */
     public void waitUntilReady(Duration timeout) throws InterruptedException {
-        sharedWs.start();
+        ensureWs();
         long deadlineNanos = System.nanoTime() + timeout.toNanos();
         while (!"connected".equals(sharedWs.connectionStatus())) {
             if (System.nanoTime() >= deadlineNanos) {
@@ -419,9 +399,24 @@ public final class SmplClient implements AutoCloseable {
         }
     }
 
-    /** Equivalent to {@code waitUntilReady(Duration.ofSeconds(10))}. */
+    /**
+     * Pre-warms the SDK and blocks until the live socket is up, using the
+     * default 10-second timeout. Equivalent to
+     * {@code waitUntilReady(Duration.ofSeconds(10))}.
+     *
+     * @throws com.smplkit.errors.TimeoutError if the WebSocket fails to
+     *     connect within the default timeout
+     * @throws InterruptedException if the calling thread is interrupted while waiting
+     */
     public void waitUntilReady() throws InterruptedException {
         waitUntilReady(DEFAULT_WAIT_UNTIL_READY);
+    }
+
+    /** Lazily start the deferred machinery and the shared WebSocket. */
+    private SharedWebSocket ensureWs() {
+        ensureStarted();
+        sharedWs.start();
+        return sharedWs;
     }
 
     /** Test-only accessor for the shared WebSocket. Used to flip status
@@ -430,63 +425,88 @@ public final class SmplClient implements AutoCloseable {
         return sharedWs;
     }
 
-    private void ensureServiceContextRegistered() {
-        if (serviceContextRegistered) return;
-        serviceContextRegistered = true;
-        Thread bgThread = new Thread(this::registerServiceContext, "smplkit-svc-ctx");
-        bgThread.setDaemon(true);
-        bgThread.start();
-    }
-
-    /** Returns the configured environment. */
+    /**
+     * Returns the configured environment.
+     *
+     * @return the environment this client connects to (e.g. {@code "production"}),
+     *     or {@code null} if none was resolved
+     */
     public String environment() {
         return environment;
     }
 
-    /** Returns the configured service name. */
+    /**
+     * Returns the configured service name.
+     *
+     * @return the service name this client identifies as (e.g.
+     *     {@code "user-service"}), or {@code null} if none was resolved
+     */
     public String service() {
         return service;
     }
 
     /** Per-thread evaluation context, mirrors Python's contextvars-backed implementation. */
-    private static final ThreadLocal<java.util.List<Context>> CURRENT_CONTEXT =
+    private static final ThreadLocal<List<Context>> CURRENT_CONTEXT =
             ThreadLocal.withInitial(java.util.Collections::emptyList);
 
     /**
-     * Stash {@code contexts} as the current thread's evaluation context.
+     * Stash {@code contexts} as the current request's evaluation context.
      *
-     * <p>Mirrors Python's {@code client.set_context([...])}: typical use is from
-     * middleware — set the context once at request entry and every subsequent
-     * {@code flag.get()} on the same thread automatically picks it up. Each
-     * unique {@code (type, key)} is also queued for bulk registration.</p>
+     * <p>Typical use is from middleware — set the context once at request entry
+     * and every {@code flag.get()} (and other context-sensitive evaluations)
+     * inside that request automatically picks it up. {@link ThreadLocal}
+     * provides per-thread isolation so concurrent requests don't
+     * cross-contaminate.</p>
      *
-     * <p>Note: pure-Python uses {@code contextvars} for per-task isolation;
-     * Java uses {@code ThreadLocal} since {@code CompletableFuture}-based
-     * workflows reuse threads. For per-async-task isolation you may need an
-     * explicit context wrapper — out of scope for the initial mirror.</p>
+     * <p>Each unique {@code (type, key)} is also registered with the platform,
+     * deduplicated via an LRU and sent in the background. An empty list clears
+     * any registration step.</p>
+     *
+     * @param contexts the contexts to make active for the current thread (e.g.
+     *     the request's user and account); an empty list clears any
+     *     registration step
      */
-    public void setContext(java.util.List<Context> contexts) {
+    public void setContext(List<Context> contexts) {
+        ensureStarted();
         if (contexts != null && !contexts.isEmpty()) {
-            manage.contexts.register(contexts);
+            platform.contexts.register(contexts);
         }
         CURRENT_CONTEXT.set(contexts != null ? contexts : java.util.Collections.emptyList());
         flags.setContextProvider(CURRENT_CONTEXT::get);
     }
 
-    /** Clears the current thread's evaluation context. */
+    /** Clears the current thread's evaluation context, so subsequent
+     * evaluations on this thread carry no context until the next
+     * {@link #setContext}. */
     public void clearContext() {
         CURRENT_CONTEXT.remove();
     }
 
     /**
-     * Creates a new {@link SmplClient} with automatic resolution.
+     * Creates a new {@link SmplClient}, resolving all settings from the
+     * {@code ~/.smplkit} configuration file and {@code SMPLKIT_*} environment
+     * variables.
+     *
+     * @return a new client
+     * @throws com.smplkit.errors.SmplError if the environment, service, or API
+     *     key cannot be resolved
      */
     public static SmplClient create() {
         return builder().build();
     }
 
     /**
-     * Creates a new {@link SmplClient} with the given API key, environment, and service.
+     * Creates a new {@link SmplClient} with the given API key, environment, and
+     * service. Any setting left {@code null} is resolved from the
+     * {@code ~/.smplkit} configuration file and {@code SMPLKIT_*} environment
+     * variables.
+     *
+     * @param apiKey the API key for authenticating with the smplkit platform
+     * @param environment the environment to connect to (e.g. {@code "production"})
+     * @param service the service name (e.g. {@code "user-service"})
+     * @return a new client
+     * @throws com.smplkit.errors.SmplError if the environment, service, or API
+     *     key cannot be resolved
      */
     public static SmplClient create(String apiKey, String environment, String service) {
         return builder().apiKey(apiKey).environment(environment).service(service).build();
@@ -494,26 +514,30 @@ public final class SmplClient implements AutoCloseable {
 
     /**
      * Returns a new builder for constructing {@link SmplClient} instances.
+     *
+     * @return a new builder
      */
     public static SmplClientBuilder builder() {
         return new SmplClientBuilder();
     }
 
-    /**
-     * Releases all resources held by this client.
-     */
+    /** Releases all resources held by this client. */
     @Override
     public void close() {
         Debug.log("lifecycle", "SmplClient.close() called");
-        if (audit != null) {
-            audit.close();
+        closed = true;
+        if (flushTimer != null) {
+            flushTimer.cancel();
+            flushTimer = null;
         }
-        if (logging != null) {
-            logging.close();
-        }
-        sharedWs.close();
+        finalFlush();
         if (metrics != null) {
             metrics.close();
         }
+        logging.close();
+        flags.close();
+        audit.close();
+        config.close();
+        sharedWs.close();
     }
 }

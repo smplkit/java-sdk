@@ -207,9 +207,8 @@ class AuditClientTest {
     }
 
     @Test
-    void create_withSeverityAndCategory_serializesBothFields() throws Exception {
+    void create_withCategory_serializesField() throws Exception {
         CreateEventInput input = new CreateEventInput("user.created", "user", "u-1");
-        input.severity = "WARN";
         input.category = "auth";
         client.events().record(input);
         client.events().flush(2_000);

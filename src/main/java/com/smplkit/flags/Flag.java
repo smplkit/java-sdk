@@ -9,10 +9,14 @@ import java.util.List;
 import java.util.Map;
 
 /**
- * A feature flag with a typed value.
+ * A flag resource — unified runtime handle and management active record.
  *
- * <p>Use {@link #get()} to evaluate the flag. Use {@link #save()} to persist
- * changes to the server.</p>
+ * <p>Provides management operations (save, addRule, environment settings)
+ * and runtime evaluation via {@link #get}.</p>
+ *
+ * <p>The type parameter pins the {@link #get} return value (Boolean, String,
+ * Number, Object) the same way Python's typed variants (BooleanFlag,
+ * StringFlag, NumberFlag, JsonFlag) constrain {@code .get()}.</p>
  *
  * @param <T> the flag value type (Boolean, String, Number, Object)
  */
@@ -74,14 +78,13 @@ public final class Flag<T> {
     public Instant getCreatedAt() { return createdAt; }
     public Instant getUpdatedAt() { return updatedAt; }
 
-    // --- Typed accessors (mirror Python rule 8) ---
+    // --- Typed read-only views ---
 
     /**
-     * Returns a typed, immutable per-environment view.
+     * Read-only view of per-environment configuration.
      *
-     * <p>{@code flag.environments().get("production").enabled()},
-     * {@code flag.environments().get("production").rules()}, etc. Mirrors
-     * Python's {@code flag.environments["production"].enabled}.</p>
+     * <p>Mutate via {@link #addRule} / {@link #enableRules} / {@link #disableRules} /
+     * {@link #setDefault} (with an {@code environment}) / {@link #clearRules}.</p>
      */
     @SuppressWarnings("unchecked")
     public Map<String, FlagEnvironment> environments() {
@@ -110,9 +113,10 @@ public final class Flag<T> {
     }
 
     /**
-     * Returns the constrained-values list as typed {@link FlagValue} records,
-     * or {@code null} if the flag is unconstrained. Mirrors Python's
-     * {@code flag.values}.
+     * Read-only view of constrained values.
+     *
+     * <p>{@code null} means unconstrained. Mutate via {@link #addValue} /
+     * {@link #removeValue} / {@link #clearValues}.</p>
      */
     public List<FlagValue> values() {
         if (values == null) return null;
@@ -150,14 +154,26 @@ public final class Flag<T> {
     // ------------------------------------------------------------------
 
     /**
-     * Returns the current value of this flag.
+     * Evaluate this flag and return its current value.
+     *
+     * <p>Uses the ambient request context (if any). When no context is set, evaluates
+     * without context.</p>
+     *
+     * @return the evaluated flag value, or this flag's default when no environment
+     *         override or rule applies
      */
     public T get() {
         return get((List<Context>) null);
     }
 
     /**
-     * Returns the current value of this flag, evaluated against the given contexts.
+     * Evaluate this flag against the given contexts and return its current value.
+     *
+     * @param contexts optional list of {@link Context} entities to evaluate targeting
+     *                 rules against; when {@code null}, the ambient request context (if
+     *                 any) is used
+     * @return the evaluated flag value, or this flag's default when no environment
+     *         override or rule applies
      */
     @SuppressWarnings("unchecked")
     public T get(List<Context> contexts) {
@@ -191,13 +207,14 @@ public final class Flag<T> {
     // ------------------------------------------------------------------
 
     /**
-     * Persists this flag to the server.
+     * Persist this flag to the server.
      *
-     * <p>After a successful save, this instance is refreshed with the
-     * server response.</p>
+     * <p>Creates a new flag if unsaved, or updates the existing one.
+     * Requires a flags client (i.e. the flag was constructed via
+     * {@code client.flags().new*} or returned from {@code client.flags().get}/{@code list}).</p>
      */
     public void save() {
-        if (client == null) throw new IllegalStateException("Flag not bound to a client");
+        if (client == null) throw new IllegalStateException("Flag was constructed without a client; cannot save");
         if (createdAt == null) {
             Flag<T> created = client._createFlag(this);
             _apply(created);
@@ -207,28 +224,54 @@ public final class Flag<T> {
         }
     }
 
-    /** Async variant of {@link #save()} (rule 12). */
+    /**
+     * Async variant of {@link #save()}, running on the common pool.
+     *
+     * @return a future that completes when the flag has been persisted, or completes
+     *         exceptionally if the save fails
+     */
     public java.util.concurrent.CompletableFuture<Void> saveAsync() {
         return saveAsync(java.util.concurrent.ForkJoinPool.commonPool());
     }
 
-    /** Async variant of {@link #save()} with a custom executor. */
+    /**
+     * Async variant of {@link #save()} with a custom executor.
+     *
+     * @param executor the executor on which to run the blocking save
+     * @return a future that completes when the flag has been persisted, or completes
+     *         exceptionally if the save fails
+     */
     public java.util.concurrent.CompletableFuture<Void> saveAsync(java.util.concurrent.Executor executor) {
         return java.util.concurrent.CompletableFuture.runAsync(this::save, executor);
     }
 
-    /**
-     * Deletes this flag from the server.
-     *
-     * <p>Mirrors Python's {@code flag.delete()}: delegates to
-     * {@code mgmt.flags.delete(id)}. Bubbles {@link com.smplkit.errors.NotFoundError}
-     * if the flag is not on the server.</p>
-     *
-     * @throws IllegalStateException if not bound to a client
-     */
+    /** Delete this flag from the server. */
     public void delete() {
-        if (client == null) throw new IllegalStateException("Flag not bound to a client");
-        client.management().delete(id);
+        if (client == null || id == null) {
+            throw new IllegalStateException("Flag was constructed without a client or id; cannot delete");
+        }
+        client.delete(id);
+    }
+
+    /**
+     * Async variant of {@link #delete()}, running on the common pool.
+     *
+     * @return a future that completes when the flag has been deleted, or completes
+     *         exceptionally if the delete fails
+     */
+    public java.util.concurrent.CompletableFuture<Void> deleteAsync() {
+        return deleteAsync(java.util.concurrent.ForkJoinPool.commonPool());
+    }
+
+    /**
+     * Async variant of {@link #delete()} with a custom executor.
+     *
+     * @param executor the executor on which to run the blocking delete
+     * @return a future that completes when the flag has been deleted, or completes
+     *         exceptionally if the delete fails
+     */
+    public java.util.concurrent.CompletableFuture<Void> deleteAsync(java.util.concurrent.Executor executor) {
+        return java.util.concurrent.CompletableFuture.runAsync(this::delete, executor);
     }
 
     // ------------------------------------------------------------------
@@ -236,9 +279,10 @@ public final class Flag<T> {
     // ------------------------------------------------------------------
 
     /**
-     * Appends a rule to a specific environment. Call {@link #save()} to persist.
+     * Append a rule to a specific environment.
      *
-     * <p>The built rule must include an "environment" key.</p>
+     * <p>The {@code builtRule} map must include an {@code "environment"} key.
+     * Call {@link #save()} to persist.</p>
      *
      * @return this for chaining
      */
@@ -248,7 +292,7 @@ public final class Flag<T> {
         if (envKey == null) {
             throw new IllegalArgumentException(
                     "Built rule must include 'environment' key. "
-                    + "Use Rule(...).environment(\"env_key\").when(...).serve(...).build()");
+                    + "Use Rule(..., environment=\"env_key\").when(...).serve(...)");
         }
         Map<String, Object> ruleCopy = new HashMap<>(builtRule);
         ruleCopy.remove("environment");
@@ -262,49 +306,59 @@ public final class Flag<T> {
     }
 
     /**
-     * Sets whether the flag is enabled in the given environment.
+     * Enable rule evaluation in every environment configured on this flag.
      * Call {@link #save()} to persist.
      */
-    @SuppressWarnings("unchecked")
-    public void setEnvironmentEnabled(String envKey, boolean enabled) {
-        Map<String, Object> envData = (Map<String, Object>) environments.computeIfAbsent(
-                envKey, k -> new HashMap<>());
-        envData.put("enabled", enabled);
+    public void enableRules() { enableRules(null); }
+
+    /**
+     * Enable rule evaluation. Call {@link #save()} to persist.
+     *
+     * <p>With an {@code environment} scopes to that single environment; with
+     * {@code null}, enables rules in every environment configured on this flag.</p>
+     */
+    public void enableRules(String environment) {
+        if (environment == null) {
+            for (String envKey : new ArrayList<>(environments.keySet())) {
+                setEnvironmentEnabled(envKey, true);
+            }
+        } else {
+            setEnvironmentEnabled(environment, true);
+        }
     }
 
     /**
-     * Sets the environment-specific default value.
-     * Call {@link #save()} to persist.
+     * Disable rule evaluation (kill switch) in every environment configured on
+     * this flag. Call {@link #save()} to persist.
      */
-    @SuppressWarnings("unchecked")
-    public void setEnvironmentDefault(String envKey, Object defaultVal) {
-        Map<String, Object> envData = (Map<String, Object>) environments.computeIfAbsent(
-                envKey, k -> new HashMap<>());
-        envData.put("default", defaultVal);
+    public void disableRules() { disableRules(null); }
+
+    /**
+     * Disable rule evaluation (kill switch). Call {@link #save()} to persist.
+     *
+     * <p>With an {@code environment} scopes to that single environment; with
+     * {@code null}, disables rules in every environment configured on this flag.
+     * When disabled, {@link #get} skips rules and returns the env-specific default
+     * (or the flag's base default).</p>
+     */
+    public void disableRules(String environment) {
+        if (environment == null) {
+            for (String envKey : new ArrayList<>(environments.keySet())) {
+                setEnvironmentEnabled(envKey, false);
+            }
+        } else {
+            setEnvironmentEnabled(environment, false);
+        }
     }
 
     /**
-     * Removes all rules from the given environment.
-     * Call {@link #save()} to persist.
-     */
-    @SuppressWarnings("unchecked")
-    public void clearRules(String envKey) {
-        Map<String, Object> envData = (Map<String, Object>) environments.computeIfAbsent(
-                envKey, k -> new HashMap<>());
-        envData.put("rules", new ArrayList<>());
-    }
-
-    // --- Per-env unified methods (mirror Python's enable_rules / disable_rules / clear_default) ---
-
-    /** Enables rules in a specific environment. */
-    public void enableRules(String envKey) { setEnvironmentEnabled(envKey, true); }
-
-    /** Disables rules in a specific environment. */
-    public void disableRules(String envKey) { setEnvironmentEnabled(envKey, false); }
-
-    /**
-     * Sets the default value for a specific environment.
-     * {@code environment=null} sets the flag-level default (not env-scoped).
+     * Set the flag's default served value.
+     *
+     * <p>With {@code environment=null} (the default), updates the flag-level default
+     * used when no environment-specific override applies. With an {@code environment},
+     * sets the per-environment default served when no rule matches.</p>
+     *
+     * <p>Call {@link #save()} to persist.</p>
      */
     public void setDefault(T value, String environment) {
         if (environment == null) {
@@ -314,29 +368,89 @@ public final class Flag<T> {
         }
     }
 
-    /** Removes the per-environment default override (does not change the flag-level default). */
+    /**
+     * Clear the per-environment default override on {@code environment}.
+     *
+     * <p>After clearing, the environment falls back to the flag's base default
+     * when no rule matches. Call {@link #save()} to persist.</p>
+     */
     @SuppressWarnings("unchecked")
-    public void clearDefault(String envKey) {
-        Map<String, Object> envData = (Map<String, Object>) environments.get(envKey);
+    public void clearDefault(String environment) {
+        Map<String, Object> envData = (Map<String, Object>) environments.get(environment);
         if (envData != null) envData.remove("default");
     }
 
-    /** Appends a value to the constrained-values list. */
+    /**
+     * Remove rules from every environment configured on this flag.
+     * Call {@link #save()} to persist.
+     */
+    public void clearRules() { clearRules(null); }
+
+    /**
+     * Remove rules. Call {@link #save()} to persist.
+     *
+     * <p>With an {@code environment} scopes to that single environment; with
+     * {@code null}, removes rules from every environment configured on this flag.</p>
+     */
+    @SuppressWarnings("unchecked")
+    public void clearRules(String environment) {
+        if (environment == null) {
+            for (String envKey : new ArrayList<>(environments.keySet())) {
+                // Keys come straight from the map, so the entry always exists.
+                Map<String, Object> envData = (Map<String, Object>) environments.get(envKey);
+                envData.put("rules", new ArrayList<>());
+            }
+        } else {
+            Map<String, Object> envData = (Map<String, Object>) environments.computeIfAbsent(
+                    environment, k -> new HashMap<>());
+            envData.put("rules", new ArrayList<>());
+        }
+    }
+
+    /**
+     * Append a constrained value to the flag's values list.
+     *
+     * @param name  human-readable label for the value entry
+     * @param value the value to allow the flag to serve
+     * @return this flag, so calls can be chained
+     */
     public Flag<T> addValue(String name, Object value) {
         if (values == null) values = new ArrayList<>();
         values.add(Map.of("name", name, "value", value));
         return this;
     }
 
-    /** Removes the first value entry whose {@code value} matches. */
+    /**
+     * Remove the first values entry whose {@code value} field matches.
+     *
+     * @param value the value to remove; entries are matched on their {@code value} field,
+     *              and the first match is removed while others are left in place
+     * @return this flag, so calls can be chained
+     */
     public Flag<T> removeValue(Object value) {
         if (values == null) return this;
         values.removeIf(v -> java.util.Objects.equals(v.get("value"), value));
         return this;
     }
 
-    /** Clears all constrained values (the flag becomes unconstrained). */
+    /** Set values to {@code null} (unconstrained). Call {@link #save()} to persist. */
     public void clearValues() { this.values = null; }
+
+    // --- Private per-env helpers backing the public mutators ---
+
+    @SuppressWarnings("unchecked")
+    private void setEnvironmentEnabled(String envKey, boolean enabled) {
+        Map<String, Object> envData = (Map<String, Object>) environments.computeIfAbsent(
+                envKey, k -> new HashMap<>());
+        envData.put("enabled", enabled);
+    }
+
+    @SuppressWarnings("unchecked")
+    private void setEnvironmentDefault(String envKey, Object defaultVal) {
+        Map<String, Object> envData = (Map<String, Object>) environments.computeIfAbsent(
+                envKey, k -> new HashMap<>());
+        envData.put("default", defaultVal);
+    }
 
     // ------------------------------------------------------------------
     // Internal

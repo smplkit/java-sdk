@@ -7,15 +7,18 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.Executor;
+import java.util.concurrent.ForkJoinPool;
 
 /**
- * A mutable logger resource from the Smpl Logging service.
+ * SDK model for a logger resource.
  *
- * <p>Modify properties, then call {@link #save()} to persist changes.</p>
+ * <p>Modify properties locally, then call {@link #save} to persist.</p>
  */
 public final class Logger {
 
-    private LoggingClient client;
+    private LoggersClient client;
     private String id;
     private String name;
     private String level;
@@ -26,7 +29,7 @@ public final class Logger {
     private Instant createdAt;
     private Instant updatedAt;
 
-    Logger(LoggingClient client, String id, String name,
+    Logger(LoggersClient client, String id, String name,
            String level, String group, boolean managed,
            List<Map<String, Object>> sources, Map<String, Object> environments,
            Instant createdAt, Instant updatedAt) {
@@ -44,90 +47,143 @@ public final class Logger {
 
     // --- Public getters ---
 
+    /** @return the logger's identifier (its normalized name), or null when unsaved. */
     public String getId() { return id; }
+
+    /** @return the logger's display name. */
     public String getName() { return name; }
+
+    /** @return the base log level, or null when inherited. */
     public String getLevel() { return level; }
+
+    /** @return the id of the parent log group, or null when not grouped. */
     public String getGroup() { return group; }
+
+    /** @return whether smplkit controls this logger's level at runtime. */
     public boolean isManaged() { return managed; }
+
+    /** @return the discovery sources that reported this logger. */
     public List<Map<String, Object>> getSources() { return sources; }
 
-    /**
-     * @deprecated use {@link #environments()} for the typed view. The raw-Map
-     * accessor is kept for one cycle for compatibility and will be removed in
-     * a follow-up.
-     */
-    @Deprecated
-    public Map<String, Object> getEnvironments() { return environments; }
+    /** @return when this logger was created on the server, or null when unsaved. */
     public Instant getCreatedAt() { return createdAt; }
+
+    /** @return when this logger was last updated on the server, or null when unsaved. */
     public Instant getUpdatedAt() { return updatedAt; }
 
-    // --- Typed accessor (mirror Python rule 8) ---
+    /** Raw per-environment map. Internal — use {@link #environments()} for the typed view. */
+    Map<String, Object> getEnvironments() { return environments; }
 
     /**
-     * Returns a typed, immutable per-environment view.
+     * Read-only view of per-environment level overrides.
      *
-     * <p>{@code logger.environments().get("production").level()} returns a
-     * typed {@link com.smplkit.LogLevel} (or null), not a raw string.
-     * Mirrors Python's {@code logger.environments["production"].level}.</p>
+     * <p>Mutate via {@link #setLevel} / {@link #clearLevel} /
+     * {@link #clearAllEnvironmentLevels} (with an {@code environment} argument).</p>
      */
     @SuppressWarnings("unchecked")
     public Map<String, LoggerEnvironment> environments() {
         Map<String, LoggerEnvironment> out = new HashMap<>();
         for (Map.Entry<String, Object> e : environments.entrySet()) {
-            if (!(e.getValue() instanceof Map)) continue;
+            if (!(e.getValue() instanceof Map)) {
+                continue;
+            }
             Map<String, Object> envMap = (Map<String, Object>) e.getValue();
             Object levelStr = envMap.get("level");
-            com.smplkit.LogLevel level = null;
+            LogLevel lvl = null;
             if (levelStr instanceof String s) {
-                try { level = com.smplkit.LogLevel.valueOf(s); }
-                catch (IllegalArgumentException ignored) { /* unknown level; leave null */ }
+                try {
+                    lvl = LogLevel.valueOf(s);
+                } catch (IllegalArgumentException ignored) {
+                    /* unknown level; leave null */
+                }
             }
-            out.put(e.getKey(), new LoggerEnvironment(level));
+            out.put(e.getKey(), new LoggerEnvironment(lvl));
         }
         return Map.copyOf(out);
     }
 
     // --- Public setters for mutable fields ---
 
+    /**
+     * Set the logger's display name. Local until {@link #save()}.
+     *
+     * @param name the display name
+     */
     public void setName(String name) { this.name = name; }
+
+    /**
+     * Set the id of the parent log group, or null to remove it from a group.
+     * Local until {@link #save()}.
+     *
+     * @param group the parent log-group id, or null
+     */
     public void setGroup(String group) { this.group = group; }
+
+    /**
+     * Set whether smplkit controls this logger's level at runtime. Local until
+     * {@link #save()}.
+     *
+     * @param managed {@code true} to let smplkit manage the level
+     */
     public void setManaged(boolean managed) { this.managed = managed; }
-    public void setEnvironments(Map<String, Object> environments) {
-        this.environments = environments != null ? new HashMap<>(environments) : new HashMap<>();
-    }
 
-    // --- Level convenience methods (per-env unified, mirrors Python rule 7) ---
+    // --- Level convenience methods ---
 
-    /** Set the base log level. */
+    /**
+     * Set the log level.
+     *
+     * <p>Sets the base log level used when no environment-specific override
+     * applies.</p>
+     */
     public void setLevel(LogLevel level) {
         setLevel(level, null);
     }
 
     /**
-     * Set the log level. {@code environment=null} sets the base level; otherwise
-     * sets the per-environment override.
+     * Set the log level.
      *
-     * <p>Mirrors Python's {@code logger.set_level(level, environment=None)}.</p>
+     * <p>With {@code environment=null} (the default), sets the base log level used
+     * when no environment-specific override applies.  With an {@code environment},
+     * sets the per-environment override.</p>
+     *
+     * <p>Changes are local until you call {@link #save()}.</p>
+     *
+     * @param level       the log level to apply
+     * @param environment when given, set the override for that environment only;
+     *     when null, set the base level
      */
     public void setLevel(LogLevel level, String environment) {
         if (environment == null) {
             this.level = level != null ? level.getValue() : null;
         } else {
-            this.environments.put(environment,
-                    Map.of("level", level != null ? level.getValue() : null));
+            Map<String, Object> override = new java.util.HashMap<>();
+            override.put("level", level != null ? level.getValue() : null);
+            this.environments.put(environment, override);
         }
     }
 
-    /** Remove the base log level (inherit from group/ancestry). */
+    /**
+     * Remove a log level.
+     *
+     * <p>Removes the base log level (the logger then inherits from its group /
+     * dot-notation ancestor / system default).</p>
+     */
     public void clearLevel() {
         clearLevel(null);
     }
 
     /**
-     * Clear a log level. {@code environment=null} clears the base level; otherwise
-     * clears the per-environment override only.
+     * Remove a log level.
      *
-     * <p>Mirrors Python's {@code logger.clear_level(environment=None)}.</p>
+     * <p>With {@code environment=null} (the default), removes the base log level
+     * (the logger then inherits from its group / dot-notation ancestor /
+     * system default).  With an {@code environment}, removes the per-environment
+     * override only.</p>
+     *
+     * <p>Changes are local until you call {@link #save()}.</p>
+     *
+     * @param environment when given, remove the override for that environment
+     *     only; when null, remove the base level
      */
     public void clearLevel(String environment) {
         if (environment == null) {
@@ -137,82 +193,76 @@ public final class Logger {
         }
     }
 
-    /**
-     * @deprecated use {@link #setLevel(LogLevel, String)} instead. Retained
-     * for compatibility; will be removed once the per-env unification rolls
-     * out across the SDK.
-     */
-    @Deprecated
-    public void setEnvironmentLevel(String env, LogLevel level) {
-        setLevel(level, env);
-    }
-
-    /**
-     * @deprecated use {@link #clearLevel(String)} instead.
-     */
-    @Deprecated
-    public void clearEnvironmentLevel(String env) {
-        clearLevel(env);
-    }
-
-    /** Remove all environment-level overrides. */
+    /** Remove all per-environment level overrides. */
     public void clearAllEnvironmentLevels() {
         this.environments = new HashMap<>();
     }
 
-    // --- Active record: save ---
+    // --- Active record: save / delete ---
 
-    /**
-     * Persists this logger to the server.
-     *
-     * <p>After a successful save, this instance is refreshed with the
-     * server response.</p>
-     */
+    /** Persist this logger to the server (create or update). */
     public void save() {
-        if (client == null) throw new IllegalStateException("Logger not bound to a client");
-        Logger saved = client._saveLogger(this);
-        _apply(saved);
-    }
-
-    /** Async variant of {@link #save()} (rule 12). */
-    public java.util.concurrent.CompletableFuture<Void> saveAsync() {
-        return saveAsync(java.util.concurrent.ForkJoinPool.commonPool());
-    }
-
-    /** Async variant of {@link #save()} with a custom executor. */
-    public java.util.concurrent.CompletableFuture<Void> saveAsync(java.util.concurrent.Executor executor) {
-        return java.util.concurrent.CompletableFuture.runAsync(this::save, executor);
+        if (client == null) {
+            throw new IllegalStateException("Logger was constructed without a client; cannot save");
+        }
+        Logger updated = client.saveLogger(this);
+        applyFrom(updated);
     }
 
     /**
-     * Deletes this logger from the server.
+     * Persist this logger to the server on the common pool.
      *
-     * <p>Mirrors Python's {@code logger.delete()}: delegates to
-     * {@code mgmt.loggers.delete(id)}. Bubbles {@link com.smplkit.errors.NotFoundError}
-     * if the logger is not on the server.</p>
-     *
-     * @throws IllegalStateException if not bound to a client
+     * @return a future that completes when the create-or-update round-trip finishes
      */
-    public void delete() {
-        if (client == null) throw new IllegalStateException("Logger not bound to a client");
-        client.management().delete(id);
+    public CompletableFuture<Void> saveAsync() {
+        return saveAsync(ForkJoinPool.commonPool());
     }
 
-    // --- Package-private setters (used by LoggingClient) ---
+    /**
+     * Persist this logger to the server on the given executor.
+     *
+     * @param executor the executor that runs the persist round-trip
+     * @return a future that completes when the create-or-update round-trip finishes
+     */
+    public CompletableFuture<Void> saveAsync(Executor executor) {
+        return CompletableFuture.runAsync(this::save, executor);
+    }
+
+    /** Delete this logger from the server. */
+    public void delete() {
+        if (client == null || id == null) {
+            throw new IllegalStateException("Logger was constructed without a client or id; cannot delete");
+        }
+        client.delete(id);
+    }
+
+    /**
+     * Delete this logger from the server on the common pool.
+     *
+     * @return a future that completes when the delete round-trip finishes
+     */
+    public CompletableFuture<Void> deleteAsync() {
+        return deleteAsync(ForkJoinPool.commonPool());
+    }
+
+    /**
+     * Delete this logger from the server on the given executor.
+     *
+     * @param executor the executor that runs the delete round-trip
+     * @return a future that completes when the delete round-trip finishes
+     */
+    public CompletableFuture<Void> deleteAsync(Executor executor) {
+        return CompletableFuture.runAsync(this::delete, executor);
+    }
+
+    // --- Package-private accessors (used by LoggingClient / sub-clients) ---
 
     void setId(String id) { this.id = id; }
-    void setSources(List<Map<String, Object>> sources) {
-        this.sources = sources != null ? new ArrayList<>(sources) : new ArrayList<>();
-    }
-    void setCreatedAt(Instant createdAt) { this.createdAt = createdAt; }
-    void setUpdatedAt(Instant updatedAt) { this.updatedAt = updatedAt; }
-    void setClient(LoggingClient client) { this.client = client; }
-    LoggingClient getClient() { return client; }
-
-    /** Package-private: set level as raw string (used by LoggingClient). */
     void setLevelRaw(String level) { this.level = level; }
+    void setClient(LoggersClient client) { this.client = client; }
 
-    void _apply(Logger other) {
+    /** Copy all properties from {@code other} into {@code this}. */
+    void applyFrom(Logger other) {
         this.id = other.id;
         this.name = other.name;
         this.level = other.level;
@@ -226,6 +276,6 @@ public final class Logger {
 
     @Override
     public String toString() {
-        return "Logger{id='" + id + "', name='" + name + "'}";
+        return "Logger(id=" + id + ", name=" + name + ")";
     }
 }

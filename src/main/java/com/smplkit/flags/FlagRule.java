@@ -3,11 +3,14 @@ package com.smplkit.flags;
 import java.util.Map;
 
 /**
- * Targeted rule on a flag environment.
+ * A single targeting rule on a {@link Flag}.
  *
- * <p>Immutable record; mirrors Python's {@code FlagRule}. The {@code logic}
- * map is a JSON Logic predicate ({@code {}} means "always match"). Mutations
- * go through {@link Flag#addRule}, never by mutating the rule directly.</p>
+ * <p>Lives in {@link FlagEnvironment#rules}. Frozen — author rules via the
+ * {@link com.smplkit.Rule} fluent builder and pass through {@link Flag#addRule}.</p>
+ *
+ * @param logic       JSON Logic predicate. Empty map means "always match".
+ * @param value       Value to serve when {@code logic} evaluates truthy.
+ * @param description Human-readable label (optional).
  */
 public record FlagRule(Map<String, Object> logic, Object value, String description) {
 

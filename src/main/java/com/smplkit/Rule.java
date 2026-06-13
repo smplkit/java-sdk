@@ -1,25 +1,26 @@
 package com.smplkit;
 
+import com.smplkit.flags.types.Op;
+
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
 /**
- * Fluent builder for constructing flag evaluation rules.
+ * Fluent builder for flag targeting rules.
  *
+ * <p>Usage:</p>
  * <pre>{@code
- * Map<String, Object> rule = new Rule("Enable for enterprise users")
- *     .when("user.plan", "==", "enterprise")
- *     .serve(true)
- *     .build();
- *
- * Map<String, Object> rule2 = new Rule("Blue for premium")
- *     .environment("production")
- *     .when("user.plan", "==", "premium")
- *     .serve("blue")
- *     .build();
+ * new Rule("Enable for enterprise users", "staging")
+ *     .when("user.plan", Op.EQ, "enterprise")
+ *     .serve(true);
  * }</pre>
+ *
+ * <p>Multiple {@code when()} calls are AND'd. {@code environment} is required so the
+ * target environment is unambiguous when the rule is passed to
+ * {@link com.smplkit.flags.Flag#addRule}. {@code serve()} finalizes the rule and
+ * returns the built map ready to pass to {@code addRule}.</p>
  */
 public final class Rule {
 
@@ -38,9 +39,39 @@ public final class Rule {
     }
 
     /**
-     * Adds a condition to this rule. Multiple conditions are AND'd together.
+     * Creates a new rule builder with the given description scoped to an environment.
      *
-     * @param variable the context variable path (e.g. "user.plan")
+     * @param description human-readable description of what this rule does
+     * @param environment the environment key (e.g. {@code "production"})
+     */
+    public Rule(String description, String environment) {
+        this.description = description;
+        this.environment = environment;
+    }
+
+    /**
+     * Add a condition. Multiple calls are AND'd at the top level.
+     *
+     * <p>Convenience form for simple comparisons. {@code op} accepts an
+     * {@link Op} enum value (preferred) or a raw string (e.g. {@code "=="},
+     * {@code "contains"}).</p>
+     *
+     * @param variable the context variable path (e.g. {@code "user.plan"})
+     * @param operator the comparison operator
+     * @param operand  the value to compare against
+     * @return this rule
+     */
+    public Rule when(String variable, Op operator, Object operand) {
+        return when(variable, operator.value(), operand);
+    }
+
+    /**
+     * Add a condition. Multiple calls are AND'd at the top level.
+     *
+     * <p>Convenience form for simple comparisons. {@code operator} accepts a
+     * raw JSON Logic operator string (e.g. {@code "=="}, {@code "contains"}).</p>
+     *
+     * @param variable the context variable path (e.g. {@code "user.plan"})
      * @param operator the comparison operator (==, !=, &gt;, &lt;, &gt;=, &lt;=, in, contains)
      * @param operand  the value to compare against
      * @return this rule
@@ -48,6 +79,7 @@ public final class Rule {
     public Rule when(String variable, String operator, Object operand) {
         Map<String, Object> condition;
         if ("contains".equals(operator)) {
+            // JSON Logic "in" with reversed operands: value in var
             condition = Map.of("in", List.of(operand, Map.of("var", variable)));
         } else {
             condition = Map.of(operator, List.of(Map.of("var", variable), operand));
@@ -57,7 +89,22 @@ public final class Rule {
     }
 
     /**
-     * Sets the value to serve when this rule matches.
+     * Add a condition. Multiple calls are AND'd at the top level.
+     *
+     * <p>Escape hatch accepting an arbitrary JSON Logic expression (use this for
+     * OR, nested AND/OR, {@code if}, etc.). See https://jsonlogic.com/ for the
+     * full expression grammar.</p>
+     *
+     * @param expr an arbitrary JSON Logic expression
+     * @return this rule
+     */
+    public Rule when(Map<String, Object> expr) {
+        conditions.add(expr);
+        return this;
+    }
+
+    /**
+     * Finalize the rule with {@code value} served on match.
      *
      * @param value the value to return on match
      * @return this rule
@@ -70,7 +117,7 @@ public final class Rule {
     /**
      * Tags this rule with a specific environment.
      *
-     * @param environment the environment key (e.g. "production")
+     * @param environment the environment key (e.g. {@code "production"})
      * @return this rule
      */
     public Rule environment(String environment) {
@@ -79,9 +126,9 @@ public final class Rule {
     }
 
     /**
-     * Builds the rule as a map.
+     * Builds the rule as a map ready to pass to {@link com.smplkit.flags.Flag#addRule}.
      *
-     * @return the rule definition
+     * @return the built rule map
      */
     public Map<String, Object> build() {
         Map<String, Object> logic;

@@ -5,10 +5,13 @@ import com.smplkit.errors.NotFoundError;
 import com.smplkit.internal.generated.logging.ApiException;
 import com.smplkit.internal.generated.logging.api.LogGroupsApi;
 import com.smplkit.internal.generated.logging.api.LoggersApi;
+import com.smplkit.internal.generated.logging.model.LogGroupCreateRequest;
 import com.smplkit.internal.generated.logging.model.LogGroupListResponse;
+import com.smplkit.internal.generated.logging.model.LogGroupRequest;
 import com.smplkit.internal.generated.logging.model.LogGroupResource;
 import com.smplkit.internal.generated.logging.model.LogGroupResponse;
 import com.smplkit.internal.generated.logging.model.LoggerBulkRequest;
+import com.smplkit.internal.generated.logging.model.LoggerRequest;
 import com.smplkit.internal.generated.logging.model.LoggerListResponse;
 import com.smplkit.internal.generated.logging.model.LoggerResource;
 import com.smplkit.internal.generated.logging.model.LoggerResponse;
@@ -23,22 +26,24 @@ import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.ArgumentMatchers.isNull;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 /**
- * CRUD tests for the standalone {@link LoggersClient} / {@link LogGroupsClient}
- * facades — they wrap a {@link LoggingClient} and expose the management surface
- * directly (no {@code .management()} hop), so each path needs its own mock-API
- * coverage.
+ * CRUD tests for the fused logging client's {@code loggers} and {@code logGroups}
+ * sub-clients — they expose the management surface directly off a wired
+ * {@link LoggingClient}, so each path needs its own mock-API coverage. The wired
+ * constructor borrows the generated {@code *Api} mocks; CRUD never triggers the
+ * live install.
  */
 class LoggersClientCrudTest {
 
     private LoggersApi mockLoggersApi;
     private LogGroupsApi mockLogGroupsApi;
-    private LoggingClient inner;
+    private LoggingClient client;
     private LoggersClient loggers;
     private LogGroupsClient groups;
 
@@ -46,10 +51,10 @@ class LoggersClientCrudTest {
     void setUp() {
         mockLoggersApi = mock(LoggersApi.class);
         mockLogGroupsApi = mock(LogGroupsApi.class);
-        inner = new LoggingClient(mockLoggersApi, mockLogGroupsApi,
+        client = new LoggingClient(mockLoggersApi, mockLogGroupsApi,
                 HttpClient.newHttpClient(), "test-key");
-        loggers = new LoggersClient(inner);
-        groups = new LogGroupsClient(inner);
+        loggers = client.loggers;
+        groups = client.logGroups;
     }
 
     // -------------------------------------------------------------- LoggersClient
@@ -113,38 +118,100 @@ class LoggersClientCrudTest {
     }
 
     @Test
-    void loggers_registerSources_buildsBulkRequest() throws ApiException {
+    void loggers_saveLogger_putsAndReturnsModel() throws ApiException {
+        when(mockLoggersApi.updateLogger(eq("my.key"), any(LoggerRequest.class)))
+                .thenReturn(buildLoggerResponse("my.key", "My Key", "WARN"));
+
+        Logger lg = loggers.new_("my.key");
+        lg.setLevel(LogLevel.WARN);
+        lg.save();
+
+        assertEquals("WARN", lg.getLevel());
+        verify(mockLoggersApi).updateLogger(eq("my.key"), any());
+    }
+
+    @Test
+    void loggers_saveLogger_mapsApiException() throws ApiException {
+        when(mockLoggersApi.updateLogger(any(), any())).thenThrow(new ApiException(422, "validation"));
+        Logger lg = loggers.new_("bad");
+        assertThrows(RuntimeException.class, lg::save);
+    }
+
+    // -------------------------------------------------------------- register / flush
+
+    @Test
+    void loggers_register_flushTrue_buildsBulkRequest() throws ApiException {
         List<LoggerSource> sources = List.of(
-                new LoggerSource("svc.a", "svc-a", "prod", LogLevel.INFO, LogLevel.DEBUG),
-                new LoggerSource("svc.b", "svc-b", "stg", LogLevel.WARN));
+                new LoggerSource("svc.a", LogLevel.DEBUG, LogLevel.INFO, "svc-a", "prod"),
+                new LoggerSource("svc.b", LogLevel.WARN, "svc-b", "stg"));
         ArgumentCaptor<LoggerBulkRequest> captor = ArgumentCaptor.forClass(LoggerBulkRequest.class);
 
-        loggers.registerSources(sources);
+        loggers.register(sources, true);
 
         verify(mockLoggersApi).bulkRegisterLoggers(captor.capture());
         LoggerBulkRequest req = captor.getValue();
         assertEquals(2, req.getLoggers().size());
         assertEquals("svc.a", req.getLoggers().get(0).getId());
-        assertEquals("DEBUG", req.getLoggers().get(0).getLevel());
+        // resolvedLevel always written; explicit level written only when set
+        assertEquals("INFO", req.getLoggers().get(0).getLevel());
+        assertEquals("DEBUG", req.getLoggers().get(0).getResolvedLevel());
         assertEquals("svc-a", req.getLoggers().get(0).getService());
         assertEquals("prod", req.getLoggers().get(0).getEnvironment());
-        // Second source has level=null, so the JsonNullable level isn't written
+        // Second source has no explicit level — JsonNullable level stays absent
         assertEquals("svc.b", req.getLoggers().get(1).getId());
+        assertNull(req.getLoggers().get(1).getLevel());
+        assertEquals("WARN", req.getLoggers().get(1).getResolvedLevel());
     }
 
     @Test
-    void loggers_registerSources_emptyOrNull_isNoOp() throws ApiException {
-        loggers.registerSources(null);
-        loggers.registerSources(List.of());
+    void loggers_register_singleSourceWithFlush() throws ApiException {
+        loggers.register(new LoggerSource("only", LogLevel.INFO, "svc", "env"), true);
+        verify(mockLoggersApi).bulkRegisterLoggers(any());
+    }
+
+    @Test
+    void loggers_register_null_isNoOp() throws ApiException {
+        loggers.register((List<LoggerSource>) null, true);
         verify(mockLoggersApi, org.mockito.Mockito.never()).bulkRegisterLoggers(any());
     }
 
     @Test
-    void loggers_registerSources_mapsApiException() throws ApiException {
+    void loggers_register_buffersWithoutFlush() throws ApiException {
+        loggers.register(new LoggerSource("buffered", LogLevel.INFO, "svc", "env"));
+        assertEquals(1, loggers.pendingCount());
+        verify(mockLoggersApi, org.mockito.Mockito.never()).bulkRegisterLoggers(any());
+    }
+
+    @Test
+    void loggers_register_listWithoutFlush_buffers() throws ApiException {
+        loggers.register(List.of(new LoggerSource("a", LogLevel.INFO, "svc", "env")));
+        assertEquals(1, loggers.pendingCount());
+    }
+
+    @Test
+    void loggers_flush_isNoOpWhenBufferEmpty() throws ApiException {
+        loggers.flush();
+        verify(mockLoggersApi, org.mockito.Mockito.never()).bulkRegisterLoggers(any());
+    }
+
+    @Test
+    void loggers_flush_drainsBuffer() throws ApiException {
+        loggers.register(new LoggerSource("com.acme.payments", LogLevel.INFO, "svc", "env"));
+        loggers.flush();
+
+        ArgumentCaptor<LoggerBulkRequest> captor = ArgumentCaptor.forClass(LoggerBulkRequest.class);
+        verify(mockLoggersApi).bulkRegisterLoggers(captor.capture());
+        assertEquals(1, captor.getValue().getLoggers().size());
+        assertEquals("com.acme.payments", captor.getValue().getLoggers().get(0).getId());
+        assertEquals(0, loggers.pendingCount());
+    }
+
+    @Test
+    void loggers_flush_mapsApiException() throws ApiException {
+        loggers.register(new LoggerSource("x", LogLevel.INFO, "svc", "env"));
         org.mockito.Mockito.doThrow(new ApiException(409, "conflict"))
                 .when(mockLoggersApi).bulkRegisterLoggers(any());
-        assertThrows(RuntimeException.class, () -> loggers.registerSources(
-                List.of(new LoggerSource("x", "svc", "env", LogLevel.INFO))));
+        assertThrows(RuntimeException.class, () -> loggers.flush());
     }
 
     // -------------------------------------------------------------- LogGroupsClient
@@ -205,6 +272,38 @@ class LoggersClientCrudTest {
         assertThrows(NotFoundError.class, () -> groups.delete("missing"));
     }
 
+    @Test
+    void groups_saveGroup_createsWhenUnsaved() throws ApiException {
+        when(mockLogGroupsApi.createLogGroup(any(LogGroupCreateRequest.class)))
+                .thenReturn(buildGroupResponse("g", "G", "INFO"));
+
+        LogGroup grp = groups.new_("g");
+        grp.save();
+
+        verify(mockLogGroupsApi).createLogGroup(any(LogGroupCreateRequest.class));
+    }
+
+    @Test
+    void groups_saveGroup_updatesWhenExisting() throws ApiException {
+        when(mockLogGroupsApi.getLogGroup("g")).thenReturn(buildGroupResponse("g", "G", "INFO"));
+        when(mockLogGroupsApi.updateLogGroup(eq("g"), any(LogGroupRequest.class)))
+                .thenReturn(buildGroupResponse("g", "G2", "WARN"));
+
+        LogGroup grp = groups.get("g"); // has createdAt set -> save() PUTs
+        grp.setName("G2");
+        grp.save();
+
+        verify(mockLogGroupsApi).updateLogGroup(eq("g"), any(LogGroupRequest.class));
+        assertEquals("G2", grp.getName());
+    }
+
+    @Test
+    void groups_saveGroup_mapsApiException() throws ApiException {
+        when(mockLogGroupsApi.createLogGroup(any())).thenThrow(new ApiException(422, "validation"));
+        LogGroup grp = groups.new_("bad");
+        assertThrows(RuntimeException.class, grp::save);
+    }
+
     // -------------------------------------------------------------- Logger.delete() / LogGroup.delete()
 
     @Test
@@ -223,13 +322,6 @@ class LoggersClientCrudTest {
     }
 
     @Test
-    void logger_activeRecord_delete_unboundClient_throwsIllegalState() {
-        Logger orphan = new Logger(null, "orphan", "Orphan",
-                null, null, false, null, null, null, null);
-        assertThrows(IllegalStateException.class, orphan::delete);
-    }
-
-    @Test
     void logGroup_activeRecord_delete_callsApi() throws ApiException {
         LogGroup grp = groups.new_("doomed-group");
         grp.delete();
@@ -242,47 +334,6 @@ class LoggersClientCrudTest {
                 .when(mockLogGroupsApi).deleteLogGroup("ghost-group");
         LogGroup grp = groups.new_("ghost-group");
         assertThrows(NotFoundError.class, grp::delete);
-    }
-
-    @Test
-    void logGroup_activeRecord_delete_unboundClient_throwsIllegalState() {
-        LogGroup orphan = new LogGroup(null, "orphan", "Orphan",
-                null, null, null, null, null);
-        assertThrows(IllegalStateException.class, orphan::delete);
-    }
-
-    // -------------------------------------------------------------- LoggersClient.flush()
-
-    @Test
-    void loggers_flush_isNoOpWhenBufferEmpty() throws ApiException {
-        loggers.flush();
-        verify(mockLoggersApi, org.mockito.Mockito.never()).bulkRegisterLoggers(any());
-    }
-
-    @Test
-    void loggers_flush_drainsPendingDiscoveryBuffer() throws ApiException {
-        // Simulate a discovered logger entering the buffer via the adapter hook path.
-        inner.simulateNewLogger("com.acme.payments", "INFO");
-
-        loggers.flush();
-
-        ArgumentCaptor<LoggerBulkRequest> captor = ArgumentCaptor.forClass(LoggerBulkRequest.class);
-        verify(mockLoggersApi).bulkRegisterLoggers(captor.capture());
-        LoggerBulkRequest req = captor.getValue();
-        assertEquals(1, req.getLoggers().size());
-        assertEquals("com.acme.payments", req.getLoggers().get(0).getId());
-    }
-
-    @Test
-    void loggers_flush_swallowsApiException() throws ApiException {
-        inner.simulateNewLogger("com.acme.payments", "INFO");
-        org.mockito.Mockito.doThrow(new ApiException(500, "boom"))
-                .when(mockLoggersApi).bulkRegisterLoggers(any());
-
-        // flush() must not propagate the exception (matches periodic-flush semantics)
-        loggers.flush();
-
-        verify(mockLoggersApi).bulkRegisterLoggers(any());
     }
 
     // -------------------------------------------------------------- helpers

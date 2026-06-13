@@ -1,31 +1,26 @@
 package com.smplkit.audit;
 
 /**
- * SIEM streaming destination type. Mirrors the audit OpenAPI
- * {@code ForwarderType} enum so the wrapper public surface keeps
- * customer code outside {@code com.smplkit.internal.*}.
+ * Supported SIEM forwarder destination types.
  *
- * <p>The available types are real-time HTTP destinations sharing one
- * outbound plumbing path. Object-storage archival (S3, GCS, etc.) has
- * different operational shape (batching, IAM, lifecycle policies) and
- * will get its own type if customer demand warrants.</p>
+ * <p>The audit service's OpenAPI spec declares {@code forwarder_type} as a
+ * string-with-enum-constraint; this Java-side enum mirrors that constraint so
+ * customers get autocomplete and type-checked values instead of stringly-typed
+ * inputs. A {@code ForwarderType} member's {@link #getValue()} returns its
+ * string literal ({@code ForwarderType.HTTP.getValue().equals("http")}).</p>
  *
- * <p>Members are declared in alphabetical order.</p>
+ * <p>The available types are real-time HTTP destinations sharing one outbound
+ * delivery path. Object-storage archival (S3, GCS, etc.) has a different
+ * operational shape (batching, IAM, lifecycle policies) and may get its own
+ * type if customer demand warrants.</p>
  */
 public enum ForwarderType {
-    /** Datadog Logs intake. */
     DATADOG("datadog"),
-    /** Elastic / Elasticsearch HTTP ingest. */
     ELASTIC("elastic"),
-    /** Honeycomb events HTTP ingest. */
     HONEYCOMB("honeycomb"),
-    /** Generic HTTP POST destination. */
     HTTP("http"),
-    /** New Relic logs HTTP ingest. */
     NEW_RELIC("new_relic"),
-    /** Splunk HTTP Event Collector. */
     SPLUNK_HEC("splunk_hec"),
-    /** Sumo Logic HTTP source. */
     SUMO_LOGIC("sumo_logic");
 
     private final String value;

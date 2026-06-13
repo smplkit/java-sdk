@@ -642,18 +642,6 @@ class AuditForwardersTest {
     }
 
     // -----------------------------------------------------------------
-    // AuditManagementClient
-    // -----------------------------------------------------------------
-
-    @Test
-    void auditManagementClient_exposesForwarders() {
-        AuditManagementClient mgmt = new AuditManagementClient(
-                "sk_test", Map.of(), Duration.ofSeconds(5),
-                "http://127.0.0.1:" + server.getAddress().getPort());
-        assertNotNull(mgmt.forwarders);
-    }
-
-    // -----------------------------------------------------------------
     // AuditResourceTypesClient
     // -----------------------------------------------------------------
 

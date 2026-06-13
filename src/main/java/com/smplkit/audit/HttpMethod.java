@@ -5,19 +5,15 @@ package com.smplkit.audit;
  *
  * <p>Mirrors the audit spec's {@code HttpConfigurationMethod} enum so
  * customers get autocomplete and a typed value back from
- * {@code forwarder.configuration.method}. Members are declared in
- * alphabetical order.</p>
+ * {@code forwarder.configuration.method}. A {@code HttpMethod} member's
+ * {@link #getValue()} returns its raw string
+ * ({@code HttpMethod.POST.getValue().equals("POST")}).</p>
  */
 public enum HttpMethod {
-    /** {@code DELETE} */
     DELETE("DELETE"),
-    /** {@code GET} */
     GET("GET"),
-    /** {@code PATCH} */
     PATCH("PATCH"),
-    /** {@code POST} */
     POST("POST"),
-    /** {@code PUT} */
     PUT("PUT");
 
     private final String value;

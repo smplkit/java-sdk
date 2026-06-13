@@ -43,85 +43,6 @@ class Phase2CoverageTest {
             .registerModule(new JavaTimeModule())
             .registerModule(new JsonNullableModule());
 
-    // --- ConfigClient prescriptive access ---
-
-    @Test
-    void resolve_returnsEmptyMapWhenNotConnected() {
-        ConfigsApi mockApi = mock(ConfigsApi.class);
-        ConfigClient configClient = new ConfigClient(mockApi, HttpClient.newHttpClient(), "test-key");
-
-        // Per ADR-024 §2.9 / §2.13 update: a not-yet-cached config throws
-        // rather than silently returning an empty proxy. Discovery (via
-        // getOrCreate) is the supported path for code-declared configs.
-        assertThrows(com.smplkit.errors.NotFoundError.class, () -> configClient.get("my-config"));
-    }
-
-    @Test
-    void resolve_fetchesAndCachesConfigs() throws ApiException {
-        ConfigsApi mockApi = mock(ConfigsApi.class);
-
-        Map<String, Object> configData = new HashMap<>();
-        configData.put("name", "DB Config");
-        configData.put("items", Map.of(
-                "host", Map.of("type", "STRING", "value", "localhost"),
-                "port", Map.of("type", "NUMBER", "value", 5432)
-        ));
-        // Per ADR-024 §2.4 the wire shape is flat: {env: {key: rawValue}}.
-        configData.put("environments", Map.of(
-                "production", Map.of("host", "prod-db.example.com")
-        ));
-
-        ConfigListResponse listResponse = OBJECT_MAPPER.convertValue(
-                Map.of("data", List.of(Map.of(
-                        "id", "db-config",
-                        "attributes", configData
-                ))),
-                ConfigListResponse.class);
-        when(mockApi.listConfigs(isNull(), isNull(), isNull(), isNull(), any(), any(), isNull())).thenReturn(listResponse);
-
-        // Without setEnvironment, get throws (no lazy init, nothing cached)
-        ConfigClient noEnvClient = new ConfigClient(mockApi, HttpClient.newHttpClient(), "test-key");
-        assertThrows(com.smplkit.errors.NotFoundError.class, () -> noEnvClient.get("db-config"));
-
-        // With setEnvironment, resolve triggers lazy init and returns data
-        ConfigClient configClient = new ConfigClient(mockApi, HttpClient.newHttpClient(), "test-key");
-        configClient.setEnvironment("production");
-
-        Map<String, Object> resolved = configClient.get("db-config");
-        assertEquals("prod-db.example.com", resolved.get("host"));
-        assertEquals(5432, resolved.get("port"));
-
-        // Nonexistent config
-        assertThrows(com.smplkit.errors.NotFoundError.class, () -> configClient.get("nonexistent-config"));
-    }
-
-    @Test
-    void resolve_returnsFullResolvedMap() throws ApiException {
-        ConfigsApi mockApi = mock(ConfigsApi.class);
-
-        ConfigListResponse listResponse = OBJECT_MAPPER.convertValue(
-                Map.of("data", List.of(Map.of(
-                        "id", "app-config",
-                        "attributes", Map.of(
-                                "name", "App Config",
-                                "items", Map.of(
-                                        "title", Map.of("type", "STRING", "value", "Default Title")
-                                )
-                        )
-                ))),
-                ConfigListResponse.class);
-        when(mockApi.listConfigs(isNull(), isNull(), isNull(), isNull(), any(), any(), isNull())).thenReturn(listResponse);
-
-        ConfigClient configClient = new ConfigClient(mockApi, HttpClient.newHttpClient(), "test-key");
-        configClient.setEnvironment("staging");
-
-        Map<String, Object> values = configClient.get("app-config");
-        assertNotNull(values);
-        assertEquals("Default Title", values.get("title"));
-
-        assertThrows(com.smplkit.errors.NotFoundError.class, () -> configClient.get("unknown"));
-    }
-
     // --- Service context auto-injection in flag evaluation ---
 
     @Test
@@ -260,23 +181,22 @@ class Phase2CoverageTest {
         HttpClient mockHttp = mock(HttpClient.class);
         com.smplkit.internal.generated.app.api.ContextsApi mockContextsApi =
                 mock(com.smplkit.internal.generated.app.api.ContextsApi.class);
-
-        when(mockContextsApi.bulkRegisterContexts(any()))
-                .thenThrow(new com.smplkit.internal.generated.app.ApiException(500, "fail"));
-
-        FlagsApi mockFlagsApi = mock(FlagsApi.class);
-        FlagsClient flagsClient = new FlagsClient(mockFlagsApi, null, mockHttp,
-                "test-key", "https://flags.smplkit.com", "https://app.smplkit.com",
-                Duration.ofSeconds(5));
-        ConfigsApi mockConfigsApi = mock(ConfigsApi.class);
-        ConfigClient configClient = new ConfigClient(mockConfigsApi, mockHttp, "test-key");
+        java.util.concurrent.CountDownLatch registered = new java.util.concurrent.CountDownLatch(1);
+        when(mockContextsApi.bulkRegisterContexts(any())).thenAnswer(inv -> {
+            registered.countDown();
+            throw new com.smplkit.internal.generated.app.ApiException(500, "fail");
+        });
 
         assertDoesNotThrow(() -> {
             try (SmplClient client = new SmplClient(mockHttp, "test-key", "staging", "test-service",
-                    Duration.ofSeconds(5), flagsClient, configClient, mockContextsApi)) {
-                verify(mockContextsApi).bulkRegisterContexts(any());
+                    Duration.ofSeconds(5), mockContextsApi)) {
+                // Trigger the deferred service-context registration daemon.
+                client.setContext(java.util.List.of());
+                assertTrue(registered.await(5, java.util.concurrent.TimeUnit.SECONDS),
+                        "bulkRegisterContexts should have been attempted");
             }
         });
+        verify(mockContextsApi).bulkRegisterContexts(any());
     }
 
     @Test
@@ -284,18 +204,19 @@ class Phase2CoverageTest {
         HttpClient mockHttp = mock(HttpClient.class);
         com.smplkit.internal.generated.app.api.ContextsApi mockContextsApi =
                 mock(com.smplkit.internal.generated.app.api.ContextsApi.class);
-
-        FlagsApi mockFlagsApi = mock(FlagsApi.class);
-        FlagsClient flagsClient = new FlagsClient(mockFlagsApi, null, mockHttp,
-                "test-key", "https://flags.smplkit.com", "https://app.smplkit.com",
-                Duration.ofSeconds(5));
-        ConfigsApi mockConfigsApi = mock(ConfigsApi.class);
-        ConfigClient configClient = new ConfigClient(mockConfigsApi, mockHttp, "test-key");
+        java.util.concurrent.CountDownLatch registered = new java.util.concurrent.CountDownLatch(1);
+        when(mockContextsApi.bulkRegisterContexts(any())).thenAnswer(inv -> {
+            registered.countDown();
+            return null;
+        });
 
         try (SmplClient client = new SmplClient(mockHttp, "test-key", "staging", "my-service",
-                Duration.ofSeconds(5), flagsClient, configClient, mockContextsApi)) {
-            verify(mockContextsApi).bulkRegisterContexts(any());
+                Duration.ofSeconds(5), mockContextsApi)) {
+            client.setContext(java.util.List.of());
+            assertTrue(registered.await(5, java.util.concurrent.TimeUnit.SECONDS),
+                    "bulkRegisterContexts should have been called");
         }
+        verify(mockContextsApi).bulkRegisterContexts(any());
     }
 
     @Test

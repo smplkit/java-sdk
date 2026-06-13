@@ -18,8 +18,8 @@ class SmplClientAuditTest {
         var client = new SmplClient(HttpClient.newHttpClient(),
                 "sk_api_test", "dev", "test-svc", Duration.ofSeconds(5));
         try {
-            assertNotNull(client.audit());
-            assertSame(client.audit(), client.audit());
+            assertNotNull(client.audit);
+            assertSame(client.audit, client.audit);
         } finally {
             client.close();
         }

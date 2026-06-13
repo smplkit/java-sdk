@@ -9,28 +9,25 @@ import java.util.Set;
 import java.util.function.Consumer;
 
 /**
- * A live, dict-like, read-only proxy over a runtime config.
+ * A live, dict-like view of resolved config values.
  *
- * <p>Every read goes through the {@link ConfigClient}'s resolved-config
- * cache, so WebSocket updates are picked up automatically — there is no
- * {@code subscribe()} step. The proxy is identity-stable: calling
- * {@link ConfigClient#get(String)} for the same id returns the same
- * {@code LiveConfigProxy} instance.</p>
+ * <p>Returned by {@link ConfigClient#subscribe}. Always reflects the latest
+ * server-pushed state — every read sees current values.</p>
  *
- * <p>Implements {@link Map} for ergonomic {@code proxy.get("database.host")},
- * {@code containsKey}, and iteration. Mutation paths
- * ({@link #put}, {@link #remove}, {@link #clear}, {@link #putAll}) throw
- * {@link UnsupportedOperationException} pointing at
- * {@code client.manage().config} for legitimate mutations.</p>
+ * <p>Implements the {@link Map} API: {@code proxy.get("key")},
+ * {@code proxy.containsKey("key")}, {@code proxy.size()}, iteration over
+ * {@code proxy.keySet()}, {@code proxy.values()}, {@code proxy.entrySet()},
+ * {@code proxy.getOrDefault(key, default)}. Read-only; any write attempt
+ * raises.</p>
  *
- * <p>For declarative, typed access, use {@link ConfigClient#bind} instead —
- * the bound target stays live on the same WebSocket-driven cache, with
- * plain field access in place of {@code proxy.get(key)}.</p>
+ * <p>For typed access via a Java POJO, use {@link ConfigClient#bind}
+ * instead — bound instances stay live on the same WebSocket cache, with
+ * field access typed by the POJO class.</p>
  */
 public final class LiveConfigProxy implements Map<String, Object> {
 
     private static final String READ_ONLY_MSG =
-            "LiveConfigProxy is read-only; use client.manage().config to mutate config values";
+            "LiveConfigProxy is read-only; cannot set. Edit config values via client.config().get(id) + save().";
 
     private final ConfigClient client;
     private final String configId;
@@ -40,25 +37,45 @@ public final class LiveConfigProxy implements Map<String, Object> {
         this.configId = configId;
     }
 
-    /** Returns the config id this proxy reads through. */
-    public String configId() { return configId; }
+    /**
+     * Returns the config id this proxy reads through.
+     *
+     * @return the config identifier (slug) this proxy is scoped to
+     */
+    public String configId() {
+        return configId;
+    }
 
     /**
-     * Sugar for {@code client.onChange(configId, fn)} — fires for any item
-     * change on this config.
+     * Register a change listener scoped to this config.
+     *
+     * <p>Fires on any change to this config. Equivalent to
+     * {@code client.config().onChange(configId, fn)}; offered as sugar so
+     * callers who already have a live proxy can register listeners without
+     * re-stating the config id.</p>
+     *
+     * @param listener invoked with a {@link ConfigChangeEvent} when this config
+     *     changes
      */
     public void onChange(Consumer<ConfigChangeEvent> listener) {
         client.onChange(configId, listener);
     }
 
     /**
-     * Sugar for {@code client.onChange(configId, itemKey, fn)} — fires only
-     * when {@code itemKey} changes on this config.
+     * Register a change listener scoped to a single item on this config.
+     *
+     * <p>Fires only when {@code itemKey} changes. Equivalent to
+     * {@code client.config().onChange(configId, itemKey, fn)}.</p>
+     *
+     * @param itemKey  the item key within this config to restrict the listener to
+     * @param listener invoked with a {@link ConfigChangeEvent} when that item
+     *     changes
      */
     public void onChange(String itemKey, Consumer<ConfigChangeEvent> listener) {
         client.onChange(configId, itemKey, listener);
     }
 
+    /** Read the current resolved values from the client cache. */
     private Map<String, Object> currentValues() {
         return client._getResolvedCache(configId);
     }
@@ -66,19 +83,29 @@ public final class LiveConfigProxy implements Map<String, Object> {
     // --- Map<String, Object> read-only interface ---
 
     @Override
-    public int size() { return currentValues().size(); }
+    public int size() {
+        return currentValues().size();
+    }
 
     @Override
-    public boolean isEmpty() { return currentValues().isEmpty(); }
+    public boolean isEmpty() {
+        return currentValues().isEmpty();
+    }
 
     @Override
-    public boolean containsKey(Object key) { return currentValues().containsKey(key); }
+    public boolean containsKey(Object key) {
+        return currentValues().containsKey(key);
+    }
 
     @Override
-    public boolean containsValue(Object value) { return currentValues().containsValue(value); }
+    public boolean containsValue(Object value) {
+        return currentValues().containsValue(value);
+    }
 
     @Override
-    public Object get(Object key) { return currentValues().get(key); }
+    public Object get(Object key) {
+        return currentValues().get(key);
+    }
 
     @Override
     public Object getOrDefault(Object key, Object defaultValue) {
@@ -131,6 +158,6 @@ public final class LiveConfigProxy implements Map<String, Object> {
 
     @Override
     public String toString() {
-        return "LiveConfigProxy[configId=" + configId + ", values=" + currentValues() + "]";
+        return "LiveConfigProxy(config_id=" + configId + ")";
     }
 }

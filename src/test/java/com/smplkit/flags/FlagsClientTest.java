@@ -3,10 +3,9 @@ package com.smplkit.flags;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import com.smplkit.Context;
-import com.smplkit.SharedWebSocket;
 import com.smplkit.errors.NotFoundError;
 import com.smplkit.errors.ValidationError;
-import com.smplkit.management.ContextRegistrationBuffer;
+import com.smplkit.internal.ContextRegistrationBuffer;
 import com.smplkit.internal.generated.app.api.ContextsApi;
 import com.smplkit.internal.generated.flags.ApiException;
 import com.smplkit.internal.generated.flags.api.FlagsApi;
@@ -15,6 +14,7 @@ import com.smplkit.internal.generated.flags.model.FlagCreateResource;
 import com.smplkit.internal.generated.flags.model.FlagListResponse;
 import com.smplkit.internal.generated.flags.model.FlagResponse;
 import com.smplkit.internal.generated.flags.model.FlagRequest;
+import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;
@@ -52,11 +52,16 @@ class FlagsClientTest {
         client.setEnvironment("staging");
     }
 
+    @AfterEach
+    void tearDown() {
+        if (client != null) client.close();
+    }
+
     // --- Factory methods return unsaved flags ---
 
     @Test
     void newBooleanFlag_createsUnsavedFlag() {
-        Flag<Boolean> flag = client.management().newBooleanFlag("my-flag", false);
+        Flag<Boolean> flag = client.newBooleanFlag("my-flag", false);
         assertEquals("my-flag", flag.getId());
         assertEquals("BOOLEAN", flag.getType());
         assertFalse(flag.getDefault());
@@ -64,7 +69,7 @@ class FlagsClientTest {
 
     @Test
     void newBooleanFlag_withNameAndDescription() {
-        Flag<Boolean> flag = client.management().newBooleanFlag("my-flag", true, "My Flag", "A test flag");
+        Flag<Boolean> flag = client.newBooleanFlag("my-flag", true, "My Flag", "A test flag");
         assertEquals("my-flag", flag.getId());
         assertEquals("My Flag", flag.getName());
         assertEquals("A test flag", flag.getDescription());
@@ -72,7 +77,7 @@ class FlagsClientTest {
 
     @Test
     void newBooleanFlag_withoutName_usesKeyToDisplayName() {
-        Flag<Boolean> flag = client.management().newBooleanFlag("checkout-v2", false);
+        Flag<Boolean> flag = client.newBooleanFlag("checkout-v2", false);
         assertEquals("Checkout V2", flag.getName());
     }
 
@@ -117,7 +122,7 @@ class FlagsClientTest {
                 .thenReturn(makeFlagResponse(TEST_FLAG_ID, "My Flag",
                         "BOOLEAN", false, List.of(), Map.of()));
 
-        Flag<?> result = client.management().get("my-flag");
+        Flag<?> result = client.get("my-flag");
         assertEquals(TEST_FLAG_ID, result.getId());
         verify(mockApi).getFlag(eq("my-flag"));
     }
@@ -127,7 +132,7 @@ class FlagsClientTest {
         when(mockApi.getFlag(eq("unknown")))
                 .thenThrow(new ApiException(404, "Not Found"));
 
-        assertThrows(NotFoundError.class, () -> client.management().get("unknown"));
+        assertThrows(NotFoundError.class, () -> client.get("unknown"));
     }
 
     @Test
@@ -135,7 +140,7 @@ class FlagsClientTest {
         when(mockApi.getFlag(eq("my-flag")))
                 .thenThrow(new ApiException(404, "Not Found"));
 
-        assertThrows(NotFoundError.class, () -> client.management().get("my-flag"));
+        assertThrows(NotFoundError.class, () -> client.get("my-flag"));
     }
 
     // --- list() returns all flags ---
@@ -154,7 +159,7 @@ class FlagsClientTest {
         )), FlagListResponse.class);
         when(mockApi.listFlags(isNull(), isNull(), isNull(), isNull(), isNull(), isNull(), any(), any(), isNull())).thenReturn(listResponse);
 
-        List<Flag<?>> result = client.management().list();
+        List<Flag<?>> result = client.list();
         assertEquals(2, result.size());
         assertEquals("flag-1", result.get(0).getId());
         assertEquals("flag-2", result.get(1).getId());
@@ -164,7 +169,7 @@ class FlagsClientTest {
     void list_emptyResponse() throws ApiException {
         when(mockApi.listFlags(isNull(), isNull(), isNull(), isNull(), isNull(), isNull(), any(), any(), isNull())).thenReturn(new FlagListResponse().data(List.of()));
 
-        List<Flag<?>> result = client.management().list();
+        List<Flag<?>> result = client.list();
         assertTrue(result.isEmpty());
     }
 
@@ -174,7 +179,7 @@ class FlagsClientTest {
     void delete_deletesDirectly() throws ApiException {
         doNothing().when(mockApi).deleteFlag("my-flag");
 
-        client.management().delete("my-flag");
+        client.delete("my-flag");
 
         verify(mockApi).deleteFlag("my-flag");
     }
@@ -183,7 +188,7 @@ class FlagsClientTest {
 
     @Test
     void activeRecord_delete_callsManagementDelete() throws ApiException {
-        Flag<Boolean> flag = client.management().newBooleanFlag("doomed", false);
+        Flag<Boolean> flag = client.newBooleanFlag("doomed", false);
         flag.delete();
 
         verify(mockApi).deleteFlag("doomed");
@@ -193,7 +198,7 @@ class FlagsClientTest {
     void activeRecord_delete_bubblesNotFound() throws ApiException {
         doThrow(new ApiException(404, "Not Found")).when(mockApi).deleteFlag("ghost");
 
-        Flag<Boolean> flag = client.management().newBooleanFlag("ghost", false);
+        Flag<Boolean> flag = client.newBooleanFlag("ghost", false);
         assertThrows(NotFoundError.class, flag::delete);
     }
 
@@ -215,7 +220,7 @@ class FlagsClientTest {
                 ), Map.of());
         when(mockApi.createFlag(any(FlagCreateRequest.class))).thenReturn(response);
 
-        Flag<Boolean> newFlag = client.management().newBooleanFlag("my-flag", false, "My Flag", null);
+        Flag<Boolean> newFlag = client.newBooleanFlag("my-flag", false, "My Flag", null);
         newFlag.save();
 
         assertNotNull(newFlag.getId());
@@ -233,7 +238,7 @@ class FlagsClientTest {
                 .thenReturn(response);
 
         // Create a flag that already has createdAt (simulating a fetched flag)
-        Flag<Boolean> existingFlag = client.management().newBooleanFlag("my-flag", false, "My Flag", null);
+        Flag<Boolean> existingFlag = client.newBooleanFlag("my-flag", false, "My Flag", null);
         existingFlag.setCreatedAt(java.time.Instant.parse("2024-06-01T12:00:00Z"));
         existingFlag.setName("Updated Flag");
         existingFlag.save();
@@ -250,7 +255,7 @@ class FlagsClientTest {
                 "NUMERIC", 3, null, Map.of());
         when(mockApi.createFlag(any(FlagCreateRequest.class))).thenReturn(response);
 
-        Flag<Number> newFlag = client.management().newNumberFlag("max-retries", 3, "Max Retries", null);
+        Flag<Number> newFlag = client.newNumberFlag("max-retries", 3, "Max Retries", null);
         assertNull(newFlag.getValues(), "unconstrained flag should have null values before save");
         newFlag.save();
 
@@ -266,7 +271,7 @@ class FlagsClientTest {
         when(mockApi.updateFlag(eq("max-retries"), any(FlagRequest.class)))
                 .thenReturn(response);
 
-        Flag<Number> existingFlag = client.management().newNumberFlag("max-retries", 3, "Max Retries", null);
+        Flag<Number> existingFlag = client.newNumberFlag("max-retries", 3, "Max Retries", null);
         existingFlag.setCreatedAt(java.time.Instant.parse("2024-06-01T12:00:00Z"));
         existingFlag.setDefault(5);
         existingFlag.save();
@@ -281,14 +286,14 @@ class FlagsClientTest {
     void apiException404_throwsNotFoundError() throws ApiException {
         when(mockApi.getFlag(anyString()))
                 .thenThrow(new ApiException(404, "Not Found"));
-        assertThrows(NotFoundError.class, () -> client.management().get("my-flag"));
+        assertThrows(NotFoundError.class, () -> client.get("my-flag"));
     }
 
     @Test
     void apiException409_throwsConflictError() throws ApiException {
         when(mockApi.createFlag(any(FlagCreateRequest.class)))
                 .thenThrow(new ApiException(409, "Conflict"));
-        Flag<Boolean> flag = client.management().newBooleanFlag("dup", false);
+        Flag<Boolean> flag = client.newBooleanFlag("dup", false);
         assertThrows(com.smplkit.errors.ConflictError.class, flag::save);
     }
 
@@ -296,7 +301,7 @@ class FlagsClientTest {
     void apiException422_throwsValidationError() throws ApiException {
         when(mockApi.createFlag(any(FlagCreateRequest.class)))
                 .thenThrow(new ApiException(422, "Validation Error"));
-        Flag<Boolean> flag = client.management().newBooleanFlag("bad-flag", false);
+        Flag<Boolean> flag = client.newBooleanFlag("bad-flag", false);
         assertThrows(ValidationError.class, flag::save);
     }
 
@@ -330,7 +335,7 @@ class FlagsClientTest {
         Flag<Boolean> handle = client.booleanFlag("unknown-flag", false);
         assertFalse(handle.get());
 
-        // _connectInternal called listFlags
+        // ensureConnected called listFlags
         verify(mockApi, atLeastOnce()).listFlags(isNull(), isNull(), isNull(), isNull(), isNull(), isNull(), any(), any(), isNull());
     }
 
@@ -421,7 +426,7 @@ class FlagsClientTest {
                                  Map<String, Object> environments) throws ApiException {
         when(mockApi.listFlags(isNull(), isNull(), isNull(), isNull(), isNull(), isNull(), any(), any(), isNull())).thenReturn(
                 makeFlagListResponse(id, id, type, defaultValue, environments));
-        client._connectInternal();
+        client.ensureConnected();
     }
 
     private static FlagResponse makeFlagResponse(String id, String name,
@@ -441,27 +446,34 @@ class FlagsClientTest {
 
     // -----------------------------------------------------------------------
     // Shared ContextRegistrationBuffer wiring
+    //
+    // Contexts are observed into the wired shared buffer during evaluation
+    // (flag.get(contexts) -> _evaluateHandle -> observeContext -> buffer.observe).
     // -----------------------------------------------------------------------
 
     @Test
-    void sharedBuffer_observeDeduplicates() {
+    void sharedBuffer_observeDeduplicates() throws ApiException {
         ContextRegistrationBuffer buffer = new ContextRegistrationBuffer();
         client.setContextBuffer(buffer);
+        setupFlagStore("feature-x", "BOOLEAN", false, Map.of());
+        Flag<Boolean> handle = client.booleanFlag("feature-x", false);
 
-        client.register(new Context("user", "u1", Map.of("plan", "free")));
+        handle.get(List.of(new Context("user", "u1", Map.of("plan", "free"))));
         assertEquals(1, buffer.pendingCount());
 
-        // same key → deduped
-        client.register(new Context("user", "u1", null));
+        // same type:key → deduped
+        handle.get(List.of(new Context("user", "u1", null)));
         assertEquals(1, buffer.pendingCount());
     }
 
     @Test
-    void sharedBuffer_listOverload_addsAll() {
+    void sharedBuffer_multipleContexts_addAll() throws ApiException {
         ContextRegistrationBuffer buffer = new ContextRegistrationBuffer();
         client.setContextBuffer(buffer);
+        setupFlagStore("feature-x", "BOOLEAN", false, Map.of());
+        Flag<Boolean> handle = client.booleanFlag("feature-x", false);
 
-        client.register(List.of(
+        handle.get(List.of(
                 new Context("user", "u1", null),
                 new Context("user", "u2", null)
         ));
@@ -472,8 +484,10 @@ class FlagsClientTest {
     void sharedBuffer_flushContexts_drainsBuffer() throws Exception {
         ContextRegistrationBuffer buffer = new ContextRegistrationBuffer();
         client.setContextBuffer(buffer);
+        setupFlagStore("feature-x", "BOOLEAN", false, Map.of());
+        Flag<Boolean> handle = client.booleanFlag("feature-x", false);
 
-        client.register(new Context("user", "u1", null));
+        handle.get(List.of(new Context("user", "u1", null)));
         when(mockContextsApi.bulkRegisterContexts(any())).thenReturn(null);
         client.flushContexts();
 

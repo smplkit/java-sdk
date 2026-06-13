@@ -98,4 +98,14 @@ class SmplErrorTest {
             assertSame(ex, caught);
         }
     }
+
+    @Test
+    void escapeJson_null_returnsEmptyString() {
+        assertEquals("", SmplError.escapeJson(null));
+    }
+
+    @Test
+    void escapeJson_escapesQuotesAndBackslashes() {
+        assertEquals("a\\\\b\\\"c", SmplError.escapeJson("a\\b\"c"));
+    }
 }

@@ -6,20 +6,21 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.Executor;
-import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 import static org.junit.jupiter.api.Assertions.*;
 
 /**
- * Covers the per-environment setters, removers, the typed environments() view
- * branches, and the async save() variants on {@link Config}.
+ * Covers the base / per-environment setters, removers, the {@code items()} /
+ * {@code itemsRaw()} / {@code environments()} views, and the async save()
+ * variants on {@link Config}.
  */
 class ConfigMutationTest {
 
     private Config newConfig() {
-        return new Config(null, "cfg", "Cfg");
+        return new Config(null, "cfg", "Cfg", null, null,
+                new HashMap<>(), new HashMap<>(), null, null);
     }
 
     // --- setString ---
@@ -28,7 +29,21 @@ class ConfigMutationTest {
     void setString_baseLevel_writesItem() {
         Config c = newConfig();
         c.setString("greeting", "hello");
-        assertEquals("hello", c.getResolvedItems().get("greeting"));
+        assertEquals("hello", c.items().get("greeting"));
+        // The raw typed shape carries value + type.
+        @SuppressWarnings("unchecked")
+        Map<String, Object> raw = (Map<String, Object>) c.itemsRaw().get("greeting");
+        assertEquals("hello", raw.get("value"));
+        assertEquals("STRING", raw.get("type"));
+    }
+
+    @Test
+    void setString_withDescription_carriesDescription() {
+        Config c = newConfig();
+        c.setString("greeting", "hello", "a friendly hello", null);
+        @SuppressWarnings("unchecked")
+        Map<String, Object> raw = (Map<String, Object>) c.itemsRaw().get("greeting");
+        assertEquals("a friendly hello", raw.get("description"));
     }
 
     @Test
@@ -54,7 +69,7 @@ class ConfigMutationTest {
     void setNumber_baseLevel_writesItem() {
         Config c = newConfig();
         c.setNumber("limit", 42);
-        assertEquals(42, c.getResolvedItems().get("limit"));
+        assertEquals(42, c.items().get("limit"));
     }
 
     @Test
@@ -65,13 +80,13 @@ class ConfigMutationTest {
     }
 
     @Test
-    void setNumber_perEnv_extendsExistingEnv() {
+    void setNumber_withDescription_baseLevel() {
         Config c = newConfig();
-        c.setNumber("x", 1, "prod");
-        c.setNumber("y", 2, "prod");
-        ConfigEnvironment env = c.environments().get("prod");
-        assertEquals(1, env.values().get("x"));
-        assertEquals(2, env.values().get("y"));
+        c.setNumber("limit", 42, "the cap", null);
+        @SuppressWarnings("unchecked")
+        Map<String, Object> raw = (Map<String, Object>) c.itemsRaw().get("limit");
+        assertEquals("the cap", raw.get("description"));
+        assertEquals("NUMBER", raw.get("type"));
     }
 
     // --- setBoolean ---
@@ -80,7 +95,7 @@ class ConfigMutationTest {
     void setBoolean_baseLevel_writesItem() {
         Config c = newConfig();
         c.setBoolean("on", true);
-        assertEquals(true, c.getResolvedItems().get("on"));
+        assertEquals(true, c.items().get("on"));
     }
 
     @Test
@@ -91,13 +106,13 @@ class ConfigMutationTest {
     }
 
     @Test
-    void setBoolean_perEnv_extendsExistingEnv() {
+    void setBoolean_withDescription_baseLevel() {
         Config c = newConfig();
-        c.setBoolean("a", true, "prod");
-        c.setBoolean("b", false, "prod");
-        ConfigEnvironment env = c.environments().get("prod");
-        assertEquals(true, env.values().get("a"));
-        assertEquals(false, env.values().get("b"));
+        c.setBoolean("on", true, "the switch", null);
+        @SuppressWarnings("unchecked")
+        Map<String, Object> raw = (Map<String, Object>) c.itemsRaw().get("on");
+        assertEquals("the switch", raw.get("description"));
+        assertEquals("BOOLEAN", raw.get("type"));
     }
 
     // --- setJson ---
@@ -107,7 +122,7 @@ class ConfigMutationTest {
         Config c = newConfig();
         Map<String, Object> payload = Map.of("k", "v");
         c.setJson("payload", payload);
-        assertEquals(payload, c.getResolvedItems().get("payload"));
+        assertEquals(payload, c.items().get("payload"));
     }
 
     @Test
@@ -119,13 +134,24 @@ class ConfigMutationTest {
     }
 
     @Test
-    void setJson_perEnv_extendsExistingEnv() {
+    void setJson_withDescription_baseLevel() {
         Config c = newConfig();
-        c.setJson("a", Map.of("k", 1), "prod");
-        c.setJson("b", Map.of("k", 2), "prod");
-        ConfigEnvironment env = c.environments().get("prod");
-        assertEquals(Map.of("k", 1), env.values().get("a"));
-        assertEquals(Map.of("k", 2), env.values().get("b"));
+        c.setJson("payload", Map.of("k", "v"), "the blob", null);
+        @SuppressWarnings("unchecked")
+        Map<String, Object> raw = (Map<String, Object>) c.itemsRaw().get("payload");
+        assertEquals("the blob", raw.get("description"));
+        assertEquals("JSON", raw.get("type"));
+    }
+
+    // --- set(ConfigItem) without environment uses the no-description branch ---
+
+    @Test
+    void setItem_withoutDescription_omitsDescriptionKey() {
+        Config c = newConfig();
+        c.set(new ConfigItem("k", "v", ItemType.STRING));
+        @SuppressWarnings("unchecked")
+        Map<String, Object> raw = (Map<String, Object>) c.itemsRaw().get("k");
+        assertFalse(raw.containsKey("description"));
     }
 
     // --- remove ---
@@ -135,7 +161,7 @@ class ConfigMutationTest {
         Config c = newConfig();
         c.setString("k", "v");
         c.remove("k");
-        assertFalse(c.getResolvedItems().containsKey("k"));
+        assertFalse(c.items().containsKey("k"));
     }
 
     @Test
@@ -143,7 +169,7 @@ class ConfigMutationTest {
         Config c = newConfig();
         c.setNumber("n", 5);
         c.remove("n", null);
-        assertFalse(c.getResolvedItems().containsKey("n"));
+        assertFalse(c.items().containsKey("n"));
     }
 
     @Test
@@ -158,62 +184,35 @@ class ConfigMutationTest {
     }
 
     @Test
-    void remove_perEnv_missingEnvIsNoOp() {
+    void remove_perEnv_missingEnv_createsEmptyEnvThenNoOp() {
         Config c = newConfig();
-        // Should not throw even though the environment doesn't exist
+        // itemsTarget(env) creates the env if absent, then removes a missing key.
         c.remove("anything", "missing-env");
-        assertTrue(c.environments().isEmpty());
+        assertTrue(c.environments().get("missing-env").values().isEmpty());
     }
 
     @Test
     void remove_perEnv_keyAbsentIsNoOp() {
         Config c = newConfig();
-        // Plant an environment entry that doesn't contain the key being removed.
-        Map<String, Map<String, Object>> envs = new HashMap<>();
-        Map<String, Object> existing = new HashMap<>();
-        existing.put("other", "metadata");
-        envs.put("prod", existing);
-        c.setEnvironments(envs);
-
-        // Should be a no-op rather than NPE
+        c.setString("other", "metadata", "prod");
         c.remove("anything", "prod");
-        // The other key is left alone.
         assertEquals("metadata", c.environments().get("prod").values().get("other"));
     }
 
-    // --- environments() defensive branch coverage ---
+    // --- setters that mutate metadata ---
 
     @Test
-    void environments_nullEnvValue_yieldsEmptyEnvironment() {
+    void setName_setDescription_setParent_mutateFields() {
         Config c = newConfig();
-        // Per ADR-024 §2.4 each env entry IS the flat override map. A null
-        // entry should degrade to an empty ConfigEnvironment rather than NPE.
-        Map<String, Map<String, Object>> envs = new HashMap<>();
-        envs.put("prod", null);
-        c.setEnvironments(envs);
-
-        ConfigEnvironment env = c.environments().get("prod");
-        assertNotNull(env);
-        assertTrue(env.values().isEmpty());
-        assertTrue(env.valuesRaw().isEmpty());
+        c.setName("New Name");
+        c.setDescription("new desc");
+        c.setParent("the-parent");
+        assertEquals("New Name", c.getName());
+        assertEquals("new desc", c.getDescription());
+        assertEquals("the-parent", c.getParent());
     }
 
-    @Test
-    void environments_flatShape_isPassedThrough() {
-        Config c = newConfig();
-        // Per ADR-024 §2.4 each env entry is {key: rawValue}, no "values"
-        // sub-map and no per-override envelope.
-        Map<String, Map<String, Object>> envs = new HashMap<>();
-        Map<String, Object> values = new HashMap<>();
-        values.put("inline-string", "directly stored");
-        envs.put("prod", values);
-        c.setEnvironments(envs);
-
-        ConfigEnvironment env = c.environments().get("prod");
-        assertEquals("directly stored", env.values().get("inline-string"));
-    }
-
-    // --- saveAsync (no-op-ish: just confirm it dispatches via executor) ---
+    // --- saveAsync ---
 
     @Test
     void saveAsync_withNullClient_completesExceptionally() throws Exception {
@@ -242,5 +241,91 @@ class ConfigMutationTest {
             // supplied executor was actually used.
         }
         assertTrue(usedExecutor.get());
+    }
+
+    @Test
+    void deleteAsync_withNullClient_completesExceptionally() {
+        Config c = newConfig();
+        CompletableFuture<Void> fut = c.deleteAsync();
+        Exception ex = assertThrows(java.util.concurrent.ExecutionException.class,
+                () -> fut.get(2, TimeUnit.SECONDS));
+        assertTrue(ex.getCause() instanceof IllegalStateException);
+    }
+
+    @Test
+    void deleteAsyncWithExecutor_runsOnSuppliedExecutor() {
+        Config c = newConfig();
+        AtomicBoolean usedExecutor = new AtomicBoolean(false);
+        Executor inline = r -> {
+            usedExecutor.set(true);
+            r.run();
+        };
+        CompletableFuture<Void> fut = c.deleteAsync(inline);
+        try {
+            fut.get(2, TimeUnit.SECONDS);
+        } catch (Exception ignored) {
+            // delete() fails (no client) — we only assert the executor ran.
+        }
+        assertTrue(usedExecutor.get());
+    }
+
+    @Test
+    void config_toString() {
+        Config c = newConfig();
+        assertEquals("Config(id=cfg, name=Cfg)", c.toString());
+    }
+
+    // --- items() / itemsRaw() unwrap branches ---
+
+    @Test
+    void items_unwrapsTypedMap_andPassesPlainValueThrough() {
+        Map<String, Object> raw = new HashMap<>();
+        raw.put("typed", Map.of("value", 30, "type", "NUMBER"));
+        raw.put("plain", "raw-string"); // not a typed map
+        raw.put("mapNoValue", Map.of("k", "v")); // a map without a "value" key
+        Config c = new Config(null, "cfg", "Cfg", null, null,
+                raw, new HashMap<>(), null, null);
+
+        Map<String, Object> items = c.items();
+        assertEquals(30, items.get("typed"));
+        assertEquals("raw-string", items.get("plain"));
+        assertEquals(Map.of("k", "v"), items.get("mapNoValue"));
+
+        Map<String, Object> rawCopy = c.itemsRaw();
+        // The typed entry is a defensive copy of the map.
+        assertEquals(Map.of("value", 30, "type", "NUMBER"), rawCopy.get("typed"));
+        assertEquals("raw-string", rawCopy.get("plain"));
+    }
+
+    // --- buildChain ---
+
+    @Test
+    void buildChain_rootConfig_singleEntry() {
+        Config c = new Config(null, "root", "Root", null, null,
+                new HashMap<>(), new HashMap<>(), null, null);
+        var chain = c.buildChain(null);
+        assertEquals(1, chain.size());
+        assertEquals("root", chain.get(0).id);
+    }
+
+    @Test
+    void buildChain_parentResolvedFromSuppliedList() {
+        Config parent = new Config(null, "parent", "Parent", null, null,
+                new HashMap<>(), new HashMap<>(), null, null);
+        Config child = new Config(null, "child", "Child", null, "parent",
+                new HashMap<>(), new HashMap<>(), null, null);
+        var chain = child.buildChain(java.util.List.of(child, parent));
+        assertEquals(2, chain.size());
+        assertEquals("child", chain.get(0).id);
+        assertEquals("parent", chain.get(1).id);
+    }
+
+    @Test
+    void buildChain_parentMissingAndNoClient_throws() {
+        // A parent that isn't in the supplied list and no client to fetch it
+        // with cannot be resolved.
+        Config child = new Config(null, "child", "Child", null, "ghost-parent",
+                new HashMap<>(), new HashMap<>(), null, null);
+        assertThrows(IllegalStateException.class, () -> child.buildChain(java.util.List.of(child)));
     }
 }

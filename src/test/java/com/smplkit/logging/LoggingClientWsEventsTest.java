@@ -110,8 +110,10 @@ class LoggingClientWsEventsTest {
 
         client.simulateLoggerChanged(Map.of()); // no "id"
 
+        // Mirrors the canonical: a missing id fetches with an empty key, which
+        // returns no data and is a no-op (no listener fires, no cache change).
         assertEquals(0, count.get());
-        verify(mockLoggersApi, never()).getLogger(any());
+        verify(mockLoggersApi).getLogger("");
     }
 
     @Test
@@ -219,12 +221,9 @@ class LoggingClientWsEventsTest {
 
     @Test
     void loggerDeleted_beforeStart_isNoOp() throws ApiException {
-        AtomicInteger count = new AtomicInteger();
-        client.onChange(e -> count.incrementAndGet());
-
-        client.simulateLoggerDeleted(Map.of("id", "com.acme.service"));
-
-        assertEquals(0, count.get());
+        // Listeners can't be registered before install() (onChange is gated);
+        // the handler itself must be inert before install — no fetch, no throw.
+        assertDoesNotThrow(() -> client.simulateLoggerDeleted(Map.of("id", "com.acme.service")));
         verify(mockLoggersApi, never()).getLogger(any());
     }
 
@@ -310,7 +309,8 @@ class LoggingClientWsEventsTest {
 
         client.simulateGroupChanged(Map.of()); // no "id"
 
-        verify(mockLogGroupsApi, never()).getLogGroup(any());
+        // A missing id fetches with an empty key, returns no data, and is a no-op.
+        verify(mockLogGroupsApi).getLogGroup("");
     }
 
     @Test
@@ -492,12 +492,9 @@ class LoggingClientWsEventsTest {
 
     @Test
     void groupDeleted_beforeStart_isNoOp() throws ApiException {
-        AtomicInteger count = new AtomicInteger();
-        client.onChange(e -> count.incrementAndGet());
-
-        client.simulateGroupDeleted(Map.of("id", "my-group"));
-
-        assertEquals(0, count.get());
+        // onChange is gated by install(); the handler must be inert before install.
+        assertDoesNotThrow(() -> client.simulateGroupDeleted(Map.of("id", "my-group")));
+        verify(mockLogGroupsApi, never()).getLogGroup(any());
     }
 
     @Test
@@ -724,8 +721,12 @@ class LoggingClientWsEventsTest {
         client.onChange("com.acme.svc", e -> count.incrementAndGet());
         count.set(0);
 
-        // Return a logger with invalid level string
-        LoggerResource lr = buildLoggerResource("com.acme.svc", "INVALID_LEVEL", true);
+        // A server-supplied env override carries an arbitrary string in the JSONB
+        // environments map: resolveLevel returns "NOT_A_LEVEL" verbatim (different
+        // from the cached INFO, so the delta loop is entered), and tryParseLogLevel
+        // returns null — the apply must be skipped, no adapter call, no listener.
+        LoggerResource lr = buildLoggerResource("com.acme.svc", null, true);
+        lr.getAttributes().setEnvironments(Map.of("production", Map.of("level", "NOT_A_LEVEL")));
         LoggerListResponse updated = new LoggerListResponse();
         updated.setData(new ArrayList<>(List.of(lr)));
         when(mockLoggersApi.listLoggers(isNull(), isNull(), isNull(), isNull(), isNull(), any(), any(), isNull())).thenReturn(updated);
@@ -747,8 +748,10 @@ class LoggingClientWsEventsTest {
     // -----------------------------------------------------------------------
 
     @Test
-    void refresh_beforeInstall_isNoOp() throws ApiException {
-        client.refresh();
+    void refresh_beforeInstall_throwsNotInstalled() throws ApiException {
+        // refresh() requires install() first — it raises NotInstalledError rather
+        // than silently no-op'ing, and never touches the API.
+        assertThrows(com.smplkit.errors.NotInstalledError.class, () -> client.refresh());
         verify(mockLoggersApi, never()).listLoggers(any(), any(), any(), any(), any(), any(), any(), any());
         verify(mockLogGroupsApi, never()).listLogGroups(isNull(), any(), any(), isNull());
     }

@@ -17,6 +17,7 @@ import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.*;
 import static org.mockito.Mockito.*;
 
+/** Pagination behavior for both the runtime fetch loop and management list(). */
 class PaginationTest {
 
     private ConfigsApi mockApi;
@@ -34,7 +35,7 @@ class PaginationTest {
         when(mockApi.listConfigs(isNull(), isNull(), isNull(), isNull(), eq(1), eq(1000), isNull()))
                 .thenReturn(listOf(1));
 
-        client._connectInternal();
+        client.ensureConnected();
 
         verify(mockApi, times(1)).listConfigs(isNull(), isNull(), isNull(), isNull(), eq(1), eq(1000), isNull());
         assertTrue(client.isConnected());
@@ -47,10 +48,33 @@ class PaginationTest {
         when(mockApi.listConfigs(isNull(), isNull(), isNull(), isNull(), eq(2), eq(1000), isNull()))
                 .thenReturn(listOf(3));
 
-        client._connectInternal();
+        client.ensureConnected();
 
         verify(mockApi, times(1)).listConfigs(isNull(), isNull(), isNull(), isNull(), eq(1), eq(1000), isNull());
         verify(mockApi, times(1)).listConfigs(isNull(), isNull(), isNull(), isNull(), eq(2), eq(1000), isNull());
+        assertTrue(client.isConnected());
+    }
+
+    @Test
+    void runtime_emptyFirstPage_exitsImmediately() throws ApiException {
+        when(mockApi.listConfigs(isNull(), isNull(), isNull(), isNull(), eq(1), eq(1000), isNull()))
+                .thenReturn(listOf(0));
+
+        client.ensureConnected();
+
+        verify(mockApi, times(1)).listConfigs(isNull(), isNull(), isNull(), isNull(), eq(1), eq(1000), isNull());
+        assertTrue(client.isConnected());
+    }
+
+    @Test
+    void runtime_nullDataPage_exitsLoop() throws ApiException {
+        ConfigListResponse nullData = new ConfigListResponse();
+        nullData.setData(null);
+        when(mockApi.listConfigs(isNull(), isNull(), isNull(), isNull(), eq(1), eq(1000), isNull()))
+                .thenReturn(nullData);
+
+        client.ensureConnected();
+
         assertTrue(client.isConnected());
     }
 
@@ -59,19 +83,18 @@ class PaginationTest {
         when(mockApi.listConfigs(isNull(), isNull(), isNull(), isNull(), eq(2), eq(50), isNull()))
                 .thenReturn(listOf(2));
 
-        List<Config> result = client.management().list(2, 50);
+        List<Config> result = client.list(2, 50);
 
         assertEquals(2, result.size());
         verify(mockApi).listConfigs(isNull(), isNull(), isNull(), isNull(), eq(2), eq(50), isNull());
     }
 
     @Test
-    void asyncManagement_listWithPagination_delegatesToSync() throws Exception {
+    void asyncClient_listWithPagination_delegatesToSync() throws Exception {
         when(mockApi.listConfigs(isNull(), isNull(), isNull(), isNull(), eq(4), eq(10), isNull()))
                 .thenReturn(listOf(1));
 
-        AsyncConfigManagement async = new AsyncConfigManagement(
-                client.management(), Executors.newSingleThreadExecutor());
+        AsyncConfigClient async = AsyncConfigClient.wrap(client, Executors.newSingleThreadExecutor());
 
         List<Config> result = async.list(4, 10).get();
 

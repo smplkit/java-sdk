@@ -79,5 +79,10 @@ class ColorTest {
         assertNotEquals(null, a);
         assertNotEquals("not a color", a);
         assertEquals(a, a);  // self-equality
+        // Color as the equals receiver, compared against a non-Color and null,
+        // to drive the `!(o instanceof Color)` false arm.
+        assertNotEquals(a, "not a color");
+        assertNotEquals(a, null);
+        assertNotEquals(a, Integer.valueOf(42));
     }
 }

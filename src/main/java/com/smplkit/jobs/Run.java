@@ -5,10 +5,6 @@ import java.util.Map;
 
 /**
  * A single execution of a job (read-only).
- *
- * <p>Runs are created and mutated by the jobs service, not by clients;
- * clients influence runs only through the {@code run} / {@code cancel} /
- * {@code rerun} actions on {@code mgmt.jobs}.</p>
  */
 public final class Run {
     /** Server-assigned UUID for this run. */

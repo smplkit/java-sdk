@@ -5,27 +5,33 @@ import com.smplkit.internal.generated.audit.ApiException;
 import java.time.OffsetDateTime;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.CompletionException;
+import java.util.concurrent.Executor;
+import java.util.concurrent.ForkJoinPool;
 
 /**
  * A SIEM streaming forwarder configured on the customer's account.
  *
- * <p>Active-record style: mutate fields directly and call {@link #save()}
- * to persist, or {@link #delete()} to remove. Header values in
- * {@code configuration.headers} are always returned redacted on reads —
- * the GET path on the audit API replaces every header value with
- * {@code "<redacted>"}. Re-supply real values before calling {@link #save()}
- * (the SDK does not cache them client-side).</p>
+ * <p>Active-record style: mutate fields directly and call {@link #save()} to
+ * persist, or {@link #delete()} to remove. Header values in
+ * {@code configuration.headers} are returned in plaintext on reads, so
+ * fetching a forwarder, mutating it, and calling {@link #save()} preserves
+ * its header values without re-entering secrets.</p>
+ *
+ * <p>Both {@link #save()}/{@link #saveAsync()} and {@link #delete()}/{@link
+ * #deleteAsync()} are exposed on the same instance — the async forms schedule
+ * the round-trip on a {@link CompletableFuture}; the sync forms block.</p>
  */
 public final class Forwarder {
 
     private AuditForwarders client;
 
     /**
-     * Caller-supplied key for this forwarder (used as the JSON:API
-     * {@code data.id} and as the URL path-param). For a new instance built
-     * via {@link AuditForwarders#newForwarder}, this is the id passed in
-     * by the caller. May only be {@code null} for the (rare) case of a
-     * forwarder constructed without the active-record builders.
+     * Caller-supplied unique identifier (key) for this forwarder. Unique
+     * within an account and immutable for the lifetime of the forwarder.
+     * {@code null} only while the instance represents an unsaved instance
+     * constructed without an id (which {@link #save()} would then reject).
      */
     public String id;
     /** Display name. Free-form. */
@@ -35,21 +41,18 @@ public final class Forwarder {
     /** Destination type — see {@link ForwarderType}. */
     public ForwarderType forwarderType;
     /**
-     * Read-only. Always {@code false} — the base enablement is pinned off
-     * server-side. Whether a forwarder actually delivers is decided per
-     * environment via {@link #environments}; mutating this field has no
-     * effect on the server.
+     * Read-only. Always {@code false} — the base enablement is pinned off.
+     * Whether a forwarder actually delivers is decided per environment via
+     * {@link #environments}; mutating this field has no effect on the server.
      */
     public boolean enabled = false;
     /**
      * Per-environment overrides keyed by environment key (e.g.
      * {@code "production"}, {@code "staging"}). A forwarder delivers in an
      * environment only when {@code environments.get(env).enabled} is
-     * {@code true}. Each entry may carry an optional
-     * {@link HttpConfiguration} override; omit it (leave
-     * {@code configuration} null) to inherit the base
-     * {@link #configuration}. Every referenced environment must exist and
-     * be managed for the account.
+     * {@code true}. Each entry may carry an optional {@link HttpConfiguration}
+     * override; omit it to inherit the base {@link #configuration}. Every
+     * referenced environment must exist and be managed for the account.
      */
     public Map<String, ForwarderEnvironment> environments = new HashMap<>();
     /**
@@ -59,29 +62,26 @@ public final class Forwarder {
      */
     public Map<String, Object> filter;
     /**
-     * Optional template applied to each event before delivery. Shape
-     * depends on {@link #transformType}; for {@link TransformType#JSONATA},
-     * a {@code String} containing the JSONata expression. {@code null}
-     * delivers the event JSON as-is.
-     *
-     * <p>Typed as {@code Object} because future engines may carry
-     * structured templates rather than plain strings; the wire model
-     * accepts any JSON-serializable value.</p>
+     * Optional template applied to each event before delivery. Shape depends
+     * on {@link #transformType}; for {@link TransformType#JSONATA}, a
+     * {@code String} containing a JSONata expression. {@code null} delivers
+     * the event JSON as-is.
      */
     public Object transform;
     /**
      * Engine used to evaluate {@link #transform}. Must be set whenever
-     * {@link #transform} is set, and vice versa — {@link #save()} rejects
-     * a forwarder where exactly one of the two is set.
+     * {@link #transform} is set.
      */
     public TransformType transformType;
     /**
-     * When {@code true}, this forwarder also receives smplkit's own platform
-     * change events (flag/config/etc. changes), delivered through every
-     * environment it is enabled in. Defaults to {@code false}. This is a
-     * base-level forwarder setting, parallel to {@link #filter} and
-     * {@link #transform} — not part of the per-environment
-     * {@link #environments} override map.
+     * When {@code true}, this forwarder also receives platform change events
+     * that smplkit records about your own resources (flag, configuration, and
+     * similar changes). Each such event is delivered through every environment
+     * this forwarder is enabled in, using that environment's resolved
+     * configuration. Independent of the per-environment {@link #environments}
+     * settings, since platform change events are not tied to a deployment
+     * environment. Defaults to {@code false} — platform change events are not
+     * forwarded unless you opt in.
      */
     public boolean forwardSmplkitEvents = false;
     /** Destination request configuration. */
@@ -90,7 +90,7 @@ public final class Forwarder {
     public OffsetDateTime createdAt;
     /** When this forwarder was last mutated. */
     public OffsetDateTime updatedAt;
-    /** Soft-delete timestamp. {@code null} for live forwarders. */
+    /** Deletion timestamp; {@code null} for live forwarders. */
     public OffsetDateTime deletedAt;
     /** Monotonic version counter; bumped on every server-side write. */
     public Integer version;
@@ -129,14 +129,26 @@ public final class Forwarder {
         this.version = version;
     }
 
+    @Override
+    public String toString() {
+        java.util.List<String> enabledEnvs = new java.util.ArrayList<>();
+        for (Map.Entry<String, ForwarderEnvironment> e : environments.entrySet()) {
+            if (e.getValue() != null && e.getValue().enabled) {
+                enabledEnvs.add(e.getKey());
+            }
+        }
+        java.util.Collections.sort(enabledEnvs);
+        return "Forwarder(id=" + id + ", name=" + name + ", enabled_in=" + enabledEnvs + ")";
+    }
+
     /**
-     * Persists this forwarder to the server.
+     * Create or update this forwarder on the server.
      *
-     * <p>Upsert behavior is driven by {@link #createdAt}: a forwarder with
-     * no {@code createdAt} is created (POST); otherwise it's full-replace
-     * updated (PUT). After the call, every field is refreshed from the
-     * server response (including newly-assigned {@code id},
-     * {@code createdAt}, {@code updatedAt}, {@code version}).</p>
+     * <p>Upsert behavior is driven by {@link #createdAt}: a forwarder with no
+     * {@code createdAt} is created (POST); otherwise it's full-replace updated
+     * (PUT). After the call, every field is refreshed from the server response
+     * (including newly-assigned {@code id}, {@code createdAt},
+     * {@code updatedAt}, {@code version}).</p>
      *
      * @throws IllegalArgumentException if {@code transform} and
      *     {@code transformType} are not both set or both unset, or if
@@ -152,6 +164,22 @@ public final class Forwarder {
         apply(other);
     }
 
+    /** Create or full-replace this forwarder on the server, scheduled on the common pool. */
+    public CompletableFuture<Void> saveAsync() {
+        return saveAsync(ForkJoinPool.commonPool());
+    }
+
+    /** Create or full-replace this forwarder on the server, scheduled on {@code executor}. */
+    public CompletableFuture<Void> saveAsync(Executor executor) {
+        return CompletableFuture.runAsync(() -> {
+            try {
+                save();
+            } catch (ApiException e) {
+                throw new CompletionException(e);
+            }
+        }, executor);
+    }
+
     static void validateTransform(TransformType transformType, Object transform) {
         if ((transform == null) != (transformType == null)) {
             throw new IllegalArgumentException(
@@ -163,12 +191,101 @@ public final class Forwarder {
         }
     }
 
-    /** Soft-deletes this forwarder on the server. */
+    /** Delete this forwarder on the server. */
     public void delete() throws ApiException {
         if (client == null || id == null) {
             throw new IllegalStateException("Forwarder was constructed without a client or id; cannot delete");
         }
         client.delete(id);
+    }
+
+    /** Delete this forwarder on the server, scheduled on the common pool. */
+    public CompletableFuture<Void> deleteAsync() {
+        return deleteAsync(ForkJoinPool.commonPool());
+    }
+
+    /** Delete this forwarder on the server, scheduled on {@code executor}. */
+    public CompletableFuture<Void> deleteAsync(Executor executor) {
+        return CompletableFuture.runAsync(() -> {
+            try {
+                delete();
+            } catch (ApiException e) {
+                throw new CompletionException(e);
+            }
+        }, executor);
+    }
+
+    /**
+     * Return the override for {@code environment}, creating an empty one if absent.
+     *
+     * <p>The per-environment mutators reach through here so an existing
+     * override's other field is preserved when only one of {@code enabled} /
+     * {@code configuration} is being set.</p>
+     */
+    private ForwarderEnvironment environmentOverride(String environment) {
+        ForwarderEnvironment env = environments.get(environment);
+        if (env == null) {
+            env = new ForwarderEnvironment();
+            environments.put(environment, env);
+        }
+        return env;
+    }
+
+    /**
+     * Set this forwarder's destination configuration in memory (base).
+     *
+     * <p>Replaces the base {@link #configuration}. Call {@link #save()} to
+     * persist.</p>
+     */
+    public void setConfiguration(HttpConfiguration configuration) {
+        this.configuration = configuration;
+    }
+
+    /**
+     * Set this forwarder's destination configuration in memory.
+     *
+     * <p>With {@code environment} omitted (the base overload), replaces the
+     * base {@link #configuration}. With {@code environment} given, sets the
+     * per-environment override's configuration on {@link #environments},
+     * creating the override entry if it doesn't exist yet (preserving any
+     * already-set {@code enabled} on it). Call {@link #save()} to persist.</p>
+     */
+    public void setConfiguration(HttpConfiguration configuration, String environment) {
+        if (environment == null) {
+            this.configuration = configuration;
+        } else {
+            environmentOverride(environment).configuration = configuration;
+        }
+    }
+
+    /**
+     * Set this forwarder's enablement in memory (base).
+     *
+     * <p>Sets the base {@link #enabled} (which the server pins false
+     * regardless — enablement is per-environment). Call {@link #save()} to
+     * persist.</p>
+     */
+    public void setEnabled(boolean enabled) {
+        this.enabled = enabled;
+    }
+
+    /**
+     * Set this forwarder's enablement in memory.
+     *
+     * <p>With {@code environment} omitted (the base overload), sets the base
+     * {@link #enabled} (which the server pins false regardless — enablement is
+     * per-environment). With {@code environment} given, sets the
+     * per-environment override's {@code enabled} on {@link #environments},
+     * creating the override entry if it doesn't exist yet (preserving any
+     * already-set {@code configuration} on it). Call {@link #save()} to
+     * persist.</p>
+     */
+    public void setEnabled(boolean enabled, String environment) {
+        if (environment == null) {
+            this.enabled = enabled;
+        } else {
+            environmentOverride(environment).enabled = enabled;
+        }
     }
 
     void apply(Forwarder other) {

@@ -1,9 +1,7 @@
 package com.smplkit.flags;
 
-import com.smplkit.management.SmplManagementClient;
 import org.junit.jupiter.api.Test;
 
-import java.util.List;
 import java.util.Map;
 
 import static org.junit.jupiter.api.Assertions.*;
@@ -16,8 +14,8 @@ import static org.junit.jupiter.api.Assertions.*;
 class FlagMutationsTest {
 
     private Flag<Boolean> newFlag() {
-        try (SmplManagementClient mc = SmplManagementClient.create("test-key")) {
-            return mc.flags.newBooleanFlag("my-flag", false);
+        try (FlagsClient client = FlagsClient.create("test-key")) {
+            return client.newBooleanFlag("my-flag", false);
         }
     }
 
@@ -87,9 +85,9 @@ class FlagMutationsTest {
     @Test
     void addValue_initialisesValuesIfNull() {
         Flag<String> flag;
-        try (SmplManagementClient mc = SmplManagementClient.create("test-key")) {
+        try (FlagsClient client = FlagsClient.create("test-key")) {
             // String flag with null values list (unconstrained)
-            flag = mc.flags.newStringFlag("color", "red", null, null, null);
+            flag = client.newStringFlag("color", "red", null, null, null);
         }
         assertNull(flag.getValues());
         flag.addValue("Red", "red");
@@ -116,8 +114,8 @@ class FlagMutationsTest {
     @Test
     void removeValue_nullValuesList_isNoOpAndReturnsThis() {
         Flag<String> flag;
-        try (SmplManagementClient mc = SmplManagementClient.create("test-key")) {
-            flag = mc.flags.newStringFlag("color", "red", null, null, null);
+        try (FlagsClient client = FlagsClient.create("test-key")) {
+            flag = client.newStringFlag("color", "red", null, null, null);
         }
         assertNull(flag.getValues());
         assertSame(flag, flag.removeValue("red"));

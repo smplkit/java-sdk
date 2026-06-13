@@ -1,6 +1,7 @@
 package com.smplkit;
 
 import com.smplkit.config.ConfigClient;
+import com.smplkit.internal.HttpClients;
 import com.smplkit.errors.SmplError;
 import com.smplkit.flags.FlagsClient;
 import com.smplkit.logging.LoggingClient;
@@ -29,8 +30,10 @@ class SmplClientTest {
                 .disableTelemetry(true)
                 .build()) {
             assertNotNull(client);
-            assertNotNull(client.config());
-            assertNotNull(client.manage());
+            assertNotNull(client.config);
+            assertNotNull(client.platform);
+            assertNotNull(client.account);
+            assertNotNull(client.jobs);
             assertEquals("test", client.environment());
             assertEquals("test-service", client.service());
         }
@@ -46,7 +49,7 @@ class SmplClientTest {
                 .disableTelemetry(true)
                 .build()) {
             assertNotNull(client);
-            assertNotNull(client.config());
+            assertNotNull(client.config);
         }
     }
 
@@ -72,9 +75,9 @@ class SmplClientTest {
                 .service("test-service")
                 .disableTelemetry(true)
                 .build()) {
-            ConfigClient config = client.config();
+            ConfigClient config = client.config;
             assertNotNull(config);
-            assertSame(config, client.config(), "config() should return the same instance");
+            assertSame(config, client.config, "config() should return the same instance");
         }
     }
 
@@ -86,9 +89,9 @@ class SmplClientTest {
                 .service("test-service")
                 .disableTelemetry(true)
                 .build()) {
-            FlagsClient flags = client.flags();
+            FlagsClient flags = client.flags;
             assertNotNull(flags);
-            assertSame(flags, client.flags(), "flags() should return the same instance");
+            assertSame(flags, client.flags, "flags() should return the same instance");
         }
     }
 
@@ -100,31 +103,42 @@ class SmplClientTest {
                 .service("test-service")
                 .disableTelemetry(true)
                 .build()) {
-            LoggingClient logging = client.logging();
+            LoggingClient logging = client.logging;
             assertNotNull(logging);
-            assertSame(logging, client.logging(), "logging() should return the same instance");
+            assertSame(logging, client.logging, "logging() should return the same instance");
         }
     }
 
     @Test
-    void builderWithoutEnvironment_throwsSmplError(@TempDir Path tempDir) {
+    void builderWithoutEnvironment_succeeds(@TempDir Path tempDir) {
         String origHome = System.getProperty("user.home");
         try {
             System.setProperty("user.home", tempDir.toString());
-            SmplClientBuilder builder = SmplClient.builder().apiKey("test-key").service("test-service");
-            assertThrows(SmplError.class, builder::build);
+            // environment is optional — an omitted environment resolves to null.
+            try (SmplClient client = SmplClient.builder()
+                    .apiKey("test-key").service("test-service").disableTelemetry(true).build()) {
+                assertNull(client.environment());
+                assertEquals("test-service", client.service());
+            }
         } finally {
             System.setProperty("user.home", origHome);
         }
     }
 
     @Test
-    void builderWithNoService_throwsSmplError() {
-        SmplClientBuilder builder = SmplClient.builder().apiKey("test-key").environment("test");
-        SmplError ex = assertThrows(SmplError.class, builder::build);
-        assertTrue(ex.getMessage().contains("No service provided"));
-        assertTrue(ex.getMessage().contains(".service()"));
-        assertTrue(ex.getMessage().contains("SMPLKIT_SERVICE"));
+    void builderWithNoService_succeeds(@TempDir Path tempDir) {
+        String origHome = System.getProperty("user.home");
+        try {
+            System.setProperty("user.home", tempDir.toString());
+            // service is optional — an omitted service resolves to null.
+            try (SmplClient client = SmplClient.builder()
+                    .apiKey("test-key").environment("test").disableTelemetry(true).build()) {
+                assertNull(client.service());
+                assertEquals("test", client.environment());
+            }
+        } finally {
+            System.setProperty("user.home", origHome);
+        }
     }
 
     @Test
@@ -214,7 +228,7 @@ class SmplClientTest {
     @Test
     void authInterceptor_addsAuthorizationHeader() {
         java.util.function.Consumer<java.net.http.HttpRequest.Builder> interceptor =
-                SmplClient.authInterceptor("sk_test_123");
+                HttpClients.authInterceptor("sk_test_123");
 
         java.net.http.HttpRequest.Builder builder = java.net.http.HttpRequest.newBuilder()
                 .uri(java.net.URI.create("https://example.com"));
@@ -232,46 +246,9 @@ class SmplClientTest {
         SmplClient client = new SmplClient(httpClient, "test-key", "test", "test-service",
                 Duration.ofSeconds(30));
         assertNotNull(client);
-        assertNotNull(client.config());
+        assertNotNull(client.config);
         assertEquals("test", client.environment());
         assertEquals("test-service", client.service());
-    }
-
-    @Test
-    void packagePrivateConstructorWithInjectableSubClients_createsClient() {
-        java.net.http.HttpClient httpClient = java.net.http.HttpClient.newHttpClient();
-
-        com.smplkit.internal.generated.flags.ApiClient flagsApiClient =
-                new com.smplkit.internal.generated.flags.ApiClient();
-        flagsApiClient.updateBaseUri("https://flags.smplkit.com");
-        flagsApiClient.setRequestInterceptor(SmplClient.authInterceptor("test-key"));
-        flagsApiClient.setReadTimeout(Duration.ofSeconds(5));
-        com.smplkit.internal.generated.flags.api.FlagsApi flagsApi =
-                new com.smplkit.internal.generated.flags.api.FlagsApi(flagsApiClient);
-
-        com.smplkit.flags.FlagsClient flagsClient = new com.smplkit.flags.FlagsClient(
-                flagsApi, null, httpClient, "test-key",
-                "https://flags.smplkit.com", "https://app.smplkit.com", Duration.ofSeconds(5));
-
-        com.smplkit.internal.generated.config.ApiClient configApiClient =
-                new com.smplkit.internal.generated.config.ApiClient();
-        configApiClient.updateBaseUri("https://config.smplkit.com");
-        configApiClient.setRequestInterceptor(
-                b -> b.header("Authorization", "Bearer test-key"));
-        configApiClient.setReadTimeout(Duration.ofSeconds(5));
-        com.smplkit.internal.generated.config.api.ConfigsApi configsApi =
-                new com.smplkit.internal.generated.config.api.ConfigsApi(configApiClient);
-        com.smplkit.config.ConfigClient configClient =
-                new com.smplkit.config.ConfigClient(configsApi, httpClient, "test-key");
-
-        SmplClient client = new SmplClient(httpClient, "test-key", "test", "test-service",
-                Duration.ofSeconds(5), flagsClient, configClient);
-        assertNotNull(client);
-        assertNotNull(client.config());
-        assertNotNull(client.flags());
-        assertEquals("test", client.environment());
-        assertEquals("test-service", client.service());
-        client.close();
     }
 
     @Test
@@ -361,8 +338,11 @@ class SmplClientTest {
 
     @Test
     void waitUntilReadyTimesOutWhenWsUnreachable() {
-        // Point the WS at an unreachable port so it never reaches "connected".
-        // waitUntilReady must throw a TimeoutError instead of blocking forever.
+        // This test exercises the real timeout path, so opt out of the suite-wide
+        // dial neutralization. The WS points at a refused localhost port (no
+        // external network), so it never reaches "connected" and the dial fails
+        // fast. waitUntilReady must throw a TimeoutError instead of blocking forever.
+        SharedWebSocket.disableDialForTests = false;
         try (SmplClient client = SmplClient.builder()
                 .apiKey("test-key")
                 .environment("test")
@@ -413,7 +393,7 @@ class SmplClientTest {
 
     @Test
     void compositeInterceptor_setsExtraHeadersAndAuth() throws Exception {
-        var interceptor = SmplClient.compositeInterceptor("sk_api_test",
+        var interceptor = HttpClients.compositeInterceptor("sk_api_test",
                 Map.of("X-Custom", "value"));
         var builder = HttpRequest.newBuilder(new URI("http://example.com"));
         interceptor.accept(builder);
@@ -424,7 +404,7 @@ class SmplClientTest {
 
     @Test
     void compositeInterceptor_sdkHeadersWinOnCollision() throws Exception {
-        var interceptor = SmplClient.compositeInterceptor("sk_api_test",
+        var interceptor = HttpClients.compositeInterceptor("sk_api_test",
                 Map.of("Authorization", "Bearer overridden", "X-Tenant", "acme"));
         var builder = HttpRequest.newBuilder(new URI("http://example.com"));
         interceptor.accept(builder);

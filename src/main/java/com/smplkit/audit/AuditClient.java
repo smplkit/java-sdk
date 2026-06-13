@@ -1,11 +1,13 @@
 package com.smplkit.audit;
 
-import com.smplkit.SmplClient;
+import com.smplkit.internal.ConfigResolver;
+import com.smplkit.internal.ConfigResolver.ResolvedClientConfig;
 import com.smplkit.internal.HttpClients;
 import com.smplkit.internal.generated.audit.ApiClient;
 import com.smplkit.internal.generated.audit.api.CategoriesApi;
 import com.smplkit.internal.generated.audit.api.EventTypesApi;
 import com.smplkit.internal.generated.audit.api.EventsApi;
+import com.smplkit.internal.generated.audit.api.ForwardersApi;
 import com.smplkit.internal.generated.audit.api.ResourceTypesApi;
 
 import java.net.http.HttpClient;
@@ -14,15 +16,27 @@ import java.util.HashMap;
 import java.util.Map;
 
 /**
- * Audit-product runtime entry point — accessed via {@link SmplClient#audit()}.
+ * The Smpl Audit client (sync).
  *
- * <p>Sub-clients: {@link #events()} for event recording / listing /
- * retrieval; {@link #resourceTypes()} for the distinct resource-type
- * slugs seen in the account; {@link #eventTypes()} for the distinct event
- * type slugs (powering cascading filter dropdowns).</p>
+ * <p>Audit installs no in-process machinery, so it has no runtime/management
+ * split: one client exposes the full surface — event recording and reads,
+ * distinct-value discovery, and SIEM forwarder CRUD — reachable as
+ * {@code client.audit} ({@link com.smplkit.SmplClient}) or constructed
+ * directly:</p>
  *
- * <p>Management-plane operations (SIEM forwarder CRUD) live on
- * {@code SmplManagementClient} under {@code mgmt.audit.*}.</p>
+ * <pre>{@code
+ * try (AuditClient audit = AuditClient.builder().environment("production").build()) {
+ *     audit.events().record(new CreateEventInput("invoice.created", "invoice", "inv-1"));
+ *     audit.events().flush(5_000);
+ *     for (Forwarder f : audit.forwarders().list()) {
+ *         // ...
+ *     }
+ * }
+ * }</pre>
+ *
+ * <p>Namespaces: {@link #events()} (record/flush/list/get),
+ * {@link #resourceTypes()}, {@link #eventTypes()}, {@link #categories()}
+ * (discovery), and {@link #forwarders()} (CRUD).</p>
  */
 public final class AuditClient implements AutoCloseable {
 
@@ -30,19 +44,35 @@ public final class AuditClient implements AutoCloseable {
     private final AuditResourceTypesClient resourceTypes;
     private final AuditEventTypesClient eventTypes;
     private final AuditCategoriesClient categories;
+    private final AuditForwarders forwarders;
+    private final boolean ownsTransport;
 
+    /**
+     * Wired constructor (no environment) — invoked by {@link com.smplkit.SmplClient}
+     * so the audit surface shares the parent client's connection pool. The
+     * resulting client does NOT own its transport; {@link #close()} tears down
+     * only the event buffer.
+     */
     public AuditClient(HttpClient httpClient, String apiKey, Map<String, String> extraHeaders,
                        Duration timeout, String baseUrl) {
         this(httpClient, apiKey, extraHeaders, timeout, baseUrl, null);
     }
 
     /**
-     * Runtime audit ops are environment-scoped (ADR-055): record / list /
-     * get / discovery all resolve their environment from the
+     * Wired constructor — invoked by {@link com.smplkit.SmplClient} so the audit
+     * surface shares the parent client's connection pool.
+     *
+     * <p>Runtime audit ops are environment-scoped: record / list / get /
+     * discovery all resolve their environment from the
      * {@code X-Smplkit-Environment} request header. We stamp it once at the
      * client level from the SDK's configured runtime {@code environment} so
      * every generated call carries it. A caller-supplied {@code extraHeaders}
-     * entry of the same name wins (explicit override).
+     * entry of the same name wins (explicit override).</p>
+     *
+     * <p>This is the wired constructor {@link com.smplkit.SmplClient} calls:
+     * {@code AuditClient(java.net.http.HttpClient, apiKey, extraHeaders, timeout,
+     * auditBaseUrl, environment)}. The resulting client does NOT own its
+     * transport; {@link #close()} tears down only the event buffer.</p>
      *
      * @param environment the SDK's configured runtime environment, or
      *     {@code null} to omit the header (e.g. a single-environment
@@ -50,9 +80,42 @@ public final class AuditClient implements AutoCloseable {
      */
     public AuditClient(HttpClient httpClient, String apiKey, Map<String, String> extraHeaders,
                        Duration timeout, String baseUrl, String environment) {
+        ApiClient apiClient = buildApiClient(baseUrl, apiKey, withEnvironment(environment, extraHeaders), timeout);
+        this.events = new AuditEvents(new EventsApi(apiClient));
+        this.resourceTypes = new AuditResourceTypesClient(new ResourceTypesApi(apiClient));
+        this.eventTypes = new AuditEventTypesClient(new EventTypesApi(apiClient));
+        this.categories = new AuditCategoriesClient(new CategoriesApi(apiClient));
+        this.forwarders = new AuditForwarders(new ForwardersApi(apiClient));
+        this.ownsTransport = false;
+    }
+
+    /**
+     * Standalone constructor — builds and OWNS its own transport. Used by
+     * {@link AuditClientBuilder#build()}.
+     */
+    private AuditClient(ResolvedClientConfig cfg, String environment, Duration timeout,
+                        Map<String, String> extraHeaders) {
+        String baseUrl = ConfigResolver.serviceUrl(cfg.scheme, "audit", cfg.baseDomain);
+        ApiClient apiClient = buildApiClient(baseUrl, cfg.apiKey, withEnvironment(environment, extraHeaders), timeout);
+        this.events = new AuditEvents(new EventsApi(apiClient));
+        this.resourceTypes = new AuditResourceTypesClient(new ResourceTypesApi(apiClient));
+        this.eventTypes = new AuditEventTypesClient(new EventTypesApi(apiClient));
+        this.categories = new AuditCategoriesClient(new CategoriesApi(apiClient));
+        this.forwarders = new AuditForwarders(new ForwardersApi(apiClient));
+        this.ownsTransport = true;
+    }
+
+    private static ApiClient buildApiClient(String baseUrl, String apiKey,
+                                            Map<String, String> headers, Duration timeout) {
         ApiClient apiClient = new ApiClient();
         apiClient.setHttpClientBuilder(HttpClients.builder());
         apiClient.updateBaseUri(baseUrl);
+        apiClient.setRequestInterceptor(HttpClients.compositeInterceptor(apiKey, headers));
+        apiClient.setReadTimeout(timeout);
+        return apiClient;
+    }
+
+    private static Map<String, String> withEnvironment(String environment, Map<String, String> extraHeaders) {
         Map<String, String> headers = new HashMap<>();
         if (environment != null) {
             headers.put("X-Smplkit-Environment", environment);
@@ -60,15 +123,10 @@ public final class AuditClient implements AutoCloseable {
         if (extraHeaders != null) {
             headers.putAll(extraHeaders); // explicit caller override wins
         }
-        apiClient.setRequestInterceptor(SmplClient.compositeInterceptor(apiKey, headers));
-        apiClient.setReadTimeout(timeout);
-        this.events = new AuditEvents(new EventsApi(apiClient));
-        this.resourceTypes = new AuditResourceTypesClient(new ResourceTypesApi(apiClient));
-        this.eventTypes = new AuditEventTypesClient(new EventTypesApi(apiClient));
-        this.categories = new AuditCategoriesClient(new CategoriesApi(apiClient));
+        return headers;
     }
 
-    /** Returns the events sub-client (record, list, get). */
+    /** Returns the events sub-client (record, flush, list, get). */
     public AuditEvents events() {
         return events;
     }
@@ -88,8 +146,60 @@ public final class AuditClient implements AutoCloseable {
         return categories;
     }
 
+    /** Returns the forwarders sub-client (SIEM forwarder CRUD). */
+    public AuditForwarders forwarders() {
+        return forwarders;
+    }
+
+    /**
+     * Release HTTP resources — drains and stops the event buffer's worker,
+     * then (only when this client owns its transport) tears down the transport.
+     *
+     * <p>An audit client wired by a top-level client shares that client's
+     * transport and must not close it here; the owning client's
+     * {@code close()} handles teardown. A standalone audit client owns its
+     * transport, but the JDK {@code HttpClient} backing it has no persistent
+     * resources beyond a daemon selector thread the JVM reclaims on GC, so
+     * there is nothing to tear down explicitly today.</p>
+     */
     @Override
     public void close() {
-        events.close();
+        try {
+            events.close();
+        } finally {
+            if (ownsTransport) {
+                // No persistent resources beyond the owned HttpClient (managed by JDK).
+            }
+        }
+    }
+
+    // ------------------------------------------------------------------
+    // Standalone construction (mirrors SmplClient.create / builder())
+    // ------------------------------------------------------------------
+
+    /**
+     * Construct a standalone {@link AuditClient}, resolving credentials from the
+     * standard sources (env vars, {@code ~/.smplkit}). Owns its own transport.
+     * No environment is configured — recording falls back to the server-side
+     * default environment.
+     */
+    public static AuditClient create() {
+        return builder().build();
+    }
+
+    /** Construct a standalone {@link AuditClient} with the given API key. */
+    public static AuditClient create(String apiKey) {
+        return builder().apiKey(apiKey).build();
+    }
+
+    /** Returns a builder for a standalone {@link AuditClient}. */
+    public static AuditClientBuilder builder() {
+        return new AuditClientBuilder();
+    }
+
+    /** Internal: build a standalone client from already-resolved config. */
+    static AuditClient fromResolved(ResolvedClientConfig cfg, String environment,
+                                    Duration timeout, Map<String, String> extraHeaders) {
+        return new AuditClient(cfg, environment, timeout, extraHeaders);
     }
 }

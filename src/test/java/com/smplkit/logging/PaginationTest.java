@@ -19,6 +19,11 @@ import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.*;
 import static org.mockito.Mockito.*;
 
+/**
+ * Pagination behavior across the runtime fetch (page size 1000, loop-until-short)
+ * and the management CRUD list endpoints (caller-supplied page/size pass-through),
+ * both sync and async.
+ */
 class PaginationTest {
 
     private LoggersApi mockLoggersApi;
@@ -90,7 +95,7 @@ class PaginationTest {
                 eq(3), eq(20), isNull()))
                 .thenReturn(loggers(1));
 
-        List<Logger> result = client.management().list(3, 20);
+        List<Logger> result = client.loggers.list(3, 20);
 
         assertEquals(1, result.size());
         verify(mockLoggersApi).listLoggers(isNull(), isNull(), isNull(), isNull(), isNull(),
@@ -102,33 +107,30 @@ class PaginationTest {
         when(mockLogGroupsApi.listLogGroups(isNull(), eq(2), eq(10), isNull()))
                 .thenReturn(groups(2));
 
-        List<LogGroup> result = client.management().listGroups(2, 10);
+        List<LogGroup> result = client.logGroups.list(2, 10);
 
         assertEquals(2, result.size());
         verify(mockLogGroupsApi).listLogGroups(isNull(), eq(2), eq(10), isNull());
     }
 
     @Test
-    void mgmtLoggersClient_listWithPagination_passesThrough() throws ApiException {
+    void management_logger_listDefault_passesNullPagination() throws ApiException {
         when(mockLoggersApi.listLoggers(isNull(), isNull(), isNull(), isNull(), isNull(),
-                eq(5), eq(50), isNull()))
+                isNull(), isNull(), isNull()))
                 .thenReturn(loggers(1));
 
-        LoggersClient lc = new LoggersClient(client);
-        List<Logger> result = lc.list(5, 50);
-
-        assertEquals(1, result.size());
+        assertEquals(1, client.loggers.list().size());
+        verify(mockLoggersApi).listLoggers(isNull(), isNull(), isNull(), isNull(), isNull(),
+                isNull(), isNull(), isNull());
     }
 
     @Test
-    void mgmtLogGroupsClient_listWithPagination_passesThrough() throws ApiException {
-        when(mockLogGroupsApi.listLogGroups(isNull(), eq(2), eq(100), isNull()))
-                .thenReturn(groups(3));
+    void management_group_listDefault_passesNullPagination() throws ApiException {
+        when(mockLogGroupsApi.listLogGroups(isNull(), isNull(), isNull(), isNull()))
+                .thenReturn(groups(1));
 
-        LogGroupsClient lgc = new LogGroupsClient(client);
-        List<LogGroup> result = lgc.list(2, 100);
-
-        assertEquals(3, result.size());
+        assertEquals(1, client.logGroups.list().size());
+        verify(mockLogGroupsApi).listLogGroups(isNull(), isNull(), isNull(), isNull());
     }
 
     @Test
@@ -138,7 +140,7 @@ class PaginationTest {
                 .thenReturn(loggers(1));
 
         AsyncLoggersClient async = new AsyncLoggersClient(
-                new LoggersClient(client), Executors.newSingleThreadExecutor());
+                client.loggers, Executors.newSingleThreadExecutor());
 
         List<Logger> result = async.list(2, 25).get();
 
@@ -151,7 +153,7 @@ class PaginationTest {
                 .thenReturn(groups(1));
 
         AsyncLogGroupsClient async = new AsyncLogGroupsClient(
-                new LogGroupsClient(client), Executors.newSingleThreadExecutor());
+                client.logGroups, Executors.newSingleThreadExecutor());
 
         List<LogGroup> result = async.list(3, 15).get();
 

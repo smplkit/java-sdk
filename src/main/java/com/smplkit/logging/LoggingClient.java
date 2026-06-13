@@ -2,72 +2,118 @@ package com.smplkit.logging;
 
 import com.smplkit.LogLevel;
 import com.smplkit.SharedWebSocket;
-import com.smplkit.errors.ApiExceptionHandler;
-import com.smplkit.errors.NotFoundError;
+import com.smplkit.internal.ApiExceptionHandler;
+import com.smplkit.errors.NotInstalledError;
 import com.smplkit.internal.Debug;
 import com.smplkit.internal.generated.logging.ApiException;
 import com.smplkit.internal.generated.logging.api.LogGroupsApi;
 import com.smplkit.internal.generated.logging.api.LoggersApi;
-import com.smplkit.internal.generated.logging.model.LogGroupCreateRequest;
-import com.smplkit.internal.generated.logging.model.LogGroupCreateResource;
 import com.smplkit.internal.generated.logging.model.LogGroupListResponse;
-import com.smplkit.internal.generated.logging.model.LogGroupRequest;
 import com.smplkit.internal.generated.logging.model.LogGroupResource;
 import com.smplkit.internal.generated.logging.model.LogGroupResponse;
-import com.smplkit.internal.generated.logging.model.LoggerBulkItem;
-import com.smplkit.internal.generated.logging.model.LoggerBulkRequest;
 import com.smplkit.internal.generated.logging.model.LoggerListResponse;
-import com.smplkit.internal.generated.logging.model.LoggerRequest;
 import com.smplkit.internal.generated.logging.model.LoggerResource;
 import com.smplkit.internal.generated.logging.model.LoggerResponse;
-import org.openapitools.jackson.nullable.JsonNullable;
 import com.smplkit.logging.adapters.DiscoveredLogger;
 import com.smplkit.logging.adapters.LoggingAdapter;
 
 import java.net.http.HttpClient;
-import java.time.Instant;
-import java.time.OffsetDateTime;
 import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
-import java.util.concurrent.CopyOnWriteArrayList;
-import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.Executors;
-import java.util.concurrent.ScheduledExecutorService;
-import java.util.concurrent.ScheduledFuture;
 import java.util.ServiceConfigurationError;
 import java.util.ServiceLoader;
-import java.util.concurrent.TimeUnit;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.function.Consumer;
 import java.util.logging.Level;
 
 /**
- * Client for the smplkit Logging service.
+ * The Smpl Logging client (sync).
  *
- * <p>Provides logger and group management via {@link #management()} and runtime
- * level control ({@link #install()}, {@link #onChange}).</p>
+ * <p>Smpl Logging has two surfaces on a single client, mirroring how the config,
+ * flags, audit, and jobs clients expose their full surface from one class:</p>
  *
- * <p>Supports JUL, Logback, and Log4j2 via pluggable {@link LoggingAdapter} instances.</p>
+ * <ul>
+ *   <li><strong>CRUD surface</strong> — works without {@link #install}. Two sub-clients:
+ *   <ul>
+ *     <li>{@code client.logging.loggers} — logger CRUD + discovery: {@code new_} /
+ *       {@code list} / {@code get} / {@code delete} plus {@code register} /
+ *       {@code flush} / {@code pendingCount}.</li>
+ *     <li>{@code client.logging.logGroups} — log-group CRUD: {@code new_} /
+ *       {@code list} / {@code get} / {@code delete}.</li>
+ *   </ul>
+ *   The fused client owns the logger-discovery buffer directly; the {@code loggers}
+ *   sub-client shares that same buffer so discovery and explicit registration
+ *   drain through one queue.</li>
+ *   <li><strong>Live surface</strong> — directly on the client. {@link #registerAdapter}
+ *   is a PRE-install configuration call (allowed before {@link #install}).
+ *   {@link #install} opens the live connection (hooks into the application's
+ *   logging framework via the registered adapters, discovers loggers, fetches +
+ *   applies levels, opens the shared WebSocket). {@code onChange} / {@code refresh} require {@link #install} first;
+ *   calling them earlier raises {@link NotInstalledError}.</li>
+ * </ul>
+ *
+ * <p>One client exposes the full surface, reachable as {@code client.logging}
+ * ({@link com.smplkit.SmplClient}) or constructed directly:</p>
+ *
+ * <pre>{@code
+ * try (LoggingClient logging = LoggingClient.builder()
+ *         .environment("production").build()) {
+ *     logging.loggers.new_("sqlalchemy.engine").save();
+ *     logging.install();
+ * }
+ * }</pre>
+ *
+ * <p>The client supports two construction shapes:</p>
+ *
+ * <ul>
+ *   <li><strong>Wired</strong> into {@link com.smplkit.SmplClient} — borrows the
+ *   parent's logging transport for both runtime fetch and CRUD and the parent's
+ *   shared WebSocket for the live channel. This is the common path.</li>
+ *   <li><strong>Standalone</strong> — {@code LoggingClient.builder()...build()}
+ *   builds and owns its own logging transport, and on {@link #install} opens and
+ *   owns its own WebSocket (the WebSocket gateway lives on the app service).
+ *   {@link #close()} tears down only the owned transport and owned WebSocket.</li>
+ * </ul>
  */
-public final class LoggingClient {
+public final class LoggingClient implements AutoCloseable {
 
-    private static final java.util.logging.Logger LOG = java.util.logging.Logger.getLogger("smplkit.logging");
+    private static final java.util.logging.Logger LOG =
+            java.util.logging.Logger.getLogger("smplkit.logging");
+
+    private static final String NOT_INSTALLED_MESSAGE =
+            "Smpl Logging live operations require install() first — this opens a live "
+            + "connection to your running service and hooks into your application's "
+            + "logging framework. Call client.logging.install() before "
+            + "onChange()/refresh().";
+
+    private static final int RUNTIME_PAGE_SIZE = 1000;
+
+    /** Logger CRUD + discovery ({@code client.logging.loggers}). */
+    public final LoggersClient loggers;
+    /** Log-group CRUD ({@code client.logging.logGroups}). */
+    public final LogGroupsClient logGroups;
 
     final LoggersApi loggersApi;
     final LogGroupsApi logGroupsApi;
     private final HttpClient httpClient;
     private final String apiKey;
+    private final String appBaseUrl;
+    private final boolean ownsTransport;
     private volatile com.smplkit.MetricsReporter metrics;
+
+    // Discovery buffer is owned by this client; the loggers sub-client
+    // shares it so discovery and explicit registration drain together.
+    private final LoggerRegistrationBuffer buffer = new LoggerRegistrationBuffer();
 
     // Adapter state
     private final List<LoggingAdapter> adapters = new ArrayList<>();
     private boolean explicitAdapters = false;
 
-    // Runtime state
-    private volatile boolean started = false;
+    // Live-surface state
+    private volatile boolean connected = false;
     private String environment;
     private String service;
     private final Map<String, String> nameMap = new ConcurrentHashMap<>();
@@ -76,60 +122,88 @@ public final class LoggingClient {
     private final List<Consumer<LoggerChangeEvent>> globalListeners = new CopyOnWriteArrayList<>();
     private final Map<String, List<Consumer<LoggerChangeEvent>>> keyListeners = new ConcurrentHashMap<>();
     private volatile SharedWebSocket wsManager;
-
-    // Post-startup registration buffer
-    private final LoggerRegistrationBuffer loggerBuffer = new LoggerRegistrationBuffer();
-    private final ScheduledExecutorService loggerFlushExecutor;
-    private volatile ScheduledFuture<?> loggerFlushFuture;
+    private boolean ownsWs = false;
 
     // WS event handlers (stored as fields so they can be unregistered)
-    private final java.util.function.Consumer<java.util.Map<String, Object>> loggerChangedHandler =
-            this::handleLoggerChanged;
-    private final java.util.function.Consumer<java.util.Map<String, Object>> loggerDeletedHandler =
-            this::handleLoggerDeleted;
-    private final java.util.function.Consumer<java.util.Map<String, Object>> groupChangedHandler =
-            this::handleGroupChanged;
-    private final java.util.function.Consumer<java.util.Map<String, Object>> groupDeletedHandler =
-            this::handleGroupDeleted;
-    private final java.util.function.Consumer<java.util.Map<String, Object>> loggersChangedHandler =
-            this::handleLoggersChanged;
-
-    // Management accessor
-    private final LoggingManagement management;
+    private final Consumer<Map<String, Object>> loggerChangedHandler = this::handleLoggerChanged;
+    private final Consumer<Map<String, Object>> loggerDeletedHandler = this::handleLoggerDeleted;
+    private final Consumer<Map<String, Object>> groupChangedHandler = this::handleGroupChanged;
+    private final Consumer<Map<String, Object>> groupDeletedHandler = this::handleGroupDeleted;
+    private final Consumer<Map<String, Object>> loggersChangedHandler = this::handleLoggersChanged;
 
     /**
-     * Creates a new LoggingClient.
+     * Wired constructor — called by {@link com.smplkit.SmplClient}.
+     *
+     * <p><strong>Exact signature:</strong>
+     * {@code LoggingClient(LoggersApi loggersApi, LogGroupsApi logGroupsApi,
+     * java.net.http.HttpClient httpClient, String apiKey)}.</p>
+     *
+     * <p>SmplClient builds the generated logging {@code ApiClient} via the
+     * {@code HttpClients.compositeInterceptor} transport idiom, derives the two
+     * generated {@code *Api} instances, and passes the parent's shared
+     * {@link HttpClient} (used by the parent {@link SharedWebSocket}) plus the
+     * api key. After construction SmplClient calls {@link #setEnvironment},
+     * {@link #setService}, {@link #setMetrics}, and {@link #setSharedWs} to wire
+     * the runtime context. A wired client borrows the parent's transport and
+     * WebSocket and closes neither.</p>
      *
      * @param loggersApi   the generated Loggers API client
      * @param logGroupsApi the generated LogGroups API client
-     * @param httpClient   shared HTTP client
+     * @param httpClient   shared HTTP client (for the parent's WebSocket)
      * @param apiKey       bearer token for authentication
      */
     public LoggingClient(LoggersApi loggersApi, LogGroupsApi logGroupsApi,
                          HttpClient httpClient, String apiKey) {
+        this(loggersApi, logGroupsApi, httpClient, apiKey, null, false);
+    }
+
+    private LoggingClient(LoggersApi loggersApi, LogGroupsApi logGroupsApi,
+                          HttpClient httpClient, String apiKey,
+                          String appBaseUrl, boolean ownsTransport) {
         this.loggersApi = loggersApi;
         this.logGroupsApi = logGroupsApi;
         this.httpClient = httpClient;
         this.apiKey = apiKey;
-        this.management = new LoggingManagement(this);
-        this.loggerFlushExecutor = Executors.newSingleThreadScheduledExecutor(r -> {
-            Thread t = new Thread(r, "smplkit-logger-flush");
-            t.setDaemon(true);
-            return t;
-        });
+        this.appBaseUrl = appBaseUrl;
+        this.ownsTransport = ownsTransport;
+        this.loggers = new LoggersClient(loggersApi, buffer);
+        this.logGroups = new LogGroupsClient(logGroupsApi);
+    }
+
+    /**
+     * Internal: build a standalone client owning a freshly-built logging transport.
+     *
+     * @param loggersApi   the standalone Loggers API
+     * @param logGroupsApi the standalone LogGroups API
+     * @param httpClient   the standalone HTTP client used to open the owned WebSocket
+     * @param apiKey       the resolved api key
+     * @param appBaseUrl   the app-service base URL (the WebSocket gateway lives on app)
+     */
+    static LoggingClient standalone(LoggersApi loggersApi, LogGroupsApi logGroupsApi,
+                                    HttpClient httpClient, String apiKey, String appBaseUrl) {
+        return new LoggingClient(loggersApi, logGroupsApi, httpClient, apiKey, appBaseUrl, true);
     }
 
     // -----------------------------------------------------------------------
-    // Management accessor
+    // Standalone construction
     // -----------------------------------------------------------------------
 
     /**
-     * Returns the management-plane API for logger and log group CRUD operations.
-     *
-     * @return the {@link LoggingManagement} instance
+     * Construct a standalone {@link LoggingClient} resolving credentials from the
+     * standard sources (env vars, {@code ~/.smplkit}). Owns its own logging transport.
      */
-    public LoggingManagement management() {
-        return management;
+    public static LoggingClient create() {
+        return builder().build();
+    }
+
+    /** Construct a standalone {@link LoggingClient} with the given API key. */
+    public static LoggingClient create(String apiKey) {
+        return builder().apiKey(apiKey).build();
+    }
+
+    /** Returns a builder for a standalone {@link LoggingClient}. */
+    public static LoggingClientBuilder builder() {
+        return new LoggingClientBuilder();
     }
 
     // -----------------------------------------------------------------------
@@ -151,25 +225,34 @@ public final class LoggingClient {
         this.metrics = metrics;
     }
 
-    /** Sets the shared WebSocket manager. Called by SmplClient before start(). */
+    /** Sets the shared WebSocket manager. Called by SmplClient before install(). */
     public void setSharedWs(SharedWebSocket ws) {
         this.wsManager = ws;
     }
 
+    private volatile Runnable ensureStartedHook;
+
+    /** Sets the parent's deferred-start hook, run once when the live surface first connects (wired path). */
+    public void setEnsureStarted(Runnable hook) {
+        this.ensureStartedHook = hook;
+    }
+
     // -----------------------------------------------------------------------
-    // Adapter registration
+    // Adapter registration (pre-install, ungated)
     // -----------------------------------------------------------------------
 
     /**
-     * Registers a custom logging adapter. Must be called before {@link #install()}.
+     * Register a logging adapter. Must be called before install().
      *
-     * <p>Registering an adapter disables automatic adapter detection.</p>
+     * <p>If called at least once, auto-loading is disabled — only explicitly
+     * registered adapters are used. This is a pre-install configuration
+     * call: it is intentionally NOT gated by {@link #install}.</p>
      *
      * @param adapter the adapter to register
      * @throws IllegalStateException if called after install()
      */
     public void registerAdapter(LoggingAdapter adapter) {
-        if (started) {
+        if (connected) {
             throw new IllegalStateException("Cannot register adapters after install()");
         }
         explicitAdapters = true;
@@ -177,198 +260,199 @@ public final class LoggingClient {
     }
 
     // -----------------------------------------------------------------------
-    // Internal: create / update (called by Logger.save() and LogGroup.save())
+    // Live surface: install (gate) + WebSocket helpers
     // -----------------------------------------------------------------------
 
-    /** Saves a logger on the server (upsert via PUT). Called by {@link Logger#save()}. */
-    Logger _saveLogger(Logger lg) {
-        try {
-            LoggerRequest body = buildLoggerBody(lg.getId(), lg);
-            LoggerResponse response = loggersApi.updateLogger(lg.getId(), body);
-            return loggerResponseToModel(response);
-        } catch (ApiException e) {
-            throw mapLoggingException(e);
+    private void requireInstalled() {
+        if (!connected) {
+            throw new NotInstalledError(NOT_INSTALLED_MESSAGE);
         }
     }
 
-    /** Updates an existing logger on the server. Called by {@link Logger#save()}. */
-    Logger _updateLogger(Logger lg) {
-        return _saveLogger(lg);
-    }
-
-    /** Creates a new group on the server. Called by {@link LogGroup#save()}. */
-    LogGroup _createGroup(LogGroup grp) {
-        try {
-            LogGroupCreateRequest body = buildCreateGroupBody(grp);
-            LogGroupResponse response = logGroupsApi.createLogGroup(body);
-            return logGroupResponseToModel(response);
-        } catch (ApiException e) {
-            throw mapLoggingException(e);
+    /** Return the shared WebSocket — the parent's when wired, else our own. */
+    private SharedWebSocket ensureWs() {
+        if (wsManager == null && ownsTransport && appBaseUrl != null && httpClient != null) {
+            wsManager = new SharedWebSocket(httpClient, appBaseUrl, apiKey, metrics);
+            wsManager.start();
+            ownsWs = true;
         }
+        return wsManager;
     }
-
-    /** Updates an existing group on the server. Called by {@link LogGroup#save()}. */
-    LogGroup _updateGroup(LogGroup grp) {
-        try {
-            LogGroupRequest body = buildGroupBody(grp.getId(), grp);
-            LogGroupResponse response = logGroupsApi.updateLogGroup(grp.getId(), body);
-            return logGroupResponseToModel(response);
-        } catch (ApiException e) {
-            throw mapLoggingException(e);
-        }
-    }
-
-    // -----------------------------------------------------------------------
-    // Runtime: install, onChange
-    // -----------------------------------------------------------------------
 
     /**
-     * Installs runtime logging control. Idempotent.
+     * Hook smplkit into the application's logging machinery.
      *
-     * <p>Mirrors Python's {@code client.logging.install()}: hooks the SDK into
-     * the existing logging machinery — loads adapters, scans loggers, applies
-     * the resolved levels from the server. There is no {@code stop()}; close
-     * the parent {@link com.smplkit.SmplClient} to release adapters.</p>
+     * <p>Loads adapters, scans existing loggers, applies levels from the
+     * smplkit server, and wires WebSocket handlers for live updates. This
+     * IS the explicit consent gate — {@link #onChange} / {@link #refresh}
+     * require it first.</p>
      *
-     * <p>Renamed from {@code start()} in the Python-PR-127 mirror to make the
-     * "install adapters into your runtime" intent explicit.</p>
+     * <p>Idempotent — safe to call multiple times.</p>
      */
     public void install() {
-        if (started) {
+        Debug.log("lifecycle", "LoggingClient.install() called");
+        Runnable h = this.ensureStartedHook;
+        if (h != null) {
+            h.run();
+        }
+        if (connected) {
             return;
         }
 
-        // 1. Load adapters (auto or explicit)
-        if (!explicitAdapters) {
+        // 0. Load adapters
+        if (!explicitAdapters && adapters.isEmpty()) {
             autoLoadAdapters();
         }
 
-        // 2. Discover existing loggers — add each to the registration buffer
-        int discoveredCount = 0;
+        // 1. Discover existing loggers from all adapters
         for (LoggingAdapter adapter : adapters) {
             try {
-                List<DiscoveredLogger> discovered = adapter.discover();
-                for (DiscoveredLogger dl : discovered) {
+                List<DiscoveredLogger> existing = adapter.discover();
+                Debug.log("discovery", "adapter '" + adapter.name() + "' discovered "
+                        + existing.size() + " existing loggers");
+                for (DiscoveredLogger dl : existing) {
                     String normalized = normalizeKey(dl.name());
                     nameMap.put(dl.name(), normalized);
-                    loggerBuffer.add(normalized, dl.level(), dl.resolvedLevel(), service, environment);
-                    Debug.log("discovery", "discovered logger: " + normalized + " (level=" + dl.level() + ")");
-                    discoveredCount++;
+                    loggers.register(loggerSourceFor(dl.name(), dl.level(), dl.resolvedLevel()));
                 }
             } catch (NoClassDefFoundError e) {
-                Debug.log("lifecycle", "Skipped adapter " + adapter.name() + " discover() — dependency missing: " + e.getMessage());
+                Debug.log("lifecycle", "Skipped adapter " + adapter.name()
+                        + " discover() — dependency missing: " + e.getMessage());
             } catch (Exception e) {
                 LOG.log(Level.WARNING, "Adapter " + adapter.name() + " discover() failed", e);
             }
         }
-        Debug.log("lifecycle", "discovered " + discoveredCount + " loggers from adapters");
-        if (metrics != null && discoveredCount > 0) {
-            metrics.record("logging.loggers_discovered", discoveredCount, "loggers");
-        }
 
-        // 3. Install hooks for new logger detection
+        // 2. Install continuous discovery hooks
         for (LoggingAdapter adapter : adapters) {
             try {
                 adapter.installHook(this::onNewLogger);
             } catch (NoClassDefFoundError e) {
-                Debug.log("lifecycle", "Skipped adapter " + adapter.name() + " installHook() — dependency missing: " + e.getMessage());
+                Debug.log("lifecycle", "Skipped adapter " + adapter.name()
+                        + " installHook() — dependency missing: " + e.getMessage());
             } catch (Exception e) {
-                LOG.warning("Adapter " + adapter.name() + " installHook() failed: " + e.getMessage());
-                Debug.log("lifecycle", "Adapter " + adapter.name() + " installHook() failed: " + e);
+                LOG.warning("Adapter " + adapter.name() + " install_hook() failed: " + e.getMessage());
             }
         }
-        Debug.log("registration", "installed hooks on " + adapters.size() + " adapters");
 
-        // 4. Flush buffer — bulk-registers all discovered loggers with the server
-        // (flushLoggerBuffer catches all exceptions internally)
-        flushLoggerBuffer();
-        Debug.log("registration", "initial registration flush complete");
-
-        // 5. Fetch all loggers and groups, resolve and apply levels
-        Debug.log("api", "fetching logger and group definitions");
+        // 3. Flush initial batch
         try {
-            fetchAndApply("start");
-        } catch (Exception e) {
-            LOG.warning("Failed to fetch/apply logging levels during start: " + e.getMessage());
-            Debug.log("resolution", "Failed to fetch/apply logging levels during start: " + e);
-        }
-        Debug.log("api", "fetched " + loggersCache.size() + " loggers and " + groupsCache.size() + " groups");
-
-        // 6. Register WebSocket listeners for real-time updates
-        if (wsManager != null) {
-            wsManager.on("logger_changed", loggerChangedHandler);
-            wsManager.on("logger_deleted", loggerDeletedHandler);
-            wsManager.on("group_changed", groupChangedHandler);
-            wsManager.on("group_deleted", groupDeletedHandler);
-            wsManager.on("loggers_changed", loggersChangedHandler);
+            loggers.flush();
+        } catch (Exception exc) {
+            LOG.warning("Bulk logger registration failed: " + exc);
+            Debug.log("registration", "Bulk logger registration failed: " + exc);
         }
 
-        // 7. Start periodic flush for loggers discovered after start()
-        loggerFlushFuture = loggerFlushExecutor.scheduleAtFixedRate(
-                this::flushLoggerBufferSafe, 30, 30, TimeUnit.SECONDS);
+        // 4-6. Fetch, resolve, apply
+        try {
+            fetchAndApply("install()");
+        } catch (Exception exc) {
+            LOG.warning("Failed to fetch/apply logging levels during connect: " + exc);
+            Debug.log("resolution", "Failed to fetch/apply logging levels during connect: " + exc);
+        }
 
-        started = true;
+        // 7. Register WebSocket event handlers for real-time level updates
+        SharedWebSocket ws = ensureWs();
+        if (ws != null) {
+            ws.on("logger_changed", loggerChangedHandler);
+            ws.on("logger_deleted", loggerDeletedHandler);
+            ws.on("group_changed", groupChangedHandler);
+            ws.on("group_deleted", groupDeletedHandler);
+            ws.on("loggers_changed", loggersChangedHandler);
+        }
+
+        connected = true;
     }
+
+    // -----------------------------------------------------------------------
+    // Live surface: change listeners
+    // -----------------------------------------------------------------------
 
     /**
      * Register a global change listener that fires for any logger change.
      *
-     * @param listener the callback
+     * <p>Requires {@link #install} first; raises {@link NotInstalledError}
+     * otherwise.</p>
+     *
+     * @param listener the callback invoked with a {@link LoggerChangeEvent}
+     *     whenever a logger's effective level changes
+     * @throws NotInstalledError if called before {@link #install}
      */
     public void onChange(Consumer<LoggerChangeEvent> listener) {
+        requireInstalled();
         globalListeners.add(listener);
     }
 
     /**
-     * Register an id-scoped change listener that fires only for the given logger id.
+     * Register a key-scoped change listener that fires only for the given logger id.
+     *
+     * <p>Requires {@link #install} first; raises {@link NotInstalledError}
+     * otherwise.</p>
      *
      * @param id       the logger id to watch
-     * @param listener the callback
+     * @param listener the callback invoked with a {@link LoggerChangeEvent}
+     *     whenever this logger's effective level changes
+     * @throws NotInstalledError if called before {@link #install}
      */
     public void onChange(String id, Consumer<LoggerChangeEvent> listener) {
+        requireInstalled();
         keyListeners.computeIfAbsent(id, k -> new CopyOnWriteArrayList<>()).add(listener);
     }
 
     /**
-     * Re-fetches logger and group definitions from the server, recomputes
-     * resolved levels, applies them through the registered adapters, and fires
-     * change listeners for any logger whose resolved level changed.
+     * Re-fetch all loggers and groups and fire listener events for any deltas.
      *
-     * <p>Mirrors Python's {@code client.logging.refresh()}. The runtime path is
-     * normally driven by WebSocket events (registered in {@link #install()});
-     * call this to force a re-pull when you've made server-side changes through
-     * a different process and want them reflected immediately.</p>
+     * <p>Requires {@link #install} first; raises {@link NotInstalledError}
+     * otherwise.</p>
      *
-     * <p>No-op if {@link #install()} has not been called.</p>
+     * @throws NotInstalledError if called before {@link #install}
      */
     public void refresh() {
-        if (!started) return;
-        Map<String, String> preLevels = snapshotLevels();
+        requireInstalled();
+        Debug.log("resolution", "refresh() called, triggering full resolution pass");
+        Map<String, String> pre = snapshotEffectiveLevels();
         try {
-            fetchOnly();
+            fetchCache("refresh()");
         } catch (Exception e) {
             LOG.warning("Failed to fetch levels during refresh: " + e.getMessage());
             Debug.log("resolution", "refresh fetch failed: " + e);
             return;
         }
-        diffAndFireLevels(preLevels, "manual");
+        applyDeltasAndFire(pre, "manual");
     }
 
-    /** Returns whether {@link #install()} has been called. */
+    /**
+     * Returns whether {@link #install} has been called.
+     *
+     * @return {@code true} once {@link #install} has run, {@code false} otherwise
+     */
     public boolean isInstalled() {
-        return started;
+        return connected;
     }
 
-    /** Returns the list of loaded adapters. */
+    /**
+     * Returns the loaded logging-framework adapters.
+     *
+     * @return the adapters used to discover loggers and apply levels — those
+     *     registered via {@link #registerAdapter}, or the auto-loaded set
+     */
     public List<LoggingAdapter> getAdapters() {
         return adapters;
     }
 
     // -----------------------------------------------------------------------
-    // Key normalization (ADR-034 section 5)
+    // Key normalization
     // -----------------------------------------------------------------------
 
-    /** Normalizes a logger name to a canonical key form. */
+    /**
+     * Normalize a logger name.
+     *
+     * <ul>
+     *   <li>Replace {@code /} with {@code .}</li>
+     *   <li>Replace {@code :} with {@code .}</li>
+     *   <li>Lowercase everything</li>
+     * </ul>
+     */
     static String normalizeKey(String name) {
         return name.replace("/", ".").replace(":", ".").toLowerCase();
     }
@@ -378,7 +462,9 @@ public final class LoggingClient {
     // -----------------------------------------------------------------------
 
     private void autoLoadAdapters() {
-        loadAdaptersFromProviders(ServiceLoader.load(LoggingAdapter.class).stream().collect(java.util.stream.Collectors.toList()));
+        loadAdaptersFromProviders(
+                ServiceLoader.load(LoggingAdapter.class).stream()
+                        .collect(java.util.stream.Collectors.toList()));
     }
 
     /** Package-private for testing — production code always calls autoLoadAdapters(). */
@@ -389,7 +475,7 @@ public final class LoggingClient {
                 adapters.add(adapter);
                 Debug.log("lifecycle", "Loaded logging adapter: " + adapter.name());
             } catch (ServiceConfigurationError | NoClassDefFoundError e) {
-                Debug.log("lifecycle", "Skipped logging adapter (dependency not on classpath): " + e.getMessage());
+                Debug.log("lifecycle", "Skipped logging adapter (dependency not installed): " + e.getMessage());
             } catch (Exception e) {
                 LOG.warning("Failed to load logging adapter: " + e.getMessage());
             }
@@ -400,238 +486,231 @@ public final class LoggingClient {
     }
 
     // -----------------------------------------------------------------------
-    // New logger callback (for adapter hooks)
+    // Internal
     // -----------------------------------------------------------------------
 
-    private void onNewLogger(String originalName, String level) {
-        String normalized = normalizeKey(originalName);
-        Debug.log("discovery", "new logger from hook: " + normalized + " (level=" + level + ")");
-        nameMap.put(originalName, normalized);
-        loggerBuffer.add(normalized, level, level, service, environment);
+    /** Build a LoggerSource from an adapter's (name, explicit, effective) discovery tuple. */
+    private LoggerSource loggerSourceFor(String name, String explicitLevel, String effectiveLevel) {
+        LogLevel resolved = effectiveLevel != null ? tryParseLogLevel(effectiveLevel, name) : null;
+        LogLevel explicit = explicitLevel != null ? tryParseLogLevel(explicitLevel, name) : null;
+        return new LoggerSource(name, resolved, explicit, service, environment);
+    }
 
-        if (loggerBuffer.pendingCount() >= 50) {
-            Thread t = new Thread(this::flushLoggerBufferSafe, "smplkit-logger-flush-eager");
-            t.setDaemon(true);
-            t.start();
-        }
+    /** Callback from adapters when a new logger is created. */
+    private void onNewLogger(String name, String explicitLevel) {
+        String normalized = normalizeKey(name);
+        Debug.log("discovery", "new logger intercepted via callback: '" + name
+                + "' (normalized: '" + normalized + "')");
+        nameMap.put(name, normalized);
+        loggers.register(loggerSourceFor(name, explicitLevel, explicitLevel));
+        Debug.log("registration", "queued '" + name
+                + "' for bulk registration (buffer size: " + loggers.pendingCount() + ")");
 
-        // If already started, apply managed level from cache immediately
-        if (started) {
+        // If connected, try to apply level from cache
+        if (connected && loggersCache.containsKey(normalized)) {
             Map<String, Object> entry = loggersCache.get(normalized);
-            if (entry != null && Boolean.TRUE.equals(entry.get("managed"))) {
+            if (Boolean.TRUE.equals(entry.get("managed"))) {
+                Debug.log("resolution",
+                        "applying immediate level for newly discovered managed logger '" + name + "'");
                 String resolved = Resolution.resolveLevel(normalized, environment, loggersCache, groupsCache);
                 for (LoggingAdapter adapter : adapters) {
                     try {
-                        adapter.applyLevel(originalName, resolved);
+                        adapter.applyLevel(name, resolved);
                     } catch (Exception e) {
-                        // ignore adapter errors
+                        LOG.warning("Adapter " + adapter.name() + " apply_level() failed for " + name);
                     }
                 }
             }
         }
     }
 
+    // -----------------------------------------------------------------------
+    // Internal: event handlers (called by SharedWebSocket)
+    // -----------------------------------------------------------------------
+
     private void handleLoggerChanged(Map<String, Object> data) {
-        if (!started) return;
-        String loggerKey = data.get("id") instanceof String s ? s : null;
-        if (loggerKey == null) {
-            Debug.log("websocket", "logger_changed event missing id, skipping");
+        if (!connected) {
             return;
         }
-        Debug.log("websocket", "logger_changed event received, key=" + loggerKey);
-
-        // Snapshot pre-levels across ALL tracked loggers so dot-descendants
-        // (which inherit from this key when they have no own level/group) get
-        // re-resolved and their listeners fire on resolved-level deltas.
-        Map<String, String> preLevels = snapshotLevels();
-
-        // Scoped fetch: GET /loggers/{key}
+        String key = data.get("id") instanceof String s ? s : "";
+        Debug.log("websocket", "logger_changed: fetching logger '" + key + "'");
+        Map<String, String> pre = snapshotEffectiveLevels();
         try {
-            LoggerResponse resp = loggersApi.getLogger(loggerKey);
-            Logger lg = loggerResponseToModel(resp);
-            var attrs = resp.getData().getAttributes();
-            String gid = lg.getId() != null ? lg.getId() : "";
-            Map<String, Object> entry = new HashMap<>();
-            entry.put("id", gid);
-            entry.put("level", attrs.getLevel() != null ? attrs.getLevel().getValue() : null);
-            entry.put("group", attrs.getGroup());
-            entry.put("managed", attrs.getManaged());
-            entry.put("environments", attrs.getEnvironments() != null
-                    ? new HashMap<>(attrs.getEnvironments()) : new HashMap<>());
-            loggersCache.put(loggerKey, entry);
+            LoggerResponse resp = loggersApi.getLogger(key);
+            if (resp != null && resp.getData() != null) {
+                var attrs = resp.getData().getAttributes();
+                String lid = resp.getData().getId() != null ? resp.getData().getId() : key;
+                Map<String, Object> entry = new HashMap<>();
+                entry.put("level", attrs.getLevel() != null ? attrs.getLevel().getValue() : null);
+                entry.put("group", attrs.getGroup());
+                entry.put("managed", attrs.getManaged());
+                entry.put("environments", attrs.getEnvironments() != null
+                        ? new HashMap<>(attrs.getEnvironments()) : new HashMap<>());
+                loggersCache.put(lid, entry);
+            }
         } catch (ApiException e) {
-            LOG.warning("Failed scoped fetch for logger key=" + loggerKey + ": " + e.getMessage());
-            Debug.log("websocket", "logger_changed scoped fetch failed for key=" + loggerKey + ": " + e);
+            LOG.warning("Failed to fetch logger '" + key + "' after WS event: " + e.getMessage());
+            Debug.log("websocket", "logger_changed scoped fetch failed for '" + key + "': " + e);
             return;
         }
-
-        // Diff-based re-apply: pushes new levels to adapters and fires
-        // key-scoped listeners for every tracked logger whose resolved level
-        // changed — including dot-descendants of the changed key.
-        diffAndFireLevels(preLevels, "websocket");
+        applyDeltasAndFire(pre, "websocket");
     }
 
     private void handleLoggerDeleted(Map<String, Object> data) {
-        if (!started) return;
-        String loggerKey = data.get("id") instanceof String s ? s : null;
-        if (loggerKey == null) {
-            Debug.log("websocket", "logger_deleted event missing id, skipping");
+        if (!connected) {
             return;
         }
-        Debug.log("websocket", "logger_deleted event received, key=" + loggerKey);
-
-        // Deletion is not a level change. Snapshot resolved levels, evict
-        // the logger from cache, then re-apply for every tracked logger
-        // whose effective level moved — EXCEPT the deleted key itself.
-        // We deliberately stop pushing levels to a key the platform no
-        // longer manages: per the listener contract, deletion fires no
-        // listener for the deleted logger.
-        Map<String, String> preLevels = snapshotLevels();
-        loggersCache.remove(loggerKey);
-        diffAndFireLevels(preLevels, "websocket", java.util.Set.of(loggerKey));
+        String key = data.get("id") instanceof String s ? s : "";
+        Debug.log("websocket", "logger_deleted: removing logger '" + key + "'");
+        Map<String, String> pre = snapshotEffectiveLevels();
+        loggersCache.remove(key);
+        applyDeltasAndFire(pre, "websocket");
     }
 
     private void handleGroupChanged(Map<String, Object> data) {
-        if (!started) return;
-        String groupKey = data.get("id") instanceof String s ? s : null;
-        if (groupKey == null) {
-            Debug.log("websocket", "group_changed event missing id, skipping");
+        if (!connected) {
             return;
         }
-        Debug.log("websocket", "group_changed event received, key=" + groupKey);
-
-        // Snapshot pre-levels for all loggers in this group
-        Map<String, String> preLevels = snapshotLevels();
-
-        // Scoped fetch: GET /log_groups/{key}
+        String key = data.get("id") instanceof String s ? s : "";
+        Debug.log("websocket", "group_changed: fetching group '" + key + "'");
+        Map<String, String> pre = snapshotEffectiveLevels();
         try {
-            LogGroupResponse resp = logGroupsApi.getLogGroup(groupKey);
-            var attrs = resp.getData().getAttributes();
-            String gid = resp.getData().getId() != null ? resp.getData().getId() : "";
-            Map<String, Object> entry = new HashMap<>();
-            entry.put("id", gid);
-            entry.put("level", attrs.getLevel() != null ? attrs.getLevel().getValue() : null);
-            entry.put("group", attrs.getParentId());
-            entry.put("environments", attrs.getEnvironments() != null
-                    ? new HashMap<>(attrs.getEnvironments()) : new HashMap<>());
-            groupsCache.put(groupKey, entry);
+            LogGroupResponse resp = logGroupsApi.getLogGroup(key);
+            if (resp != null && resp.getData() != null) {
+                var attrs = resp.getData().getAttributes();
+                String gid = resp.getData().getId() != null ? resp.getData().getId() : key;
+                Map<String, Object> entry = new HashMap<>();
+                entry.put("level", attrs.getLevel() != null ? attrs.getLevel().getValue() : null);
+                entry.put("group", attrs.getParentId());
+                entry.put("environments", attrs.getEnvironments() != null
+                        ? new HashMap<>(attrs.getEnvironments()) : new HashMap<>());
+                groupsCache.put(gid, entry);
+            }
         } catch (ApiException e) {
-            LOG.warning("Failed scoped fetch for group key=" + groupKey + ": " + e.getMessage());
-            Debug.log("websocket", "group_changed scoped fetch failed for key=" + groupKey + ": " + e);
+            LOG.warning("Failed to fetch log group '" + key + "' after WS event: " + e.getMessage());
+            Debug.log("websocket", "group_changed scoped fetch failed for '" + key + "': " + e);
             return;
         }
-
-        // Diff and fire for loggers whose resolved level changed
-        diffAndFireLevels(preLevels, "websocket");
+        applyDeltasAndFire(pre, "websocket");
     }
 
     private void handleGroupDeleted(Map<String, Object> data) {
-        if (!started) return;
-        String groupKey = data.get("id") instanceof String s ? s : null;
-        if (groupKey == null) {
-            Debug.log("websocket", "group_deleted event missing id, skipping");
+        if (!connected) {
             return;
         }
-        Debug.log("websocket", "group_deleted event received, key=" + groupKey);
-
-        // Deletion is not a level change. Snapshot resolved levels, evict the
-        // group from cache, then re-apply for every tracked logger whose
-        // effective level moved (typically loggers whose resolution chain ran
-        // through this group and now fall through to a parent group, a
-        // dot-ancestor, or INFO fallback). No synthetic event fires for the
-        // deleted group key itself.
-        Map<String, String> preLevels = snapshotLevels();
-        groupsCache.remove(groupKey);
-        diffAndFireLevels(preLevels, "websocket");
+        String key = data.get("id") instanceof String s ? s : "";
+        Debug.log("websocket", "group_deleted: removing group '" + key + "'");
+        Map<String, String> pre = snapshotEffectiveLevels();
+        groupsCache.remove(key);
+        applyDeltasAndFire(pre, "websocket");
     }
 
     private void handleLoggersChanged(Map<String, Object> data) {
-        if (!started) return;
-        Debug.log("websocket", "loggers_changed event received");
-
-        // Snapshot pre-levels
-        Map<String, String> preLevels = snapshotLevels();
-
-        // Full refetch of both loggers AND log_groups (without firing listeners)
-        try {
-            fetchOnly();
-        } catch (Exception e) {
-            LOG.warning("Failed to re-fetch levels after loggers_changed event: " + e.getMessage());
-            Debug.log("websocket", "loggers_changed fetch failed: " + e);
+        if (!connected) {
             return;
         }
-
-        // Diff-based firing
-        diffAndFireLevels(preLevels, "websocket");
+        Debug.log("websocket", "loggers_changed: full re-fetch");
+        try {
+            Map<String, String> pre = snapshotEffectiveLevels();
+            fetchCache("loggers_changed WS event");
+            applyDeltasAndFire(pre, "websocket");
+        } catch (Exception exc) {
+            LOG.warning("Failed to re-fetch/apply logging levels after loggers_changed event: " + exc);
+            Debug.log("websocket", "loggers_changed fetch failed: " + exc);
+        }
     }
 
-    /** Snapshots current resolved levels for all tracked loggers. */
-    private Map<String, String> snapshotLevels() {
+    /**
+     * Effective level for every locally-tracked managed logger.
+     *
+     * <p>This is the universe of loggers the adapter applies levels to —
+     * the only loggers whose listener can fire. A logger not in
+     * {@code nameMap} (never instantiated locally) or marked
+     * {@code managed=false} in the cache is excluded.</p>
+     */
+    private Map<String, String> snapshotEffectiveLevels() {
         Map<String, String> snapshot = new HashMap<>();
-        for (String key : nameMap.values()) {
-            snapshot.put(key, Resolution.resolveLevel(key, environment, loggersCache, groupsCache));
+        for (String normalizedId : nameMap.values()) {
+            Map<String, Object> entry = loggersCache.get(normalizedId);
+            if (entry == null || !Boolean.TRUE.equals(entry.get("managed"))) {
+                continue;
+            }
+            snapshot.put(normalizedId,
+                    Resolution.resolveLevel(normalizedId, environment, loggersCache, groupsCache));
         }
         return snapshot;
     }
 
     /**
-     * Diffs pre vs post resolved levels and applies the new level (plus fires
-     * listeners) for each tracked logger whose level moved. Each apply goes
-     * through {@link #applyLevelForKey}, which fires the key-scoped listener
-     * AND every global listener exactly once for that key — so a single
-     * trigger that re-resolves N loggers produces N global invocations, not
-     * one summary event.
+     * Apply + fire per-logger whenever the effective level moved.
+     *
+     * <p>For every locally-tracked managed logger, recompute the effective
+     * level and compare to {@code pre}. On a delta: call {@code applyLevel} on
+     * every adapter AND fire one {@link LoggerChangeEvent} per affected
+     * logger — once to each matching key-scoped listener and once to
+     * every global listener (a global is semantically a key-scoped
+     * subscription on every logger). No-op when nothing moved: no apply,
+     * no fire.</p>
      */
-    private void diffAndFireLevels(Map<String, String> preLevels, String source) {
-        diffAndFireLevels(preLevels, source, java.util.Set.of());
-    }
-
-    /**
-     * Variant that skips a set of keys — used by deletion handlers so the
-     * just-deleted key fires no listener even if its post-deletion fallback
-     * resolution differs from its pre-deletion own level.
-     */
-    private void diffAndFireLevels(Map<String, String> preLevels, String source,
-                                   java.util.Set<String> skipKeys) {
-        for (String normalizedKey : nameMap.values()) {
-            if (skipKeys.contains(normalizedKey)) continue;
-            String preLevel = preLevels.get(normalizedKey);
-            String postLevel = Resolution.resolveLevel(normalizedKey, environment, loggersCache, groupsCache);
-            if (!java.util.Objects.equals(preLevel, postLevel)) {
-                applyLevelForKey(normalizedKey, postLevel, source);
-            }
-        }
-    }
-
-    /**
-     * Applies a resolved level to every adapter for the given key and fires
-     * the resulting {@link LoggerChangeEvent} to the key-scoped listeners for
-     * that key AND every global listener.
-     */
-    private void applyLevelForKey(String normalizedKey, String level, String source) {
-        LogLevel logLevel = tryParseLogLevel(level, normalizedKey);
-        if (logLevel == null) return;
+    private void applyDeltasAndFire(Map<String, String> pre, String source) {
         for (Map.Entry<String, String> mapping : nameMap.entrySet()) {
-            if (!normalizedKey.equals(mapping.getValue())) continue;
             String originalName = mapping.getKey();
+            String normalizedId = mapping.getValue();
+            Map<String, Object> entry = loggersCache.get(normalizedId);
+            if (entry == null || !Boolean.TRUE.equals(entry.get("managed"))) {
+                continue;
+            }
+            String newLevel = Resolution.resolveLevel(normalizedId, environment, loggersCache, groupsCache);
+            if (java.util.Objects.equals(pre.get(normalizedId), newLevel)) {
+                continue;
+            }
+            LogLevel logLevel = tryParseLogLevel(newLevel, normalizedId);
+            if (logLevel == null) {
+                continue;
+            }
             for (LoggingAdapter adapter : adapters) {
                 try {
-                    adapter.applyLevel(originalName, level);
+                    adapter.applyLevel(originalName, newLevel);
                 } catch (Exception e) {
-                    Debug.log("adapter", "Adapter " + adapter.name()
-                            + " applyLevel failed for " + originalName + ": " + e);
+                    LOG.warning("Adapter " + adapter.name() + " apply_level() failed for " + originalName);
                 }
             }
             if (metrics != null) {
-                metrics.record("logging.level_changes", "changes",
-                        java.util.Map.of("logger", normalizedKey));
+                metrics.record("logging.level_changes", "changes", Map.of("logger", normalizedId));
             }
-            LoggerChangeEvent event = new LoggerChangeEvent(normalizedKey, logLevel, source);
-            fireChangeListeners(normalizedKey, event);
+            fireForLogger(normalizedId, logLevel, source);
         }
     }
 
-    /** Parse a resolved level string into a typed LogLevel, returning null if
+    /**
+     * Fire one {@link LoggerChangeEvent} to every matching subscriber.
+     *
+     * <p>Both the key-scoped listeners registered for {@code loggerId} and
+     * every global listener receive the same payload.</p>
+     */
+    private void fireForLogger(String loggerId, LogLevel level, String source) {
+        LoggerChangeEvent event = new LoggerChangeEvent(loggerId, level, source);
+        for (Consumer<LoggerChangeEvent> cb : globalListeners) {
+            try {
+                cb.accept(event);
+            } catch (Exception e) {
+                LOG.log(Level.SEVERE, "Exception in global logging on_change listener", e);
+            }
+        }
+        List<Consumer<LoggerChangeEvent>> scoped = keyListeners.get(loggerId);
+        if (scoped != null) {
+            for (Consumer<LoggerChangeEvent> cb : scoped) {
+                try {
+                    cb.accept(event);
+                } catch (Exception e) {
+                    LOG.log(Level.SEVERE, "Exception in key-scoped logging on_change listener", e);
+                }
+            }
+        }
+    }
+
+    /**
+     * Parse a resolved level string into a typed LogLevel, returning null if
      * the string isn't one of the known enum values. Generated logger / log-group
      * model bindings reject unknown values during deserialization, so production
      * traffic never reaches this fallback, but defensive guarding lets a stray
@@ -651,70 +730,25 @@ public final class LoggingClient {
     // Internal: fetch, resolve, apply
     // -----------------------------------------------------------------------
 
+    /** Re-fetch loggers/groups into the cache (no apply, no fire). */
+    private void fetchCache(String trigger) {
+        Debug.log("resolution", "full resolution pass starting (trigger: " + trigger + ")");
+        Map<String, Map<String, Object>> loggersData = fetchAllLoggers();
+        Map<String, Map<String, Object>> groupsData = fetchAllGroups();
+        this.loggersCache = new ConcurrentHashMap<>(loggersData);
+        this.groupsCache = new ConcurrentHashMap<>(groupsData);
+    }
+
     /**
-     * Drains the registration buffer and sends all pending loggers to the server via
-     * the bulk-register endpoint. No-op if the buffer is empty.
+     * Fetch loggers/groups and unconditionally apply levels (initial install path).
      *
-     * <p>Package-private so the management facade {@link LoggersClient#flush()}
-     * can call it; not part of the public {@link LoggingClient} surface.</p>
+     * <p>Silent — does not fire change-listener events. Use
+     * {@code applyDeltasAndFire} from the WS / refresh paths to get
+     * per-logger fanout.</p>
      */
-    void flushLoggerBuffer() {
-        List<LoggerRegistrationEntry> batch = loggerBuffer.drain();
-        if (batch.isEmpty()) return;
-
-        LoggerBulkRequest req = new LoggerBulkRequest();
-        for (LoggerRegistrationEntry entry : batch) {
-            LoggerBulkItem item = new LoggerBulkItem();
-            item.setId(entry.id());
-
-            // level: only set when explicitly configured on the logger
-            if (entry.level() != null) {
-                item.setLevel_JsonNullable(JsonNullable.of(entry.level()));
-            }
-            // resolved_level: always set — effective level after framework inheritance
-            item.setResolvedLevel(entry.resolvedLevel());
-
-            if (entry.service() != null) item.setService(entry.service());
-            if (entry.environment() != null) item.setEnvironment(entry.environment());
-
-            req.addLoggersItem(item);
-        }
-
-        try {
-            loggersApi.bulkRegisterLoggers(req);
-            Debug.log("registration", "bulk-registered " + batch.size() + " logger(s)");
-        } catch (Exception e) {
-            LOG.warning("Bulk logger registration failed: " + e.getMessage());
-            Debug.log("registration", "Bulk logger registration failed: " + e);
-        }
-    }
-
-    private void flushLoggerBufferSafe() {
-        flushLoggerBuffer(); // all exceptions handled internally
-    }
-
-    private static final int RUNTIME_PAGE_SIZE = 1000;
-
-    @SuppressWarnings("unchecked")
-    private void fetchAndApply(String source) {
-        Map<String, Map<String, Object>> loggersData = fetchAllLoggers();
-        Map<String, Map<String, Object>> groupsData = fetchAllGroups();
-
-        this.loggersCache = new ConcurrentHashMap<>(loggersData);
-        this.groupsCache = new ConcurrentHashMap<>(groupsData);
-
-        // Resolve and apply levels
-        applyLevels(source);
-    }
-
-    /** Fetches loggers and groups and updates the caches without firing any listeners. */
-    @SuppressWarnings("unchecked")
-    private void fetchOnly() {
-        Map<String, Map<String, Object>> loggersData = fetchAllLoggers();
-        Map<String, Map<String, Object>> groupsData = fetchAllGroups();
-
-        this.loggersCache = new ConcurrentHashMap<>(loggersData);
-        this.groupsCache = new ConcurrentHashMap<>(groupsData);
+    private void fetchAndApply(String trigger) {
+        fetchCache(trigger);
+        applyLevels();
     }
 
     private Map<String, Map<String, Object>> fetchAllLoggers() {
@@ -722,6 +756,7 @@ public final class LoggingClient {
         int page = 1;
         try {
             while (true) {
+                Debug.log("api", "GET /api/v1/loggers (page " + page + ")");
                 // Positional args: filterManaged, filterService, filterLastSeen,
                 // filterSearch, sort, pageNumber, pageSize, metaTotal.
                 LoggerListResponse loggerResp = loggersApi.listLoggers(
@@ -732,7 +767,6 @@ public final class LoggingClient {
                     var attrs = r.getAttributes();
                     String id = r.getId() != null ? r.getId() : "";
                     Map<String, Object> entry = new HashMap<>();
-                    entry.put("id", id);
                     entry.put("level", attrs.getLevel() != null ? attrs.getLevel().getValue() : null);
                     entry.put("group", attrs.getGroup());
                     entry.put("managed", attrs.getManaged());
@@ -740,7 +774,9 @@ public final class LoggingClient {
                             ? new HashMap<>(attrs.getEnvironments()) : new HashMap<>());
                     loggersData.put(id, entry);
                 }
-                if (rows.size() < RUNTIME_PAGE_SIZE) break;
+                if (rows.size() < RUNTIME_PAGE_SIZE) {
+                    break;
+                }
                 page++;
             }
         } catch (ApiException e) {
@@ -754,6 +790,7 @@ public final class LoggingClient {
         int page = 1;
         try {
             while (true) {
+                Debug.log("api", "GET /api/v1/log-groups (page " + page + ")");
                 LogGroupListResponse groupResp = logGroupsApi.listLogGroups(
                         null, page, RUNTIME_PAGE_SIZE, null);
                 List<LogGroupResource> rows = groupResp.getData() != null
@@ -762,14 +799,15 @@ public final class LoggingClient {
                     var attrs = r.getAttributes();
                     String gid = r.getId() != null ? r.getId() : "";
                     Map<String, Object> entry = new HashMap<>();
-                    entry.put("id", gid);
                     entry.put("level", attrs.getLevel() != null ? attrs.getLevel().getValue() : null);
                     entry.put("group", attrs.getParentId());
                     entry.put("environments", attrs.getEnvironments() != null
                             ? new HashMap<>(attrs.getEnvironments()) : new HashMap<>());
                     groupsData.put(gid, entry);
                 }
-                if (rows.size() < RUNTIME_PAGE_SIZE) break;
+                if (rows.size() < RUNTIME_PAGE_SIZE) {
+                    break;
+                }
                 page++;
             }
         } catch (ApiException e) {
@@ -778,59 +816,33 @@ public final class LoggingClient {
         return groupsData;
     }
 
-    @SuppressWarnings("unchecked")
-    private void applyLevels(String source) {
+    /** Apply resolved levels to all managed, locally-present loggers. */
+    private void applyLevels() {
+        Debug.log("resolution", "running full resolution pass for " + nameMap.size() + " local loggers");
         for (Map.Entry<String, String> mapping : nameMap.entrySet()) {
             String originalName = mapping.getKey();
-            String normalizedKey = mapping.getValue();
-            Map<String, Object> entry = loggersCache.get(normalizedKey);
-            if (entry == null) continue;
-            Boolean managed = (Boolean) entry.get("managed");
-            if (managed == null || !managed) continue;
-
-            String resolved = Resolution.resolveLevel(normalizedKey, environment, loggersCache, groupsCache);
-            Debug.log("resolution", "resolved " + normalizedKey + " → " + resolved);
-            LogLevel logLevel = tryParseLogLevel(resolved, normalizedKey);
-            if (logLevel == null) continue;
-
-            // Apply through all adapters
+            String normalizedId = mapping.getValue();
+            Map<String, Object> entry = loggersCache.get(normalizedId);
+            if (entry == null) {
+                continue;
+            }
+            if (!Boolean.TRUE.equals(entry.get("managed"))) {
+                continue;
+            }
+            String resolved = Resolution.resolveLevel(normalizedId, environment, loggersCache, groupsCache);
+            LogLevel logLevel = tryParseLogLevel(resolved, normalizedId);
+            if (logLevel == null) {
+                continue;
+            }
             for (LoggingAdapter adapter : adapters) {
                 try {
                     adapter.applyLevel(originalName, resolved);
-                    Debug.log("adapter", "applied level " + resolved + " to logger " + originalName);
                 } catch (Exception e) {
-                    Debug.log("adapter", "Adapter " + adapter.name()
-                            + " applyLevel failed for " + originalName + ": " + e);
+                    LOG.warning("Adapter " + adapter.name() + " apply_level() failed for " + originalName);
                 }
             }
-
             if (metrics != null) {
-                metrics.record("logging.level_changes", "changes",
-                        java.util.Map.of("logger", normalizedKey));
-            }
-
-            // Fire change listeners
-            LoggerChangeEvent event = new LoggerChangeEvent(normalizedKey, logLevel, source);
-            fireChangeListeners(normalizedKey, event);
-        }
-    }
-
-    private void fireChangeListeners(String key, LoggerChangeEvent event) {
-        for (Consumer<LoggerChangeEvent> listener : globalListeners) {
-            try {
-                listener.accept(event);
-            } catch (Exception e) {
-                LOG.log(Level.WARNING, "Global change listener threw exception", e);
-            }
-        }
-        List<Consumer<LoggerChangeEvent>> scoped = keyListeners.get(key);
-        if (scoped != null) {
-            for (Consumer<LoggerChangeEvent> listener : scoped) {
-                try {
-                    listener.accept(event);
-                } catch (Exception e) {
-                    LOG.log(Level.WARNING, "Key-scoped change listener threw exception", e);
-                }
+                metrics.record("logging.level_changes", "changes", Map.of("logger", normalizedId));
             }
         }
     }
@@ -839,150 +851,40 @@ public final class LoggingClient {
     // Cleanup
     // -----------------------------------------------------------------------
 
-    /** Releases resources and removes logging hooks. */
+    /**
+     * Release resources — only those this client owns.
+     *
+     * <p>Uninstalls the adapter hooks, unsubscribes from the WebSocket, and
+     * tears down the owned WebSocket (standalone install) and the owned
+     * logging transport (standalone construction). A wired client borrows
+     * the parent's transport and WebSocket and closes neither.</p>
+     */
+    @Override
     public void close() {
         Debug.log("lifecycle", "LoggingClient.close() called");
-        if (loggerFlushFuture != null) {
-            loggerFlushFuture.cancel(false);
-            loggerFlushFuture = null;
+        for (LoggingAdapter adapter : adapters) {
+            try {
+                adapter.uninstallHook();
+            } catch (Exception e) {
+                Debug.log("lifecycle", "Adapter " + adapter.name() + " uninstall_hook() failed: " + e);
+            }
         }
-        loggerFlushExecutor.shutdownNow();
         if (wsManager != null) {
             wsManager.off("logger_changed", loggerChangedHandler);
             wsManager.off("logger_deleted", loggerDeletedHandler);
             wsManager.off("group_changed", groupChangedHandler);
             wsManager.off("group_deleted", groupDeletedHandler);
             wsManager.off("loggers_changed", loggersChangedHandler);
-        }
-        for (LoggingAdapter adapter : adapters) {
-            try {
-                adapter.uninstallHook();
-            } catch (Exception e) {
-                Debug.log("lifecycle", "Adapter " + adapter.name() + " uninstallHook() failed: " + e);
+            if (ownsWs) {
+                wsManager.close();
+                ownsWs = false;
             }
+            wsManager = null;
         }
-        started = false;
-    }
-
-    // -----------------------------------------------------------------------
-    // Model conversion (package-private for LoggingManagement)
-    // -----------------------------------------------------------------------
-
-    Logger loggerResponseToModel(LoggerResponse response) {
-        return loggerResourceToModel(response.getData());
-    }
-
-    Logger loggerResourceToModel(LoggerResource resource) {
-        var attrs = resource.getAttributes();
-        return new Logger(
-                this,
-                resource.getId() != null ? resource.getId() : null,
-                attrs.getName(),
-                attrs.getLevel() != null ? attrs.getLevel().getValue() : null,
-                attrs.getGroup(),
-                attrs.getManaged() != null ? attrs.getManaged() : false,
-                attrs.getSources() != null ? new ArrayList<>(attrs.getSources()) : new ArrayList<>(),
-                attrs.getEnvironments() != null ? new HashMap<>(attrs.getEnvironments()) : new HashMap<>(),
-                toInstant(attrs.getCreatedAt()),
-                toInstant(attrs.getUpdatedAt())
-        );
-    }
-
-    LogGroup logGroupResponseToModel(LogGroupResponse response) {
-        return logGroupResourceToModel(response.getData());
-    }
-
-    LogGroup logGroupResourceToModel(LogGroupResource resource) {
-        var attrs = resource.getAttributes();
-        return new LogGroup(
-                this,
-                resource.getId() != null ? resource.getId() : null,
-                attrs.getName(),
-                attrs.getLevel() != null ? attrs.getLevel().getValue() : null,
-                attrs.getParentId(),
-                attrs.getEnvironments() != null ? new HashMap<>(attrs.getEnvironments()) : new HashMap<>(),
-                toInstant(attrs.getCreatedAt()),
-                toInstant(attrs.getUpdatedAt())
-        );
-    }
-
-    // -----------------------------------------------------------------------
-    // Request body building
-    // -----------------------------------------------------------------------
-
-    private LoggerRequest buildLoggerBody(String loggerId, Logger lg) {
-        var attrs = new com.smplkit.internal.generated.logging.model.Logger();
-        attrs.setName(lg.getName());
-        if (lg.getLevel() != null) {
-            attrs.setLevel(com.smplkit.internal.generated.logging.model.LogLevel.fromValue(lg.getLevel()));
-        }
-        if (lg.getGroup() != null) attrs.setGroup(lg.getGroup());
-        attrs.setManaged(lg.isManaged());
-        // Always include environments — even when empty — so a clearLevel()
-        // that drains the last override is carried to the server. Omitting
-        // the field is read by the JSON:API put as "no change," which
-        // strands the clear in client memory only.
-        attrs.setEnvironments(new HashMap<>(
-                lg.getEnvironments() != null ? lg.getEnvironments() : new HashMap<>()));
-
-        LoggerResource data = new LoggerResource();
-        data.setType(LoggerResource.TypeEnum.LOGGER);
-        data.setAttributes(attrs);
-        data.setId(loggerId != null ? loggerId : lg.getId());
-
-        LoggerRequest body = new LoggerRequest();
-        body.setData(data);
-        return body;
-    }
-
-    private LogGroupRequest buildGroupBody(String groupId, LogGroup grp) {
-        var attrs = buildGroupAttrs(grp);
-
-        LogGroupResource data = new LogGroupResource();
-        data.setType(LogGroupResource.TypeEnum.LOG_GROUP);
-        data.setAttributes(attrs);
-        data.setId(groupId != null ? groupId : grp.getId());
-
-        LogGroupRequest body = new LogGroupRequest();
-        body.setData(data);
-        return body;
-    }
-
-    private LogGroupCreateRequest buildCreateGroupBody(LogGroup grp) {
-        var attrs = buildGroupAttrs(grp);
-
-        LogGroupCreateResource data = new LogGroupCreateResource();
-        data.setType(LogGroupCreateResource.TypeEnum.LOG_GROUP);
-        data.setAttributes(attrs);
-        // Create requires a client-supplied id. The server rejects a missing /
-        // empty id with 422; the LogGroup model exposes id as caller-required
-        // for new groups (per ADR-013 key-based identity).
-        data.setId(grp.getId());
-
-        LogGroupCreateRequest body = new LogGroupCreateRequest();
-        body.setData(data);
-        return body;
-    }
-
-    private com.smplkit.internal.generated.logging.model.LogGroup buildGroupAttrs(LogGroup grp) {
-        var attrs = new com.smplkit.internal.generated.logging.model.LogGroup();
-        attrs.setName(grp.getName());
-        if (grp.getLevel() != null) {
-            attrs.setLevel(com.smplkit.internal.generated.logging.model.LogLevel.fromValue(grp.getLevel()));
-        }
-        if (grp.getGroup() != null) attrs.setParentId(grp.getGroup());
-        // Always include environments — see buildLoggerBody for rationale.
-        attrs.setEnvironments(new HashMap<>(
-                grp.getEnvironments() != null ? grp.getEnvironments() : new HashMap<>()));
-        return attrs;
-    }
-
-    // -----------------------------------------------------------------------
-    // Helpers
-    // -----------------------------------------------------------------------
-
-    private static Instant toInstant(OffsetDateTime odt) {
-        return odt != null ? odt.toInstant() : null;
+        // The standalone logging transport is a JDK HttpClient managed by the
+        // generated ApiClient; the JDK reclaims its connection pool on GC.
+        // Nothing further to release for ownsTransport today.
+        connected = false;
     }
 
     static RuntimeException mapLoggingException(ApiException e) {
@@ -1028,46 +930,6 @@ public final class LoggingClient {
 
     /** Returns the number of loggers pending registration in the buffer (for testing). */
     int getLoggerBufferPendingCount() {
-        return loggerBuffer.pendingCount();
-    }
-
-    /** Returns true if the periodic flush future is active (for testing). */
-    boolean isFlushScheduled() {
-        ScheduledFuture<?> f = loggerFlushFuture;
-        return f != null && !f.isDone();
-    }
-
-    // -----------------------------------------------------------------------
-    // Inner types
-    // -----------------------------------------------------------------------
-
-    private record LoggerRegistrationEntry(
-            String id, String level, String resolvedLevel, String service, String environment) {}
-
-    private static final class LoggerRegistrationBuffer {
-        private final Set<String> seen = new HashSet<>();
-        private final List<LoggerRegistrationEntry> pending = new ArrayList<>();
-        private final Object lock = new Object();
-
-        void add(String id, String level, String resolvedLevel, String service, String environment) {
-            synchronized (lock) {
-                if (seen.add(id)) {
-                    pending.add(new LoggerRegistrationEntry(id, level, resolvedLevel, service, environment));
-                }
-            }
-        }
-
-        List<LoggerRegistrationEntry> drain() {
-            synchronized (lock) {
-                if (pending.isEmpty()) return List.of();
-                List<LoggerRegistrationEntry> batch = new ArrayList<>(pending);
-                pending.clear();
-                return batch;
-            }
-        }
-
-        int pendingCount() {
-            synchronized (lock) { return pending.size(); }
-        }
+        return buffer.pendingCount();
     }
 }

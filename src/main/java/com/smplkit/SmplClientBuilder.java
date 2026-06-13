@@ -1,5 +1,7 @@
 package com.smplkit;
 
+import com.smplkit.internal.ConfigResolver;
+
 import java.time.Duration;
 import java.util.Collections;
 import java.util.HashMap;

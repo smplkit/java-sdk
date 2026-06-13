@@ -6,17 +6,17 @@ import java.util.List;
 /**
  * The HTTP request a job performs when it fires (the {@code http}
  * configuration).
- *
- * <p>Extends the shared forwarder shape with the two fields a scheduled job
- * needs beyond a forwarder: a request {@link #body} and a per-run
- * {@link #timeout}.</p>
  */
 public final class HttpConfig {
     /** HTTP verb used when the job fires. Defaults to {@link HttpMethod#POST}. */
     public HttpMethod method = HttpMethod.POST;
     /** Destination URL the job requests on each run. */
     public String url = "";
-    /** Headers attached to every request. Values are redacted on reads. */
+    /**
+     * Headers attached to every request, as name/value pairs. Header values
+     * are returned in plaintext on reads, so a get-mutate-put round-trip
+     * preserves them.
+     */
     public List<HttpHeader> headers = new ArrayList<>();
     /**
      * Request body sent on each run. {@code null} (the default) sends an empty
@@ -49,12 +49,26 @@ public final class HttpConfig {
      */
     public String caCert = null;
 
+    /** Create an empty configuration; set the public fields before use. */
     public HttpConfig() {}
 
+    /**
+     * Create a configuration targeting the given URL, leaving every other
+     * field at its default.
+     *
+     * @param url destination URL the job sends its request to
+     */
     public HttpConfig(String url) {
         this.url = url;
     }
 
+    /**
+     * Create a configuration with an explicit method, URL, and headers.
+     *
+     * @param method  HTTP verb used for the request
+     * @param url     destination URL the job sends its request to
+     * @param headers headers attached to the request, as name/value pairs
+     */
     public HttpConfig(HttpMethod method, String url, List<HttpHeader> headers) {
         this.method = method;
         this.url = url;

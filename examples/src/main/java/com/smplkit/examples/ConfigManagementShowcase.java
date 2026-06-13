@@ -6,26 +6,26 @@
  *     - A valid smplkit API key, provided via one of:
  *         - SMPLKIT_API_KEY environment variable
  *         - ~/.smplkit configuration file (see SDK docs)
- *     - The smplkit Config service running and reachable
  *
  * Usage:
  *     ./gradlew :examples:run -PmainClass=com.smplkit.examples.ConfigManagementShowcase
  */
 package com.smplkit.examples;
 
+import com.smplkit.SmplClient;
 import com.smplkit.config.Config;
 import com.smplkit.examples.setup.ConfigManagementSetup;
-import com.smplkit.management.SmplManagementClient;
 
 public final class ConfigManagementShowcase {
 
     public static void main(String[] args) {
-        // create the client (use SmplManagementClient for synchronous use)
-        try (SmplManagementClient manage = SmplManagementClient.create()) {
-            ConfigManagementSetup.setup(manage);
+
+        // or AsyncSmplClient for asynchronous use
+        try (SmplClient client = SmplClient.create()) {
+            ConfigManagementSetup.setup(client);
 
             // create a "parent" configuration that all other configs inherit from
-            Config shared = manage.config.new_(
+            Config shared = client.config.new_(
                     "showcase-common", "Showcase Common",
                     "Showcase-only shared configuration.", (String) null);
             shared.setString("app_name", "Acme SaaS Platform");
@@ -39,7 +39,7 @@ public final class ConfigManagementShowcase {
             System.out.println("Created config: " + shared.getId());
 
             // create a config (inherits from showcase-common)
-            Config userService = manage.config.new_(
+            Config userService = client.config.new_(
                     "showcase-user-service", "Showcase User Service",
                     "Configuration for the user microservice.", shared);
             userService.setString("database.host", "localhost");
@@ -62,28 +62,28 @@ public final class ConfigManagementShowcase {
             System.out.println("Updated config: " + userService.getId());
 
             // list configs
-            for (Config cfg : manage.config.list()) {
+            for (Config cfg : client.config.list()) {
                 String parentInfo = cfg.getParent() != null
                         ? " (parent: " + cfg.getParent() + ")" : " (root)";
                 System.out.println("  " + cfg.getId() + parentInfo);
             }
 
             // get a config
-            Config fetched = manage.config.get("showcase-user-service");
+            Config fetched = client.config.get("showcase-user-service");
             System.out.println("Fetched: id=" + fetched.getId()
                     + ", name=" + fetched.getName());
             System.out.println("  description=" + fetched.getDescription());
             System.out.println("  parent=" +
                     (fetched.getParent() != null ? fetched.getParent() : "(none)"));
-            System.out.println("  items: " + fetched.getResolvedItems().keySet());
+            System.out.println("  items: " + fetched.items().keySet());
 
             // delete configs
-            manage.config.delete(userService.getId());
-            manage.config.delete(shared.getId());
+            userService.delete();
+            shared.delete();
             System.out.println("Deleted configs");
 
             // cleanup
-            ConfigManagementSetup.cleanup(manage);
+            ConfigManagementSetup.cleanup(client);
             System.out.println("Done!");
         }
     }

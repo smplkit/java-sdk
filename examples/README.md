@@ -7,28 +7,60 @@ Runnable examples demonstrating the [smplkit Java SDK](https://github.com/smplki
 ## Prerequisites
 
 1. Java 17+
-2. A valid smplkit API key, provided via `SMPLKIT_API_KEY` env var or `~/.smplkit` config file (create one in the [smplkit console](https://app.smplkit.com)).
-3. At least one config created in your smplkit account (every account comes with a `common` config by default).
+2. A valid smplkit API key, provided via one of:
+   - `SMPLKIT_API_KEY` environment variable
+   - `~/.smplkit` configuration file (see SDK docs)
+3. At least two environments configured (e.g., `staging`, `production`).
 
-## Config Showcase
+## Structure
 
-**File:** [`src/main/java/com/smplkit/examples/ConfigShowcase.java`](src/main/java/com/smplkit/examples/ConfigShowcase.java)
+There is **one** client per product, reached from `SmplClient` (and
+`AsyncSmplClient`): `client.config`, `client.flags`, `client.logging`,
+`client.audit`, and `client.jobs`. Management/CRUD lives directly on each
+product client — `client.config.new_/get/list/delete`, the `client.flags.new*`
+builders, and `client.logging.loggers` / `client.logging.logGroups`. Each
+product can also be used via a standalone client (`AuditClient`, `JobsClient`).
 
-An end-to-end walkthrough of the Smpl Config SDK covering:
+Config/Flags/Logging keep a **management** + **runtime** showcase pair (the two
+sides — CRUD vs. evaluation — are genuinely different). Audit and Jobs have **one**
+showcase each — they have no runtime/management split (one client, full surface).
 
-- **Client initialization** — `SmplClient.builder().environment(...).service(...).build()`
-- **Management-plane CRUD** — create, update, list, get by key, and delete configs
-- **Environment overrides** — `setValues()` and `setValue()` for per-environment configuration
-- **Multi-level inheritance** — child → parent → common hierarchy setup
-- **Runtime value resolution** — `connect()`, `get()`, typed accessors (`getString`, `getInt`, `getBool`)
-- **Real-time updates** — WebSocket-driven cache invalidation with change listeners
-- **Manual refresh and cache diagnostics** — `refresh()`, `stats()`
-- **AutoCloseable pattern** — automatic cleanup via try-with-resources
+| Product | Management | Runtime | Setup |
+|---------|-----------|---------|-------|
+| **Flags** | `FlagsManagementShowcase.java` | `FlagsRuntimeShowcase.java` | `setup/FlagsRuntimeSetup.java` |
+| **Config** | `ConfigManagementShowcase.java` | `ConfigRuntimeShowcase.java` | `setup/ConfigRuntimeSetup.java` |
+| **Logging** | `LoggingManagementShowcase.java` | `LoggingRuntimeShowcase.java` | `setup/LoggingManagementSetup.java` |
+| **Audit** | `AuditShowcase.java` — single; events, discovery, categories, and forwarders | | _(none)_ |
+| **Jobs** | `JobsShowcase.java` — single; job CRUD, runs, usage | | _(none)_ |
 
-### Running
+**Management showcases** demonstrate the programmatic CRUD API directly on the
+product client: creating resources with `new*()` + `save()`, fetching with
+`get(id)`, listing, mutating, and deleting. No `install()` needed — management
+methods are stateless HTTP calls.
+
+**Runtime showcases** demonstrate the developer experience: a per-product
+`install()` (`client.config` connects lazily / `client.flags` connects lazily /
+`client.logging.install()`), local evaluation, live updates via WebSocket, and
+change listeners. Each runtime showcase imports its setup helper to create
+server-side state, then cleans up after itself.
+
+## Running
 
 ```bash
-./gradlew :examples:run
+# Single-client products (Audit, Jobs — full surface, no runtime/management split)
+make audit_showcase
+make jobs_showcase
+
+# Management / CRUD (directly on client.config / client.flags / client.logging)
+make flags_management_showcase
+make config_management_showcase
+make logging_management_showcase
+
+# Runtime (imports its setup helper automatically)
+make flags_runtime_showcase
+make config_runtime_showcase
+make logging_runtime_showcase
 ```
 
-The script creates temporary configs, exercises all SDK features, then cleans up after itself.
+Each target runs `./gradlew :examples:run -PmainClass=com.smplkit.examples.<ClassName>`.
+Each script creates temporary resources, exercises all SDK features, then cleans up after itself.

@@ -1,8 +1,8 @@
 package com.smplkit.examples.setup;
 
+import com.smplkit.SmplClient;
 import com.smplkit.config.Config;
 import com.smplkit.errors.NotFoundError;
-import com.smplkit.management.SmplManagementClient;
 
 import java.util.List;
 
@@ -14,20 +14,18 @@ public final class ConfigRuntimeSetup {
 
     private ConfigRuntimeSetup() {}
 
-    public static void simulateAdminOverride(SmplManagementClient manage) {
-        // Real customers never read back through the management API
-        // immediately after binding via the runtime client — this is a
-        // simulation-only step. Push pending runtime-side registrations
-        // through so the lookup below can find the freshly-declared config.
-        manage.config.flush();
-        Config billing = manage.config.get("showcase-billing");
+    public static void simulateAdminOverride(SmplClient client) {
+        // Push pending runtime-side registrations through so the lookup below
+        // can find the freshly-declared config.
+        client.config.flush();
+        Config billing = client.config.get("showcase-billing");
         billing.setNumber("plan.max_seats", 25, "production");
         billing.save();
     }
 
-    public static void cleanup(SmplManagementClient manage) {
+    public static void cleanup(SmplClient client) {
         for (String configId : DEMO_CONFIG_IDS) {
-            try { manage.config.delete(configId); } catch (NotFoundError ignored) {}
+            try { client.config.delete(configId); } catch (NotFoundError ignored) {}
         }
     }
 }

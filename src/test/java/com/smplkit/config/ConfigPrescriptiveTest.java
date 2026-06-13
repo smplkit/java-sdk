@@ -1,5 +1,6 @@
 package com.smplkit.config;
 
+import com.smplkit.MetricsReporter;
 import com.smplkit.internal.generated.config.ApiException;
 import com.smplkit.internal.generated.config.api.ConfigsApi;
 import com.smplkit.internal.generated.config.model.ConfigItemDefinition;
@@ -17,13 +18,16 @@ import java.util.Map;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.ArgumentMatchers.isNull;
+import static org.mockito.Mockito.atLeastOnce;
+import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 /**
- * Tests for the prescriptive config access pattern: get(), get(id, key),
+ * Tests for the prescriptive config access pattern: subscribe(), getValue(),
  * refresh(), onChange, lazy init, and the {@link Resolver}.
  */
 class ConfigPrescriptiveTest {
@@ -66,10 +70,6 @@ class ConfigPrescriptiveTest {
         return def;
     }
 
-    /**
-     * Per ADR-024 §2.4 the wire-shape per-env override IS the flat
-     * {@code {key: rawValue}} map.
-     */
     private static Map<String, Object> envOverride(Map<String, Object> rawValues) {
         return rawValues != null ? new HashMap<>(rawValues) : new HashMap<>();
     }
@@ -86,70 +86,92 @@ class ConfigPrescriptiveTest {
     }
 
     // -----------------------------------------------------------------------
-    // get(id)
+    // subscribe(id) — live resolved view
     // -----------------------------------------------------------------------
 
     @Test
-    void get_returnsResolvedValues() throws ApiException {
+    void subscribe_returnsResolvedValues() throws ApiException {
         setupListResponse(makeResource(APP_ID, "App", null,
                 Map.of("name", itemDef("Acme", ConfigItemDefinition.TypeEnum.STRING),
                         "retries", itemDef(3, ConfigItemDefinition.TypeEnum.NUMBER)),
                 Map.of()));
 
-        Map<String, Object> values = configClient.get("app");
+        LiveConfigProxy values = configClient.subscribe("app");
 
         assertEquals("Acme", values.get("name"));
         assertEquals(3, values.get("retries"));
     }
 
     @Test
-    void get_withEnvironmentOverrides() throws ApiException {
+    void subscribe_withEnvironmentOverrides() throws ApiException {
         setupListResponse(makeResource(APP_ID, "App", null,
                 Map.of("retries", itemDef(3, ConfigItemDefinition.TypeEnum.NUMBER)),
                 Map.of("production", envOverride(Map.of("retries", 5)))));
 
-        Map<String, Object> values = configClient.get("app");
-
+        LiveConfigProxy values = configClient.subscribe("app");
         assertEquals(5, values.get("retries"));
     }
 
     @Test
-    void get_unknownKey_throws() throws ApiException {
+    void subscribe_unknownConfig_throws() throws ApiException {
         setupListResponse(makeResource(APP_ID, "App", null, Map.of(), Map.of()));
-
-        // The id is not in the cache → NotFoundError. Declarative discovery
-        // via bind() / get(id, key, default) handles the unknown case.
         assertThrows(com.smplkit.errors.NotFoundError.class,
-                () -> configClient.get("nonexistent"));
+                () -> configClient.subscribe("nonexistent"));
     }
 
     // -----------------------------------------------------------------------
-    // get(id, key) — two-argument form, throws on miss
+    // getValue(id, key) — throws on miss
     // -----------------------------------------------------------------------
 
     @Test
-    void get_byKey_returnsValue() throws ApiException {
+    void getValue_returnsValue() throws ApiException {
         setupListResponse(makeResource(APP_ID, "App", null,
                 Map.of("retries", itemDef(3, ConfigItemDefinition.TypeEnum.NUMBER)),
                 Map.of()));
 
-        assertEquals(3, configClient.get("app", "retries"));
+        assertEquals(3, configClient.getValue("app", "retries"));
     }
 
     @Test
-    void get_byKey_missingConfig_throws() throws ApiException {
+    void getValue_missingConfig_throws() throws ApiException {
         setupListResponse(makeResource(APP_ID, "App", null, Map.of(), Map.of()));
         assertThrows(com.smplkit.errors.NotFoundError.class,
-                () -> configClient.get("missing", "key"));
+                () -> configClient.getValue("missing", "key"));
     }
 
     @Test
-    void get_byKey_missingKey_throws() throws ApiException {
+    void getValue_missingKey_throws() throws ApiException {
         setupListResponse(makeResource(APP_ID, "App", null,
                 Map.of("retries", itemDef(3, ConfigItemDefinition.TypeEnum.NUMBER)),
                 Map.of()));
         assertThrows(com.smplkit.errors.NotFoundError.class,
-                () -> configClient.get("app", "missing"));
+                () -> configClient.getValue("app", "missing"));
+    }
+
+    // -----------------------------------------------------------------------
+    // getValue(id, key, default) — registers + falls back
+    // -----------------------------------------------------------------------
+
+    @Test
+    void getValueOrDefault_existingValue_overDefault() throws ApiException {
+        setupListResponse(makeResource(APP_ID, "App", null,
+                Map.of("retries", itemDef(3, ConfigItemDefinition.TypeEnum.NUMBER)),
+                Map.of()));
+        assertEquals(3, configClient.getValue("app", "retries", 999));
+    }
+
+    @Test
+    void getValueOrDefault_missingConfig_returnsDefault() throws ApiException {
+        setupListResponse();
+        assertEquals(42, configClient.getValue("brand-new", "k", 42));
+    }
+
+    @Test
+    void getValueOrDefault_missingKey_returnsDefault() throws ApiException {
+        setupListResponse(makeResource(APP_ID, "App", null,
+                Map.of("retries", itemDef(3, ConfigItemDefinition.TypeEnum.NUMBER)),
+                Map.of()));
+        assertEquals("fallback", configClient.getValue("app", "missing", "fallback"));
     }
 
     // -----------------------------------------------------------------------
@@ -157,31 +179,24 @@ class ConfigPrescriptiveTest {
     // -----------------------------------------------------------------------
 
     @Test
-    void resolve_triggersLazyInit() throws ApiException {
+    void subscribe_triggersLazyInit() throws ApiException {
         setupListResponse(makeResource(APP_ID, "App", null,
                 Map.of("x", itemDef(1, ConfigItemDefinition.TypeEnum.NUMBER)),
                 Map.of()));
 
         assertFalse(configClient.isConnected());
-        configClient.get("app");
+        configClient.subscribe("app");
         assertTrue(configClient.isConnected());
     }
 
     @Test
-    void resolve_lazyInitIdempotent() throws ApiException {
+    void subscribe_lazyInitIdempotent() throws ApiException {
         setupListResponse(makeResource(APP_ID, "App", null, Map.of(), Map.of()));
 
-        configClient.get("app");
-        configClient.get("app");
+        configClient.subscribe("app");
+        configClient.subscribe("app");
 
         verify(mockApi, times(1)).listConfigs(isNull(), isNull(), isNull(), isNull(), any(), any(), isNull());
-    }
-
-    @Test
-    void resolve_noEnvironment_doesNotConnect() {
-        ConfigClient noEnvClient = new ConfigClient(mockApi, HttpClient.newHttpClient(), "test-key");
-        assertThrows(com.smplkit.errors.NotFoundError.class, () -> noEnvClient.get("app"));
-        assertFalse(noEnvClient.isConnected());
     }
 
     // -----------------------------------------------------------------------
@@ -189,7 +204,7 @@ class ConfigPrescriptiveTest {
     // -----------------------------------------------------------------------
 
     @Test
-    void resolve_parentChain_resolvesInheritance() throws ApiException {
+    void subscribe_parentChain_resolvesInheritance() throws ApiException {
         ConfigResource parent = makeResource(PARENT_ID, "Common", null,
                 Map.of("retries", itemDef(3, ConfigItemDefinition.TypeEnum.NUMBER),
                         "timeout", itemDef(1000, ConfigItemDefinition.TypeEnum.NUMBER)),
@@ -200,7 +215,7 @@ class ConfigPrescriptiveTest {
 
         setupListResponse(parent, child);
 
-        Map<String, Object> values = configClient.get("service");
+        LiveConfigProxy values = configClient.subscribe("service");
 
         assertEquals(5, values.get("retries"));
         assertEquals(1000, values.get("timeout"));
@@ -216,7 +231,7 @@ class ConfigPrescriptiveTest {
                 Map.of("retries", itemDef(3, ConfigItemDefinition.TypeEnum.NUMBER)),
                 Map.of()));
 
-        Map<String, Object> initial = configClient.get("app");
+        LiveConfigProxy initial = configClient.subscribe("app");
         assertEquals(3, initial.get("retries"));
 
         when(mockApi.listConfigs(isNull(), isNull(), isNull(), isNull(), any(), any(), isNull()))
@@ -227,8 +242,8 @@ class ConfigPrescriptiveTest {
 
         configClient.refresh();
 
-        Map<String, Object> refreshed = configClient.get("app");
-        assertEquals(7, refreshed.get("retries"));
+        // The same live proxy reflects the refreshed value.
+        assertEquals(7, initial.get("retries"));
     }
 
     @Test
@@ -241,7 +256,7 @@ class ConfigPrescriptiveTest {
                 Map.of());
 
         setupListResponse(parent, child);
-        assertEquals(1000, configClient.get("service").get("timeout"));
+        assertEquals(1000, configClient.subscribe("service").get("timeout"));
 
         ConfigResource parentUpdated = makeResource(PARENT_ID, "Common", null,
                 Map.of("timeout", itemDef(2000, ConfigItemDefinition.TypeEnum.NUMBER)),
@@ -251,17 +266,11 @@ class ConfigPrescriptiveTest {
 
         configClient.refresh();
 
-        assertEquals(2000, configClient.get("service").get("timeout"));
-    }
-
-    @Test
-    void refresh_noEnvironment_noOp() {
-        ConfigClient noEnvClient = new ConfigClient(mockApi, HttpClient.newHttpClient(), "test-key");
-        assertDoesNotThrow(noEnvClient::refresh);
+        assertEquals(2000, configClient.subscribe("service").get("timeout"));
     }
 
     // -----------------------------------------------------------------------
-    // onChange
+    // onChange — fires on refresh diffs
     // -----------------------------------------------------------------------
 
     @Test
@@ -270,7 +279,7 @@ class ConfigPrescriptiveTest {
                 Map.of("retries", itemDef(3, ConfigItemDefinition.TypeEnum.NUMBER)),
                 Map.of()));
 
-        configClient.get("app");
+        configClient.subscribe("app");
 
         List<ConfigChangeEvent> events = new ArrayList<>();
         configClient.onChange(events::add);
@@ -297,7 +306,7 @@ class ConfigPrescriptiveTest {
                 Map.of("retries", itemDef(3, ConfigItemDefinition.TypeEnum.NUMBER)),
                 Map.of()));
 
-        configClient.get("app");
+        configClient.subscribe("app");
 
         List<ConfigChangeEvent> appEvents = new ArrayList<>();
         configClient.onChange("app", appEvents::add);
@@ -324,7 +333,7 @@ class ConfigPrescriptiveTest {
                         "timeout", itemDef(1000, ConfigItemDefinition.TypeEnum.NUMBER)),
                 Map.of()));
 
-        configClient.get("app");
+        configClient.subscribe("app");
 
         List<ConfigChangeEvent> retriesEvents = new ArrayList<>();
         configClient.onChange("app", "retries", retriesEvents::add);
@@ -348,7 +357,7 @@ class ConfigPrescriptiveTest {
                 Map.of("retries", itemDef(3, ConfigItemDefinition.TypeEnum.NUMBER)),
                 Map.of()));
 
-        configClient.get("app");
+        configClient.subscribe("app");
 
         List<ConfigChangeEvent> events = new ArrayList<>();
         configClient.onChange(e -> { throw new RuntimeException("bad listener"); });
@@ -366,16 +375,16 @@ class ConfigPrescriptiveTest {
     }
 
     // -----------------------------------------------------------------------
-    // diffAndFire edge cases
+    // refresh diff edge cases (new config, removed key, no listeners)
     // -----------------------------------------------------------------------
 
     @Test
-    void diffAndFire_noListeners_doesNotThrow() throws ApiException {
+    void refresh_noListeners_doesNotThrow() throws ApiException {
         setupListResponse(makeResource(APP_ID, "App", null,
                 Map.of("retries", itemDef(3, ConfigItemDefinition.TypeEnum.NUMBER)),
                 Map.of()));
 
-        configClient.get("app");
+        configClient.subscribe("app");
 
         when(mockApi.listConfigs(isNull(), isNull(), isNull(), isNull(), any(), any(), isNull()))
                 .thenReturn(listResponse(List.of(
@@ -387,12 +396,12 @@ class ConfigPrescriptiveTest {
     }
 
     @Test
-    void diffAndFire_newConfig() throws ApiException {
+    void refresh_newConfig_firesWithNullOld() throws ApiException {
         setupListResponse(makeResource(APP_ID, "App", null,
                 Map.of("a", itemDef(1, ConfigItemDefinition.TypeEnum.NUMBER)),
                 Map.of()));
 
-        configClient.get("app");
+        configClient.subscribe("app");
 
         List<ConfigChangeEvent> events = new ArrayList<>();
         configClient.onChange(events::add);
@@ -416,13 +425,13 @@ class ConfigPrescriptiveTest {
     }
 
     @Test
-    void diffAndFire_removedKey() throws ApiException {
+    void refresh_removedKey_firesWithNullNew() throws ApiException {
         setupListResponse(makeResource(APP_ID, "App", null,
                 Map.of("a", itemDef(1, ConfigItemDefinition.TypeEnum.NUMBER),
                         "b", itemDef(2, ConfigItemDefinition.TypeEnum.NUMBER)),
                 Map.of()));
 
-        configClient.get("app");
+        configClient.subscribe("app");
 
         List<ConfigChangeEvent> events = new ArrayList<>();
         configClient.onChange(events::add);
@@ -438,6 +447,36 @@ class ConfigPrescriptiveTest {
         assertEquals(1, events.size());
         assertEquals("b", events.get(0).itemKey());
         assertNull(events.get(0).newValue());
+    }
+
+    // -----------------------------------------------------------------------
+    // Metrics — recorded on subscribe (resolutions) and on change (changes)
+    // -----------------------------------------------------------------------
+
+    @Test
+    void metrics_recordedOnSubscribeAndOnChange() throws ApiException {
+        MetricsReporter metrics = mock(MetricsReporter.class);
+        configClient.setMetrics(metrics);
+
+        setupListResponse(makeResource(APP_ID, "App", null,
+                Map.of("retries", itemDef(3, ConfigItemDefinition.TypeEnum.NUMBER)),
+                Map.of()));
+
+        // subscribe records a resolution metric.
+        configClient.subscribe("app");
+        verify(metrics, atLeastOnce())
+                .record(eq("config.resolutions"), eq("resolutions"), any());
+
+        // a refresh that changes a value records a change metric.
+        configClient.onChange(e -> {});
+        when(mockApi.listConfigs(isNull(), isNull(), isNull(), isNull(), any(), any(), isNull()))
+                .thenReturn(listResponse(List.of(
+                        makeResource(APP_ID, "App", null,
+                                Map.of("retries", itemDef(7, ConfigItemDefinition.TypeEnum.NUMBER)),
+                                Map.of()))));
+        configClient.refresh();
+        verify(metrics, atLeastOnce())
+                .record(eq("config.changes"), eq("changes"), any());
     }
 
     // -----------------------------------------------------------------------
@@ -482,11 +521,22 @@ class ConfigPrescriptiveTest {
     }
 
     @Test
+    void resolver_resolve_unwrapsTypedItems() {
+        // Items in the typed {key: {value, type}} shape are unwrapped to raw.
+        Resolver.ChainEntry entry = new Resolver.ChainEntry(
+                "id1",
+                Map.of("a", Map.of("value", 7, "type", "NUMBER")),
+                Map.of());
+        Map<String, Object> result = Resolver.resolve(List.of(entry), "production");
+        assertEquals(7, result.get("a"));
+    }
+
+    @Test
     void resolver_chainEntry_nullsDefaultToEmpty() {
         Resolver.ChainEntry entry = new Resolver.ChainEntry("id", null, null);
-        assertNotNull(entry.values);
+        assertNotNull(entry.items);
         assertNotNull(entry.environments);
-        assertTrue(entry.values.isEmpty());
+        assertTrue(entry.items.isEmpty());
         assertTrue(entry.environments.isEmpty());
     }
 }

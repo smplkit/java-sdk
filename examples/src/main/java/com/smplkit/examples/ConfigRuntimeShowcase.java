@@ -8,7 +8,7 @@
  *         - ~/.smplkit configuration file (see SDK docs)
  *
  * Usage:
- *     make config_runtime_showcase
+ *     ./gradlew :examples:run -PmainClass=com.smplkit.examples.ConfigRuntimeShowcase
  */
 package com.smplkit.examples;
 
@@ -55,33 +55,34 @@ public final class ConfigRuntimeShowcase {
     }
 
     public static void main(String[] args) throws Exception {
-        // create the client
-        try (SmplClient client = SmplClient.builder()
-                .environment("production").service("showcase-billing").build()) {
 
-            ConfigRuntimeSetup.cleanup(client.manage());
+        // or AsyncSmplClient for asynchronous use
+        try (SmplClient client = SmplClient.builder()
+                .environment("production").build()) {
+            ConfigRuntimeSetup.cleanup(client);
 
             // bind POJOs
-            Common common = client.config().bind("showcase-common", new Common());
-            Billing billing = client.config().bind(
+            Common common = client.config.bind("showcase-common", new Common());
+            Billing billing = client.config.bind(
                     "showcase-billing", new Billing(), common);
-
             System.out.println("common.app.name = " + common.app.name);
+            System.out.println("billing.app.name = " + billing.app.name
+                    + "  // inherited from common");
             System.out.println("billing.plan.max_seats = " + billing.plan.max_seats);
-            assert "Acme SaaS".equals(common.app.name);
-            assert billing.plan.max_seats == 5;
 
             // add listeners if desired
             List<ConfigChangeEvent> changes = new ArrayList<>();
-            client.config().onChange("showcase-billing", "plan.max_seats", evt -> {
+            client.config.onChange("showcase-billing", "plan.max_seats", evt -> {
                 changes.add(evt);
                 System.out.println("    [CHANGE] " + evt.configId() + "."
                         + evt.itemKey() + ": " + evt.oldValue()
                         + " -> " + evt.newValue());
             });
 
+            client.waitUntilReady();
+
             // simulate someone making a change in smplkit console
-            ConfigRuntimeSetup.simulateAdminOverride(client.manage());
+            ConfigRuntimeSetup.simulateAdminOverride(client);
 
             long deadline = System.currentTimeMillis() + 10_000;
             while (System.currentTimeMillis() < deadline
@@ -104,7 +105,7 @@ public final class ConfigRuntimeShowcase {
             db.put("primary", primary);
             db.put("pool_size", 10);
             db.put("statement_timeout_ms", 30000);
-            Map<String, Object> dbBound = client.config().bind("showcase-database", db);
+            Map<String, Object> dbBound = client.config.bind("showcase-database", db);
 
             @SuppressWarnings("unchecked")
             Map<String, Object> primaryRef = (Map<String, Object>) dbBound.get("primary");
@@ -113,9 +114,8 @@ public final class ConfigRuntimeShowcase {
             assert "db.acme.example".equals(primaryRef.get("host"));
             assert ((Number) dbBound.get("pool_size")).intValue() == 10;
 
-            // or get a config by ID (raises NotFoundError if not found; pass
-            // a default if you want a fallback)
-            LiveConfigProxy commonView = client.config().get("showcase-common");
+            // or read live values via subscribe(id)
+            LiveConfigProxy commonView = client.config.subscribe("showcase-common");
             System.out.println("showcase-common (via get):");
             for (Map.Entry<String, Object> entry : commonView.entrySet()) {
                 System.out.println("    " + entry.getKey() + " = " + entry.getValue());
@@ -123,13 +123,13 @@ public final class ConfigRuntimeShowcase {
             assert "Acme SaaS".equals(commonView.get("app.name"));
 
             // or skip the POJO/Map and just fetch specific keys directly
-            int slowQueryMs = ((Number) client.config().get(
+            int slowQueryMs = ((Number) client.config.getValue(
                     "showcase-database", "slow_query_threshold_ms", 500)).intValue();
             System.out.println("showcase-database.slow_query_threshold_ms = "
-                    + slowQueryMs + "  // default used; now registered for visibility");
+                    + slowQueryMs + "  // default used (key absent)");
             assert slowQueryMs == 500;
 
-            ConfigRuntimeSetup.cleanup(client.manage());
+            ConfigRuntimeSetup.cleanup(client);
             System.out.println("Done!");
         }
     }

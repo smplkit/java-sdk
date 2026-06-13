@@ -4,12 +4,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 /**
- * HTTP destination configuration for a {@link Forwarder} whose
- * {@code forwarderType} is one of the HTTP-family transports
- * (HTTP, DATADOG, SPLUNK_HEC, SUMO_LOGIC, NEW_RELIC, HONEYCOMB,
- * ELASTIC). Carried as {@code Forwarder.configuration}; non-HTTP
- * transports will land their own configuration shapes alongside
- * this one as the discriminated union grows.
+ * Forwarder destination HTTP request shape.
  */
 public final class HttpConfiguration {
     /** HTTP verb used for delivery. Defaults to {@link HttpMethod#POST}. */
@@ -17,8 +12,9 @@ public final class HttpConfiguration {
     /** Destination URL the audit service POSTs each event to. */
     public String url = "";
     /**
-     * Headers attached to every outbound request. Values carry credentials
-     * and are encrypted at rest server-side; reads return them redacted.
+     * Headers attached to every outbound request. Values often carry
+     * credentials and are returned in plaintext on reads, so a
+     * get-mutate-put round-trip preserves them without re-entering secrets.
      */
     public List<HttpHeader> headers = new ArrayList<>();
     /**
@@ -44,10 +40,20 @@ public final class HttpConfiguration {
 
     public HttpConfiguration() {}
 
+    /**
+     * @param url destination URL the audit service POSTs each event to
+     */
     public HttpConfiguration(String url) {
         this.url = url;
     }
 
+    /**
+     * @param method HTTP verb used for delivery
+     * @param url destination URL the audit service POSTs each event to
+     * @param headers headers attached to every outbound request; values are
+     *     returned in plaintext on reads, so a get-mutate-put round-trip
+     *     preserves them without re-entering secrets
+     */
     public HttpConfiguration(HttpMethod method, String url, List<HttpHeader> headers) {
         this.method = method;
         this.url = url;

@@ -35,8 +35,10 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 /**
- * Tests for {@link ConfigClient} CRUD operations using the new API:
- * new_() + save(), get(id), list(), delete(id).
+ * Tests for the fused {@link ConfigClient} CRUD surface:
+ * new_() + save(), get(id), list(), delete(id), plus error mapping,
+ * {@link ConfigChangeEvent}, and the WebSocket-handler registration / simulate
+ * seams.
  */
 class ConfigClientTest {
 
@@ -89,11 +91,7 @@ class ConfigClientTest {
         return def;
     }
 
-    /**
-     * Per ADR-024 §2.4 the wire-shape per-env override IS the flat
-     * {@code {key: rawValue}} map. Kept as a helper so call sites continue to
-     * read "envOverride(...)" the same way they always have.
-     */
+    /** Per ADR-024 §2.4 the wire-shape per-env override IS the flat {@code {key: rawValue}} map. */
     private static Map<String, Object> envOverride(Map<String, Object> rawValues) {
         return rawValues != null ? new HashMap<>(rawValues) : new HashMap<>();
     }
@@ -110,24 +108,30 @@ class ConfigClientTest {
         return response;
     }
 
+    private ConfigListResponse emptyListResponse() {
+        ConfigListResponse resp = new ConfigListResponse();
+        resp.setData(List.of());
+        return resp;
+    }
+
     // -----------------------------------------------------------------------
     // new_()
     // -----------------------------------------------------------------------
 
     @Test
     void new_createsUnsavedConfig() {
-        Config config = configClient.management().new_("user_service");
+        Config config = configClient.new_("user_service");
 
         assertEquals("user_service", config.getId());
         assertEquals("User Service", config.getName()); // auto-generated from id
         assertNull(config.getDescription());
         assertNull(config.getParent());
-        assertTrue(config.getItems().isEmpty());
+        assertTrue(config.items().isEmpty());
     }
 
     @Test
     void new_withAllParams() {
-        Config config = configClient.management().new_("user_service", "My Service", "A description", "parent-uuid");
+        Config config = configClient.new_("user_service", "My Service", "A description", "parent-uuid");
 
         assertEquals("user_service", config.getId());
         assertEquals("My Service", config.getName());
@@ -137,9 +141,36 @@ class ConfigClientTest {
 
     @Test
     void new_nullName_autoGeneratesFromId() {
-        Config config = configClient.management().new_("checkout-v2", null, null, (String) null);
-
+        Config config = configClient.new_("checkout-v2", null, null, (String) null);
         assertEquals("Checkout V2", config.getName());
+    }
+
+    @Test
+    void new_withParentConfigInstance_usesItsId() throws ApiException {
+        ConfigResource parentRes = makeResource(CONFIG_ID, "Parent", null, null,
+                Map.of(), Map.of(), OffsetDateTime.now(), OffsetDateTime.now());
+        when(mockApi.createConfig(any())).thenReturn(singleResponse(parentRes));
+        Config parent = configClient.new_("parent");
+        parent.save(); // gives it an id
+
+        Config child = configClient.new_("child", null, null, parent);
+        assertEquals(CONFIG_ID, child.getParent());
+    }
+
+    @Test
+    void new_withNullParentConfigInstance_keepsNullParent() {
+        Config child = configClient.new_("child", null, null, (Config) null);
+        assertNull(child.getParent());
+    }
+
+    @Test
+    void new_withParentConfigMissingId_throws() {
+        // A parent Config that was never saved (id == null) cannot be used as a
+        // parent reference.
+        Config noIdParent = new Config(configClient, null, "P", null, null,
+                new HashMap<>(), new HashMap<>(), null, null);
+        assertThrows(IllegalArgumentException.class,
+                () -> configClient.new_("child", null, null, noIdParent));
     }
 
     // -----------------------------------------------------------------------
@@ -155,18 +186,20 @@ class ConfigClientTest {
         ArgumentCaptor<ConfigCreateRequest> captor = ArgumentCaptor.forClass(ConfigCreateRequest.class);
         when(mockApi.createConfig(captor.capture())).thenReturn(singleResponse(resource));
 
-        Config config = configClient.management().new_("user_service");
+        Config config = configClient.new_("user_service");
         config.setDescription("Main user service config");
-        config.setItems(Map.of("timeout", Map.of("value", 30)));
+        config.setNumber("timeout", 30);
         config.save();
 
         assertEquals(CONFIG_ID, config.getId());
         assertEquals("User Service", config.getName());
         verify(mockApi).createConfig(any(ConfigCreateRequest.class));
-        // Verify the create envelope carries the caller-supplied id.
         ConfigCreateResource data = captor.getValue().getData();
         assertEquals("user_service", data.getId());
         assertEquals(ConfigCreateResource.TypeEnum.CONFIG, data.getType());
+        // The typed item carried its NUMBER type to the wire.
+        assertEquals(ConfigItemDefinition.TypeEnum.NUMBER,
+                data.getAttributes().getItems().get("timeout").getType());
     }
 
     @Test
@@ -176,8 +209,8 @@ class ConfigClientTest {
                 Map.of(), null, null);
         when(mockApi.createConfig(any())).thenReturn(singleResponse(resource));
 
-        Config config = configClient.management().new_("flags");
-        config.setItems(Map.of("enabled", Map.of("value", Boolean.TRUE)));
+        Config config = configClient.new_("flags");
+        config.setBoolean("enabled", true);
         config.save();
 
         assertNotNull(config.getId());
@@ -191,8 +224,8 @@ class ConfigClientTest {
                 Map.of(), null, null);
         when(mockApi.createConfig(any())).thenReturn(singleResponse(resource));
 
-        Config config = configClient.management().new_("complex");
-        config.setItems(Map.of("nested", Map.of("value", Map.of("k", "v"))));
+        Config config = configClient.new_("complex");
+        config.setJson("nested", Map.of("k", "v"));
         config.save();
 
         assertNotNull(config.getId());
@@ -205,7 +238,7 @@ class ConfigClientTest {
                 Map.of(), Map.of(), null, null);
         when(mockApi.createConfig(any())).thenReturn(singleResponse(resource));
 
-        Config config = configClient.management().new_("child", null, null, CONFIG_ID);
+        Config config = configClient.new_("child", null, null, CONFIG_ID);
         config.save();
 
         assertNotNull(config.getId());
@@ -219,10 +252,8 @@ class ConfigClientTest {
                 null, null);
         when(mockApi.createConfig(any())).thenReturn(singleResponse(resource));
 
-        Config config = configClient.management().new_("svc");
-        Map<String, Object> envData = new HashMap<>();
-        envData.put("timeout", 60);
-        config.setEnvironments(Map.of("production", envData));
+        Config config = configClient.new_("svc");
+        config.setNumber("timeout", 60, "production");
         config.save();
 
         assertNotNull(config.getId());
@@ -233,7 +264,14 @@ class ConfigClientTest {
         when(mockApi.createConfig(any()))
                 .thenThrow(new ApiException(422, "Validation error"));
 
-        Config config = configClient.management().new_("bad");
+        Config config = configClient.new_("bad");
+        assertThrows(ValidationError.class, config::save);
+    }
+
+    @Test
+    void save_create_nullResponse_throwsValidationError() throws ApiException {
+        when(mockApi.createConfig(any())).thenReturn(null);
+        Config config = configClient.new_("svc");
         assertThrows(ValidationError.class, config::save);
     }
 
@@ -244,17 +282,15 @@ class ConfigClientTest {
     @Test
     void save_update_putsAndAppliesResponse() throws ApiException {
         OffsetDateTime now = OffsetDateTime.now();
-        // First create a config to get createdAt set
         ConfigResource resource = makeResource(CONFIG_ID, "Old Name", null, null,
                 Map.of("a", itemDef(1, ConfigItemDefinition.TypeEnum.NUMBER)),
                 Map.of(), now, now);
         when(mockApi.createConfig(any())).thenReturn(singleResponse(resource));
 
-        Config config = configClient.management().new_("svc");
-        config.setItems(Map.of("a", Map.of("value", 1)));
+        Config config = configClient.new_("svc");
+        config.setNumber("a", 1);
         config.save(); // create
 
-        // Now update
         ConfigResource updated = makeResource(CONFIG_ID, "New Name", "Updated desc",
                 null, Map.of("a", itemDef(2, ConfigItemDefinition.TypeEnum.NUMBER)),
                 Map.of(), now, now);
@@ -263,7 +299,7 @@ class ConfigClientTest {
 
         config.setName("New Name");
         config.setDescription("Updated desc");
-        config.setItems(Map.of("a", Map.of("value", 2)));
+        config.setNumber("a", 2);
         config.save(); // update
 
         assertEquals("New Name", config.getName());
@@ -272,13 +308,28 @@ class ConfigClientTest {
     }
 
     @Test
+    void save_update_nullResponse_throwsValidationError() throws ApiException {
+        OffsetDateTime now = OffsetDateTime.now();
+        ConfigResource created = makeResource(CONFIG_ID, "Svc", null, null,
+                Map.of(), Map.of(), now, now);
+        when(mockApi.createConfig(any())).thenReturn(singleResponse(created));
+        Config config = configClient.new_("svc");
+        config.save();
+
+        when(mockApi.updateConfig(any(), any())).thenReturn(null);
+        config.setName("New");
+        assertThrows(ValidationError.class, config::save);
+    }
+
+    @Test
     void save_withoutClient_throwsIllegalState() {
-        Config config = new Config(null, "test", "Test");
+        Config config = new Config(null, "test", "Test", null, null,
+                new HashMap<>(), new HashMap<>(), null, null);
         assertThrows(IllegalStateException.class, config::save);
     }
 
     // -----------------------------------------------------------------------
-    // get(key)
+    // get(id)
     // -----------------------------------------------------------------------
 
     @Test
@@ -290,7 +341,7 @@ class ConfigClientTest {
                 Map.of(), now, now);
         when(mockApi.getConfig("user_service")).thenReturn(singleResponse(resource));
 
-        Config config = configClient.management().get("user_service");
+        Config config = configClient.get("user_service");
 
         assertEquals(CONFIG_ID, config.getId());
         assertEquals("User Service", config.getName());
@@ -299,15 +350,15 @@ class ConfigClientTest {
         assertNotNull(config.getCreatedAt());
         assertNotNull(config.getUpdatedAt());
 
-        // Items should have the full typed shape
+        // Items expose the full typed shape via itemsRaw().
         @SuppressWarnings("unchecked")
-        Map<String, Object> timeoutItem = (Map<String, Object>) config.getItems().get("timeout");
+        Map<String, Object> timeoutItem = (Map<String, Object>) config.itemsRaw().get("timeout");
         assertEquals(30, timeoutItem.get("value"));
         assertEquals("NUMBER", timeoutItem.get("type"));
         assertEquals("Timeout in seconds", timeoutItem.get("description"));
 
-        // Resolved items should just have the value
-        assertEquals(30, config.getResolvedItems().get("timeout"));
+        // items() returns just the values.
+        assertEquals(30, config.items().get("timeout"));
     }
 
     @Test
@@ -315,8 +366,21 @@ class ConfigClientTest {
         when(mockApi.getConfig(any()))
                 .thenThrow(new ApiException(404, "Not Found"));
 
-        assertThrows(NotFoundError.class, () ->
-                configClient.management().get("nonexistent"));
+        assertThrows(NotFoundError.class, () -> configClient.get("nonexistent"));
+    }
+
+    @Test
+    void get_nullResponse_throwsNotFound() throws ApiException {
+        when(mockApi.getConfig(any())).thenReturn(null);
+        assertThrows(NotFoundError.class, () -> configClient.get("nope"));
+    }
+
+    @Test
+    void get_nullData_throwsNotFound() throws ApiException {
+        ConfigResponse resp = new ConfigResponse();
+        resp.setData(null);
+        when(mockApi.getConfig(any())).thenReturn(resp);
+        assertThrows(NotFoundError.class, () -> configClient.get("nope"));
     }
 
     @Test
@@ -324,8 +388,7 @@ class ConfigClientTest {
         when(mockApi.getConfig(any()))
                 .thenThrow(new ApiException(500, "Internal Server Error"));
 
-        SmplError ex = assertThrows(SmplError.class, () ->
-                configClient.management().get("some-id"));
+        SmplError ex = assertThrows(SmplError.class, () -> configClient.get("some-id"));
         assertEquals(500, ex.statusCode());
     }
 
@@ -334,13 +397,13 @@ class ConfigClientTest {
         ConfigResource resource = makeResource(null, null, null, null, null, null, null, null);
         when(mockApi.getConfig(any())).thenReturn(singleResponse(resource));
 
-        Config config = configClient.management().get("anything");
+        Config config = configClient.get("anything");
 
         assertEquals("", config.getId());
         assertEquals("", config.getName());
         assertNull(config.getDescription());
-        assertTrue(config.getItems().isEmpty());
-        assertTrue(config.getEnvironments().isEmpty());
+        assertTrue(config.items().isEmpty());
+        assertTrue(config.environments().isEmpty());
     }
 
     @Test
@@ -349,20 +412,8 @@ class ConfigClientTest {
                 CONFIG_ID, Map.of(), Map.of(), null, null);
         when(mockApi.getConfig("child")).thenReturn(singleResponse(resource));
 
-        Config config = configClient.management().get("child");
-
+        Config config = configClient.get("child");
         assertEquals(CONFIG_ID, config.getParent());
-    }
-
-    @Test
-    void get_resourceWithNullId_usesEmptyString() throws ApiException {
-        ConfigResource resource = makeResource(null, "Name", null,
-                null, Map.of(), Map.of(), null, null);
-        when(mockApi.getConfig(any())).thenReturn(singleResponse(resource));
-
-        Config config = configClient.management().get("svc");
-
-        assertEquals("", config.getId());
     }
 
     @Test
@@ -374,10 +425,10 @@ class ConfigClientTest {
                         "staging", emptyOverride), null, null);
         when(mockApi.getConfig("svc")).thenReturn(singleResponse(resource));
 
-        Config config = configClient.management().get("svc");
+        Config config = configClient.get("svc");
 
-        assertTrue(config.getEnvironments().containsKey("production"));
-        assertTrue(config.getEnvironments().containsKey("staging"));
+        assertTrue(config.environments().containsKey("production"));
+        assertTrue(config.environments().containsKey("staging"));
     }
 
     // -----------------------------------------------------------------------
@@ -388,9 +439,10 @@ class ConfigClientTest {
     void list_returnsAllConfigs() throws ApiException {
         ConfigResource r1 = makeResource(CONFIG_ID, "Svc A", null, null, Map.of(), Map.of(), null, null);
         ConfigResource r2 = makeResource(CONFIG_ID_2, "Svc B", null, CONFIG_ID, Map.of(), Map.of(), null, null);
-        when(mockApi.listConfigs(isNull(), isNull(), isNull(), isNull(), any(), any(), isNull())).thenReturn(listResponse(List.of(r1, r2)));
+        when(mockApi.listConfigs(isNull(), isNull(), isNull(), isNull(), isNull(), isNull(), isNull()))
+                .thenReturn(listResponse(List.of(r1, r2)));
 
-        List<Config> configs = configClient.management().list();
+        List<Config> configs = configClient.list();
 
         assertEquals(2, configs.size());
         assertEquals(CONFIG_ID, configs.get(0).getId());
@@ -400,43 +452,42 @@ class ConfigClientTest {
 
     @Test
     void list_returnsUnmodifiableList() throws ApiException {
-        when(mockApi.listConfigs(isNull(), isNull(), isNull(), isNull(), any(), any(), isNull())).thenReturn(listResponse(List.of()));
+        when(mockApi.listConfigs(isNull(), isNull(), isNull(), isNull(), isNull(), isNull(), isNull()))
+                .thenReturn(listResponse(List.of()));
 
-        List<Config> configs = configClient.management().list();
+        List<Config> configs = configClient.list();
 
         assertThrows(UnsupportedOperationException.class, () ->
-                configs.add(new Config(null, "id", "name")));
+                configs.add(configClient.new_("id")));
     }
 
     @Test
     void list_nullData_returnsEmpty() throws ApiException {
         ConfigListResponse response = new ConfigListResponse();
         response.setData(null);
-        when(mockApi.listConfigs(isNull(), isNull(), isNull(), isNull(), any(), any(), isNull())).thenReturn(response);
+        when(mockApi.listConfigs(isNull(), isNull(), isNull(), isNull(), isNull(), isNull(), isNull()))
+                .thenReturn(response);
 
-        List<Config> configs = configClient.management().list();
-
+        List<Config> configs = configClient.list();
         assertTrue(configs.isEmpty());
     }
 
     @Test
     void list_apiException_throwsSmplError() throws ApiException {
-        when(mockApi.listConfigs(isNull(), isNull(), isNull(), isNull(), any(), any(), isNull()))
+        when(mockApi.listConfigs(isNull(), isNull(), isNull(), isNull(), isNull(), isNull(), isNull()))
                 .thenThrow(new ApiException(503, "Service Unavailable"));
 
-        SmplError ex = assertThrows(SmplError.class, () ->
-                configClient.management().list());
+        SmplError ex = assertThrows(SmplError.class, () -> configClient.list());
         assertEquals(503, ex.statusCode());
     }
 
     // -----------------------------------------------------------------------
-    // delete(key)
+    // delete(id)
     // -----------------------------------------------------------------------
 
     @Test
     void delete_byId_deletesDirectly() throws ApiException {
-        configClient.management().delete("my_config");
-
+        configClient.delete("my_config");
         verify(mockApi).deleteConfig("my_config");
     }
 
@@ -446,7 +497,7 @@ class ConfigClientTest {
                 .when(mockApi).deleteConfig("parent_config");
 
         ConflictError ex = assertThrows(ConflictError.class, () ->
-                configClient.management().delete("parent_config"));
+                configClient.delete("parent_config"));
         assertEquals(409, ex.statusCode());
     }
 
@@ -455,7 +506,7 @@ class ConfigClientTest {
         Mockito.doThrow(new ApiException(404, "Not Found"))
                 .when(mockApi).deleteConfig("nonexistent");
 
-        assertThrows(NotFoundError.class, () -> configClient.management().delete("nonexistent"));
+        assertThrows(NotFoundError.class, () -> configClient.delete("nonexistent"));
     }
 
     // -----------------------------------------------------------------------
@@ -463,10 +514,9 @@ class ConfigClientTest {
     // -----------------------------------------------------------------------
 
     @Test
-    void activeRecord_delete_callsManagementDelete() throws ApiException {
-        Config config = configClient.management().new_("doomed");
+    void activeRecord_delete_callsClientDelete() throws ApiException {
+        Config config = configClient.new_("doomed");
         config.delete();
-
         verify(mockApi).deleteConfig("doomed");
     }
 
@@ -475,13 +525,21 @@ class ConfigClientTest {
         Mockito.doThrow(new ApiException(404, "Not Found"))
                 .when(mockApi).deleteConfig("ghost");
 
-        Config config = configClient.management().new_("ghost");
+        Config config = configClient.new_("ghost");
         assertThrows(NotFoundError.class, config::delete);
     }
 
     @Test
     void activeRecord_delete_unboundClient_throwsIllegalState() {
-        Config config = new Config(null, "orphan", "Orphan");
+        Config config = new Config(null, "orphan", "Orphan", null, null,
+                new HashMap<>(), new HashMap<>(), null, null);
+        assertThrows(IllegalStateException.class, config::delete);
+    }
+
+    @Test
+    void activeRecord_delete_nullId_throwsIllegalState() {
+        Config config = new Config(configClient, null, "NoId", null, null,
+                new HashMap<>(), new HashMap<>(), null, null);
         assertThrows(IllegalStateException.class, config::delete);
     }
 
@@ -494,8 +552,7 @@ class ConfigClientTest {
         when(mockApi.getConfig(any()))
                 .thenThrow(new ApiException(500, "Internal Server Error"));
 
-        SmplError ex = assertThrows(SmplError.class, () ->
-                configClient.management().get(CONFIG_ID));
+        SmplError ex = assertThrows(SmplError.class, () -> configClient.get(CONFIG_ID));
         assertEquals(500, ex.statusCode());
     }
 
@@ -504,7 +561,7 @@ class ConfigClientTest {
         when(mockApi.getConfig(any()))
                 .thenThrow(new ApiException("network failure"));
 
-        assertThrows(SmplError.class, () -> configClient.management().get(CONFIG_ID));
+        assertThrows(SmplError.class, () -> configClient.get(CONFIG_ID));
     }
 
     @Test
@@ -512,95 +569,8 @@ class ConfigClientTest {
         when(mockApi.getConfig(any()))
                 .thenThrow(new ApiException(503, (String) null));
 
-        SmplError ex = assertThrows(SmplError.class, () ->
-                configClient.management().get("some-id"));
+        SmplError ex = assertThrows(SmplError.class, () -> configClient.get("some-id"));
         assertTrue(ex.getMessage().contains("503"));
-    }
-
-    // -----------------------------------------------------------------------
-    // Config class
-    // -----------------------------------------------------------------------
-
-    @Test
-    void config_toString() {
-        Config config = configClient.management().new_("id1");
-        assertEquals("Config[id=id1, name=Id1]", config.toString());
-    }
-
-    @Test
-    void config_getResolvedItems_extractsValues() {
-        Config config = configClient.management().new_("test");
-        Map<String, Object> items = new HashMap<>();
-        items.put("timeout", Map.of("value", 30, "type", "NUMBER"));
-        items.put("name", Map.of("value", "hello"));
-        items.put("plain", "raw"); // non-map value
-        config.setItems(items);
-
-        Map<String, Object> resolved = config.getResolvedItems();
-        assertEquals(30, resolved.get("timeout"));
-        assertEquals("hello", resolved.get("name"));
-        assertEquals("raw", resolved.get("plain"));
-    }
-
-    @Test
-    void config_getResolvedItems_mapWithoutValueKey() {
-        Config config = configClient.management().new_("test");
-        Map<String, Object> items = new HashMap<>();
-        items.put("nested", Map.of("key", "val")); // map without "value" key
-        config.setItems(items);
-
-        Map<String, Object> resolved = config.getResolvedItems();
-        assertEquals(Map.of("key", "val"), resolved.get("nested"));
-    }
-
-    @Test
-    void config_setItems_null_defaultsToEmpty() {
-        Config config = configClient.management().new_("test");
-        config.setItems(null);
-        assertNotNull(config.getItems());
-        assertTrue(config.getItems().isEmpty());
-    }
-
-    @Test
-    void config_setEnvironments_null_defaultsToEmpty() {
-        Config config = configClient.management().new_("test");
-        config.setEnvironments(null);
-        assertNotNull(config.getEnvironments());
-        assertTrue(config.getEnvironments().isEmpty());
-    }
-
-    @Test
-    void config_apply_copiesAllFields() {
-        Config source = configClient.management().new_("src-id");
-        source.setDescription("src desc");
-        source.setParent("src-parent");
-        source.setItems(Map.of("k", "v"));
-        source.setEnvironments(Map.of("prod", Map.<String, Object>of()));
-        source.setCreatedAt(java.time.Instant.now());
-        source.setUpdatedAt(java.time.Instant.now());
-
-        Config target = configClient.management().new_("target-id");
-        target._apply(source);
-
-        assertEquals("src-id", target.getId());
-        assertEquals("Src Id", target.getName());
-        assertEquals("src desc", target.getDescription());
-        assertEquals("src-parent", target.getParent());
-        assertNotNull(target.getCreatedAt());
-        assertNotNull(target.getUpdatedAt());
-    }
-
-    @Test
-    void config_apply_copiesItemsAndEnvironments() {
-        Config source = new Config(configClient, "src", "Src");
-        source.setItems(Map.of("k", "v"));
-        source.setEnvironments(Map.of("prod", Map.<String, Object>of()));
-
-        Config target = configClient.management().new_("tgt");
-        target._apply(source);
-
-        assertEquals(Map.of("k", "v"), target.getItems());
-        assertEquals(Map.of("prod", Map.of()), target.getEnvironments());
     }
 
     // -----------------------------------------------------------------------
@@ -644,115 +614,94 @@ class ConfigClientTest {
     }
 
     // -----------------------------------------------------------------------
-    // unflatten
+    // setEnvironment / isConnected
     // -----------------------------------------------------------------------
 
     @Test
-    void unflatten_convertsDotNotation() {
-        Map<String, Object> flat = Map.of(
-                "database.host", "localhost",
-                "database.port", 5432,
-                "app_name", "MyApp"
-        );
-        Map<String, Object> nested = ConfigClient.unflatten(flat);
-
-        @SuppressWarnings("unchecked")
-        Map<String, Object> db = (Map<String, Object>) nested.get("database");
-        assertEquals("localhost", db.get("host"));
-        assertEquals(5432, db.get("port"));
-        assertEquals("MyApp", nested.get("app_name"));
-    }
-
-    @Test
-    void unflatten_emptyMap() {
-        Map<String, Object> nested = ConfigClient.unflatten(Map.of());
-        assertTrue(nested.isEmpty());
-    }
-
-    // -----------------------------------------------------------------------
-    // inferType
-    // -----------------------------------------------------------------------
-
-    @Test
-    void inferType_allTypes() {
-        assertEquals(ConfigItemDefinition.TypeEnum.STRING, ConfigClient.inferType("hello"));
-        assertEquals(ConfigItemDefinition.TypeEnum.NUMBER, ConfigClient.inferType(42));
-        assertEquals(ConfigItemDefinition.TypeEnum.BOOLEAN, ConfigClient.inferType(true));
-        assertEquals(ConfigItemDefinition.TypeEnum.JSON, ConfigClient.inferType(Map.of("k", "v")));
-    }
-
-    // -----------------------------------------------------------------------
-    // setEnvironment
-    // -----------------------------------------------------------------------
-
-    @Test
-    void setEnvironment_setsValue() {
+    void setEnvironment_doesNotConnect() {
         configClient.setEnvironment("staging");
-        // No public getter, but verified indirectly through resolve()
         assertFalse(configClient.isConnected());
     }
-
-    // -----------------------------------------------------------------------
-    // isConnected
-    // -----------------------------------------------------------------------
 
     @Test
     void isConnected_falseByDefault() {
         assertFalse(configClient.isConnected());
     }
 
+    @Test
+    void ensureConnected_runsDeferredStartHook() throws ApiException {
+        when(mockApi.listConfigs(isNull(), isNull(), isNull(), isNull(), any(), any(), isNull()))
+                .thenReturn(emptyListResponse());
+        java.util.concurrent.atomic.AtomicInteger hookRuns = new java.util.concurrent.atomic.AtomicInteger();
+        configClient.setEnsureStarted(hookRuns::incrementAndGet);
+        configClient.setService("svc");
+        configClient.setEnvironment("production");
+
+        configClient.ensureConnected();
+        // Idempotent connect, but the hook runs on every ensureConnected call.
+        configClient.ensureConnected();
+
+        assertTrue(hookRuns.get() >= 1, "deferred-start hook should run on connect");
+        assertTrue(configClient.isConnected());
+    }
+
     // -----------------------------------------------------------------------
-    // WebSocket handler coverage
+    // WebSocket handler registration + simulate seams
     // -----------------------------------------------------------------------
 
     @Test
-    void connectInternal_registersWsHandlersWhenManagerSet() throws ApiException {
-        when(mockApi.listConfigs(isNull(), isNull(), isNull(), isNull(), any(), any(), isNull())).thenReturn(emptyListResponse());
+    void ensureConnected_registersWsHandlersWhenManagerSet() throws ApiException {
+        when(mockApi.listConfigs(isNull(), isNull(), isNull(), isNull(), any(), any(), isNull()))
+                .thenReturn(emptyListResponse());
         SharedWebSocket mockWs = mock(SharedWebSocket.class);
         configClient.setSharedWs(mockWs);
         configClient.setEnvironment("production");
 
-        configClient._connectInternal();
+        configClient.ensureConnected();
 
         verify(mockWs).on(eq("config_changed"), any());
         verify(mockWs).on(eq("config_deleted"), any());
         verify(mockWs).on(eq("configs_changed"), any());
+        verify(mockWs).ensureConnected(any());
     }
 
     @Test
-    void simulateConfigChanged_triggersSccopedFetch() throws ApiException {
-        when(mockApi.listConfigs(isNull(), isNull(), isNull(), isNull(), any(), any(), isNull())).thenReturn(emptyListResponse());
+    void simulateConfigChanged_triggersScopedFetch() throws ApiException {
+        when(mockApi.listConfigs(isNull(), isNull(), isNull(), isNull(), any(), any(), isNull()))
+                .thenReturn(emptyListResponse());
         ConfigResource resource = makeResource(CONFIG_ID, "Some Config", null, null,
                 Map.of("timeout", itemDef(30, ConfigItemDefinition.TypeEnum.NUMBER)),
                 Map.of(), null, null);
         when(mockApi.getConfig("some-config-id")).thenReturn(singleResponse(resource));
         configClient.setEnvironment("production");
-        configClient._connectInternal();
+        configClient.ensureConnected();
 
         configClient.simulateConfigChanged(Map.of("id", "some-config-id"));
 
-        // Scoped fetch: getConfig called once for the changed key
+        // Scoped fetch: getConfig called once for the changed key.
         verify(mockApi, times(1)).getConfig("some-config-id");
-        // listConfigs called only once for init, NOT for the scoped change
+        // listConfigs called only once for init, NOT for the scoped change.
         verify(mockApi, times(1)).listConfigs(isNull(), isNull(), isNull(), isNull(), any(), any(), isNull());
     }
 
     @Test
     void simulateConfigDeleted_removesFromCacheNoFetch() throws ApiException {
-        when(mockApi.listConfigs(isNull(), isNull(), isNull(), isNull(), any(), any(), isNull())).thenReturn(emptyListResponse());
+        ConfigResource resource = makeResource(CONFIG_ID, "Some Config", null, null,
+                Map.of("timeout", itemDef(30, ConfigItemDefinition.TypeEnum.NUMBER)),
+                Map.of(), null, null);
+        when(mockApi.listConfigs(isNull(), isNull(), isNull(), isNull(), any(), any(), isNull()))
+                .thenReturn(listResponse(List.of(resource)));
         configClient.setEnvironment("production");
-        configClient._connectInternal();
+        configClient.ensureConnected();
 
-        configClient.simulateConfigDeleted(Map.of("id", "some-config-id"));
+        configClient.simulateConfigDeleted(Map.of("id", CONFIG_ID));
 
-        // No additional listConfigs or getConfig calls — deleted is handled locally
         verify(mockApi, times(1)).listConfigs(isNull(), isNull(), isNull(), isNull(), any(), any(), isNull());
         verify(mockApi, never()).getConfig(any());
     }
 
     @Test
     void simulateConfigChanged_beforeConnect_isNoOp() throws ApiException {
-        // handleConfigChanged when not connected should not throw and not call API
         configClient.simulateConfigChanged(Map.of("id", "some-config-id"));
         verify(mockApi, never()).listConfigs(any(), any(), any(), any(), any(), any(), any());
         verify(mockApi, never()).getConfig(any());
@@ -766,20 +715,14 @@ class ConfigClientTest {
 
     @Test
     void simulateConfigsChanged_triggersFullRefresh() throws ApiException {
-        when(mockApi.listConfigs(isNull(), isNull(), isNull(), isNull(), any(), any(), isNull())).thenReturn(emptyListResponse());
+        when(mockApi.listConfigs(isNull(), isNull(), isNull(), isNull(), any(), any(), isNull()))
+                .thenReturn(emptyListResponse());
         configClient.setEnvironment("production");
-        configClient._connectInternal();
+        configClient.ensureConnected();
 
         configClient.simulateConfigsChanged(Map.of());
 
-        // configs_changed triggers full refresh: listConfigs called twice
+        // configs_changed triggers full refresh: listConfigs called twice.
         verify(mockApi, times(2)).listConfigs(isNull(), isNull(), isNull(), isNull(), any(), any(), isNull());
-    }
-
-    private com.smplkit.internal.generated.config.model.ConfigListResponse emptyListResponse() {
-        com.smplkit.internal.generated.config.model.ConfigListResponse resp =
-                new com.smplkit.internal.generated.config.model.ConfigListResponse();
-        resp.setData(List.of());
-        return resp;
     }
 }

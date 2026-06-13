@@ -421,6 +421,49 @@ class MetricsReporterTest {
         assertEquals("db", dims.get("config"));
     }
 
+    @Test
+    void ensureTimerStarted_innerDoubleCheck_handlesConcurrentFirstRecords() throws Exception {
+        // Fresh reporter with a long interval so its flush daemon never fires
+        // during the test. Many threads issue the very first records at once,
+        // so multiple pass the outer guard and race into the synchronized
+        // block — the loser hits the inner `if (timerStarted || closed) return`
+        // double-check (the timer is only scheduled once).
+        MetricsReporter racy = new MetricsReporter(
+                mockHttpClient, "https://app.smplkit.com", "key", "prod", "svc", 3600);
+        try {
+            int threadCount = 16;
+            java.util.concurrent.CyclicBarrier barrier =
+                    new java.util.concurrent.CyclicBarrier(threadCount);
+            CountDownLatch done = new CountDownLatch(threadCount);
+            for (int i = 0; i < threadCount; i++) {
+                new Thread(() -> {
+                    try {
+                        barrier.await(5, TimeUnit.SECONDS);
+                        racy.record("race.metric", "ops");
+                    } catch (Exception ignored) {
+                        // test thread interruption / barrier timeout — irrelevant
+                    } finally {
+                        done.countDown();
+                    }
+                }).start();
+            }
+            assertTrue(done.await(10, TimeUnit.SECONDS), "all racing recorders finished");
+
+            // The timer was scheduled exactly once despite the concurrent first
+            // records — the double-check guarded the second entrant.
+            java.lang.reflect.Field startedField =
+                    MetricsReporter.class.getDeclaredField("timerStarted");
+            startedField.setAccessible(true);
+            assertTrue((boolean) startedField.get(racy), "timer should have started once");
+            java.lang.reflect.Field futureField =
+                    MetricsReporter.class.getDeclaredField("flushFuture");
+            futureField.setAccessible(true);
+            assertNotNull(futureField.get(racy), "exactly one flush future scheduled");
+        } finally {
+            racy.close();
+        }
+    }
+
     // -----------------------------------------------------------------------
     // Helpers
     // -----------------------------------------------------------------------

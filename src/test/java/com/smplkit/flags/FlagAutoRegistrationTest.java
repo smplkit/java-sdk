@@ -7,6 +7,8 @@ import com.smplkit.internal.generated.flags.model.FlagBulkItem;
 import com.smplkit.internal.generated.flags.model.FlagBulkRequest;
 import com.smplkit.internal.generated.flags.model.FlagBulkResponse;
 import com.smplkit.internal.generated.flags.model.FlagListResponse;
+import com.smplkit.flags.types.FlagDeclaration;
+import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.ArgumentCaptor;
@@ -44,8 +46,13 @@ class FlagAutoRegistrationTest {
                 Duration.ofSeconds(5));
         client.setEnvironment("staging");
         client.setParentService("my-service");
-        // Default stub so _connectInternal doesn't fail
+        // Default stub so ensureConnected doesn't fail
         when(mockApi.listFlags(isNull(), isNull(), isNull(), isNull(), isNull(), isNull(), any(), any(), isNull())).thenReturn(new FlagListResponse().data(List.of()));
+    }
+
+    @AfterEach
+    void tearDown() {
+        if (client != null) client.close();
     }
 
     // -----------------------------------------------------------------------
@@ -236,9 +243,11 @@ class FlagAutoRegistrationTest {
     @Test
     void connectInternal_flushFailure_preventsConnect_schedulesRetry() throws ApiException {
         when(mockApi.bulkRegisterFlags(any())).thenThrow(new ApiException(500, "Internal Error"));
-        client.booleanFlag("flag-x", false);
+        // register() buffers the declaration WITHOUT connecting, so the explicit
+        // ensureConnected() below is the first connect and exercises the flush.
+        client.register(new FlagDeclaration("flag-x", "BOOLEAN", false), false);
 
-        client._connectInternal();
+        client.ensureConnected();
 
         assertFalse(client.isConnected(), "connected must stay false when flush fails");
         assertTrue(client.isRetryScheduled(), "a retry must be scheduled after flush failure");
@@ -246,12 +255,14 @@ class FlagAutoRegistrationTest {
     }
 
     // -----------------------------------------------------------------------
-    // Flush-before-fetch ordering in _connectInternal
+    // Flush-before-fetch ordering in ensureConnected
     // -----------------------------------------------------------------------
 
     @Test
     void connectInternal_flushesBeforeFetchingFlags() throws ApiException {
-        client.booleanFlag("feature-y", false);
+        // register() buffers without connecting, so the explicit ensureConnected()
+        // is the first connect and must flush (bulk register) before fetching (list).
+        client.register(new FlagDeclaration("feature-y", "BOOLEAN", false), false);
 
         List<String> order = new ArrayList<>();
         when(mockApi.bulkRegisterFlags(any())).thenAnswer(inv -> {
@@ -263,7 +274,7 @@ class FlagAutoRegistrationTest {
             return new FlagListResponse().data(List.of());
         });
 
-        client._connectInternal();
+        client.ensureConnected();
 
         assertEquals(List.of("bulk", "list"), order, "bulk register must precede list");
     }
@@ -274,7 +285,7 @@ class FlagAutoRegistrationTest {
 
     @Test
     void connectInternal_schedulesPeriodicFlush() throws ApiException {
-        client._connectInternal();
+        client.ensureConnected();
 
         // Scheduler started — we verify by disconnecting (cancel) without error
         assertDoesNotThrow(() -> client.disconnect());
@@ -282,7 +293,7 @@ class FlagAutoRegistrationTest {
 
     @Test
     void disconnect_cancelsFlagFlushFuture_idempotent() throws ApiException {
-        client._connectInternal();
+        client.ensureConnected();
         client.disconnect();
         // Second disconnect is safe
         assertDoesNotThrow(() -> client.disconnect());
@@ -351,5 +362,102 @@ class FlagAutoRegistrationTest {
         }
 
         assertTrue(latch.await(5, TimeUnit.SECONDS), "eager flush should have fired within 5s");
+    }
+
+    // -----------------------------------------------------------------------
+    // Public register(FlagDeclaration ...) overloads + FlagDeclaration model
+    // -----------------------------------------------------------------------
+
+    @Test
+    void flagDeclaration_convenienceConstructor_defaultsServiceAndEnvironmentToNull() {
+        FlagDeclaration d = new FlagDeclaration("feature-x", "BOOLEAN", false);
+        assertEquals("feature-x", d.id());
+        assertEquals("BOOLEAN", d.type());
+        assertEquals(false, d.defaultValue());
+        assertNull(d.service());
+        assertNull(d.environment());
+    }
+
+    @Test
+    void flagDeclaration_canonicalConstructor_retainsServiceAndEnvironment() {
+        FlagDeclaration d = new FlagDeclaration("feature-y", "STRING", "red", "svc", "staging");
+        assertEquals("svc", d.service());
+        assertEquals("staging", d.environment());
+    }
+
+    @Test
+    void register_singleDeclaration_buffersIt() throws ApiException {
+        client.register(new FlagDeclaration("feature-x", "BOOLEAN", false));
+        assertEquals(1, client.pendingCount());
+
+        client.flushFlags();
+        ArgumentCaptor<FlagBulkRequest> captor = ArgumentCaptor.forClass(FlagBulkRequest.class);
+        verify(mockApi).bulkRegisterFlags(captor.capture());
+        assertEquals("feature-x", captor.getValue().getFlags().get(0).getId());
+        assertEquals(FlagBulkItem.TypeEnum.BOOLEAN, captor.getValue().getFlags().get(0).getType());
+    }
+
+    @Test
+    void register_listOfDeclarations_buffersAll() {
+        client.register(List.of(
+                new FlagDeclaration("a", "BOOLEAN", false),
+                new FlagDeclaration("b", "STRING", "x")
+        ));
+        assertEquals(2, client.pendingCount());
+    }
+
+    @Test
+    void register_singleDeclaration_flushTrue_sendsImmediately() throws ApiException {
+        when(mockApi.bulkRegisterFlags(any())).thenReturn(new FlagBulkResponse());
+
+        client.register(new FlagDeclaration("now-flag", "BOOLEAN", true), true);
+
+        verify(mockApi).bulkRegisterFlags(any());
+        assertEquals(0, client.pendingCount(), "flush=true must drain the buffer");
+    }
+
+    @Test
+    void register_listOfDeclarations_flushTrue_sendsImmediately() throws ApiException {
+        when(mockApi.bulkRegisterFlags(any())).thenReturn(new FlagBulkResponse());
+
+        client.register(List.of(
+                new FlagDeclaration("a", "BOOLEAN", false),
+                new FlagDeclaration("b", "NUMERIC", 1)
+        ), true);
+
+        verify(mockApi).bulkRegisterFlags(any());
+        assertEquals(0, client.pendingCount());
+    }
+
+    @Test
+    void flush_sendsBufferedDeclarations() throws ApiException {
+        when(mockApi.bulkRegisterFlags(any())).thenReturn(new FlagBulkResponse());
+
+        client.register(new FlagDeclaration("queued", "JSON", Map.of("k", "v")));
+        client.flush();
+
+        verify(mockApi).bulkRegisterFlags(any());
+        assertEquals(0, client.pendingCount());
+    }
+
+    @Test
+    void flushSync_isAliasOfFlush() throws ApiException {
+        when(mockApi.bulkRegisterFlags(any())).thenReturn(new FlagBulkResponse());
+
+        client.register(new FlagDeclaration("queued", "BOOLEAN", false));
+        client.flushSync();
+
+        verify(mockApi).bulkRegisterFlags(any());
+        assertEquals(0, client.pendingCount());
+    }
+
+    @Test
+    void flush_apiError_throwsMappedException() throws ApiException {
+        when(mockApi.bulkRegisterFlags(any())).thenThrow(new ApiException(422, "Validation Error"));
+
+        client.register(new FlagDeclaration("bad", "BOOLEAN", false));
+        assertThrows(com.smplkit.errors.ValidationError.class, () -> client.flush());
+        // Buffer retained for retry after a failed flush
+        assertEquals(1, client.pendingCount());
     }
 }

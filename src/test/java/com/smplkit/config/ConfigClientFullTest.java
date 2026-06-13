@@ -4,11 +4,13 @@ import com.smplkit.errors.SmplError;
 import com.smplkit.internal.generated.config.ApiException;
 import com.smplkit.internal.generated.config.api.ConfigsApi;
 import com.smplkit.internal.generated.config.model.ConfigItemDefinition;
+import com.smplkit.internal.generated.config.model.ConfigRequest;
 import com.smplkit.internal.generated.config.model.ConfigListResponse;
 import com.smplkit.internal.generated.config.model.ConfigResource;
 import com.smplkit.internal.generated.config.model.ConfigResponse;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.mockito.ArgumentCaptor;
 import org.mockito.Mockito;
 
 import java.net.http.HttpClient;
@@ -24,8 +26,8 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 /**
- * Additional integration-style tests for {@link ConfigClient} covering
- * save() round-trips, update edge cases, and parseResource corner cases.
+ * Integration-style save() round-trips, update edge cases, and parseResource
+ * corner cases for the fused {@link ConfigClient}.
  */
 class ConfigClientFullTest {
 
@@ -39,12 +41,6 @@ class ConfigClientFullTest {
     void setUp() {
         mockApi = Mockito.mock(ConfigsApi.class);
         configClient = new ConfigClient(mockApi, HttpClient.newHttpClient(), "test-key");
-    }
-
-    private ConfigResource makeResource(String id, String name, String description,
-                                        String parent, Map<String, ConfigItemDefinition> items,
-                                        Map<String, Map<String, Object>> environments) {
-        return makeResource(id, name, description, parent, items, environments, null, null);
     }
 
     private ConfigResource makeResource(String id, String name, String description,
@@ -72,11 +68,6 @@ class ConfigClientFullTest {
         return def;
     }
 
-    /**
-     * Per ADR-024 §2.4 the wire-shape per-env override IS the flat
-     * {@code {key: rawValue}} map. Kept as a helper so call sites continue to
-     * read "envOverride(...)" the same way they always have.
-     */
     private static Map<String, Object> envOverride(Map<String, Object> rawValues) {
         return rawValues != null ? new HashMap<>(rawValues) : new HashMap<>();
     }
@@ -87,12 +78,6 @@ class ConfigClientFullTest {
         return response;
     }
 
-    private ConfigListResponse listResponse(List<ConfigResource> resources) {
-        ConfigListResponse response = new ConfigListResponse();
-        response.setData(resources);
-        return response;
-    }
-
     // -----------------------------------------------------------------------
     // save() create + update round-trip
     // -----------------------------------------------------------------------
@@ -100,20 +85,18 @@ class ConfigClientFullTest {
     @Test
     void save_fullRoundTrip_createThenUpdate() throws ApiException {
         OffsetDateTime now = OffsetDateTime.now();
-        // 1. Create
         ConfigResource created = makeResource(CONFIG_ID, "Svc", "initial desc",
                 null, Map.of("a", itemDef(1, ConfigItemDefinition.TypeEnum.NUMBER)), Map.of(),
                 now, now);
         when(mockApi.createConfig(any())).thenReturn(singleResponse(created));
 
-        Config config = configClient.management().new_("svc", "Svc", "initial desc", (String) null);
-        config.setItems(Map.of("a", Map.of("value", 1)));
+        Config config = configClient.new_("svc", "Svc", "initial desc", (String) null);
+        config.setNumber("a", 1);
         config.save();
 
         assertEquals(CONFIG_ID, config.getId());
         assertEquals("initial desc", config.getDescription());
 
-        // 2. Mutate and update
         ConfigResource updated = makeResource(CONFIG_ID, "Svc Updated", "new desc",
                 null, Map.of("a", itemDef(99, ConfigItemDefinition.TypeEnum.NUMBER)), Map.of(),
                 now, now);
@@ -122,17 +105,13 @@ class ConfigClientFullTest {
 
         config.setName("Svc Updated");
         config.setDescription("new desc");
-        config.setItems(Map.of("a", Map.of("value", 99)));
+        config.setNumber("a", 99);
         config.save();
 
         assertEquals("Svc Updated", config.getName());
         assertEquals("new desc", config.getDescription());
         verify(mockApi).updateConfig(eq(CONFIG_ID), any());
     }
-
-    // -----------------------------------------------------------------------
-    // save() update with parent preservation
-    // -----------------------------------------------------------------------
 
     @Test
     void save_update_preservesParent() throws ApiException {
@@ -141,48 +120,39 @@ class ConfigClientFullTest {
                 PARENT_ID, Map.of(), Map.of(), now, now);
         when(mockApi.createConfig(any())).thenReturn(singleResponse(created));
 
-        Config config = configClient.management().new_("child", null, null, PARENT_ID);
+        Config config = configClient.new_("child", null, null, PARENT_ID);
         config.save();
-
         assertEquals(PARENT_ID, config.getParent());
 
-        // Update should preserve parent
         ConfigResource updated = makeResource(CONFIG_ID, "Child Updated", null,
                 PARENT_ID, Map.of(), Map.of(), now, now);
-        when(mockApi.updateConfig(any(), any())).thenReturn(singleResponse(updated));
+        ArgumentCaptor<ConfigRequest> captor = ArgumentCaptor.forClass(ConfigRequest.class);
+        when(mockApi.updateConfig(any(), captor.capture())).thenReturn(singleResponse(updated));
 
         config.setName("Child Updated");
         config.save();
 
         assertEquals(PARENT_ID, config.getParent());
+        // The update body carried the parent through.
+        assertEquals(PARENT_ID, captor.getValue().getData().getAttributes().getParent());
     }
-
-    // -----------------------------------------------------------------------
-    // save() update API error
-    // -----------------------------------------------------------------------
 
     @Test
     void save_update_apiException_throwsSmplError() throws ApiException {
         OffsetDateTime now = OffsetDateTime.now();
-        // Setup: create a config first to give it createdAt
         ConfigResource created = makeResource(CONFIG_ID, "Svc", null,
                 null, Map.of(), Map.of(), now, now);
         when(mockApi.createConfig(any())).thenReturn(singleResponse(created));
 
-        Config config = configClient.management().new_("svc");
+        Config config = configClient.new_("svc");
         config.save();
 
-        // Now update fails
         when(mockApi.updateConfig(any(), any()))
                 .thenThrow(new ApiException(500, "Error"));
 
         config.setName("New Name");
         assertThrows(SmplError.class, config::save);
     }
-
-    // -----------------------------------------------------------------------
-    // save() with environments
-    // -----------------------------------------------------------------------
 
     @Test
     void save_update_withEnvironments() throws ApiException {
@@ -191,104 +161,150 @@ class ConfigClientFullTest {
                 Map.of(), Map.of(), now, now);
         when(mockApi.createConfig(any())).thenReturn(singleResponse(created));
 
-        Config config = configClient.management().new_("svc");
+        Config config = configClient.new_("svc");
         config.save();
 
         ConfigResource updated = makeResource(CONFIG_ID, "Name", null, null,
                 Map.of(), Map.of("production", envOverride(Map.of("k", "v"))), now, now);
-        when(mockApi.updateConfig(any(), any())).thenReturn(singleResponse(updated));
+        ArgumentCaptor<ConfigRequest> captor = ArgumentCaptor.forClass(ConfigRequest.class);
+        when(mockApi.updateConfig(any(), captor.capture())).thenReturn(singleResponse(updated));
 
-        Map<String, Object> envData = new HashMap<>();
-        envData.put("k", "v");
-        config.setEnvironments(Map.of("production", envData));
+        config.setString("k", "v", "production");
         config.save();
 
-        assertNotNull(config);
+        // The update body carried the flat per-env override.
+        Map<String, Map<String, Object>> envs = captor.getValue().getData().getAttributes().getEnvironments();
+        assertEquals("v", envs.get("production").get("k"));
     }
 
     // -----------------------------------------------------------------------
-    // wrapValuesAsItems
+    // _createConfig with plain (untyped) items — inferType path
     // -----------------------------------------------------------------------
 
     @Test
-    void wrapValuesAsItems_wrapsAllTypes() {
-        Map<String, Object> values = Map.of(
-                "str", "hello",
-                "num", 42,
-                "bool", true,
-                "json", Map.of("k", "v")
-        );
-        Map<String, ConfigItemDefinition> wrapped = ConfigClient.wrapValuesAsItems(values);
+    void save_create_inferTypeFromPlainItemValues() throws ApiException {
+        // Construct a config carrying plain (non-typed-map) item values so the
+        // wire conversion has to infer each item's type.
+        Map<String, Object> plainItems = new HashMap<>();
+        plainItems.put("str", "hello");
+        plainItems.put("num", 42);
+        plainItems.put("bool", true);
+        plainItems.put("json", Map.of("k", "v"));
+        Config config = new Config(configClient, "svc", "Svc", null, null,
+                plainItems, new HashMap<>(), null, null);
 
-        assertEquals(4, wrapped.size());
-        assertEquals(ConfigItemDefinition.TypeEnum.STRING, wrapped.get("str").getType());
-        assertEquals(ConfigItemDefinition.TypeEnum.NUMBER, wrapped.get("num").getType());
-        assertEquals(ConfigItemDefinition.TypeEnum.BOOLEAN, wrapped.get("bool").getType());
-        assertEquals(ConfigItemDefinition.TypeEnum.JSON, wrapped.get("json").getType());
+        ConfigResource created = makeResource(CONFIG_ID, "Svc", null, null,
+                Map.of(), Map.of(), OffsetDateTime.now(), OffsetDateTime.now());
+        ArgumentCaptor<com.smplkit.internal.generated.config.model.ConfigCreateRequest> captor =
+                ArgumentCaptor.forClass(com.smplkit.internal.generated.config.model.ConfigCreateRequest.class);
+        when(mockApi.createConfig(captor.capture())).thenReturn(singleResponse(created));
+
+        config.save();
+
+        Map<String, ConfigItemDefinition> sent =
+                captor.getValue().getData().getAttributes().getItems();
+        assertEquals(ConfigItemDefinition.TypeEnum.STRING, sent.get("str").getType());
+        assertEquals(ConfigItemDefinition.TypeEnum.NUMBER, sent.get("num").getType());
+        assertEquals(ConfigItemDefinition.TypeEnum.BOOLEAN, sent.get("bool").getType());
+        assertEquals(ConfigItemDefinition.TypeEnum.JSON, sent.get("json").getType());
+    }
+
+    @Test
+    void save_create_typedItem_withDescriptionAndMissingType() throws ApiException {
+        // A typed item map carrying a description but NO "type" key exercises
+        // makeItems' description-present + type-absent branches.
+        Map<String, Object> typed = new HashMap<>();
+        Map<String, Object> withDesc = new HashMap<>();
+        withDesc.put("value", "v");
+        withDesc.put("type", "STRING");
+        withDesc.put("description", "a described item");
+        Map<String, Object> noType = new HashMap<>();
+        noType.put("value", 9); // no "type" key
+        typed.put("described", withDesc);
+        typed.put("untyped", noType);
+
+        Config config = new Config(configClient, "svc", "Svc", null, null,
+                typed, new HashMap<>(), null, null);
+
+        ConfigResource created = makeResource(CONFIG_ID, "Svc", null, null,
+                Map.of(), Map.of(), OffsetDateTime.now(), OffsetDateTime.now());
+        ArgumentCaptor<com.smplkit.internal.generated.config.model.ConfigCreateRequest> captor =
+                ArgumentCaptor.forClass(com.smplkit.internal.generated.config.model.ConfigCreateRequest.class);
+        when(mockApi.createConfig(captor.capture())).thenReturn(singleResponse(created));
+
+        config.save();
+
+        Map<String, ConfigItemDefinition> sent =
+                captor.getValue().getData().getAttributes().getItems();
+        assertEquals("a described item", sent.get("described").getDescription());
+        assertEquals(ConfigItemDefinition.TypeEnum.STRING, sent.get("described").getType());
+        // The untyped item kept its value but carries no declared type.
+        assertEquals(9, sent.get("untyped").getValue());
+        assertNull(sent.get("untyped").getType());
+    }
+
+    @Test
+    void registerConfigItem_nullType_mapsToNullTypeEnum() throws Exception {
+        // A null item type label drives toTypeEnum(null) -> null on the wire.
+        com.smplkit.internal.generated.config.api.ConfigsApi api = mockApi;
+        when(api.bulkRegisterConfigs(any()))
+                .thenReturn(new com.smplkit.internal.generated.config.model.ConfigBulkResponse());
+        configClient.registerConfig("billing", "svc", "prod", null, null, null);
+        configClient.registerConfigItem("billing", "x", null, 5, null);
+
+        ArgumentCaptor<com.smplkit.internal.generated.config.model.ConfigBulkRequest> captor =
+                ArgumentCaptor.forClass(com.smplkit.internal.generated.config.model.ConfigBulkRequest.class);
+        configClient.flush();
+        verify(api).bulkRegisterConfigs(captor.capture());
+        assertNull(captor.getValue().getConfigs().get(0).getItems().get("x").getType());
     }
 
     // -----------------------------------------------------------------------
-    // wrapEnvironments — flat shape per ADR-024 §2.4
+    // parseResource — items carrying only a value (no type/description)
     // -----------------------------------------------------------------------
 
     @Test
-    void wrapEnvironments_passesThroughFlatShape() {
-        // Per-env setters (setNumber/setString/etc.) write raw scalars directly
-        // into env[key]. wrapEnvironments is then a defensive shallow copy.
-        Config cfg = new Config(null, "k", "K");
-        cfg.setNumber("max_retries", 5, "production");
-        cfg.setString("env_label", "prod", "production");
+    void get_itemWithoutTypeOrDescription_parsesValueOnly() throws ApiException {
+        ConfigItemDefinition bare = new ConfigItemDefinition();
+        bare.setValue("only-value");
+        ConfigResource resource = makeResource(CONFIG_ID, "Svc", null, null,
+                Map.of("k", bare), Map.of(), OffsetDateTime.now(), OffsetDateTime.now());
+        when(mockApi.getConfig("svc")).thenReturn(singleResponse(resource));
 
-        Map<String, Map<String, Object>> wrapped =
-                ConfigClient.wrapEnvironments(cfg.getEnvironments());
+        Config config = configClient.get("svc");
 
-        Map<String, Object> prod = wrapped.get("production");
-        assertNotNull(prod);
-        assertEquals(5, prod.get("max_retries"));
-        assertEquals("prod", prod.get("env_label"));
-    }
-
-    @Test
-    void wrapEnvironments_isDefensiveCopy() {
-        // Mutating the returned map must not mutate the source.
-        Map<String, Object> source = new HashMap<>();
-        source.put("k", "v");
-        Map<String, Map<String, Object>> envs = new HashMap<>();
-        envs.put("staging", source);
-
-        Map<String, Map<String, Object>> wrapped = ConfigClient.wrapEnvironments(envs);
-        wrapped.get("staging").put("hacked", true);
-
-        assertFalse(source.containsKey("hacked"));
-    }
-
-    @Test
-    void wrapEnvironments_handlesNullEnvValue() {
-        Map<String, Map<String, Object>> envs = new HashMap<>();
-        envs.put("staging", null);
-
-        Map<String, Map<String, Object>> wrapped = ConfigClient.wrapEnvironments(envs);
-
-        assertNotNull(wrapped.get("staging"));
-        assertTrue(wrapped.get("staging").isEmpty());
+        @SuppressWarnings("unchecked")
+        Map<String, Object> raw = (Map<String, Object>) config.itemsRaw().get("k");
+        assertEquals("only-value", raw.get("value"));
+        assertFalse(raw.containsKey("type"));
+        assertFalse(raw.containsKey("description"));
     }
 
     // -----------------------------------------------------------------------
-    // Config.getClient() package-private getter
+    // buildChain — parent fetched on demand when not in the supplied list
     // -----------------------------------------------------------------------
 
     @Test
-    void config_getClient_returnsClient() {
-        Config config = configClient.management().new_("test");
-        assertSame(configClient, config.getClient());
-    }
+    void resolveParentChain_fetchesUnlistedParent_viaClientGet() throws ApiException {
+        // A standalone config whose parent isn't in the resolution list forces
+        // buildChain to fetch the parent through the client.
+        ConfigResource parentRes = makeResource(PARENT_ID, "Parent", null, null,
+                Map.of("base", itemDef(7, ConfigItemDefinition.TypeEnum.NUMBER)), Map.of(),
+                OffsetDateTime.now(), OffsetDateTime.now());
+        when(mockApi.getConfig(PARENT_ID)).thenReturn(singleResponse(parentRes));
 
-    @Test
-    void config_setClient_changesClient() {
-        Config config = configClient.management().new_("test");
-        ConfigsApi otherApi = Mockito.mock(ConfigsApi.class);
-        ConfigClient otherClient = new ConfigClient(otherApi, HttpClient.newHttpClient(), "other");
-        config.setClient(otherClient);
-        assertSame(otherClient, config.getClient());
+        ConfigResource child = makeResource(CONFIG_ID, "Child", null, PARENT_ID,
+                Map.of("own", itemDef(1, ConfigItemDefinition.TypeEnum.NUMBER)), Map.of(),
+                OffsetDateTime.now(), OffsetDateTime.now());
+        when(mockApi.listConfigs(any(), any(), any(), any(), any(), any(), any()))
+                .thenReturn(new ConfigListResponse().data(List.of(child)));
+        configClient.setEnvironment("production");
+
+        configClient.ensureConnected();
+
+        // The unlisted parent was fetched and folded into the child's resolved view.
+        assertEquals(7, configClient.getValue(CONFIG_ID, "base"));
+        assertEquals(1, configClient.getValue(CONFIG_ID, "own"));
+        verify(mockApi).getConfig(PARENT_ID);
     }
 }

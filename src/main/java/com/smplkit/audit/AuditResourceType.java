@@ -6,9 +6,9 @@ import java.time.OffsetDateTime;
  * A distinct resource_type slug seen for the account.
  *
  * <p>The {@code id} and {@code resourceType} carry the same value —
- * JSON:API surfaces the customer-facing key as the resource id (ADR-014
- * "key as id"). Both fields are kept so SDK consumers can pick
- * whichever name reads better in context.</p>
+ * JSON:API surfaces the customer-facing key as the resource id. Both fields
+ * are kept so SDK consumers can pick whichever name reads better in
+ * context.</p>
  */
 public final class AuditResourceType {
     /** The resource-type slug, surfaced as the JSON:API resource id. */

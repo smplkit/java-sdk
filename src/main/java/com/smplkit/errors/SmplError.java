@@ -20,6 +20,13 @@ public class SmplError extends RuntimeException {
     private final String responseBody;
     private final List<ApiErrorDetail> errors;
 
+    /**
+     * Creates an error with no structured details and no underlying cause.
+     *
+     * @param message the human-readable error message
+     * @param statusCode the HTTP status code, or 0 if not applicable
+     * @param responseBody the raw response body, or null if not available
+     */
     public SmplError(String message, int statusCode, String responseBody) {
         super(message);
         this.statusCode = statusCode;
@@ -27,6 +34,14 @@ public class SmplError extends RuntimeException {
         this.errors = Collections.emptyList();
     }
 
+    /**
+     * Creates an error wrapping an underlying cause (e.g. a network failure).
+     *
+     * @param message the human-readable error message
+     * @param statusCode the HTTP status code, or 0 if not applicable
+     * @param responseBody the raw response body, or null if not available
+     * @param cause the underlying exception that triggered this error
+     */
     public SmplError(String message, int statusCode, String responseBody, Throwable cause) {
         super(message, cause);
         this.statusCode = statusCode;
@@ -34,6 +49,15 @@ public class SmplError extends RuntimeException {
         this.errors = Collections.emptyList();
     }
 
+    /**
+     * Creates an error carrying structured server-side error details.
+     *
+     * @param message the human-readable error message
+     * @param statusCode the HTTP status code, or 0 if not applicable
+     * @param responseBody the raw response body, or null if not available
+     * @param errors the structured error details from the server's JSON:API
+     *     {@code errors} array; may be null, treated as empty
+     */
     public SmplError(String message, int statusCode, String responseBody, List<ApiErrorDetail> errors) {
         super(message);
         this.statusCode = statusCode;
@@ -41,22 +65,39 @@ public class SmplError extends RuntimeException {
         this.errors = errors != null ? List.copyOf(errors) : Collections.emptyList();
     }
 
-    /** Returns the HTTP status code, or 0 if not applicable (e.g., connection errors). */
+    /**
+     * Returns the HTTP status code, or 0 if not applicable (e.g., connection errors).
+     *
+     * @return the HTTP status code, or 0 when none applies
+     */
     public int statusCode() {
         return statusCode;
     }
 
-    /** Returns the HTTP status code as a nullable Integer, or null if 0. */
+    /**
+     * Returns the HTTP status code as a nullable Integer, or null if 0.
+     *
+     * @return the HTTP status code, or null when none applies
+     */
     public Integer getStatusCode() {
         return statusCode == 0 ? null : statusCode;
     }
 
-    /** Returns the raw response body, or null if not available. */
+    /**
+     * Returns the raw response body, or null if not available.
+     *
+     * @return the raw response body, or null
+     */
     public String responseBody() {
         return responseBody;
     }
 
-    /** Returns the structured error details, or an empty list if none. */
+    /**
+     * Returns the structured error details, or an empty list if none.
+     *
+     * @return the structured error details from the server's JSON:API
+     *     {@code errors} array; never null
+     */
     public List<ApiErrorDetail> getErrors() {
         return errors;
     }
@@ -84,30 +125,5 @@ public class SmplError extends RuntimeException {
     /** Minimal JSON string escaping (test helper, mirrors {@link ApiErrorDetail#escapeJson}). */
     static String escapeJson(String s) {
         return ApiErrorDetail.escapeJson(s);
-    }
-
-    /** Derives a human-readable message from a list of error details. */
-    static String deriveMessage(List<ApiErrorDetail> errors) {
-        if (errors == null || errors.isEmpty()) {
-            return "An API error occurred";
-        }
-        ApiErrorDetail first = errors.get(0);
-        String msg;
-        if (first.detail() != null && !first.detail().isEmpty()) {
-            msg = first.detail();
-        } else if (first.title() != null && !first.title().isEmpty()) {
-            msg = first.title();
-        } else if (first.status() != null && !first.status().isEmpty()) {
-            msg = "HTTP " + first.status();
-        } else {
-            msg = "An API error occurred";
-        }
-        int extra = errors.size() - 1;
-        if (extra == 1) {
-            msg += " (and 1 more error)";
-        } else if (extra > 1) {
-            msg += " (and " + extra + " more errors)";
-        }
-        return msg;
     }
 }

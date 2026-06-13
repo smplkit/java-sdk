@@ -16,12 +16,6 @@ public final class CreateEventInput {
     public String resourceType;
     /** Customer-facing id of the resource the event operated on. */
     public String resourceId;
-    /**
-     * Severity. One of {@code TRACE}, {@code DEBUG}, {@code INFO}, {@code WARN},
-     * {@code ERROR}, {@code FATAL}. Unknown values are rejected with a 400.
-     * {@code null} records the event at {@code INFO}.
-     */
-    public String severity;
     /** Optional free-form bucket label. {@code null} round-trips as {@code null} on read. */
     public String category;
     /** Optional; defaults to server-side {@code now()} if {@code null}. */
@@ -55,6 +49,13 @@ public final class CreateEventInput {
 
     public CreateEventInput() {}
 
+    /**
+     * @param eventType event type slug — e.g. {@code "user.created"}
+     * @param resourceType type of resource the event operated on — e.g.
+     *     {@code "invoice"}; values starting with {@code smpl.} are reserved
+     *     and rejected by the server with a 403
+     * @param resourceId customer-facing id of the resource the event operated on
+     */
     public CreateEventInput(String eventType, String resourceType, String resourceId) {
         this.eventType = eventType;
         this.resourceType = resourceType;

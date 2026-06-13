@@ -11,8 +11,8 @@ import java.util.concurrent.atomic.AtomicInteger;
 import static org.junit.jupiter.api.Assertions.*;
 
 /**
- * {@code client.config().get(id)} returns a live, read-only,
- * identity-stable proxy backed by the resolved-config cache.
+ * {@code client.subscribe(id)} returns a live, read-only, identity-stable
+ * {@link LiveConfigProxy} backed by the resolved-config cache.
  */
 class LiveConfigProxyTest {
 
@@ -20,6 +20,7 @@ class LiveConfigProxyTest {
         ConfigsApi api = org.mockito.Mockito.mock(ConfigsApi.class);
         ConfigClient client = new ConfigClient(api, java.net.http.HttpClient.newHttpClient(), "test-key");
         client.setEnvironment("staging");
+        // Mark connected so subscribe() reads the seeded cache without doing I/O.
         try {
             Field f = ConfigClient.class.getDeclaredField("connected");
             f.setAccessible(true);
@@ -43,13 +44,13 @@ class LiveConfigProxyTest {
     }
 
     @Test
-    void get_returnsLiveProxy_dictLikeReads() {
+    void subscribe_returnsLiveProxy_dictLikeReads() {
         ConfigClient client = newClient();
         seedCache(client, "user-svc", Map.of(
                 "database.host", "prod-db",
                 "max_retries", 5));
 
-        LiveConfigProxy proxy = client.get("user-svc");
+        LiveConfigProxy proxy = client.subscribe("user-svc");
         assertEquals("prod-db", proxy.get("database.host"));
         assertEquals(5, proxy.get("max_retries"));
         assertNull(proxy.get("missing_key"));
@@ -60,12 +61,19 @@ class LiveConfigProxyTest {
     }
 
     @Test
-    void get_isIdentityStable() {
+    void subscribe_unknownConfig_throwsNotFound() {
+        ConfigClient client = newClient();
+        assertThrows(com.smplkit.errors.NotFoundError.class,
+                () -> client.subscribe("nope"));
+    }
+
+    @Test
+    void subscribe_isIdentityStable() {
         ConfigClient client = newClient();
         seedCache(client, "user-svc", Map.of("k", "v"));
 
-        LiveConfigProxy a = client.get("user-svc");
-        LiveConfigProxy b = client.get("user-svc");
+        LiveConfigProxy a = client.subscribe("user-svc");
+        LiveConfigProxy b = client.subscribe("user-svc");
         assertSame(a, b, "Proxy must be identity-stable across calls");
     }
 
@@ -76,7 +84,7 @@ class LiveConfigProxyTest {
         initial.put("max_retries", 3);
         seedCache(client, "user-svc", initial);
 
-        LiveConfigProxy proxy = client.get("user-svc");
+        LiveConfigProxy proxy = client.subscribe("user-svc");
         assertEquals(3, proxy.get("max_retries"));
 
         seedCache(client, "user-svc", Map.of("max_retries", 7));
@@ -87,11 +95,11 @@ class LiveConfigProxyTest {
     void proxy_isReadOnly_mutationsRaise() {
         ConfigClient client = newClient();
         seedCache(client, "user-svc", Map.of("k", "v"));
-        LiveConfigProxy proxy = client.get("user-svc");
+        LiveConfigProxy proxy = client.subscribe("user-svc");
 
         UnsupportedOperationException put = assertThrows(
                 UnsupportedOperationException.class, () -> proxy.put("x", "y"));
-        assertTrue(put.getMessage().contains("client.manage"));
+        assertTrue(put.getMessage().contains("read-only"));
 
         assertThrows(UnsupportedOperationException.class, () -> proxy.remove("k"));
         assertThrows(UnsupportedOperationException.class, () -> proxy.clear());
@@ -103,19 +111,11 @@ class LiveConfigProxyTest {
         ConfigClient client = newClient();
         seedCache(client, "user-svc", Map.of("k", "v"));
 
-        LiveConfigProxy proxy = client.get("user-svc");
+        LiveConfigProxy proxy = client.subscribe("user-svc");
         AtomicInteger fired = new AtomicInteger(0);
         proxy.onChange(evt -> fired.incrementAndGet());
 
-        try {
-            Field f = ConfigClient.class.getDeclaredField("listeners");
-            f.setAccessible(true);
-            @SuppressWarnings("unchecked")
-            java.util.List<Object> listeners = (java.util.List<Object>) f.get(client);
-            assertEquals(1, listeners.size());
-        } catch (Exception e) {
-            throw new RuntimeException(e);
-        }
+        assertEquals(1, listenerCount(client));
     }
 
     @Test
@@ -125,7 +125,7 @@ class LiveConfigProxyTest {
         initial.put("k1", "v1");
         initial.put("k2", "v2");
         seedCache(client, "user-svc", initial);
-        LiveConfigProxy proxy = client.get("user-svc");
+        LiveConfigProxy proxy = client.subscribe("user-svc");
 
         var keys = proxy.keySet();
         assertEquals(2, keys.size());
@@ -134,5 +134,17 @@ class LiveConfigProxyTest {
         assertEquals(2, entries.size());
         var values = proxy.values();
         assertEquals(2, values.size());
+    }
+
+    private static int listenerCount(ConfigClient client) {
+        try {
+            Field f = ConfigClient.class.getDeclaredField("listeners");
+            f.setAccessible(true);
+            @SuppressWarnings("unchecked")
+            java.util.List<Object> listeners = (java.util.List<Object>) f.get(client);
+            return listeners.size();
+        } catch (Exception e) {
+            throw new RuntimeException(e);
+        }
     }
 }

@@ -205,7 +205,7 @@ class TelemetryIntegrationTest {
         config.setEnvironment("production");
         config.setMetrics(reporter);
 
-        config.get("my-config");
+        config.subscribe("my-config");
 
         reporter.flush();
 
@@ -234,7 +234,7 @@ class TelemetryIntegrationTest {
         config.setEnvironment("production");
         config.setMetrics(reporter);
 
-        config.get("my-config");
+        config.subscribe("my-config");
 
         reporter.flush();
 
@@ -288,7 +288,7 @@ class TelemetryIntegrationTest {
         config.setMetrics(reporter);
 
         // Initial connect
-        config.get("my-config");
+        config.subscribe("my-config");
         // Refresh triggers diff
         config.refresh();
 
@@ -305,59 +305,6 @@ class TelemetryIntegrationTest {
     // -----------------------------------------------------------------------
     // LoggingClient telemetry
     // -----------------------------------------------------------------------
-
-    @Test
-    void loggingDiscoveredRecordsMetric() throws Exception {
-        LoggersApi loggersApi = mock(LoggersApi.class);
-        LogGroupsApi logGroupsApi = mock(LogGroupsApi.class);
-
-        // Empty responses for fetch
-        LoggerListResponse loggerResp = new LoggerListResponse();
-        loggerResp.setData(List.of());
-        when(loggersApi.listLoggers(nullable(Boolean.class), nullable(String.class), nullable(String.class), nullable(String.class), nullable(String.class), nullable(Integer.class), nullable(Integer.class), nullable(Boolean.class))).thenReturn(loggerResp);
-        LogGroupListResponse groupResp = new LogGroupListResponse();
-        groupResp.setData(List.of());
-        when(logGroupsApi.listLogGroups(isNull(), any(), any(), isNull())).thenReturn(groupResp);
-
-        LoggingClient logging = new LoggingClient(loggersApi, logGroupsApi, mockHttpClient, "key");
-        logging.setEnvironment("production");
-        logging.setService("my-service");
-        logging.setMetrics(reporter);
-
-        // Register a mock adapter that discovers loggers
-        logging.registerAdapter(new LoggingAdapter() {
-            @Override public String name() { return "test"; }
-            @Override public List<DiscoveredLogger> discover() {
-                return List.of(
-                        new DiscoveredLogger("com.myapp.service", "INFO"),
-                        new DiscoveredLogger("com.myapp.repo", "DEBUG")
-                );
-            }
-            @Override public void applyLevel(String name, String level) {}
-            @Override public void installHook(java.util.function.BiConsumer<String, String> cb) {}
-            @Override public void uninstallHook() {}
-        });
-
-        logging.install();
-
-        reporter.flush();
-
-        assertTrue(capturedBodies.size() > 0);
-        Map<String, Object> payload = parsePayload(capturedBodies.get(0));
-        @SuppressWarnings("unchecked")
-        List<Map<String, Object>> data = (List<Map<String, Object>>) payload.get("data");
-        assertTrue(hasMetric(data, "logging.loggers_discovered"));
-        // Should have value 2
-        for (Map<String, Object> item : data) {
-            @SuppressWarnings("unchecked")
-            Map<String, Object> attrs = (Map<String, Object>) item.get("attributes");
-            if ("logging.loggers_discovered".equals(attrs.get("name"))) {
-                assertEquals(2, attrs.get("value"));
-            }
-        }
-
-        logging.close();
-    }
 
     @Test
     void loggingLevelChangesRecordsMetric() throws Exception {

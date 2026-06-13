@@ -13,6 +13,7 @@ import com.smplkit.internal.generated.flags.model.FlagCreateRequest;
 import com.smplkit.internal.generated.flags.model.FlagListResponse;
 import com.smplkit.internal.generated.flags.model.FlagResponse;
 import com.smplkit.internal.generated.flags.model.FlagRequest;
+import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;
@@ -20,9 +21,12 @@ import org.openapitools.jackson.nullable.JsonNullableModule;
 
 import java.net.http.HttpClient;
 import java.time.Duration;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicReference;
 
@@ -56,11 +60,16 @@ class FlagsClientCoverageTest {
         client.setEnvironment("staging");
     }
 
+    @AfterEach
+    void tearDown() {
+        if (client != null) client.close();
+    }
+
     // --- newStringFlag variants ---
 
     @Test
     void newStringFlag_withNameAndDescription() {
-        Flag<String> flag = client.management().newStringFlag("color", "red", "Color", "Pick a color");
+        Flag<String> flag = client.newStringFlag("color", "red", "Color", "Pick a color");
         assertEquals("color", flag.getId());
         assertEquals("STRING", flag.getType());
         assertEquals("Color", flag.getName());
@@ -75,13 +84,13 @@ class FlagsClientCoverageTest {
                 Map.of("name", "Red", "value", "red"),
                 Map.of("name", "Blue", "value", "blue")
         );
-        Flag<String> flag = client.management().newStringFlag("color", "red", "Color", null, values);
+        Flag<String> flag = client.newStringFlag("color", "red", "Color", null, values);
         assertEquals(2, flag.getValues().size());
     }
 
     @Test
     void newStringFlag_withoutName_usesKeyToDisplayName() {
-        Flag<String> flag = client.management().newStringFlag("bg-color", "red");
+        Flag<String> flag = client.newStringFlag("bg-color", "red");
         assertEquals("Bg Color", flag.getName());
     }
 
@@ -89,7 +98,7 @@ class FlagsClientCoverageTest {
 
     @Test
     void newNumberFlag_minimal() {
-        Flag<Number> flag = client.management().newNumberFlag("rate-limit", 100);
+        Flag<Number> flag = client.newNumberFlag("rate-limit", 100);
         assertEquals("rate-limit", flag.getId());
         assertEquals("NUMERIC", flag.getType());
         assertEquals(100, flag.getDefault());
@@ -98,7 +107,7 @@ class FlagsClientCoverageTest {
 
     @Test
     void newNumberFlag_withNameAndDescription() {
-        Flag<Number> flag = client.management().newNumberFlag("rate-limit", 100, "Rate Limit", "Max requests");
+        Flag<Number> flag = client.newNumberFlag("rate-limit", 100, "Rate Limit", "Max requests");
         assertEquals("Rate Limit", flag.getName());
         assertEquals("Max requests", flag.getDescription());
         assertNull(flag.getValues(), "unconstrained flag should have null values");
@@ -110,7 +119,7 @@ class FlagsClientCoverageTest {
                 Map.of("name", "Low", "value", 100),
                 Map.of("name", "High", "value", 1000)
         );
-        Flag<Number> flag = client.management().newNumberFlag("rate-limit", 100, null, null, values);
+        Flag<Number> flag = client.newNumberFlag("rate-limit", 100, null, null, values);
         assertEquals(2, flag.getValues().size());
         // name from key
         assertEquals("Rate Limit", flag.getName());
@@ -120,7 +129,7 @@ class FlagsClientCoverageTest {
 
     @Test
     void newJsonFlag_minimal() {
-        Flag<Object> flag = client.management().newJsonFlag("config", Map.of("a", 1));
+        Flag<Object> flag = client.newJsonFlag("config", Map.of("a", 1));
         assertEquals("config", flag.getId());
         assertEquals("JSON", flag.getType());
         assertNull(flag.getValues(), "unconstrained flag should have null values");
@@ -128,7 +137,7 @@ class FlagsClientCoverageTest {
 
     @Test
     void newJsonFlag_withNameAndDescription() {
-        Flag<Object> flag = client.management().newJsonFlag("config", Map.of(), "Config", "Feature config");
+        Flag<Object> flag = client.newJsonFlag("config", Map.of(), "Config", "Feature config");
         assertEquals("Config", flag.getName());
         assertEquals("Feature config", flag.getDescription());
         assertNull(flag.getValues(), "unconstrained flag should have null values");
@@ -137,36 +146,39 @@ class FlagsClientCoverageTest {
     @Test
     void newJsonFlag_withValues() {
         List<Map<String, Object>> values = List.of(Map.of("name", "Preset A", "value", Map.of("x", 1)));
-        Flag<Object> flag = client.management().newJsonFlag("config", Map.of(), null, null, values);
+        Flag<Object> flag = client.newJsonFlag("config", Map.of(), null, null, values);
         assertEquals(1, flag.getValues().size());
     }
 
-    // --- register(Context...) and register(List<Context>) ---
+    // --- context observation during evaluation (internal fallback buffer) ---
 
     @Test
-    void register_varArgs() throws ApiException {
+    void observeContexts_multipleContexts() throws ApiException {
         setupFlagStore("f", "BOOLEAN", false, Map.of());
+        Flag<Boolean> handle = client.booleanFlag("f", false);
         Context c1 = new Context("user", "u-1", Map.of());
         Context c2 = new Context("user", "u-2", Map.of());
-        assertDoesNotThrow(() -> client.register(c1, c2));
+        assertDoesNotThrow(() -> handle.get(List.of(c1, c2)));
     }
 
     @Test
-    void register_listOverload() throws ApiException {
+    void observeContexts_listOverload() throws ApiException {
         setupFlagStore("f", "BOOLEAN", false, Map.of());
+        Flag<Boolean> handle = client.booleanFlag("f", false);
         List<Context> list = List.of(
                 new Context("user", "u-1", Map.of()),
                 new Context("account", "acme", Map.of())
         );
-        assertDoesNotThrow(() -> client.register(list));
+        assertDoesNotThrow(() -> handle.get(list));
     }
 
     @Test
-    void register_duplicateContextIgnored() throws ApiException {
+    void observeContexts_duplicateContextIgnored() throws ApiException {
         setupFlagStore("f", "BOOLEAN", false, Map.of());
+        Flag<Boolean> handle = client.booleanFlag("f", false);
         Context ctx = new Context("user", "u-1", Map.of("plan", "premium"));
-        client.register(ctx);
-        client.register(ctx); // same type:key -- should not add again
+        handle.get(List.of(ctx));
+        handle.get(List.of(ctx)); // same type:key -- should not add again
     }
 
     // --- flushContexts ---
@@ -177,7 +189,8 @@ class FlagsClientCoverageTest {
                 "staging", Map.of("enabled", true, "default", true)
         ));
 
-        client.register(new Context("user", "u-1", Map.of("plan", "premium")));
+        Flag<Boolean> handle = client.booleanFlag("feature-x", false);
+        handle.get(List.of(new Context("user", "u-1", Map.of("plan", "premium"))));
         client.flushContexts();
 
         verify(mockContextsApi).bulkRegisterContexts(any(ContextBulkRegister.class));
@@ -198,7 +211,8 @@ class FlagsClientCoverageTest {
                 .thenThrow(new com.smplkit.internal.generated.app.ApiException(500, "fail"));
 
         setupFlagStore("feature-x", "BOOLEAN", false, Map.of());
-        client.register(new Context("user", "u-1", Map.of()));
+        Flag<Boolean> handle = client.booleanFlag("feature-x", false);
+        handle.get(List.of(new Context("user", "u-1", Map.of())));
 
         assertDoesNotThrow(() -> client.flushContexts());
     }
@@ -462,7 +476,7 @@ class FlagsClientCoverageTest {
         when(mockApi.listFlags(isNull(), isNull(), isNull(), isNull(), isNull(), isNull(), any(), any(), isNull())).thenReturn(OBJECT_MAPPER.convertValue(
                 Map.of("data", List.of(Map.of("id", "feature-x", "type", "flag", "attributes", attrs))),
                 FlagListResponse.class));
-        client._connectInternal();
+        client.ensureConnected();
 
         Flag<String> handle = client.stringFlag("feature-x", "fallback");
         assertEquals("fallback", handle.get(List.of()));
@@ -475,7 +489,7 @@ class FlagsClientCoverageTest {
         FlagListResponse resp = new FlagListResponse();
         resp.setData(null);
         when(mockApi.listFlags(isNull(), isNull(), isNull(), isNull(), isNull(), isNull(), any(), any(), isNull())).thenReturn(resp);
-        List<Flag<?>> result = client.management().list();
+        List<Flag<?>> result = client.list();
         assertTrue(result.isEmpty());
     }
 
@@ -485,14 +499,14 @@ class FlagsClientCoverageTest {
     void list_apiException_throwsSmplError() throws ApiException {
         when(mockApi.listFlags(isNull(), isNull(), isNull(), isNull(), isNull(), isNull(), any(), any(), isNull()))
                 .thenThrow(new ApiException(500, "Server Error"));
-        assertThrows(SmplError.class, () -> client.management().list());
+        assertThrows(SmplError.class, () -> client.list());
     }
 
     @Test
     void list_apiException_code0_mapsToConnectionError() throws ApiException {
         when(mockApi.listFlags(isNull(), isNull(), isNull(), isNull(), isNull(), isNull(), any(), any(), isNull()))
                 .thenThrow(new ApiException("network failure"));
-        assertThrows(SmplError.class, () -> client.management().list());
+        assertThrows(SmplError.class, () -> client.list());
     }
 
     // --- _createFlag with environments ---
@@ -510,8 +524,8 @@ class FlagsClientCoverageTest {
         )), FlagResponse.class);
         when(mockApi.createFlag(any(FlagCreateRequest.class))).thenReturn(response);
 
-        Flag<Boolean> flag = client.management().newBooleanFlag("my-flag", false, "My Flag", "A test flag");
-        flag.setEnvironmentEnabled("staging", true);
+        Flag<Boolean> flag = client.newBooleanFlag("my-flag", false, "My Flag", "A test flag");
+        flag.enableRules("staging");
         flag.save();
 
         assertEquals(FLAG_ID, flag.getId());
@@ -522,19 +536,33 @@ class FlagsClientCoverageTest {
 
     @Test
     void evaluateHandle_triggersEagerFlush_whenBatchFull() throws Exception {
+        // The eager flush thread invokes bulkRegisterContexts; latch on it so
+        // the assertion is deterministic rather than relying on a fixed sleep.
+        CountDownLatch flushLatch = new CountDownLatch(1);
+        when(mockContextsApi.bulkRegisterContexts(any(ContextBulkRegister.class)))
+                .thenAnswer(inv -> {
+                    flushLatch.countDown();
+                    return null;
+                });
+
         setupFlagStore("feature-x", "BOOLEAN", false, Map.of(
                 "staging", Map.of("enabled", true, "default", true)
         ));
 
         Flag<Boolean> handle = client.booleanFlag("feature-x", false);
 
-        // Register enough contexts to exceed the batch flush size (100)
+        // Observe enough contexts (>100) in one evaluation to fill the buffer,
+        // then a follow-up evaluation crosses the batch flush size (100) and
+        // spawns the eager-flush daemon thread.
+        List<Context> many = new ArrayList<>();
         for (int i = 0; i < 101; i++) {
-            client.register(new Context("user", "u-" + i, Map.of("plan", "free")));
+            many.add(new Context("user", "u-" + i, Map.of("plan", "free")));
         }
-
+        handle.get(many);
         handle.get(List.of(new Context("user", "u-new", Map.of("plan", "new"))));
-        Thread.sleep(100);
+
+        assertTrue(flushLatch.await(5, TimeUnit.SECONDS),
+                "eager context flush should have fired within 5s");
     }
 
     // --- flushContextsSafe catches exception ---
@@ -546,7 +574,8 @@ class FlagsClientCoverageTest {
 
         setupFlagStore("feature-x", "BOOLEAN", false, Map.of("staging", Map.of("enabled", true)));
 
-        client.register(new Context("user", "u-1", Map.of("plan", "premium")));
+        Flag<Boolean> handle = client.booleanFlag("feature-x", false);
+        handle.get(List.of(new Context("user", "u-1", Map.of("plan", "premium"))));
 
         assertDoesNotThrow(() -> client.disconnect());
     }
@@ -565,7 +594,7 @@ class FlagsClientCoverageTest {
         when(mockApi.listFlags(isNull(), isNull(), isNull(), isNull(), isNull(), isNull(), any(), any(), isNull())).thenReturn(OBJECT_MAPPER.convertValue(
                 Map.of("data", List.of(Map.of("id", "null-flag", "type", "flag", "attributes", attrs))),
                 FlagListResponse.class));
-        client._connectInternal();
+        client.ensureConnected();
 
         Flag<String> handle = client.stringFlag("null-flag", null);
         // _evaluateHandle returns null (the defaultValue), get() null check returns defaultValue (null)
@@ -579,7 +608,7 @@ class FlagsClientCoverageTest {
         doThrow(new ApiException(500, "Server Error"))
                 .when(mockApi).deleteFlag("my-flag");
 
-        assertThrows(SmplError.class, () -> client.management().delete("my-flag"));
+        assertThrows(SmplError.class, () -> client.delete("my-flag"));
     }
 
     // --- _updateFlag with description ---
@@ -596,7 +625,7 @@ class FlagsClientCoverageTest {
         when(mockApi.updateFlag(eq(FLAG_ID), any(FlagRequest.class)))
                 .thenReturn(response);
 
-        Flag<Boolean> flag = client.management().newBooleanFlag("my-flag", false, "My Flag", "Updated desc");
+        Flag<Boolean> flag = client.newBooleanFlag("my-flag", false, "My Flag", "Updated desc");
         flag.setCreatedAt(java.time.Instant.parse("2024-06-01T12:00:00Z"));
         flag.save();
 
@@ -610,7 +639,7 @@ class FlagsClientCoverageTest {
         // Flag with no environments at all
         when(mockApi.listFlags(isNull(), isNull(), isNull(), isNull(), isNull(), isNull(), any(), any(), isNull())).thenReturn(
                 makeFlagListResponse("simple-flag", "BOOLEAN", true, Map.of()));
-        client._connectInternal();
+        client.ensureConnected();
 
         Flag<Boolean> handle = client.booleanFlag("simple-flag", false);
         // Flag store has default=true, no environment data for "staging" -> returns flagDefault (true)
@@ -631,9 +660,9 @@ class FlagsClientCoverageTest {
         )), FlagResponse.class);
         when(mockApi.createFlag(any(FlagCreateRequest.class))).thenReturn(response);
 
-        Flag<Boolean> flag = client.management().newBooleanFlag("my-flag", false);
-        flag.setEnvironmentEnabled("staging", true);
-        flag.setEnvironmentDefault("staging", true);
+        Flag<Boolean> flag = client.newBooleanFlag("my-flag", false);
+        flag.enableRules("staging");
+        flag.setDefault(true, "staging");
         flag.save();
 
         verify(mockApi).createFlag(any(FlagCreateRequest.class));
@@ -645,7 +674,7 @@ class FlagsClientCoverageTest {
                                  Map<String, Object> environments) throws ApiException {
         when(mockApi.listFlags(isNull(), isNull(), isNull(), isNull(), isNull(), isNull(), any(), any(), isNull())).thenReturn(
                 makeFlagListResponse(id, type, defaultValue, environments));
-        client._connectInternal();
+        client.ensureConnected();
     }
 
     private static FlagListResponse makeFlagListResponse(String id, String type,

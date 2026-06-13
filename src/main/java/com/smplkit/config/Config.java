@@ -1,17 +1,30 @@
 package com.smplkit.config;
 
 import java.time.Instant;
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.LinkedHashMap;
+import java.util.List;
 import java.util.Map;
-import java.util.Objects;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.Executor;
+import java.util.concurrent.ForkJoinPool;
 
 /**
- * A mutable configuration resource from the Smpl Config service.
+ * A configuration resource fetched from the Smpl Config service.
  *
- * <p>Instances are returned by {@link ConfigClient} methods and provide
- * a {@link #save()} method to persist changes to the server.</p>
- *
- * <p>Use {@link #getResolvedItems()} to get plain {@code {key: value}} entries.</p>
+ * <p>Accessors:</p>
+ * <ul>
+ *   <li>{@link #getId()} — the config identifier (slug), or {@code null} for unsaved configs.</li>
+ *   <li>{@link #getName()} — display name.</li>
+ *   <li>{@link #getDescription()} — optional description.</li>
+ *   <li>{@link #getParent()} — parent config id (slug), or {@code null} for root configs.</li>
+ *   <li>{@link #items()} — base values as a {@code {key: value}} map.</li>
+ *   <li>{@link #itemsRaw()} — full typed items as {@code {key: {value, type, description}}}.</li>
+ *   <li>{@link #environments()} — map of environment names to their overrides.</li>
+ *   <li>{@link #getCreatedAt()} — creation timestamp.</li>
+ *   <li>{@link #getUpdatedAt()} — last-modified timestamp.</li>
+ * </ul>
  */
 public final class Config {
 
@@ -19,284 +32,517 @@ public final class Config {
     private String id;
     private String name;
     private String description;
-    private String parent;      // parent config slug or null
-    private Map<String, Object> items;  // {key: {value, type, description}} - the raw typed shape
-    // Per-env overrides in flat shape per ADR-024 §2.4: {env: {key: rawValue}}.
-    private Map<String, Map<String, Object>> environments;
+    private String parent;
+    // {key: {value, type, description}} — the raw typed shape.
+    private Map<String, Object> itemsRaw;
+    private Map<String, ConfigEnvironment> environments;
     private Instant createdAt;
     private Instant updatedAt;
 
     /**
-     * Package-private constructor. Use {@link ConfigClient#new_(String)} to create instances.
+     * Full constructor. Use {@link ConfigClient#new_(String)} to create
+     * instances in customer code; this is invoked by the client when
+     * converting server resources.
      */
-    Config(ConfigClient client, String id, String name) {
+    Config(ConfigClient client, String id, String name, String description, String parent,
+           Map<String, Object> items, Map<String, ConfigEnvironment> environments,
+           Instant createdAt, Instant updatedAt) {
         this.client = client;
-        this.id = Objects.requireNonNull(id, "id must not be null");
-        this.name = Objects.requireNonNull(name, "name must not be null");
-        this.items = new HashMap<>();
-        this.environments = new HashMap<>();
+        this.id = id;
+        this.name = name;
+        this.description = description;
+        this.parent = parent;
+        this.itemsRaw = items != null ? new HashMap<>(items) : new HashMap<>();
+        this.environments = environments != null ? new HashMap<>(environments) : new HashMap<>();
+        this.createdAt = createdAt;
+        this.updatedAt = updatedAt;
     }
 
     // --- Public getters ---
 
-    /** Returns the unique identifier (slug), or null for unsaved configs. */
-    public String getId() { return id; }
+    /** Returns the config identifier (slug), or {@code null} for unsaved configs. */
+    public String getId() {
+        return id;
+    }
 
     /** Returns the display name. */
-    public String getName() { return name; }
+    public String getName() {
+        return name;
+    }
 
-    /** Returns the optional description (may be null). */
-    public String getDescription() { return description; }
+    /** Returns the optional description (may be {@code null}). */
+    public String getDescription() {
+        return description;
+    }
 
-    /** Returns the parent config identifier, or null for root configs. */
-    public String getParent() { return parent; }
+    /** Returns the parent config id (slug), or {@code null} for root configs. */
+    public String getParent() {
+        return parent;
+    }
 
-    /**
-     * Returns the items map with type metadata.
-     *
-     * <p>Use {@link #getResolvedItems()} for plain {@code key -> value} entries.</p>
-     */
-    public Map<String, Object> getItems() { return items; }
+    /** Returns the creation timestamp (may be {@code null}). */
+    public Instant getCreatedAt() {
+        return createdAt;
+    }
 
-    /**
-     * Returns the raw per-environment override map.
-     *
-     * <p>The shape is {@code {env: {key: rawValue}}} per ADR-024 §2.4.
-     * Use {@link #environments()} for the typed view.</p>
-     *
-     * @deprecated use {@link #environments()} for the typed view returning
-     * {@code Map<String, ConfigEnvironment>}.
-     */
-    @Deprecated
-    public Map<String, Map<String, Object>> getEnvironments() { return environments; }
+    /** Returns the last-modified timestamp (may be {@code null}). */
+    public Instant getUpdatedAt() {
+        return updatedAt;
+    }
 
     /**
-     * Returns a typed, immutable per-environment view (mirrors Python rule 8).
+     * Read-only plain {@code {key: value}} view of base items.
      *
-     * <p>{@code config.environments().get("production").values()} returns the
-     * resolved {@code key -> value} map for that environment;
-     * {@code config.environments().get("production").valuesRaw()} returns the
-     * same map (per ADR-024 §2.4 the wire shape no longer carries per-override
-     * {value, type} envelopes, so {@code values} and {@code valuesRaw} are
-     * equivalent).</p>
+     * <p>Mutate via {@link #set} / {@link #setString} / {@link #setNumber} /
+     * {@link #setBoolean} / {@link #setJson} / {@link #remove}.</p>
+     *
+     * @return a fresh map of item key to resolved value
      */
-    public Map<String, ConfigEnvironment> environments() {
-        Map<String, ConfigEnvironment> out = new HashMap<>();
-        for (Map.Entry<String, Map<String, Object>> e : environments.entrySet()) {
-            Map<String, Object> envMap = e.getValue();
-            if (envMap == null) {
-                out.put(e.getKey(), new ConfigEnvironment(Map.of(), Map.of()));
+    @SuppressWarnings("unchecked")
+    public Map<String, Object> items() {
+        Map<String, Object> out = new HashMap<>();
+        for (Map.Entry<String, Object> e : itemsRaw.entrySet()) {
+            Object v = e.getValue();
+            if (v instanceof Map<?, ?> m && m.containsKey("value")) {
+                out.put(e.getKey(), ((Map<String, Object>) m).get("value"));
             } else {
-                out.put(e.getKey(), new ConfigEnvironment(envMap, envMap));
+                out.put(e.getKey(), v);
             }
         }
-        return Map.copyOf(out);
-    }
-
-    /** Returns the creation timestamp (may be null). */
-    public Instant getCreatedAt() { return createdAt; }
-
-    /** Returns the last-modified timestamp (may be null). */
-    public Instant getUpdatedAt() { return updatedAt; }
-
-    // --- Public setters (mutable fields) ---
-
-    /** Sets the display name. */
-    public void setName(String name) { this.name = name; }
-
-    /** Sets the description. */
-    public void setDescription(String description) { this.description = description; }
-
-    /**
-     * Sets items from a plain {@code {key: value}} map.
-     */
-    public void setItems(Map<String, Object> items) {
-        this.items = items != null ? new HashMap<>(items) : new HashMap<>();
+        return out;
     }
 
     /**
-     * Sets the environments map. The shape is {@code {env: {key: rawValue}}}
-     * per ADR-024 §2.4 — pass raw scalars, not the legacy {@code {value, type}}
-     * wrapper or a {@code "values"} sub-map.
+     * Return the full typed items {@code {key: {value, type, description}}}
+     * (read-only deep copy).
+     *
+     * @return a fresh map of item key to its typed {@code {value, type,
+     *     description}} entry
      */
-    public void setEnvironments(Map<String, Map<String, Object>> environments) {
-        this.environments = environments != null ? new HashMap<>(environments) : new HashMap<>();
+    @SuppressWarnings("unchecked")
+    public Map<String, Object> itemsRaw() {
+        Map<String, Object> out = new HashMap<>();
+        for (Map.Entry<String, Object> e : itemsRaw.entrySet()) {
+            Object v = e.getValue();
+            out.put(e.getKey(), v instanceof Map<?, ?> m ? new HashMap<>((Map<String, Object>) m) : v);
+        }
+        return out;
     }
 
-    /** Sets the parent config id. */
-    public void setParent(String parent) { this.parent = parent; }
-
-    // --- Per-env unified setters (mirror Python's set_string / set_number / etc.) ---
-
-    /** Sets a string item at the base level. */
-    public void setString(String name, String value) {
-        setString(name, value, null);
+    /**
+     * Read-only view of per-environment overrides keyed by environment id.
+     *
+     * <p>Mutate via the {@code environment="..."} argument on {@link #set} /
+     * {@link #setString} / {@link #setNumber} / {@link #setBoolean} /
+     * {@link #setJson} / {@link #remove}.</p>
+     *
+     * @return a fresh map of environment id to its {@link ConfigEnvironment}
+     *     overrides
+     */
+    public Map<String, ConfigEnvironment> environments() {
+        return new HashMap<>(environments);
     }
 
-    /** Sets a string item; {@code environment=null} sets the base, otherwise the per-env override. */
-    public void setString(String name, String value, String environment) {
+    // --- Internal accessors used by the client / wire conversion ---
+
+    /** Package-private: the live typed-items map ({@code {key: {value, type, description}}}). */
+    Map<String, Object> rawItemsMap() {
+        return itemsRaw;
+    }
+
+    /** Package-private: the live environments map. */
+    Map<String, ConfigEnvironment> rawEnvironmentsMap() {
+        return environments;
+    }
+
+    /**
+     * Return the dict that {@code set()} / {@code remove()} should mutate.
+     *
+     * <p>For the base config this is the typed-items map storing
+     * {@code {key: {value, type, description}}}. For an environment override
+     * it is the flat overrides map storing {@code {key: rawValue}}.</p>
+     */
+    private Map<String, Object> itemsTarget(String environment) {
         if (environment == null) {
-            items.put(name, Map.of("value", value, "type", "STRING"));
+            return itemsRaw;
+        }
+        ConfigEnvironment env = environments.get(environment);
+        if (env == null) {
+            env = new ConfigEnvironment();
+            environments.put(environment, env);
+        }
+        return env.rawMap();
+    }
+
+    // --- Setters / mutators ---
+
+    /**
+     * Sets the display name.
+     *
+     * @param name the new display name
+     */
+    public void setName(String name) {
+        this.name = name;
+    }
+
+    /**
+     * Sets the description.
+     *
+     * @param description the new description, or {@code null} to clear it
+     */
+    public void setDescription(String description) {
+        this.description = description;
+    }
+
+    /**
+     * Sets the parent config id.
+     *
+     * @param parent the parent config id (slug) to inherit from, or {@code null}
+     *     to make this a root config
+     */
+    public void setParent(String parent) {
+        this.parent = parent;
+    }
+
+    /**
+     * Set (or replace) an item.  When {@code environment} is given, sets an override on that environment.
+     *
+     * <p>When {@code environment} is supplied, the override carries only the raw
+     * value — the declared {@code type} / {@code description} come from the base
+     * item, so the {@code ConfigItem}'s type and description are ignored.</p>
+     *
+     * @param item        the {@link ConfigItem} to set. Its name is the item key.
+     * @param environment when non-{@code null}, set the value as an override on
+     *     this environment rather than on the base config
+     */
+    public void set(ConfigItem item, String environment) {
+        if (environment == null) {
+            Map<String, Object> raw = new LinkedHashMap<>();
+            raw.put("value", item.value());
+            raw.put("type", item.type().value());
+            if (item.description() != null) {
+                raw.put("description", item.description());
+            }
+            itemsTarget(null).put(item.name(), raw);
         } else {
-            environments.computeIfAbsent(environment, k -> new HashMap<>()).put(name, value);
+            itemsTarget(environment).put(item.name(), item.value());
         }
     }
 
-    /** Sets a number item at the base level. */
-    public void setNumber(String name, Number value) {
-        setNumber(name, value, null);
+    /**
+     * Set (or replace) a base-level item.
+     *
+     * @param item the {@link ConfigItem} to set. Its name is the item key.
+     */
+    public void set(ConfigItem item) {
+        set(item, null);
     }
 
-    /** Sets a number item; {@code environment=null} sets the base. */
-    public void setNumber(String name, Number value, String environment) {
-        if (environment == null) {
-            items.put(name, Map.of("value", value, "type", "NUMBER"));
-        } else {
-            environments.computeIfAbsent(environment, k -> new HashMap<>()).put(name, value);
-        }
-    }
-
-    /** Sets a boolean item at the base level. */
-    public void setBoolean(String name, boolean value) {
-        setBoolean(name, value, null);
-    }
-
-    /** Sets a boolean item; {@code environment=null} sets the base. */
-    public void setBoolean(String name, boolean value, String environment) {
-        if (environment == null) {
-            items.put(name, Map.of("value", value, "type", "BOOLEAN"));
-        } else {
-            environments.computeIfAbsent(environment, k -> new HashMap<>()).put(name, value);
-        }
-    }
-
-    /** Sets a JSON item at the base level. */
-    public void setJson(String name, Object value) {
-        setJson(name, value, null);
-    }
-
-    /** Sets a JSON item; {@code environment=null} sets the base. */
-    public void setJson(String name, Object value, String environment) {
-        if (environment == null) {
-            items.put(name, Map.of("value", value, "type", "JSON"));
-        } else {
-            environments.computeIfAbsent(environment, k -> new HashMap<>()).put(name, value);
-        }
-    }
-
-    /** Removes an item; {@code environment=null} removes from base. */
+    /**
+     * Remove an item by name.  When {@code environment} is given, removes the per-environment override only.
+     *
+     * <p>Removing an item that isn't present is a no-op.</p>
+     *
+     * @param name        the item key to remove
+     * @param environment when non-{@code null}, remove only this environment's
+     *     override for {@code name}, leaving the base item intact
+     */
     public void remove(String name, String environment) {
-        if (environment == null) {
-            items.remove(name);
-        } else {
-            Map<String, Object> env = environments.get(environment);
-            if (env != null) env.remove(name);
-        }
+        itemsTarget(environment).remove(name);
     }
 
-    /** Removes an item from the base. */
+    /**
+     * Remove a base-level item by name. Removing an item that isn't present is a no-op.
+     *
+     * @param name the item key to remove
+     */
     public void remove(String name) {
         remove(name, null);
     }
 
-    // --- Package-private setters (used by ConfigClient) ---
-
-    void setCreatedAt(Instant createdAt) { this.createdAt = createdAt; }
-    void setUpdatedAt(Instant updatedAt) { this.updatedAt = updatedAt; }
-    void setClient(ConfigClient client) { this.client = client; }
-    ConfigClient getClient() { return client; }
-
-    // --- Resolved items ---
+    /**
+     * Convenience: set a base-level STRING item.
+     *
+     * @param name  the item key to set
+     * @param value the string value
+     */
+    public void setString(String name, String value) {
+        set(new ConfigItem(name, value, ItemType.STRING), null);
+    }
 
     /**
-     * Returns item values as a plain {@code {key: value}} map.
+     * Convenience: set a STRING item (or environment override).
+     *
+     * @param name        the item key to set
+     * @param value       the string value
+     * @param environment when non-{@code null}, set the value as an override on
+     *     this environment rather than on the base config
      */
-    @SuppressWarnings("unchecked")
-    public Map<String, Object> getResolvedItems() {
-        Map<String, Object> resolved = new HashMap<>();
-        for (Map.Entry<String, Object> entry : items.entrySet()) {
-            Object v = entry.getValue();
-            if (v instanceof Map) {
-                Map<String, Object> itemMap = (Map<String, Object>) v;
-                if (itemMap.containsKey("value")) {
-                    resolved.put(entry.getKey(), itemMap.get("value"));
-                } else {
-                    resolved.put(entry.getKey(), v);
-                }
-            } else {
-                resolved.put(entry.getKey(), v);
-            }
-        }
-        return resolved;
+    public void setString(String name, String value, String environment) {
+        set(new ConfigItem(name, value, ItemType.STRING), environment);
+    }
+
+    /**
+     * Convenience: set a STRING item with a description (or environment override).
+     *
+     * @param name        the item key to set
+     * @param value       the string value
+     * @param description optional human-readable description. Ignored when setting
+     *     an environment override.
+     * @param environment when non-{@code null}, set the value as an override on
+     *     this environment rather than on the base config
+     */
+    public void setString(String name, String value, String description, String environment) {
+        set(new ConfigItem(name, value, ItemType.STRING, description), environment);
+    }
+
+    /**
+     * Convenience: set a base-level NUMBER item.
+     *
+     * @param name  the item key to set
+     * @param value the numeric value
+     */
+    public void setNumber(String name, Number value) {
+        set(new ConfigItem(name, value, ItemType.NUMBER), null);
+    }
+
+    /**
+     * Convenience: set a NUMBER item (or environment override).
+     *
+     * @param name        the item key to set
+     * @param value       the numeric value
+     * @param environment when non-{@code null}, set the value as an override on
+     *     this environment rather than on the base config
+     */
+    public void setNumber(String name, Number value, String environment) {
+        set(new ConfigItem(name, value, ItemType.NUMBER), environment);
+    }
+
+    /**
+     * Convenience: set a NUMBER item with a description (or environment override).
+     *
+     * @param name        the item key to set
+     * @param value       the numeric value
+     * @param description optional human-readable description. Ignored when setting
+     *     an environment override.
+     * @param environment when non-{@code null}, set the value as an override on
+     *     this environment rather than on the base config
+     */
+    public void setNumber(String name, Number value, String description, String environment) {
+        set(new ConfigItem(name, value, ItemType.NUMBER, description), environment);
+    }
+
+    /**
+     * Convenience: set a base-level BOOLEAN item.
+     *
+     * @param name  the item key to set
+     * @param value the boolean value
+     */
+    public void setBoolean(String name, boolean value) {
+        set(new ConfigItem(name, value, ItemType.BOOLEAN), null);
+    }
+
+    /**
+     * Convenience: set a BOOLEAN item (or environment override).
+     *
+     * @param name        the item key to set
+     * @param value       the boolean value
+     * @param environment when non-{@code null}, set the value as an override on
+     *     this environment rather than on the base config
+     */
+    public void setBoolean(String name, boolean value, String environment) {
+        set(new ConfigItem(name, value, ItemType.BOOLEAN), environment);
+    }
+
+    /**
+     * Convenience: set a BOOLEAN item with a description (or environment override).
+     *
+     * @param name        the item key to set
+     * @param value       the boolean value
+     * @param description optional human-readable description. Ignored when setting
+     *     an environment override.
+     * @param environment when non-{@code null}, set the value as an override on
+     *     this environment rather than on the base config
+     */
+    public void setBoolean(String name, boolean value, String description, String environment) {
+        set(new ConfigItem(name, value, ItemType.BOOLEAN, description), environment);
+    }
+
+    /**
+     * Convenience: set a base-level JSON item.
+     *
+     * @param name  the item key to set
+     * @param value any JSON-serializable value (map, list, or primitive)
+     */
+    public void setJson(String name, Object value) {
+        set(new ConfigItem(name, value, ItemType.JSON), null);
+    }
+
+    /**
+     * Convenience: set a JSON item (or environment override).
+     *
+     * @param name        the item key to set
+     * @param value       any JSON-serializable value (map, list, or primitive)
+     * @param environment when non-{@code null}, set the value as an override on
+     *     this environment rather than on the base config
+     */
+    public void setJson(String name, Object value, String environment) {
+        set(new ConfigItem(name, value, ItemType.JSON), environment);
+    }
+
+    /**
+     * Convenience: set a JSON item with a description (or environment override).
+     *
+     * @param name        the item key to set
+     * @param value       any JSON-serializable value (map, list, or primitive)
+     * @param description optional human-readable description. Ignored when setting
+     *     an environment override.
+     * @param environment when non-{@code null}, set the value as an override on
+     *     this environment rather than on the base config
+     */
+    public void setJson(String name, Object value, String description, String environment) {
+        set(new ConfigItem(name, value, ItemType.JSON, description), environment);
     }
 
     // --- Persistence ---
 
     /**
-     * Persists this config to the server.
+     * Persist this config to the server.
      *
-     * <p>After a successful save, this instance is refreshed with the
-     * server response.</p>
+     * <p>Creates a new config if unsaved, or updates the existing one.</p>
      *
-     * @throws IllegalStateException if not bound to a client
+     * @throws com.smplkit.errors.NotFoundError   If the config no longer exists (update).
+     * @throws com.smplkit.errors.ValidationError If the server rejects the request.
+     * @throws IllegalStateException              If the model was constructed without a client.
      */
     public void save() {
-        if (client == null) throw new IllegalStateException("Config not bound to a client");
-        if (createdAt == null) {
-            Config created = client._createConfig(this);
-            _apply(created);
-        } else {
-            Config updated = client._updateConfig(this);
-            _apply(updated);
+        if (client == null) {
+            throw new IllegalStateException("Config was constructed without a client; cannot save");
         }
+        Config other;
+        if (createdAt == null) {
+            other = client._createConfig(this);
+        } else {
+            other = client._updateConfigFromModel(this);
+        }
+        apply(other);
     }
 
     /**
-     * Async variant of {@link #save()}, returning a {@link java.util.concurrent.CompletableFuture}.
+     * Async variant of {@link #save()}, scheduled on the JDK common pool.
      *
-     * <p>Mirrors Python rule 12: customer picks sync vs async at the call site
-     * on the same model. The mutation is scheduled on the JDK common pool;
-     * provide a custom executor via {@link #saveAsync(java.util.concurrent.Executor)}.</p>
+     * <p>The customer picks sync vs async at the call site on the same model.
+     * Provide a custom executor via {@link #saveAsync(Executor)}.</p>
+     *
+     * @return a future that completes when the config has been persisted, or
+     *     completes exceptionally with the same errors as {@link #save()}
      */
-    public java.util.concurrent.CompletableFuture<Void> saveAsync() {
-        return saveAsync(java.util.concurrent.ForkJoinPool.commonPool());
-    }
-
-    /** Async variant of {@link #save()} with a custom executor. */
-    public java.util.concurrent.CompletableFuture<Void> saveAsync(java.util.concurrent.Executor executor) {
-        return java.util.concurrent.CompletableFuture.runAsync(this::save, executor);
+    public CompletableFuture<Void> saveAsync() {
+        return saveAsync(ForkJoinPool.commonPool());
     }
 
     /**
-     * Deletes this config from the server.
+     * Async variant of {@link #save()} with a custom executor.
      *
-     * <p>Mirrors Python's {@code config.delete()}: delegates to
-     * {@code mgmt.config.delete(id)}. Bubbles {@link com.smplkit.errors.NotFoundError}
-     * if the config is not on the server (e.g. unsaved or already deleted).</p>
+     * @param executor the executor to run the persistence call on
+     * @return a future that completes when the config has been persisted, or
+     *     completes exceptionally with the same errors as {@link #save()}
+     */
+    public CompletableFuture<Void> saveAsync(Executor executor) {
+        return CompletableFuture.runAsync(this::save, executor);
+    }
+
+    /**
+     * Delete this config from the server.
      *
-     * @throws IllegalStateException if not bound to a client
+     * @throws IllegalStateException if the model was constructed without a client
+     *     or has no id
      */
     public void delete() {
-        if (client == null) throw new IllegalStateException("Config not bound to a client");
-        client.management().delete(id);
+        if (client == null || id == null) {
+            throw new IllegalStateException("Config was constructed without a client or id; cannot delete");
+        }
+        client.delete(id);
     }
 
     /**
-     * Copy all properties from {@code other} into this instance.
+     * Async variant of {@link #delete()}, scheduled on the JDK common pool.
+     *
+     * @return a future that completes when the config has been deleted
      */
-    void _apply(Config other) {
+    public CompletableFuture<Void> deleteAsync() {
+        return deleteAsync(ForkJoinPool.commonPool());
+    }
+
+    /**
+     * Async variant of {@link #delete()} with a custom executor.
+     *
+     * @param executor the executor to run the delete call on
+     * @return a future that completes when the config has been deleted
+     */
+    public CompletableFuture<Void> deleteAsync(Executor executor) {
+        return CompletableFuture.runAsync(this::delete, executor);
+    }
+
+    /** Copy all properties from {@code other} into this instance. */
+    private void apply(Config other) {
         this.id = other.id;
         this.name = other.name;
         this.description = other.description;
         this.parent = other.parent;
-        this.items = new HashMap<>(other.items);
-        this.environments = new HashMap<>(other.environments);
+        this.itemsRaw = other.itemsRaw;
+        this.environments = other.environments;
         this.createdAt = other.createdAt;
         this.updatedAt = other.updatedAt;
     }
 
+    /**
+     * Walk the parent chain and return config data entries child-to-root.
+     *
+     * @param configs Optional pre-fetched list of configs to look up parents
+     *     by ID, avoiding extra network calls.
+     */
+    List<Resolver.ChainEntry> buildChain(List<Config> configs) {
+        List<Resolver.ChainEntry> chain = new ArrayList<>();
+        chain.add(toChainEntry(this));
+        Config current = this;
+        Map<String, Config> configsById = new HashMap<>();
+        if (configs != null) {
+            for (Config c : configs) {
+                if (c.id != null) {
+                    configsById.put(c.id, c);
+                }
+            }
+        }
+        while (current.parent != null) {
+            Config parentConfig = configsById.get(current.parent);
+            if (parentConfig == null) {
+                if (client == null) {
+                    throw new IllegalStateException(
+                            "cannot resolve parent config '" + current.parent + "' without a client");
+                }
+                parentConfig = client.get(current.parent);
+            }
+            chain.add(toChainEntry(parentConfig));
+            current = parentConfig;
+        }
+        return chain;
+    }
+
+    /** Build a {@link Resolver.ChainEntry} from a config's typed items + flat environments. */
+    private static Resolver.ChainEntry toChainEntry(Config config) {
+        Map<String, Map<String, Object>> envWire = new HashMap<>();
+        for (Map.Entry<String, ConfigEnvironment> e : config.environments.entrySet()) {
+            envWire.put(e.getKey(), e.getValue().values());
+        }
+        return new Resolver.ChainEntry(
+                config.id != null ? config.id : "",
+                new HashMap<>(config.itemsRaw),
+                envWire);
+    }
+
     @Override
     public String toString() {
-        return "Config[id=" + id + ", name=" + name + "]";
+        return "Config(id=" + id + ", name=" + name + ")";
     }
 }

@@ -7,6 +7,7 @@ import com.smplkit.internal.generated.flags.ApiException;
 import com.smplkit.internal.generated.flags.api.FlagsApi;
 import com.smplkit.internal.generated.flags.model.FlagListResponse;
 import com.smplkit.internal.generated.flags.model.FlagResponse;
+import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;
@@ -50,6 +51,11 @@ class FlagsClientWsEventsTest {
         client.setEnvironment("staging");
     }
 
+    @AfterEach
+    void tearDown() {
+        if (client != null) client.close();
+    }
+
     // -----------------------------------------------------------------------
     // B. Fan-out bug fix
     // -----------------------------------------------------------------------
@@ -64,7 +70,7 @@ class FlagsClientWsEventsTest {
                 flagData("flag-y", "BOOLEAN", false, Map.of())
         )), FlagListResponse.class);
         when(mockApi.listFlags(isNull(), isNull(), isNull(), isNull(), isNull(), isNull(), any(), any(), isNull())).thenReturn(both);
-        client._connectInternal();
+        client.ensureConnected();
 
         AtomicInteger xCount = new AtomicInteger();
         AtomicInteger yCount = new AtomicInteger();
@@ -86,7 +92,7 @@ class FlagsClientWsEventsTest {
                 flagData("flag-b", "BOOLEAN", false, Map.of())
         )), FlagListResponse.class);
         when(mockApi.listFlags(isNull(), isNull(), isNull(), isNull(), isNull(), isNull(), any(), any(), isNull())).thenReturn(both);
-        client._connectInternal();
+        client.ensureConnected();
 
         AtomicInteger globalCount = new AtomicInteger();
         client.onChange(e -> globalCount.incrementAndGet());
@@ -105,7 +111,7 @@ class FlagsClientWsEventsTest {
     @Test
     void flagChanged_contentChanged_scopedFetch_listenerFires() throws ApiException {
         setupList("my-flag", "BOOLEAN", false, Map.of());
-        client._connectInternal();
+        client.ensureConnected();
 
         AtomicReference<FlagChangeEvent> received = new AtomicReference<>();
         client.onChange("my-flag", received::set);
@@ -126,7 +132,7 @@ class FlagsClientWsEventsTest {
     @Test
     void flagChanged_contentUnchanged_scopedFetch_listenerDoesNotFire() throws ApiException {
         setupList("my-flag", "BOOLEAN", false, Map.of());
-        client._connectInternal();
+        client.ensureConnected();
 
         AtomicInteger count = new AtomicInteger();
         client.onChange("my-flag", e -> count.incrementAndGet());
@@ -142,7 +148,7 @@ class FlagsClientWsEventsTest {
     @Test
     void flagChanged_missingId_isNoOp() throws ApiException {
         setupList("my-flag", "BOOLEAN", false, Map.of());
-        client._connectInternal();
+        client.ensureConnected();
 
         AtomicInteger count = new AtomicInteger();
         client.onChange(e -> count.incrementAndGet());
@@ -161,7 +167,7 @@ class FlagsClientWsEventsTest {
     @Test
     void flagDeleted_removesFromStore_firesListenerWithDeletedTrue() throws ApiException {
         setupList("deleted-flag", "BOOLEAN", false, Map.of());
-        client._connectInternal();
+        client.ensureConnected();
 
         AtomicReference<FlagChangeEvent> received = new AtomicReference<>();
         client.onChange("deleted-flag", received::set);
@@ -181,7 +187,7 @@ class FlagsClientWsEventsTest {
     @Test
     void flagDeleted_globalListenerFires() throws ApiException {
         setupList("deleted-flag", "BOOLEAN", false, Map.of());
-        client._connectInternal();
+        client.ensureConnected();
 
         AtomicReference<FlagChangeEvent> globalReceived = new AtomicReference<>();
         client.onChange(globalReceived::set);
@@ -199,7 +205,7 @@ class FlagsClientWsEventsTest {
                 flagData("flag-y", "BOOLEAN", false, Map.of())
         )), FlagListResponse.class);
         when(mockApi.listFlags(isNull(), isNull(), isNull(), isNull(), isNull(), isNull(), any(), any(), isNull())).thenReturn(both);
-        client._connectInternal();
+        client.ensureConnected();
 
         AtomicInteger yCount = new AtomicInteger();
         client.onChange("flag-y", e -> yCount.incrementAndGet());
@@ -216,7 +222,7 @@ class FlagsClientWsEventsTest {
     @Test
     void flagsChanged_fullFetch_diffBasedFiring() throws ApiException {
         setupList("flag-1", "BOOLEAN", false, Map.of());
-        client._connectInternal();
+        client.ensureConnected();
 
         AtomicReference<FlagChangeEvent> receivedKeyed = new AtomicReference<>();
         AtomicReference<FlagChangeEvent> receivedGlobal = new AtomicReference<>();
@@ -240,7 +246,7 @@ class FlagsClientWsEventsTest {
     @Test
     void flagsChanged_noContentChange_noListenersFire() throws ApiException {
         setupList("flag-1", "BOOLEAN", false, Map.of());
-        client._connectInternal();
+        client.ensureConnected();
 
         AtomicInteger count = new AtomicInteger();
         client.onChange(e -> count.incrementAndGet());
@@ -260,7 +266,7 @@ class FlagsClientWsEventsTest {
                 flagData("f2", "BOOLEAN", false, Map.of())
         )), FlagListResponse.class);
         when(mockApi.listFlags(isNull(), isNull(), isNull(), isNull(), isNull(), isNull(), any(), any(), isNull())).thenReturn(initial);
-        client._connectInternal();
+        client.ensureConnected();
 
         AtomicInteger globalCount = new AtomicInteger();
         client.onChange(e -> globalCount.incrementAndGet());
@@ -284,7 +290,7 @@ class FlagsClientWsEventsTest {
                 flagData("f3", "BOOLEAN", false, Map.of())
         )), FlagListResponse.class);
         when(mockApi.listFlags(isNull(), isNull(), isNull(), isNull(), isNull(), isNull(), any(), any(), isNull())).thenReturn(initial);
-        client._connectInternal();
+        client.ensureConnected();
 
         AtomicInteger f1Count = new AtomicInteger();
         AtomicInteger f2Count = new AtomicInteger();
@@ -314,7 +320,7 @@ class FlagsClientWsEventsTest {
     @Test
     void flagChanged_apiFetchThrows_isNoOp() throws ApiException {
         setupList("my-flag", "BOOLEAN", false, Map.of());
-        client._connectInternal();
+        client.ensureConnected();
 
         AtomicInteger count = new AtomicInteger();
         client.onChange("my-flag", e -> count.incrementAndGet());
@@ -328,7 +334,7 @@ class FlagsClientWsEventsTest {
     @Test
     void flagDeleted_missingIdAfterConnect_isNoOp() throws ApiException {
         setupList("my-flag", "BOOLEAN", false, Map.of());
-        client._connectInternal();
+        client.ensureConnected();
 
         AtomicInteger count = new AtomicInteger();
         client.onChange(e -> count.incrementAndGet());
@@ -341,7 +347,7 @@ class FlagsClientWsEventsTest {
     @Test
     void flagChanged_listenerThrows_doesNotPropagateException() throws ApiException {
         setupList("my-flag", "BOOLEAN", false, Map.of());
-        client._connectInternal();
+        client.ensureConnected();
 
         client.onChange("my-flag", e -> { throw new RuntimeException("listener crash"); });
 
@@ -353,7 +359,7 @@ class FlagsClientWsEventsTest {
     @Test
     void flagChanged_globalListenerThrows_doesNotPropagateException() throws ApiException {
         setupList("my-flag", "BOOLEAN", false, Map.of());
-        client._connectInternal();
+        client.ensureConnected();
 
         client.onChange(e -> { throw new RuntimeException("global listener crash"); });
 

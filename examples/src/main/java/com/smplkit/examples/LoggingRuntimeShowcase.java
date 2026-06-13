@@ -17,10 +17,10 @@ import com.smplkit.SmplClient;
 public final class LoggingRuntimeShowcase {
 
     public static void main(String[] args) {
-        // create the client (use SmplClient for synchronous use)
-        try (SmplClient client = SmplClient.builder()
-                .environment("production").service("showcase-service").build()) {
-            client.logging().install();
+
+        // or AsyncSmplClient for asynchronous use
+        try (SmplClient client = SmplClient.create()) {
+            client.logging.install();
             System.out.println("All loggers are now controlled by smplkit");
         }
     }

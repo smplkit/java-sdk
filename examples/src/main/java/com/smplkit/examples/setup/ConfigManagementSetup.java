@@ -1,7 +1,7 @@
 package com.smplkit.examples.setup;
 
+import com.smplkit.SmplClient;
 import com.smplkit.errors.NotFoundError;
-import com.smplkit.management.SmplManagementClient;
 
 import java.util.List;
 
@@ -13,13 +13,13 @@ public final class ConfigManagementSetup {
 
     private ConfigManagementSetup() {}
 
-    public static void setup(SmplManagementClient manage) {
-        cleanup(manage);
+    public static void setup(SmplClient client) {
+        cleanup(client);
     }
 
-    public static void cleanup(SmplManagementClient manage) {
+    public static void cleanup(SmplClient client) {
         for (String configId : DEMO_CONFIG_IDS) {
-            try { manage.config.delete(configId); } catch (NotFoundError ignored) {}
+            try { client.config.delete(configId); } catch (NotFoundError ignored) {}
         }
     }
 }

@@ -1,27 +1,17 @@
 package com.smplkit.config;
 
 /**
- * Describes a single config item value change.
+ * Describes a single config value change.
  *
- * @param configId the config id (e.g. "user_service")
- * @param itemKey  the item key within the config (e.g. "timeout")
- * @param oldValue the previous value (may be {@code null} if the item was added)
- * @param newValue the updated value (may be {@code null} if the item was removed)
- * @param source   how the change was detected (e.g. {@code "manual"} from {@code refresh()})
- * @param deleted  {@code true} if the config was deleted
+ * <p>Frozen — fields are set at construction and cannot be mutated afterward.</p>
+ *
+ * @param configId The config id that changed.
+ * @param itemKey  The item key within the config that changed.
+ * @param oldValue The previous value.
+ * @param newValue The updated value.
+ * @param source   How the change was delivered ({@code "websocket"} or {@code "manual"}).
  */
-public record ConfigChangeEvent(String configId, String itemKey, Object oldValue, Object newValue,
-                                String source, boolean deleted) {
-
-    /** Convenience constructor for non-delete events. */
-    public ConfigChangeEvent(String configId, String itemKey, Object oldValue, Object newValue, String source) {
-        this(configId, itemKey, oldValue, newValue, source, false);
-    }
-
-    /** Returns {@code true} if the config was deleted. */
-    public boolean isDeleted() {
-        return deleted;
-    }
+public record ConfigChangeEvent(String configId, String itemKey, Object oldValue, Object newValue, String source) {
 
     @Override
     public String toString() {
@@ -29,7 +19,6 @@ public record ConfigChangeEvent(String configId, String itemKey, Object oldValue
                 + ", itemKey=" + itemKey
                 + ", oldValue=" + oldValue
                 + ", newValue=" + newValue
-                + ", source=" + source
-                + ", deleted=" + deleted + "]";
+                + ", source=" + source + "]";
     }
 }

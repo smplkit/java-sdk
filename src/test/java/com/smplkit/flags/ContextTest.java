@@ -71,6 +71,10 @@ class ContextTest {
         assertEquals(a, b);
         assertEquals(a.hashCode(), b.hashCode());
         assertNotEquals(a, c);
+        // Reflexive (this == o) arm and the non-Context (instanceof false) arm.
+        assertEquals(a, a);
+        assertNotEquals(a, "not a context");
+        assertNotEquals(a, null);
     }
 
     @Test

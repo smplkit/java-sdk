@@ -3,8 +3,10 @@ package com.smplkit.flags;
 import com.smplkit.SharedWebSocket;
 import com.smplkit.internal.generated.app.api.ContextsApi;
 import com.smplkit.internal.generated.flags.ApiException;
+import com.smplkit.flags.types.FlagDeclaration;
 import com.smplkit.internal.generated.flags.api.FlagsApi;
 import com.smplkit.internal.generated.flags.model.FlagListResponse;
+import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;
@@ -12,6 +14,8 @@ import org.mockito.Mockito;
 import java.net.http.HttpClient;
 import java.time.Duration;
 import java.util.List;
+import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
 
 import static org.junit.jupiter.api.Assertions.*;
@@ -46,6 +50,15 @@ class FlagsClientStartRetryTest {
                 "test-key", "https://flags.smplkit.com", "https://app.smplkit.com",
                 Duration.ofSeconds(5));
         client.setEnvironment("staging");
+        // Inject a mock WebSocket so a successful connect never dials a real
+        // socket (keeps the whole class WS-free). Tests that need to verify WS
+        // interactions install their own mock over this one.
+        client.setSharedWs(Mockito.mock(SharedWebSocket.class));
+    }
+
+    @AfterEach
+    void tearDown() {
+        if (client != null) client.close();
     }
 
     // -----------------------------------------------------------------------
@@ -61,11 +74,11 @@ class FlagsClientStartRetryTest {
         when(mockApi.listFlags(isNull(), isNull(), isNull(), isNull(), isNull(), isNull(), any(), any(), isNull()))
                 .thenReturn(emptyListResponse());
 
-        client.booleanFlag("feature-x", false);
+        client.register(new FlagDeclaration("feature-x", "BOOLEAN", false), false);
         assertEquals(1, client.flagBuffer.pendingCount());
 
         // First connect: flush 500s
-        client._connectInternal();
+        client.ensureConnected();
 
         assertEquals(1, client.flagBuffer.pendingCount(), "buffer must survive a failed flush");
     }
@@ -81,8 +94,8 @@ class FlagsClientStartRetryTest {
         when(mockApi.listFlags(isNull(), isNull(), isNull(), isNull(), isNull(), isNull(), any(), any(), isNull()))
                 .thenReturn(emptyListResponse());
 
-        client.booleanFlag("feature-x", false);
-        client._connectInternal();
+        client.register(new FlagDeclaration("feature-x", "BOOLEAN", false), false);
+        client.ensureConnected();
 
         assertFalse(client.isConnected());
         assertTrue(client.isRetryScheduled());
@@ -100,16 +113,16 @@ class FlagsClientStartRetryTest {
         when(mockApi.listFlags(isNull(), isNull(), isNull(), isNull(), isNull(), isNull(), any(), any(), isNull()))
                 .thenReturn(emptyListResponse());
 
-        client.booleanFlag("feature-x", false);
+        client.register(new FlagDeclaration("feature-x", "BOOLEAN", false), false);
 
         // First attempt: fails
-        client._connectInternal();
+        client.ensureConnected();
         assertFalse(client.isConnected());
         assertEquals(1, client.flagBuffer.pendingCount());
 
         // Simulate the scheduled retry firing: reset retry state and reconnect
         client.disconnect();
-        client._connectInternal();
+        client.ensureConnected();
 
         assertTrue(client.isConnected());
         assertEquals(0, client.flagBuffer.pendingCount(), "buffer must be committed after successful flush");
@@ -130,15 +143,15 @@ class FlagsClientStartRetryTest {
         when(mockApi.listFlags(isNull(), isNull(), isNull(), isNull(), isNull(), isNull(), any(), any(), isNull()))
                 .thenReturn(emptyListResponse());
 
-        client.booleanFlag("feature-x", false);
+        client.register(new FlagDeclaration("feature-x", "BOOLEAN", false), false);
 
         // First attempt: fails before WS registration
-        client._connectInternal();
+        client.ensureConnected();
         verify(mockWs, never()).on(anyString(), any());
 
         // Simulate retry
         client.disconnect();
-        client._connectInternal();
+        client.ensureConnected();
 
         // Handlers registered exactly once each
         verify(mockWs, times(1)).on(eq("flag_changed"), any());
@@ -157,7 +170,7 @@ class FlagsClientStartRetryTest {
         when(mockApi.listFlags(isNull(), isNull(), isNull(), isNull(), isNull(), isNull(), any(), any(), isNull()))
                 .thenThrow(new ApiException(500, "Service Unavailable"));
 
-        client._connectInternal();
+        client.ensureConnected();
 
         assertFalse(client.isConnected());
         assertTrue(client.isRetryScheduled());
@@ -170,22 +183,37 @@ class FlagsClientStartRetryTest {
     @Test
     void retryTimer_firesAutomaticallyAndConnects() throws Exception {
         AtomicInteger bulkCalls = new AtomicInteger();
+        // The retry's successful flush is the deterministic barrier: count the
+        // latch down on the second (succeeding) bulk-register so the test waits
+        // on a real signal from the daemon retry thread, not a fixed sleep.
+        CountDownLatch retryFlushLatch = new CountDownLatch(1);
         when(mockApi.bulkRegisterFlags(any())).thenAnswer(inv -> {
             if (bulkCalls.incrementAndGet() == 1) {
                 throw new ApiException(500, "Service Unavailable");
             }
+            retryFlushLatch.countDown();
             return null;
         });
         when(mockApi.listFlags(isNull(), isNull(), isNull(), isNull(), isNull(), isNull(), any(), any(), isNull()))
                 .thenReturn(emptyListResponse());
 
-        client.booleanFlag("feature-x", false);
-        client._connectInternal();
+        client.register(new FlagDeclaration("feature-x", "BOOLEAN", false), false);
+        client.ensureConnected();
 
         assertFalse(client.isConnected());
 
-        // First backoff is 1 second — wait 1.5s for the retry to fire
-        Thread.sleep(1500);
+        // First backoff is 1 second; the scheduled retry fires on a daemon thread.
+        // Wait on the flush barrier rather than sleeping a fixed interval.
+        assertTrue(retryFlushLatch.await(5, TimeUnit.SECONDS),
+                "automatic retry must re-attempt the flush within 5s");
+
+        // The retry thread sets connected=true immediately after the successful
+        // flush + fetch; spin on the volatile so the assertion is stable without
+        // a fixed sleep (no coverage is lost to a premature read).
+        long deadline = System.nanoTime() + TimeUnit.SECONDS.toNanos(5);
+        while (!client.isConnected() && System.nanoTime() < deadline) {
+            Thread.onSpinWait();
+        }
 
         assertTrue(client.isConnected(), "runtime must be connected after automatic retry");
         assertEquals(0, client.flagBuffer.pendingCount());
@@ -200,8 +228,8 @@ class FlagsClientStartRetryTest {
         when(mockApi.bulkRegisterFlags(any()))
                 .thenThrow(new ApiException(500, "Service Unavailable"));
 
-        client.booleanFlag("feature-x", false);
-        client._connectInternal();
+        client.register(new FlagDeclaration("feature-x", "BOOLEAN", false), false);
+        client.ensureConnected();
 
         assertTrue(client.isRetryScheduled());
 

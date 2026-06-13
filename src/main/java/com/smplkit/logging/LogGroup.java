@@ -5,15 +5,18 @@ import com.smplkit.LogLevel;
 import java.time.Instant;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.Executor;
+import java.util.concurrent.ForkJoinPool;
 
 /**
- * A mutable log group resource from the Smpl Logging service.
+ * SDK model for a log group resource.
  *
- * <p>Modify properties, then call {@link #save()} to persist changes.</p>
+ * <p>Modify properties locally, then call {@link #save} to persist.</p>
  */
 public final class LogGroup {
 
-    private LoggingClient client;
+    private LogGroupsClient client;
     private String id;
     private String name;
     private String level;
@@ -22,7 +25,7 @@ public final class LogGroup {
     private Instant createdAt;
     private Instant updatedAt;
 
-    LogGroup(LoggingClient client, String id, String name,
+    LogGroup(LogGroupsClient client, String id, String name,
              String level, String group, Map<String, Object> environments,
              Instant createdAt, Instant updatedAt) {
         this.client = client;
@@ -37,79 +40,129 @@ public final class LogGroup {
 
     // --- Public getters ---
 
+    /** @return the log group's identifier, or null when unsaved. */
     public String getId() { return id; }
+
+    /** @return the log group's display name. */
     public String getName() { return name; }
+
+    /** @return the base log level, or null when inherited. */
     public String getLevel() { return level; }
+
+    /** @return the id of the parent log group, or null for a top-level group. */
     public String getGroup() { return group; }
 
-    /**
-     * @deprecated use {@link #environments()} for the typed view.
-     */
-    @Deprecated
-    public Map<String, Object> getEnvironments() { return environments; }
+    /** @return when this group was created on the server, or null when unsaved. */
     public Instant getCreatedAt() { return createdAt; }
+
+    /** @return when this group was last updated on the server, or null when unsaved. */
     public Instant getUpdatedAt() { return updatedAt; }
 
+    /** Raw per-environment map. Internal — use {@link #environments()} for the typed view. */
+    Map<String, Object> getEnvironments() { return environments; }
+
     /**
-     * Returns a typed, immutable per-environment view (mirrors Python rule 8).
+     * Read-only view of per-environment level overrides.
      *
-     * <p>{@code group.environments().get("production").level()} returns a typed
-     * {@link com.smplkit.LogLevel} or null.</p>
+     * <p>Mutate via {@link #setLevel} / {@link #clearLevel} /
+     * {@link #clearAllEnvironmentLevels} (with an {@code environment} argument).</p>
      */
     @SuppressWarnings("unchecked")
     public Map<String, LoggerEnvironment> environments() {
         Map<String, LoggerEnvironment> out = new HashMap<>();
         for (Map.Entry<String, Object> e : environments.entrySet()) {
-            if (!(e.getValue() instanceof Map)) continue;
+            if (!(e.getValue() instanceof Map)) {
+                continue;
+            }
             Map<String, Object> envMap = (Map<String, Object>) e.getValue();
             Object levelStr = envMap.get("level");
-            com.smplkit.LogLevel level = null;
+            LogLevel lvl = null;
             if (levelStr instanceof String s) {
-                try { level = com.smplkit.LogLevel.valueOf(s); }
-                catch (IllegalArgumentException ignored) { /* unknown level */ }
+                try {
+                    lvl = LogLevel.valueOf(s);
+                } catch (IllegalArgumentException ignored) {
+                    /* unknown level */
+                }
             }
-            out.put(e.getKey(), new LoggerEnvironment(level));
+            out.put(e.getKey(), new LoggerEnvironment(lvl));
         }
         return Map.copyOf(out);
     }
 
     // --- Public setters for mutable fields ---
 
+    /**
+     * Set the group's display name. Local until {@link #save()}.
+     *
+     * @param name the display name
+     */
     public void setName(String name) { this.name = name; }
+
+    /**
+     * Set the id of the parent log group, or null for a top-level group.
+     * Local until {@link #save()}.
+     *
+     * @param group the parent log-group id, or null
+     */
     public void setGroup(String group) { this.group = group; }
-    public void setEnvironments(Map<String, Object> environments) {
-        this.environments = environments != null ? new HashMap<>(environments) : new HashMap<>();
-    }
 
-    // --- Level convenience methods (per-env unified, mirrors Python rule 7) ---
+    // --- Level convenience methods ---
 
-    /** Set the base log level. */
+    /**
+     * Set the log level.
+     *
+     * <p>Sets the base log level used when no environment-specific override
+     * applies.</p>
+     */
     public void setLevel(LogLevel level) {
         setLevel(level, null);
     }
 
     /**
-     * Set the log level. {@code environment=null} sets the base; otherwise sets
-     * the per-environment override. Mirrors Python's
-     * {@code logGroup.set_level(level, environment=None)}.
+     * Set the log level.
+     *
+     * <p>With {@code environment=null} (the default), sets the base log level used
+     * when no environment-specific override applies.  With an {@code environment},
+     * sets the per-environment override.</p>
+     *
+     * <p>Changes are local until you call {@link #save()}.</p>
+     *
+     * @param level       the log level to apply
+     * @param environment when given, set the override for that environment only;
+     *     when null, set the base level
      */
     public void setLevel(LogLevel level, String environment) {
         if (environment == null) {
             this.level = level != null ? level.getValue() : null;
         } else {
-            this.environments.put(environment,
-                    Map.of("level", level != null ? level.getValue() : null));
+            Map<String, Object> override = new java.util.HashMap<>();
+            override.put("level", level != null ? level.getValue() : null);
+            this.environments.put(environment, override);
         }
     }
 
-    /** Remove the base log level (inherit from parent group/ancestry). */
+    /**
+     * Remove a log level.
+     *
+     * <p>Removes the base log level (the group then inherits from its parent
+     * group / dot-notation ancestor / system default).</p>
+     */
     public void clearLevel() {
         clearLevel(null);
     }
 
     /**
-     * Clear a log level. {@code environment=null} clears the base; otherwise
-     * clears only the per-environment override.
+     * Remove a log level.
+     *
+     * <p>With {@code environment=null} (the default), removes the base log level
+     * (the group then inherits from its parent group / dot-notation ancestor /
+     * system default).  With an {@code environment}, removes the per-environment
+     * override only.</p>
+     *
+     * <p>Changes are local until you call {@link #save()}.</p>
+     *
+     * @param environment when given, remove the override for that environment
+     *     only; when null, remove the base level
      */
     public void clearLevel(String environment) {
         if (environment == null) {
@@ -119,82 +172,76 @@ public final class LogGroup {
         }
     }
 
-    /**
-     * @deprecated use {@link #setLevel(LogLevel, String)}.
-     */
-    @Deprecated
-    public void setEnvironmentLevel(String env, LogLevel level) {
-        setLevel(level, env);
-    }
-
-    /**
-     * @deprecated use {@link #clearLevel(String)}.
-     */
-    @Deprecated
-    public void clearEnvironmentLevel(String env) {
-        clearLevel(env);
-    }
-
-    /** Remove all environment-level overrides. */
+    /** Remove all per-environment level overrides. */
     public void clearAllEnvironmentLevels() {
         this.environments = new HashMap<>();
     }
 
-    // --- Active record: save ---
+    // --- Active record: save / delete ---
 
-    /**
-     * Persists this log group to the server.
-     *
-     * <p>After a successful save, this instance is refreshed with the
-     * server response.</p>
-     */
+    /** Persist this group to the server (create or update). */
     public void save() {
-        if (client == null) throw new IllegalStateException("LogGroup not bound to a client");
-        if (createdAt == null) {
-            LogGroup created = client._createGroup(this);
-            _apply(created);
-        } else {
-            LogGroup updated = client._updateGroup(this);
-            _apply(updated);
+        if (client == null) {
+            throw new IllegalStateException("LogGroup was constructed without a client; cannot save");
         }
-    }
-
-    /** Async variant of {@link #save()} (rule 12). */
-    public java.util.concurrent.CompletableFuture<Void> saveAsync() {
-        return saveAsync(java.util.concurrent.ForkJoinPool.commonPool());
-    }
-
-    /** Async variant of {@link #save()} with a custom executor. */
-    public java.util.concurrent.CompletableFuture<Void> saveAsync(java.util.concurrent.Executor executor) {
-        return java.util.concurrent.CompletableFuture.runAsync(this::save, executor);
+        LogGroup updated = client.saveGroup(this);
+        applyFrom(updated);
     }
 
     /**
-     * Deletes this log group from the server.
+     * Persist this group to the server on the common pool.
      *
-     * <p>Mirrors Python's {@code log_group.delete()}: delegates to
-     * {@code mgmt.log_groups.delete(id)}. Bubbles
-     * {@link com.smplkit.errors.NotFoundError} if the group is not on the server.</p>
-     *
-     * @throws IllegalStateException if not bound to a client
+     * @return a future that completes when the create-or-update round-trip finishes
      */
-    public void delete() {
-        if (client == null) throw new IllegalStateException("LogGroup not bound to a client");
-        client.management().deleteGroup(id);
+    public CompletableFuture<Void> saveAsync() {
+        return saveAsync(ForkJoinPool.commonPool());
     }
 
-    // --- Package-private setters (used by LoggingClient) ---
+    /**
+     * Persist this group to the server on the given executor.
+     *
+     * @param executor the executor that runs the persist round-trip
+     * @return a future that completes when the create-or-update round-trip finishes
+     */
+    public CompletableFuture<Void> saveAsync(Executor executor) {
+        return CompletableFuture.runAsync(this::save, executor);
+    }
+
+    /** Delete this group from the server. */
+    public void delete() {
+        if (client == null || id == null) {
+            throw new IllegalStateException("LogGroup was constructed without a client or id; cannot delete");
+        }
+        client.delete(id);
+    }
+
+    /**
+     * Delete this group from the server on the common pool.
+     *
+     * @return a future that completes when the delete round-trip finishes
+     */
+    public CompletableFuture<Void> deleteAsync() {
+        return deleteAsync(ForkJoinPool.commonPool());
+    }
+
+    /**
+     * Delete this group from the server on the given executor.
+     *
+     * @param executor the executor that runs the delete round-trip
+     * @return a future that completes when the delete round-trip finishes
+     */
+    public CompletableFuture<Void> deleteAsync(Executor executor) {
+        return CompletableFuture.runAsync(this::delete, executor);
+    }
+
+    // --- Package-private accessors (used by LoggingClient / sub-clients) ---
 
     void setId(String id) { this.id = id; }
-    void setCreatedAt(Instant createdAt) { this.createdAt = createdAt; }
-    void setUpdatedAt(Instant updatedAt) { this.updatedAt = updatedAt; }
-    void setClient(LoggingClient client) { this.client = client; }
-    LoggingClient getClient() { return client; }
-
-    /** Package-private: set level as raw string (used by LoggingClient). */
     void setLevelRaw(String level) { this.level = level; }
+    void setClient(LogGroupsClient client) { this.client = client; }
 
-    void _apply(LogGroup other) {
+    /** Copy all properties from {@code other} into {@code this}. */
+    void applyFrom(LogGroup other) {
         this.id = other.id;
         this.name = other.name;
         this.level = other.level;
@@ -206,6 +253,6 @@ public final class LogGroup {
 
     @Override
     public String toString() {
-        return "LogGroup{id='" + id + "', name='" + name + "'}";
+        return "LogGroup(id=" + id + ", name=" + name + ")";
     }
 }

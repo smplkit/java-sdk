@@ -12,9 +12,9 @@ import java.util.List;
  * Distinct category values seen for the account — accessed via
  * {@link AuditClient#categories()}.
  *
- * <p>Backed by a maintain-by-write side table populated whenever an event
- * is recorded with a non-null {@code category}. Sorted alphabetically;
- * offset pagination via {@link ListCategoriesInput#pageNumber} /
+ * <p>Response time is independent of how many years of events the account
+ * has accumulated. Sorted alphabetically; offset pagination via
+ * {@link ListCategoriesInput#pageNumber} /
  * {@link ListCategoriesInput#pageSize}.</p>
  */
 public final class AuditCategoriesClient {
@@ -25,7 +25,14 @@ public final class AuditCategoriesClient {
         this.api = api;
     }
 
-    /** List the distinct category values seen in the account. */
+    /**
+     * List the distinct category values seen in the account.
+     *
+     * @param input optional environment scope and pagination; an empty
+     *     instance lists every distinct category
+     * @return a {@link ListCategoriesPage} of the matching category values
+     * @throws ApiException if the request fails
+     */
     public ListCategoriesPage list(ListCategoriesInput input) throws ApiException {
         CategoryListResponse resp = api.listCategories(
                 AuditResourceTypesClient.joinEnvironments(input.environments), null,

@@ -15,7 +15,7 @@ import java.util.List;
  * <p>Without {@link ListEventTypesInput#filterResourceType}, returns one
  * row per distinct event type. With the filter, returns the event types seen
  * with that specific resource_type, powering cascading-filter behavior.
- * ADR-047 §2.5. Sorted alphabetically; offset pagination via
+ * Sorted alphabetically; offset pagination via
  * {@link ListEventTypesInput#pageNumber} / {@link
  * ListEventTypesInput#pageSize}.</p>
  */
@@ -27,7 +27,14 @@ public final class AuditEventTypesClient {
         this.api = api;
     }
 
-    /** List the distinct event type slugs seen in the account. */
+    /**
+     * List the distinct event-type slugs seen in the account.
+     *
+     * @param input optional resource-type filter, environment scope, and
+     *     pagination; an empty instance lists every distinct event type
+     * @return an {@link EventTypeListPage} of the matching event-type slugs
+     * @throws ApiException if the request fails
+     */
     public EventTypeListPage list(ListEventTypesInput input) throws ApiException {
         EventTypeListResponse resp = api.listEventTypes(
                 AuditResourceTypesClient.joinEnvironments(input.environments),

@@ -28,7 +28,7 @@ class SmplClientFullTest {
             // This will attempt a real HTTP call which exercises the interceptor
             // then fail because there's no real server.
             assertThrows(Exception.class, () ->
-                    client.config().get("550e8400-e29b-41d4-a716-446655440000"));
+                    client.config.get("550e8400-e29b-41d4-a716-446655440000"));
         }
     }
 }

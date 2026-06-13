@@ -3,6 +3,8 @@ package com.smplkit;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.smplkit.internal.Debug;
 
+import org.jetbrains.annotations.ApiStatus;
+
 import java.net.URI;
 import java.net.http.HttpClient;
 import java.net.http.WebSocket;
@@ -28,6 +30,17 @@ public final class SharedWebSocket {
     private static final Logger LOG = Logger.getLogger("smplkit.ws");
     private static final ObjectMapper OBJECT_MAPPER = new ObjectMapper();
     private static final int[] BACKOFF_SECONDS = {1, 2, 4, 8, 16, 32, 60};
+
+    /**
+     * Internal test seam: when {@code true}, {@link #start()} marks the
+     * connection ready immediately instead of opening a real socket, so the
+     * unit suite never dials the network. The dedicated WebSocket tests reset
+     * this to {@code false} to exercise the real connect/reconnect machinery.
+     *
+     * @hidden
+     */
+    @ApiStatus.Internal
+    public static volatile boolean disableDialForTests = false;
 
     private final HttpClient httpClient;
     private final String wsUrl;
@@ -145,8 +158,14 @@ public final class SharedWebSocket {
      */
     public void start() {
         if (closed || wsConnector == null) return;
-        Debug.log("websocket", "starting WebSocket connection");
         connectedLatch = new CountDownLatch(1);
+        if (disableDialForTests) {
+            // Unit-test no-op: report ready without opening a real socket.
+            connectionStatus = "connected";
+            connectedLatch.countDown();
+            return;
+        }
+        Debug.log("websocket", "starting WebSocket connection");
         wsThread = new Thread(this::wsThreadEntry, "smplkit-shared-ws");
         wsThread.setDaemon(true);
         wsThread.start();

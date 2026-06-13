@@ -47,7 +47,7 @@ class LiveConfigProxyExtraTest {
     void configId_returnsConstructorArgument() {
         ConfigClient client = newClient();
         seedCache(client, "user-svc", Map.of("k", "v"));
-        LiveConfigProxy proxy = client.get("user-svc");
+        LiveConfigProxy proxy = client.subscribe("user-svc");
         assertEquals("user-svc", proxy.configId());
     }
 
@@ -55,13 +55,11 @@ class LiveConfigProxyExtraTest {
     void onChange_perItemKey_delegatesToClient() {
         ConfigClient client = newClient();
         seedCache(client, "user-svc", Map.of("max_retries", 3));
-        LiveConfigProxy proxy = client.get("user-svc");
+        LiveConfigProxy proxy = client.subscribe("user-svc");
 
         AtomicInteger fired = new AtomicInteger();
         proxy.onChange("max_retries", evt -> fired.incrementAndGet());
 
-        // Verify the listener was actually registered with the client (we don't
-        // rely on firing it — that's covered elsewhere).
         try {
             Field f = ConfigClient.class.getDeclaredField("listeners");
             f.setAccessible(true);
@@ -80,7 +78,7 @@ class LiveConfigProxyExtraTest {
         initial.put("host", "prod-db");
         initial.put("port", 5432);
         seedCache(client, "user-svc", initial);
-        LiveConfigProxy proxy = client.get("user-svc");
+        LiveConfigProxy proxy = client.subscribe("user-svc");
 
         assertTrue(proxy.containsValue("prod-db"));
         assertTrue(proxy.containsValue(5432));
@@ -88,14 +86,13 @@ class LiveConfigProxyExtraTest {
     }
 
     @Test
-    void toString_includesConfigIdAndValues() {
+    void toString_includesConfigId() {
         ConfigClient client = newClient();
         seedCache(client, "user-svc", Map.of("k", "v"));
-        LiveConfigProxy proxy = client.get("user-svc");
+        LiveConfigProxy proxy = client.subscribe("user-svc");
 
         String str = proxy.toString();
         assertTrue(str.contains("LiveConfigProxy"));
         assertTrue(str.contains("user-svc"));
-        assertTrue(str.contains("k") && str.contains("v"));
     }
 }

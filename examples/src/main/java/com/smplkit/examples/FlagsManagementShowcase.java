@@ -13,9 +13,10 @@
 package com.smplkit.examples;
 
 import com.smplkit.Rule;
+import com.smplkit.SmplClient;
 import com.smplkit.examples.setup.FlagsManagementSetup;
 import com.smplkit.flags.Flag;
-import com.smplkit.management.SmplManagementClient;
+import com.smplkit.flags.types.Op;
 
 import java.util.List;
 import java.util.Map;
@@ -23,19 +24,20 @@ import java.util.Map;
 public final class FlagsManagementShowcase {
 
     public static void main(String[] args) {
-        // create the client (use SmplManagementClient for synchronous use)
-        try (SmplManagementClient manage = SmplManagementClient.create()) {
-            FlagsManagementSetup.setup(manage);
+
+        // or AsyncSmplClient for asynchronous use
+        try (SmplClient client = SmplClient.create()) {
+            FlagsManagementSetup.setup(client);
 
             // create a boolean flag
-            Flag<Boolean> checkoutFlag = manage.flags.newBooleanFlag(
+            Flag<Boolean> checkoutFlag = client.flags.newBooleanFlag(
                     "checkout-v2", false, null,
                     "Controls rollout of the new checkout experience.");
             checkoutFlag.save();
             System.out.println("Created flag: " + checkoutFlag.getId());
 
             // create a string flag (constrained)
-            Flag<String> bannerFlag = manage.flags.newStringFlag(
+            Flag<String> bannerFlag = client.flags.newStringFlag(
                     "banner-color", "red", "Banner Color",
                     "Controls the banner color shown to users.",
                     List.of(
@@ -46,14 +48,14 @@ public final class FlagsManagementShowcase {
             System.out.println("Created flag: " + bannerFlag.getId());
 
             // create a numeric flag (unconstrained)
-            Flag<Number> retryFlag = manage.flags.newNumberFlag(
+            Flag<Number> retryFlag = client.flags.newNumberFlag(
                     "max-retries", 3, null,
                     "Maximum number of API retries before failing.");
             retryFlag.save();
             System.out.println("Created flag: " + retryFlag.getId());
 
             // create a JSON flag (constrained)
-            Flag<Object> themeFlag = manage.flags.newJsonFlag(
+            Flag<Object> themeFlag = client.flags.newJsonFlag(
                     "ui-theme", Map.of("mode", "light", "accent", "#0066cc"),
                     null, "Controls the UI theme configuration.",
                     List.of(
@@ -68,23 +70,21 @@ public final class FlagsManagementShowcase {
 
             // checkoutFlag (serve true in production to enterprise US users)
             checkoutFlag.enableRules("production");
-            checkoutFlag.addRule(new Rule("Enable for enterprise users in US region")
-                    .environment("production")
-                    .when("user.plan", "==", "enterprise")
-                    .when("account.region", "==", "us")
+            checkoutFlag.addRule(new Rule("Enable for enterprise users in US region", "production")
+                    .when("user.plan", Op.EQ, "enterprise")
+                    .when("account.region", Op.EQ, "us")
                     .serve(true).build());
 
             // checkoutFlag (serve true in production for beta testers)
-            checkoutFlag.addRule(new Rule("Enable for beta testers")
-                    .environment("production")
-                    .when("user.beta_tester", "==", true)
+            checkoutFlag.addRule(new Rule("Enable for beta testers", "production")
+                    .when("user.beta_tester", Op.EQ, true)
                     .serve(true).build());
 
             checkoutFlag.save();
             System.out.println("Updated flag: " + checkoutFlag.getId());
 
             // list flags
-            List<Flag<?>> flags = manage.flags.list();
+            List<Flag<?>> flags = client.flags.list();
             System.out.println("Total flags: " + flags.size());
             for (Flag<?> f : flags) {
                 var envs = f.environments().keySet();
@@ -93,7 +93,7 @@ public final class FlagsManagementShowcase {
             }
 
             // get a flag
-            Flag<?> fetched = manage.flags.get("checkout-v2");
+            Flag<?> fetched = client.flags.get("checkout-v2");
             System.out.println("\nFetched by id: " + fetched.getId());
             int prodRules = fetched.environments().get("production").rules().size();
             boolean prodEnabled = fetched.environments().get("production").enabled();
@@ -104,9 +104,8 @@ public final class FlagsManagementShowcase {
             bannerFlag.addValue("Purple", "purple");
             bannerFlag.setDefault("blue", null);
             bannerFlag.setDescription("Controls the banner color — updated");
-            bannerFlag.addRule(new Rule("Purple for enterprise users")
-                    .environment("production")
-                    .when("user.plan", "==", "enterprise")
+            bannerFlag.addRule(new Rule("Purple for enterprise users", "production")
+                    .when("user.plan", Op.EQ, "enterprise")
                     .serve("purple").build());
             bannerFlag.save();
             System.out.println("Updated flag: " + bannerFlag.getId() + "'");
@@ -122,12 +121,12 @@ public final class FlagsManagementShowcase {
             System.out.println("Updated flag: " + bannerFlag.getId() + "'");
 
             // delete flags
-            manage.flags.delete("checkout-v2");
-            manage.flags.delete(bannerFlag.getId());
+            client.flags.delete("checkout-v2");
+            bannerFlag.delete();
             System.out.println("Deleted flags");
 
             // cleanup
-            FlagsManagementSetup.cleanup(manage);
+            FlagsManagementSetup.cleanup(client);
             System.out.println("Done!");
         }
     }

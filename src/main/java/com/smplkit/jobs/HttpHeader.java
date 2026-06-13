@@ -2,18 +2,13 @@ package com.smplkit.jobs;
 
 /**
  * A single name/value HTTP header attached to the request a job performs.
- *
- * <p>Header values carry credentials and are encrypted at rest server-side;
- * reads return them redacted. Re-supply real values before saving a job
- * fetched from the server, or those headers will be persisted as the
- * redaction marker.</p>
  */
 public final class HttpHeader {
     /** Header name (e.g. {@code "Authorization"}, {@code "Content-Type"}). */
     public final String name;
     /**
-     * Header value, plaintext on writes. The jobs service encrypts values
-     * at rest; reads return them redacted.
+     * Header value. Returned in plaintext on reads, so a get-mutate-put
+     * round-trip of a fetched job preserves it without re-entering the value.
      */
     public final String value;
 

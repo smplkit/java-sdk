@@ -6,6 +6,7 @@ import com.smplkit.internal.generated.app.api.ContextsApi;
 import com.smplkit.internal.generated.flags.ApiException;
 import com.smplkit.internal.generated.flags.api.FlagsApi;
 import com.smplkit.internal.generated.flags.model.FlagListResponse;
+import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;
@@ -17,7 +18,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.concurrent.ExecutionException;
+import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
 import static org.junit.jupiter.api.Assertions.*;
@@ -43,13 +44,18 @@ class PaginationTest {
         client.setEnvironment("staging");
     }
 
+    @AfterEach
+    void tearDown() {
+        if (client != null) client.close();
+    }
+
     @Test
     void runtime_singlePageExit_stopsAfterShortPage() throws ApiException {
         when(mockApi.listFlags(isNull(), isNull(), isNull(), isNull(), isNull(), isNull(),
                 eq(1), eq(1000), isNull()))
                 .thenReturn(makeListResponse("f1"));
 
-        client._connectInternal();
+        client.ensureConnected();
 
         verify(mockApi, times(1)).listFlags(isNull(), isNull(), isNull(), isNull(), isNull(), isNull(),
                 eq(1), eq(1000), isNull());
@@ -68,7 +74,7 @@ class PaginationTest {
                 eq(2), eq(1000), isNull()))
                 .thenReturn(makeListResponse("f-extra"));
 
-        client._connectInternal();
+        client.ensureConnected();
 
         verify(mockApi, times(1)).listFlags(isNull(), isNull(), isNull(), isNull(), isNull(), isNull(),
                 eq(1), eq(1000), isNull());
@@ -83,7 +89,7 @@ class PaginationTest {
                 eq(2), eq(50), isNull()))
                 .thenReturn(makeListResponse("f-page2"));
 
-        List<Flag<?>> result = client.management().list(2, 50);
+        List<Flag<?>> result = client.list(2, 50);
 
         assertEquals(1, result.size());
         verify(mockApi).listFlags(isNull(), isNull(), isNull(), isNull(), isNull(), isNull(),
@@ -96,25 +102,29 @@ class PaginationTest {
                 isNull(), isNull(), isNull()))
                 .thenReturn(makeListResponse("f1"));
 
-        List<Flag<?>> result = client.management().list(null, null);
+        List<Flag<?>> result = client.list(null, null);
 
         assertEquals(1, result.size());
     }
 
     @Test
-    void asyncManagement_listWithPagination_delegatesToSync() throws Exception {
+    void asyncList_withPagination_delegatesToSync() throws Exception {
         when(mockApi.listFlags(isNull(), isNull(), isNull(), isNull(), isNull(), isNull(),
                 eq(3), eq(25), isNull()))
                 .thenReturn(makeListResponse("f-async"));
 
-        AsyncFlagsManagement async = new AsyncFlagsManagement(
-                client.management(), Executors.newSingleThreadExecutor());
+        ExecutorService executor = Executors.newSingleThreadExecutor();
+        try {
+            AsyncFlagsClient async = AsyncFlagsClient.wrap(client, executor);
 
-        List<Flag<?>> result = async.list(3, 25).get();
+            List<Flag<?>> result = async.list(3, 25).get();
 
-        assertEquals(1, result.size());
-        verify(mockApi).listFlags(isNull(), isNull(), isNull(), isNull(), isNull(), isNull(),
-                eq(3), eq(25), isNull());
+            assertEquals(1, result.size());
+            verify(mockApi).listFlags(isNull(), isNull(), isNull(), isNull(), isNull(), isNull(),
+                    eq(3), eq(25), isNull());
+        } finally {
+            executor.shutdownNow();
+        }
     }
 
     private static FlagListResponse makeListResponse(String... ids) {

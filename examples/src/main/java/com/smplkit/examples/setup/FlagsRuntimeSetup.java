@@ -1,9 +1,10 @@
 package com.smplkit.examples.setup;
 
 import com.smplkit.Rule;
+import com.smplkit.SmplClient;
 import com.smplkit.errors.NotFoundError;
 import com.smplkit.flags.Flag;
-import com.smplkit.management.SmplManagementClient;
+import com.smplkit.flags.types.Op;
 
 import java.util.List;
 import java.util.Map;
@@ -16,58 +17,53 @@ public final class FlagsRuntimeSetup {
 
     private FlagsRuntimeSetup() {}
 
-    public static void setup(SmplManagementClient manage) {
-        cleanup(manage);
+    public static void setup(SmplClient client) {
+        cleanup(client);
 
-        Flag<Boolean> checkout = manage.flags.newBooleanFlag(
+        Flag<Boolean> checkout = client.flags.newBooleanFlag(
                 "checkout-v2", false, null,
                 "Controls rollout of the new checkout experience.");
-        checkout.setEnvironmentEnabled("production", true);
-        checkout.addRule(new Rule("Enable for enterprise users in US region")
-                .environment("production")
-                .when("user.plan", "==", "enterprise")
-                .when("account.region", "==", "us")
+        checkout.enableRules("production");
+        checkout.addRule(new Rule("Enable for enterprise users in US region", "production")
+                .when("user.plan", Op.EQ, "enterprise")
+                .when("account.region", Op.EQ, "us")
                 .serve(true)
                 .build());
-        checkout.addRule(new Rule("Enable for beta testers")
-                .environment("production")
-                .when("user.beta_tester", "==", true)
+        checkout.addRule(new Rule("Enable for beta testers", "production")
+                .when("user.beta_tester", Op.EQ, true)
                 .serve(true)
                 .build());
         checkout.save();
 
-        Flag<String> banner = manage.flags.newStringFlag(
+        Flag<String> banner = client.flags.newStringFlag(
                 "banner-color", "red", "Banner Color",
                 "Controls the banner color shown to users.",
                 List.of(
                         Map.of("name", "Red", "value", "red"),
                         Map.of("name", "Green", "value", "green"),
                         Map.of("name", "Blue", "value", "blue")));
-        banner.setEnvironmentEnabled("production", true);
-        banner.addRule(new Rule("Blue for enterprise users")
-                .environment("production")
-                .when("user.plan", "==", "enterprise")
+        banner.enableRules("production");
+        banner.addRule(new Rule("Blue for enterprise users", "production")
+                .when("user.plan", Op.EQ, "enterprise")
                 .serve("blue").build());
-        banner.addRule(new Rule("Green for technology companies")
-                .environment("production")
-                .when("account.industry", "==", "technology")
+        banner.addRule(new Rule("Green for technology companies", "production")
+                .when("account.industry", Op.EQ, "technology")
                 .serve("green").build());
         banner.save();
 
-        Flag<Number> retries = manage.flags.newNumberFlag(
+        Flag<Number> retries = client.flags.newNumberFlag(
                 "max-retries", 3, null,
                 "Maximum number of API retries before failing.");
-        retries.setEnvironmentEnabled("production", true);
-        retries.addRule(new Rule("High retries for large accounts")
-                .environment("production")
-                .when("account.employee_count", ">", 100)
+        retries.enableRules("production");
+        retries.addRule(new Rule("High retries for large accounts", "production")
+                .when("account.employee_count", Op.GT, 100)
                 .serve(5).build());
         retries.save();
     }
 
-    public static void cleanup(SmplManagementClient manage) {
+    public static void cleanup(SmplClient client) {
         for (String flagId : DEMO_FLAG_IDS) {
-            try { manage.flags.delete(flagId); } catch (NotFoundError ignored) {}
+            try { client.flags.delete(flagId); } catch (NotFoundError ignored) {}
         }
     }
 }

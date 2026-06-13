@@ -185,13 +185,12 @@ class AuditBufferCoverageTest {
                 "snapshot", java.util.Map.of("k", "v"),
                 "d", 1);
         var ev = new AuditEvent(id, "act", "rt", "rid",
-                "INFO", "auth",
+                "auth",
                 OffsetDateTime.now(), OffsetDateTime.now(),
                 "USER", actorId, "label",
                 data, "ik", false, "production");
         assertEquals(id, ev.id);
         assertEquals("act", ev.eventType);
-        assertEquals("INFO", ev.severity);
         assertEquals("auth", ev.category);
         assertEquals(actorId, ev.actorId);
         assertEquals("ik", ev.idempotencyKey);
@@ -252,6 +251,67 @@ class AuditBufferCoverageTest {
         AuditEvents events = new AuditEvents(api);
         var page = events.list(new ListEventsInput());
         assertEquals("tok-xyz", page.nextCursor);
+        events.close();
+    }
+
+    @Test
+    void auditEvents_listLinkWithCursorAsLastParam_trimsToEnd() throws Exception {
+        // next link ends with page[after]=tok with no trailing '&' — covers the
+        // amp<0 branch of the cursor extraction (cursor runs to end of string).
+        server.createContext("/api/v1/events", ex -> {
+            byte[] resp = ("{\"data\":[],\"meta\":{\"page_size\":1}," +
+                    "\"links\":{\"next\":\"/api/v1/events?page[size]=1&page[after]=tok-last\"}}").getBytes();
+            ex.getResponseHeaders().add("Content-Type", "application/vnd.api+json");
+            ex.sendResponseHeaders(200, resp.length);
+            ex.getResponseBody().write(resp);
+            ex.close();
+        });
+        AuditEvents events = new AuditEvents(api);
+        var page = events.list(new ListEventsInput());
+        assertEquals("tok-last", page.nextCursor);
+        events.close();
+    }
+
+    @Test
+    void auditEvents_listLinkWithoutCursorParam_yieldsNullCursor() throws Exception {
+        // next link present but carries no page[after] — covers the idx<0 branch
+        // (nextCursor stays null).
+        server.createContext("/api/v1/events", ex -> {
+            byte[] resp = ("{\"data\":[],\"meta\":{\"page_size\":1}," +
+                    "\"links\":{\"next\":\"/api/v1/events?page[size]=1\"}}").getBytes();
+            ex.getResponseHeaders().add("Content-Type", "application/vnd.api+json");
+            ex.sendResponseHeaders(200, resp.length);
+            ex.getResponseBody().write(resp);
+            ex.close();
+        });
+        AuditEvents events = new AuditEvents(api);
+        var page = events.list(new ListEventsInput());
+        assertNull(page.nextCursor);
+        events.close();
+    }
+
+    @Test
+    void auditEvents_listEventWithEmptyIdAndDoNotForward_mapsNullIdAndTrueFlag() throws Exception {
+        // Empty id → null UUID; do_not_forward=true → covers the non-null/true
+        // branch of the doNotForward mapping in fromResource.
+        server.createContext("/api/v1/events", ex -> {
+            byte[] resp = ("{\"data\":[{\"id\":\"\",\"type\":\"event\",\"attributes\":{" +
+                    "\"event_type\":\"u.created\",\"resource_type\":\"u\",\"resource_id\":\"1\"," +
+                    "\"occurred_at\":\"2026-05-06T12:00:00Z\"," +
+                    "\"created_at\":\"2026-05-06T12:00:01Z\"," +
+                    "\"actor_type\":\"USER\",\"actor_id\":null,\"actor_label\":\"\"," +
+                    "\"data\":{},\"idempotency_key\":\"k\",\"do_not_forward\":true}}]," +
+                    "\"meta\":{\"page_size\":1}}").getBytes();
+            ex.getResponseHeaders().add("Content-Type", "application/vnd.api+json");
+            ex.sendResponseHeaders(200, resp.length);
+            ex.getResponseBody().write(resp);
+            ex.close();
+        });
+        AuditEvents events = new AuditEvents(api);
+        var page = events.list(new ListEventsInput());
+        assertEquals(1, page.events.size());
+        assertNull(page.events.get(0).id);
+        assertTrue(page.events.get(0).doNotForward);
         events.close();
     }
 

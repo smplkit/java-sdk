@@ -1,14 +1,13 @@
 package com.smplkit.audit;
 
 /**
- * Engine used to evaluate a forwarder's {@code transform}. Must be set
- * whenever {@code transform} is set. Today only {@link #JSONATA} is
- * supported; new engines will be added as the audit service grows.
+ * Engine used to evaluate a forwarder's {@code transform}.
  *
- * <p>Members are declared in alphabetical order.</p>
+ * <p>Today only {@link #JSONATA} is supported. A {@code TransformType}
+ * member's {@link #getValue()} returns its raw string
+ * ({@code TransformType.JSONATA.getValue().equals("JSONATA")}).</p>
  */
 public enum TransformType {
-    /** JSONata expression — see https://jsonata.org. */
     JSONATA("JSONATA");
 
     private final String value;

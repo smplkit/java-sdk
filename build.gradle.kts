@@ -49,6 +49,9 @@ dependencies {
     implementation("com.fasterxml.jackson.datatype:jackson-datatype-jsr310:[2.16.0,)")
     implementation("org.openapitools:jackson-databind-nullable:0.2.10")
     compileOnly("jakarta.annotation:jakarta.annotation-api:3.0.0")
+    // @ApiStatus.Internal markers on internal seams; CLASS-retention, compile-only
+    // (never on the customer's runtime/transitive classpath).
+    compileOnly("org.jetbrains:annotations:26.0.2")
 
     // JSON Logic evaluation for flags runtime
     implementation("io.github.jamsesso:json-logic-java:1.1.0")
@@ -68,6 +71,18 @@ dependencies {
     testImplementation("org.slf4j:slf4j-api:2.0.18")
     testImplementation("org.apache.logging.log4j:log4j-core:2.26.0")
     testImplementation("org.apache.logging.log4j:log4j-api:2.26.0")
+}
+
+tasks.withType<Javadoc>().configureEach {
+    // The com.smplkit.internal package (incl. internal.generated) is implementation
+    // detail and must never appear on the published Javadoc surface (P1).
+    exclude("com/smplkit/internal/**")
+    (options as StandardJavadocDocletOptions).apply {
+        encoding = "UTF-8"
+        // The published artifact must always build a Javadoc jar; don't let
+        // doclint strictness (which varies by JDK) fail the release.
+        addStringOption("Xdoclint:none", "-quiet")
+    }
 }
 
 tasks.test {

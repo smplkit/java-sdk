@@ -17,14 +17,22 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 
 /**
- * Bounded in-memory queue + worker thread for fire-and-forget audit
- * emits (ADR-047 §2.6).
+ * Bounded in-memory buffer + worker thread for fire-and-forget audit emits.
  *
- * <p>{@link #enqueue} returns immediately. The worker drains the queue
- * on either a periodic tick or once depth crosses the high-water mark,
- * retries transient failures with exponential backoff, drops permanent
- * 4xx other than 429 with a log line, and evicts oldest items under
- * sustained back-pressure to bound memory.</p>
+ * <p>The buffer caps at {@code MAX_BUFFER_SIZE} to bound memory consumption
+ * under sustained back-pressure. When full, the oldest queued event is
+ * dropped to make room — recent events are more useful for debugging than
+ * ancient ones, and the loss is acknowledged as part of the async-emit
+ * trade-off.</p>
+ *
+ * <p>Retry strategy: exponential backoff with jitter on transient failures
+ * (connection errors, 5xx, 429). Permanent failures (4xx other than 429) are
+ * logged and dropped. The retry budget per item is finite so a single event
+ * can't block the queue indefinitely.</p>
+ *
+ * <p>Thread-safe bounded queue + flush worker for audit POSTs. The buffer owns
+ * a single daemon worker thread that wakes up on the periodic timer or when an
+ * enqueue tips the depth past the watermark.</p>
  */
 final class AuditEventBuffer {
     private static final Logger LOG = Logger.getLogger("smplkit.audit");

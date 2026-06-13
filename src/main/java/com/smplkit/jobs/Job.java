@@ -3,19 +3,16 @@ package com.smplkit.jobs;
 import com.smplkit.internal.generated.jobs.ApiException;
 
 import java.time.OffsetDateTime;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.Executor;
+import java.util.concurrent.ForkJoinPool;
 
 /**
- * A scheduled unit of work: an HTTP request run on a schedule.
- *
- * <p>Active-record style: mutate fields directly and call {@link #save()} to
- * persist, or {@link #delete()} to remove. Header values in
- * {@code configuration.headers} are returned redacted on reads — re-supply
- * the real values before calling {@link #save()} (the SDK does not cache
- * them).</p>
+ * A job definition (sync). Mutate fields, then call {@link #save}.
  */
 public final class Job {
 
-    private JobsManagementClient client;
+    private JobsClient client;
 
     /** Caller-supplied unique identifier for the job (the resource {@code id}). */
     public String id;
@@ -44,12 +41,12 @@ public final class Job {
     public OffsetDateTime createdAt;
     /** When the job was last modified. */
     public OffsetDateTime updatedAt;
-    /** Soft-delete timestamp. {@code null} for live jobs. */
+    /** When the job was deleted; {@code null} for live jobs. */
     public OffsetDateTime deletedAt;
     /** Monotonic version counter; bumped on every server-side write. */
     public Integer version;
 
-    Job(JobsManagementClient client, String id, String name, String schedule, HttpConfig configuration) {
+    Job(JobsClient client, String id, String name, String schedule, HttpConfig configuration) {
         this.client = client;
         this.id = id;
         this.name = name;
@@ -57,15 +54,7 @@ public final class Job {
         this.configuration = configuration;
     }
 
-    /**
-     * Create this job, or full-replace it if it already exists.
-     *
-     * <p>Upsert behavior is driven by {@link #createdAt}: a job with no
-     * {@code createdAt} is created (POST); otherwise it's full-replace updated
-     * (PUT). After the call, every field is refreshed from the server response
-     * (including newly-assigned {@code createdAt}, {@code version},
-     * {@code nextRunAt}).</p>
-     */
+    /** Create this job, or full-replace it if it already exists. */
     public void save() throws ApiException {
         if (client == null) {
             throw new IllegalStateException("Job was constructed without a client; cannot save");
@@ -74,12 +63,70 @@ public final class Job {
         apply(other);
     }
 
-    /** Soft-deletes this job on the server. */
+    /**
+     * Async variant of {@link #save()}, scheduled on the common pool.
+     *
+     * @return a future that completes when the save finishes, or completes
+     *     exceptionally with a {@code CompletionException} wrapping the
+     *     underlying {@code ApiException} on failure
+     */
+    public CompletableFuture<Void> saveAsync() {
+        return saveAsync(ForkJoinPool.commonPool());
+    }
+
+    /**
+     * Async variant of {@link #save()} with a custom executor.
+     *
+     * @param executor the executor that runs the blocking save
+     * @return a future that completes when the save finishes, or completes
+     *     exceptionally with a {@code CompletionException} wrapping the
+     *     underlying {@code ApiException} on failure
+     */
+    public CompletableFuture<Void> saveAsync(Executor executor) {
+        return CompletableFuture.runAsync(() -> {
+            try {
+                save();
+            } catch (ApiException e) {
+                throw new java.util.concurrent.CompletionException(e);
+            }
+        }, executor);
+    }
+
+    /** Delete this job. */
     public void delete() throws ApiException {
         if (client == null || id == null) {
             throw new IllegalStateException("Job was constructed without a client or id; cannot delete");
         }
         client.delete(id);
+    }
+
+    /**
+     * Async variant of {@link #delete()}, scheduled on the common pool.
+     *
+     * @return a future that completes when the delete finishes, or completes
+     *     exceptionally with a {@code CompletionException} wrapping the
+     *     underlying {@code ApiException} on failure
+     */
+    public CompletableFuture<Void> deleteAsync() {
+        return deleteAsync(ForkJoinPool.commonPool());
+    }
+
+    /**
+     * Async variant of {@link #delete()} with a custom executor.
+     *
+     * @param executor the executor that runs the blocking delete
+     * @return a future that completes when the delete finishes, or completes
+     *     exceptionally with a {@code CompletionException} wrapping the
+     *     underlying {@code ApiException} on failure
+     */
+    public CompletableFuture<Void> deleteAsync(Executor executor) {
+        return CompletableFuture.runAsync(() -> {
+            try {
+                delete();
+            } catch (ApiException e) {
+                throw new java.util.concurrent.CompletionException(e);
+            }
+        }, executor);
     }
 
     void apply(Job other) {

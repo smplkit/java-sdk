@@ -17,7 +17,16 @@ public final class ApiErrorDetail {
     private final Source source;
     private final Map<String, Object> meta;
 
-    /** Full constructor (status, code, title, detail, source, meta). */
+    /**
+     * Full constructor (status, code, title, detail, source, meta).
+     *
+     * @param status the HTTP status code as a string (e.g. "400"), or null
+     * @param code the application-specific machine-readable error code, or null
+     * @param title the short human-readable summary, or null
+     * @param detail the detailed human-readable explanation, or null
+     * @param source the source location of the error, or null
+     * @param meta additional structured context, or null
+     */
     public ApiErrorDetail(String status, String code, String title, String detail,
                           Source source, Map<String, Object> meta) {
         this.status = status;
@@ -31,38 +40,98 @@ public final class ApiErrorDetail {
     /**
      * Backwards-compatible constructor without {@code code} / {@code meta} — kept
      * so callers built against the older shape (and existing tests) still compile.
+     *
+     * @param status the HTTP status code as a string (e.g. "400"), or null
+     * @param title the short human-readable summary, or null
+     * @param detail the detailed human-readable explanation, or null
+     * @param source the source location of the error, or null
      */
     public ApiErrorDetail(String status, String title, String detail, Source source) {
         this(status, null, title, detail, source, null);
     }
 
-    /** HTTP status code as a string (e.g. "400"), or null. */
+    /**
+     * Returns the HTTP status code as a string (e.g. "400"), or null.
+     *
+     * @return the HTTP status code as a string, or null
+     */
     public String status() { return status; }
     /**
      * Application-specific machine-readable error code (e.g.
-     * {@code environment_unmanaged}), or null. Per JSON:API §7 and
-     * ADR-014, smplkit sets this on every error so callers can branch
-     * without string-matching.
+     * {@code environment_unmanaged}), or null. Per JSON:API §7, smplkit
+     * sets this on every error so callers can branch without string-matching.
+     *
+     * @return the machine-readable error code, or null
      */
     public String code() { return code; }
-    /** Short human-readable summary, or null. */
+    /**
+     * Returns the short human-readable summary, or null.
+     *
+     * @return the title, or null
+     */
     public String title() { return title; }
-    /** Detailed human-readable explanation, or null. */
+    /**
+     * Returns the detailed human-readable explanation, or null.
+     *
+     * @return the detail, or null
+     */
     public String detail() { return detail; }
-    /** Source location of the error (e.g. JSON pointer), or null. */
+    /**
+     * Returns the source location of the error (e.g. JSON pointer), or null.
+     *
+     * @return the source location, or null
+     */
     public Source source() { return source; }
-    /** Additional structured context (e.g. {@code {"environment": "staging"}}), or null. */
+    /**
+     * Returns additional structured context (e.g. {@code {"environment": "staging"}}), or null.
+     *
+     * @return the meta map, or null
+     */
     public Map<String, Object> meta() { return meta; }
 
     // JavaBean-style aliases for code that prefers getX() over x().
+    /**
+     * JavaBean-style alias for {@link #status()}.
+     *
+     * @return the HTTP status code as a string, or null
+     */
     public String getStatus() { return status; }
+    /**
+     * JavaBean-style alias for {@link #code()}.
+     *
+     * @return the machine-readable error code, or null
+     */
     public String getCode() { return code; }
+    /**
+     * JavaBean-style alias for {@link #title()}.
+     *
+     * @return the title, or null
+     */
     public String getTitle() { return title; }
+    /**
+     * JavaBean-style alias for {@link #detail()}.
+     *
+     * @return the detail, or null
+     */
     public String getDetail() { return detail; }
+    /**
+     * JavaBean-style alias for {@link #source()}.
+     *
+     * @return the source location, or null
+     */
     public Source getSource() { return source; }
+    /**
+     * JavaBean-style alias for {@link #meta()}.
+     *
+     * @return the meta map, or null
+     */
     public Map<String, Object> getMeta() { return meta; }
 
-    /** Compact JSON representation. */
+    /**
+     * Returns a compact JSON representation of this error detail.
+     *
+     * @return a JSON object string containing the non-null fields
+     */
     public String toJson() {
         StringBuilder sb = new StringBuilder("{");
         boolean first = true;
@@ -109,14 +178,34 @@ public final class ApiErrorDetail {
     public static final class Source {
         private final String pointer;
 
+        /**
+         * Creates a source location.
+         *
+         * @param pointer a JSON pointer to the offending field
+         *     (e.g. {@code "/data/attributes/name"}), or null
+         */
         public Source(String pointer) {
             this.pointer = pointer;
         }
 
+        /**
+         * Returns the JSON pointer to the offending field, or null.
+         *
+         * @return the JSON pointer, or null
+         */
         public String pointer() { return pointer; }
-        /** JavaBean-style alias for {@link #pointer()}. */
+        /**
+         * JavaBean-style alias for {@link #pointer()}.
+         *
+         * @return the JSON pointer, or null
+         */
         public String getPointer() { return pointer; }
 
+        /**
+         * Returns a compact JSON representation of this source location.
+         *
+         * @return a JSON object string with the pointer, or {@code "{}"} if none
+         */
         public String toJson() {
             if (pointer != null) {
                 return "{\"pointer\": \"" + escapeJson(pointer) + "\"}";

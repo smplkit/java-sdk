@@ -7,7 +7,6 @@ import com.smplkit.internal.generated.audit.model.EventListResponse;
 import com.smplkit.internal.generated.audit.model.EventRequest;
 import com.smplkit.internal.generated.audit.model.EventResource;
 import com.smplkit.internal.generated.audit.model.EventResponse;
-import com.smplkit.internal.generated.audit.model.Severity;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
@@ -15,10 +14,10 @@ import java.util.UUID;
 /**
  * Audit events surface — accessed via {@link AuditClient#events()}.
  *
- * <p>{@link #record(CreateEventInput)} is fire-and-forget per ADR-047
- * §2.6 — the call enqueues the event onto an in-memory bounded buffer
- * and returns immediately. Reads ({@link #list(ListEventsInput)}, {@link
- * #get(UUID)}) are synchronous.</p>
+ * <p>{@link #record(CreateEventInput)} is fire-and-forget — the call
+ * enqueues the event onto an in-memory bounded buffer and returns
+ * immediately. Reads ({@link #list(ListEventsInput)}, {@link #get(UUID)})
+ * are synchronous.</p>
  */
 public final class AuditEvents {
 
@@ -37,6 +36,8 @@ public final class AuditEvents {
      * starting with {@code smpl.} are rejected by the server with a 403
      * (the buffer logs the permanent failure and drops the item).</p>
      *
+     * @param input the event to record; per-field semantics live on
+     *     {@link CreateEventInput}
      * @throws IllegalArgumentException if eventType / resourceType / resourceId
      *     are missing
      */
@@ -51,9 +52,6 @@ public final class AuditEvents {
                 .eventType(input.eventType)
                 .resourceType(input.resourceType)
                 .resourceId(input.resourceId);
-        if (input.severity != null) {
-            attrs.severity(Severity.fromValue(input.severity));
-        }
         if (input.category != null) {
             attrs.category(input.category);
         }
@@ -83,13 +81,40 @@ public final class AuditEvents {
         buffer.enqueue(body, input.idempotencyKey);
     }
 
-    /** Single-event retrieval. Returns 404 wrapped as {@link ApiException}. */
+    /**
+     * Retrieve a single audit event by id.
+     *
+     * @param eventId the event's UUID
+     * @return the matching {@link AuditEvent}
+     * @throws ApiException if no event with that id exists in the caller's
+     *     account (surfaced as a not-found error)
+     */
     public AuditEvent get(UUID eventId) throws ApiException {
         EventResponse resp = api.getEvent(eventId);
         return fromResource(resp.getData());
     }
 
-    /** List events with filters and cursor pagination. */
+    /**
+     * List audit events for the authenticated account.
+     *
+     * <p>Filters apply server-side. {@code actorId} is matched as a literal
+     * string against whatever the recording call stored. Pagination uses an
+     * opaque cursor ({@link ListEventsInput#pageAfter}); the returned page
+     * exposes {@code nextCursor} when more pages are available.</p>
+     *
+     * <p>{@link ListEventsInput#search} is an optional free-text filter:
+     * it returns only events whose {@code resource_id} or {@code description}
+     * contains it as a case-insensitive substring. A {@code search} filter
+     * must be scoped — combine it with {@code occurredAtRange}, or with both
+     * {@code resourceType} and {@code resourceId} — or the request is
+     * rejected.</p>
+     *
+     * @param input filters and pagination cursor; an empty instance lists
+     *     every event with default paging
+     * @return a {@link ListEventsPage} of the matching events; its
+     *     {@code nextCursor} is set when more pages are available
+     * @throws ApiException if the request fails
+     */
     public ListEventsPage list(ListEventsInput input) throws ApiException {
         EventListResponse resp = api.listEvents(
                 AuditResourceTypesClient.joinEnvironments(input.environments),
@@ -99,10 +124,10 @@ public final class AuditEvents {
                 input.eventType,
                 input.resourceType,
                 input.resourceId,
-                input.severity,
+                null, // severity filter not exposed on the wrapper surface
                 input.category,
                 input.search,
-                input.doNotForward,
+                null, // do_not_forward is a record()-time flag, not a list filter
                 input.pageSize,
                 input.pageAfter,
                 null, // format — null = paginated JSON:API response (no streaming export)
@@ -130,7 +155,14 @@ public final class AuditEvents {
         return new ListEventsPage(events, nextCursor);
     }
 
-    /** Block until the in-memory buffer is drained or timeout elapses. */
+    /**
+     * Block until the in-memory buffer is drained or the timeout elapses.
+     *
+     * <p>Useful for draining buffered events at process shutdown or after a
+     * batch of fire-and-forget records.</p>
+     *
+     * @param timeoutMs upper bound on the blocking flush, in milliseconds
+     */
     public void flush(long timeoutMs) {
         buffer.flush(timeoutMs);
     }
@@ -147,7 +179,6 @@ public final class AuditEvents {
                 a.getEventType(),
                 a.getResourceType(),
                 a.getResourceId(),
-                a.getSeverity() != null ? a.getSeverity().getValue() : null,
                 a.getCategory(),
                 a.getOccurredAt(),
                 a.getCreatedAt(),

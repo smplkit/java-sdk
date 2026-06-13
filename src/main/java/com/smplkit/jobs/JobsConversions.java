@@ -9,7 +9,7 @@ import com.smplkit.internal.generated.jobs.model.UsageResource;
 import java.util.ArrayList;
 import java.util.List;
 
-/** Wire &lt;-&gt; wrapper conversions shared by the jobs management surface. */
+/** Wire &lt;-&gt; wrapper conversions shared by the jobs surface. */
 final class JobsConversions {
 
     private JobsConversions() {}
@@ -46,7 +46,7 @@ final class JobsConversions {
         out.url = src.getUrl() != null ? src.getUrl() : "";
         if (src.getSuccessStatus() != null) out.successStatus = src.getSuccessStatus();
         out.body = src.getBody();
-        // Absent ``timeout`` on the wire means a job persisted before the field
+        // Absent ``timeout`` in the response means a job persisted before the field
         // landed — default to 30 so its prior behaviour is preserved.
         out.timeout = src.getTimeout() == null ? 30 : src.getTimeout();
         // Absent ``tls_verify`` means a job persisted before the field landed —

@@ -1,7 +1,12 @@
 package com.smplkit.internal;
 
 import java.net.http.HttpClient;
+import java.net.http.HttpRequest;
 import java.time.Duration;
+import java.util.Locale;
+import java.util.Map;
+import java.util.Set;
+import java.util.function.Consumer;
 
 /**
  * Shared HttpClient builder helpers.
@@ -28,5 +33,32 @@ public final class HttpClients {
     /** Convenience: build a HTTP/1.1 client with the given connect timeout. */
     public static HttpClient http11(Duration connectTimeout) {
         return builder().connectTimeout(connectTimeout).build();
+    }
+
+    /** Headers the SDK always sets; users cannot override these via extraHeaders. */
+    private static final Set<String> SDK_MANAGED_HEADERS =
+            Set.of("authorization", "accept", "content-type");
+
+    /**
+     * Builds a request interceptor that sets extra headers (excluding SDK-managed ones),
+     * then always sets the Authorization header. SDK headers win on collision.
+     */
+    public static Consumer<HttpRequest.Builder> compositeInterceptor(String apiKey,
+                                                               Map<String, String> extraHeaders) {
+        return builder -> {
+            if (extraHeaders != null) {
+                extraHeaders.forEach((k, v) -> {
+                    if (!SDK_MANAGED_HEADERS.contains(k.toLowerCase(Locale.ROOT))) {
+                        builder.header(k, v);
+                    }
+                });
+            }
+            builder.header("Authorization", "Bearer " + apiKey);
+        };
+    }
+
+    /** Builds the auth-only interceptor (no extra headers). */
+    public static Consumer<HttpRequest.Builder> authInterceptor(String apiKey) {
+        return builder -> builder.header("Authorization", "Bearer " + apiKey);
     }
 }

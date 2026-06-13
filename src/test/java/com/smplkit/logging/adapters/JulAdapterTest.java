@@ -3,13 +3,17 @@ package com.smplkit.logging.adapters;
 import com.smplkit.LogLevel;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.mockito.MockedStatic;
 
+import java.util.Collections;
+import java.util.Enumeration;
 import java.util.List;
 import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.logging.Level;
 import java.util.logging.LogManager;
 
 import static org.junit.jupiter.api.Assertions.*;
+import static org.mockito.Mockito.*;
 
 /**
  * Tests for the JUL logging adapter.
@@ -235,5 +239,56 @@ class JulAdapterTest {
         // No hook installed, should not throw
         java.util.logging.Logger.getLogger("com.smplkit.jul.nohook." + System.nanoTime());
         adapter.pollForNewLoggers();
+    }
+
+    // -----------------------------------------------------------------------
+    // Null-logger race: getLoggerNames() reports a name but getLogger(name)
+    // returns null (the logger was GC'd between enumeration and lookup). The
+    // adapter must treat the level as null (-> "DEBUG") rather than NPE.
+    // -----------------------------------------------------------------------
+
+    @Test
+    void discover_nameWithNullLogger_treatedAsDebug() {
+        LogManager mockManager = mock(LogManager.class);
+        Enumeration<String> names = Collections.enumeration(List.of("vanished.logger"));
+        when(mockManager.getLoggerNames()).thenReturn(names);
+        when(mockManager.getLogger("vanished.logger")).thenReturn(null);
+
+        try (MockedStatic<LogManager> statics = mockStatic(LogManager.class)) {
+            statics.when(LogManager::getLogManager).thenReturn(mockManager);
+
+            List<DiscoveredLogger> discovered = adapter.discover();
+
+            DiscoveredLogger found = discovered.stream()
+                    .filter(dl -> dl.name().equals("vanished.logger"))
+                    .findFirst()
+                    .orElseThrow();
+            // getLevel() on a null logger -> null -> julToSmplLevel(null) -> "DEBUG"
+            assertEquals("DEBUG", found.level());
+        }
+    }
+
+    @Test
+    void pollForNewLoggers_nameWithNullLogger_treatedAsDebug() {
+        LogManager mockManager = mock(LogManager.class);
+        when(mockManager.getLoggerNames())
+                .thenReturn(Collections.enumeration(List.of("vanished.polled")));
+        when(mockManager.getLogger("vanished.polled")).thenReturn(null);
+
+        List<String> reportedNames = new CopyOnWriteArrayList<>();
+        List<String> reportedLevels = new CopyOnWriteArrayList<>();
+        adapter.installHook((name, level) -> {
+            reportedNames.add(name);
+            reportedLevels.add(level);
+        });
+
+        try (MockedStatic<LogManager> statics = mockStatic(LogManager.class)) {
+            statics.when(LogManager::getLogManager).thenReturn(mockManager);
+
+            adapter.pollForNewLoggers();
+
+            assertTrue(reportedNames.contains("vanished.polled"));
+            assertEquals("DEBUG", reportedLevels.get(reportedNames.indexOf("vanished.polled")));
+        }
     }
 }

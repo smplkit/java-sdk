@@ -3,11 +3,15 @@ package com.smplkit.flags;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
+import com.smplkit.internal.ConfigResolver;
+import com.smplkit.internal.ConfigResolver.ResolvedClientConfig;
 import com.smplkit.Context;
+import com.smplkit.Helpers;
 import com.smplkit.SharedWebSocket;
-import com.smplkit.management.ContextRegistrationBuffer;
-import com.smplkit.errors.ApiExceptionHandler;
+import com.smplkit.internal.ApiExceptionHandler;
 import com.smplkit.errors.SmplError;
+import com.smplkit.flags.types.FlagDeclaration;
+import com.smplkit.internal.ContextRegistrationBuffer;
 import com.smplkit.internal.generated.app.api.ContextsApi;
 import com.smplkit.internal.generated.app.model.ContextBulkItem;
 import com.smplkit.internal.generated.app.model.ContextBulkRegister;
@@ -29,6 +33,7 @@ import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import org.openapitools.jackson.nullable.JsonNullableModule;
 
 import com.smplkit.internal.Debug;
+import com.smplkit.internal.HttpClients;
 
 import java.net.http.HttpClient;
 import java.time.Duration;
@@ -56,12 +61,63 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 
 /**
- * Client for the Smpl Flags service.
+ * The Smpl Flags client (sync).
  *
- * <p>Provides flag management via {@link #management()} and runtime evaluation
- * ({@link #booleanFlag}, {@link #stringFlag}, etc.).</p>
+ * <p>Smpl Flags has two surfaces on a single client, mirroring how the config,
+ * audit, and jobs clients expose their full surface from one class:</p>
+ *
+ * <ul>
+ *   <li><b>CRUD surface</b> — pure CRUD, no live connection:
+ *       {@link #newBooleanFlag} / {@link #newStringFlag} / {@link #newNumberFlag} /
+ *       {@link #newJsonFlag} constructors, {@link #get} / {@link #list} / {@link #delete}
+ *       CRUD, and the flag-declaration discovery buffer ({@link #register} /
+ *       {@link #flush} / {@link #flushSync} / {@link #pendingCount}). The client
+ *       owns the discovery buffer directly.</li>
+ *   <li><b>Live surface</b> — lazily connects to your running service on first use:
+ *       the typed handle declarations ({@link #booleanFlag} / {@link #stringFlag} /
+ *       {@link #numberFlag} / {@link #jsonFlag}) whose {@code .get()} evaluates
+ *       against the cached definitions, plus {@link #refresh} / {@link #stats} /
+ *       {@link #onChange}. The first live call transparently flushes discovery,
+ *       fetches all flag definitions into the local cache, and opens the
+ *       live-updates WebSocket — no explicit install step.</li>
+ * </ul>
+ *
+ * <p>One client exposes the full surface, reachable as {@code client.flags()}
+ * ({@link com.smplkit.SmplClient}) or constructed directly:</p>
+ *
+ * <pre>{@code
+ * try (FlagsClient flags = FlagsClient.builder().environment("production").build()) {
+ *     Flag<Boolean> newFlag = flags.newBooleanFlag("beta", false);
+ *     newFlag.save();
+ *     Flag<Boolean> beta = flags.booleanFlag("beta", false);
+ *     if (beta.get()) {
+ *         ...
+ *     }
+ * }
+ * }</pre>
+ *
+ * <p>The CRUD surface ({@code new*} / {@link #get} / {@link #list} /
+ * {@link #delete} and discovery) is pure CRUD. The live surface
+ * ({@link #booleanFlag} / {@link #stringFlag} / {@link #numberFlag} /
+ * {@link #jsonFlag} / {@link #refresh} / {@link #stats} / {@link #onChange})
+ * connects lazily on first use — the first call flushes discovery, fetches all
+ * flag definitions into the local cache, and opens the live-updates WebSocket.
+ * No explicit install step is required.</p>
+ *
+ * <p>The client supports two construction shapes:</p>
+ *
+ * <ul>
+ *   <li><b>Wired</b> into {@link com.smplkit.SmplClient} — borrows the parent's
+ *       flags transport for both runtime fetch and CRUD, the parent's shared
+ *       WebSocket for the live channel, and {@code client.platform.contexts} for
+ *       evaluation-context registration. This is the common path.</li>
+ *   <li><b>Standalone</b> — {@code FlagsClient.builder().apiKey(...).baseDomain(...)...build()}
+ *       builds and owns its own flags transport and a contexts client (against its
+ *       own app transport), and on first live use opens and owns its own WebSocket.
+ *       {@link #close()} tears down only the owned transports and owned WebSocket.</li>
+ * </ul>
  */
-public final class FlagsClient {
+public final class FlagsClient implements AutoCloseable {
 
     private static final Logger LOG = Logger.getLogger("smplkit.flags");
     static final ObjectMapper OBJECT_MAPPER = new ObjectMapper()
@@ -72,6 +128,7 @@ public final class FlagsClient {
     private static final int CACHE_MAX_SIZE = 10_000;
     private static final int CONTEXT_BUFFER_MAX_SIZE = 10_000;
     private static final int CONTEXT_BATCH_FLUSH_SIZE = 100;
+    private static final int FLAG_BATCH_FLUSH_SIZE = 50;
 
     final FlagsApi flagsApi;
     private final ContextsApi contextsApi;
@@ -80,6 +137,7 @@ public final class FlagsClient {
     private final String flagsBaseUrl;
     private final String appBaseUrl;
     private final Duration timeout;
+    private final boolean ownsTransport;
 
     // --- Runtime state ---
     private volatile boolean connected = false;
@@ -139,18 +197,37 @@ public final class FlagsClient {
     // Service name from parent SmplClient (for auto-injection)
     private volatile String parentService;
 
-    // Shared WebSocket reference (set by SmplClient)
+    // Shared WebSocket reference (set by SmplClient; lazily created when standalone)
     private volatile SharedWebSocket sharedWs;
+    private volatile boolean ownsWs = false;
     private final Consumer<Map<String, Object>> flagChangedHandler;
     private final Consumer<Map<String, Object>> flagDeletedHandler;
     private final Consumer<Map<String, Object>> flagsChangedHandler;
 
-    // Management accessor
-    private final FlagsManagement management;
-
+    /**
+     * Wired constructor — invoked by {@link com.smplkit.SmplClient} so the flags
+     * surface shares the parent client's connection pool and shared WebSocket.
+     * The resulting client does NOT own its transport, so {@link #close()} tears
+     * down nothing.
+     *
+     * @param flagsApi     pre-built generated flags API bound to the parent's transport
+     * @param contextsApi  pre-built generated app contexts API for evaluation-context registration
+     * @param httpClient   the parent's shared JDK HttpClient
+     * @param apiKey       resolved API key
+     * @param flagsBaseUrl fully-qualified flags service base URL
+     * @param appBaseUrl   fully-qualified app service base URL (event gateway)
+     * @param timeout      per-request read timeout
+     */
     public FlagsClient(FlagsApi flagsApi, ContextsApi contextsApi,
                        HttpClient httpClient, String apiKey,
                        String flagsBaseUrl, String appBaseUrl, Duration timeout) {
+        this(flagsApi, contextsApi, httpClient, apiKey, flagsBaseUrl, appBaseUrl, timeout, false);
+    }
+
+    private FlagsClient(FlagsApi flagsApi, ContextsApi contextsApi,
+                        HttpClient httpClient, String apiKey,
+                        String flagsBaseUrl, String appBaseUrl, Duration timeout,
+                        boolean ownsTransport) {
         this.flagsApi = flagsApi;
         this.contextsApi = contextsApi;
         this.httpClient = httpClient;
@@ -158,6 +235,7 @@ public final class FlagsClient {
         this.flagsBaseUrl = flagsBaseUrl;
         this.appBaseUrl = appBaseUrl;
         this.timeout = timeout;
+        this.ownsTransport = ownsTransport;
 
         this.contextFlushExecutor = Executors.newSingleThreadScheduledExecutor(r -> {
             Thread t = new Thread(r, "smplkit-flags-ctx-flush");
@@ -168,7 +246,6 @@ public final class FlagsClient {
         this.flagChangedHandler = this::handleFlagChanged;
         this.flagDeletedHandler = this::handleFlagDeleted;
         this.flagsChangedHandler = this::handleFlagsChanged;
-        this.management = new FlagsManagement(this);
     }
 
     /** Package-private test constructor. */
@@ -180,123 +257,624 @@ public final class FlagsClient {
         this.flagsBaseUrl = null;
         this.appBaseUrl = null;
         this.timeout = null;
+        this.ownsTransport = false;
         this.contextFlushExecutor = null;
         this.flagChangedHandler = this::handleFlagChanged;
         this.flagDeletedHandler = this::handleFlagDeleted;
         this.flagsChangedHandler = this::handleFlagsChanged;
-        this.management = new FlagsManagement(this);
     }
 
     // -----------------------------------------------------------------------
-    // Management accessor
+    // Standalone construction (mirrors SmplClient.create / builder())
     // -----------------------------------------------------------------------
 
     /**
-     * Returns the management-plane API for flag CRUD operations and factory methods.
-     *
-     * @return the {@link FlagsManagement} instance
+     * Construct a standalone {@link FlagsClient}, resolving credentials from the
+     * standard sources (env vars, {@code ~/.smplkit}). Owns its own transport.
      */
-    public FlagsManagement management() {
-        return management;
+    public static FlagsClient create() {
+        return builder().build();
     }
 
+    /** Construct a standalone {@link FlagsClient} with the given API key. */
+    public static FlagsClient create(String apiKey) {
+        return builder().apiKey(apiKey).build();
+    }
+
+    /** Returns a builder for a standalone {@link FlagsClient}. */
+    public static FlagsClientBuilder builder() {
+        return new FlagsClientBuilder();
+    }
+
+    /** Internal: build a standalone client from already-resolved config. */
+    static FlagsClient fromResolved(ResolvedClientConfig cfg, String environment, String baseUrl,
+                                    Duration timeout, Map<String, String> extraHeaders) {
+        // base_url is used directly when supplied (the path a top-level client
+        // takes after it has already resolved it); otherwise it is derived from
+        // the resolved scheme/base-domain.
+        String flagsBaseUrl = baseUrl != null ? baseUrl
+                : ConfigResolver.serviceUrl(cfg.scheme, "flags", cfg.baseDomain);
+        String appBaseUrl = ConfigResolver.serviceUrl(cfg.scheme, "app", cfg.baseDomain);
+
+        com.smplkit.internal.generated.flags.ApiClient flagsApiClient =
+                new com.smplkit.internal.generated.flags.ApiClient();
+        flagsApiClient.setHttpClientBuilder(HttpClients.builder());
+        flagsApiClient.updateBaseUri(flagsBaseUrl);
+        flagsApiClient.setRequestInterceptor(HttpClients.compositeInterceptor(cfg.apiKey, extraHeaders));
+        flagsApiClient.setReadTimeout(timeout);
+        FlagsApi flagsApi = new FlagsApi(flagsApiClient);
+
+        com.smplkit.internal.generated.app.ApiClient appApiClient =
+                new com.smplkit.internal.generated.app.ApiClient();
+        appApiClient.setHttpClientBuilder(HttpClients.builder());
+        appApiClient.updateBaseUri(appBaseUrl);
+        appApiClient.setRequestInterceptor(HttpClients.compositeInterceptor(cfg.apiKey, extraHeaders));
+        appApiClient.setReadTimeout(timeout);
+        ContextsApi contextsApi = new ContextsApi(appApiClient);
+
+        HttpClient httpClient = HttpClients.http11(timeout);
+        FlagsClient client = new FlagsClient(flagsApi, contextsApi, httpClient, cfg.apiKey,
+                flagsBaseUrl, appBaseUrl, timeout, true);
+        client.environment = environment;
+        return client;
+    }
+
+    // -----------------------------------------------------------------------
+    // Wiring setters (used by SmplClient)
+    // -----------------------------------------------------------------------
+
+    /** Internal — wires the parent's metrics reporter. Used by {@link com.smplkit.SmplClient}; not for direct use. */
     public void setMetrics(com.smplkit.MetricsReporter metrics) {
         this.metrics = metrics;
     }
 
+    /** Internal — wires the parent's shared WebSocket for the live channel. Used by {@link com.smplkit.SmplClient}; not for direct use. */
     public void setSharedWs(SharedWebSocket ws) {
         this.sharedWs = ws;
     }
 
+    /** Internal — wires the shared evaluation-context registration buffer. Used by {@link com.smplkit.SmplClient}; not for direct use. */
     public void setContextBuffer(ContextRegistrationBuffer buffer) {
         this.sharedContextBuffer = buffer;
     }
 
+    /** Internal — wires the parent's service name for context auto-injection. Used by {@link com.smplkit.SmplClient}; not for direct use. */
     public void setParentService(String service) {
         this.parentService = service;
     }
 
+    /** Internal — wires the deployment environment used to resolve runtime flag values. Used by {@link com.smplkit.SmplClient}; not for direct use. */
     public void setEnvironment(String environment) {
         this.environment = environment;
     }
 
-    // -----------------------------------------------------------------------
-    // Runtime: typed flag handles
-    // -----------------------------------------------------------------------
-
-    public Flag<Boolean> booleanFlag(String id, boolean defaultValue) {
-        Flag<Boolean> handle = new Flag<>(this, id, id, "BOOLEAN", defaultValue,
-                null, null, null, null, null, Boolean.class);
-        handles.put(id, handle);
-        flagBuffer.add(id, "BOOLEAN", defaultValue, parentService, environment);
-        if (flagBuffer.pendingCount() >= 50) {
-            Thread t = new Thread(this::flushFlagsSafe, "smplkit-flag-flush-eager");
-            t.setDaemon(true);
-            t.start();
-        }
-        return handle;
-    }
-
-    public Flag<String> stringFlag(String id, String defaultValue) {
-        Flag<String> handle = new Flag<>(this, id, id, "STRING", defaultValue,
-                null, null, null, null, null, String.class);
-        handles.put(id, handle);
-        flagBuffer.add(id, "STRING", defaultValue, parentService, environment);
-        if (flagBuffer.pendingCount() >= 50) {
-            Thread t = new Thread(this::flushFlagsSafe, "smplkit-flag-flush-eager");
-            t.setDaemon(true);
-            t.start();
-        }
-        return handle;
-    }
-
-    public Flag<Number> numberFlag(String id, Number defaultValue) {
-        Flag<Number> handle = new Flag<>(this, id, id, "NUMERIC", defaultValue,
-                null, null, null, null, null, Number.class);
-        handles.put(id, handle);
-        flagBuffer.add(id, "NUMERIC", defaultValue, parentService, environment);
-        if (flagBuffer.pendingCount() >= 50) {
-            Thread t = new Thread(this::flushFlagsSafe, "smplkit-flag-flush-eager");
-            t.setDaemon(true);
-            t.start();
-        }
-        return handle;
-    }
-
-    @SuppressWarnings("unchecked")
-    public Flag<Object> jsonFlag(String id, Object defaultValue) {
-        Flag<Object> handle = new Flag<>(this, id, id, "JSON", defaultValue,
-                null, null, null, null, null, Object.class);
-        handles.put(id, handle);
-        flagBuffer.add(id, "JSON", defaultValue, parentService, environment);
-        if (flagBuffer.pendingCount() >= 50) {
-            Thread t = new Thread(this::flushFlagsSafe, "smplkit-flag-flush-eager");
-            t.setDaemon(true);
-            t.start();
-        }
-        return handle;
-    }
-
-    // -----------------------------------------------------------------------
-    // Runtime: context provider
-    // -----------------------------------------------------------------------
-
+    /** Internal — wires the ambient evaluation-context provider. Used by {@link com.smplkit.SmplClient}; not for direct use. */
     public void setContextProvider(Supplier<List<Context>> provider) {
         this.contextProvider = provider;
     }
 
+    private volatile Runnable ensureStartedHook;
+
+    /** Sets the parent's deferred-start hook, run once when the live surface first connects (wired path). */
+    public void setEnsureStarted(Runnable hook) {
+        this.ensureStartedHook = hook;
+    }
+
     // -----------------------------------------------------------------------
-    // Runtime: lazy init
+    // Management surface: CRUD (no live connection)
     // -----------------------------------------------------------------------
 
-    /** Initializes the flags runtime on first use. Idempotent. Thread-safe. */
-    void _connectInternal() {
+    /**
+     * Return a new unsaved boolean {@link Flag}. Call {@code save()} to persist.
+     *
+     * @param id           stable flag identifier, unique per account
+     * @param defaultValue value served when no environment override or rule applies
+     * @return an unsaved {@link Flag}; call {@code save()} to persist it
+     */
+    public Flag<Boolean> newBooleanFlag(String id, boolean defaultValue) {
+        return newBooleanFlag(id, defaultValue, null, null);
+    }
+
+    /**
+     * Return a new unsaved boolean {@link Flag}. Call {@code save()} to persist.
+     *
+     * @param id           stable flag identifier, unique per account
+     * @param defaultValue value served when no environment override or rule applies
+     * @param name         human-readable display name; when {@code null}, defaults to a
+     *                     title-cased form of {@code id}
+     * @param description  optional free-text description of the flag
+     * @return an unsaved {@link Flag}; call {@code save()} to persist it
+     */
+    public Flag<Boolean> newBooleanFlag(String id, boolean defaultValue, String name, String description) {
+        return new Flag<>(this, id,
+                name != null ? name : Helpers.keyToDisplayName(id),
+                "BOOLEAN", defaultValue,
+                List.of(Map.of("name", "True", "value", true), Map.of("name", "False", "value", false)),
+                description, null, null, null, Boolean.class);
+    }
+
+    /**
+     * Return a new unsaved string {@link Flag}. Call {@code save()} to persist.
+     *
+     * @param id           stable flag identifier, unique per account
+     * @param defaultValue value served when no environment override or rule applies
+     * @return an unsaved {@link Flag}; call {@code save()} to persist it
+     */
+    public Flag<String> newStringFlag(String id, String defaultValue) {
+        return newStringFlag(id, defaultValue, null, null);
+    }
+
+    /**
+     * Return a new unsaved string {@link Flag}. Call {@code save()} to persist.
+     *
+     * @param id           stable flag identifier, unique per account
+     * @param defaultValue value served when no environment override or rule applies
+     * @param name         human-readable display name; when {@code null}, defaults to a
+     *                     title-cased form of {@code id}
+     * @param description  optional free-text description of the flag
+     * @return an unsaved {@link Flag}; call {@code save()} to persist it
+     */
+    public Flag<String> newStringFlag(String id, String defaultValue, String name, String description) {
+        return newStringFlag(id, defaultValue, name, description, null);
+    }
+
+    /**
+     * Return a new unsaved string {@link Flag}. Call {@code save()} to persist.
+     *
+     * @param id           stable flag identifier, unique per account
+     * @param defaultValue value served when no environment override or rule applies
+     * @param name         human-readable display name; when {@code null}, defaults to a
+     *                     title-cased form of {@code id}
+     * @param description  optional free-text description of the flag
+     * @param values       optional list of allowed values constraining what the flag may
+     *                     serve; when omitted, the flag is unconstrained
+     * @return an unsaved {@link Flag}; call {@code save()} to persist it
+     */
+    public Flag<String> newStringFlag(String id, String defaultValue, String name, String description,
+                                      List<Map<String, Object>> values) {
+        return new Flag<>(this, id,
+                name != null ? name : Helpers.keyToDisplayName(id),
+                "STRING", defaultValue, values, description, null, null, null, String.class);
+    }
+
+    /**
+     * Return a new unsaved numeric {@link Flag}. Call {@code save()} to persist.
+     *
+     * @param id           stable flag identifier, unique per account
+     * @param defaultValue value served when no environment override or rule applies
+     * @return an unsaved {@link Flag}; call {@code save()} to persist it
+     */
+    public Flag<Number> newNumberFlag(String id, Number defaultValue) {
+        return newNumberFlag(id, defaultValue, null, null);
+    }
+
+    /**
+     * Return a new unsaved numeric {@link Flag}. Call {@code save()} to persist.
+     *
+     * @param id           stable flag identifier, unique per account
+     * @param defaultValue value served when no environment override or rule applies
+     * @param name         human-readable display name; when {@code null}, defaults to a
+     *                     title-cased form of {@code id}
+     * @param description  optional free-text description of the flag
+     * @return an unsaved {@link Flag}; call {@code save()} to persist it
+     */
+    public Flag<Number> newNumberFlag(String id, Number defaultValue, String name, String description) {
+        return newNumberFlag(id, defaultValue, name, description, null);
+    }
+
+    /**
+     * Return a new unsaved numeric {@link Flag}. Call {@code save()} to persist.
+     *
+     * @param id           stable flag identifier, unique per account
+     * @param defaultValue value served when no environment override or rule applies
+     * @param name         human-readable display name; when {@code null}, defaults to a
+     *                     title-cased form of {@code id}
+     * @param description  optional free-text description of the flag
+     * @param values       optional list of allowed values constraining what the flag may
+     *                     serve; when omitted, the flag is unconstrained
+     * @return an unsaved {@link Flag}; call {@code save()} to persist it
+     */
+    public Flag<Number> newNumberFlag(String id, Number defaultValue, String name, String description,
+                                      List<Map<String, Object>> values) {
+        return new Flag<>(this, id,
+                name != null ? name : Helpers.keyToDisplayName(id),
+                "NUMERIC", defaultValue, values, description, null, null, null, Number.class);
+    }
+
+    /**
+     * Return a new unsaved JSON {@link Flag}. Call {@code save()} to persist.
+     *
+     * @param id           stable flag identifier, unique per account
+     * @param defaultValue value served when no environment override or rule applies
+     * @return an unsaved {@link Flag}; call {@code save()} to persist it
+     */
+    public Flag<Object> newJsonFlag(String id, Object defaultValue) {
+        return newJsonFlag(id, defaultValue, null, null);
+    }
+
+    /**
+     * Return a new unsaved JSON {@link Flag}. Call {@code save()} to persist.
+     *
+     * @param id           stable flag identifier, unique per account
+     * @param defaultValue value served when no environment override or rule applies
+     * @param name         human-readable display name; when {@code null}, defaults to a
+     *                     title-cased form of {@code id}
+     * @param description  optional free-text description of the flag
+     * @return an unsaved {@link Flag}; call {@code save()} to persist it
+     */
+    public Flag<Object> newJsonFlag(String id, Object defaultValue, String name, String description) {
+        return newJsonFlag(id, defaultValue, name, description, null);
+    }
+
+    /**
+     * Return a new unsaved JSON {@link Flag}. Call {@code save()} to persist.
+     *
+     * @param id           stable flag identifier, unique per account
+     * @param defaultValue value served when no environment override or rule applies
+     * @param name         human-readable display name; when {@code null}, defaults to a
+     *                     title-cased form of {@code id}
+     * @param description  optional free-text description of the flag
+     * @param values       optional list of allowed values constraining what the flag may
+     *                     serve; when omitted, the flag is unconstrained
+     * @return an unsaved {@link Flag}; call {@code save()} to persist it
+     */
+    public Flag<Object> newJsonFlag(String id, Object defaultValue, String name, String description,
+                                    List<Map<String, Object>> values) {
+        return new Flag<>(this, id,
+                name != null ? name : Helpers.keyToDisplayName(id),
+                "JSON", defaultValue, values, description, null, null, null, Object.class);
+    }
+
+    /**
+     * Fetch the editable {@link Flag} resource by id.
+     *
+     * @param id identifier of the flag to fetch
+     * @return the {@link Flag}, ready to mutate and {@code save()}
+     * @throws com.smplkit.errors.NotFoundError no flag with that id exists for the account
+     */
+    public Flag<?> get(String id) {
+        try {
+            FlagResponse response = flagsApi.getFlag(id);
+            return parseSingleResponse(response);
+        } catch (ApiException e) {
+            throw mapException(e);
+        }
+    }
+
+    /**
+     * List flags for the authenticated account.
+     *
+     * @return the flags on the first server-default page as a list of {@link Flag}
+     */
+    public List<Flag<?>> list() {
+        return list(null, null);
+    }
+
+    /**
+     * List a single page of flags. Pass {@code null} for either argument to use the
+     * server default ({@code page[number]=1}, {@code page[size]=1000}). The wrapper
+     * does not loop — customers paginate by calling this method with successive
+     * {@code pageNumber} values.
+     *
+     * @param pageNumber 1-based page index to fetch; when {@code null}, the server
+     *                   default applies
+     * @param pageSize   number of flags per page; when {@code null}, the server default
+     *                   applies
+     * @return the flags on the requested page as a list of {@link Flag}
+     */
+    public List<Flag<?>> list(Integer pageNumber, Integer pageSize) {
+        try {
+            // Positional args: filterType, filterManaged, filterReferencesContext,
+            // filterReferencesContextType, filterSearch, sort, pageNumber,
+            // pageSize, metaTotal.
+            FlagListResponse response = flagsApi.listFlags(
+                    null, null, null, null, null, null, pageNumber, pageSize, null);
+            return parseListResponse(response);
+        } catch (ApiException e) {
+            throw mapException(e);
+        }
+    }
+
+    /**
+     * Delete a flag by id.
+     *
+     * @param id identifier of the flag to delete
+     * @throws com.smplkit.errors.NotFoundError no flag with that id exists for the account
+     */
+    public void delete(String id) {
+        try {
+            flagsApi.deleteFlag(id);
+        } catch (ApiException e) {
+            throw mapException(e);
+        }
+    }
+
+    // -----------------------------------------------------------------------
+    // Management surface: create/update flags (called by Flag.save())
+    // -----------------------------------------------------------------------
+
+    /** Creates a new flag on the server. Called by {@link Flag#save()}. */
+    @SuppressWarnings("unchecked")
+    <T> Flag<T> _createFlag(Flag<T> flag) {
+        try {
+            var attrs = new com.smplkit.internal.generated.flags.model.Flag();
+            attrs.setName(flag.getName());
+            attrs.setType(com.smplkit.internal.generated.flags.model.Flag.TypeEnum.fromValue(flag.getType()));
+            attrs.setDefault(flag.getDefault());
+            if (flag.getDescription() != null) {
+                attrs.setDescription(flag.getDescription());
+            }
+            if (flag.getValues() != null) {
+                List<FlagValue> fvs = new ArrayList<>();
+                for (Map<String, Object> v : flag.getValues()) {
+                    FlagValue fv = new FlagValue();
+                    fv.setName((String) v.get("name"));
+                    fv.setValue(v.get("value"));
+                    fvs.add(fv);
+                }
+                attrs.setValues(fvs);
+            } else {
+                attrs.setValues(null);
+            }
+            if (flag.getEnvironments() != null && !flag.getEnvironments().isEmpty()) {
+                attrs.setEnvironments(buildEnvironments(flag.getEnvironments()));
+            }
+
+            // Create uses a dedicated envelope where the caller-supplied id is required.
+            FlagCreateResource data = new FlagCreateResource()
+                    .id(flag.getId())
+                    .type(FlagCreateResource.TypeEnum.FLAG)
+                    .attributes(attrs);
+            FlagCreateRequest body = new FlagCreateRequest().data(data);
+            FlagResponse response = flagsApi.createFlag(body);
+            Flag<?> result = parseSingleResponse(response);
+            return (Flag<T>) result;
+        } catch (ApiException e) {
+            throw mapException(e);
+        }
+    }
+
+    /** Updates an existing flag on the server. Called by {@link Flag#save()}. */
+    @SuppressWarnings("unchecked")
+    <T> Flag<T> _updateFlag(Flag<T> flag) {
+        try {
+            var attrs = new com.smplkit.internal.generated.flags.model.Flag();
+            attrs.setName(flag.getName());
+            attrs.setType(com.smplkit.internal.generated.flags.model.Flag.TypeEnum.fromValue(flag.getType()));
+            attrs.setDefault(flag.getDefault());
+            if (flag.getDescription() != null) {
+                attrs.setDescription(flag.getDescription());
+            }
+            if (flag.getValues() != null) {
+                List<FlagValue> fvs = new ArrayList<>();
+                for (Map<String, Object> v : flag.getValues()) {
+                    FlagValue fv = new FlagValue();
+                    fv.setName((String) v.get("name"));
+                    fv.setValue(v.get("value"));
+                    fvs.add(fv);
+                }
+                attrs.setValues(fvs);
+            } else {
+                attrs.setValues(null);
+            }
+            if (flag.getEnvironments() != null) {
+                attrs.setEnvironments(buildEnvironments(flag.getEnvironments()));
+            }
+
+            FlagResource data = new FlagResource().id(flag.getId()).type(FlagResource.TypeEnum.FLAG).attributes(attrs);
+            FlagRequest body = new FlagRequest().data(data);
+            FlagResponse response = flagsApi.updateFlag(flag.getId(), body);
+            Flag<?> result = parseSingleResponse(response);
+            return (Flag<T>) result;
+        } catch (ApiException e) {
+            throw mapException(e);
+        }
+    }
+
+    // -----------------------------------------------------------------------
+    // Management surface: discovery buffer (owned directly)
+    // -----------------------------------------------------------------------
+
+    /**
+     * Buffer a flag declaration for bulk-discovery upload.
+     *
+     * <p>The declaration stays buffered and is sent on the next flush — automatic once
+     * the buffer reaches its batch size, or on the first live call.</p>
+     *
+     * @param item the {@link FlagDeclaration} to queue
+     */
+    public void register(FlagDeclaration item) {
+        register(List.of(item), false);
+    }
+
+    /**
+     * Buffer a flag declaration for bulk-discovery upload; optionally flush now.
+     *
+     * @param item  the {@link FlagDeclaration} to queue
+     * @param flush when {@code true}, send the buffered declarations immediately via
+     *              {@link #flush()} before returning; when {@code false}, they stay
+     *              buffered and are sent on the next flush — automatic once the buffer
+     *              reaches its batch size, or on the first live call
+     */
+    public void register(FlagDeclaration item, boolean flush) {
+        register(List.of(item), flush);
+    }
+
+    /**
+     * Buffer flag declarations for bulk-discovery upload.
+     *
+     * <p>The declarations stay buffered and are sent on the next flush — automatic once
+     * the buffer reaches its batch size, or on the first live call.</p>
+     *
+     * @param items the {@link FlagDeclaration} list to queue
+     */
+    public void register(List<FlagDeclaration> items) {
+        register(items, false);
+    }
+
+    /**
+     * Buffer flag declarations for bulk-discovery upload; optionally flush now.
+     *
+     * @param items the {@link FlagDeclaration} list to queue
+     * @param flush when {@code true}, send the buffered declarations immediately via
+     *              {@link #flush()} before returning; when {@code false}, they stay
+     *              buffered and are sent on the next flush — automatic once the buffer
+     *              reaches its batch size, or on the first live call
+     */
+    public void register(List<FlagDeclaration> items, boolean flush) {
+        for (FlagDeclaration d : items) {
+            flagBuffer.add(d.id(), d.type(), d.defaultValue(), d.service(), d.environment());
+        }
+        if (flush) {
+            flush();
+            return;
+        }
+        if (flagBuffer.pendingCount() >= FLAG_BATCH_FLUSH_SIZE) {
+            Thread t = new Thread(this::thresholdFlush, "smplkit-flag-flush-eager");
+            t.setDaemon(true);
+            t.start();
+        }
+    }
+
+    private void thresholdFlush() {
+        try {
+            flushOrThrow();
+        } catch (Exception exc) {
+            LOG.warning("Flag registration flush failed: " + exc);
+        }
+    }
+
+    /**
+     * POST pending declarations to the flags bulk endpoint.
+     *
+     * <p>Items remain in the buffer until the request succeeds, so a flush
+     * against an unhealthy {@code flags} service is automatically retried by
+     * the next {@code flush()} call (periodic background flush, install retry,
+     * or final flush on close).</p>
+     */
+    public void flush() {
+        flushOrThrow();
+    }
+
+    /** Synchronous flush — alias of {@link #flush} for the periodic-flush path. */
+    public void flushSync() {
+        flush();
+    }
+
+    /**
+     * Number of pending flag declarations awaiting flush.
+     *
+     * @return the count of buffered flag declarations not yet sent
+     */
+    public int pendingCount() {
+        return flagBuffer.pendingCount();
+    }
+
+    /** Queue a declared flag with the owned discovery buffer. */
+    private void observeDeclaration(String flagId, String flagType, Object defaultValue) {
+        register(new FlagDeclaration(flagId, flagType, defaultValue, parentService, environment));
+    }
+
+    // -----------------------------------------------------------------------
+    // Live surface: typed flag handles
+    // -----------------------------------------------------------------------
+
+    /**
+     * Declare a boolean flag handle for live evaluation. Connects lazily on first use.
+     *
+     * @param id           identifier of the flag to evaluate
+     * @param defaultValue value returned by {@code handle.get()} when the flag is unknown
+     *                     or no environment override or rule applies
+     * @return a {@link Flag} handle whose {@code get()} evaluates against the live cache
+     */
+    public Flag<Boolean> booleanFlag(String id, boolean defaultValue) {
+        ensureConnected();
+        Flag<Boolean> handle = new Flag<>(this, id, id, "BOOLEAN", defaultValue,
+                null, null, null, null, null, Boolean.class);
+        handles.put(id, handle);
+        observeDeclaration(id, "BOOLEAN", defaultValue);
+        return handle;
+    }
+
+    /**
+     * Declare a string flag handle for live evaluation. Connects lazily on first use.
+     *
+     * @param id           identifier of the flag to evaluate
+     * @param defaultValue value returned by {@code handle.get()} when the flag is unknown
+     *                     or no environment override or rule applies
+     * @return a {@link Flag} handle whose {@code get()} evaluates against the live cache
+     */
+    public Flag<String> stringFlag(String id, String defaultValue) {
+        ensureConnected();
+        Flag<String> handle = new Flag<>(this, id, id, "STRING", defaultValue,
+                null, null, null, null, null, String.class);
+        handles.put(id, handle);
+        observeDeclaration(id, "STRING", defaultValue);
+        return handle;
+    }
+
+    /**
+     * Declare a numeric flag handle for live evaluation. Connects lazily on first use.
+     *
+     * @param id           identifier of the flag to evaluate
+     * @param defaultValue value returned by {@code handle.get()} when the flag is unknown
+     *                     or no environment override or rule applies
+     * @return a {@link Flag} handle whose {@code get()} evaluates against the live cache
+     */
+    public Flag<Number> numberFlag(String id, Number defaultValue) {
+        ensureConnected();
+        Flag<Number> handle = new Flag<>(this, id, id, "NUMERIC", defaultValue,
+                null, null, null, null, null, Number.class);
+        handles.put(id, handle);
+        observeDeclaration(id, "NUMERIC", defaultValue);
+        return handle;
+    }
+
+    /**
+     * Declare a JSON flag handle for live evaluation. Connects lazily on first use.
+     *
+     * @param id           identifier of the flag to evaluate
+     * @param defaultValue value returned by {@code handle.get()} when the flag is unknown
+     *                     or no environment override or rule applies
+     * @return a {@link Flag} handle whose {@code get()} evaluates against the live cache
+     */
+    public Flag<Object> jsonFlag(String id, Object defaultValue) {
+        ensureConnected();
+        Flag<Object> handle = new Flag<>(this, id, id, "JSON", defaultValue,
+                null, null, null, null, null, Object.class);
+        handles.put(id, handle);
+        observeDeclaration(id, "JSON", defaultValue);
+        return handle;
+    }
+
+    // -----------------------------------------------------------------------
+    // Live surface: lazy connect
+    // -----------------------------------------------------------------------
+
+    /**
+     * Open the live connection to the running Smpl Flags service.
+     *
+     * <p>Flushes any buffered discovery declarations, fetches all flag
+     * definitions into the local cache, opens the shared WebSocket, and
+     * subscribes to {@code flag_changed} / {@code flag_deleted} / {@code flags_changed}
+     * events.</p>
+     *
+     * <p>Idempotent and internal — every live method calls it on first use, so
+     * the live surface auto-connects with no explicit step.</p>
+     */
+    void ensureConnected() {
+        Runnable h = this.ensureStartedHook;
+        if (h != null) {
+            h.run();
+        }
         if (connected) return;
         synchronized (connectLock) {
             if (connected) return;
             if (retryScheduled) return;
             Debug.log("websocket", "flags runtime initializing");
 
+            // Flush discovered flags BEFORE fetching definitions so the fetch
+            // reflects them. Items stay in the buffer until the POST succeeds.
             // Flush + refresh are a transaction: only mark connected after both succeed.
             if (!flushFlags()) {
                 scheduleConnectRetry();
@@ -312,7 +890,7 @@ public final class FlagsClient {
             }
             resolutionCache.clear();
 
-            SharedWebSocket ws = this.sharedWs;
+            SharedWebSocket ws = ensureWs();
             if (ws != null && !wsHandlersRegistered) {
                 Debug.log("registration", "registering flag_changed, flag_deleted, and flags_changed handlers");
                 ws.on("flag_changed", flagChangedHandler);
@@ -338,6 +916,22 @@ public final class FlagsClient {
         }
     }
 
+    /** Return the shared WebSocket — the parent's when wired, else our own. */
+    private SharedWebSocket ensureWs() {
+        SharedWebSocket ws = this.sharedWs;
+        if (ws != null) return ws;
+        if (appBaseUrl == null || httpClient == null) return null;
+        synchronized (connectLock) {
+            if (this.sharedWs == null) {
+                SharedWebSocket created = new SharedWebSocket(httpClient, appBaseUrl, apiKey, metrics);
+                created.start();
+                this.sharedWs = created;
+                this.ownsWs = true;
+            }
+            return this.sharedWs;
+        }
+    }
+
     private void scheduleConnectRetry() {
         long delay = backoffSeconds;
         backoffSeconds = Math.min(backoffSeconds * 2, 60);
@@ -347,13 +941,22 @@ public final class FlagsClient {
             retryFuture = contextFlushExecutor.schedule(() -> {
                 retryScheduled = false;
                 retryFuture = null;
-                _connectInternal();
+                ensureConnected();
             }, delay, TimeUnit.SECONDS);
         }
     }
 
-    /** Refreshes all flag definitions from the server. */
+    // -----------------------------------------------------------------------
+    // Live surface: refresh / stats / change listeners
+    // -----------------------------------------------------------------------
+
+    /**
+     * Re-fetch all flag definitions and clear cache.
+     *
+     * <p>Connects lazily on first use — no explicit install step.</p>
+     */
     public void refresh() {
+        ensureConnected();
         Map<String, Map<String, Object>> preStore = new HashMap<>(flagStore);
         fetchAllFlags();
         resolutionCache.clear();
@@ -377,61 +980,35 @@ public final class FlagsClient {
         }
     }
 
-    /** Returns evaluation statistics. */
+    /** Return evaluation statistics. Connects lazily on first use. */
     public FlagStats stats() {
+        ensureConnected();
         return new FlagStats(cacheHits.get(), cacheMisses.get());
     }
 
-    // -----------------------------------------------------------------------
-    // Runtime: context registration (internal — use client.management.contexts.register())
-    // -----------------------------------------------------------------------
-
-    void register(Context... contexts) {
-        for (Context ctx : contexts) {
-            observeContext(ctx);
-        }
-    }
-
-    void register(List<Context> contexts) {
-        for (Context ctx : contexts) {
-            observeContext(ctx);
-        }
-    }
-
-    void flushContexts() {
-        List<Map<String, Object>> batch = drainPendingContexts();
-        if (batch.isEmpty()) return;
-        try {
-            List<ContextBulkItem> items = new ArrayList<>();
-            for (Map<String, Object> entry : batch) {
-                String type = (String) entry.get("type");
-                String key = (String) entry.get("key");
-                @SuppressWarnings("unchecked")
-                Map<String, Object> attrs = (Map<String, Object>) entry.get("attributes");
-                ContextBulkItem item = new ContextBulkItem()
-                        .type(type)
-                        .key(key)
-                        .attributes(attrs);
-                items.add(item);
-            }
-            ContextBulkRegister reqBody = new ContextBulkRegister().contexts(items);
-            contextsApi.bulkRegisterContexts(reqBody);
-        } catch (Exception e) {
-            Debug.log("registration", "Context flush failed: " + e);
-        }
-    }
-
-    // -----------------------------------------------------------------------
-    // Runtime: change listeners
-    // -----------------------------------------------------------------------
-
-    /** Registers a listener that fires when any flag changes. */
+    /**
+     * Register a change listener that fires when any flag changes (global listener).
+     *
+     * <p>Connects lazily on first use — no explicit install step.</p>
+     *
+     * @param listener the callback invoked with a {@link FlagChangeEvent} on every change
+     */
     public void onChange(Consumer<FlagChangeEvent> listener) {
+        ensureConnected();
         listeners.add(new ListenerEntry(null, listener));
     }
 
-    /** Registers a listener that fires when the specified flag changes. */
+    /**
+     * Register a change listener that fires when the specified flag changes
+     * (id-scoped listener).
+     *
+     * <p>Connects lazily on first use — no explicit install step.</p>
+     *
+     * @param id       identifier of the flag whose changes the listener is scoped to
+     * @param listener the callback invoked with a {@link FlagChangeEvent} when that flag changes
+     */
     public void onChange(String id, Consumer<FlagChangeEvent> listener) {
+        ensureConnected();
         listeners.add(new ListenerEntry(id, listener));
     }
 
@@ -439,15 +1016,19 @@ public final class FlagsClient {
     // Internal: evaluation engine
     // -----------------------------------------------------------------------
 
-    /** Evaluates a flag by id. Called by {@link Flag#get()}. */
+    /**
+     * Core evaluation used by flag handles (the {@code .get()} path).
+     *
+     * <p>Connects lazily on first use so {@code flag.get()} works without an
+     * explicit install step.</p>
+     */
     @SuppressWarnings("unchecked")
     Object _evaluateHandle(String id, Object defaultValue, List<Context> contexts) {
         if (!connected) {
-            _connectInternal();
+            ensureConnected();
         }
 
         Map<String, Object> flagData = flagStore.get(id);
-        if (flagData == null) return defaultValue;
 
         List<Context> ctxList;
         if (contexts != null) {
@@ -467,6 +1048,8 @@ public final class FlagsClient {
             flushThread.setDaemon(true);
             flushThread.start();
         }
+
+        if (flagData == null) return defaultValue;
 
         Map<String, Object> evalData = buildEvalData(ctxList);
 
@@ -497,6 +1080,16 @@ public final class FlagsClient {
         return result;
     }
 
+    /**
+     * Evaluate a flag definition against the given context.
+     *
+     * <ol>
+     *   <li>Look up the environment. If missing, return flag-level default.</li>
+     *   <li>If disabled, return env default or flag default.</li>
+     *   <li>Iterate rules; first match wins.</li>
+     *   <li>No match → env default or flag default.</li>
+     * </ol>
+     */
     @SuppressWarnings("unchecked")
     private Object evaluateFlag(String key, Map<String, Object> flagData,
                                 String env, Map<String, Object> evalData) {
@@ -507,10 +1100,11 @@ public final class FlagsClient {
         }
 
         Map<String, Object> envData = (Map<String, Object>) environments.get(env);
+        Object fallback = envData.get("default") != null ? envData.get("default") : flagDefault;
+
         Boolean enabled = (Boolean) envData.get("enabled");
         if (enabled == null || !enabled) {
-            Object envDefault = envData.get("default");
-            return envDefault != null ? envDefault : flagDefault;
+            return fallback;
         }
 
         List<Map<String, Object>> rules = (List<Map<String, Object>>) envData.get("rules");
@@ -530,8 +1124,7 @@ public final class FlagsClient {
             }
         }
 
-        Object envDefault = envData.get("default");
-        return envDefault != null ? envDefault : flagDefault;
+        return fallback;
     }
 
     private static boolean isTruthy(Object value) {
@@ -599,25 +1192,45 @@ public final class FlagsClient {
         return batch;
     }
 
+    void flushContexts() {
+        List<Map<String, Object>> batch = drainPendingContexts();
+        if (batch.isEmpty()) return;
+        try {
+            List<ContextBulkItem> items = new ArrayList<>();
+            for (Map<String, Object> entry : batch) {
+                String type = (String) entry.get("type");
+                String key = (String) entry.get("key");
+                @SuppressWarnings("unchecked")
+                Map<String, Object> attrs = (Map<String, Object>) entry.get("attributes");
+                ContextBulkItem item = new ContextBulkItem()
+                        .type(type)
+                        .key(key)
+                        .attributes(attrs);
+                items.add(item);
+            }
+            ContextBulkRegister reqBody = new ContextBulkRegister().contexts(items);
+            contextsApi.bulkRegisterContexts(reqBody);
+        } catch (Exception e) {
+            Debug.log("registration", "Context flush failed: " + e);
+        }
+    }
+
     private void flushContextsSafe() {
         flushContexts();
     }
 
-    /** Peeks the buffer, POSTs to the server, and commits only on success. Returns true on success. */
+    /**
+     * Peeks the buffer, POSTs to the server, and commits only on success.
+     * Returns true on success (used by the lazy-connect transaction and
+     * the periodic/eager background flushes which must not throw).
+     */
     boolean flushFlags() {
         List<FlagRegistrationEntry> batch = flagBuffer.peek();
         if (batch.isEmpty()) return true;
         try {
-            FlagBulkRequest req = new FlagBulkRequest();
+            FlagBulkRequest req = buildBulkRequest(batch);
             Set<String> ids = new HashSet<>();
             for (FlagRegistrationEntry entry : batch) {
-                FlagBulkItem item = new FlagBulkItem();
-                item.setId(entry.id());
-                item.setType(FlagBulkItem.TypeEnum.fromValue(entry.type()));
-                item.setDefault(entry.defaultValue());
-                if (entry.service() != null) item.setService(entry.service());
-                if (entry.environment() != null) item.setEnvironment(entry.environment());
-                req.addFlagsItem(item);
                 ids.add(entry.id());
             }
             flagsApi.bulkRegisterFlags(req);
@@ -630,6 +1243,37 @@ public final class FlagsClient {
         }
     }
 
+    /** POSTs pending declarations, raising the mapped SDK exception on failure. */
+    private void flushOrThrow() {
+        List<FlagRegistrationEntry> batch = flagBuffer.peek();
+        if (batch.isEmpty()) return;
+        FlagBulkRequest req = buildBulkRequest(batch);
+        Set<String> ids = new HashSet<>();
+        for (FlagRegistrationEntry entry : batch) {
+            ids.add(entry.id());
+        }
+        try {
+            flagsApi.bulkRegisterFlags(req);
+        } catch (ApiException e) {
+            throw mapException(e);
+        }
+        flagBuffer.commit(ids);
+    }
+
+    private static FlagBulkRequest buildBulkRequest(List<FlagRegistrationEntry> batch) {
+        FlagBulkRequest req = new FlagBulkRequest();
+        for (FlagRegistrationEntry entry : batch) {
+            FlagBulkItem item = new FlagBulkItem();
+            item.setId(entry.id());
+            item.setType(FlagBulkItem.TypeEnum.fromValue(entry.type()));
+            item.setDefault(entry.defaultValue());
+            if (entry.service() != null) item.setService(entry.service());
+            if (entry.environment() != null) item.setEnvironment(entry.environment());
+            req.addFlagsItem(item);
+        }
+        return req;
+    }
+
     private void flushFlagsSafe() {
         flushFlags();
     }
@@ -640,7 +1284,7 @@ public final class FlagsClient {
         flagStore.clear();
         int page = 1;
         while (true) {
-            List<Flag<?>> rows = management.list(page, RUNTIME_PAGE_SIZE);
+            List<Flag<?>> rows = list(page, RUNTIME_PAGE_SIZE);
             for (Flag<?> flag : rows) {
                 flagStore.put(flag.getId(), flagToStoreEntry(flag));
             }
@@ -680,7 +1324,7 @@ public final class FlagsClient {
         // Scoped fetch: GET /flags/{key}
         Flag<?> fetched;
         try {
-            fetched = management.get(flagKey);
+            fetched = get(flagKey);
         } catch (Exception e) {
             Debug.log("websocket", "flag_changed scoped fetch failed for key=" + flagKey + ": " + e);
             return;
@@ -710,8 +1354,11 @@ public final class FlagsClient {
         Debug.log("websocket", "flag_deleted event received, key=" + flagKey);
 
         // Remove from local store — no HTTP fetch
+        boolean existed = flagStore.containsKey(flagKey);
         flagStore.remove(flagKey);
         resolutionCache.clear();
+
+        if (!existed) return;
 
         FlagChangeEvent event = new FlagChangeEvent(flagKey, "websocket", true);
         fireListenersForKey(flagKey, event);
@@ -726,7 +1373,12 @@ public final class FlagsClient {
         Map<String, Map<String, Object>> preStore = new HashMap<>(flagStore);
 
         // Full list fetch
-        fetchAllFlags();
+        try {
+            fetchAllFlags();
+        } catch (Exception e) {
+            Debug.log("websocket", "Failed to refresh flags after flags_changed WS event: " + e);
+            return;
+        }
         resolutionCache.clear();
 
         // Diff pre vs post — fire per-key listener for each changed key, global once
@@ -761,7 +1413,7 @@ public final class FlagsClient {
             try {
                 entry.listener.accept(event);
             } catch (Exception e) {
-                LOG.log(Level.WARNING, "Exception in onChange listener for flag '" + flagKey + "'", e);
+                LOG.log(Level.WARNING, "Exception in id-scoped flags onChange listener for flag '" + flagKey + "'", e);
             }
         }
     }
@@ -773,13 +1425,13 @@ public final class FlagsClient {
             try {
                 entry.listener.accept(event);
             } catch (Exception e) {
-                LOG.log(Level.WARNING, "Exception in global onChange listener", e);
+                LOG.log(Level.WARNING, "Exception in global flags onChange listener", e);
             }
         }
     }
 
     // -----------------------------------------------------------------------
-    // Internal: response parsing (package-private for FlagsManagement)
+    // Internal: response parsing
     // -----------------------------------------------------------------------
 
     @SuppressWarnings("unchecked")
@@ -875,84 +1527,29 @@ public final class FlagsClient {
     }
 
     // -----------------------------------------------------------------------
-    // Internal: create/update flags (called by Flag.save())
+    // Lifecycle
     // -----------------------------------------------------------------------
 
-    /** Creates a new flag on the server. Called by {@link Flag#save()}. */
-    @SuppressWarnings("unchecked")
-    <T> Flag<T> _createFlag(Flag<T> flag) {
-        try {
-            var attrs = new com.smplkit.internal.generated.flags.model.Flag();
-            attrs.setName(flag.getName());
-            attrs.setType(com.smplkit.internal.generated.flags.model.Flag.TypeEnum.fromValue(flag.getType()));
-            attrs.setDefault(flag.getDefault());
-            if (flag.getDescription() != null) {
-                attrs.setDescription(flag.getDescription());
-            }
-            if (flag.getValues() != null) {
-                List<FlagValue> fvs = new ArrayList<>();
-                for (Map<String, Object> v : flag.getValues()) {
-                    FlagValue fv = new FlagValue();
-                    fv.setName((String) v.get("name"));
-                    fv.setValue(v.get("value"));
-                    fvs.add(fv);
-                }
-                attrs.setValues(fvs);
-            } else {
-                attrs.setValues(null);
-            }
-            if (flag.getEnvironments() != null && !flag.getEnvironments().isEmpty()) {
-                attrs.setEnvironments(buildEnvironments(flag.getEnvironments()));
-            }
-
-            // Create uses a dedicated envelope where the caller-supplied id is required.
-            FlagCreateResource data = new FlagCreateResource()
-                    .id(flag.getId())
-                    .type(FlagCreateResource.TypeEnum.FLAG)
-                    .attributes(attrs);
-            FlagCreateRequest body = new FlagCreateRequest().data(data);
-            FlagResponse response = flagsApi.createFlag(body);
-            Flag<?> result = parseSingleResponse(response);
-            return (Flag<T>) result;
-        } catch (ApiException e) {
-            throw mapException(e);
+    /**
+     * Release resources — only those this client owns.
+     *
+     * <p>Tears down the owned WebSocket (standalone install) and the owned
+     * flags + app HTTP transports (standalone construction). A wired client
+     * borrows the parent's transport, WebSocket, and contexts client and
+     * closes none of them.</p>
+     */
+    @Override
+    public void close() {
+        if (contextFlushExecutor != null) {
+            contextFlushExecutor.shutdownNow();
         }
-    }
-
-    /** Updates an existing flag on the server. Called by {@link Flag#save()}. */
-    @SuppressWarnings("unchecked")
-    <T> Flag<T> _updateFlag(Flag<T> flag) {
-        try {
-            var attrs = new com.smplkit.internal.generated.flags.model.Flag();
-            attrs.setName(flag.getName());
-            attrs.setType(com.smplkit.internal.generated.flags.model.Flag.TypeEnum.fromValue(flag.getType()));
-            attrs.setDefault(flag.getDefault());
-            if (flag.getDescription() != null) {
-                attrs.setDescription(flag.getDescription());
-            }
-            if (flag.getValues() != null) {
-                List<FlagValue> fvs = new ArrayList<>();
-                for (Map<String, Object> v : flag.getValues()) {
-                    FlagValue fv = new FlagValue();
-                    fv.setName((String) v.get("name"));
-                    fv.setValue(v.get("value"));
-                    fvs.add(fv);
-                }
-                attrs.setValues(fvs);
-            } else {
-                attrs.setValues(null);
-            }
-            if (flag.getEnvironments() != null) {
-                attrs.setEnvironments(buildEnvironments(flag.getEnvironments()));
-            }
-
-            FlagResource data = new FlagResource().id(flag.getId()).type(FlagResource.TypeEnum.FLAG).attributes(attrs);
-            FlagRequest body = new FlagRequest().data(data);
-            FlagResponse response = flagsApi.updateFlag(flag.getId(), body);
-            Flag<?> result = parseSingleResponse(response);
-            return (Flag<T>) result;
-        } catch (ApiException e) {
-            throw mapException(e);
+        if (ownsWs && sharedWs != null) {
+            sharedWs.close();
+            sharedWs = null;
+            ownsWs = false;
+        }
+        if (ownsTransport) {
+            // No persistent resources beyond the owned HttpClient (managed by JDK).
         }
     }
 

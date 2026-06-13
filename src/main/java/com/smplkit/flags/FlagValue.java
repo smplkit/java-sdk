@@ -1,8 +1,9 @@
 package com.smplkit.flags;
 
 /**
- * Constrained-value entry on a flag — a (name, value) pair shown in dashboards
- * and used for value-pinning rules. Immutable record; mirrors Python's
- * {@code FlagValue}.
+ * A constrained value entry on a {@link Flag}.
+ *
+ * <p>Lives in {@link Flag#values}. Frozen — author values via
+ * {@link Flag#addValue} / {@link Flag#removeValue} / {@link Flag#clearValues}.</p>
  */
 public record FlagValue(String name, Object value) {}

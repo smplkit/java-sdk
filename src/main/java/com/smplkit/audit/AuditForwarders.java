@@ -19,7 +19,9 @@ import java.util.Map;
 /**
  * SIEM streaming forwarder CRUD for the authenticated account.
  *
- * <p>Accessed via {@code SmplManagementClient.audit.forwarders}.</p>
+ * <p>Forwarders are part of the single unified audit surface — there is no
+ * runtime/management split for audit. Accessed via
+ * {@code client.audit().forwarders()}.</p>
  */
 public final class AuditForwarders {
 
@@ -79,12 +81,26 @@ public final class AuditForwarders {
         return fwd;
     }
 
-    /** List forwarders for the authenticated account (default filters and page size). */
+    /**
+     * List forwarders for the authenticated account, using default filters
+     * and page size.
+     *
+     * @return a {@link ListForwardersPage} of the matching forwarders
+     * @throws ApiException if the request fails
+     */
     public ListForwardersPage list() throws ApiException {
         return list(new ListForwardersInput());
     }
 
-    /** List forwarders for the authenticated account. */
+    /**
+     * List forwarders for the authenticated account. Offset paginated via
+     * {@link ListForwardersInput#pageNumber} / {@link ListForwardersInput#pageSize}.
+     *
+     * @param input filters (forwarder type) and pagination; an empty instance
+     *     lists every type with default paging
+     * @return a {@link ListForwardersPage} of the matching forwarders
+     * @throws ApiException if the request fails
+     */
     public ListForwardersPage list(ListForwardersInput input) throws ApiException {
         String filterType = input.forwarderType == null ? null : input.forwarderType.getValue();
         ForwarderListResponse resp = api.listForwarders(
@@ -100,13 +116,26 @@ public final class AuditForwarders {
     /**
      * Fetch a single forwarder by id; the returned instance is bound to this
      * client so {@code forwarder.save()} and {@code forwarder.delete()} work.
+     *
+     * <p>Header values come back in plaintext, so mutating the returned
+     * forwarder and calling {@code save()} preserves them without re-entering
+     * secrets.</p>
+     *
+     * @param forwarderId the forwarder's id (key)
+     * @return the matching {@link Forwarder}, bound to this client
+     * @throws ApiException if no forwarder with that id exists in the caller's account
      */
     public Forwarder get(String forwarderId) throws ApiException {
         ForwarderResponse resp = api.getForwarder(forwarderId);
         return fromResource(resp.getData());
     }
 
-    /** Soft-delete a forwarder by id. */
+    /**
+     * Delete a forwarder.
+     *
+     * @param forwarderId the id (key) of the forwarder to delete
+     * @throws ApiException if the request fails (e.g. no forwarder with that id)
+     */
     public void delete(String forwarderId) throws ApiException {
         api.deleteForwarder(forwarderId);
     }
@@ -141,7 +170,7 @@ public final class AuditForwarders {
         attrs.setName(forwarder.name);
         if (forwarder.description != null) attrs.setDescription(forwarder.description);
         attrs.setForwarderType(toGenForwarderType(forwarder.forwarderType));
-        // The base ``enabled`` is server-pinned false (ADR-055); it's read-only,
+        // The base ``enabled`` is server-pinned false; it's read-only,
         // so we never send it. Enablement travels entirely through ``environments``.
         attrs.setConfiguration(toGenConfiguration(forwarder.configuration));
         if (forwarder.environments != null && !forwarder.environments.isEmpty()) {
@@ -218,7 +247,7 @@ public final class AuditForwarders {
                 a.getFilter(),
                 tt != null ? TransformType.fromValue(tt.getValue()) : null,
                 a.getTransform(),
-                // Absent on the wire means a forwarder persisted before the
+                // Absent in the response means a forwarder persisted before the
                 // field landed — default to false (no platform events).
                 a.getForwardSmplkitEvents() != null ? a.getForwardSmplkitEvents() : false,
                 cfg,
@@ -287,7 +316,7 @@ public final class AuditForwarders {
         if (src.getMethod() != null) out.method = HttpMethod.fromValue(src.getMethod().getValue());
         out.url = src.getUrl() != null ? src.getUrl() : "";
         if (src.getSuccessStatus() != null) out.successStatus = src.getSuccessStatus();
-        // Absent ``tls_verify`` on the wire means a forwarder persisted
+        // Absent ``tls_verify`` in the response means a forwarder persisted
         // before the field landed — default to verifying so its prior
         // secure behaviour is preserved.
         out.tlsVerify = src.getTlsVerify() == null ? true : src.getTlsVerify();

@@ -14,8 +14,7 @@ import java.util.stream.Collectors;
  * Distinct resource-type slugs seen for the account — accessed via
  * {@link AuditClient#resourceTypes()}.
  *
- * <p>Backed by a maintain-by-write side table (ADR-047 §2.5), so the
- * response time is independent of how many years of events the account
+ * <p>Response time is independent of how many years of events the account
  * has accumulated. Sorted alphabetically; offset pagination via
  * {@link ListResourceTypesInput#pageNumber} / {@link
  * ListResourceTypesInput#pageSize}.</p>
@@ -28,7 +27,14 @@ public final class AuditResourceTypesClient {
         this.api = api;
     }
 
-    /** List the distinct resource_type slugs seen in the account. */
+    /**
+     * List the distinct resource-type slugs seen in the account.
+     *
+     * @param input optional environment scope and pagination; an empty
+     *     instance lists every distinct resource type
+     * @return a {@link ListResourceTypesPage} of the matching resource-type slugs
+     * @throws ApiException if the request fails
+     */
     public ListResourceTypesPage list(ListResourceTypesInput input) throws ApiException {
         ResourceTypeListResponse resp = api.listResourceTypes(
                 joinEnvironments(input.environments), null,
@@ -61,7 +67,7 @@ public final class AuditResourceTypesClient {
      * Join environment keys into the comma-separated string the generated
      * {@code filter[environment]} parameter expects. Returns {@code null} when
      * the list is {@code null} or contains no non-blank entries, leaving the
-     * filter unset on the wire (prior behavior). Blank entries are dropped.
+     * filter unset (prior behavior). Blank entries are dropped.
      */
     static String joinEnvironments(List<String> environments) {
         if (environments == null || environments.isEmpty()) {

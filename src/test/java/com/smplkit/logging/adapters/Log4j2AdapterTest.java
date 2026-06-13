@@ -12,6 +12,7 @@ import java.util.List;
 import java.util.concurrent.CopyOnWriteArrayList;
 
 import static org.junit.jupiter.api.Assertions.*;
+import static org.mockito.Mockito.*;
 
 /**
  * Tests for the Log4j2 logging adapter.
@@ -257,5 +258,17 @@ class Log4j2AdapterTest {
         adapter.discover();
         createLogger("com.smplkit.log4j2.nohook." + System.nanoTime());
         adapter.pollForNewLoggers();
+    }
+
+    @Test
+    void resolveLog4j2Level_nullEffectiveLevel_fallsBackToInfo() {
+        // Log4j2's getLevel() is documented as always non-null in real use, but
+        // the resolver defensively falls back to "INFO" when it is null. Mock a
+        // core Logger whose getLevel() returns null to exercise that false arm.
+        org.apache.logging.log4j.core.Logger logger =
+                mock(org.apache.logging.log4j.core.Logger.class);
+        when(logger.getLevel()).thenReturn(null);
+
+        assertEquals("INFO", Log4j2Adapter.resolveLog4j2Level(logger));
     }
 }

@@ -13,7 +13,12 @@ import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;
 
 /**
- * Tests for the Logger model class.
+ * Tests for the {@link Logger} model class.
+ *
+ * <p>The active-record {@code save()} delegates to {@link LoggersClient#saveLogger}
+ * (an id-addressed upsert PUT); {@code delete()} delegates to
+ * {@link LoggersClient#delete}. Both are exercised here against a mocked
+ * {@link LoggersClient}.</p>
  */
 class LoggerTest {
 
@@ -51,7 +56,7 @@ class LoggerTest {
     }
 
     // -----------------------------------------------------------------------
-    // Setters
+    // Public setters
     // -----------------------------------------------------------------------
 
     @Test
@@ -66,45 +71,25 @@ class LoggerTest {
 
         lg.setManaged(true);
         assertTrue(lg.isManaged());
-
-        Map<String, Object> envs = new HashMap<>();
-        envs.put("staging", Map.of("level", "DEBUG"));
-        lg.setEnvironments(envs);
-        assertEquals(1, lg.getEnvironments().size());
-
-        // Null environments becomes empty map
-        lg.setEnvironments(null);
-        assertNotNull(lg.getEnvironments());
-        assertTrue(lg.getEnvironments().isEmpty());
     }
 
     @Test
     void packagePrivateSetters_work() {
         Logger lg = new Logger(null, null, "name", null, null, false, null, null, null, null);
-        Instant now = Instant.now();
 
         lg.setId("new-id");
         assertEquals("new-id", lg.getId());
 
-        lg.setSources(List.of(Map.of("a", "b")));
-        assertEquals(1, lg.getSources().size());
-
-        lg.setSources(null);
-        assertNotNull(lg.getSources());
-        assertTrue(lg.getSources().isEmpty());
-
-        lg.setCreatedAt(now);
-        assertEquals(now, lg.getCreatedAt());
-
-        lg.setUpdatedAt(now);
-        assertEquals(now, lg.getUpdatedAt());
-
         lg.setLevelRaw("ERROR");
         assertEquals("ERROR", lg.getLevel());
 
-        LoggingClient mockClient = mock(LoggingClient.class);
+        // setClient rebinds the active-record client; save() now routes to it.
+        LoggersClient mockClient = mock(LoggersClient.class);
+        Logger returned = new Logger(null, "new-id", "name", null, null, false, null, null, null, null);
+        when(mockClient.saveLogger(lg)).thenReturn(returned);
         lg.setClient(mockClient);
-        assertEquals(mockClient, lg.getClient());
+        lg.save();
+        verify(mockClient).saveLogger(lg);
     }
 
     // -----------------------------------------------------------------------
@@ -123,6 +108,13 @@ class LoggerTest {
     }
 
     @Test
+    void setLevel_nullClearsBaseLevel() {
+        Logger lg = new Logger(null, null, "name", "INFO", null, false, null, null, null, null);
+        lg.setLevel(null);
+        assertNull(lg.getLevel());
+    }
+
+    @Test
     void clearLevel_setsNull() {
         Logger lg = new Logger(null, null, "name", "INFO", null, false, null, null, null, null);
         assertNotNull(lg.getLevel());
@@ -132,31 +124,40 @@ class LoggerTest {
     }
 
     @Test
-    void setEnvironmentLevel_addsEntry() {
+    void setLevel_withEnvironment_addsEntry() {
         Logger lg = new Logger(null, null, "name", null, null, false, null, null, null, null);
 
-        lg.setEnvironmentLevel("production", LogLevel.ERROR);
+        lg.setLevel(LogLevel.ERROR, "production");
         Map<?, ?> envData = (Map<?, ?>) lg.getEnvironments().get("production");
         assertNotNull(envData);
         assertEquals("ERROR", envData.get("level"));
     }
 
     @Test
-    void clearEnvironmentLevel_removesEntry() {
+    void setLevel_withEnvironmentAndNull_storesNullOverride() {
+        Logger lg = new Logger(null, null, "name", null, null, false, null, null, null, null);
+        lg.setLevel(null, "production");
+        Map<?, ?> envData = (Map<?, ?>) lg.getEnvironments().get("production");
+        assertNotNull(envData);
+        assertNull(envData.get("level"));
+    }
+
+    @Test
+    void clearLevel_withEnvironment_removesEntry() {
         Map<String, Object> envs = new HashMap<>();
         envs.put("prod", Map.of("level", "WARN"));
         envs.put("staging", Map.of("level", "DEBUG"));
         Logger lg = new Logger(null, null, "name", null, null, false, null, envs, null, null);
 
-        lg.clearEnvironmentLevel("prod");
+        lg.clearLevel("prod");
         assertNull(lg.getEnvironments().get("prod"));
         assertNotNull(lg.getEnvironments().get("staging"));
     }
 
     @Test
-    void clearEnvironmentLevel_noopIfNotPresent() {
+    void clearLevel_withEnvironment_noopIfNotPresent() {
         Logger lg = new Logger(null, null, "name", null, null, false, null, null, null, null);
-        lg.clearEnvironmentLevel("nonexistent"); // should not throw
+        lg.clearLevel("nonexistent"); // should not throw
         assertTrue(lg.getEnvironments().isEmpty());
     }
 
@@ -172,6 +173,28 @@ class LoggerTest {
     }
 
     // -----------------------------------------------------------------------
+    // environments() typed view
+    // -----------------------------------------------------------------------
+
+    @Test
+    void environments_returnsTypedView() {
+        Map<String, Object> envs = new HashMap<>();
+        envs.put("production", Map.of("level", "ERROR"));
+        Logger lg = new Logger(null, "x", "X", null, null, true, null, envs, null, null);
+
+        Map<String, LoggerEnvironment> typed = lg.environments();
+        assertEquals(LogLevel.ERROR, typed.get("production").level());
+    }
+
+    @Test
+    void environments_skipsNonMapEntries() {
+        Map<String, Object> envs = new HashMap<>();
+        envs.put("production", "not-a-map");
+        Logger lg = new Logger(null, "x", "X", null, null, true, null, envs, null, null);
+        assertTrue(lg.environments().isEmpty());
+    }
+
+    // -----------------------------------------------------------------------
     // save()
     // -----------------------------------------------------------------------
 
@@ -182,44 +205,93 @@ class LoggerTest {
     }
 
     @Test
-    void save_callsSaveLoggerForNewLogger() {
-        LoggingClient mockClient = mock(LoggingClient.class);
+    void save_callsSaveLoggerAndAppliesResult() {
+        LoggersClient mockClient = mock(LoggersClient.class);
         Logger lg = new Logger(mockClient, "my-logger", "name", null, null, false, null, null, null, null);
-        Logger created = new Logger(null, "my-logger", "name", null, null, false, null, null, Instant.now(), Instant.now());
-        when(mockClient._saveLogger(lg)).thenReturn(created);
+        Logger updated = new Logger(null, "created-id", "name", null, null, false, null, null,
+                Instant.now(), Instant.now());
+        when(mockClient.saveLogger(lg)).thenReturn(updated);
 
         lg.save();
 
-        verify(mockClient)._saveLogger(lg);
-        assertEquals("my-logger", lg.getId());
+        verify(mockClient).saveLogger(lg);
+        assertEquals("created-id", lg.getId());
     }
 
     @Test
-    void save_callsSaveLoggerForExistingLogger() {
-        LoggingClient mockClient = mock(LoggingClient.class);
+    void save_existingLogger_copiesUpdatedAttributes() {
+        LoggersClient mockClient = mock(LoggersClient.class);
         Instant now = Instant.now();
         Logger lg = new Logger(mockClient, "existing-id", "name", null, null, false, null, null, now, now);
         Logger updated = new Logger(null, "existing-id", "Updated Name", "INFO", null, false, null, null, now, now);
-        when(mockClient._saveLogger(lg)).thenReturn(updated);
+        when(mockClient.saveLogger(lg)).thenReturn(updated);
 
         lg.save();
 
-        verify(mockClient)._saveLogger(lg);
+        verify(mockClient).saveLogger(lg);
         assertEquals("Updated Name", lg.getName());
+        assertEquals("INFO", lg.getLevel());
+    }
+
+    @Test
+    void saveAsync_runsSaveOnExecutor() {
+        LoggersClient mockClient = mock(LoggersClient.class);
+        Logger lg = new Logger(mockClient, "id", "name", null, null, false, null, null, null, null);
+        Logger updated = new Logger(null, "id", "name", null, null, false, null, null,
+                Instant.now(), Instant.now());
+        when(mockClient.saveLogger(lg)).thenReturn(updated);
+
+        lg.saveAsync().join();
+
+        verify(mockClient).saveLogger(lg);
     }
 
     // -----------------------------------------------------------------------
-    // _apply
+    // delete()
     // -----------------------------------------------------------------------
 
     @Test
-    void apply_copiesAllFields() {
+    void delete_callsClientDelete() {
+        LoggersClient mockClient = mock(LoggersClient.class);
+        Logger lg = new Logger(mockClient, "doomed", "name", null, null, false, null, null, null, null);
+
+        lg.delete();
+
+        verify(mockClient).delete("doomed");
+    }
+
+    @Test
+    void delete_throwsWhenNoClientOrId() {
+        Logger noClient = new Logger(null, "id", "name", null, null, false, null, null, null, null);
+        assertThrows(IllegalStateException.class, noClient::delete);
+
+        LoggersClient mockClient = mock(LoggersClient.class);
+        Logger noId = new Logger(mockClient, null, "name", null, null, false, null, null, null, null);
+        assertThrows(IllegalStateException.class, noId::delete);
+    }
+
+    @Test
+    void deleteAsync_runsDeleteOnExecutor() {
+        LoggersClient mockClient = mock(LoggersClient.class);
+        Logger lg = new Logger(mockClient, "doomed", "name", null, null, false, null, null, null, null);
+
+        lg.deleteAsync().join();
+
+        verify(mockClient).delete("doomed");
+    }
+
+    // -----------------------------------------------------------------------
+    // applyFrom
+    // -----------------------------------------------------------------------
+
+    @Test
+    void applyFrom_copiesAllFields() {
         Instant now = Instant.now();
         Logger source = new Logger(null, "id-1", "Name 1", "DEBUG", "grp",
                 true, List.of(Map.of("x", "y")), Map.of("p", Map.of("level", "WARN")), now, now);
         Logger target = new Logger(null, null, "Old", null, null, false, null, null, null, null);
 
-        target._apply(source);
+        target.applyFrom(source);
 
         assertEquals("id-1", target.getId());
         assertEquals("Name 1", target.getName());
@@ -233,11 +305,12 @@ class LoggerTest {
     }
 
     @Test
-    void apply_handlesNullSourcesAndEnvironments() {
+    void applyFrom_handlesNullSourcesAndEnvironments() {
         Logger source = new Logger(null, "id", "Name", null, null, false, null, null, null, null);
-        Logger target = new Logger(null, null, "Old", null, null, false, List.of(Map.of("a", "b")), Map.of("x", "y"), null, null);
+        Logger target = new Logger(null, null, "Old", null, null, false,
+                new ArrayList<>(List.of(Map.of("a", "b"))), new HashMap<>(Map.of("x", "y")), null, null);
 
-        target._apply(source);
+        target.applyFrom(source);
 
         assertNotNull(target.getSources());
         assertTrue(target.getSources().isEmpty());

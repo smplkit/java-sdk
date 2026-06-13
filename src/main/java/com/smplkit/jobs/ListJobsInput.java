@@ -1,6 +1,6 @@
 package com.smplkit.jobs;
 
-/** Filters and pagination for {@link JobsManagementClient#list(ListJobsInput)}. */
+/** Filters and pagination for {@link JobsClient#list(ListJobsInput)}. */
 public final class ListJobsInput {
     /** Filter to jobs matching this enabled state. {@code null} means no filter. */
     public Boolean enabled;

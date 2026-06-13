@@ -24,6 +24,7 @@ import com.smplkit.SmplClient;
 import com.smplkit.examples.setup.FlagsRuntimeSetup;
 import com.smplkit.flags.Flag;
 import com.smplkit.flags.FlagChangeEvent;
+import com.smplkit.flags.types.Op;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -74,36 +75,31 @@ public final class FlagsRuntimeShowcase {
     }
 
     public static void main(String[] args) throws Exception {
-        // create the client (use SmplClient for synchronous use)
+
+        // or AsyncSmplClient for asynchronous use
         try (SmplClient client = SmplClient.builder()
                 .environment("production").service("showcase-service").build()) {
-            FlagsRuntimeSetup.setup(client.manage());
-
-            // Block until the live-updates WebSocket subscription is registered
-            // server-side. Without this, writes fired immediately afterward can
-            // race the broadcast of their own change events (the SDK isn't in
-            // the subscriber registry yet) and silently miss them. Mirrors
-            // `await client.wait_until_ready()` in the Python showcase.
+            FlagsRuntimeSetup.setup(client);
             client.waitUntilReady();
 
             // declare flags - default values will be used if the flag does not
             // exist or smplkit is unreachable
-            Flag<Boolean> checkoutV2 = client.flags().booleanFlag("checkout-v2", false);
-            Flag<String> bannerColor = client.flags().stringFlag("banner-color", "red");
-            Flag<Number> maxRetries = client.flags().numberFlag("max-retries", 3);
+            Flag<Boolean> checkoutV2 = client.flags.booleanFlag("checkout-v2", false);
+            Flag<String> bannerColor = client.flags.stringFlag("banner-color", "red");
+            Flag<Number> maxRetries = client.flags.numberFlag("max-retries", 3);
 
             List<Map<String, String>> allChanges = new ArrayList<>();
             List<FlagChangeEvent> bannerChanges = new ArrayList<>();
 
             // global listener — fires when ANY flag definition changes
-            client.flags().onChange(event -> {
+            client.flags.onChange(event -> {
                 allChanges.add(Map.of("id", event.id(), "source", event.source()));
                 System.out.println("    Global flag listener: '" + event.id()
                         + "' updated via " + event.source());
             });
 
             // flag listener — fires only when a specific flag changes
-            client.flags().onChange("banner-color", event -> {
+            client.flags.onChange("banner-color", event -> {
                 bannerChanges.add(event);
                 System.out.println("    banner-color flag changed!");
             });
@@ -123,7 +119,8 @@ public final class FlagsRuntimeShowcase {
             assert retriesResult.intValue() == 5 : "Expected 5, got " + retriesResult;
 
             // request 2 — Bob from a small retail account
-            client.setContext(createContext(BOB, SMALL_RETAIL_ACCOUNT));
+            List<Context> bobContext = createContext(BOB, SMALL_RETAIL_ACCOUNT);
+            client.setContext(bobContext);
             boolean checkoutResult2 = checkoutV2.get();
             System.out.println("checkout-v2 = " + checkoutResult2);
             assert !checkoutResult2;
@@ -135,6 +132,17 @@ public final class FlagsRuntimeShowcase {
             Number retriesResult2 = maxRetries.get();
             System.out.println("max-retries = " + retriesResult2);
             assert retriesResult2.intValue() == 3;
+
+            // nested scoped override — temporarily impersonate Alice without
+            // disturbing the surrounding request's context.
+            client.setContext(createContext(ALICE, LARGE_TECHNOLOGY_ACCOUNT));
+            boolean scopedResult = checkoutV2.get();
+            System.out.println("checkout-v2 (scoped: Alice) = " + scopedResult);
+            assert scopedResult;
+
+            // context restored to Bob/small retail here
+            client.setContext(bobContext);
+            assert !checkoutV2.get();
 
             // get a flag's value (explicitly pass context)
             boolean explicitResult = checkoutV2.get(List.of(
@@ -157,16 +165,15 @@ public final class FlagsRuntimeShowcase {
             assert !allChanges.isEmpty() : "Expected at least one global change";
             assert !bannerChanges.isEmpty() : "Expected at least one banner change";
 
-            FlagsRuntimeSetup.cleanup(client.manage());
+            FlagsRuntimeSetup.cleanup(client);
             System.out.println("Done!");
         }
     }
 
     private static void updateRules(SmplClient client) {
-        Flag<?> currentBanner = client.manage().flags.get("banner-color");
-        currentBanner.addRule(new Rule("Red for small companies")
-                .environment("production")
-                .when("account.employee_count", "<", 50)
+        Flag<?> currentBanner = client.flags.get("banner-color");
+        currentBanner.addRule(new Rule("Red for small companies", "production")
+                .when("account.employee_count", Op.LT, 50)
                 .serve("red").build());
         currentBanner.save();
     }
