@@ -31,6 +31,8 @@ class AuditClientTest {
     private AtomicInteger postCount;
     private AtomicReference<String> lastIdempotencyKey;
     private AtomicReference<String> lastEnvironmentHeader;
+    private AtomicReference<String> lastPostBody;
+    private AtomicReference<String> lastQuery;
     private CountDownLatch firstPostSeen;
     private String baseUrl;
 
@@ -39,6 +41,8 @@ class AuditClientTest {
         postCount = new AtomicInteger();
         lastIdempotencyKey = new AtomicReference<>();
         lastEnvironmentHeader = new AtomicReference<>();
+        lastPostBody = new AtomicReference<>();
+        lastQuery = new AtomicReference<>();
         firstPostSeen = new CountDownLatch(1);
         server = HttpServer.create(new InetSocketAddress("127.0.0.1", 0), 0);
         installDefaultHandlers();
@@ -72,6 +76,9 @@ class AuditClientTest {
                     // case-insensitive lookup.
                     lastIdempotencyKey.set(firstHeader(ex, "Idempotency-Key"));
                     lastEnvironmentHeader.set(firstHeader(ex, "X-Smplkit-Environment"));
+                    lastQuery.set(ex.getRequestURI().getRawQuery());
+                    lastPostBody.set(new String(ex.getRequestBody().readAllBytes(),
+                            java.nio.charset.StandardCharsets.UTF_8));
                     postCount.incrementAndGet();
                     firstPostSeen.countDown();
                     String body = "{\"data\":{\"id\":\"00000000-0000-0000-0000-000000000001\",\"type\":\"event\",\"attributes\":{\"event_type\":\"x.created\",\"resource_type\":\"x\",\"resource_id\":\"1\",\"occurred_at\":\"2026-05-06T12:00:00Z\",\"created_at\":\"2026-05-06T12:00:01Z\",\"actor_type\":\"API_KEY\",\"actor_id\":null,\"actor_label\":\"\",\"data\":{},\"idempotency_key\":\"\"}}}";
@@ -84,6 +91,7 @@ class AuditClientTest {
                 }
                 if (ex.getRequestMethod().equals("GET")) {
                     lastEnvironmentHeader.set(firstHeader(ex, "X-Smplkit-Environment"));
+                    lastQuery.set(ex.getRequestURI().getRawQuery());
                     String body = "{\"data\":{\"id\":\"11111111-2222-3333-4444-555555555555\",\"type\":\"event\",\"attributes\":{\"event_type\":\"x.created\",\"resource_type\":\"x\",\"resource_id\":\"1\",\"occurred_at\":\"2026-05-06T12:00:00Z\",\"created_at\":\"2026-05-06T12:00:01Z\",\"actor_type\":\"API_KEY\",\"actor_id\":null,\"actor_label\":\"\",\"data\":{},\"idempotency_key\":\"k\",\"environment\":\"production\"}}}";
                     byte[] resp = body.getBytes();
                     ex.getResponseHeaders().add("Content-Type", "application/vnd.api+json");
@@ -282,11 +290,13 @@ class AuditClientTest {
     }
 
     // -----------------------------------------------------------------
-    // Environment-header injection (ADR-055)
+    // Environment routing (ADR-055): the configured environment travels on
+    // the event request body when recording and as the default
+    // filter[environment] on reads — never as a request header.
     // -----------------------------------------------------------------
 
     @Test
-    void record_injectsConfiguredEnvironmentHeader() throws Exception {
+    void record_stampsConfiguredEnvironmentOnBody() throws Exception {
         // The default client (set up in @BeforeEach) carries no environment;
         // build one bound to "production" against the same server.
         try (AuditClient envClient = new AuditClient(HttpClient.newHttpClient(), "sk_api_test",
@@ -297,38 +307,84 @@ class AuditClientTest {
             Thread.interrupted();
             assertTrue(firstPostSeen.await(15, java.util.concurrent.TimeUnit.SECONDS),
                     "test server never received the POST");
-            assertEquals("production", lastEnvironmentHeader.get());
+            assertTrue(lastPostBody.get().replace(" ", "").contains("\"environment\":\"production\""),
+                    "record must stamp the configured environment on the body, got: " + lastPostBody.get());
+            assertNull(lastEnvironmentHeader.get(), "the dead env header must not be sent");
         }
     }
 
     @Test
-    void get_injectsConfiguredEnvironmentHeader() throws Exception {
-        try (AuditClient envClient = new AuditClient(HttpClient.newHttpClient(), "sk_api_test",
-                Map.of(), Duration.ofSeconds(5), baseUrl, "staging")) {
-            UUID id = UUID.fromString("11111111-2222-3333-4444-555555555555");
-            envClient.events().get(id);
-            assertEquals("staging", lastEnvironmentHeader.get());
-        }
-    }
-
-    @Test
-    void noEnvironment_omitsEnvironmentHeader() throws Exception {
-        // The default client has no environment configured (null path).
-        UUID id = UUID.fromString("11111111-2222-3333-4444-555555555555");
-        client.events().get(id);
+    void record_noEnvironment_omitsEnvironmentFromBody() throws Exception {
+        // The default client has no environment configured (null path): the
+        // request body must carry no environment field at all.
+        CreateEventInput input = new CreateEventInput("user.created", "user", "u-1");
+        client.events().record(input);
+        client.events().flush(2_000);
+        Thread.interrupted();
+        assertTrue(firstPostSeen.await(15, java.util.concurrent.TimeUnit.SECONDS),
+                "test server never received the POST");
+        assertFalse(lastPostBody.get().contains("\"environment\""),
+                "no configured environment must omit the body field, got: " + lastPostBody.get());
         assertNull(lastEnvironmentHeader.get());
     }
 
     @Test
-    void explicitEnvironmentHeader_overridesConfiguredEnvironment() throws Exception {
-        // A caller-supplied X-Smplkit-Environment in extraHeaders wins over
-        // the SDK's configured environment.
+    void get_sendsNoEnvironmentScopeOrHeader() throws Exception {
+        // GET /events/{id} is a global by-id lookup — no environment scoping,
+        // and never the legacy header. The environment on the read is the
+        // server-resolved value, returned in the body.
         try (AuditClient envClient = new AuditClient(HttpClient.newHttpClient(), "sk_api_test",
-                Map.of("X-Smplkit-Environment", "explicit-override"), Duration.ofSeconds(5),
-                baseUrl, "production")) {
+                Map.of(), Duration.ofSeconds(5), baseUrl, "staging")) {
             UUID id = UUID.fromString("11111111-2222-3333-4444-555555555555");
-            envClient.events().get(id);
-            assertEquals("explicit-override", lastEnvironmentHeader.get());
+            AuditEvent ev = envClient.events().get(id);
+            assertEquals("production", ev.environment);
+            String q = lastQuery.get();
+            assertTrue(q == null || !q.contains("filter%5Benvironment%5D"),
+                    "get by id must not scope by environment, query: " + q);
+            assertNull(lastEnvironmentHeader.get());
         }
+    }
+
+    @Test
+    void list_defaultsFilterEnvironmentToConfigured() throws Exception {
+        // events.list with no explicit environments scopes to the client's
+        // configured environment via filter[environment] — and no header.
+        installEventListHandler();
+        try (AuditClient envClient = new AuditClient(HttpClient.newHttpClient(), "sk_api_test",
+                Map.of(), Duration.ofSeconds(5), baseUrl, "production")) {
+            envClient.events().list(new ListEventsInput());
+            assertTrue(lastQuery.get().contains("filter%5Benvironment%5D=production"),
+                    "list must default filter[environment] to the configured env, query: " + lastQuery.get());
+            assertNull(lastEnvironmentHeader.get());
+        }
+    }
+
+    @Test
+    void list_explicitEnvironments_overridesConfiguredDefault() throws Exception {
+        // An explicit environments arg wins over the configured default.
+        installEventListHandler();
+        try (AuditClient envClient = new AuditClient(HttpClient.newHttpClient(), "sk_api_test",
+                Map.of(), Duration.ofSeconds(5), baseUrl, "production")) {
+            ListEventsInput input = new ListEventsInput();
+            input.environments = java.util.List.of("staging");
+            envClient.events().list(input);
+            assertTrue(lastQuery.get().contains("filter%5Benvironment%5D=staging"),
+                    "explicit environments must override the configured default, query: " + lastQuery.get());
+            assertFalse(lastQuery.get().contains("production"));
+        }
+    }
+
+    private void installEventListHandler() {
+        server.removeContext("/api/v1/events");
+        server.createContext("/api/v1/events", ex -> {
+            lastEnvironmentHeader.set(firstHeader(ex, "X-Smplkit-Environment"));
+            lastQuery.set(ex.getRequestURI().getRawQuery());
+            byte[] resp = "{\"data\":[],\"meta\":{\"page_size\":50}}"
+                    .getBytes(java.nio.charset.StandardCharsets.UTF_8);
+            ex.getResponseHeaders().add("Content-Type", "application/vnd.api+json");
+            ex.sendResponseHeaders(200, resp.length);
+            ex.getResponseBody().write(resp);
+            ex.close();
+        });
     }
 }

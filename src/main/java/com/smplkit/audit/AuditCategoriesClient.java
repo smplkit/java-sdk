@@ -20,13 +20,25 @@ import java.util.List;
 public final class AuditCategoriesClient {
 
     private final CategoriesApi api;
+    private final String environment;
 
     AuditCategoriesClient(CategoriesApi api) {
+        this(api, null);
+    }
+
+    AuditCategoriesClient(CategoriesApi api, String environment) {
         this.api = api;
+        this.environment = environment;
     }
 
     /**
      * List the distinct category values seen in the account.
+     *
+     * <p>{@link ListCategoriesInput#environments} scopes the listing to a set
+     * of environments, sent comma-separated as {@code filter[environment]}.
+     * Omit it (the default) to scope the listing to the client's configured
+     * environment; with no configured environment the filter is left off
+     * entirely.</p>
      *
      * @param input optional environment scope and pagination; an empty
      *     instance lists every distinct category
@@ -35,7 +47,7 @@ public final class AuditCategoriesClient {
      */
     public ListCategoriesPage list(ListCategoriesInput input) throws ApiException {
         CategoryListResponse resp = api.listCategories(
-                AuditResourceTypesClient.joinEnvironments(input.environments), null,
+                AuditResourceTypesClient.resolveEnvironmentFilter(input.environments, environment), null,
                 input.pageNumber, input.pageSize, input.metaTotal);
         List<AuditCategory> rows = new ArrayList<>();
         if (resp.getData() != null) {

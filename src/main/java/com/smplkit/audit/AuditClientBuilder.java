@@ -14,10 +14,10 @@ import java.util.Objects;
  * <p>Resolution order matches {@link com.smplkit.SmplClientBuilder} but skips
  * service/telemetry: Audit resolves credentials/base-domain from
  * {@code ~/.smplkit} / env vars / builder args. An {@code environment} is
- * supported but optional — when present it is stamped as
- * {@code X-Smplkit-Environment} so event recording and reads scope to it
- * server-side; when absent the client still works (forwarder CRUD and
- * discovery are environment-agnostic, and reads accept an explicit
+ * supported but optional — when present, event recording stamps it on the
+ * request body and reads default {@code filter[environment]} to it so they
+ * scope to it server-side; when absent the client still works (forwarder CRUD
+ * and discovery are environment-agnostic, and reads accept an explicit
  * {@code environments} filter).</p>
  */
 public final class AuditClientBuilder {
@@ -57,10 +57,11 @@ public final class AuditClientBuilder {
     }
 
     /**
-     * Deployment environment to scope recording and reads to, sent as
-     * {@code X-Smplkit-Environment}. Optional — forwarder CRUD and discovery
-     * are environment-agnostic, and reads accept an explicit
-     * {@code environments} filter.
+     * Deployment environment to scope recording and reads to. Sent on the
+     * event request body when recording and as the default
+     * {@code filter[environment]} on the read surfaces. Optional — forwarder
+     * CRUD and discovery are environment-agnostic, and reads accept an explicit
+     * {@code environments} filter that overrides this default.
      *
      * @param environment the deployment environment key
      * @return this builder

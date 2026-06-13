@@ -34,9 +34,15 @@ public final class AuditEvents {
 
     private final EventsApi api;
     private final AuditEventBuffer buffer;
+    private final String environment;
 
     AuditEvents(EventsApi api) {
+        this(api, null);
+    }
+
+    AuditEvents(EventsApi api, String environment) {
         this.api = api;
+        this.environment = environment;
         this.buffer = new AuditEventBuffer(api);
     }
 
@@ -142,6 +148,13 @@ public final class AuditEvents {
         if (input.doNotForward) {
             attrs.doNotForward(true);
         }
+        // Stamp the client's configured environment onto the event request body
+        // — the body-driven replacement for the dead X-Smplkit-Environment
+        // header (ADR-055). Omitted when null so a single-environment credential
+        // resolves it server-side.
+        if (environment != null) {
+            attrs.environment(environment);
+        }
         EventResource resource = new EventResource()
                 .id("") // server assigns
                 .type("event")
@@ -181,6 +194,13 @@ public final class AuditEvents {
      * {@code resourceType} and {@code resourceId} — or the request is
      * rejected.</p>
      *
+     * <p>{@link ListEventsInput#environments} scopes the read to a set of
+     * environments — environment keys and/or the reserved {@code "smplkit"}
+     * control-plane bucket, sent comma-separated as {@code filter[environment]}.
+     * Omit it (the default) to scope the read to the client's configured
+     * environment; with no configured environment the filter is left off
+     * entirely.</p>
+     *
      * @param input filters and pagination cursor; an empty instance lists
      *     every event with default paging
      * @return a {@link ListEventsPage} of the matching events; its
@@ -189,7 +209,7 @@ public final class AuditEvents {
      */
     public ListEventsPage list(ListEventsInput input) throws ApiException {
         EventListResponse resp = api.listEvents(
-                AuditResourceTypesClient.joinEnvironments(input.environments),
+                AuditResourceTypesClient.resolveEnvironmentFilter(input.environments, environment),
                 input.occurredAtRange,
                 input.actorType,
                 input.actorId,

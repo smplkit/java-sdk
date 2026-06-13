@@ -22,13 +22,25 @@ import java.util.List;
 public final class AuditEventTypesClient {
 
     private final EventTypesApi api;
+    private final String environment;
 
     AuditEventTypesClient(EventTypesApi api) {
+        this(api, null);
+    }
+
+    AuditEventTypesClient(EventTypesApi api, String environment) {
         this.api = api;
+        this.environment = environment;
     }
 
     /**
      * List the distinct event-type slugs seen in the account.
+     *
+     * <p>{@link ListEventTypesInput#environments} scopes the listing to a set
+     * of environments, sent comma-separated as {@code filter[environment]}.
+     * Omit it (the default) to scope the listing to the client's configured
+     * environment; with no configured environment the filter is left off
+     * entirely.</p>
      *
      * @param input optional resource-type filter, environment scope, and
      *     pagination; an empty instance lists every distinct event type
@@ -37,7 +49,7 @@ public final class AuditEventTypesClient {
      */
     public EventTypeListPage list(ListEventTypesInput input) throws ApiException {
         EventTypeListResponse resp = api.listEventTypes(
-                AuditResourceTypesClient.joinEnvironments(input.environments),
+                AuditResourceTypesClient.resolveEnvironmentFilter(input.environments, environment),
                 input.filterResourceType, null, input.pageNumber, input.pageSize, input.metaTotal);
         List<AuditEventType> rows = new ArrayList<>();
         if (resp.getData() != null) {

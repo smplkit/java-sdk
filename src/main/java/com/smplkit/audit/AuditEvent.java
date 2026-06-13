@@ -64,10 +64,9 @@ public final class AuditEvent {
      * The environment the event was recorded in. Read-only and always
      * present on reads — the audit service resolves it when the event is
      * recorded (from a single-environment credential, or from the runtime
-     * SDK's configured environment, which the SDK sends on every recording
-     * call via the {@code X-Smplkit-Environment} header). {@code null} only
-     * for an event that predates environment scoping. Never set on the
-     * recording request body.
+     * SDK's configured environment, which the SDK sends on the recording
+     * request body). {@code null} only for an event that predates
+     * environment scoping.
      */
     public final String environment;
 
