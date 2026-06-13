@@ -112,6 +112,23 @@ class FlagMutationsTest {
     }
 
     @Test
+    void removeValue_dropsOnlyFirstOfDuplicates() {
+        Flag<String> flag;
+        try (FlagsClient client = FlagsClient.create("test-key")) {
+            flag = client.newStringFlag("color", "red", null, null, null);
+        }
+        flag.addValue("Red", "red");
+        flag.addValue("Crimson", "red");
+        flag.addValue("Blue", "blue");
+        flag.removeValue("red");
+        // Only the first "red" entry is removed; the later duplicate survives.
+        assertEquals(2, flag.getValues().size());
+        assertEquals("Crimson", flag.getValues().get(0).get("name"));
+        assertEquals("red", flag.getValues().get(0).get("value"));
+        assertEquals("Blue", flag.getValues().get(1).get("name"));
+    }
+
+    @Test
     void removeValue_nullValuesList_isNoOpAndReturnsThis() {
         Flag<String> flag;
         try (FlagsClient client = FlagsClient.create("test-key")) {

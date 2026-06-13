@@ -429,7 +429,12 @@ public final class Flag<T> {
      */
     public Flag<T> removeValue(Object value) {
         if (values == null) return this;
-        values.removeIf(v -> java.util.Objects.equals(v.get("value"), value));
+        for (int i = 0; i < values.size(); i++) {
+            if (java.util.Objects.equals(values.get(i).get("value"), value)) {
+                values.remove(i);
+                break;
+            }
+        }
         return this;
     }
 
