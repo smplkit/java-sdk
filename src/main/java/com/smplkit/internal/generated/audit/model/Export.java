@@ -39,6 +39,7 @@ import com.smplkit.internal.generated.audit.ApiClient;
  */
 @JsonPropertyOrder({
   Export.JSON_PROPERTY_FORMAT,
+  Export.JSON_PROPERTY_ENVIRONMENT,
   Export.JSON_PROPERTY_FILTER_OCCURRED_AT,
   Export.JSON_PROPERTY_FILTER_ACTOR_TYPE,
   Export.JSON_PROPERTY_FILTER_ACTOR_ID,
@@ -90,6 +91,9 @@ public class Export {
   public static final String JSON_PROPERTY_FORMAT = "format";
   @jakarta.annotation.Nonnull
   private FormatEnum format;
+
+  public static final String JSON_PROPERTY_ENVIRONMENT = "environment";
+  private JsonNullable<String> environment = JsonNullable.<String>undefined();
 
   public static final String JSON_PROPERTY_FILTER_OCCURRED_AT = "filter[occurred_at]";
   private JsonNullable<String> filterOccurredAt = JsonNullable.<String>undefined();
@@ -155,6 +159,38 @@ public class Export {
   @JsonInclude(value = JsonInclude.Include.ALWAYS)
   public void setFormat(@jakarta.annotation.Nonnull FormatEnum format) {
     this.format = format;
+  }
+
+
+  public Export environment(@jakarta.annotation.Nullable String environment) {
+    this.environment = JsonNullable.<String>of(environment);
+    return this;
+  }
+
+  /**
+   * The single environment the export is scoped to. Omit it and a single-environment credential implies it (a multi-environment credential must name it), and a named environment must be one the caller may access. An export always covers exactly one environment.
+   * @return environment
+   */
+  @jakarta.annotation.Nullable
+  @JsonIgnore
+  public String getEnvironment() {
+        return environment.orElse(null);
+  }
+
+  @JsonProperty(value = JSON_PROPERTY_ENVIRONMENT, required = false)
+  @JsonInclude(value = JsonInclude.Include.USE_DEFAULTS)
+
+  public JsonNullable<String> getEnvironment_JsonNullable() {
+    return environment;
+  }
+  
+  @JsonProperty(JSON_PROPERTY_ENVIRONMENT)
+  public void setEnvironment_JsonNullable(JsonNullable<String> environment) {
+    this.environment = environment;
+  }
+
+  public void setEnvironment(@jakarta.annotation.Nullable String environment) {
+    this.environment = JsonNullable.<String>of(environment);
   }
 
 
@@ -483,6 +519,7 @@ public class Export {
     }
     Export export = (Export) o;
     return Objects.equals(this.format, export.format) &&
+        equalsNullable(this.environment, export.environment) &&
         equalsNullable(this.filterOccurredAt, export.filterOccurredAt) &&
         equalsNullable(this.filterActorType, export.filterActorType) &&
         equalsNullable(this.filterActorId, export.filterActorId) &&
@@ -501,7 +538,7 @@ public class Export {
 
   @Override
   public int hashCode() {
-    return Objects.hash(format, hashCodeNullable(filterOccurredAt), hashCodeNullable(filterActorType), hashCodeNullable(filterActorId), hashCodeNullable(filterEventType), hashCodeNullable(filterResourceType), hashCodeNullable(filterResourceId), hashCodeNullable(filterSearch), hashCodeNullable(filterDoNotForward), hashCodeNullable(url), hashCodeNullable(expiresAt));
+    return Objects.hash(format, hashCodeNullable(environment), hashCodeNullable(filterOccurredAt), hashCodeNullable(filterActorType), hashCodeNullable(filterActorId), hashCodeNullable(filterEventType), hashCodeNullable(filterResourceType), hashCodeNullable(filterResourceId), hashCodeNullable(filterSearch), hashCodeNullable(filterDoNotForward), hashCodeNullable(url), hashCodeNullable(expiresAt));
   }
 
   private static <T> int hashCodeNullable(JsonNullable<T> a) {
@@ -516,6 +553,7 @@ public class Export {
     StringBuilder sb = new StringBuilder();
     sb.append("class Export {\n");
     sb.append("    format: ").append(toIndentedString(format)).append("\n");
+    sb.append("    environment: ").append(toIndentedString(environment)).append("\n");
     sb.append("    filterOccurredAt: ").append(toIndentedString(filterOccurredAt)).append("\n");
     sb.append("    filterActorType: ").append(toIndentedString(filterActorType)).append("\n");
     sb.append("    filterActorId: ").append(toIndentedString(filterActorId)).append("\n");
@@ -573,6 +611,11 @@ public class Export {
     // add `format` to the URL query string
     if (getFormat() != null) {
       joiner.add(String.format(java.util.Locale.ROOT, "%sformat%s=%s", prefix, suffix, ApiClient.urlEncode(ApiClient.valueToString(getFormat()))));
+    }
+
+    // add `environment` to the URL query string
+    if (getEnvironment() != null) {
+      joiner.add(String.format(java.util.Locale.ROOT, "%senvironment%s=%s", prefix, suffix, ApiClient.urlEncode(ApiClient.valueToString(getEnvironment()))));
     }
 
     // add `filter[occurred_at]` to the URL query string
