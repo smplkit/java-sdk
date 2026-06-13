@@ -81,12 +81,31 @@ class AsyncLoggingClientTest {
     }
 
     @Test
-    void create_default_readsProvisionedCredentials() {
-        // The test environment provisions ~/.smplkit with a [default] profile, so
-        // the no-arg factory resolves credentials without a network round-trip.
+    void create_default_resolvesFromEnv() throws Exception {
+        // Inject an API key via the environment so the no-arg factory resolves
+        // credentials hermetically (CI has no ~/.smplkit).
+        setEnv("SMPLKIT_API_KEY", "sk_async_logging_create");
         try (AsyncLoggingClient a = AsyncLoggingClient.create()) {
             assertNotNull(a.sync());
+        } finally {
+            clearEnv("SMPLKIT_API_KEY");
         }
+    }
+
+    @SuppressWarnings("unchecked")
+    private static void setEnv(String key, String value) throws Exception {
+        var env = System.getenv();
+        var field = env.getClass().getDeclaredField("m");
+        field.setAccessible(true);
+        ((java.util.Map<String, String>) field.get(env)).put(key, value);
+    }
+
+    @SuppressWarnings("unchecked")
+    private static void clearEnv(String key) throws Exception {
+        var env = System.getenv();
+        var field = env.getClass().getDeclaredField("m");
+        field.setAccessible(true);
+        ((java.util.Map<String, String>) field.get(env)).remove(key);
     }
 
     // -------------------------------------------------------- live surface
