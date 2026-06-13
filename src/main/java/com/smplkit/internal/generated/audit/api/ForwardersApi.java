@@ -24,6 +24,7 @@ import com.smplkit.internal.generated.audit.model.ForwarderDeliveryResponse;
 import com.smplkit.internal.generated.audit.model.ForwarderListResponse;
 import com.smplkit.internal.generated.audit.model.ForwarderRequest;
 import com.smplkit.internal.generated.audit.model.ForwarderResponse;
+import com.smplkit.internal.generated.audit.model.RetryFailedDeliveriesRequest;
 import com.smplkit.internal.generated.audit.model.RetryFailedDeliveriesSummary;
 import com.smplkit.internal.generated.audit.model.TestForwarderRequest;
 import com.smplkit.internal.generated.audit.model.TestForwarderResponse;
@@ -641,8 +642,9 @@ public class ForwardersApi {
 
   /**
    * List Forwarder Deliveries
-   * List delivery log entries for a forwarder.  Scoped to the resolved environment — only that environment&#39;s deliveries for the forwarder are shown. Default sort is &#x60;-created_at&#x60; (newest first). Filter by &#x60;status&#x60; (&#x60;SUCCEEDED&#x60; or &#x60;FAILED&#x60;, case-insensitive), by &#x60;event&#x60;, or by a &#x60;created_at&#x60; range using interval notation (e.g. &#x60;[2026-01-01T00:00:00Z,*)&#x60;).
+   * List delivery log entries for a forwarder.  Scoped by environment. Pass &#x60;filter[environment]&#x60; as a comma-separated list of environment keys to restrict results to that subset of the environments you can access; omit it to cover every environment you can access. Default sort is &#x60;-created_at&#x60; (newest first). Filter by &#x60;status&#x60; (&#x60;SUCCEEDED&#x60; or &#x60;FAILED&#x60;, case-insensitive), by &#x60;event&#x60;, or by a &#x60;created_at&#x60; range using interval notation (e.g. &#x60;[2026-01-01T00:00:00Z,*)&#x60;).
    * @param forwarderId  (required)
+   * @param filterEnvironment Comma-separated list of environment keys to scope deliveries to (e.g. &#x60;production,staging&#x60;). When omitted, results cover every environment you can access. The reserved value &#x60;smplkit&#x60; selects deliveries of platform change events smplkit records about your own resources; it is included by default when your plan grants change history, and requesting it explicitly without that entitlement returns 402. (optional)
    * @param filterStatus  (optional)
    * @param filterCreatedAt  (optional)
    * @param filterEvent  (optional)
@@ -652,14 +654,15 @@ public class ForwardersApi {
    * @return ForwarderDeliveryListResponse
    * @throws ApiException if fails to make API call
    */
-  public ForwarderDeliveryListResponse listForwarderDeliveries(@jakarta.annotation.Nonnull String forwarderId, @jakarta.annotation.Nullable String filterStatus, @jakarta.annotation.Nullable String filterCreatedAt, @jakarta.annotation.Nullable String filterEvent, @jakarta.annotation.Nullable Integer pageSize, @jakarta.annotation.Nullable String pageAfter, @jakarta.annotation.Nullable String sort) throws ApiException {
-    return listForwarderDeliveries(forwarderId, filterStatus, filterCreatedAt, filterEvent, pageSize, pageAfter, sort, null);
+  public ForwarderDeliveryListResponse listForwarderDeliveries(@jakarta.annotation.Nonnull String forwarderId, @jakarta.annotation.Nullable String filterEnvironment, @jakarta.annotation.Nullable String filterStatus, @jakarta.annotation.Nullable String filterCreatedAt, @jakarta.annotation.Nullable String filterEvent, @jakarta.annotation.Nullable Integer pageSize, @jakarta.annotation.Nullable String pageAfter, @jakarta.annotation.Nullable String sort) throws ApiException {
+    return listForwarderDeliveries(forwarderId, filterEnvironment, filterStatus, filterCreatedAt, filterEvent, pageSize, pageAfter, sort, null);
   }
 
   /**
    * List Forwarder Deliveries
-   * List delivery log entries for a forwarder.  Scoped to the resolved environment — only that environment&#39;s deliveries for the forwarder are shown. Default sort is &#x60;-created_at&#x60; (newest first). Filter by &#x60;status&#x60; (&#x60;SUCCEEDED&#x60; or &#x60;FAILED&#x60;, case-insensitive), by &#x60;event&#x60;, or by a &#x60;created_at&#x60; range using interval notation (e.g. &#x60;[2026-01-01T00:00:00Z,*)&#x60;).
+   * List delivery log entries for a forwarder.  Scoped by environment. Pass &#x60;filter[environment]&#x60; as a comma-separated list of environment keys to restrict results to that subset of the environments you can access; omit it to cover every environment you can access. Default sort is &#x60;-created_at&#x60; (newest first). Filter by &#x60;status&#x60; (&#x60;SUCCEEDED&#x60; or &#x60;FAILED&#x60;, case-insensitive), by &#x60;event&#x60;, or by a &#x60;created_at&#x60; range using interval notation (e.g. &#x60;[2026-01-01T00:00:00Z,*)&#x60;).
    * @param forwarderId  (required)
+   * @param filterEnvironment Comma-separated list of environment keys to scope deliveries to (e.g. &#x60;production,staging&#x60;). When omitted, results cover every environment you can access. The reserved value &#x60;smplkit&#x60; selects deliveries of platform change events smplkit records about your own resources; it is included by default when your plan grants change history, and requesting it explicitly without that entitlement returns 402. (optional)
    * @param filterStatus  (optional)
    * @param filterCreatedAt  (optional)
    * @param filterEvent  (optional)
@@ -670,15 +673,16 @@ public class ForwardersApi {
    * @return ForwarderDeliveryListResponse
    * @throws ApiException if fails to make API call
    */
-  public ForwarderDeliveryListResponse listForwarderDeliveries(@jakarta.annotation.Nonnull String forwarderId, @jakarta.annotation.Nullable String filterStatus, @jakarta.annotation.Nullable String filterCreatedAt, @jakarta.annotation.Nullable String filterEvent, @jakarta.annotation.Nullable Integer pageSize, @jakarta.annotation.Nullable String pageAfter, @jakarta.annotation.Nullable String sort, Map<String, String> headers) throws ApiException {
-    ApiResponse<ForwarderDeliveryListResponse> localVarResponse = listForwarderDeliveriesWithHttpInfo(forwarderId, filterStatus, filterCreatedAt, filterEvent, pageSize, pageAfter, sort, headers);
+  public ForwarderDeliveryListResponse listForwarderDeliveries(@jakarta.annotation.Nonnull String forwarderId, @jakarta.annotation.Nullable String filterEnvironment, @jakarta.annotation.Nullable String filterStatus, @jakarta.annotation.Nullable String filterCreatedAt, @jakarta.annotation.Nullable String filterEvent, @jakarta.annotation.Nullable Integer pageSize, @jakarta.annotation.Nullable String pageAfter, @jakarta.annotation.Nullable String sort, Map<String, String> headers) throws ApiException {
+    ApiResponse<ForwarderDeliveryListResponse> localVarResponse = listForwarderDeliveriesWithHttpInfo(forwarderId, filterEnvironment, filterStatus, filterCreatedAt, filterEvent, pageSize, pageAfter, sort, headers);
     return localVarResponse.getData();
   }
 
   /**
    * List Forwarder Deliveries
-   * List delivery log entries for a forwarder.  Scoped to the resolved environment — only that environment&#39;s deliveries for the forwarder are shown. Default sort is &#x60;-created_at&#x60; (newest first). Filter by &#x60;status&#x60; (&#x60;SUCCEEDED&#x60; or &#x60;FAILED&#x60;, case-insensitive), by &#x60;event&#x60;, or by a &#x60;created_at&#x60; range using interval notation (e.g. &#x60;[2026-01-01T00:00:00Z,*)&#x60;).
+   * List delivery log entries for a forwarder.  Scoped by environment. Pass &#x60;filter[environment]&#x60; as a comma-separated list of environment keys to restrict results to that subset of the environments you can access; omit it to cover every environment you can access. Default sort is &#x60;-created_at&#x60; (newest first). Filter by &#x60;status&#x60; (&#x60;SUCCEEDED&#x60; or &#x60;FAILED&#x60;, case-insensitive), by &#x60;event&#x60;, or by a &#x60;created_at&#x60; range using interval notation (e.g. &#x60;[2026-01-01T00:00:00Z,*)&#x60;).
    * @param forwarderId  (required)
+   * @param filterEnvironment Comma-separated list of environment keys to scope deliveries to (e.g. &#x60;production,staging&#x60;). When omitted, results cover every environment you can access. The reserved value &#x60;smplkit&#x60; selects deliveries of platform change events smplkit records about your own resources; it is included by default when your plan grants change history, and requesting it explicitly without that entitlement returns 402. (optional)
    * @param filterStatus  (optional)
    * @param filterCreatedAt  (optional)
    * @param filterEvent  (optional)
@@ -688,14 +692,15 @@ public class ForwardersApi {
    * @return ApiResponse&lt;ForwarderDeliveryListResponse&gt;
    * @throws ApiException if fails to make API call
    */
-  public ApiResponse<ForwarderDeliveryListResponse> listForwarderDeliveriesWithHttpInfo(@jakarta.annotation.Nonnull String forwarderId, @jakarta.annotation.Nullable String filterStatus, @jakarta.annotation.Nullable String filterCreatedAt, @jakarta.annotation.Nullable String filterEvent, @jakarta.annotation.Nullable Integer pageSize, @jakarta.annotation.Nullable String pageAfter, @jakarta.annotation.Nullable String sort) throws ApiException {
-    return listForwarderDeliveriesWithHttpInfo(forwarderId, filterStatus, filterCreatedAt, filterEvent, pageSize, pageAfter, sort, null);
+  public ApiResponse<ForwarderDeliveryListResponse> listForwarderDeliveriesWithHttpInfo(@jakarta.annotation.Nonnull String forwarderId, @jakarta.annotation.Nullable String filterEnvironment, @jakarta.annotation.Nullable String filterStatus, @jakarta.annotation.Nullable String filterCreatedAt, @jakarta.annotation.Nullable String filterEvent, @jakarta.annotation.Nullable Integer pageSize, @jakarta.annotation.Nullable String pageAfter, @jakarta.annotation.Nullable String sort) throws ApiException {
+    return listForwarderDeliveriesWithHttpInfo(forwarderId, filterEnvironment, filterStatus, filterCreatedAt, filterEvent, pageSize, pageAfter, sort, null);
   }
 
   /**
    * List Forwarder Deliveries
-   * List delivery log entries for a forwarder.  Scoped to the resolved environment — only that environment&#39;s deliveries for the forwarder are shown. Default sort is &#x60;-created_at&#x60; (newest first). Filter by &#x60;status&#x60; (&#x60;SUCCEEDED&#x60; or &#x60;FAILED&#x60;, case-insensitive), by &#x60;event&#x60;, or by a &#x60;created_at&#x60; range using interval notation (e.g. &#x60;[2026-01-01T00:00:00Z,*)&#x60;).
+   * List delivery log entries for a forwarder.  Scoped by environment. Pass &#x60;filter[environment]&#x60; as a comma-separated list of environment keys to restrict results to that subset of the environments you can access; omit it to cover every environment you can access. Default sort is &#x60;-created_at&#x60; (newest first). Filter by &#x60;status&#x60; (&#x60;SUCCEEDED&#x60; or &#x60;FAILED&#x60;, case-insensitive), by &#x60;event&#x60;, or by a &#x60;created_at&#x60; range using interval notation (e.g. &#x60;[2026-01-01T00:00:00Z,*)&#x60;).
    * @param forwarderId  (required)
+   * @param filterEnvironment Comma-separated list of environment keys to scope deliveries to (e.g. &#x60;production,staging&#x60;). When omitted, results cover every environment you can access. The reserved value &#x60;smplkit&#x60; selects deliveries of platform change events smplkit records about your own resources; it is included by default when your plan grants change history, and requesting it explicitly without that entitlement returns 402. (optional)
    * @param filterStatus  (optional)
    * @param filterCreatedAt  (optional)
    * @param filterEvent  (optional)
@@ -706,8 +711,8 @@ public class ForwardersApi {
    * @return ApiResponse&lt;ForwarderDeliveryListResponse&gt;
    * @throws ApiException if fails to make API call
    */
-  public ApiResponse<ForwarderDeliveryListResponse> listForwarderDeliveriesWithHttpInfo(@jakarta.annotation.Nonnull String forwarderId, @jakarta.annotation.Nullable String filterStatus, @jakarta.annotation.Nullable String filterCreatedAt, @jakarta.annotation.Nullable String filterEvent, @jakarta.annotation.Nullable Integer pageSize, @jakarta.annotation.Nullable String pageAfter, @jakarta.annotation.Nullable String sort, Map<String, String> headers) throws ApiException {
-    HttpRequest.Builder localVarRequestBuilder = listForwarderDeliveriesRequestBuilder(forwarderId, filterStatus, filterCreatedAt, filterEvent, pageSize, pageAfter, sort, headers);
+  public ApiResponse<ForwarderDeliveryListResponse> listForwarderDeliveriesWithHttpInfo(@jakarta.annotation.Nonnull String forwarderId, @jakarta.annotation.Nullable String filterEnvironment, @jakarta.annotation.Nullable String filterStatus, @jakarta.annotation.Nullable String filterCreatedAt, @jakarta.annotation.Nullable String filterEvent, @jakarta.annotation.Nullable Integer pageSize, @jakarta.annotation.Nullable String pageAfter, @jakarta.annotation.Nullable String sort, Map<String, String> headers) throws ApiException {
+    HttpRequest.Builder localVarRequestBuilder = listForwarderDeliveriesRequestBuilder(forwarderId, filterEnvironment, filterStatus, filterCreatedAt, filterEvent, pageSize, pageAfter, sort, headers);
     try {
       HttpResponse<InputStream> localVarResponse = memberVarHttpClient.send(
           localVarRequestBuilder.build(),
@@ -754,7 +759,7 @@ public class ForwardersApi {
     }
   }
 
-  private HttpRequest.Builder listForwarderDeliveriesRequestBuilder(@jakarta.annotation.Nonnull String forwarderId, @jakarta.annotation.Nullable String filterStatus, @jakarta.annotation.Nullable String filterCreatedAt, @jakarta.annotation.Nullable String filterEvent, @jakarta.annotation.Nullable Integer pageSize, @jakarta.annotation.Nullable String pageAfter, @jakarta.annotation.Nullable String sort, Map<String, String> headers) throws ApiException {
+  private HttpRequest.Builder listForwarderDeliveriesRequestBuilder(@jakarta.annotation.Nonnull String forwarderId, @jakarta.annotation.Nullable String filterEnvironment, @jakarta.annotation.Nullable String filterStatus, @jakarta.annotation.Nullable String filterCreatedAt, @jakarta.annotation.Nullable String filterEvent, @jakarta.annotation.Nullable Integer pageSize, @jakarta.annotation.Nullable String pageAfter, @jakarta.annotation.Nullable String sort, Map<String, String> headers) throws ApiException {
     // verify the required parameter 'forwarderId' is set
     if (forwarderId == null) {
       throw new ApiException(400, "Missing the required parameter 'forwarderId' when calling listForwarderDeliveries");
@@ -768,6 +773,8 @@ public class ForwardersApi {
     List<Pair> localVarQueryParams = new ArrayList<>();
     StringJoiner localVarQueryStringJoiner = new StringJoiner("&");
     String localVarQueryParameterBaseName;
+    localVarQueryParameterBaseName = "filter[environment]";
+    localVarQueryParams.addAll(ApiClient.parameterToPairs("filter[environment]", filterEnvironment));
     localVarQueryParameterBaseName = "filter[status]";
     localVarQueryParams.addAll(ApiClient.parameterToPairs("filter[status]", filterStatus));
     localVarQueryParameterBaseName = "filter[created_at]";
@@ -960,49 +967,53 @@ public class ForwardersApi {
 
   /**
    * Retry Failed Forwarder Deliveries
-   * Retry every failed delivery for this forwarder in the resolved environment.  Scoped to the resolved environment (a single-environment credential implies it; otherwise send the &#x60;X-Smplkit-Environment&#x60; header): only that environment&#39;s failed deliveries are re-attempted, each using the forwarder&#39;s effective configuration for that environment and the original event. Returns the counts.
+   * Retry every failed delivery for this forwarder in the target environment.  Targets a single environment: name it in the request body&#39;s &#x60;environment&#x60; field, or omit it and a single-environment credential implies it (a multi-environment credential must name it). Only that environment&#39;s failed deliveries are re-attempted, each using the forwarder&#39;s effective configuration for that environment and the original event. Returns the counts.
    * @param forwarderId  (required)
+   * @param retryFailedDeliveriesRequest  (optional)
    * @return RetryFailedDeliveriesSummary
    * @throws ApiException if fails to make API call
    */
-  public RetryFailedDeliveriesSummary retryFailedForwarderDeliveries(@jakarta.annotation.Nonnull String forwarderId) throws ApiException {
-    return retryFailedForwarderDeliveries(forwarderId, null);
+  public RetryFailedDeliveriesSummary retryFailedForwarderDeliveries(@jakarta.annotation.Nonnull String forwarderId, @jakarta.annotation.Nullable RetryFailedDeliveriesRequest retryFailedDeliveriesRequest) throws ApiException {
+    return retryFailedForwarderDeliveries(forwarderId, retryFailedDeliveriesRequest, null);
   }
 
   /**
    * Retry Failed Forwarder Deliveries
-   * Retry every failed delivery for this forwarder in the resolved environment.  Scoped to the resolved environment (a single-environment credential implies it; otherwise send the &#x60;X-Smplkit-Environment&#x60; header): only that environment&#39;s failed deliveries are re-attempted, each using the forwarder&#39;s effective configuration for that environment and the original event. Returns the counts.
+   * Retry every failed delivery for this forwarder in the target environment.  Targets a single environment: name it in the request body&#39;s &#x60;environment&#x60; field, or omit it and a single-environment credential implies it (a multi-environment credential must name it). Only that environment&#39;s failed deliveries are re-attempted, each using the forwarder&#39;s effective configuration for that environment and the original event. Returns the counts.
    * @param forwarderId  (required)
+   * @param retryFailedDeliveriesRequest  (optional)
    * @param headers Optional headers to include in the request
    * @return RetryFailedDeliveriesSummary
    * @throws ApiException if fails to make API call
    */
-  public RetryFailedDeliveriesSummary retryFailedForwarderDeliveries(@jakarta.annotation.Nonnull String forwarderId, Map<String, String> headers) throws ApiException {
-    ApiResponse<RetryFailedDeliveriesSummary> localVarResponse = retryFailedForwarderDeliveriesWithHttpInfo(forwarderId, headers);
+  public RetryFailedDeliveriesSummary retryFailedForwarderDeliveries(@jakarta.annotation.Nonnull String forwarderId, @jakarta.annotation.Nullable RetryFailedDeliveriesRequest retryFailedDeliveriesRequest, Map<String, String> headers) throws ApiException {
+    ApiResponse<RetryFailedDeliveriesSummary> localVarResponse = retryFailedForwarderDeliveriesWithHttpInfo(forwarderId, retryFailedDeliveriesRequest, headers);
     return localVarResponse.getData();
   }
 
   /**
    * Retry Failed Forwarder Deliveries
-   * Retry every failed delivery for this forwarder in the resolved environment.  Scoped to the resolved environment (a single-environment credential implies it; otherwise send the &#x60;X-Smplkit-Environment&#x60; header): only that environment&#39;s failed deliveries are re-attempted, each using the forwarder&#39;s effective configuration for that environment and the original event. Returns the counts.
+   * Retry every failed delivery for this forwarder in the target environment.  Targets a single environment: name it in the request body&#39;s &#x60;environment&#x60; field, or omit it and a single-environment credential implies it (a multi-environment credential must name it). Only that environment&#39;s failed deliveries are re-attempted, each using the forwarder&#39;s effective configuration for that environment and the original event. Returns the counts.
    * @param forwarderId  (required)
+   * @param retryFailedDeliveriesRequest  (optional)
    * @return ApiResponse&lt;RetryFailedDeliveriesSummary&gt;
    * @throws ApiException if fails to make API call
    */
-  public ApiResponse<RetryFailedDeliveriesSummary> retryFailedForwarderDeliveriesWithHttpInfo(@jakarta.annotation.Nonnull String forwarderId) throws ApiException {
-    return retryFailedForwarderDeliveriesWithHttpInfo(forwarderId, null);
+  public ApiResponse<RetryFailedDeliveriesSummary> retryFailedForwarderDeliveriesWithHttpInfo(@jakarta.annotation.Nonnull String forwarderId, @jakarta.annotation.Nullable RetryFailedDeliveriesRequest retryFailedDeliveriesRequest) throws ApiException {
+    return retryFailedForwarderDeliveriesWithHttpInfo(forwarderId, retryFailedDeliveriesRequest, null);
   }
 
   /**
    * Retry Failed Forwarder Deliveries
-   * Retry every failed delivery for this forwarder in the resolved environment.  Scoped to the resolved environment (a single-environment credential implies it; otherwise send the &#x60;X-Smplkit-Environment&#x60; header): only that environment&#39;s failed deliveries are re-attempted, each using the forwarder&#39;s effective configuration for that environment and the original event. Returns the counts.
+   * Retry every failed delivery for this forwarder in the target environment.  Targets a single environment: name it in the request body&#39;s &#x60;environment&#x60; field, or omit it and a single-environment credential implies it (a multi-environment credential must name it). Only that environment&#39;s failed deliveries are re-attempted, each using the forwarder&#39;s effective configuration for that environment and the original event. Returns the counts.
    * @param forwarderId  (required)
+   * @param retryFailedDeliveriesRequest  (optional)
    * @param headers Optional headers to include in the request
    * @return ApiResponse&lt;RetryFailedDeliveriesSummary&gt;
    * @throws ApiException if fails to make API call
    */
-  public ApiResponse<RetryFailedDeliveriesSummary> retryFailedForwarderDeliveriesWithHttpInfo(@jakarta.annotation.Nonnull String forwarderId, Map<String, String> headers) throws ApiException {
-    HttpRequest.Builder localVarRequestBuilder = retryFailedForwarderDeliveriesRequestBuilder(forwarderId, headers);
+  public ApiResponse<RetryFailedDeliveriesSummary> retryFailedForwarderDeliveriesWithHttpInfo(@jakarta.annotation.Nonnull String forwarderId, @jakarta.annotation.Nullable RetryFailedDeliveriesRequest retryFailedDeliveriesRequest, Map<String, String> headers) throws ApiException {
+    HttpRequest.Builder localVarRequestBuilder = retryFailedForwarderDeliveriesRequestBuilder(forwarderId, retryFailedDeliveriesRequest, headers);
     try {
       HttpResponse<InputStream> localVarResponse = memberVarHttpClient.send(
           localVarRequestBuilder.build(),
@@ -1049,7 +1060,7 @@ public class ForwardersApi {
     }
   }
 
-  private HttpRequest.Builder retryFailedForwarderDeliveriesRequestBuilder(@jakarta.annotation.Nonnull String forwarderId, Map<String, String> headers) throws ApiException {
+  private HttpRequest.Builder retryFailedForwarderDeliveriesRequestBuilder(@jakarta.annotation.Nonnull String forwarderId, @jakarta.annotation.Nullable RetryFailedDeliveriesRequest retryFailedDeliveriesRequest, Map<String, String> headers) throws ApiException {
     // verify the required parameter 'forwarderId' is set
     if (forwarderId == null) {
       throw new ApiException(400, "Missing the required parameter 'forwarderId' when calling retryFailedForwarderDeliveries");
@@ -1062,9 +1073,15 @@ public class ForwardersApi {
 
     localVarRequestBuilder.uri(URI.create(memberVarBaseUri + localVarPath));
 
-    localVarRequestBuilder.header("Accept", "application/vnd.api+json");
+    localVarRequestBuilder.header("Content-Type", "application/json");
+    localVarRequestBuilder.header("Accept", "application/json");
 
-    localVarRequestBuilder.method("POST", HttpRequest.BodyPublishers.noBody());
+    try {
+      byte[] localVarPostBody = memberVarObjectMapper.writeValueAsBytes(retryFailedDeliveriesRequest);
+      localVarRequestBuilder.method("POST", HttpRequest.BodyPublishers.ofByteArray(localVarPostBody));
+    } catch (IOException e) {
+      throw new ApiException(e);
+    }
     if (memberVarReadTimeout != null) {
       localVarRequestBuilder.timeout(memberVarReadTimeout);
     }

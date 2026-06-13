@@ -115,12 +115,10 @@ public class Event {
 
   @JsonCreator
   public Event(
-    @JsonProperty(JSON_PROPERTY_ENVIRONMENT) String environment, 
     @JsonProperty(JSON_PROPERTY_CREATED_AT) OffsetDateTime createdAt, 
     @JsonProperty(JSON_PROPERTY_IDEMPOTENCY_KEY) String idempotencyKey
   ) {
   this();
-    this.environment = environment == null ? JsonNullable.<String>undefined() : JsonNullable.of(environment);
     this.createdAt = createdAt == null ? JsonNullable.<OffsetDateTime>undefined() : JsonNullable.of(createdAt);
     this.idempotencyKey = idempotencyKey == null ? JsonNullable.<String>undefined() : JsonNullable.of(idempotencyKey);
   }
@@ -469,18 +467,19 @@ public class Event {
   }
 
 
+  public Event environment(@jakarta.annotation.Nullable String environment) {
+    this.environment = JsonNullable.<String>of(environment);
+    return this;
+  }
+
   /**
-   * The environment the event occurred in. Always present on read. Resolved when the event is recorded — from a single-environment credential, or the &#x60;X-Smplkit-Environment&#x60; header for multi-environment credentials — and never set on the request body. The same content recorded in two environments produces two distinct events.
+   * The environment the event occurred in. On write, optionally names the target environment: omit it and a single-environment credential implies it (a multi-environment credential must name it), and a named environment must be one the caller may access. Always present on read as the resolved environment. The same content recorded in two environments produces two distinct events.
    * @return environment
    */
   @jakarta.annotation.Nullable
   @JsonIgnore
   public String getEnvironment() {
-    
-    if (environment == null) {
-      environment = JsonNullable.<String>undefined();
-    }
-    return environment.orElse(null);
+        return environment.orElse(null);
   }
 
   @JsonProperty(value = JSON_PROPERTY_ENVIRONMENT, required = false)
@@ -491,10 +490,13 @@ public class Event {
   }
   
   @JsonProperty(JSON_PROPERTY_ENVIRONMENT)
-  private void setEnvironment_JsonNullable(JsonNullable<String> environment) {
+  public void setEnvironment_JsonNullable(JsonNullable<String> environment) {
     this.environment = environment;
   }
 
+  public void setEnvironment(@jakarta.annotation.Nullable String environment) {
+    this.environment = JsonNullable.<String>of(environment);
+  }
 
 
   /**
