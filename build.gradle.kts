@@ -18,10 +18,35 @@ repositories {
     mavenCentral()
 }
 
+// Customer-floor verification hook. Passing `-PjacksonFloorOverride=2.16.0`
+// (used by the `test-min-floor` CI job) force-resolves every Jackson core +
+// datatype dependency to that version, so we can prove the SDK still compiles
+// and its tests pass at the declared lower bound. Without an override, normal
+// resolution lets the open-ended range below pick the highest available. This
+// keeps the published `[2.16.0,)` floor honest rather than aspirational.
+val jacksonFloorOverride = findProperty("jacksonFloorOverride") as String?
+if (jacksonFloorOverride != null) {
+    configurations.all {
+        resolutionStrategy.eachDependency {
+            if (requested.group == "com.fasterxml.jackson.core" ||
+                requested.group == "com.fasterxml.jackson.datatype") {
+                useVersion(jacksonFloorOverride)
+            }
+        }
+    }
+}
+
 dependencies {
-    // Generated client dependencies (Jackson-based, used by internal/generated/)
-    implementation("com.fasterxml.jackson.core:jackson-databind:2.22.0")
-    implementation("com.fasterxml.jackson.datatype:jackson-datatype-jsr310:2.22.0")
+    // Generated client dependencies (Jackson-based, used by internal/generated/).
+    // Declared as an open lower-bound range so consumers on older (but still
+    // supported) Jackson can resolve the SDK — Jackson is commonly pinned by a
+    // customer's Spring Boot BOM. 2.16.0 is the true floor: the generated
+    // RFC3339InstantDeserializer uses jsr310 JavaTimeFeature, added in 2.16.0
+    // (2.15.x fails to compile). Verified by the test-min-floor CI job. The
+    // build itself resolves to the highest available; the published POM keeps
+    // the range so the customer's MVS intersects ours.
+    implementation("com.fasterxml.jackson.core:jackson-databind:[2.16.0,)")
+    implementation("com.fasterxml.jackson.datatype:jackson-datatype-jsr310:[2.16.0,)")
     implementation("org.openapitools:jackson-databind-nullable:0.2.10")
     compileOnly("jakarta.annotation:jakarta.annotation-api:3.0.0")
 

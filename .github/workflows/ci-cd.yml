@@ -77,9 +77,39 @@ jobs:
           token: ${{ secrets.CODECOV_TOKEN }}
           fail_ci_if_error: false
 
+  test-min-floor:
+    # Prove the SDK still compiles and its tests pass at the lowest declared
+    # customer-facing Jackson floor (2.16.0 — where jsr310 JavaTimeFeature,
+    # used by the generated RFC3339InstantDeserializer, was introduced). Without
+    # this, the `[2.16.0,)` range in build.gradle.kts is aspirational: normal
+    # CI builds against the latest Jackson and could silently start using a
+    # 2.17+ API that breaks consumers pinned to 2.16.
+    name: Test min Jackson floor (JDK ${{ matrix.java-version }})
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        java-version: [17, 21]
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          fetch-depth: 0
+
+      - name: Set up JDK ${{ matrix.java-version }}
+        uses: actions/setup-java@v5
+        with:
+          java-version: ${{ matrix.java-version }}
+          distribution: temurin
+
+      - name: Setup Gradle
+        uses: gradle/actions/setup-gradle@v6
+
+      - name: Build and test with Jackson pinned to the declared floor
+        run: ./gradlew build -PjacksonFloorOverride=2.16.0
+
   ci-gate:
     if: always()
-    needs: [lint, build]
+    needs: [lint, build, test-min-floor]
     runs-on: ubuntu-latest
     steps:
       - uses: smplkit/.github-public/actions/ci-gate@main

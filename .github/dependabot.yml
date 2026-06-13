@@ -21,6 +21,30 @@ updates:
       prefix: "fix"
       include: "scope"
     open-pull-requests-limit: 10
+    # SDK floor protection. Gradle supports no `versioning-strategy`, and a
+    # declared implementation version is the floor consumers resolve against via
+    # our published POM. Freeze the customer-facing deps so Dependabot cannot
+    # ratchet the floor (Jackson moved 2.17.1 -> 2.21.3 -> 2.22.0 in two weeks
+    # before this). jackson-databind/jsr310 are declared as an open `[2.16.0,)`
+    # range in build.gradle.kts; the ignore stops Dependabot replacing the range
+    # with a higher floor. `update-types` ignores suppress only scheduled VERSION
+    # updates — Dependabot SECURITY updates still flow, which matters for
+    # jackson-databind's CVE history. The logging frameworks (logback/slf4j/
+    # log4j) are compileOnly — not on the consumer classpath, not customer-facing
+    # — and are left to bump freely.
+    ignore:
+      - dependency-name: "com.fasterxml.jackson.core:jackson-databind"
+        update-types:
+          ["version-update:semver-patch", "version-update:semver-minor", "version-update:semver-major"]
+      - dependency-name: "com.fasterxml.jackson.datatype:jackson-datatype-jsr310"
+        update-types:
+          ["version-update:semver-patch", "version-update:semver-minor", "version-update:semver-major"]
+      - dependency-name: "org.openapitools:jackson-databind-nullable"
+        update-types:
+          ["version-update:semver-patch", "version-update:semver-minor", "version-update:semver-major"]
+      - dependency-name: "io.github.jamsesso:json-logic-java"
+        update-types:
+          ["version-update:semver-patch", "version-update:semver-minor", "version-update:semver-major"]
     groups:
       gradle:
         update-types:
