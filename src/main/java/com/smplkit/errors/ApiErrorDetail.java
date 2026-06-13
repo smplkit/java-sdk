@@ -1,5 +1,8 @@
 package com.smplkit.errors;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
+
+import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.Objects;
 
@@ -9,6 +12,9 @@ import java.util.Objects;
  * <p>Immutable value type, mirroring the Python SDK's {@code ApiErrorDetail}.</p>
  */
 public final class ApiErrorDetail {
+
+    /** Serializes the {@code meta} object inside {@link #toJson()}. */
+    private static final ObjectMapper MAPPER = new ObjectMapper();
 
     private final String status;
     private final String code;
@@ -128,15 +134,21 @@ public final class ApiErrorDetail {
     public Map<String, Object> getMeta() { return meta; }
 
     /**
-     * Returns a compact JSON representation of this error detail.
+     * Returns a compact JSON representation of this error detail, including the
+     * {@code code} and {@code meta} fields when present.
      *
-     * @return a JSON object string containing the non-null fields
+     * @return a JSON object string containing the populated fields
      */
     public String toJson() {
         StringBuilder sb = new StringBuilder("{");
         boolean first = true;
         if (status != null) {
             sb.append("\"status\": \"").append(escapeJson(status)).append("\"");
+            first = false;
+        }
+        if (code != null) {
+            if (!first) sb.append(", ");
+            sb.append("\"code\": \"").append(escapeJson(code)).append("\"");
             first = false;
         }
         if (title != null) {
@@ -152,9 +164,38 @@ public final class ApiErrorDetail {
         if (source != null) {
             if (!first) sb.append(", ");
             sb.append("\"source\": ").append(source.toJson());
+            first = false;
+        }
+        if (meta != null && !meta.isEmpty()) {
+            if (!first) sb.append(", ");
+            sb.append("\"meta\": ").append(MAPPER.valueToTree(meta).toString());
         }
         sb.append("}");
         return sb.toString();
+    }
+
+    /**
+     * Returns this error detail as a map of its populated fields — any of
+     * {@code status}, {@code code}, {@code title}, {@code detail}, {@code source},
+     * and {@code meta} that are set. Unset fields, an empty source, and empty
+     * meta are omitted. The {@code source} entry is itself a map carrying the
+     * {@code pointer}.
+     *
+     * @return an ordered map of the populated fields
+     */
+    public Map<String, Object> toMap() {
+        Map<String, Object> map = new LinkedHashMap<>();
+        if (status != null) map.put("status", status);
+        if (code != null) map.put("code", code);
+        if (title != null) map.put("title", title);
+        if (detail != null) map.put("detail", detail);
+        if (source != null && source.pointer() != null) {
+            Map<String, Object> sourceMap = new LinkedHashMap<>();
+            sourceMap.put("pointer", source.pointer());
+            map.put("source", sourceMap);
+        }
+        if (meta != null && !meta.isEmpty()) map.put("meta", meta);
+        return map;
     }
 
     @Override

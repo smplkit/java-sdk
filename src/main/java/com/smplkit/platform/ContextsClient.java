@@ -9,6 +9,7 @@ import com.smplkit.internal.generated.app.api.ContextsApi;
 import com.smplkit.internal.generated.app.model.ContextBulkItem;
 import com.smplkit.internal.generated.app.model.ContextBulkRegister;
 import com.smplkit.internal.generated.app.model.ContextListResponse;
+import com.smplkit.internal.generated.app.model.ContextRequest;
 import com.smplkit.internal.generated.app.model.ContextResource;
 import com.smplkit.internal.generated.app.model.ContextResponse;
 
@@ -214,6 +215,28 @@ public final class ContextsClient {
         }
     }
 
+    ContextEntity _save(ContextEntity entity) {
+        com.smplkit.internal.generated.app.model.Context attrs =
+                new com.smplkit.internal.generated.app.model.Context();
+        attrs.setContextType(entity.getType());
+        attrs.setName(entity.getName());
+        attrs.setAttributes(new HashMap<>(entity.getAttributes()));
+        ContextRequest body = new ContextRequest().data(new ContextResource()
+                .id(entity.getId())
+                .type(ContextResource.TypeEnum.CONTEXT)
+                .attributes(attrs));
+        try {
+            ContextResponse resp = api.updateContext(entity.getId(), body);
+            if (resp == null || resp.getData() == null) {
+                throw new com.smplkit.errors.ValidationError(
+                        "Saving context '" + entity.getId() + "' returned an empty response", null);
+            }
+            return resourceToEntity(resp.getData());
+        } catch (ApiException e) {
+            throw mapException(e);
+        }
+    }
+
     private static String[] splitCompositeId(String idOrType, String key) {
         if (key != null) return new String[]{idOrType, key};
         int colon = idOrType.indexOf(':');
@@ -226,7 +249,7 @@ public final class ContextsClient {
     }
 
     @SuppressWarnings("unchecked")
-    private static ContextEntity resourceToEntity(ContextResource r) {
+    private ContextEntity resourceToEntity(ContextResource r) {
         String compositeId = r.getId() != null ? r.getId() : "";
         String type, key;
         int colon = compositeId.indexOf(':');
@@ -249,7 +272,7 @@ public final class ContextsClient {
             if (attrs.getCreatedAt() != null) createdAt = attrs.getCreatedAt().toInstant();
             if (attrs.getUpdatedAt() != null) updatedAt = attrs.getUpdatedAt().toInstant();
         }
-        return new ContextEntity(type, key, name, attributes, createdAt, updatedAt);
+        return new ContextEntity(this, type, key, name, attributes, createdAt, updatedAt);
     }
 
     private static com.smplkit.errors.SmplError mapException(ApiException e) {

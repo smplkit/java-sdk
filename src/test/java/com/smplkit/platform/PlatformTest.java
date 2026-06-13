@@ -14,6 +14,7 @@ import com.smplkit.internal.generated.app.api.ServicesApi;
 import com.smplkit.internal.generated.app.model.ContextBulkItem;
 import com.smplkit.internal.generated.app.model.ContextBulkRegister;
 import com.smplkit.internal.generated.app.model.ContextListResponse;
+import com.smplkit.internal.generated.app.model.ContextRequest;
 import com.smplkit.internal.generated.app.model.ContextResource;
 import com.smplkit.internal.generated.app.model.ContextResponse;
 import com.smplkit.internal.generated.app.model.ContextTypeListResponse;
@@ -424,7 +425,7 @@ class PlatformTest {
 
     @Test
     void contextEntity_getId_composite() {
-        ContextEntity entity = new ContextEntity("user", "u123", "Alice",
+        ContextEntity entity = new ContextEntity(null, "user", "u123", "Alice",
                 Map.of("plan", "free"), null, null);
         assertEquals("user:u123", entity.getId());
         assertEquals("user", entity.getType());
@@ -437,23 +438,89 @@ class PlatformTest {
 
     @Test
     void contextEntity_toString() {
-        ContextEntity entity = new ContextEntity("user", "u123", null, null, null, null);
+        ContextEntity entity = new ContextEntity(null, "user", "u123", null, null, null, null);
         assertTrue(entity.toString().contains("user"));
         assertTrue(entity.toString().contains("u123"));
     }
 
     @Test
     void contextEntity_nullAttributes_returnsEmpty() {
-        ContextEntity entity = new ContextEntity("user", "k", null, null, null, null);
+        ContextEntity entity = new ContextEntity(null, "user", "k", null, null, null, null);
         assertTrue(entity.getAttributes().isEmpty());
     }
 
     @Test
     void contextEntity_timestamps() {
         Instant now = Instant.now();
-        ContextEntity entity = new ContextEntity("user", "k", null, null, now, now);
+        ContextEntity entity = new ContextEntity(null, "user", "k", null, null, now, now);
         assertEquals(now, entity.getCreatedAt());
         assertEquals(now, entity.getUpdatedAt());
+    }
+
+    @Test
+    void contextEntity_setName() {
+        ContextEntity entity = new ContextEntity(null, "user", "u1", "Alice", null, null, null);
+        entity.setName("Alice Smith");
+        assertEquals("Alice Smith", entity.getName());
+    }
+
+    @Test
+    void contextEntity_setAttributes_replacesContents() {
+        ContextEntity entity = new ContextEntity(null, "user", "u1", null,
+                Map.of("plan", "free"), null, null);
+        entity.setAttributes(Map.of("plan", "enterprise", "seats", 50));
+        assertEquals("enterprise", entity.getAttributes().get("plan"));
+        assertEquals(50, entity.getAttributes().get("seats"));
+    }
+
+    @Test
+    void contextEntity_setAttributes_null_clears() {
+        ContextEntity entity = new ContextEntity(null, "user", "u1", null,
+                Map.of("plan", "free"), null, null);
+        entity.setAttributes(null);
+        assertTrue(entity.getAttributes().isEmpty());
+    }
+
+    @Test
+    void contextEntity_save_withoutClient_throws() {
+        ContextEntity entity = new ContextEntity(null, "user", "u1", null, null, null, null);
+        assertThrows(IllegalStateException.class, entity::save);
+    }
+
+    @Test
+    void contextEntity_delete_withoutClient_throws() {
+        ContextEntity entity = new ContextEntity(null, "user", "u1", null, null, null, null);
+        assertThrows(IllegalStateException.class, entity::delete);
+    }
+
+    @Test
+    void contextEntity_saveAsync_default_returnsFuture() {
+        ContextEntity entity = new ContextEntity(null, "user", "u1", null, null, null, null);
+        assertNotNull(entity.saveAsync());
+    }
+
+    @Test
+    void contextEntity_saveAsync_runsOnProvidedExecutor() {
+        ContextEntity entity = new ContextEntity(null, "user", "u1", null, null, null, null);
+        java.util.concurrent.atomic.AtomicInteger ran = new java.util.concurrent.atomic.AtomicInteger();
+        java.util.concurrent.Executor inline = r -> { ran.incrementAndGet(); r.run(); };
+        entity.saveAsync(inline).exceptionally(t -> null).join();
+        assertEquals(1, ran.get());
+    }
+
+    @Test
+    void contextEntity_deleteAsync_default_returnsFuture() {
+        ContextEntity entity = new ContextEntity(null, "user", "u1", null, null, null, null);
+        assertNotNull(entity.deleteAsync());
+    }
+
+    @Test
+    void contextEntity_deleteAsync_runsOnProvidedExecutor() {
+        ContextEntity entity = new ContextEntity(null, "user", "u1", null, null, null, null);
+        java.util.concurrent.atomic.AtomicInteger ran = new java.util.concurrent.atomic.AtomicInteger();
+        java.util.concurrent.Executor inline = r -> { ran.incrementAndGet(); r.run(); };
+        entity.deleteAsync(inline).exceptionally(t -> null).join();
+        assertEquals(1, ran.get());
     }
 
     // =======================================================================
@@ -1262,6 +1329,72 @@ class PlatformTest {
         ContextEntity e = ctxClient.get("user:u1");
         assertEquals("", e.getType());
         assertEquals("", e.getKey());
+    }
+
+    @Test
+    void ctxClient_save_viaModel_putsAndApplies() throws Exception {
+        // Fetch a client-bound entity, mutate it, then persist via save().
+        ContextResponse getResp = new ContextResponse();
+        getResp.setData(buildCtxResource("user:u1", "Alice", Map.of("plan", "free"),
+                OffsetDateTime.now(), OffsetDateTime.now()));
+        when(mockCtxApi.getContext("user:u1")).thenReturn(getResp);
+        ContextEntity entity = ctxClient.get("user:u1");
+
+        entity.setName("Alice Smith");
+        entity.setAttributes(Map.of("plan", "enterprise"));
+
+        ContextResponse putResp = new ContextResponse();
+        putResp.setData(buildCtxResource("user:u1", "Alice Smith", Map.of("plan", "enterprise"),
+                OffsetDateTime.now(), OffsetDateTime.now()));
+        ArgumentCaptor<ContextRequest> captor = ArgumentCaptor.forClass(ContextRequest.class);
+        when(mockCtxApi.updateContext(eq("user:u1"), captor.capture())).thenReturn(putResp);
+
+        entity.save();
+
+        // The saved state is applied back onto the instance.
+        assertEquals("Alice Smith", entity.getName());
+        assertEquals("enterprise", entity.getAttributes().get("plan"));
+        // The PUT body carries the full resource the server expects.
+        ContextResource sent = captor.getValue().getData();
+        assertEquals("user:u1", sent.getId());
+        assertEquals(ContextResource.TypeEnum.CONTEXT, sent.getType());
+        assertEquals("user", sent.getAttributes().getContextType());
+        assertEquals("Alice Smith", sent.getAttributes().getName());
+        assertEquals("enterprise", sent.getAttributes().getAttributes().get("plan"));
+    }
+
+    @Test
+    void ctxClient_save_viaModel_emptyResponse_throwsValidation() throws Exception {
+        ContextResponse getResp = new ContextResponse();
+        getResp.setData(buildCtxResource("user:u1", "Alice", new HashMap<>(), null, null));
+        when(mockCtxApi.getContext("user:u1")).thenReturn(getResp);
+        ContextEntity entity = ctxClient.get("user:u1");
+
+        when(mockCtxApi.updateContext(eq("user:u1"), any())).thenReturn(new ContextResponse());
+        assertThrows(com.smplkit.errors.ValidationError.class, entity::save);
+    }
+
+    @Test
+    void ctxClient_save_viaModel_apiException() throws Exception {
+        ContextResponse getResp = new ContextResponse();
+        getResp.setData(buildCtxResource("user:u1", "Alice", new HashMap<>(), null, null));
+        when(mockCtxApi.getContext("user:u1")).thenReturn(getResp);
+        ContextEntity entity = ctxClient.get("user:u1");
+
+        when(mockCtxApi.updateContext(eq("user:u1"), any())).thenThrow(new ApiException(409, "conflict"));
+        assertThrows(SmplError.class, entity::save);
+    }
+
+    @Test
+    void ctxClient_delete_viaModel() throws Exception {
+        ContextResponse getResp = new ContextResponse();
+        getResp.setData(buildCtxResource("user:u1", "Alice", new HashMap<>(), null, null));
+        when(mockCtxApi.getContext("user:u1")).thenReturn(getResp);
+        ContextEntity entity = ctxClient.get("user:u1");
+
+        doNothing().when(mockCtxApi).deleteContext("user:u1");
+        assertDoesNotThrow(entity::delete);
+        verify(mockCtxApi).deleteContext("user:u1");
     }
 
     // =======================================================================
