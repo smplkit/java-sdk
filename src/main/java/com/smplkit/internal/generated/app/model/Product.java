@@ -49,6 +49,7 @@ import com.smplkit.internal.generated.app.ApiClient;
   Product.JSON_PROPERTY_FEATURES,
   Product.JSON_PROPERTY_COMING_SOON,
   Product.JSON_PROPERTY_LIMITS,
+  Product.JSON_PROPERTY_METERED_LIMITS,
   Product.JSON_PROPERTY_PLANS
 })
 @jakarta.annotation.Generated(value = "org.openapitools.codegen.languages.JavaClientCodegen", comments = "Generator version: 7.21.0")
@@ -75,6 +76,10 @@ public class Product {
   public static final String JSON_PROPERTY_LIMITS = "limits";
   @jakarta.annotation.Nonnull
   private Map<String, LimitDefinition> limits = new HashMap<>();
+
+  public static final String JSON_PROPERTY_METERED_LIMITS = "metered_limits";
+  @jakarta.annotation.Nullable
+  private List<String> meteredLimits = new ArrayList<>();
 
   public static final String JSON_PROPERTY_PLANS = "plans";
   @jakarta.annotation.Nonnull
@@ -251,6 +256,38 @@ public class Product {
   }
 
 
+  public Product meteredLimits(@jakarta.annotation.Nullable List<String> meteredLimits) {
+    this.meteredLimits = meteredLimits;
+    return this;
+  }
+
+  public Product addMeteredLimitsItem(String meteredLimitsItem) {
+    if (this.meteredLimits == null) {
+      this.meteredLimits = new ArrayList<>();
+    }
+    this.meteredLimits.add(meteredLimitsItem);
+    return this;
+  }
+
+  /**
+   * Limit keys on this product that are metered: each includes a monthly allotment in the plan price and bills per unit beyond it at the plan&#39;s &#x60;overage_rates&#x60; rate, rather than capping hard. Empty for products with no metered limits.
+   * @return meteredLimits
+   */
+  @jakarta.annotation.Nullable
+  @JsonProperty(value = JSON_PROPERTY_METERED_LIMITS, required = false)
+  @JsonInclude(value = JsonInclude.Include.USE_DEFAULTS)
+  public List<String> getMeteredLimits() {
+    return meteredLimits;
+  }
+
+
+  @JsonProperty(value = JSON_PROPERTY_METERED_LIMITS, required = false)
+  @JsonInclude(value = JsonInclude.Include.USE_DEFAULTS)
+  public void setMeteredLimits(@jakarta.annotation.Nullable List<String> meteredLimits) {
+    this.meteredLimits = meteredLimits;
+  }
+
+
   public Product plans(@jakarta.annotation.Nonnull Map<String, PlanDefinition> plans) {
     this.plans = plans;
     return this;
@@ -301,6 +338,7 @@ public class Product {
         Objects.equals(this.features, product.features) &&
         Objects.equals(this.comingSoon, product.comingSoon) &&
         Objects.equals(this.limits, product.limits) &&
+        Objects.equals(this.meteredLimits, product.meteredLimits) &&
         Objects.equals(this.plans, product.plans);
   }
 
@@ -310,7 +348,7 @@ public class Product {
 
   @Override
   public int hashCode() {
-    return Objects.hash(displayName, description, hashCodeNullable(tagline), features, comingSoon, limits, plans);
+    return Objects.hash(displayName, description, hashCodeNullable(tagline), features, comingSoon, limits, meteredLimits, plans);
   }
 
   private static <T> int hashCodeNullable(JsonNullable<T> a) {
@@ -330,6 +368,7 @@ public class Product {
     sb.append("    features: ").append(toIndentedString(features)).append("\n");
     sb.append("    comingSoon: ").append(toIndentedString(comingSoon)).append("\n");
     sb.append("    limits: ").append(toIndentedString(limits)).append("\n");
+    sb.append("    meteredLimits: ").append(toIndentedString(meteredLimits)).append("\n");
     sb.append("    plans: ").append(toIndentedString(plans)).append("\n");
     sb.append("}");
     return sb.toString();
@@ -411,6 +450,15 @@ public class Product {
           joiner.add(getLimits().get(_key).toUrlQueryString(String.format(java.util.Locale.ROOT, "%slimits%s%s", prefix, suffix,
               "".equals(suffix) ? "" : String.format(java.util.Locale.ROOT, "%s%d%s", containerPrefix, _key, containerSuffix))));
         }
+      }
+    }
+
+    // add `metered_limits` to the URL query string
+    if (getMeteredLimits() != null) {
+      for (int i = 0; i < getMeteredLimits().size(); i++) {
+        joiner.add(String.format(java.util.Locale.ROOT, "%smetered_limits%s%s=%s", prefix, suffix,
+            "".equals(suffix) ? "" : String.format(java.util.Locale.ROOT, "%s%d%s", containerPrefix, i, containerSuffix),
+            ApiClient.urlEncode(ApiClient.valueToString(getMeteredLimits().get(i)))));
       }
     }
 
