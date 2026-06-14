@@ -27,6 +27,10 @@ import com.fasterxml.jackson.annotation.JsonValue;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
+import org.openapitools.jackson.nullable.JsonNullable;
+import com.fasterxml.jackson.annotation.JsonIgnore;
+import org.openapitools.jackson.nullable.JsonNullable;
+import java.util.NoSuchElementException;
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 
 
@@ -36,7 +40,8 @@ import com.smplkit.internal.generated.app.ApiClient;
  */
 @JsonPropertyOrder({
   PlanDefinition.JSON_PROPERTY_PRICE_MONTHLY_CENTS,
-  PlanDefinition.JSON_PROPERTY_LIMITS
+  PlanDefinition.JSON_PROPERTY_LIMITS,
+  PlanDefinition.JSON_PROPERTY_OVERAGE_RATES
 })
 @jakarta.annotation.Generated(value = "org.openapitools.codegen.languages.JavaClientCodegen", comments = "Generator version: 7.21.0")
 public class PlanDefinition {
@@ -47,6 +52,9 @@ public class PlanDefinition {
   public static final String JSON_PROPERTY_LIMITS = "limits";
   @jakarta.annotation.Nonnull
   private Map<String, Integer> limits = new HashMap<>();
+
+  public static final String JSON_PROPERTY_OVERAGE_RATES = "overage_rates";
+  private JsonNullable<Map<String, Integer>> overageRates = JsonNullable.<Map<String, Integer>>undefined();
 
   public PlanDefinition() { 
   }
@@ -107,6 +115,50 @@ public class PlanDefinition {
   }
 
 
+  public PlanDefinition overageRates(@jakarta.annotation.Nullable Map<String, Integer> overageRates) {
+    this.overageRates = JsonNullable.<Map<String, Integer>>of(overageRates);
+    return this;
+  }
+
+  public PlanDefinition putOverageRatesItem(String key, Integer overageRatesItem) {
+    if (this.overageRates == null || !this.overageRates.isPresent()) {
+      this.overageRates = JsonNullable.<Map<String, Integer>>of(new HashMap<>());
+    }
+    try {
+      this.overageRates.get().put(key, overageRatesItem);
+    } catch (java.util.NoSuchElementException e) {
+      // this can never happen, as we make sure above that the value is present
+    }
+    return this;
+  }
+
+  /**
+   * For metered products only: map of metered limit key to the per-unit overage price in micro-USD ($0.000001) charged for each unit beyond the plan&#39;s included allotment. A rate of &#x60;0&#x60; means the plan stops at its allotment with no overage. Omitted for products that are not metered.
+   * @return overageRates
+   */
+  @jakarta.annotation.Nullable
+  @JsonIgnore
+  public Map<String, Integer> getOverageRates() {
+        return overageRates.orElse(null);
+  }
+
+  @JsonProperty(value = JSON_PROPERTY_OVERAGE_RATES, required = false)
+  @JsonInclude(value = JsonInclude.Include.USE_DEFAULTS)
+
+  public JsonNullable<Map<String, Integer>> getOverageRates_JsonNullable() {
+    return overageRates;
+  }
+  
+  @JsonProperty(JSON_PROPERTY_OVERAGE_RATES)
+  public void setOverageRates_JsonNullable(JsonNullable<Map<String, Integer>> overageRates) {
+    this.overageRates = overageRates;
+  }
+
+  public void setOverageRates(@jakarta.annotation.Nullable Map<String, Integer> overageRates) {
+    this.overageRates = JsonNullable.<Map<String, Integer>>of(overageRates);
+  }
+
+
   /**
    * Return true if this PlanDefinition object is equal to o.
    */
@@ -120,12 +172,24 @@ public class PlanDefinition {
     }
     PlanDefinition planDefinition = (PlanDefinition) o;
     return Objects.equals(this.priceMonthlyCents, planDefinition.priceMonthlyCents) &&
-        Objects.equals(this.limits, planDefinition.limits);
+        Objects.equals(this.limits, planDefinition.limits) &&
+        equalsNullable(this.overageRates, planDefinition.overageRates);
+  }
+
+  private static <T> boolean equalsNullable(JsonNullable<T> a, JsonNullable<T> b) {
+    return a == b || (a != null && b != null && a.isPresent() && b.isPresent() && Objects.deepEquals(a.get(), b.get()));
   }
 
   @Override
   public int hashCode() {
-    return Objects.hash(priceMonthlyCents, limits);
+    return Objects.hash(priceMonthlyCents, limits, hashCodeNullable(overageRates));
+  }
+
+  private static <T> int hashCodeNullable(JsonNullable<T> a) {
+    if (a == null) {
+      return 1;
+    }
+    return a.isPresent() ? Arrays.deepHashCode(new Object[]{a.get()}) : 31;
   }
 
   @Override
@@ -134,6 +198,7 @@ public class PlanDefinition {
     sb.append("class PlanDefinition {\n");
     sb.append("    priceMonthlyCents: ").append(toIndentedString(priceMonthlyCents)).append("\n");
     sb.append("    limits: ").append(toIndentedString(limits)).append("\n");
+    sb.append("    overageRates: ").append(toIndentedString(overageRates)).append("\n");
     sb.append("}");
     return sb.toString();
   }
@@ -189,6 +254,15 @@ public class PlanDefinition {
         joiner.add(String.format(java.util.Locale.ROOT, "%slimits%s%s=%s", prefix, suffix,
             "".equals(suffix) ? "" : String.format(java.util.Locale.ROOT, "%s%d%s", containerPrefix, _key, containerSuffix),
             getLimits().get(_key), ApiClient.urlEncode(ApiClient.valueToString(getLimits().get(_key)))));
+      }
+    }
+
+    // add `overage_rates` to the URL query string
+    if (getOverageRates() != null) {
+      for (String _key : getOverageRates().keySet()) {
+        joiner.add(String.format(java.util.Locale.ROOT, "%soverage_rates%s%s=%s", prefix, suffix,
+            "".equals(suffix) ? "" : String.format(java.util.Locale.ROOT, "%s%d%s", containerPrefix, _key, containerSuffix),
+            getOverageRates().get(_key), ApiClient.urlEncode(ApiClient.valueToString(getOverageRates().get(_key)))));
       }
     }
 
