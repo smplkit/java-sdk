@@ -165,7 +165,7 @@ public class ProductsApi {
 
   /**
    * List Products
-   * Return all flag-enabled products with their plans, limits, and marketing content.  Default sort is &#x60;display_name&#x60; ascending.
+   * Return all products with their plans, limits, and marketing content.  Default sort is &#x60;display_name&#x60; ascending.
    * @param sort Field to sort by. Prefix with &#x60;-&#x60; for descending order. Default: &#x60;display_name&#x60;. Allowed values: &#x60;display_name&#x60;, &#x60;-display_name&#x60;, &#x60;id&#x60;, &#x60;-id&#x60;. (optional, default to display_name)
    * @param pageNumber 1-based page number to return. Optional; defaults to &#x60;1&#x60; when omitted. Must be &#x60;&gt;&#x3D; 1&#x60; — requests with a smaller value are rejected with a 400 error. (optional, default to 1)
    * @param pageSize Number of items per page. Optional; defaults to &#x60;1000&#x60; when omitted. Must be between &#x60;1&#x60; and &#x60;1000&#x60; inclusive — requests outside that range are rejected with a 400 error. (optional, default to 1000)
@@ -179,7 +179,7 @@ public class ProductsApi {
 
   /**
    * List Products
-   * Return all flag-enabled products with their plans, limits, and marketing content.  Default sort is &#x60;display_name&#x60; ascending.
+   * Return all products with their plans, limits, and marketing content.  Default sort is &#x60;display_name&#x60; ascending.
    * @param sort Field to sort by. Prefix with &#x60;-&#x60; for descending order. Default: &#x60;display_name&#x60;. Allowed values: &#x60;display_name&#x60;, &#x60;-display_name&#x60;, &#x60;id&#x60;, &#x60;-id&#x60;. (optional, default to display_name)
    * @param pageNumber 1-based page number to return. Optional; defaults to &#x60;1&#x60; when omitted. Must be &#x60;&gt;&#x3D; 1&#x60; — requests with a smaller value are rejected with a 400 error. (optional, default to 1)
    * @param pageSize Number of items per page. Optional; defaults to &#x60;1000&#x60; when omitted. Must be between &#x60;1&#x60; and &#x60;1000&#x60; inclusive — requests outside that range are rejected with a 400 error. (optional, default to 1000)
@@ -195,7 +195,7 @@ public class ProductsApi {
 
   /**
    * List Products
-   * Return all flag-enabled products with their plans, limits, and marketing content.  Default sort is &#x60;display_name&#x60; ascending.
+   * Return all products with their plans, limits, and marketing content.  Default sort is &#x60;display_name&#x60; ascending.
    * @param sort Field to sort by. Prefix with &#x60;-&#x60; for descending order. Default: &#x60;display_name&#x60;. Allowed values: &#x60;display_name&#x60;, &#x60;-display_name&#x60;, &#x60;id&#x60;, &#x60;-id&#x60;. (optional, default to display_name)
    * @param pageNumber 1-based page number to return. Optional; defaults to &#x60;1&#x60; when omitted. Must be &#x60;&gt;&#x3D; 1&#x60; — requests with a smaller value are rejected with a 400 error. (optional, default to 1)
    * @param pageSize Number of items per page. Optional; defaults to &#x60;1000&#x60; when omitted. Must be between &#x60;1&#x60; and &#x60;1000&#x60; inclusive — requests outside that range are rejected with a 400 error. (optional, default to 1000)
@@ -209,7 +209,7 @@ public class ProductsApi {
 
   /**
    * List Products
-   * Return all flag-enabled products with their plans, limits, and marketing content.  Default sort is &#x60;display_name&#x60; ascending.
+   * Return all products with their plans, limits, and marketing content.  Default sort is &#x60;display_name&#x60; ascending.
    * @param sort Field to sort by. Prefix with &#x60;-&#x60; for descending order. Default: &#x60;display_name&#x60;. Allowed values: &#x60;display_name&#x60;, &#x60;-display_name&#x60;, &#x60;id&#x60;, &#x60;-id&#x60;. (optional, default to display_name)
    * @param pageNumber 1-based page number to return. Optional; defaults to &#x60;1&#x60; when omitted. Must be &#x60;&gt;&#x3D; 1&#x60; — requests with a smaller value are rejected with a 400 error. (optional, default to 1)
    * @param pageSize Number of items per page. Optional; defaults to &#x60;1000&#x60; when omitted. Must be between &#x60;1&#x60; and &#x60;1000&#x60; inclusive — requests outside that range are rejected with a 400 error. (optional, default to 1000)
