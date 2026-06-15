@@ -47,7 +47,6 @@ import com.smplkit.internal.generated.app.ApiClient;
   Product.JSON_PROPERTY_DESCRIPTION,
   Product.JSON_PROPERTY_TAGLINE,
   Product.JSON_PROPERTY_FEATURES,
-  Product.JSON_PROPERTY_COMING_SOON,
   Product.JSON_PROPERTY_LIMITS,
   Product.JSON_PROPERTY_METERED_LIMITS,
   Product.JSON_PROPERTY_PLANS
@@ -68,10 +67,6 @@ public class Product {
   public static final String JSON_PROPERTY_FEATURES = "features";
   @jakarta.annotation.Nullable
   private List<String> features = new ArrayList<>();
-
-  public static final String JSON_PROPERTY_COMING_SOON = "coming_soon";
-  @jakarta.annotation.Nullable
-  private Boolean comingSoon = false;
 
   public static final String JSON_PROPERTY_LIMITS = "limits";
   @jakarta.annotation.Nonnull
@@ -200,30 +195,6 @@ public class Product {
   }
 
 
-  public Product comingSoon(@jakarta.annotation.Nullable Boolean comingSoon) {
-    this.comingSoon = comingSoon;
-    return this;
-  }
-
-  /**
-   * When &#x60;true&#x60;, the product is listed but not yet available for subscription.
-   * @return comingSoon
-   */
-  @jakarta.annotation.Nullable
-  @JsonProperty(value = JSON_PROPERTY_COMING_SOON, required = false)
-  @JsonInclude(value = JsonInclude.Include.USE_DEFAULTS)
-  public Boolean getComingSoon() {
-    return comingSoon;
-  }
-
-
-  @JsonProperty(value = JSON_PROPERTY_COMING_SOON, required = false)
-  @JsonInclude(value = JsonInclude.Include.USE_DEFAULTS)
-  public void setComingSoon(@jakarta.annotation.Nullable Boolean comingSoon) {
-    this.comingSoon = comingSoon;
-  }
-
-
   public Product limits(@jakarta.annotation.Nonnull Map<String, LimitDefinition> limits) {
     this.limits = limits;
     return this;
@@ -336,7 +307,6 @@ public class Product {
         Objects.equals(this.description, product.description) &&
         equalsNullable(this.tagline, product.tagline) &&
         Objects.equals(this.features, product.features) &&
-        Objects.equals(this.comingSoon, product.comingSoon) &&
         Objects.equals(this.limits, product.limits) &&
         Objects.equals(this.meteredLimits, product.meteredLimits) &&
         Objects.equals(this.plans, product.plans);
@@ -348,7 +318,7 @@ public class Product {
 
   @Override
   public int hashCode() {
-    return Objects.hash(displayName, description, hashCodeNullable(tagline), features, comingSoon, limits, meteredLimits, plans);
+    return Objects.hash(displayName, description, hashCodeNullable(tagline), features, limits, meteredLimits, plans);
   }
 
   private static <T> int hashCodeNullable(JsonNullable<T> a) {
@@ -366,7 +336,6 @@ public class Product {
     sb.append("    description: ").append(toIndentedString(description)).append("\n");
     sb.append("    tagline: ").append(toIndentedString(tagline)).append("\n");
     sb.append("    features: ").append(toIndentedString(features)).append("\n");
-    sb.append("    comingSoon: ").append(toIndentedString(comingSoon)).append("\n");
     sb.append("    limits: ").append(toIndentedString(limits)).append("\n");
     sb.append("    meteredLimits: ").append(toIndentedString(meteredLimits)).append("\n");
     sb.append("    plans: ").append(toIndentedString(plans)).append("\n");
@@ -436,11 +405,6 @@ public class Product {
             "".equals(suffix) ? "" : String.format(java.util.Locale.ROOT, "%s%d%s", containerPrefix, i, containerSuffix),
             ApiClient.urlEncode(ApiClient.valueToString(getFeatures().get(i)))));
       }
-    }
-
-    // add `coming_soon` to the URL query string
-    if (getComingSoon() != null) {
-      joiner.add(String.format(java.util.Locale.ROOT, "%scoming_soon%s=%s", prefix, suffix, ApiClient.urlEncode(ApiClient.valueToString(getComingSoon()))));
     }
 
     // add `limits` to the URL query string
