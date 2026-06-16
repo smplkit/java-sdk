@@ -165,6 +165,8 @@ public final class JobsClient implements AutoCloseable {
      *
      * @param input filters and paging for the listing. {@code enabled} returns
      *     only jobs with that enabled state ({@code null} lists both);
+     *     {@code recurring} returns only recurring ({@code true}) or only
+     *     one-off ({@code false}) jobs ({@code null} lists both);
      *     {@code pageNumber} is the 1-based page ({@code null} returns the
      *     first page); {@code pageSize} is the max jobs per page ({@code null}
      *     uses the server default)
@@ -172,7 +174,7 @@ public final class JobsClient implements AutoCloseable {
      * @throws ApiException if the request fails
      */
     public List<Job> list(ListJobsInput input) throws ApiException {
-        JobListResponse resp = api.listJobs(input.enabled, input.pageNumber, input.pageSize, null);
+        JobListResponse resp = api.listJobs(input.enabled, input.recurring, input.pageNumber, input.pageSize, null);
         List<Job> out = new ArrayList<>();
         if (resp.getData() != null) {
             for (JobResource r : resp.getData()) out.add(fromResource(r));

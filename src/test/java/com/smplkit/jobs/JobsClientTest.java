@@ -250,6 +250,7 @@ class JobsClientTest {
             assertEquals(2, c.list().size());
             ListJobsInput in = new ListJobsInput();
             in.enabled = true;
+            in.recurring = true;
             in.pageNumber = 1;
             in.pageSize = 10;
             assertEquals(2, c.list(in).size());
