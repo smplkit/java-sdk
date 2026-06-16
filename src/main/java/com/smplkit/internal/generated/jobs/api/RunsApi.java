@@ -404,7 +404,7 @@ public class RunsApi {
    * List Runs
    * List runs for this account, newest first (cursor paginated).  Use &#x60;filter[job]&#x3D;{id}&#x60; for a single job&#39;s run history.
    * @param filterJob  (optional)
-   * @param pageSize  (optional)
+   * @param pageSize Number of runs per page. Optional; defaults to &#x60;50&#x60; when omitted. Must be between &#x60;1&#x60; and &#x60;1000&#x60; inclusive — requests outside that range are rejected with a 400 error. (optional)
    * @param pageAfter  (optional)
    * @return RunListResponse
    * @throws ApiException if fails to make API call
@@ -417,7 +417,7 @@ public class RunsApi {
    * List Runs
    * List runs for this account, newest first (cursor paginated).  Use &#x60;filter[job]&#x3D;{id}&#x60; for a single job&#39;s run history.
    * @param filterJob  (optional)
-   * @param pageSize  (optional)
+   * @param pageSize Number of runs per page. Optional; defaults to &#x60;50&#x60; when omitted. Must be between &#x60;1&#x60; and &#x60;1000&#x60; inclusive — requests outside that range are rejected with a 400 error. (optional)
    * @param pageAfter  (optional)
    * @param headers Optional headers to include in the request
    * @return RunListResponse
@@ -432,7 +432,7 @@ public class RunsApi {
    * List Runs
    * List runs for this account, newest first (cursor paginated).  Use &#x60;filter[job]&#x3D;{id}&#x60; for a single job&#39;s run history.
    * @param filterJob  (optional)
-   * @param pageSize  (optional)
+   * @param pageSize Number of runs per page. Optional; defaults to &#x60;50&#x60; when omitted. Must be between &#x60;1&#x60; and &#x60;1000&#x60; inclusive — requests outside that range are rejected with a 400 error. (optional)
    * @param pageAfter  (optional)
    * @return ApiResponse&lt;RunListResponse&gt;
    * @throws ApiException if fails to make API call
@@ -445,7 +445,7 @@ public class RunsApi {
    * List Runs
    * List runs for this account, newest first (cursor paginated).  Use &#x60;filter[job]&#x3D;{id}&#x60; for a single job&#39;s run history.
    * @param filterJob  (optional)
-   * @param pageSize  (optional)
+   * @param pageSize Number of runs per page. Optional; defaults to &#x60;50&#x60; when omitted. Must be between &#x60;1&#x60; and &#x60;1000&#x60; inclusive — requests outside that range are rejected with a 400 error. (optional)
    * @param pageAfter  (optional)
    * @param headers Optional headers to include in the request
    * @return ApiResponse&lt;RunListResponse&gt;
