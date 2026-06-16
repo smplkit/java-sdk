@@ -60,7 +60,7 @@ public class UsageAttributes {
   }
 
   /**
-   * Identifier of the metered limit, e.g. &#x60;audit.events_per_month&#x60;.
+   * Identifier of the metered limit, e.g. &#x60;audit.included_events_per_month&#x60;.
    * @return limitKey
    */
   @jakarta.annotation.Nonnull
