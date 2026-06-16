@@ -42,7 +42,8 @@ public final class RunsClient {
      * @throws ApiException if the request fails
      */
     public List<Run> list(ListRunsInput input) throws ApiException {
-        RunListResponse resp = api.listRuns(input.job, input.pageSize, input.after);
+        RunListResponse resp = api.listRuns(
+            input.job, null, null, null, null, null, input.pageSize, input.after, null);
         List<Run> out = new ArrayList<>();
         if (resp.getData() != null) {
             for (RunResource r : resp.getData()) out.add(JobsConversions.runFromResource(r));
