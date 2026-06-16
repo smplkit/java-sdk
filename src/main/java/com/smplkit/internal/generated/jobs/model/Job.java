@@ -47,6 +47,7 @@ import com.smplkit.internal.generated.jobs.ApiClient;
   Job.JSON_PROPERTY_CONFIGURATION,
   Job.JSON_PROPERTY_CONCURRENCY_POLICY,
   Job.JSON_PROPERTY_NEXT_RUN_AT,
+  Job.JSON_PROPERTY_RECURRING,
   Job.JSON_PROPERTY_CREATED_AT,
   Job.JSON_PROPERTY_UPDATED_AT,
   Job.JSON_PROPERTY_DELETED_AT,
@@ -150,6 +151,10 @@ public class Job {
   public static final String JSON_PROPERTY_NEXT_RUN_AT = "next_run_at";
   private JsonNullable<OffsetDateTime> nextRunAt = JsonNullable.<OffsetDateTime>undefined();
 
+  public static final String JSON_PROPERTY_RECURRING = "recurring";
+  @jakarta.annotation.Nullable
+  private Boolean recurring = false;
+
   public static final String JSON_PROPERTY_CREATED_AT = "created_at";
   private JsonNullable<OffsetDateTime> createdAt = JsonNullable.<OffsetDateTime>undefined();
 
@@ -168,6 +173,7 @@ public class Job {
   @JsonCreator
   public Job(
     @JsonProperty(JSON_PROPERTY_NEXT_RUN_AT) OffsetDateTime nextRunAt, 
+    @JsonProperty(JSON_PROPERTY_RECURRING) Boolean recurring, 
     @JsonProperty(JSON_PROPERTY_CREATED_AT) OffsetDateTime createdAt, 
     @JsonProperty(JSON_PROPERTY_UPDATED_AT) OffsetDateTime updatedAt, 
     @JsonProperty(JSON_PROPERTY_DELETED_AT) OffsetDateTime deletedAt, 
@@ -175,6 +181,7 @@ public class Job {
   ) {
   this();
     this.nextRunAt = nextRunAt == null ? JsonNullable.<OffsetDateTime>undefined() : JsonNullable.of(nextRunAt);
+    this.recurring = recurring;
     this.createdAt = createdAt == null ? JsonNullable.<OffsetDateTime>undefined() : JsonNullable.of(createdAt);
     this.updatedAt = updatedAt == null ? JsonNullable.<OffsetDateTime>undefined() : JsonNullable.of(updatedAt);
     this.deletedAt = deletedAt == null ? JsonNullable.<OffsetDateTime>undefined() : JsonNullable.of(deletedAt);
@@ -386,6 +393,20 @@ public class Job {
 
 
   /**
+   * Whether the job runs on a repeating schedule. &#x60;true&#x60; for a cron schedule; &#x60;false&#x60; for a one-off datetime or &#x60;now&#x60; schedule, which runs a single time. Derived from &#x60;schedule&#x60;.
+   * @return recurring
+   */
+  @jakarta.annotation.Nullable
+  @JsonProperty(value = JSON_PROPERTY_RECURRING, required = false)
+  @JsonInclude(value = JsonInclude.Include.USE_DEFAULTS)
+  public Boolean getRecurring() {
+    return recurring;
+  }
+
+
+
+
+  /**
    * When the job was created.
    * @return createdAt
    */
@@ -517,6 +538,7 @@ public class Job {
         Objects.equals(this._configuration, job._configuration) &&
         Objects.equals(this.concurrencyPolicy, job.concurrencyPolicy) &&
         equalsNullable(this.nextRunAt, job.nextRunAt) &&
+        Objects.equals(this.recurring, job.recurring) &&
         equalsNullable(this.createdAt, job.createdAt) &&
         equalsNullable(this.updatedAt, job.updatedAt) &&
         equalsNullable(this.deletedAt, job.deletedAt) &&
@@ -529,7 +551,7 @@ public class Job {
 
   @Override
   public int hashCode() {
-    return Objects.hash(name, hashCodeNullable(description), enabled, type, schedule, _configuration, concurrencyPolicy, hashCodeNullable(nextRunAt), hashCodeNullable(createdAt), hashCodeNullable(updatedAt), hashCodeNullable(deletedAt), hashCodeNullable(version));
+    return Objects.hash(name, hashCodeNullable(description), enabled, type, schedule, _configuration, concurrencyPolicy, hashCodeNullable(nextRunAt), recurring, hashCodeNullable(createdAt), hashCodeNullable(updatedAt), hashCodeNullable(deletedAt), hashCodeNullable(version));
   }
 
   private static <T> int hashCodeNullable(JsonNullable<T> a) {
@@ -551,6 +573,7 @@ public class Job {
     sb.append("    _configuration: ").append(toIndentedString(_configuration)).append("\n");
     sb.append("    concurrencyPolicy: ").append(toIndentedString(concurrencyPolicy)).append("\n");
     sb.append("    nextRunAt: ").append(toIndentedString(nextRunAt)).append("\n");
+    sb.append("    recurring: ").append(toIndentedString(recurring)).append("\n");
     sb.append("    createdAt: ").append(toIndentedString(createdAt)).append("\n");
     sb.append("    updatedAt: ").append(toIndentedString(updatedAt)).append("\n");
     sb.append("    deletedAt: ").append(toIndentedString(deletedAt)).append("\n");
@@ -637,6 +660,11 @@ public class Job {
     // add `next_run_at` to the URL query string
     if (getNextRunAt() != null) {
       joiner.add(String.format(java.util.Locale.ROOT, "%snext_run_at%s=%s", prefix, suffix, ApiClient.urlEncode(ApiClient.valueToString(getNextRunAt()))));
+    }
+
+    // add `recurring` to the URL query string
+    if (getRecurring() != null) {
+      joiner.add(String.format(java.util.Locale.ROOT, "%srecurring%s=%s", prefix, suffix, ApiClient.urlEncode(ApiClient.valueToString(getRecurring()))));
     }
 
     // add `created_at` to the URL query string

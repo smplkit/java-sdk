@@ -515,20 +515,22 @@ public class JobsApi {
    * List Jobs
    * List this account&#39;s jobs, newest first.
    * @param filterEnabled  (optional)
+   * @param filterRecurring  (optional)
    * @param pageNumber 1-based page number to return. Optional; defaults to &#x60;1&#x60; when omitted. Must be &#x60;&gt;&#x3D; 1&#x60; — requests with a smaller value are rejected with a 400 error. (optional, default to 1)
    * @param pageSize Number of items per page. Optional; defaults to &#x60;1000&#x60; when omitted. Must be between &#x60;1&#x60; and &#x60;1000&#x60; inclusive — requests outside that range are rejected with a 400 error. (optional, default to 1000)
    * @param metaTotal When &#x60;true&#x60;, the response&#39;s &#x60;meta.pagination&#x60; block includes &#x60;total&#x60; (the total number of matching items across all pages) and &#x60;total_pages&#x60;. Computing these requires an extra &#x60;COUNT&#x60; query, so omit (or pass &#x60;false&#x60;) when the totals are not needed. Defaults to &#x60;false&#x60;. (optional, default to false)
    * @return JobListResponse
    * @throws ApiException if fails to make API call
    */
-  public JobListResponse listJobs(@jakarta.annotation.Nullable Boolean filterEnabled, @jakarta.annotation.Nullable Integer pageNumber, @jakarta.annotation.Nullable Integer pageSize, @jakarta.annotation.Nullable Boolean metaTotal) throws ApiException {
-    return listJobs(filterEnabled, pageNumber, pageSize, metaTotal, null);
+  public JobListResponse listJobs(@jakarta.annotation.Nullable Boolean filterEnabled, @jakarta.annotation.Nullable Boolean filterRecurring, @jakarta.annotation.Nullable Integer pageNumber, @jakarta.annotation.Nullable Integer pageSize, @jakarta.annotation.Nullable Boolean metaTotal) throws ApiException {
+    return listJobs(filterEnabled, filterRecurring, pageNumber, pageSize, metaTotal, null);
   }
 
   /**
    * List Jobs
    * List this account&#39;s jobs, newest first.
    * @param filterEnabled  (optional)
+   * @param filterRecurring  (optional)
    * @param pageNumber 1-based page number to return. Optional; defaults to &#x60;1&#x60; when omitted. Must be &#x60;&gt;&#x3D; 1&#x60; — requests with a smaller value are rejected with a 400 error. (optional, default to 1)
    * @param pageSize Number of items per page. Optional; defaults to &#x60;1000&#x60; when omitted. Must be between &#x60;1&#x60; and &#x60;1000&#x60; inclusive — requests outside that range are rejected with a 400 error. (optional, default to 1000)
    * @param metaTotal When &#x60;true&#x60;, the response&#39;s &#x60;meta.pagination&#x60; block includes &#x60;total&#x60; (the total number of matching items across all pages) and &#x60;total_pages&#x60;. Computing these requires an extra &#x60;COUNT&#x60; query, so omit (or pass &#x60;false&#x60;) when the totals are not needed. Defaults to &#x60;false&#x60;. (optional, default to false)
@@ -536,8 +538,8 @@ public class JobsApi {
    * @return JobListResponse
    * @throws ApiException if fails to make API call
    */
-  public JobListResponse listJobs(@jakarta.annotation.Nullable Boolean filterEnabled, @jakarta.annotation.Nullable Integer pageNumber, @jakarta.annotation.Nullable Integer pageSize, @jakarta.annotation.Nullable Boolean metaTotal, Map<String, String> headers) throws ApiException {
-    ApiResponse<JobListResponse> localVarResponse = listJobsWithHttpInfo(filterEnabled, pageNumber, pageSize, metaTotal, headers);
+  public JobListResponse listJobs(@jakarta.annotation.Nullable Boolean filterEnabled, @jakarta.annotation.Nullable Boolean filterRecurring, @jakarta.annotation.Nullable Integer pageNumber, @jakarta.annotation.Nullable Integer pageSize, @jakarta.annotation.Nullable Boolean metaTotal, Map<String, String> headers) throws ApiException {
+    ApiResponse<JobListResponse> localVarResponse = listJobsWithHttpInfo(filterEnabled, filterRecurring, pageNumber, pageSize, metaTotal, headers);
     return localVarResponse.getData();
   }
 
@@ -545,20 +547,22 @@ public class JobsApi {
    * List Jobs
    * List this account&#39;s jobs, newest first.
    * @param filterEnabled  (optional)
+   * @param filterRecurring  (optional)
    * @param pageNumber 1-based page number to return. Optional; defaults to &#x60;1&#x60; when omitted. Must be &#x60;&gt;&#x3D; 1&#x60; — requests with a smaller value are rejected with a 400 error. (optional, default to 1)
    * @param pageSize Number of items per page. Optional; defaults to &#x60;1000&#x60; when omitted. Must be between &#x60;1&#x60; and &#x60;1000&#x60; inclusive — requests outside that range are rejected with a 400 error. (optional, default to 1000)
    * @param metaTotal When &#x60;true&#x60;, the response&#39;s &#x60;meta.pagination&#x60; block includes &#x60;total&#x60; (the total number of matching items across all pages) and &#x60;total_pages&#x60;. Computing these requires an extra &#x60;COUNT&#x60; query, so omit (or pass &#x60;false&#x60;) when the totals are not needed. Defaults to &#x60;false&#x60;. (optional, default to false)
    * @return ApiResponse&lt;JobListResponse&gt;
    * @throws ApiException if fails to make API call
    */
-  public ApiResponse<JobListResponse> listJobsWithHttpInfo(@jakarta.annotation.Nullable Boolean filterEnabled, @jakarta.annotation.Nullable Integer pageNumber, @jakarta.annotation.Nullable Integer pageSize, @jakarta.annotation.Nullable Boolean metaTotal) throws ApiException {
-    return listJobsWithHttpInfo(filterEnabled, pageNumber, pageSize, metaTotal, null);
+  public ApiResponse<JobListResponse> listJobsWithHttpInfo(@jakarta.annotation.Nullable Boolean filterEnabled, @jakarta.annotation.Nullable Boolean filterRecurring, @jakarta.annotation.Nullable Integer pageNumber, @jakarta.annotation.Nullable Integer pageSize, @jakarta.annotation.Nullable Boolean metaTotal) throws ApiException {
+    return listJobsWithHttpInfo(filterEnabled, filterRecurring, pageNumber, pageSize, metaTotal, null);
   }
 
   /**
    * List Jobs
    * List this account&#39;s jobs, newest first.
    * @param filterEnabled  (optional)
+   * @param filterRecurring  (optional)
    * @param pageNumber 1-based page number to return. Optional; defaults to &#x60;1&#x60; when omitted. Must be &#x60;&gt;&#x3D; 1&#x60; — requests with a smaller value are rejected with a 400 error. (optional, default to 1)
    * @param pageSize Number of items per page. Optional; defaults to &#x60;1000&#x60; when omitted. Must be between &#x60;1&#x60; and &#x60;1000&#x60; inclusive — requests outside that range are rejected with a 400 error. (optional, default to 1000)
    * @param metaTotal When &#x60;true&#x60;, the response&#39;s &#x60;meta.pagination&#x60; block includes &#x60;total&#x60; (the total number of matching items across all pages) and &#x60;total_pages&#x60;. Computing these requires an extra &#x60;COUNT&#x60; query, so omit (or pass &#x60;false&#x60;) when the totals are not needed. Defaults to &#x60;false&#x60;. (optional, default to false)
@@ -566,8 +570,8 @@ public class JobsApi {
    * @return ApiResponse&lt;JobListResponse&gt;
    * @throws ApiException if fails to make API call
    */
-  public ApiResponse<JobListResponse> listJobsWithHttpInfo(@jakarta.annotation.Nullable Boolean filterEnabled, @jakarta.annotation.Nullable Integer pageNumber, @jakarta.annotation.Nullable Integer pageSize, @jakarta.annotation.Nullable Boolean metaTotal, Map<String, String> headers) throws ApiException {
-    HttpRequest.Builder localVarRequestBuilder = listJobsRequestBuilder(filterEnabled, pageNumber, pageSize, metaTotal, headers);
+  public ApiResponse<JobListResponse> listJobsWithHttpInfo(@jakarta.annotation.Nullable Boolean filterEnabled, @jakarta.annotation.Nullable Boolean filterRecurring, @jakarta.annotation.Nullable Integer pageNumber, @jakarta.annotation.Nullable Integer pageSize, @jakarta.annotation.Nullable Boolean metaTotal, Map<String, String> headers) throws ApiException {
+    HttpRequest.Builder localVarRequestBuilder = listJobsRequestBuilder(filterEnabled, filterRecurring, pageNumber, pageSize, metaTotal, headers);
     try {
       HttpResponse<InputStream> localVarResponse = memberVarHttpClient.send(
           localVarRequestBuilder.build(),
@@ -614,7 +618,7 @@ public class JobsApi {
     }
   }
 
-  private HttpRequest.Builder listJobsRequestBuilder(@jakarta.annotation.Nullable Boolean filterEnabled, @jakarta.annotation.Nullable Integer pageNumber, @jakarta.annotation.Nullable Integer pageSize, @jakarta.annotation.Nullable Boolean metaTotal, Map<String, String> headers) throws ApiException {
+  private HttpRequest.Builder listJobsRequestBuilder(@jakarta.annotation.Nullable Boolean filterEnabled, @jakarta.annotation.Nullable Boolean filterRecurring, @jakarta.annotation.Nullable Integer pageNumber, @jakarta.annotation.Nullable Integer pageSize, @jakarta.annotation.Nullable Boolean metaTotal, Map<String, String> headers) throws ApiException {
 
     HttpRequest.Builder localVarRequestBuilder = HttpRequest.newBuilder();
 
@@ -625,6 +629,8 @@ public class JobsApi {
     String localVarQueryParameterBaseName;
     localVarQueryParameterBaseName = "filter[enabled]";
     localVarQueryParams.addAll(ApiClient.parameterToPairs("filter[enabled]", filterEnabled));
+    localVarQueryParameterBaseName = "filter[recurring]";
+    localVarQueryParams.addAll(ApiClient.parameterToPairs("filter[recurring]", filterRecurring));
     localVarQueryParameterBaseName = "page[number]";
     localVarQueryParams.addAll(ApiClient.parameterToPairs("page[number]", pageNumber));
     localVarQueryParameterBaseName = "page[size]";
