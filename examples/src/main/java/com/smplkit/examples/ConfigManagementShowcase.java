@@ -21,7 +21,8 @@ public final class ConfigManagementShowcase {
     public static void main(String[] args) {
 
         // or AsyncSmplClient for asynchronous use
-        try (SmplClient client = SmplClient.create()) {
+        SmplClient client = SmplClient.create();
+        try {
             ConfigManagementSetup.setup(client);
 
             // create a "parent" configuration that all other configs inherit from
@@ -82,9 +83,12 @@ public final class ConfigManagementShowcase {
             shared.delete();
             System.out.println("Deleted configs");
 
-            // cleanup
-            ConfigManagementSetup.cleanup(client);
             System.out.println("Done!");
+        } finally {
+            // Always tear down — even if an error occurred above — so a
+            // failed run never leaves orphaned configs for the next run.
+            ConfigManagementSetup.cleanup(client);
+            client.close();
         }
     }
 }

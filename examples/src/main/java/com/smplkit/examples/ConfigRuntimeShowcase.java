@@ -57,8 +57,9 @@ public final class ConfigRuntimeShowcase {
     public static void main(String[] args) throws Exception {
 
         // or AsyncSmplClient for asynchronous use
-        try (SmplClient client = SmplClient.builder()
-                .environment("production").build()) {
+        SmplClient client = SmplClient.builder()
+                .environment("production").build();
+        try {
             ConfigRuntimeSetup.cleanup(client);
 
             // bind POJOs
@@ -129,8 +130,12 @@ public final class ConfigRuntimeShowcase {
                     + slowQueryMs + "  // default used (key absent)");
             assert slowQueryMs == 500;
 
-            ConfigRuntimeSetup.cleanup(client);
             System.out.println("Done!");
+        } finally {
+            // Always tear down — even if an assertion above failed — so a
+            // failed run never leaves orphaned configs for the next run.
+            ConfigRuntimeSetup.cleanup(client);
+            client.close();
         }
     }
 }
