@@ -43,6 +43,7 @@ import com.smplkit.internal.generated.jobs.ApiClient;
 @JsonPropertyOrder({
   Run.JSON_PROPERTY_JOB,
   Run.JSON_PROPERTY_JOB_VERSION,
+  Run.JSON_PROPERTY_ENVIRONMENT,
   Run.JSON_PROPERTY_TRIGGER,
   Run.JSON_PROPERTY_RERUN_OF,
   Run.JSON_PROPERTY_SCHEDULED_FOR,
@@ -66,6 +67,10 @@ public class Run {
 
   public static final String JSON_PROPERTY_JOB_VERSION = "job_version";
   private JsonNullable<Integer> jobVersion = JsonNullable.<Integer>undefined();
+
+  public static final String JSON_PROPERTY_ENVIRONMENT = "environment";
+  @jakarta.annotation.Nonnull
+  private String environment;
 
   /**
    * Why the run exists: &#x60;SCHEDULE&#x60;, &#x60;MANUAL&#x60; (Run now), or &#x60;RERUN&#x60;.
@@ -288,6 +293,30 @@ public class Run {
 
   public void setJobVersion(@jakarta.annotation.Nullable Integer jobVersion) {
     this.jobVersion = JsonNullable.<Integer>of(jobVersion);
+  }
+
+
+  public Run environment(@jakarta.annotation.Nonnull String environment) {
+    this.environment = environment;
+    return this;
+  }
+
+  /**
+   * The environment this run executed in. A scheduled run inherits the firing job-environment; a manual run is created in the environment you name with the &#x60;X-Smplkit-Environment&#x60; header; a rerun copies its source run&#39;s environment.
+   * @return environment
+   */
+  @jakarta.annotation.Nonnull
+  @JsonProperty(value = JSON_PROPERTY_ENVIRONMENT, required = true)
+  @JsonInclude(value = JsonInclude.Include.ALWAYS)
+  public String getEnvironment() {
+    return environment;
+  }
+
+
+  @JsonProperty(value = JSON_PROPERTY_ENVIRONMENT, required = true)
+  @JsonInclude(value = JsonInclude.Include.ALWAYS)
+  public void setEnvironment(@jakarta.annotation.Nonnull String environment) {
+    this.environment = environment;
   }
 
 
@@ -761,6 +790,7 @@ public class Run {
     Run run = (Run) o;
     return Objects.equals(this.job, run.job) &&
         equalsNullable(this.jobVersion, run.jobVersion) &&
+        Objects.equals(this.environment, run.environment) &&
         Objects.equals(this.trigger, run.trigger) &&
         equalsNullable(this.rerunOf, run.rerunOf) &&
         equalsNullable(this.scheduledFor, run.scheduledFor) &&
@@ -783,7 +813,7 @@ public class Run {
 
   @Override
   public int hashCode() {
-    return Objects.hash(job, hashCodeNullable(jobVersion), trigger, hashCodeNullable(rerunOf), hashCodeNullable(scheduledFor), status, hashCodeNullable(startedAt), hashCodeNullable(finishedAt), hashCodeNullable(pendingDurationMs), hashCodeNullable(runDurationMs), hashCodeNullable(totalDurationMs), hashCodeNullable(failureReason), hashCodeNullable(error), hashCodeNullable(request), hashCodeNullable(result), hashCodeNullable(createdAt));
+    return Objects.hash(job, hashCodeNullable(jobVersion), environment, trigger, hashCodeNullable(rerunOf), hashCodeNullable(scheduledFor), status, hashCodeNullable(startedAt), hashCodeNullable(finishedAt), hashCodeNullable(pendingDurationMs), hashCodeNullable(runDurationMs), hashCodeNullable(totalDurationMs), hashCodeNullable(failureReason), hashCodeNullable(error), hashCodeNullable(request), hashCodeNullable(result), hashCodeNullable(createdAt));
   }
 
   private static <T> int hashCodeNullable(JsonNullable<T> a) {
@@ -799,6 +829,7 @@ public class Run {
     sb.append("class Run {\n");
     sb.append("    job: ").append(toIndentedString(job)).append("\n");
     sb.append("    jobVersion: ").append(toIndentedString(jobVersion)).append("\n");
+    sb.append("    environment: ").append(toIndentedString(environment)).append("\n");
     sb.append("    trigger: ").append(toIndentedString(trigger)).append("\n");
     sb.append("    rerunOf: ").append(toIndentedString(rerunOf)).append("\n");
     sb.append("    scheduledFor: ").append(toIndentedString(scheduledFor)).append("\n");
@@ -865,6 +896,11 @@ public class Run {
     // add `job_version` to the URL query string
     if (getJobVersion() != null) {
       joiner.add(String.format(java.util.Locale.ROOT, "%sjob_version%s=%s", prefix, suffix, ApiClient.urlEncode(ApiClient.valueToString(getJobVersion()))));
+    }
+
+    // add `environment` to the URL query string
+    if (getEnvironment() != null) {
+      joiner.add(String.format(java.util.Locale.ROOT, "%senvironment%s=%s", prefix, suffix, ApiClient.urlEncode(ApiClient.valueToString(getEnvironment()))));
     }
 
     // add `trigger` to the URL query string

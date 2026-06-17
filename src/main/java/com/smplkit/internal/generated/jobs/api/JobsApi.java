@@ -168,7 +168,7 @@ public class JobsApi {
 
   /**
    * Create Job
-   * Create a job for this account.  The caller supplies the job&#39;s id as &#x60;data.id&#x60;. Ids are unique within an account and immutable. An enabled job begins scheduling immediately.
+   * Create a job for this account.  The caller supplies the job&#39;s id as &#x60;data.id&#x60;. Ids are unique within an account and immutable. A recurring job supplies &#x60;environments&#x60; to choose where it runs and begins scheduling immediately in each enabled environment. A one-off job is created in the environment named by the &#x60;X-Smplkit-Environment&#x60; header (implied when the credential is scoped to a single environment).
    * @param jobCreateRequest  (required)
    * @return JobResponse
    * @throws ApiException if fails to make API call
@@ -179,7 +179,7 @@ public class JobsApi {
 
   /**
    * Create Job
-   * Create a job for this account.  The caller supplies the job&#39;s id as &#x60;data.id&#x60;. Ids are unique within an account and immutable. An enabled job begins scheduling immediately.
+   * Create a job for this account.  The caller supplies the job&#39;s id as &#x60;data.id&#x60;. Ids are unique within an account and immutable. A recurring job supplies &#x60;environments&#x60; to choose where it runs and begins scheduling immediately in each enabled environment. A one-off job is created in the environment named by the &#x60;X-Smplkit-Environment&#x60; header (implied when the credential is scoped to a single environment).
    * @param jobCreateRequest  (required)
    * @param headers Optional headers to include in the request
    * @return JobResponse
@@ -192,7 +192,7 @@ public class JobsApi {
 
   /**
    * Create Job
-   * Create a job for this account.  The caller supplies the job&#39;s id as &#x60;data.id&#x60;. Ids are unique within an account and immutable. An enabled job begins scheduling immediately.
+   * Create a job for this account.  The caller supplies the job&#39;s id as &#x60;data.id&#x60;. Ids are unique within an account and immutable. A recurring job supplies &#x60;environments&#x60; to choose where it runs and begins scheduling immediately in each enabled environment. A one-off job is created in the environment named by the &#x60;X-Smplkit-Environment&#x60; header (implied when the credential is scoped to a single environment).
    * @param jobCreateRequest  (required)
    * @return ApiResponse&lt;JobResponse&gt;
    * @throws ApiException if fails to make API call
@@ -203,7 +203,7 @@ public class JobsApi {
 
   /**
    * Create Job
-   * Create a job for this account.  The caller supplies the job&#39;s id as &#x60;data.id&#x60;. Ids are unique within an account and immutable. An enabled job begins scheduling immediately.
+   * Create a job for this account.  The caller supplies the job&#39;s id as &#x60;data.id&#x60;. Ids are unique within an account and immutable. A recurring job supplies &#x60;environments&#x60; to choose where it runs and begins scheduling immediately in each enabled environment. A one-off job is created in the environment named by the &#x60;X-Smplkit-Environment&#x60; header (implied when the credential is scoped to a single environment).
    * @param jobCreateRequest  (required)
    * @param headers Optional headers to include in the request
    * @return ApiResponse&lt;JobResponse&gt;
@@ -513,7 +513,7 @@ public class JobsApi {
 
   /**
    * List Jobs
-   * List this account&#39;s jobs.  Default sort is &#x60;name&#x60; ascending. Sort by &#x60;name&#x60;, &#x60;created_at&#x60;, &#x60;updated_at&#x60;, &#x60;next_run_at&#x60;, or &#x60;enabled&#x60;, ascending or descending (prefix &#x60;-&#x60; for descending). Filter with &#x60;filter[enabled]&#x60;, &#x60;filter[recurring]&#x60;, and &#x60;filter[name]&#x60; (case-insensitive substring match on the name); filters compose with AND.
+   * List this account&#39;s jobs.  Default sort is &#x60;name&#x60; ascending. Sort by &#x60;name&#x60;, &#x60;created_at&#x60;, &#x60;updated_at&#x60;, &#x60;next_run_at&#x60;, or &#x60;enabled&#x60;, ascending or descending (prefix &#x60;-&#x60; for descending). Filter with &#x60;filter[enabled]&#x60; (enabled in at least one environment), &#x60;filter[recurring]&#x60;, and &#x60;filter[name]&#x60; (case-insensitive substring match on the name); filters compose with AND. A scoped caller sees each job&#39;s &#x60;environments&#x60; map narrowed to the environments it may access.
    * @param filterEnabled  (optional)
    * @param filterRecurring  (optional)
    * @param filterName Case-insensitive substring match on the job &#x60;name&#x60; (matches when the name contains the given text). (optional)
@@ -530,7 +530,7 @@ public class JobsApi {
 
   /**
    * List Jobs
-   * List this account&#39;s jobs.  Default sort is &#x60;name&#x60; ascending. Sort by &#x60;name&#x60;, &#x60;created_at&#x60;, &#x60;updated_at&#x60;, &#x60;next_run_at&#x60;, or &#x60;enabled&#x60;, ascending or descending (prefix &#x60;-&#x60; for descending). Filter with &#x60;filter[enabled]&#x60;, &#x60;filter[recurring]&#x60;, and &#x60;filter[name]&#x60; (case-insensitive substring match on the name); filters compose with AND.
+   * List this account&#39;s jobs.  Default sort is &#x60;name&#x60; ascending. Sort by &#x60;name&#x60;, &#x60;created_at&#x60;, &#x60;updated_at&#x60;, &#x60;next_run_at&#x60;, or &#x60;enabled&#x60;, ascending or descending (prefix &#x60;-&#x60; for descending). Filter with &#x60;filter[enabled]&#x60; (enabled in at least one environment), &#x60;filter[recurring]&#x60;, and &#x60;filter[name]&#x60; (case-insensitive substring match on the name); filters compose with AND. A scoped caller sees each job&#39;s &#x60;environments&#x60; map narrowed to the environments it may access.
    * @param filterEnabled  (optional)
    * @param filterRecurring  (optional)
    * @param filterName Case-insensitive substring match on the job &#x60;name&#x60; (matches when the name contains the given text). (optional)
@@ -549,7 +549,7 @@ public class JobsApi {
 
   /**
    * List Jobs
-   * List this account&#39;s jobs.  Default sort is &#x60;name&#x60; ascending. Sort by &#x60;name&#x60;, &#x60;created_at&#x60;, &#x60;updated_at&#x60;, &#x60;next_run_at&#x60;, or &#x60;enabled&#x60;, ascending or descending (prefix &#x60;-&#x60; for descending). Filter with &#x60;filter[enabled]&#x60;, &#x60;filter[recurring]&#x60;, and &#x60;filter[name]&#x60; (case-insensitive substring match on the name); filters compose with AND.
+   * List this account&#39;s jobs.  Default sort is &#x60;name&#x60; ascending. Sort by &#x60;name&#x60;, &#x60;created_at&#x60;, &#x60;updated_at&#x60;, &#x60;next_run_at&#x60;, or &#x60;enabled&#x60;, ascending or descending (prefix &#x60;-&#x60; for descending). Filter with &#x60;filter[enabled]&#x60; (enabled in at least one environment), &#x60;filter[recurring]&#x60;, and &#x60;filter[name]&#x60; (case-insensitive substring match on the name); filters compose with AND. A scoped caller sees each job&#39;s &#x60;environments&#x60; map narrowed to the environments it may access.
    * @param filterEnabled  (optional)
    * @param filterRecurring  (optional)
    * @param filterName Case-insensitive substring match on the job &#x60;name&#x60; (matches when the name contains the given text). (optional)
@@ -566,7 +566,7 @@ public class JobsApi {
 
   /**
    * List Jobs
-   * List this account&#39;s jobs.  Default sort is &#x60;name&#x60; ascending. Sort by &#x60;name&#x60;, &#x60;created_at&#x60;, &#x60;updated_at&#x60;, &#x60;next_run_at&#x60;, or &#x60;enabled&#x60;, ascending or descending (prefix &#x60;-&#x60; for descending). Filter with &#x60;filter[enabled]&#x60;, &#x60;filter[recurring]&#x60;, and &#x60;filter[name]&#x60; (case-insensitive substring match on the name); filters compose with AND.
+   * List this account&#39;s jobs.  Default sort is &#x60;name&#x60; ascending. Sort by &#x60;name&#x60;, &#x60;created_at&#x60;, &#x60;updated_at&#x60;, &#x60;next_run_at&#x60;, or &#x60;enabled&#x60;, ascending or descending (prefix &#x60;-&#x60; for descending). Filter with &#x60;filter[enabled]&#x60; (enabled in at least one environment), &#x60;filter[recurring]&#x60;, and &#x60;filter[name]&#x60; (case-insensitive substring match on the name); filters compose with AND. A scoped caller sees each job&#39;s &#x60;environments&#x60; map narrowed to the environments it may access.
    * @param filterEnabled  (optional)
    * @param filterRecurring  (optional)
    * @param filterName Case-insensitive substring match on the job &#x60;name&#x60; (matches when the name contains the given text). (optional)
@@ -677,7 +677,7 @@ public class JobsApi {
 
   /**
    * Run Job Now
-   * Trigger one immediate run of the job (a &#x60;MANUAL&#x60; run).  The job&#39;s schedule and enabled state are untouched. The run is enqueued and executed by the worker; if the account is over its run allotment the run will fail with reason &#x60;QUOTA_EXCEEDED&#x60; rather than being rejected here.
+   * Trigger one immediate run of the job (a &#x60;MANUAL&#x60; run).  The job&#39;s schedule and enabled state are untouched. The run executes in the environment named by the &#x60;X-Smplkit-Environment&#x60; header; when the job is enabled in exactly one environment that environment is used, and a single-environment credential implies it. The run executes the job&#39;s effective configuration for that environment. It is enqueued and executed by the worker; if the account is over its run allotment the run will fail with reason &#x60;QUOTA_EXCEEDED&#x60; rather than being rejected here.
    * @param jobId  (required)
    * @return RunResponse
    * @throws ApiException if fails to make API call
@@ -688,7 +688,7 @@ public class JobsApi {
 
   /**
    * Run Job Now
-   * Trigger one immediate run of the job (a &#x60;MANUAL&#x60; run).  The job&#39;s schedule and enabled state are untouched. The run is enqueued and executed by the worker; if the account is over its run allotment the run will fail with reason &#x60;QUOTA_EXCEEDED&#x60; rather than being rejected here.
+   * Trigger one immediate run of the job (a &#x60;MANUAL&#x60; run).  The job&#39;s schedule and enabled state are untouched. The run executes in the environment named by the &#x60;X-Smplkit-Environment&#x60; header; when the job is enabled in exactly one environment that environment is used, and a single-environment credential implies it. The run executes the job&#39;s effective configuration for that environment. It is enqueued and executed by the worker; if the account is over its run allotment the run will fail with reason &#x60;QUOTA_EXCEEDED&#x60; rather than being rejected here.
    * @param jobId  (required)
    * @param headers Optional headers to include in the request
    * @return RunResponse
@@ -701,7 +701,7 @@ public class JobsApi {
 
   /**
    * Run Job Now
-   * Trigger one immediate run of the job (a &#x60;MANUAL&#x60; run).  The job&#39;s schedule and enabled state are untouched. The run is enqueued and executed by the worker; if the account is over its run allotment the run will fail with reason &#x60;QUOTA_EXCEEDED&#x60; rather than being rejected here.
+   * Trigger one immediate run of the job (a &#x60;MANUAL&#x60; run).  The job&#39;s schedule and enabled state are untouched. The run executes in the environment named by the &#x60;X-Smplkit-Environment&#x60; header; when the job is enabled in exactly one environment that environment is used, and a single-environment credential implies it. The run executes the job&#39;s effective configuration for that environment. It is enqueued and executed by the worker; if the account is over its run allotment the run will fail with reason &#x60;QUOTA_EXCEEDED&#x60; rather than being rejected here.
    * @param jobId  (required)
    * @return ApiResponse&lt;RunResponse&gt;
    * @throws ApiException if fails to make API call
@@ -712,7 +712,7 @@ public class JobsApi {
 
   /**
    * Run Job Now
-   * Trigger one immediate run of the job (a &#x60;MANUAL&#x60; run).  The job&#39;s schedule and enabled state are untouched. The run is enqueued and executed by the worker; if the account is over its run allotment the run will fail with reason &#x60;QUOTA_EXCEEDED&#x60; rather than being rejected here.
+   * Trigger one immediate run of the job (a &#x60;MANUAL&#x60; run).  The job&#39;s schedule and enabled state are untouched. The run executes in the environment named by the &#x60;X-Smplkit-Environment&#x60; header; when the job is enabled in exactly one environment that environment is used, and a single-environment credential implies it. The run executes the job&#39;s effective configuration for that environment. It is enqueued and executed by the worker; if the account is over its run allotment the run will fail with reason &#x60;QUOTA_EXCEEDED&#x60; rather than being rejected here.
    * @param jobId  (required)
    * @param headers Optional headers to include in the request
    * @return ApiResponse&lt;RunResponse&gt;
@@ -795,7 +795,7 @@ public class JobsApi {
 
   /**
    * Update Job
-   * Replace an existing job. Every writable field is overwritten.  Enabling a paused job is a &#x60;PUT&#x60; with &#x60;enabled: true&#x60;; pausing is &#x60;enabled: false&#x60;. Editing the schedule recomputes the next fire time.
+   * Replace an existing job. Every writable field is overwritten.  Set enablement per environment via the &#x60;environments&#x60; map (a recurring job), or by recreating a one-off job in the desired environment. Editing the schedule recomputes the next fire time; changing only which environments are enabled preserves the existing cadence.
    * @param jobId  (required)
    * @param jobRequest  (required)
    * @return JobResponse
@@ -807,7 +807,7 @@ public class JobsApi {
 
   /**
    * Update Job
-   * Replace an existing job. Every writable field is overwritten.  Enabling a paused job is a &#x60;PUT&#x60; with &#x60;enabled: true&#x60;; pausing is &#x60;enabled: false&#x60;. Editing the schedule recomputes the next fire time.
+   * Replace an existing job. Every writable field is overwritten.  Set enablement per environment via the &#x60;environments&#x60; map (a recurring job), or by recreating a one-off job in the desired environment. Editing the schedule recomputes the next fire time; changing only which environments are enabled preserves the existing cadence.
    * @param jobId  (required)
    * @param jobRequest  (required)
    * @param headers Optional headers to include in the request
@@ -821,7 +821,7 @@ public class JobsApi {
 
   /**
    * Update Job
-   * Replace an existing job. Every writable field is overwritten.  Enabling a paused job is a &#x60;PUT&#x60; with &#x60;enabled: true&#x60;; pausing is &#x60;enabled: false&#x60;. Editing the schedule recomputes the next fire time.
+   * Replace an existing job. Every writable field is overwritten.  Set enablement per environment via the &#x60;environments&#x60; map (a recurring job), or by recreating a one-off job in the desired environment. Editing the schedule recomputes the next fire time; changing only which environments are enabled preserves the existing cadence.
    * @param jobId  (required)
    * @param jobRequest  (required)
    * @return ApiResponse&lt;JobResponse&gt;
@@ -833,7 +833,7 @@ public class JobsApi {
 
   /**
    * Update Job
-   * Replace an existing job. Every writable field is overwritten.  Enabling a paused job is a &#x60;PUT&#x60; with &#x60;enabled: true&#x60;; pausing is &#x60;enabled: false&#x60;. Editing the schedule recomputes the next fire time.
+   * Replace an existing job. Every writable field is overwritten.  Set enablement per environment via the &#x60;environments&#x60; map (a recurring job), or by recreating a one-off job in the desired environment. Editing the schedule recomputes the next fire time; changing only which environments are enabled preserves the existing cadence.
    * @param jobId  (required)
    * @param jobRequest  (required)
    * @param headers Optional headers to include in the request
