@@ -224,10 +224,10 @@ public final class JobsClient implements AutoCloseable {
     /**
      * List jobs in the account.
      *
-     * @param input filters and paging for the listing. {@code enabled} returns
-     *     only jobs with that enabled state ({@code null} lists both);
-     *     {@code recurring} returns only recurring ({@code true}) or only
-     *     one-off ({@code false}) jobs ({@code null} lists both);
+     * @param input filters and paging for the listing. {@code recurring}
+     *     returns only recurring ({@code true}) or only one-off
+     *     ({@code false}) jobs ({@code null} lists both); {@code name} returns
+     *     only jobs whose name contains that text ({@code null} lists all);
      *     {@code pageNumber} is the 1-based page ({@code null} returns the
      *     first page); {@code pageSize} is the max jobs per page ({@code null}
      *     uses the server default)
@@ -236,7 +236,7 @@ public final class JobsClient implements AutoCloseable {
      */
     public List<Job> list(ListJobsInput input) throws ApiException {
         JobListResponse resp = api.listJobs(
-            input.enabled, input.recurring, input.name, null, input.pageNumber, input.pageSize, null);
+            input.recurring, input.name, null, input.pageNumber, input.pageSize, null);
         List<Job> out = new ArrayList<>();
         if (resp.getData() != null) {
             for (JobResource r : resp.getData()) out.add(fromResource(r));
@@ -439,14 +439,14 @@ public final class JobsClient implements AutoCloseable {
                 this, r.getId(), a.getName(), a.getSchedule(),
                 JobsConversions.configurationFromGen(a.getConfiguration()));
         job.description = a.getDescription();
-        // ``enabled`` is the read-only roll-up; default false when the server
-        // omits it (no environment enabled).
-        job.enabled = a.getEnabled() != null ? a.getEnabled() : false;
         job.environments = JobsConversions.environmentsFromGen(a.getEnvironments());
+        // ``enabled`` is a derived, read-only roll-up computed from the
+        // environments map — true when the job is enabled in any environment.
+        // The wire no longer carries a top-level ``enabled`` attribute.
+        job.enabled = job.computeEnabledRollup();
         job.recurring = a.getRecurring();
         if (a.getType() != null) job.type = a.getType().getValue();
         if (a.getConcurrencyPolicy() != null) job.concurrencyPolicy = a.getConcurrencyPolicy().getValue();
-        job.nextRunAt = a.getNextRunAt();
         job.createdAt = a.getCreatedAt();
         job.updatedAt = a.getUpdatedAt();
         job.deletedAt = a.getDeletedAt();

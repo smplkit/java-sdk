@@ -69,8 +69,10 @@ final class JobsConversions {
      * Convert the wrapper {@code environments} map to the generated model.
      * Per-environment {@code configuration} overrides are sent as full
      * {@link HttpConfig} payloads (plaintext headers in), mirroring the base
-     * configuration's round-trip semantics; an entry without an override sends
-     * only {@code enabled} (inherit the base configuration).
+     * configuration's round-trip semantics; a {@code schedule} override is sent
+     * only when set (omit it to inherit the base schedule). The read-only
+     * {@code nextRunAt} is never written. An entry without overrides sends only
+     * {@code enabled} (inherit the base schedule and configuration).
      */
     static Map<String, com.smplkit.internal.generated.jobs.model.JobEnvironment> environmentsToGen(
             Map<String, JobEnvironment> environments) {
@@ -80,9 +82,13 @@ final class JobsConversions {
             com.smplkit.internal.generated.jobs.model.JobEnvironment gen =
                     new com.smplkit.internal.generated.jobs.model.JobEnvironment();
             gen.setEnabled(env.enabled);
+            if (env.schedule != null) {
+                gen.setSchedule(env.schedule);
+            }
             if (env.configuration != null) {
                 gen.setConfiguration(configurationToGen(env.configuration));
             }
+            // ``nextRunAt`` is read-only and server-derived — never written.
             out.put(e.getKey(), gen);
         }
         return out;
@@ -99,8 +105,10 @@ final class JobsConversions {
             JobEnvironment env = new JobEnvironment();
             if (gen != null) {
                 env.enabled = gen.getEnabled() != null ? gen.getEnabled() : false;
+                env.schedule = gen.getSchedule();
                 env.configuration = gen.getConfiguration() != null
                         ? configurationFromGen(gen.getConfiguration()) : null;
+                env.nextRunAt = gen.getNextRunAt();
             }
             out.put(e.getKey(), env);
         }

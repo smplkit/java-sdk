@@ -2,8 +2,6 @@ package com.smplkit.jobs;
 
 /** Filters and pagination for {@link JobsClient#list(ListJobsInput)}. */
 public final class ListJobsInput {
-    /** Filter to jobs matching this enabled state. {@code null} means no filter. */
-    public Boolean enabled;
     /** Filter to recurring ({@code true}) or one-off ({@code false}) jobs. {@code null} means no filter. */
     public Boolean recurring;
     /** Filter to jobs whose name contains this text (case-insensitive). {@code null} means no filter. */
