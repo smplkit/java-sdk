@@ -142,7 +142,7 @@ public class Usage {
   }
 
   /**
-   * Number of recurring (scheduled) jobs.
+   * Number of permanent jobs (recurring and manual) counted against the plan&#39;s job limit.
    * @return activeJobs
    */
   @jakarta.annotation.Nonnull
@@ -166,7 +166,7 @@ public class Usage {
   }
 
   /**
-   * Maximum recurring jobs the plan allows (&#x60;-1&#x60; means unlimited).
+   * Maximum permanent jobs the plan allows (&#x60;-1&#x60; means unlimited).
    * @return activeJobsLimit
    */
   @jakarta.annotation.Nonnull
