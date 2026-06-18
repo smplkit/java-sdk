@@ -481,9 +481,12 @@ class JobsClientTest {
             ListJobsInput in = new ListJobsInput();
             in.enabled = true;
             in.recurring = true;
+            in.name = "health";
             in.pageNumber = 1;
             in.pageSize = 10;
             assertEquals(2, c.list(in).size());
+            assertTrue(lastQuery.get().contains("filter[name]=health"));
+            assertTrue(lastQuery.get().contains("filter[recurring]=true"));
             c.delete(JOB_ID);
             c.get(JOB_ID).delete();  // active-record delete with bound client
         }
