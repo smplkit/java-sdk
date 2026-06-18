@@ -39,18 +39,16 @@ import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 
 import com.smplkit.internal.generated.jobs.ApiClient;
 /**
- * A scheduled unit of work: an HTTP request run on a schedule.  The job is the definition; each time it fires the service records a run capturing the request, response, timing, and outcome. A job is enabled per environment: set &#x60;environments[&lt;env&gt;].enabled&#x60; to schedule runs there. A recurring (cron) job may be enabled in several environments at once and fires once per enabled environment; a one-off (&#x60;now&#x60; or future datetime) job runs a single time in the environment it was created in.
+ * A scheduled unit of work: an HTTP request run on a schedule.  The job is the definition; each time it fires the service records a run capturing the request, response, timing, and outcome. A job runs per environment: set &#x60;environments[&lt;env&gt;].enabled&#x60; to schedule runs there, and optionally give that environment its own &#x60;schedule&#x60; or &#x60;configuration&#x60;. A recurring (cron) job may be enabled in several environments at once and fires once per enabled environment, each on its own next-fire schedule; a one-off (&#x60;now&#x60; or future datetime) job runs a single time in the environment it was created in.
  */
 @JsonPropertyOrder({
   Job.JSON_PROPERTY_NAME,
   Job.JSON_PROPERTY_DESCRIPTION,
-  Job.JSON_PROPERTY_ENABLED,
   Job.JSON_PROPERTY_TYPE,
   Job.JSON_PROPERTY_SCHEDULE,
   Job.JSON_PROPERTY_CONFIGURATION,
   Job.JSON_PROPERTY_ENVIRONMENTS,
   Job.JSON_PROPERTY_CONCURRENCY_POLICY,
-  Job.JSON_PROPERTY_NEXT_RUN_AT,
   Job.JSON_PROPERTY_RECURRING,
   Job.JSON_PROPERTY_CREATED_AT,
   Job.JSON_PROPERTY_UPDATED_AT,
@@ -65,9 +63,6 @@ public class Job {
 
   public static final String JSON_PROPERTY_DESCRIPTION = "description";
   private JsonNullable<String> description = JsonNullable.<String>undefined();
-
-  public static final String JSON_PROPERTY_ENABLED = "enabled";
-  private JsonNullable<Boolean> enabled = JsonNullable.<Boolean>undefined();
 
   /**
    * Job type. Only &#x60;http&#x60; is supported today.
@@ -155,9 +150,6 @@ public class Job {
   @jakarta.annotation.Nullable
   private ConcurrencyPolicyEnum concurrencyPolicy = ConcurrencyPolicyEnum.ALLOW;
 
-  public static final String JSON_PROPERTY_NEXT_RUN_AT = "next_run_at";
-  private JsonNullable<OffsetDateTime> nextRunAt = JsonNullable.<OffsetDateTime>undefined();
-
   public static final String JSON_PROPERTY_RECURRING = "recurring";
   private JsonNullable<Boolean> recurring = JsonNullable.<Boolean>undefined();
 
@@ -178,8 +170,6 @@ public class Job {
 
   @JsonCreator
   public Job(
-    @JsonProperty(JSON_PROPERTY_ENABLED) Boolean enabled, 
-    @JsonProperty(JSON_PROPERTY_NEXT_RUN_AT) OffsetDateTime nextRunAt, 
     @JsonProperty(JSON_PROPERTY_RECURRING) Boolean recurring, 
     @JsonProperty(JSON_PROPERTY_CREATED_AT) OffsetDateTime createdAt, 
     @JsonProperty(JSON_PROPERTY_UPDATED_AT) OffsetDateTime updatedAt, 
@@ -187,8 +177,6 @@ public class Job {
     @JsonProperty(JSON_PROPERTY_VERSION) Integer version
   ) {
   this();
-    this.enabled = enabled == null ? JsonNullable.<Boolean>undefined() : JsonNullable.of(enabled);
-    this.nextRunAt = nextRunAt == null ? JsonNullable.<OffsetDateTime>undefined() : JsonNullable.of(nextRunAt);
     this.recurring = recurring == null ? JsonNullable.<Boolean>undefined() : JsonNullable.of(recurring);
     this.createdAt = createdAt == null ? JsonNullable.<OffsetDateTime>undefined() : JsonNullable.of(createdAt);
     this.updatedAt = updatedAt == null ? JsonNullable.<OffsetDateTime>undefined() : JsonNullable.of(updatedAt);
@@ -252,34 +240,6 @@ public class Job {
   }
 
 
-  /**
-   * Whether the job is enabled in at least one environment. Read-only roll-up of &#x60;environments[*].enabled&#x60;; set enablement per environment via &#x60;environments&#x60;.
-   * @return enabled
-   */
-  @jakarta.annotation.Nullable
-  @JsonIgnore
-  public Boolean getEnabled() {
-    
-    if (enabled == null) {
-      enabled = JsonNullable.<Boolean>undefined();
-    }
-    return enabled.orElse(null);
-  }
-
-  @JsonProperty(value = JSON_PROPERTY_ENABLED, required = false)
-  @JsonInclude(value = JsonInclude.Include.USE_DEFAULTS)
-
-  public JsonNullable<Boolean> getEnabled_JsonNullable() {
-    return enabled;
-  }
-  
-  @JsonProperty(JSON_PROPERTY_ENABLED)
-  private void setEnabled_JsonNullable(JsonNullable<Boolean> enabled) {
-    this.enabled = enabled;
-  }
-
-
-
   public Job type(@jakarta.annotation.Nullable TypeEnum type) {
     this.type = type;
     return this;
@@ -310,7 +270,7 @@ public class Job {
   }
 
   /**
-   * When the job runs. One of: an ISO-8601 datetime (a one-off run at that instant), a 5-field cron expression evaluated in **UTC** (recurring), or the literal &#x60;now&#x60; (run once, as soon as possible). A datetime or &#x60;now&#x60; job disables itself after it fires.
+   * The base schedule every environment inherits unless it overrides it. One of: an ISO-8601 datetime (a one-off run at that instant), a 5-field cron expression evaluated in **UTC** (recurring), or the literal &#x60;now&#x60; (run once, as soon as possible). A datetime or &#x60;now&#x60; job disables itself after it fires.
    * @return schedule
    */
   @jakarta.annotation.Nonnull
@@ -366,7 +326,7 @@ public class Job {
   }
 
   /**
-   * Per-environment overrides keyed by environment key (e.g. &#x60;production&#x60;, &#x60;staging&#x60;). Each entry sets &#x60;enabled&#x60; (whether the job schedules runs in that environment) and an optional &#x60;configuration&#x60; override (omit to inherit the base &#x60;configuration&#x60;). A job with no entry for an environment is disabled there. For a recurring job, supply this map to choose where it runs. For a one-off job, the environment it is created in is recorded here automatically — name it with the &#x60;X-Smplkit-Environment&#x60; header. Every referenced environment must exist for the account.
+   * Per-environment overrides keyed by environment key (e.g. &#x60;production&#x60;, &#x60;staging&#x60;). Each entry sets &#x60;enabled&#x60; (whether the job schedules runs in that environment), an optional &#x60;schedule&#x60; override (a cron expression for recurring jobs; omit to inherit the base &#x60;schedule&#x60;), and an optional &#x60;configuration&#x60; override (omit to inherit the base &#x60;configuration&#x60;); it also reports the read-only &#x60;next_run_at&#x60; for that environment. A job with no entry for an environment is disabled there. For a recurring job, supply this map to choose where and how it runs. For a one-off job, the environment it is created in is recorded here automatically — name it with the &#x60;X-Smplkit-Environment&#x60; header. Every referenced environment must exist for the account.
    * @return environments
    */
   @jakarta.annotation.Nullable
@@ -409,35 +369,7 @@ public class Job {
 
 
   /**
-   * The next scheduled fire time. &#x60;null&#x60; once a one-off job has fired.
-   * @return nextRunAt
-   */
-  @jakarta.annotation.Nullable
-  @JsonIgnore
-  public OffsetDateTime getNextRunAt() {
-    
-    if (nextRunAt == null) {
-      nextRunAt = JsonNullable.<OffsetDateTime>undefined();
-    }
-    return nextRunAt.orElse(null);
-  }
-
-  @JsonProperty(value = JSON_PROPERTY_NEXT_RUN_AT, required = false)
-  @JsonInclude(value = JsonInclude.Include.USE_DEFAULTS)
-
-  public JsonNullable<OffsetDateTime> getNextRunAt_JsonNullable() {
-    return nextRunAt;
-  }
-  
-  @JsonProperty(JSON_PROPERTY_NEXT_RUN_AT)
-  private void setNextRunAt_JsonNullable(JsonNullable<OffsetDateTime> nextRunAt) {
-    this.nextRunAt = nextRunAt;
-  }
-
-
-
-  /**
-   * Whether the job runs on a repeating schedule. &#x60;true&#x60; for a cron schedule; &#x60;false&#x60; for a one-off datetime or &#x60;now&#x60; schedule, which runs a single time. Derived from &#x60;schedule&#x60;.
+   * Whether the job runs on a repeating schedule. &#x60;true&#x60; for a cron schedule; &#x60;false&#x60; for a one-off datetime or &#x60;now&#x60; schedule, which runs a single time. Derived from the base &#x60;schedule&#x60;.
    * @return recurring
    */
   @jakarta.annotation.Nullable
@@ -590,13 +522,11 @@ public class Job {
     Job job = (Job) o;
     return Objects.equals(this.name, job.name) &&
         equalsNullable(this.description, job.description) &&
-        equalsNullable(this.enabled, job.enabled) &&
         Objects.equals(this.type, job.type) &&
         Objects.equals(this.schedule, job.schedule) &&
         Objects.equals(this._configuration, job._configuration) &&
         Objects.equals(this.environments, job.environments) &&
         Objects.equals(this.concurrencyPolicy, job.concurrencyPolicy) &&
-        equalsNullable(this.nextRunAt, job.nextRunAt) &&
         equalsNullable(this.recurring, job.recurring) &&
         equalsNullable(this.createdAt, job.createdAt) &&
         equalsNullable(this.updatedAt, job.updatedAt) &&
@@ -610,7 +540,7 @@ public class Job {
 
   @Override
   public int hashCode() {
-    return Objects.hash(name, hashCodeNullable(description), hashCodeNullable(enabled), type, schedule, _configuration, environments, concurrencyPolicy, hashCodeNullable(nextRunAt), hashCodeNullable(recurring), hashCodeNullable(createdAt), hashCodeNullable(updatedAt), hashCodeNullable(deletedAt), hashCodeNullable(version));
+    return Objects.hash(name, hashCodeNullable(description), type, schedule, _configuration, environments, concurrencyPolicy, hashCodeNullable(recurring), hashCodeNullable(createdAt), hashCodeNullable(updatedAt), hashCodeNullable(deletedAt), hashCodeNullable(version));
   }
 
   private static <T> int hashCodeNullable(JsonNullable<T> a) {
@@ -626,13 +556,11 @@ public class Job {
     sb.append("class Job {\n");
     sb.append("    name: ").append(toIndentedString(name)).append("\n");
     sb.append("    description: ").append(toIndentedString(description)).append("\n");
-    sb.append("    enabled: ").append(toIndentedString(enabled)).append("\n");
     sb.append("    type: ").append(toIndentedString(type)).append("\n");
     sb.append("    schedule: ").append(toIndentedString(schedule)).append("\n");
     sb.append("    _configuration: ").append(toIndentedString(_configuration)).append("\n");
     sb.append("    environments: ").append(toIndentedString(environments)).append("\n");
     sb.append("    concurrencyPolicy: ").append(toIndentedString(concurrencyPolicy)).append("\n");
-    sb.append("    nextRunAt: ").append(toIndentedString(nextRunAt)).append("\n");
     sb.append("    recurring: ").append(toIndentedString(recurring)).append("\n");
     sb.append("    createdAt: ").append(toIndentedString(createdAt)).append("\n");
     sb.append("    updatedAt: ").append(toIndentedString(updatedAt)).append("\n");
@@ -692,11 +620,6 @@ public class Job {
       joiner.add(String.format(java.util.Locale.ROOT, "%sdescription%s=%s", prefix, suffix, ApiClient.urlEncode(ApiClient.valueToString(getDescription()))));
     }
 
-    // add `enabled` to the URL query string
-    if (getEnabled() != null) {
-      joiner.add(String.format(java.util.Locale.ROOT, "%senabled%s=%s", prefix, suffix, ApiClient.urlEncode(ApiClient.valueToString(getEnabled()))));
-    }
-
     // add `type` to the URL query string
     if (getType() != null) {
       joiner.add(String.format(java.util.Locale.ROOT, "%stype%s=%s", prefix, suffix, ApiClient.urlEncode(ApiClient.valueToString(getType()))));
@@ -725,11 +648,6 @@ public class Job {
     // add `concurrency_policy` to the URL query string
     if (getConcurrencyPolicy() != null) {
       joiner.add(String.format(java.util.Locale.ROOT, "%sconcurrency_policy%s=%s", prefix, suffix, ApiClient.urlEncode(ApiClient.valueToString(getConcurrencyPolicy()))));
-    }
-
-    // add `next_run_at` to the URL query string
-    if (getNextRunAt() != null) {
-      joiner.add(String.format(java.util.Locale.ROOT, "%snext_run_at%s=%s", prefix, suffix, ApiClient.urlEncode(ApiClient.valueToString(getNextRunAt()))));
     }
 
     // add `recurring` to the URL query string

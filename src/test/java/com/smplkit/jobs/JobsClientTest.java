@@ -115,17 +115,21 @@ class JobsClientTest {
 
     private static String jobResource(String id, boolean created, int version, boolean enabled) {
         String ts = created ? "\"2026-06-04T00:00:00Z\"" : "null";
+        // The production env carries a per-environment ``next_run_at`` (read-only)
+        // when enabled, exercising the per-env nextRunAt mapping. Top-level
+        // ``enabled`` / ``next_run_at`` are gone from the wire.
+        String prodNextRun = enabled ? "\"2026-06-05T00:00:00Z\"" : "null";
         return "{\"id\":\"" + id + "\",\"type\":\"job\",\"attributes\":{"
                 + "\"name\":\"My Job\",\"description\":\"does a thing\","
-                + "\"enabled\":" + enabled + ",\"recurring\":true,\"type\":\"http\","
+                + "\"recurring\":true,\"type\":\"http\","
                 + "\"schedule\":\"0 * * * *\","
                 + "\"configuration\":{\"method\":\"POST\",\"url\":\"https://api.example.com/hook\","
                 + "\"headers\":[{\"name\":\"X-Api-Key\",\"value\":\"secret\"}],"
                 + "\"body\":\"{}\",\"success_status\":\"2xx\",\"timeout\":30,"
                 + "\"tls_verify\":true,\"ca_cert\":null},"
-                + "\"environments\":{\"production\":{\"enabled\":" + enabled + "}},"
+                + "\"environments\":{\"production\":{\"enabled\":" + enabled
+                + ",\"next_run_at\":" + prodNextRun + "}},"
                 + "\"concurrency_policy\":\"ALLOW\","
-                + "\"next_run_at\":\"2026-06-05T00:00:00Z\","
                 + "\"created_at\":" + ts + ",\"updated_at\":" + ts + ","
                 + "\"deleted_at\":null,\"version\":" + version + "}}";
     }
@@ -133,16 +137,22 @@ class JobsClientTest {
     // A job carrying a rich environments map: production enabled (no override,
     // inherits base) and development disabled with a per-environment override.
     private static String jobResourceWithEnvs(String id, int version, boolean enabled, boolean recurring) {
+        // production: enabled, no config override (inherits base) but a per-env
+        //   ``schedule`` override + read-only ``next_run_at``.
+        // development: disabled, config override, no schedule override, null
+        //   ``next_run_at`` (not enabled).
         return "{\"id\":\"" + id + "\",\"type\":\"job\",\"attributes\":{"
                 + "\"name\":\"My Job\",\"description\":\"does a thing\","
-                + "\"enabled\":" + enabled + ",\"recurring\":" + recurring + ",\"type\":\"http\","
+                + "\"recurring\":" + recurring + ",\"type\":\"http\","
                 + "\"schedule\":\"0 2 * * *\","
                 + "\"configuration\":{\"method\":\"POST\",\"url\":\"https://base.example.com/hook\","
                 + "\"headers\":[],\"body\":null,\"success_status\":\"2xx\",\"timeout\":30,"
                 + "\"tls_verify\":true,\"ca_cert\":null},"
                 + "\"environments\":{"
-                + "\"production\":{\"enabled\":true},"
-                + "\"development\":{\"enabled\":false,\"configuration\":{\"method\":\"POST\","
+                + "\"production\":{\"enabled\":true,\"schedule\":\"30 3 * * *\","
+                + "\"next_run_at\":\"2026-06-05T03:30:00Z\"},"
+                + "\"development\":{\"enabled\":false,\"schedule\":null,\"next_run_at\":null,"
+                + "\"configuration\":{\"method\":\"POST\","
                 + "\"url\":\"https://dev.example.com/hook\",\"headers\":[],\"body\":null,"
                 + "\"success_status\":\"2xx\",\"timeout\":30,\"tls_verify\":true,\"ca_cert\":null}}"
                 + "},\"concurrency_policy\":\"ALLOW\","
@@ -307,16 +317,18 @@ class JobsClientTest {
             HttpConfig base = new HttpConfig("https://base");
             Job job = c.new_(JOB_ID, "My Job", "0 * * * *", base);
 
-            // roll-up + per-env enablement
+            // roll-up + per-env enablement (the no-arg roll-up computes live)
             assertFalse(job.isEnabled());
             assertFalse(job.isEnabled("production"));
             job.setEnabled(true, "production");
             assertTrue(job.isEnabled("production"));
+            assertTrue(job.isEnabled());          // any-env-enabled -> roll-up true
             // flipping enabled preserves a previously-set configuration override
             HttpConfig prodCfg = new HttpConfig("https://prod");
             job.setConfiguration(prodCfg, "production");
             job.setEnabled(false, "production");
             assertFalse(job.isEnabled("production"));
+            assertFalse(job.isEnabled());         // back to no env enabled -> roll-up false
             assertSame(prodCfg, job.environments.get("production").configuration);
 
             // base configuration via setter + getter
@@ -346,6 +358,15 @@ class JobsClientTest {
         }
     }
 
+    @Test
+    void enabledRollup_nullEnvironmentsMap_isFalse() {
+        // Defensive: a caller that nulls the environments map yields a false
+        // roll-up rather than an NPE.
+        Job job = new Job(null, "k", "name", "0 * * * *", new HttpConfig("https://x"));
+        job.environments = null;
+        assertFalse(job.isEnabled());
+    }
+
     // -----------------------------------------------------------------
     // Active-record save / build-to-wire
     // -----------------------------------------------------------------
@@ -364,7 +385,6 @@ class JobsClientTest {
             assertNotNull(job.createdAt);
             assertEquals(1, job.version);
             assertEquals(HttpMethod.POST, job.configuration.method);
-            assertNotNull(job.nextRunAt);
             assertEquals("http", job.type);
             assertEquals(Boolean.TRUE, job.recurring);  // parsed back
             job.name = "renamed";
@@ -446,14 +466,23 @@ class JobsClientTest {
         installFullHandler();
         try (JobsClient c = client()) {
             Job job = c.get(JOB_ID);
-            assertTrue(job.isEnabled());                       // roll-up true
+            assertTrue(job.isEnabled());                       // derived roll-up true
+            assertTrue(job.enabled);                           // field mirrors the roll-up
             assertTrue(job.isEnabled("production"));
             assertFalse(job.isEnabled("development"));
             assertEquals(Boolean.TRUE, job.recurring);
-            // production has no override -> getConfiguration falls back to base
+            // production has no config override -> getConfiguration falls back to base
             assertEquals("https://base.example.com/hook", job.getConfiguration("production").url);
-            // development has an override
+            // development has a config override
             assertEquals("https://dev.example.com/hook", job.getConfiguration("development").url);
+            // per-env schedule override parsed for production; development inherits base
+            assertEquals("30 3 * * *", job.environments.get("production").schedule);
+            assertNull(job.environments.get("development").schedule);
+            assertEquals("30 3 * * *", job.getSchedule("production"));
+            assertEquals("0 2 * * *", job.getSchedule("development"));
+            // read-only per-env next_run_at: present for enabled production, null otherwise
+            assertNotNull(job.environments.get("production").nextRunAt);
+            assertNull(job.environments.get("development").nextRunAt);
         }
     }
 
@@ -469,7 +498,9 @@ class JobsClientTest {
             Job job = c.get("n");
             assertTrue(job.environments.containsKey("production"));
             assertFalse(job.environments.get("production").enabled);
+            assertNull(job.environments.get("production").schedule);
             assertNull(job.environments.get("production").configuration);
+            assertNull(job.environments.get("production").nextRunAt);
         }
     }
 
@@ -479,7 +510,6 @@ class JobsClientTest {
         try (JobsClient c = client()) {
             assertEquals(2, c.list().size());
             ListJobsInput in = new ListJobsInput();
-            in.enabled = true;
             in.recurring = true;
             in.name = "health";
             in.pageNumber = 1;
@@ -847,7 +877,7 @@ class JobsClientTest {
     @Test
     void conversions_disabledJobAndExplicitFalseTls() throws Exception {
         handler.set(ex -> respondJson(ex, 200, "{\"data\":{\"id\":\"d\",\"type\":\"job\","
-                + "\"attributes\":{\"name\":\"D\",\"enabled\":false,\"type\":\"http\","
+                + "\"attributes\":{\"name\":\"D\",\"type\":\"http\","
                 + "\"schedule\":\"now\",\"concurrency_policy\":\"ALLOW\","
                 + "\"configuration\":{\"method\":\"GET\",\"url\":\"https://d\","
                 + "\"headers\":[{\"name\":\"H\",\"value\":\"v\"}],"
@@ -909,14 +939,73 @@ class JobsClientTest {
     }
 
     @Test
-    void conversions_jobWithExplicitEnabledTrue_mapsTrue() throws Exception {
+    void conversions_enabledRollupDerivedFromEnvironments() throws Exception {
+        // No top-level ``enabled`` on the wire; the roll-up is derived from the
+        // environments map — true because ``production`` is enabled.
         handler.set(ex -> respondJson(ex, 200, "{\"data\":{\"id\":\"en\",\"type\":\"job\","
-                + "\"attributes\":{\"name\":\"En\",\"schedule\":\"now\",\"enabled\":true,"
+                + "\"attributes\":{\"name\":\"En\",\"schedule\":\"0 * * * *\","
                 + "\"configuration\":{\"method\":\"POST\",\"url\":\"https://en\"},"
+                + "\"environments\":{\"staging\":{\"enabled\":false},"
+                + "\"production\":{\"enabled\":true}},"
                 + "\"created_at\":\"2026-06-04T00:00:00Z\"}}}"));
         try (JobsClient c = client()) {
             Job job = c.get("en");
-            assertTrue(job.enabled);
+            assertTrue(job.enabled);          // derived roll-up
+            assertTrue(job.isEnabled());      // no-arg roll-up agrees
+        }
+    }
+
+    @Test
+    void conversions_perEnvironmentScheduleAndNextRunAt() throws Exception {
+        // production: enabled, per-env schedule override + read-only next_run_at.
+        // staging:    enabled, no schedule override (inherits base), null next run.
+        handler.set(ex -> respondJson(ex, 200, "{\"data\":{\"id\":\"sched\",\"type\":\"job\","
+                + "\"attributes\":{\"name\":\"Sched\",\"schedule\":\"0 2 * * *\","
+                + "\"configuration\":{\"method\":\"POST\",\"url\":\"https://x\"},"
+                + "\"environments\":{"
+                + "\"production\":{\"enabled\":true,\"schedule\":\"15 4 * * *\","
+                + "\"next_run_at\":\"2026-06-05T04:15:00Z\"},"
+                + "\"staging\":{\"enabled\":true,\"schedule\":null,\"next_run_at\":null}},"
+                + "\"created_at\":\"2026-06-04T00:00:00Z\"}}}"));
+        try (JobsClient c = client()) {
+            Job job = c.get("sched");
+            // per-env schedule override parsed; staging inherits (null override)
+            assertEquals("15 4 * * *", job.environments.get("production").schedule);
+            assertNull(job.environments.get("staging").schedule);
+            // read-only next_run_at parsed where present, null otherwise
+            assertNotNull(job.environments.get("production").nextRunAt);
+            assertNull(job.environments.get("staging").nextRunAt);
+            // getSchedule(env): override wins, else base, else base for unknown env
+            assertEquals("15 4 * * *", job.getSchedule("production"));
+            assertEquals("0 2 * * *", job.getSchedule("staging"));
+            assertEquals("0 2 * * *", job.getSchedule("unknown"));
+            assertEquals("0 2 * * *", job.getSchedule(null));
+        }
+    }
+
+    @Test
+    void perEnvironmentScheduleSetter_baseAndOverride_emitsOnWrite() throws Exception {
+        installFullHandler();
+        try (JobsClient c = client()) {
+            Job job = c.new_(JOB_ID, "My Job", "0 * * * *", new HttpConfig("https://base"));
+            // base schedule via env-aware setter (environment == null)
+            job.setSchedule("30 1 * * *", null);
+            assertEquals("30 1 * * *", job.schedule);
+            // per-env schedule override is set in memory
+            job.setEnabled(true, "production");
+            job.setSchedule("45 6 * * *", "production");
+            assertEquals("45 6 * * *", job.environments.get("production").schedule);
+            // clearing a per-env override falls back to base on resolution
+            job.setSchedule(null, "production");
+            assertNull(job.environments.get("production").schedule);
+            assertEquals("30 1 * * *", job.getSchedule("production"));
+            // re-set the override, then save: it travels on the wire; next_run_at never does
+            job.setSchedule("45 6 * * *", "production");
+            job.save();
+            JsonNode envNode = attrs().path("environments");
+            assertEquals("45 6 * * *", envNode.path("production").path("schedule").asText());
+            assertFalse(envNode.path("production").has("next_run_at"),
+                    "read-only next_run_at must never be written");
         }
     }
 
@@ -982,10 +1071,14 @@ class JobsClientTest {
     void jobEnvironmentConstructors() {
         JobEnvironment empty = new JobEnvironment();
         assertFalse(empty.enabled);
+        assertNull(empty.schedule);
         assertNull(empty.configuration);
+        assertNull(empty.nextRunAt);
         JobEnvironment enabledOnly = new JobEnvironment(true);
         assertTrue(enabledOnly.enabled);
+        assertNull(enabledOnly.schedule);
         assertNull(enabledOnly.configuration);
+        assertNull(enabledOnly.nextRunAt);
         HttpConfig cfg = new HttpConfig("https://z");
         JobEnvironment both = new JobEnvironment(false, cfg);
         assertFalse(both.enabled);
@@ -1013,7 +1106,6 @@ class JobsClientTest {
         assertEquals("a", h.name);
         assertEquals("b", h.value);
         ListJobsInput lji = new ListJobsInput();
-        assertNull(lji.enabled);
         assertNull(lji.recurring);
         assertNull(lji.pageNumber);
         assertNull(lji.pageSize);

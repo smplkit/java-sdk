@@ -16,8 +16,9 @@ import java.util.concurrent.ForkJoinPool;
  * <p>Enablement is per environment: a recurring (cron) job fires in an
  * environment only when {@link #environments} holds an entry for it with
  * {@code enabled=true}, set via {@link #setEnabled(boolean, String)}. The base
- * {@link #enabled} field is a read-only, server-derived roll-up (true when
- * enabled in at least one environment) and is never written back.</p>
+ * {@link #enabled} field is a read-only, derived roll-up (true when enabled in
+ * at least one environment) computed from {@link #environments}; it is never
+ * sent on the wire.</p>
  */
 public final class Job {
 
@@ -30,10 +31,11 @@ public final class Job {
     /** Free-text description. {@code null} when unset. */
     public String description;
     /**
-     * Read-only, server-derived roll-up: {@code true} when the job is enabled
-     * in at least one environment. Mutating this field has no effect on the
-     * server — set enablement per environment via
-     * {@link #setEnabled(boolean, String)} / {@link #environments}.
+     * Read-only, derived roll-up: {@code true} when the job is enabled in at
+     * least one environment. Computed from {@link #environments} on parse and
+     * not sent on the wire. Mutating this field has no effect on the server —
+     * set enablement per environment via {@link #setEnabled(boolean, String)} /
+     * {@link #environments}.
      */
     public boolean enabled = false;
     /**
@@ -65,8 +67,6 @@ public final class Job {
     public HttpConfig configuration;
     /** How overlapping runs are handled. {@code "ALLOW"} (the only value) permits them. */
     public String concurrencyPolicy = "ALLOW";
-    /** The next scheduled fire time. {@code null} once a one-off job has fired. */
-    public OffsetDateTime nextRunAt;
     /** When the job was created. {@code null} for an unsaved instance. */
     public OffsetDateTime createdAt;
     /** When the job was last modified. */
@@ -196,13 +196,30 @@ public final class Job {
     }
 
     /**
-     * Whether the job is enabled in at least one environment (the read-only
-     * roll-up).
+     * Whether the job is enabled in at least one environment (the derived
+     * roll-up). Computed live from {@link #environments}, so it reflects any
+     * in-memory enablement changes made via {@link #setEnabled(boolean, String)}.
      *
      * @return {@code true} when the job is enabled in any environment
      */
     public boolean isEnabled() {
-        return enabled;
+        return computeEnabledRollup();
+    }
+
+    /**
+     * Compute the enabled roll-up from {@link #environments}: {@code true} when
+     * any environment override has {@code enabled=true}.
+     */
+    boolean computeEnabledRollup() {
+        if (environments == null) {
+            return false;
+        }
+        for (JobEnvironment env : environments.values()) {
+            if (env != null && env.enabled) {
+                return true;
+            }
+        }
+        return false;
     }
 
     /**
@@ -273,16 +290,56 @@ public final class Job {
     }
 
     /**
-     * Set the job's schedule in memory. Call {@link #save()} to persist.
+     * Set the job's base schedule in memory. Call {@link #save()} to persist.
      *
-     * <p>The schedule is environment-agnostic — a job has a single cron /
-     * datetime / {@code "now"} schedule shared across every environment it runs
-     * in, so this setter takes no environment.</p>
+     * <p>The base schedule applies to every environment that does not carry its
+     * own override; use {@link #setSchedule(String, String)} to vary the cadence
+     * for a single environment.</p>
      *
      * @param schedule the new cron / datetime / {@code "now"} schedule
      */
     public void setSchedule(String schedule) {
         this.schedule = schedule;
+    }
+
+    /**
+     * Set the job's schedule in memory — base ({@code environment == null}) or a
+     * per-environment cron override. A per-environment override varies the
+     * cadence for that environment only; pass {@code null} as the {@code schedule}
+     * for that environment to clear the override and inherit the base schedule.
+     * Per-environment overrides are only meaningful on a recurring (cron) job.
+     * Call {@link #save()} to persist.
+     *
+     * @param schedule the schedule to set, or {@code null} to clear a
+     *     per-environment override
+     * @param environment the environment key to set the override for, or
+     *     {@code null} to set the base schedule
+     */
+    public void setSchedule(String schedule, String environment) {
+        if (environment == null) {
+            this.schedule = schedule;
+        } else {
+            environmentOverride(environment).schedule = schedule;
+        }
+    }
+
+    /**
+     * The job's effective schedule for an environment — that environment's cron
+     * override when it has one, else the base {@link #schedule} (the cadence the
+     * job actually fires on there).
+     *
+     * @param environment the environment key, or {@code null} for the base
+     *     schedule
+     * @return the resolved schedule string
+     */
+    public String getSchedule(String environment) {
+        if (environment != null) {
+            JobEnvironment env = environments.get(environment);
+            if (env != null && env.schedule != null) {
+                return env.schedule;
+            }
+        }
+        return schedule;
     }
 
     // ------------------------------------------------------------------
@@ -374,14 +431,15 @@ public final class Job {
         this.id = other.id;
         this.name = other.name;
         this.description = other.description;
-        this.enabled = other.enabled;
         this.environments = other.environments;
+        // ``enabled`` is the derived roll-up — recompute from the just-applied
+        // environments rather than trusting a stale value.
+        this.enabled = computeEnabledRollup();
         this.recurring = other.recurring;
         this.type = other.type;
         this.schedule = other.schedule;
         this.configuration = other.configuration;
         this.concurrencyPolicy = other.concurrencyPolicy;
-        this.nextRunAt = other.nextRunAt;
         this.createdAt = other.createdAt;
         this.updatedAt = other.updatedAt;
         this.deletedAt = other.deletedAt;

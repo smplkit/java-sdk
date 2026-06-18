@@ -164,7 +164,7 @@ public class UsageApi {
 
   /**
    * Get Usage
-   * Report this account&#39;s current-period usage against its plan allotments.  &#x60;runs_used&#x60; is the number of runs metered so far this calendar month; &#x60;active_jobs&#x60; is the number of currently-enabled jobs.
+   * Report this account&#39;s current-period usage against its plan allotments.  &#x60;runs_used&#x60; is the number of runs metered so far this calendar month; &#x60;active_jobs&#x60; is the number of recurring (scheduled) jobs, which is what the plan&#39;s job limit bounds.
    * @param filterPeriod  (optional, default to current)
    * @return UsageResponse
    * @throws ApiException if fails to make API call
@@ -175,7 +175,7 @@ public class UsageApi {
 
   /**
    * Get Usage
-   * Report this account&#39;s current-period usage against its plan allotments.  &#x60;runs_used&#x60; is the number of runs metered so far this calendar month; &#x60;active_jobs&#x60; is the number of currently-enabled jobs.
+   * Report this account&#39;s current-period usage against its plan allotments.  &#x60;runs_used&#x60; is the number of runs metered so far this calendar month; &#x60;active_jobs&#x60; is the number of recurring (scheduled) jobs, which is what the plan&#39;s job limit bounds.
    * @param filterPeriod  (optional, default to current)
    * @param headers Optional headers to include in the request
    * @return UsageResponse
@@ -188,7 +188,7 @@ public class UsageApi {
 
   /**
    * Get Usage
-   * Report this account&#39;s current-period usage against its plan allotments.  &#x60;runs_used&#x60; is the number of runs metered so far this calendar month; &#x60;active_jobs&#x60; is the number of currently-enabled jobs.
+   * Report this account&#39;s current-period usage against its plan allotments.  &#x60;runs_used&#x60; is the number of runs metered so far this calendar month; &#x60;active_jobs&#x60; is the number of recurring (scheduled) jobs, which is what the plan&#39;s job limit bounds.
    * @param filterPeriod  (optional, default to current)
    * @return ApiResponse&lt;UsageResponse&gt;
    * @throws ApiException if fails to make API call
@@ -199,7 +199,7 @@ public class UsageApi {
 
   /**
    * Get Usage
-   * Report this account&#39;s current-period usage against its plan allotments.  &#x60;runs_used&#x60; is the number of runs metered so far this calendar month; &#x60;active_jobs&#x60; is the number of currently-enabled jobs.
+   * Report this account&#39;s current-period usage against its plan allotments.  &#x60;runs_used&#x60; is the number of runs metered so far this calendar month; &#x60;active_jobs&#x60; is the number of recurring (scheduled) jobs, which is what the plan&#39;s job limit bounds.
    * @param filterPeriod  (optional, default to current)
    * @param headers Optional headers to include in the request
    * @return ApiResponse&lt;UsageResponse&gt;

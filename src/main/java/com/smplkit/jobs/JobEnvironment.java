@@ -1,7 +1,10 @@
 package com.smplkit.jobs;
 
+import java.time.OffsetDateTime;
+
 /**
- * Per-environment enablement and optional configuration override for a job.
+ * Per-environment enablement, schedule, and optional configuration override for
+ * a job.
  *
  * <p>A recurring job fires in a given environment only when that environment
  * has an entry in {@link Job#environments} with {@code enabled=true}; an
@@ -16,12 +19,28 @@ public final class JobEnvironment {
     public boolean enabled = false;
 
     /**
+     * Optional per-environment cron schedule override. {@code null} (the
+     * default) inherits the job's base {@link Job#schedule}. When set, it must
+     * be a 5-field cron expression evaluated in UTC and is only meaningful on a
+     * recurring job — it varies the cadence within this environment, it cannot
+     * turn a one-off job recurring or vice-versa.
+     */
+    public String schedule = null;
+
+    /**
      * Optional per-environment request configuration that fully replaces the
      * job's base {@link Job#configuration} for this environment. {@code null}
      * (the default) inherits the base configuration. Header values are returned
      * in plaintext on reads, so a get-mutate-put round-trip preserves them.
      */
     public HttpConfig configuration = null;
+
+    /**
+     * Read-only: the next scheduled fire time in this environment. {@code null}
+     * when the environment is not enabled, once a one-off run has fired, or for
+     * an unsaved instance. Server-derived — mutating it has no effect.
+     */
+    public OffsetDateTime nextRunAt = null;
 
     public JobEnvironment() {}
 
