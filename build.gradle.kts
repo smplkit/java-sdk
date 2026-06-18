@@ -51,7 +51,7 @@ dependencies {
     compileOnly("jakarta.annotation:jakarta.annotation-api:3.0.0")
     // @ApiStatus.Internal markers on internal seams; CLASS-retention, compile-only
     // (never on the customer's runtime/transitive classpath).
-    compileOnly("org.jetbrains:annotations:26.0.2")
+    compileOnly("org.jetbrains:annotations:26.1.0")
 
     // JSON Logic evaluation for flags runtime
     implementation("io.github.jamsesso:json-logic-java:1.1.0")
