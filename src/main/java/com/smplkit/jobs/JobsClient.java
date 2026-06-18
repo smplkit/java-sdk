@@ -236,7 +236,7 @@ public final class JobsClient implements AutoCloseable {
      */
     public List<Job> list(ListJobsInput input) throws ApiException {
         JobListResponse resp = api.listJobs(
-            input.enabled, input.recurring, null, null, input.pageNumber, input.pageSize, null);
+            input.enabled, input.recurring, input.name, null, input.pageNumber, input.pageSize, null);
         List<Job> out = new ArrayList<>();
         if (resp.getData() != null) {
             for (JobResource r : resp.getData()) out.add(fromResource(r));
