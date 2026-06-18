@@ -3,6 +3,7 @@ package com.smplkit.jobs;
 import com.smplkit.internal.generated.jobs.ApiException;
 
 import java.util.List;
+import java.util.Map;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CompletionException;
 import java.util.concurrent.Executor;
@@ -81,10 +82,10 @@ public final class AsyncJobsClient implements AutoCloseable {
     public Executor executor() { return executor; }
 
     /**
-     * Return an unsaved {@link Job} with default {@code description} (none),
-     * {@code enabled} ({@code true}), and {@code concurrencyPolicy}
-     * ({@code "ALLOW"}). Call {@code .save()} / {@code .saveAsync()} to create
-     * it. Synchronous — no I/O.
+     * Return an unsaved {@link Job} with default {@code description} (none), no
+     * per-environment overrides, and {@code concurrencyPolicy} ({@code "ALLOW"}).
+     * Call {@code .save()} / {@code .saveAsync()} to create it. Synchronous —
+     * no I/O.
      *
      * @param id stable caller-supplied unique identifier for the job. Unique
      *     within the account and immutable; the service returns 409 if another
@@ -103,6 +104,23 @@ public final class AsyncJobsClient implements AutoCloseable {
     }
 
     /**
+     * Return an unsaved one-off {@link Job} born in a named environment. Call
+     * {@code .save()} / {@code .saveAsync()} to create it. Synchronous — no I/O.
+     *
+     * @param id stable caller-supplied unique identifier for the job
+     * @param name human-readable name for the job
+     * @param schedule when the job runs (see {@link #new_(String, String, String, HttpConfig)})
+     * @param configuration the HTTP request the job sends each time it fires
+     * @param environment the environment a one-off job is born in; {@code null}
+     *     falls back to the client's configured environment
+     * @return an unsaved {@link Job} bound to the underlying sync client
+     */
+    public Job new_(String id, String name, String schedule, HttpConfig configuration,
+                    String environment) {
+        return delegate.new_(id, name, schedule, configuration, environment);
+    }
+
+    /**
      * Return an unsaved {@link Job}, setting every job field at construction.
      * Call {@code .save()} / {@code .saveAsync()} to create it. Synchronous —
      * no I/O.
@@ -111,23 +129,23 @@ public final class AsyncJobsClient implements AutoCloseable {
      *     within the account and immutable; the service returns 409 if another
      *     live job already uses this id.
      * @param name human-readable name for the job
-     * @param schedule when the job runs. One of: a 5-field cron expression
-     *     evaluated in UTC (recurring); an ISO-8601 datetime (a one-off run at
-     *     that instant); or the literal {@code "now"} (run once, as soon as
-     *     possible). A datetime or {@code "now"} job disables itself after it
-     *     fires.
+     * @param schedule when the job runs (see {@link #new_(String, String, String, HttpConfig)})
      * @param configuration the HTTP request the job sends each time it fires
      * @param description free-text description for the job; {@code null} for none
-     * @param enabled whether the job schedules runs. Pass {@code false} to pause
-     *     it without deleting
+     * @param environments per-environment overrides for a recurring job, keyed
+     *     by environment key; {@code null} starts with no overrides
      * @param concurrencyPolicy how overlapping runs are handled. {@code "ALLOW"}
      *     (the default and only value today) permits a new run to start while a
      *     previous one is still in flight
+     * @param environment for a one-off job, the environment it is born in;
+     *     {@code null} falls back to the client's configured environment
      * @return an unsaved {@link Job} bound to the underlying sync client
      */
     public Job new_(String id, String name, String schedule, HttpConfig configuration,
-                    String description, boolean enabled, String concurrencyPolicy) {
-        return delegate.new_(id, name, schedule, configuration, description, enabled, concurrencyPolicy);
+                    String description, Map<String, JobEnvironment> environments,
+                    String concurrencyPolicy, String environment) {
+        return delegate.new_(id, name, schedule, configuration, description, environments,
+                concurrencyPolicy, environment);
     }
 
     /**
@@ -203,6 +221,22 @@ public final class AsyncJobsClient implements AutoCloseable {
      */
     public CompletableFuture<Run> run(String id) {
         return CompletableFuture.supplyAsync(() -> checked(() -> delegate.run(id)), executor);
+    }
+
+    /**
+     * Trigger one immediate, manual run of a job in a named environment,
+     * ignoring its schedule.
+     *
+     * @param id identifier of the job to run
+     * @param environment the environment the manual run executes in;
+     *     {@code null} falls back to the client's configured environment
+     * @return a future of the {@link Run} that was started, with
+     *     {@code trigger} set to {@code MANUAL}. It completes exceptionally
+     *     with a {@code CompletionException} wrapping the underlying
+     *     {@code ApiException} on failure
+     */
+    public CompletableFuture<Run> run(String id, String environment) {
+        return CompletableFuture.supplyAsync(() -> checked(() -> delegate.run(id, environment)), executor);
     }
 
     /**

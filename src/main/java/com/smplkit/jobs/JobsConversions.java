@@ -7,7 +7,10 @@ import com.smplkit.internal.generated.jobs.model.Usage;
 import com.smplkit.internal.generated.jobs.model.UsageResource;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
+import java.util.stream.Collectors;
 
 /** Wire &lt;-&gt; wrapper conversions shared by the jobs surface. */
 final class JobsConversions {
@@ -62,12 +65,82 @@ final class JobsConversions {
         return out;
     }
 
-    static com.smplkit.jobs.Run runFromResource(RunResource r) {
+    /**
+     * Convert the wrapper {@code environments} map to the generated model.
+     * Per-environment {@code configuration} overrides are sent as full
+     * {@link HttpConfig} payloads (plaintext headers in), mirroring the base
+     * configuration's round-trip semantics; an entry without an override sends
+     * only {@code enabled} (inherit the base configuration).
+     */
+    static Map<String, com.smplkit.internal.generated.jobs.model.JobEnvironment> environmentsToGen(
+            Map<String, JobEnvironment> environments) {
+        Map<String, com.smplkit.internal.generated.jobs.model.JobEnvironment> out = new HashMap<>();
+        for (Map.Entry<String, JobEnvironment> e : environments.entrySet()) {
+            JobEnvironment env = e.getValue();
+            com.smplkit.internal.generated.jobs.model.JobEnvironment gen =
+                    new com.smplkit.internal.generated.jobs.model.JobEnvironment();
+            gen.setEnabled(env.enabled);
+            if (env.configuration != null) {
+                gen.setConfiguration(configurationToGen(env.configuration));
+            }
+            out.put(e.getKey(), gen);
+        }
+        return out;
+    }
+
+    /** Convert the generated {@code environments} map to wrapper instances. */
+    static Map<String, JobEnvironment> environmentsFromGen(
+            Map<String, com.smplkit.internal.generated.jobs.model.JobEnvironment> environments) {
+        Map<String, JobEnvironment> out = new HashMap<>();
+        if (environments == null) return out;
+        for (Map.Entry<String, com.smplkit.internal.generated.jobs.model.JobEnvironment> e
+                : environments.entrySet()) {
+            com.smplkit.internal.generated.jobs.model.JobEnvironment gen = e.getValue();
+            JobEnvironment env = new JobEnvironment();
+            if (gen != null) {
+                env.enabled = gen.getEnabled() != null ? gen.getEnabled() : false;
+                env.configuration = gen.getConfiguration() != null
+                        ? configurationFromGen(gen.getConfiguration()) : null;
+            }
+            out.put(e.getKey(), env);
+        }
+        return out;
+    }
+
+    /**
+     * Join environment keys into the comma-separated string the generated
+     * {@code filter[environment]} parameter expects. Returns {@code null} when
+     * the list is {@code null} or contains no non-blank entries, leaving the
+     * filter unset. Blank entries are dropped.
+     */
+    static String joinEnvironments(List<String> environments) {
+        if (environments == null || environments.isEmpty()) {
+            return null;
+        }
+        String joined = environments.stream()
+                .filter(e -> e != null && !e.isBlank())
+                .collect(Collectors.joining(","));
+        return joined.isEmpty() ? null : joined;
+    }
+
+    /**
+     * Resolve the {@code filter[environment]} value for the runs read surface:
+     * an explicit {@code environments} list (comma-joined) wins, otherwise the
+     * client's configured {@code defaultEnvironment}, otherwise {@code null} so
+     * the filter is omitted and the credential's own scoping applies.
+     */
+    static String resolveEnvironmentFilter(List<String> environments, String defaultEnvironment) {
+        String explicit = joinEnvironments(environments);
+        return explicit != null ? explicit : defaultEnvironment;
+    }
+
+    static com.smplkit.jobs.Run runFromResource(RunResource r, RunsClient runs) {
         Run a = r.getAttributes();
         return new com.smplkit.jobs.Run(
                 r.getId(),
                 a.getJob(),
                 a.getJobVersion(),
+                a.getEnvironment(),
                 a.getTrigger() == null ? null : a.getTrigger().getValue(),
                 a.getRerunOf() == null ? null : a.getRerunOf().toString(),
                 a.getScheduledFor(),
@@ -81,7 +154,8 @@ final class JobsConversions {
                 a.getError(),
                 a.getRequest(),
                 a.getResult(),
-                a.getCreatedAt());
+                a.getCreatedAt(),
+                runs);
     }
 
     static com.smplkit.jobs.Usage usageFromResource(UsageResource r) {

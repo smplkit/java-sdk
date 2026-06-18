@@ -26,6 +26,7 @@ class JobsClientBuilderTest {
     void builder_allSetters_buildsTransportOwningClient() {
         try (JobsClient client = JobsClient.builder()
                 .apiKey("sk_test")
+                .environment("production")
                 .baseDomain("example.com")
                 .scheme("https")
                 .timeout(Duration.ofSeconds(10))
@@ -113,6 +114,7 @@ class JobsClientBuilderTest {
         JobsClientBuilder b = JobsClient.builder();
         assertThrows(NullPointerException.class, () -> b.profile(null));
         assertThrows(NullPointerException.class, () -> b.apiKey(null));
+        assertThrows(NullPointerException.class, () -> b.environment(null));
         assertThrows(NullPointerException.class, () -> b.baseDomain(null));
         assertThrows(NullPointerException.class, () -> b.scheme(null));
         assertThrows(NullPointerException.class, () -> b.timeout(null));
@@ -126,6 +128,7 @@ class JobsClientBuilderTest {
         JobsClientBuilder b = JobsClient.builder();
         assertSame(b, b.profile("default"));
         assertSame(b, b.apiKey("sk_test"));
+        assertSame(b, b.environment("production"));
         assertSame(b, b.baseDomain("example.com"));
         assertSame(b, b.scheme("https"));
         assertSame(b, b.timeout(Duration.ofSeconds(5)));

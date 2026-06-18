@@ -189,8 +189,10 @@ public final class SmplClient implements AutoCloseable {
         // own transport (closed in close()).
         this.audit = new AuditClient(httpClient, apiKey, extraHeaders, timeout, auditBaseUrl, environment);
         // Jobs has no runtime/management split — reuse the shared jobs
-        // transport so client.jobs is one-stop.
-        this.jobs = new JobsClient(apiKey, extraHeaders, timeout, jobsBaseUrl);
+        // transport so client.jobs is one-stop. The configured environment
+        // defaults the one-off birth header, the run-now header, and the runs
+        // read filter.
+        this.jobs = new JobsClient(apiKey, extraHeaders, timeout, jobsBaseUrl, environment);
 
         this.closed = false;
         this.started = false;

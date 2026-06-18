@@ -15,9 +15,11 @@ import java.util.UUID;
 public final class RunsClient {
 
     private final RunsApi api;
+    private final String environment;
 
-    RunsClient(RunsApi api) {
+    RunsClient(RunsApi api, String environment) {
         this.api = api;
+        this.environment = environment;
     }
 
     /**
@@ -33,20 +35,27 @@ public final class RunsClient {
     /**
      * List past runs, most recent first. Cursor paginated.
      *
-     * @param input filters and paging for the listing. {@code job} returns
-     *     only runs of the job with that id ({@code null} lists across all
-     *     jobs); {@code pageSize} is the max runs per page ({@code null} uses
-     *     the server default); {@code after} is an opaque cursor from a
-     *     previous page ({@code null} starts from the first page)
+     * @param input filters and paging for the listing. {@code job} returns only
+     *     runs of the job with that id ({@code null} lists across all jobs);
+     *     {@code environments} restricts to runs stamped with any of those
+     *     environment keys, sent comma-separated as {@code filter[environment]}
+     *     ({@code null}/empty falls back to the client's configured environment,
+     *     otherwise covers every environment you can access); {@code pageSize}
+     *     is the max runs per page ({@code null} uses the server default);
+     *     {@code after} is an opaque cursor from a previous page ({@code null}
+     *     starts from the first page)
      * @return the runs in this page, as a list of {@link Run}
      * @throws ApiException if the request fails
      */
     public List<Run> list(ListRunsInput input) throws ApiException {
+        String filterEnvironment =
+                JobsConversions.resolveEnvironmentFilter(input.environments, environment);
         RunListResponse resp = api.listRuns(
-            input.job, null, null, null, null, null, input.pageSize, input.after, null);
+            input.job, null, filterEnvironment, null, null, null, null,
+            input.pageSize, input.after, null);
         List<Run> out = new ArrayList<>();
         if (resp.getData() != null) {
-            for (RunResource r : resp.getData()) out.add(JobsConversions.runFromResource(r));
+            for (RunResource r : resp.getData()) out.add(JobsConversions.runFromResource(r, this));
         }
         return out;
     }
@@ -59,7 +68,7 @@ public final class RunsClient {
      * @throws ApiException if the request fails
      */
     public Run get(String runId) throws ApiException {
-        return JobsConversions.runFromResource(api.getRun(UUID.fromString(runId)).getData());
+        return JobsConversions.runFromResource(api.getRun(UUID.fromString(runId)).getData(), this);
     }
 
     /**
@@ -70,7 +79,7 @@ public final class RunsClient {
      * @throws ApiException if the request fails
      */
     public Run cancel(String runId) throws ApiException {
-        return JobsConversions.runFromResource(api.cancelRun(UUID.fromString(runId)).getData());
+        return JobsConversions.runFromResource(api.cancelRun(UUID.fromString(runId)).getData(), this);
     }
 
     /**
@@ -81,6 +90,6 @@ public final class RunsClient {
      * @throws ApiException if the request fails
      */
     public Run rerun(String runId) throws ApiException {
-        return JobsConversions.runFromResource(api.rerunRun(UUID.fromString(runId)).getData());
+        return JobsConversions.runFromResource(api.rerunRun(UUID.fromString(runId)).getData(), this);
     }
 }
