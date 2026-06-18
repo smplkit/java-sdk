@@ -12,14 +12,18 @@ import java.util.Objects;
  * Builder for a standalone {@link JobsClient}.
  *
  * <p>Resolution order matches {@link com.smplkit.SmplClientBuilder} but skips
- * environment/service/telemetry: jobs is account-global and never
- * environment-scoped, so it resolves credentials/base-domain from
- * {@code ~/.smplkit} / env vars / builder args.</p>
+ * service/telemetry: jobs resolves credentials/base-domain from
+ * {@code ~/.smplkit} / env vars / builder args. An {@code environment} is
+ * optional — when present it defaults the one-off birth environment on create,
+ * the environment a manual run executes in, and the {@code filter[environment]}
+ * scope on {@code jobs.runs.list()}; when absent a single-environment credential
+ * resolves it server-side.</p>
  */
 public final class JobsClientBuilder {
 
     private String profile;
     private String apiKey;
+    private String environment;
     private String baseDomain;
     private String scheme;
     private Duration timeout = Duration.ofSeconds(30);
@@ -48,6 +52,21 @@ public final class JobsClientBuilder {
      */
     public JobsClientBuilder apiKey(String apiKey) {
         this.apiKey = Objects.requireNonNull(apiKey, "apiKey must not be null");
+        return this;
+    }
+
+    /**
+     * Default environment for environment-scoped operations — the environment a
+     * one-off job created through this client is born in, the default a manual
+     * run executes in, and the default {@code filter[environment]} scope on
+     * {@code jobs.runs.list()}. Optional; when absent a single-environment
+     * credential resolves it server-side.
+     *
+     * @param environment the deployment environment key
+     * @return this builder
+     */
+    public JobsClientBuilder environment(String environment) {
+        this.environment = Objects.requireNonNull(environment, "environment must not be null");
         return this;
     }
 
@@ -119,6 +138,6 @@ public final class JobsClientBuilder {
     public JobsClient build() {
         ResolvedClientConfig cfg = ConfigResolver.resolveClient(
                 profile, apiKey, baseDomain, scheme, debug);
-        return JobsClient.fromResolved(cfg, timeout, new LinkedHashMap<>(extraHeaders));
+        return JobsClient.fromResolved(cfg, environment, timeout, new LinkedHashMap<>(extraHeaders));
     }
 }

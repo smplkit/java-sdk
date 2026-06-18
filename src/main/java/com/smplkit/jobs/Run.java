@@ -1,18 +1,30 @@
 package com.smplkit.jobs;
 
+import com.smplkit.internal.generated.jobs.ApiException;
+
 import java.time.OffsetDateTime;
 import java.util.Map;
 
 /**
- * A single execution of a job (read-only).
+ * A single execution of a job (read-only data) with {@link #rerun()} /
+ * {@link #cancel()} actions.
  */
 public final class Run {
+
+    private final RunsClient runs;
+
     /** Server-assigned UUID for this run. */
     public final String id;
     /** The id of the job this run belongs to. */
     public final String job;
     /** The job's version at the time the run executed. */
     public final Integer jobVersion;
+    /**
+     * The environment this run executed in. A scheduled run inherits the firing
+     * job-environment; a manual run uses the environment named on the request;
+     * a rerun copies its source run's environment.
+     */
+    public final String environment;
     /** Why the run exists: {@code SCHEDULE}, {@code MANUAL} (run now), or {@code RERUN}. */
     public final String trigger;
     /** The source run's id; set only when {@code trigger} is {@code RERUN}. */
@@ -42,14 +54,16 @@ public final class Run {
     /** When the run was enqueued (became {@code PENDING}). */
     public final OffsetDateTime createdAt;
 
-    Run(String id, String job, Integer jobVersion, String trigger, String rerunOf,
+    Run(String id, String job, Integer jobVersion, String environment, String trigger, String rerunOf,
         OffsetDateTime scheduledFor, String status, OffsetDateTime startedAt,
         OffsetDateTime finishedAt, Integer pendingDurationMs, Integer runDurationMs,
         Integer totalDurationMs, String failureReason, String error,
-        Map<String, Object> request, Map<String, Object> result, OffsetDateTime createdAt) {
+        Map<String, Object> request, Map<String, Object> result, OffsetDateTime createdAt,
+        RunsClient runs) {
         this.id = id;
         this.job = job;
         this.jobVersion = jobVersion;
+        this.environment = environment;
         this.trigger = trigger;
         this.rerunOf = rerunOf;
         this.scheduledFor = scheduledFor;
@@ -64,6 +78,35 @@ public final class Run {
         this.request = request;
         this.result = result;
         this.createdAt = createdAt;
+        this.runs = runs;
+    }
+
+    /**
+     * Start a new run that repeats this one (a {@code RERUN}), in the same
+     * environment.
+     *
+     * @return the new {@link Run}, with {@code rerunOf} set to this run's id
+     * @throws ApiException if the request fails
+     */
+    public Run rerun() throws ApiException {
+        if (runs == null) {
+            throw new IllegalStateException("Run was constructed without a client; cannot rerun");
+        }
+        return runs.rerun(id);
+    }
+
+    /**
+     * Cancel this run if it has not finished yet.
+     *
+     * @return the updated {@link Run} reflecting the cancellation
+     * @throws ApiException if the request fails (e.g. a finished run can no
+     *     longer be canceled)
+     */
+    public Run cancel() throws ApiException {
+        if (runs == null) {
+            throw new IllegalStateException("Run was constructed without a client; cannot cancel");
+        }
+        return runs.cancel(id);
     }
 
     @Override
