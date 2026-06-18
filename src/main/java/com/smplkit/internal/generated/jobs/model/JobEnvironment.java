@@ -25,17 +25,24 @@ import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonTypeName;
 import com.fasterxml.jackson.annotation.JsonValue;
 import com.smplkit.internal.generated.jobs.model.JobHttpConfiguration;
+import java.time.OffsetDateTime;
 import java.util.Arrays;
+import org.openapitools.jackson.nullable.JsonNullable;
+import com.fasterxml.jackson.annotation.JsonIgnore;
+import org.openapitools.jackson.nullable.JsonNullable;
+import java.util.NoSuchElementException;
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 
 
 import com.smplkit.internal.generated.jobs.ApiClient;
 /**
- * Per-environment override for a job&#39;s enablement and configuration.
+ * Per-environment override for a job&#39;s enablement, schedule, and configuration.
  */
 @JsonPropertyOrder({
   JobEnvironment.JSON_PROPERTY_ENABLED,
-  JobEnvironment.JSON_PROPERTY_CONFIGURATION
+  JobEnvironment.JSON_PROPERTY_SCHEDULE,
+  JobEnvironment.JSON_PROPERTY_CONFIGURATION,
+  JobEnvironment.JSON_PROPERTY_NEXT_RUN_AT
 })
 @jakarta.annotation.Generated(value = "org.openapitools.codegen.languages.JavaClientCodegen", comments = "Generator version: 7.21.0")
 public class JobEnvironment {
@@ -43,11 +50,25 @@ public class JobEnvironment {
   @jakarta.annotation.Nullable
   private Boolean enabled = false;
 
+  public static final String JSON_PROPERTY_SCHEDULE = "schedule";
+  private JsonNullable<String> schedule = JsonNullable.<String>undefined();
+
   public static final String JSON_PROPERTY_CONFIGURATION = "configuration";
   @jakarta.annotation.Nullable
   private JobHttpConfiguration _configuration;
 
+  public static final String JSON_PROPERTY_NEXT_RUN_AT = "next_run_at";
+  private JsonNullable<OffsetDateTime> nextRunAt = JsonNullable.<OffsetDateTime>undefined();
+
   public JobEnvironment() { 
+  }
+
+  @JsonCreator
+  public JobEnvironment(
+    @JsonProperty(JSON_PROPERTY_NEXT_RUN_AT) OffsetDateTime nextRunAt
+  ) {
+  this();
+    this.nextRunAt = nextRunAt == null ? JsonNullable.<OffsetDateTime>undefined() : JsonNullable.of(nextRunAt);
   }
 
   public JobEnvironment enabled(@jakarta.annotation.Nullable Boolean enabled) {
@@ -71,6 +92,38 @@ public class JobEnvironment {
   @JsonInclude(value = JsonInclude.Include.USE_DEFAULTS)
   public void setEnabled(@jakarta.annotation.Nullable Boolean enabled) {
     this.enabled = enabled;
+  }
+
+
+  public JobEnvironment schedule(@jakarta.annotation.Nullable String schedule) {
+    this.schedule = JsonNullable.<String>of(schedule);
+    return this;
+  }
+
+  /**
+   * Per-environment schedule override. Omit to inherit the job&#39;s base &#x60;schedule&#x60;. When present, it must be a 5-field cron expression evaluated in **UTC** (e.g. &#x60;0 3 * * *&#x60;), and is only allowed on a recurring (cron) job — it varies the cadence within that environment, it cannot turn a one-off job recurring or vice-versa.
+   * @return schedule
+   */
+  @jakarta.annotation.Nullable
+  @JsonIgnore
+  public String getSchedule() {
+        return schedule.orElse(null);
+  }
+
+  @JsonProperty(value = JSON_PROPERTY_SCHEDULE, required = false)
+  @JsonInclude(value = JsonInclude.Include.USE_DEFAULTS)
+
+  public JsonNullable<String> getSchedule_JsonNullable() {
+    return schedule;
+  }
+  
+  @JsonProperty(JSON_PROPERTY_SCHEDULE)
+  public void setSchedule_JsonNullable(JsonNullable<String> schedule) {
+    this.schedule = schedule;
+  }
+
+  public void setSchedule(@jakarta.annotation.Nullable String schedule) {
+    this.schedule = JsonNullable.<String>of(schedule);
   }
 
 
@@ -99,6 +152,34 @@ public class JobEnvironment {
 
 
   /**
+   * The next scheduled fire time in this environment. &#x60;null&#x60; when the environment is not enabled, or once a one-off run has fired.
+   * @return nextRunAt
+   */
+  @jakarta.annotation.Nullable
+  @JsonIgnore
+  public OffsetDateTime getNextRunAt() {
+    
+    if (nextRunAt == null) {
+      nextRunAt = JsonNullable.<OffsetDateTime>undefined();
+    }
+    return nextRunAt.orElse(null);
+  }
+
+  @JsonProperty(value = JSON_PROPERTY_NEXT_RUN_AT, required = false)
+  @JsonInclude(value = JsonInclude.Include.USE_DEFAULTS)
+
+  public JsonNullable<OffsetDateTime> getNextRunAt_JsonNullable() {
+    return nextRunAt;
+  }
+  
+  @JsonProperty(JSON_PROPERTY_NEXT_RUN_AT)
+  private void setNextRunAt_JsonNullable(JsonNullable<OffsetDateTime> nextRunAt) {
+    this.nextRunAt = nextRunAt;
+  }
+
+
+
+  /**
    * Return true if this JobEnvironment object is equal to o.
    */
   @Override
@@ -111,12 +192,25 @@ public class JobEnvironment {
     }
     JobEnvironment jobEnvironment = (JobEnvironment) o;
     return Objects.equals(this.enabled, jobEnvironment.enabled) &&
-        Objects.equals(this._configuration, jobEnvironment._configuration);
+        equalsNullable(this.schedule, jobEnvironment.schedule) &&
+        Objects.equals(this._configuration, jobEnvironment._configuration) &&
+        equalsNullable(this.nextRunAt, jobEnvironment.nextRunAt);
+  }
+
+  private static <T> boolean equalsNullable(JsonNullable<T> a, JsonNullable<T> b) {
+    return a == b || (a != null && b != null && a.isPresent() && b.isPresent() && Objects.deepEquals(a.get(), b.get()));
   }
 
   @Override
   public int hashCode() {
-    return Objects.hash(enabled, _configuration);
+    return Objects.hash(enabled, hashCodeNullable(schedule), _configuration, hashCodeNullable(nextRunAt));
+  }
+
+  private static <T> int hashCodeNullable(JsonNullable<T> a) {
+    if (a == null) {
+      return 1;
+    }
+    return a.isPresent() ? Arrays.deepHashCode(new Object[]{a.get()}) : 31;
   }
 
   @Override
@@ -124,7 +218,9 @@ public class JobEnvironment {
     StringBuilder sb = new StringBuilder();
     sb.append("class JobEnvironment {\n");
     sb.append("    enabled: ").append(toIndentedString(enabled)).append("\n");
+    sb.append("    schedule: ").append(toIndentedString(schedule)).append("\n");
     sb.append("    _configuration: ").append(toIndentedString(_configuration)).append("\n");
+    sb.append("    nextRunAt: ").append(toIndentedString(nextRunAt)).append("\n");
     sb.append("}");
     return sb.toString();
   }
@@ -174,9 +270,19 @@ public class JobEnvironment {
       joiner.add(String.format(java.util.Locale.ROOT, "%senabled%s=%s", prefix, suffix, ApiClient.urlEncode(ApiClient.valueToString(getEnabled()))));
     }
 
+    // add `schedule` to the URL query string
+    if (getSchedule() != null) {
+      joiner.add(String.format(java.util.Locale.ROOT, "%sschedule%s=%s", prefix, suffix, ApiClient.urlEncode(ApiClient.valueToString(getSchedule()))));
+    }
+
     // add `configuration` to the URL query string
     if (getConfiguration() != null) {
       joiner.add(getConfiguration().toUrlQueryString(prefix + "configuration" + suffix));
+    }
+
+    // add `next_run_at` to the URL query string
+    if (getNextRunAt() != null) {
+      joiner.add(String.format(java.util.Locale.ROOT, "%snext_run_at%s=%s", prefix, suffix, ApiClient.urlEncode(ApiClient.valueToString(getNextRunAt()))));
     }
 
     return joiner.toString();

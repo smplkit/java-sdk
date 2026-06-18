@@ -520,28 +520,26 @@ public class JobsApi {
 
   /**
    * List Jobs
-   * List this account&#39;s jobs.  Default sort is &#x60;name&#x60; ascending. Sort by &#x60;name&#x60;, &#x60;created_at&#x60;, &#x60;updated_at&#x60;, &#x60;next_run_at&#x60;, or &#x60;enabled&#x60;, ascending or descending (prefix &#x60;-&#x60; for descending). Filter with &#x60;filter[enabled]&#x60; (enabled in at least one environment), &#x60;filter[recurring]&#x60;, and &#x60;filter[name]&#x60; (case-insensitive substring match on the name); filters compose with AND. A scoped caller sees each job&#39;s &#x60;environments&#x60; map narrowed to the environments it may access.
-   * @param filterEnabled  (optional)
+   * List this account&#39;s jobs.  Default sort is &#x60;name&#x60; ascending. Sort by &#x60;name&#x60;, &#x60;created_at&#x60;, or &#x60;updated_at&#x60;, ascending or descending (prefix &#x60;-&#x60; for descending). Filter with &#x60;filter[recurring]&#x60; and &#x60;filter[name]&#x60; (case-insensitive substring match on the name); filters compose with AND. Each job reports its per-environment enablement and &#x60;next_run_at&#x60; inside its &#x60;environments&#x60; map; a scoped caller sees that map narrowed to the environments it may access.
    * @param filterRecurring  (optional)
    * @param filterName Case-insensitive substring match on the job &#x60;name&#x60; (matches when the name contains the given text). (optional)
-   * @param sort Field to sort by. Prefix with &#x60;-&#x60; for descending order. Default: &#x60;name&#x60;. Allowed values: &#x60;created_at&#x60;, &#x60;-created_at&#x60;, &#x60;enabled&#x60;, &#x60;-enabled&#x60;, &#x60;name&#x60;, &#x60;-name&#x60;, &#x60;next_run_at&#x60;, &#x60;-next_run_at&#x60;, &#x60;updated_at&#x60;, &#x60;-updated_at&#x60;. (optional, default to name)
+   * @param sort Field to sort by. Prefix with &#x60;-&#x60; for descending order. Default: &#x60;name&#x60;. Allowed values: &#x60;created_at&#x60;, &#x60;-created_at&#x60;, &#x60;name&#x60;, &#x60;-name&#x60;, &#x60;updated_at&#x60;, &#x60;-updated_at&#x60;. (optional, default to name)
    * @param pageNumber 1-based page number to return. Optional; defaults to &#x60;1&#x60; when omitted. Must be &#x60;&gt;&#x3D; 1&#x60; — requests with a smaller value are rejected with a 400 error. (optional, default to 1)
    * @param pageSize Number of items per page. Optional; defaults to &#x60;1000&#x60; when omitted. Must be between &#x60;1&#x60; and &#x60;1000&#x60; inclusive — requests outside that range are rejected with a 400 error. (optional, default to 1000)
    * @param metaTotal When &#x60;true&#x60;, the response&#39;s &#x60;meta.pagination&#x60; block includes &#x60;total&#x60; (the total number of matching items across all pages) and &#x60;total_pages&#x60;. Computing these requires an extra &#x60;COUNT&#x60; query, so omit (or pass &#x60;false&#x60;) when the totals are not needed. Defaults to &#x60;false&#x60;. (optional, default to false)
    * @return JobListResponse
    * @throws ApiException if fails to make API call
    */
-  public JobListResponse listJobs(@jakarta.annotation.Nullable Boolean filterEnabled, @jakarta.annotation.Nullable Boolean filterRecurring, @jakarta.annotation.Nullable String filterName, @jakarta.annotation.Nullable String sort, @jakarta.annotation.Nullable Integer pageNumber, @jakarta.annotation.Nullable Integer pageSize, @jakarta.annotation.Nullable Boolean metaTotal) throws ApiException {
-    return listJobs(filterEnabled, filterRecurring, filterName, sort, pageNumber, pageSize, metaTotal, null);
+  public JobListResponse listJobs(@jakarta.annotation.Nullable Boolean filterRecurring, @jakarta.annotation.Nullable String filterName, @jakarta.annotation.Nullable String sort, @jakarta.annotation.Nullable Integer pageNumber, @jakarta.annotation.Nullable Integer pageSize, @jakarta.annotation.Nullable Boolean metaTotal) throws ApiException {
+    return listJobs(filterRecurring, filterName, sort, pageNumber, pageSize, metaTotal, null);
   }
 
   /**
    * List Jobs
-   * List this account&#39;s jobs.  Default sort is &#x60;name&#x60; ascending. Sort by &#x60;name&#x60;, &#x60;created_at&#x60;, &#x60;updated_at&#x60;, &#x60;next_run_at&#x60;, or &#x60;enabled&#x60;, ascending or descending (prefix &#x60;-&#x60; for descending). Filter with &#x60;filter[enabled]&#x60; (enabled in at least one environment), &#x60;filter[recurring]&#x60;, and &#x60;filter[name]&#x60; (case-insensitive substring match on the name); filters compose with AND. A scoped caller sees each job&#39;s &#x60;environments&#x60; map narrowed to the environments it may access.
-   * @param filterEnabled  (optional)
+   * List this account&#39;s jobs.  Default sort is &#x60;name&#x60; ascending. Sort by &#x60;name&#x60;, &#x60;created_at&#x60;, or &#x60;updated_at&#x60;, ascending or descending (prefix &#x60;-&#x60; for descending). Filter with &#x60;filter[recurring]&#x60; and &#x60;filter[name]&#x60; (case-insensitive substring match on the name); filters compose with AND. Each job reports its per-environment enablement and &#x60;next_run_at&#x60; inside its &#x60;environments&#x60; map; a scoped caller sees that map narrowed to the environments it may access.
    * @param filterRecurring  (optional)
    * @param filterName Case-insensitive substring match on the job &#x60;name&#x60; (matches when the name contains the given text). (optional)
-   * @param sort Field to sort by. Prefix with &#x60;-&#x60; for descending order. Default: &#x60;name&#x60;. Allowed values: &#x60;created_at&#x60;, &#x60;-created_at&#x60;, &#x60;enabled&#x60;, &#x60;-enabled&#x60;, &#x60;name&#x60;, &#x60;-name&#x60;, &#x60;next_run_at&#x60;, &#x60;-next_run_at&#x60;, &#x60;updated_at&#x60;, &#x60;-updated_at&#x60;. (optional, default to name)
+   * @param sort Field to sort by. Prefix with &#x60;-&#x60; for descending order. Default: &#x60;name&#x60;. Allowed values: &#x60;created_at&#x60;, &#x60;-created_at&#x60;, &#x60;name&#x60;, &#x60;-name&#x60;, &#x60;updated_at&#x60;, &#x60;-updated_at&#x60;. (optional, default to name)
    * @param pageNumber 1-based page number to return. Optional; defaults to &#x60;1&#x60; when omitted. Must be &#x60;&gt;&#x3D; 1&#x60; — requests with a smaller value are rejected with a 400 error. (optional, default to 1)
    * @param pageSize Number of items per page. Optional; defaults to &#x60;1000&#x60; when omitted. Must be between &#x60;1&#x60; and &#x60;1000&#x60; inclusive — requests outside that range are rejected with a 400 error. (optional, default to 1000)
    * @param metaTotal When &#x60;true&#x60;, the response&#39;s &#x60;meta.pagination&#x60; block includes &#x60;total&#x60; (the total number of matching items across all pages) and &#x60;total_pages&#x60;. Computing these requires an extra &#x60;COUNT&#x60; query, so omit (or pass &#x60;false&#x60;) when the totals are not needed. Defaults to &#x60;false&#x60;. (optional, default to false)
@@ -549,35 +547,33 @@ public class JobsApi {
    * @return JobListResponse
    * @throws ApiException if fails to make API call
    */
-  public JobListResponse listJobs(@jakarta.annotation.Nullable Boolean filterEnabled, @jakarta.annotation.Nullable Boolean filterRecurring, @jakarta.annotation.Nullable String filterName, @jakarta.annotation.Nullable String sort, @jakarta.annotation.Nullable Integer pageNumber, @jakarta.annotation.Nullable Integer pageSize, @jakarta.annotation.Nullable Boolean metaTotal, Map<String, String> headers) throws ApiException {
-    ApiResponse<JobListResponse> localVarResponse = listJobsWithHttpInfo(filterEnabled, filterRecurring, filterName, sort, pageNumber, pageSize, metaTotal, headers);
+  public JobListResponse listJobs(@jakarta.annotation.Nullable Boolean filterRecurring, @jakarta.annotation.Nullable String filterName, @jakarta.annotation.Nullable String sort, @jakarta.annotation.Nullable Integer pageNumber, @jakarta.annotation.Nullable Integer pageSize, @jakarta.annotation.Nullable Boolean metaTotal, Map<String, String> headers) throws ApiException {
+    ApiResponse<JobListResponse> localVarResponse = listJobsWithHttpInfo(filterRecurring, filterName, sort, pageNumber, pageSize, metaTotal, headers);
     return localVarResponse.getData();
   }
 
   /**
    * List Jobs
-   * List this account&#39;s jobs.  Default sort is &#x60;name&#x60; ascending. Sort by &#x60;name&#x60;, &#x60;created_at&#x60;, &#x60;updated_at&#x60;, &#x60;next_run_at&#x60;, or &#x60;enabled&#x60;, ascending or descending (prefix &#x60;-&#x60; for descending). Filter with &#x60;filter[enabled]&#x60; (enabled in at least one environment), &#x60;filter[recurring]&#x60;, and &#x60;filter[name]&#x60; (case-insensitive substring match on the name); filters compose with AND. A scoped caller sees each job&#39;s &#x60;environments&#x60; map narrowed to the environments it may access.
-   * @param filterEnabled  (optional)
+   * List this account&#39;s jobs.  Default sort is &#x60;name&#x60; ascending. Sort by &#x60;name&#x60;, &#x60;created_at&#x60;, or &#x60;updated_at&#x60;, ascending or descending (prefix &#x60;-&#x60; for descending). Filter with &#x60;filter[recurring]&#x60; and &#x60;filter[name]&#x60; (case-insensitive substring match on the name); filters compose with AND. Each job reports its per-environment enablement and &#x60;next_run_at&#x60; inside its &#x60;environments&#x60; map; a scoped caller sees that map narrowed to the environments it may access.
    * @param filterRecurring  (optional)
    * @param filterName Case-insensitive substring match on the job &#x60;name&#x60; (matches when the name contains the given text). (optional)
-   * @param sort Field to sort by. Prefix with &#x60;-&#x60; for descending order. Default: &#x60;name&#x60;. Allowed values: &#x60;created_at&#x60;, &#x60;-created_at&#x60;, &#x60;enabled&#x60;, &#x60;-enabled&#x60;, &#x60;name&#x60;, &#x60;-name&#x60;, &#x60;next_run_at&#x60;, &#x60;-next_run_at&#x60;, &#x60;updated_at&#x60;, &#x60;-updated_at&#x60;. (optional, default to name)
+   * @param sort Field to sort by. Prefix with &#x60;-&#x60; for descending order. Default: &#x60;name&#x60;. Allowed values: &#x60;created_at&#x60;, &#x60;-created_at&#x60;, &#x60;name&#x60;, &#x60;-name&#x60;, &#x60;updated_at&#x60;, &#x60;-updated_at&#x60;. (optional, default to name)
    * @param pageNumber 1-based page number to return. Optional; defaults to &#x60;1&#x60; when omitted. Must be &#x60;&gt;&#x3D; 1&#x60; — requests with a smaller value are rejected with a 400 error. (optional, default to 1)
    * @param pageSize Number of items per page. Optional; defaults to &#x60;1000&#x60; when omitted. Must be between &#x60;1&#x60; and &#x60;1000&#x60; inclusive — requests outside that range are rejected with a 400 error. (optional, default to 1000)
    * @param metaTotal When &#x60;true&#x60;, the response&#39;s &#x60;meta.pagination&#x60; block includes &#x60;total&#x60; (the total number of matching items across all pages) and &#x60;total_pages&#x60;. Computing these requires an extra &#x60;COUNT&#x60; query, so omit (or pass &#x60;false&#x60;) when the totals are not needed. Defaults to &#x60;false&#x60;. (optional, default to false)
    * @return ApiResponse&lt;JobListResponse&gt;
    * @throws ApiException if fails to make API call
    */
-  public ApiResponse<JobListResponse> listJobsWithHttpInfo(@jakarta.annotation.Nullable Boolean filterEnabled, @jakarta.annotation.Nullable Boolean filterRecurring, @jakarta.annotation.Nullable String filterName, @jakarta.annotation.Nullable String sort, @jakarta.annotation.Nullable Integer pageNumber, @jakarta.annotation.Nullable Integer pageSize, @jakarta.annotation.Nullable Boolean metaTotal) throws ApiException {
-    return listJobsWithHttpInfo(filterEnabled, filterRecurring, filterName, sort, pageNumber, pageSize, metaTotal, null);
+  public ApiResponse<JobListResponse> listJobsWithHttpInfo(@jakarta.annotation.Nullable Boolean filterRecurring, @jakarta.annotation.Nullable String filterName, @jakarta.annotation.Nullable String sort, @jakarta.annotation.Nullable Integer pageNumber, @jakarta.annotation.Nullable Integer pageSize, @jakarta.annotation.Nullable Boolean metaTotal) throws ApiException {
+    return listJobsWithHttpInfo(filterRecurring, filterName, sort, pageNumber, pageSize, metaTotal, null);
   }
 
   /**
    * List Jobs
-   * List this account&#39;s jobs.  Default sort is &#x60;name&#x60; ascending. Sort by &#x60;name&#x60;, &#x60;created_at&#x60;, &#x60;updated_at&#x60;, &#x60;next_run_at&#x60;, or &#x60;enabled&#x60;, ascending or descending (prefix &#x60;-&#x60; for descending). Filter with &#x60;filter[enabled]&#x60; (enabled in at least one environment), &#x60;filter[recurring]&#x60;, and &#x60;filter[name]&#x60; (case-insensitive substring match on the name); filters compose with AND. A scoped caller sees each job&#39;s &#x60;environments&#x60; map narrowed to the environments it may access.
-   * @param filterEnabled  (optional)
+   * List this account&#39;s jobs.  Default sort is &#x60;name&#x60; ascending. Sort by &#x60;name&#x60;, &#x60;created_at&#x60;, or &#x60;updated_at&#x60;, ascending or descending (prefix &#x60;-&#x60; for descending). Filter with &#x60;filter[recurring]&#x60; and &#x60;filter[name]&#x60; (case-insensitive substring match on the name); filters compose with AND. Each job reports its per-environment enablement and &#x60;next_run_at&#x60; inside its &#x60;environments&#x60; map; a scoped caller sees that map narrowed to the environments it may access.
    * @param filterRecurring  (optional)
    * @param filterName Case-insensitive substring match on the job &#x60;name&#x60; (matches when the name contains the given text). (optional)
-   * @param sort Field to sort by. Prefix with &#x60;-&#x60; for descending order. Default: &#x60;name&#x60;. Allowed values: &#x60;created_at&#x60;, &#x60;-created_at&#x60;, &#x60;enabled&#x60;, &#x60;-enabled&#x60;, &#x60;name&#x60;, &#x60;-name&#x60;, &#x60;next_run_at&#x60;, &#x60;-next_run_at&#x60;, &#x60;updated_at&#x60;, &#x60;-updated_at&#x60;. (optional, default to name)
+   * @param sort Field to sort by. Prefix with &#x60;-&#x60; for descending order. Default: &#x60;name&#x60;. Allowed values: &#x60;created_at&#x60;, &#x60;-created_at&#x60;, &#x60;name&#x60;, &#x60;-name&#x60;, &#x60;updated_at&#x60;, &#x60;-updated_at&#x60;. (optional, default to name)
    * @param pageNumber 1-based page number to return. Optional; defaults to &#x60;1&#x60; when omitted. Must be &#x60;&gt;&#x3D; 1&#x60; — requests with a smaller value are rejected with a 400 error. (optional, default to 1)
    * @param pageSize Number of items per page. Optional; defaults to &#x60;1000&#x60; when omitted. Must be between &#x60;1&#x60; and &#x60;1000&#x60; inclusive — requests outside that range are rejected with a 400 error. (optional, default to 1000)
    * @param metaTotal When &#x60;true&#x60;, the response&#39;s &#x60;meta.pagination&#x60; block includes &#x60;total&#x60; (the total number of matching items across all pages) and &#x60;total_pages&#x60;. Computing these requires an extra &#x60;COUNT&#x60; query, so omit (or pass &#x60;false&#x60;) when the totals are not needed. Defaults to &#x60;false&#x60;. (optional, default to false)
@@ -585,8 +581,8 @@ public class JobsApi {
    * @return ApiResponse&lt;JobListResponse&gt;
    * @throws ApiException if fails to make API call
    */
-  public ApiResponse<JobListResponse> listJobsWithHttpInfo(@jakarta.annotation.Nullable Boolean filterEnabled, @jakarta.annotation.Nullable Boolean filterRecurring, @jakarta.annotation.Nullable String filterName, @jakarta.annotation.Nullable String sort, @jakarta.annotation.Nullable Integer pageNumber, @jakarta.annotation.Nullable Integer pageSize, @jakarta.annotation.Nullable Boolean metaTotal, Map<String, String> headers) throws ApiException {
-    HttpRequest.Builder localVarRequestBuilder = listJobsRequestBuilder(filterEnabled, filterRecurring, filterName, sort, pageNumber, pageSize, metaTotal, headers);
+  public ApiResponse<JobListResponse> listJobsWithHttpInfo(@jakarta.annotation.Nullable Boolean filterRecurring, @jakarta.annotation.Nullable String filterName, @jakarta.annotation.Nullable String sort, @jakarta.annotation.Nullable Integer pageNumber, @jakarta.annotation.Nullable Integer pageSize, @jakarta.annotation.Nullable Boolean metaTotal, Map<String, String> headers) throws ApiException {
+    HttpRequest.Builder localVarRequestBuilder = listJobsRequestBuilder(filterRecurring, filterName, sort, pageNumber, pageSize, metaTotal, headers);
     try {
       HttpResponse<InputStream> localVarResponse = memberVarHttpClient.send(
           localVarRequestBuilder.build(),
@@ -633,7 +629,7 @@ public class JobsApi {
     }
   }
 
-  private HttpRequest.Builder listJobsRequestBuilder(@jakarta.annotation.Nullable Boolean filterEnabled, @jakarta.annotation.Nullable Boolean filterRecurring, @jakarta.annotation.Nullable String filterName, @jakarta.annotation.Nullable String sort, @jakarta.annotation.Nullable Integer pageNumber, @jakarta.annotation.Nullable Integer pageSize, @jakarta.annotation.Nullable Boolean metaTotal, Map<String, String> headers) throws ApiException {
+  private HttpRequest.Builder listJobsRequestBuilder(@jakarta.annotation.Nullable Boolean filterRecurring, @jakarta.annotation.Nullable String filterName, @jakarta.annotation.Nullable String sort, @jakarta.annotation.Nullable Integer pageNumber, @jakarta.annotation.Nullable Integer pageSize, @jakarta.annotation.Nullable Boolean metaTotal, Map<String, String> headers) throws ApiException {
 
     HttpRequest.Builder localVarRequestBuilder = HttpRequest.newBuilder();
 
@@ -642,8 +638,6 @@ public class JobsApi {
     List<Pair> localVarQueryParams = new ArrayList<>();
     StringJoiner localVarQueryStringJoiner = new StringJoiner("&");
     String localVarQueryParameterBaseName;
-    localVarQueryParameterBaseName = "filter[enabled]";
-    localVarQueryParams.addAll(ApiClient.parameterToPairs("filter[enabled]", filterEnabled));
     localVarQueryParameterBaseName = "filter[recurring]";
     localVarQueryParams.addAll(ApiClient.parameterToPairs("filter[recurring]", filterRecurring));
     localVarQueryParameterBaseName = "filter[name]";
@@ -809,7 +803,7 @@ public class JobsApi {
 
   /**
    * Update Job
-   * Replace an existing job. Every writable field is overwritten.  Set enablement per environment via the &#x60;environments&#x60; map (a recurring job), or by recreating a one-off job in the desired environment. Editing the schedule recomputes the next fire time; changing only which environments are enabled preserves the existing cadence.
+   * Replace an existing job. Every writable field is overwritten.  Set enablement per environment via the &#x60;environments&#x60; map (a recurring job), or by recreating a one-off job in the desired environment. Each environment may carry its own cron &#x60;schedule&#x60; override. Editing an environment&#39;s effective schedule recomputes its next fire time; an edit that leaves an environment&#39;s schedule unchanged preserves its existing cadence.
    * @param jobId  (required)
    * @param jobRequest  (required)
    * @param xSmplkitEnvironment The environment to operate in. Names the single environment a one-off job is born in (or a manual run executes in). Optional when the credential is scoped to a single environment (which is then implied); required when the credential can reach several environments and the choice is otherwise ambiguous. Ignored for a recurring job, whose environments come from its &#x60;environments&#x60; map. (optional)
@@ -822,7 +816,7 @@ public class JobsApi {
 
   /**
    * Update Job
-   * Replace an existing job. Every writable field is overwritten.  Set enablement per environment via the &#x60;environments&#x60; map (a recurring job), or by recreating a one-off job in the desired environment. Editing the schedule recomputes the next fire time; changing only which environments are enabled preserves the existing cadence.
+   * Replace an existing job. Every writable field is overwritten.  Set enablement per environment via the &#x60;environments&#x60; map (a recurring job), or by recreating a one-off job in the desired environment. Each environment may carry its own cron &#x60;schedule&#x60; override. Editing an environment&#39;s effective schedule recomputes its next fire time; an edit that leaves an environment&#39;s schedule unchanged preserves its existing cadence.
    * @param jobId  (required)
    * @param jobRequest  (required)
    * @param xSmplkitEnvironment The environment to operate in. Names the single environment a one-off job is born in (or a manual run executes in). Optional when the credential is scoped to a single environment (which is then implied); required when the credential can reach several environments and the choice is otherwise ambiguous. Ignored for a recurring job, whose environments come from its &#x60;environments&#x60; map. (optional)
@@ -837,7 +831,7 @@ public class JobsApi {
 
   /**
    * Update Job
-   * Replace an existing job. Every writable field is overwritten.  Set enablement per environment via the &#x60;environments&#x60; map (a recurring job), or by recreating a one-off job in the desired environment. Editing the schedule recomputes the next fire time; changing only which environments are enabled preserves the existing cadence.
+   * Replace an existing job. Every writable field is overwritten.  Set enablement per environment via the &#x60;environments&#x60; map (a recurring job), or by recreating a one-off job in the desired environment. Each environment may carry its own cron &#x60;schedule&#x60; override. Editing an environment&#39;s effective schedule recomputes its next fire time; an edit that leaves an environment&#39;s schedule unchanged preserves its existing cadence.
    * @param jobId  (required)
    * @param jobRequest  (required)
    * @param xSmplkitEnvironment The environment to operate in. Names the single environment a one-off job is born in (or a manual run executes in). Optional when the credential is scoped to a single environment (which is then implied); required when the credential can reach several environments and the choice is otherwise ambiguous. Ignored for a recurring job, whose environments come from its &#x60;environments&#x60; map. (optional)
@@ -850,7 +844,7 @@ public class JobsApi {
 
   /**
    * Update Job
-   * Replace an existing job. Every writable field is overwritten.  Set enablement per environment via the &#x60;environments&#x60; map (a recurring job), or by recreating a one-off job in the desired environment. Editing the schedule recomputes the next fire time; changing only which environments are enabled preserves the existing cadence.
+   * Replace an existing job. Every writable field is overwritten.  Set enablement per environment via the &#x60;environments&#x60; map (a recurring job), or by recreating a one-off job in the desired environment. Each environment may carry its own cron &#x60;schedule&#x60; override. Editing an environment&#39;s effective schedule recomputes its next fire time; an edit that leaves an environment&#39;s schedule unchanged preserves its existing cadence.
    * @param jobId  (required)
    * @param jobRequest  (required)
    * @param xSmplkitEnvironment The environment to operate in. Names the single environment a one-off job is born in (or a manual run executes in). Optional when the credential is scoped to a single environment (which is then implied); required when the credential can reach several environments and the choice is otherwise ambiguous. Ignored for a recurring job, whose environments come from its &#x60;environments&#x60; map. (optional)

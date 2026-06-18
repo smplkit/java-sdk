@@ -142,7 +142,7 @@ public class Usage {
   }
 
   /**
-   * Number of currently-enabled jobs.
+   * Number of recurring (scheduled) jobs.
    * @return activeJobs
    */
   @jakarta.annotation.Nonnull
@@ -166,7 +166,7 @@ public class Usage {
   }
 
   /**
-   * Maximum enabled jobs the plan allows (&#x60;-1&#x60; means unlimited).
+   * Maximum recurring jobs the plan allows (&#x60;-1&#x60; means unlimited).
    * @return activeJobsLimit
    */
   @jakarta.annotation.Nonnull
