@@ -2,6 +2,7 @@ package com.smplkit.jobs;
 
 import com.smplkit.internal.generated.jobs.ApiException;
 
+import java.time.OffsetDateTime;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.CompletableFuture;
@@ -14,7 +15,8 @@ import java.util.concurrent.ForkJoinPool;
  *
  * <p>Holds a sync {@link JobsClient} as the single source of truth for state.
  * Each I/O method returns a {@code CompletableFuture<T>} scheduled on the
- * configured {@link Executor}; {@link #new_} is synchronous (no I/O). Run
+ * configured {@link Executor}; the job constructors ({@link #newRecurringJob},
+ * {@link #newManualJob}, {@link #schedule}) are synchronous (no I/O). Run
  * actions live on the async {@link #runs} surface.</p>
  *
  * <p>Use {@link #create()} for default credentials and the common-pool
@@ -82,25 +84,112 @@ public final class AsyncJobsClient implements AutoCloseable {
     public Executor executor() { return executor; }
 
     /**
-     * Return an unsaved {@link Job} with default {@code description} (none), no
-     * per-environment overrides, and {@code concurrencyPolicy} ({@code "ALLOW"}).
-     * Call {@code .save()} / {@code .saveAsync()} to create it. Synchronous —
-     * no I/O.
+     * Return an unsaved recurring {@link Job} with default {@code description}
+     * (none), no per-environment overrides, and {@code concurrencyPolicy}
+     * ({@code "ALLOW"}). Call {@code .save()} / {@code .saveAsync()} to create
+     * it. Synchronous — no I/O.
      *
      * @param id stable caller-supplied unique identifier for the job. Unique
      *     within the account and immutable; the service returns 409 if another
      *     live job already uses this id.
      * @param name human-readable name for the job
-     * @param schedule when the job runs. One of: a 5-field cron expression
-     *     evaluated in UTC (recurring); an ISO-8601 datetime (a one-off run at
-     *     that instant); or the literal {@code "now"} (run once, as soon as
-     *     possible). A datetime or {@code "now"} job disables itself after it
-     *     fires.
+     * @param schedule the base cadence — a 5-field cron expression evaluated in
+     *     UTC (e.g. {@code "0 2 * * *"}) — that every environment inherits
+     *     unless it sets its own override
      * @param configuration the HTTP request the job sends each time it fires
-     * @return an unsaved {@link Job} bound to the underlying sync client
+     * @return an unsaved recurring {@link Job} bound to the underlying sync client
      */
-    public Job new_(String id, String name, String schedule, HttpConfig configuration) {
-        return delegate.new_(id, name, schedule, configuration);
+    public Job newRecurringJob(String id, String name, String schedule, HttpConfig configuration) {
+        return delegate.newRecurringJob(id, name, schedule, configuration);
+    }
+
+    /**
+     * Return an unsaved recurring {@link Job}, setting every job field at
+     * construction. Call {@code .save()} / {@code .saveAsync()} to create it.
+     * Synchronous — no I/O.
+     *
+     * @param id stable caller-supplied unique identifier for the job. Unique
+     *     within the account and immutable; the service returns 409 if another
+     *     live job already uses this id.
+     * @param name human-readable name for the job
+     * @param schedule the base cron cadence (see
+     *     {@link #newRecurringJob(String, String, String, HttpConfig)})
+     * @param configuration the HTTP request the job sends each time it fires
+     * @param description free-text description for the job; {@code null} for none
+     * @param environments per-environment overrides keyed by environment key;
+     *     {@code null} starts with no overrides
+     * @param concurrencyPolicy how overlapping runs are handled. {@code "ALLOW"}
+     *     (the default and only value today) permits a new run to start while a
+     *     previous one is still in flight
+     * @return an unsaved recurring {@link Job} bound to the underlying sync client
+     */
+    public Job newRecurringJob(String id, String name, String schedule, HttpConfig configuration,
+                               String description, Map<String, JobEnvironment> environments,
+                               String concurrencyPolicy) {
+        return delegate.newRecurringJob(id, name, schedule, configuration, description, environments,
+                concurrencyPolicy);
+    }
+
+    /**
+     * Return an unsaved manual {@link Job} with default {@code description}
+     * (none), no per-environment overrides, and {@code concurrencyPolicy}
+     * ({@code "ALLOW"}). Call {@code .save()} / {@code .saveAsync()} to create
+     * it. A manual job has no schedule — it never auto-fires and runs only when
+     * triggered. Synchronous — no I/O.
+     *
+     * @param id stable caller-supplied unique identifier for the job. Unique
+     *     within the account and immutable; the service returns 409 if another
+     *     live job already uses this id.
+     * @param name human-readable name for the job
+     * @param configuration the HTTP request the job sends each time it runs
+     * @return an unsaved manual {@link Job} bound to the underlying sync client
+     */
+    public Job newManualJob(String id, String name, HttpConfig configuration) {
+        return delegate.newManualJob(id, name, configuration);
+    }
+
+    /**
+     * Return an unsaved manual {@link Job}, setting every job field at
+     * construction. Call {@code .save()} / {@code .saveAsync()} to create it. A
+     * manual job has no schedule — it never auto-fires and runs only when
+     * triggered. Synchronous — no I/O.
+     *
+     * @param id stable caller-supplied unique identifier for the job. Unique
+     *     within the account and immutable; the service returns 409 if another
+     *     live job already uses this id.
+     * @param name human-readable name for the job
+     * @param configuration the HTTP request the job sends each time it runs
+     * @param description free-text description for the job; {@code null} for none
+     * @param environments per-environment overrides keyed by environment key;
+     *     {@code null} starts with no overrides
+     * @param concurrencyPolicy how overlapping runs are handled. {@code "ALLOW"}
+     *     (the default and only value today) permits a new run to start while a
+     *     previous one is still in flight
+     * @return an unsaved manual {@link Job} bound to the underlying sync client
+     */
+    public Job newManualJob(String id, String name, HttpConfig configuration,
+                            String description, Map<String, JobEnvironment> environments,
+                            String concurrencyPolicy) {
+        return delegate.newManualJob(id, name, configuration, description, environments,
+                concurrencyPolicy);
+    }
+
+    /**
+     * Return an unsaved one-off {@link Job} born in the client's configured
+     * environment. Call {@code .save()} / {@code .saveAsync()} to create it. A
+     * one-off job runs a single time at {@code schedule} and is then spent.
+     * Synchronous — no I/O.
+     *
+     * @param id stable caller-supplied unique identifier for the job. Unique
+     *     within the account and immutable; the service returns 409 if another
+     *     live job already uses this id.
+     * @param name human-readable name for the job
+     * @param schedule the instant the single run fires
+     * @param configuration the HTTP request the job sends when it runs
+     * @return an unsaved one-off {@link Job} bound to the underlying sync client
+     */
+    public Job schedule(String id, String name, OffsetDateTime schedule, HttpConfig configuration) {
+        return delegate.schedule(id, name, schedule, configuration);
     }
 
     /**
@@ -109,43 +198,41 @@ public final class AsyncJobsClient implements AutoCloseable {
      *
      * @param id stable caller-supplied unique identifier for the job
      * @param name human-readable name for the job
-     * @param schedule when the job runs (see {@link #new_(String, String, String, HttpConfig)})
-     * @param configuration the HTTP request the job sends each time it fires
-     * @param environment the environment a one-off job is born in; {@code null}
-     *     falls back to the client's configured environment
-     * @return an unsaved {@link Job} bound to the underlying sync client
+     * @param schedule the instant the single run fires
+     * @param configuration the HTTP request the job sends when it runs
+     * @param environment the environment the job is born in; {@code null} falls
+     *     back to the client's configured environment
+     * @return an unsaved one-off {@link Job} bound to the underlying sync client
      */
-    public Job new_(String id, String name, String schedule, HttpConfig configuration,
-                    String environment) {
-        return delegate.new_(id, name, schedule, configuration, environment);
+    public Job schedule(String id, String name, OffsetDateTime schedule, HttpConfig configuration,
+                        String environment) {
+        return delegate.schedule(id, name, schedule, configuration, environment);
     }
 
     /**
-     * Return an unsaved {@link Job}, setting every job field at construction.
-     * Call {@code .save()} / {@code .saveAsync()} to create it. Synchronous —
-     * no I/O.
+     * Return an unsaved one-off {@link Job}, setting every job field at
+     * construction. Call {@code .save()} / {@code .saveAsync()} to create it. A
+     * one-off job runs a single time at {@code schedule} and is then spent.
+     * Synchronous — no I/O.
      *
      * @param id stable caller-supplied unique identifier for the job. Unique
      *     within the account and immutable; the service returns 409 if another
      *     live job already uses this id.
      * @param name human-readable name for the job
-     * @param schedule when the job runs (see {@link #new_(String, String, String, HttpConfig)})
-     * @param configuration the HTTP request the job sends each time it fires
+     * @param schedule the instant the single run fires
+     * @param configuration the HTTP request the job sends when it runs
      * @param description free-text description for the job; {@code null} for none
-     * @param environments per-environment overrides for a recurring job, keyed
-     *     by environment key; {@code null} starts with no overrides
      * @param concurrencyPolicy how overlapping runs are handled. {@code "ALLOW"}
      *     (the default and only value today) permits a new run to start while a
      *     previous one is still in flight
-     * @param environment for a one-off job, the environment it is born in;
-     *     {@code null} falls back to the client's configured environment
-     * @return an unsaved {@link Job} bound to the underlying sync client
+     * @param environment the environment the job is born in; {@code null} falls
+     *     back to the client's configured environment
+     * @return an unsaved one-off {@link Job} bound to the underlying sync client
      */
-    public Job new_(String id, String name, String schedule, HttpConfig configuration,
-                    String description, Map<String, JobEnvironment> environments,
-                    String concurrencyPolicy, String environment) {
-        return delegate.new_(id, name, schedule, configuration, description, environments,
-                concurrencyPolicy, environment);
+    public Job schedule(String id, String name, OffsetDateTime schedule, HttpConfig configuration,
+                        String description, String concurrencyPolicy, String environment) {
+        return delegate.schedule(id, name, schedule, configuration, description, concurrencyPolicy,
+                environment);
     }
 
     /**
@@ -162,8 +249,11 @@ public final class AsyncJobsClient implements AutoCloseable {
     /**
      * List jobs in the account.
      *
-     * @param input filters and paging for the listing. {@code enabled} returns
-     *     only jobs with that enabled state ({@code null} lists both);
+     * @param input filters and paging for the listing. {@code kind} returns
+     *     only jobs of that {@link JobKind} ({@code null} lists recurring and
+     *     manual jobs; one-off jobs are omitted unless {@link JobKind#ONE_OFF}
+     *     is passed); {@code scheduled} returns only jobs with an upcoming fire
+     *     in some environment ({@code true}) or none ({@code false});
      *     {@code pageNumber} is the 1-based page ({@code null} returns the
      *     first page); {@code pageSize} is the max jobs per page ({@code null}
      *     uses the server default)

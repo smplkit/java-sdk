@@ -6,14 +6,15 @@ import java.time.OffsetDateTime;
  * Per-environment enablement, schedule, and optional configuration override for
  * a job.
  *
- * <p>A recurring job fires in a given environment only when that environment
- * has an entry in {@link Job#environments} with {@code enabled=true}; an
- * environment with no entry (or {@code enabled=false}) does not fire there.</p>
+ * <p>A job runs in a given environment only when that environment has an entry
+ * in {@link Job#environments} with {@code enabled=true} (scheduled there for a
+ * recurring job, triggerable there for a manual one); an environment with no
+ * entry (or {@code enabled=false}) is disabled there.</p>
  */
 public final class JobEnvironment {
 
     /**
-     * Whether the job fires (schedules runs) in this environment. Defaults to
+     * Whether the job is enabled in this environment. Defaults to
      * {@code false}.
      */
     public boolean enabled = false;
@@ -22,8 +23,8 @@ public final class JobEnvironment {
      * Optional per-environment cron schedule override. {@code null} (the
      * default) inherits the job's base {@link Job#schedule}. When set, it must
      * be a 5-field cron expression evaluated in UTC and is only meaningful on a
-     * recurring job — it varies the cadence within this environment, it cannot
-     * turn a one-off job recurring or vice-versa.
+     * recurring job — it varies the cadence within this environment. It cannot
+     * appear on a manual or one-off job, and cannot change a job's kind.
      */
     public String schedule = null;
 
