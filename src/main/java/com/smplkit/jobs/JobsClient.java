@@ -16,6 +16,7 @@ import com.smplkit.internal.generated.jobs.model.JobResource;
 import com.smplkit.internal.generated.jobs.model.JobResponse;
 
 import java.time.Duration;
+import java.time.OffsetDateTime;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -24,9 +25,10 @@ import java.util.Map;
 /**
  * Synchronous Smpl Jobs client.
  *
- * <p>Smpl Jobs runs an HTTP call on a schedule and records what happened each
- * time it fired. A single {@link JobsClient} (and its async counterpart
- * {@link AsyncJobsClient}) exposes the full surface, reachable two ways:</p>
+ * <p>Smpl Jobs runs an HTTP call — on a schedule or on demand — and records
+ * what happened each time it fired. A single {@link JobsClient} (and its async
+ * counterpart {@link AsyncJobsClient}) exposes the full surface, reachable two
+ * ways:</p>
  *
  * <ul>
  *   <li>{@code client.jobs} on {@link com.smplkit.SmplClient}</li>
@@ -34,12 +36,13 @@ import java.util.Map;
  *       need jobs.</li>
  * </ul>
  *
- * <p>A {@link Job} is an active record: build it with {@link #new_}, set
- * fields, and call {@code save()} (create when new, full-replace update when it
- * already exists) or {@code delete()}. A {@link Run} is a read-only record of
- * one execution; run history and run actions live on {@code jobs.runs}.</p>
+ * <p>A {@link Job} is an active record: build it with {@link #newRecurringJob},
+ * {@link #newManualJob}, or {@link #schedule}, set fields, and call
+ * {@code save()} (create when new, full-replace update when it already exists)
+ * or {@code delete()}. A {@link Run} is a read-only record of one execution;
+ * run history and run actions live on {@code jobs.runs}.</p>
  *
- * <p>Enablement is per environment: a recurring job supplies an
+ * <p>Enablement is per environment: a recurring or manual job supplies an
  * {@code environments} map to choose where it runs; a one-off job is born in a
  * single environment. A client-level {@code environment} (see {@link
  * JobsClientBuilder#environment(String)}) defaults the one-off birth
@@ -128,75 +131,155 @@ public final class JobsClient implements AutoCloseable {
     }
 
     /**
-     * Return an unsaved {@link Job} with default {@code description} (none), no
-     * per-environment overrides, and {@code concurrencyPolicy} ({@code "ALLOW"}).
-     * Call {@code .save()} to create it. A one-off job is born in the client's
-     * configured environment; a recurring job sets enablement per environment
-     * via {@link Job#setEnabled(boolean, String)}.
+     * Return an unsaved recurring {@link Job} with default {@code description}
+     * (none), no per-environment overrides, and {@code concurrencyPolicy}
+     * ({@code "ALLOW"}). Call {@code .save()} to create it. Set enablement per
+     * environment via {@link Job#setEnabled(boolean, String)}.
      *
      * @param id stable caller-supplied unique identifier for the job. Unique
      *     within the account and immutable; the service returns 409 if another
      *     live job already uses this id.
      * @param name human-readable name for the job
-     * @param schedule when the job runs. One of: a 5-field cron expression
-     *     evaluated in UTC (recurring); an ISO-8601 datetime (a one-off run at
-     *     that instant); or the literal {@code "now"} (run once, as soon as
-     *     possible). A datetime or {@code "now"} job disables itself after it
-     *     fires.
+     * @param schedule the base cadence — a 5-field cron expression evaluated in
+     *     UTC (e.g. {@code "0 2 * * *"}) — that every environment inherits
+     *     unless it sets its own override
      * @param configuration the HTTP request the job sends each time it fires
-     * @return an unsaved {@link Job} bound to this client
+     * @return an unsaved recurring {@link Job} bound to this client
      */
-    public Job new_(String id, String name, String schedule, HttpConfig configuration) {
+    public Job newRecurringJob(String id, String name, String schedule, HttpConfig configuration) {
         return newJob(id, name, schedule, configuration, null, new HashMap<>(), "ALLOW", null);
     }
 
     /**
-     * Return an unsaved one-off {@link Job} born in a named environment. Call
-     * {@code .save()} to create it. Use this for a {@code "now"} / datetime
-     * schedule: the job is created in {@code environment} (sent as the
-     * {@code X-Smplkit-Environment} header on save). Ignored for a recurring
-     * job, whose environments come from {@link Job#environments}.
-     *
-     * @param id stable caller-supplied unique identifier for the job
-     * @param name human-readable name for the job
-     * @param schedule when the job runs (see {@link #new_(String, String, String, HttpConfig)})
-     * @param configuration the HTTP request the job sends each time it fires
-     * @param environment the environment a one-off job is born in; {@code null}
-     *     falls back to the client's configured environment
-     * @return an unsaved {@link Job} bound to this client
-     */
-    public Job new_(String id, String name, String schedule, HttpConfig configuration,
-                    String environment) {
-        return newJob(id, name, schedule, configuration, null, new HashMap<>(), "ALLOW", environment);
-    }
-
-    /**
-     * Return an unsaved {@link Job}, setting every job field at construction.
-     * Call {@code .save()} to create it.
+     * Return an unsaved recurring {@link Job}, setting every job field at
+     * construction. Call {@code .save()} to create it.
      *
      * @param id stable caller-supplied unique identifier for the job. Unique
      *     within the account and immutable; the service returns 409 if another
      *     live job already uses this id.
      * @param name human-readable name for the job
-     * @param schedule when the job runs (see {@link #new_(String, String, String, HttpConfig)})
+     * @param schedule the base cron cadence (see
+     *     {@link #newRecurringJob(String, String, String, HttpConfig)})
      * @param configuration the HTTP request the job sends each time it fires
      * @param description free-text description for the job; {@code null} for none
-     * @param environments per-environment overrides for a recurring job, keyed
-     *     by environment key; a recurring job fires only in environments enabled
-     *     here. {@code null} starts with no overrides. Ignored for a one-off job.
+     * @param environments per-environment overrides keyed by environment key;
+     *     the job is scheduled only in environments enabled here. {@code null}
+     *     starts with no overrides
      * @param concurrencyPolicy how overlapping runs are handled. {@code "ALLOW"}
      *     (the default and only value today) permits a new run to start while a
      *     previous one is still in flight
-     * @param environment for a one-off job, the environment it is born in;
-     *     {@code null} falls back to the client's configured environment.
-     *     Ignored for a recurring job.
-     * @return an unsaved {@link Job} bound to this client
+     * @return an unsaved recurring {@link Job} bound to this client
      */
-    public Job new_(String id, String name, String schedule, HttpConfig configuration,
-                    String description, Map<String, JobEnvironment> environments,
-                    String concurrencyPolicy, String environment) {
+    public Job newRecurringJob(String id, String name, String schedule, HttpConfig configuration,
+                               String description, Map<String, JobEnvironment> environments,
+                               String concurrencyPolicy) {
         return newJob(id, name, schedule, configuration, description,
-                environments != null ? environments : new HashMap<>(), concurrencyPolicy, environment);
+                environments != null ? environments : new HashMap<>(), concurrencyPolicy, null);
+    }
+
+    /**
+     * Return an unsaved manual {@link Job} with default {@code description}
+     * (none), no per-environment overrides, and {@code concurrencyPolicy}
+     * ({@code "ALLOW"}). Call {@code .save()} to create it. A manual job has no
+     * schedule — it never auto-fires and runs only when triggered via
+     * {@link #run(String)} / {@link Job#trigger()}.
+     *
+     * @param id stable caller-supplied unique identifier for the job. Unique
+     *     within the account and immutable; the service returns 409 if another
+     *     live job already uses this id.
+     * @param name human-readable name for the job
+     * @param configuration the HTTP request the job sends each time it runs
+     * @return an unsaved manual {@link Job} bound to this client
+     */
+    public Job newManualJob(String id, String name, HttpConfig configuration) {
+        return newJob(id, name, null, configuration, null, new HashMap<>(), "ALLOW", null);
+    }
+
+    /**
+     * Return an unsaved manual {@link Job}, setting every job field at
+     * construction. Call {@code .save()} to create it. A manual job has no
+     * schedule — it never auto-fires and runs only when triggered.
+     *
+     * @param id stable caller-supplied unique identifier for the job. Unique
+     *     within the account and immutable; the service returns 409 if another
+     *     live job already uses this id.
+     * @param name human-readable name for the job
+     * @param configuration the HTTP request the job sends each time it runs
+     * @param description free-text description for the job; {@code null} for none
+     * @param environments per-environment overrides keyed by environment key;
+     *     the job is triggerable only in environments enabled here. {@code null}
+     *     starts with no overrides
+     * @param concurrencyPolicy how overlapping runs are handled. {@code "ALLOW"}
+     *     (the default and only value today) permits a new run to start while a
+     *     previous one is still in flight
+     * @return an unsaved manual {@link Job} bound to this client
+     */
+    public Job newManualJob(String id, String name, HttpConfig configuration,
+                            String description, Map<String, JobEnvironment> environments,
+                            String concurrencyPolicy) {
+        return newJob(id, name, null, configuration, description,
+                environments != null ? environments : new HashMap<>(), concurrencyPolicy, null);
+    }
+
+    /**
+     * Return an unsaved one-off {@link Job} born in the client's configured
+     * environment. Call {@code .save()} to create it. A one-off job runs a
+     * single time at {@code schedule} and is then spent.
+     *
+     * @param id stable caller-supplied unique identifier for the job. Unique
+     *     within the account and immutable; the service returns 409 if another
+     *     live job already uses this id.
+     * @param name human-readable name for the job
+     * @param schedule the instant the single run fires
+     * @param configuration the HTTP request the job sends when it runs
+     * @return an unsaved one-off {@link Job} bound to this client
+     */
+    public Job schedule(String id, String name, OffsetDateTime schedule, HttpConfig configuration) {
+        return newJob(id, name, schedule.toString(), configuration, null, new HashMap<>(), "ALLOW", null);
+    }
+
+    /**
+     * Return an unsaved one-off {@link Job} born in a named environment. Call
+     * {@code .save()} to create it. The job is created in {@code environment}
+     * (sent as the {@code X-Smplkit-Environment} header on save).
+     *
+     * @param id stable caller-supplied unique identifier for the job
+     * @param name human-readable name for the job
+     * @param schedule the instant the single run fires
+     * @param configuration the HTTP request the job sends when it runs
+     * @param environment the environment the job is born in; {@code null} falls
+     *     back to the client's configured environment
+     * @return an unsaved one-off {@link Job} bound to this client
+     */
+    public Job schedule(String id, String name, OffsetDateTime schedule, HttpConfig configuration,
+                        String environment) {
+        return newJob(id, name, schedule.toString(), configuration, null, new HashMap<>(), "ALLOW",
+                environment);
+    }
+
+    /**
+     * Return an unsaved one-off {@link Job}, setting every job field at
+     * construction. Call {@code .save()} to create it. A one-off job runs a
+     * single time at {@code schedule} and is then spent.
+     *
+     * @param id stable caller-supplied unique identifier for the job. Unique
+     *     within the account and immutable; the service returns 409 if another
+     *     live job already uses this id.
+     * @param name human-readable name for the job
+     * @param schedule the instant the single run fires
+     * @param configuration the HTTP request the job sends when it runs
+     * @param description free-text description for the job; {@code null} for none
+     * @param concurrencyPolicy how overlapping runs are handled. {@code "ALLOW"}
+     *     (the default and only value today) permits a new run to start while a
+     *     previous one is still in flight
+     * @param environment the environment the job is born in; {@code null} falls
+     *     back to the client's configured environment
+     * @return an unsaved one-off {@link Job} bound to this client
+     */
+    public Job schedule(String id, String name, OffsetDateTime schedule, HttpConfig configuration,
+                        String description, String concurrencyPolicy, String environment) {
+        return newJob(id, name, schedule.toString(), configuration, description,
+                new HashMap<>(), concurrencyPolicy, environment);
     }
 
     private Job newJob(String id, String name, String schedule, HttpConfig configuration,
@@ -224,10 +307,13 @@ public final class JobsClient implements AutoCloseable {
     /**
      * List jobs in the account.
      *
-     * @param input filters and paging for the listing. {@code recurring}
-     *     returns only recurring ({@code true}) or only one-off
-     *     ({@code false}) jobs ({@code null} lists both); {@code name} returns
-     *     only jobs whose name contains that text ({@code null} lists all);
+     * @param input filters and paging for the listing. {@code kind} returns
+     *     only jobs of that {@link JobKind} ({@code null} lists recurring and
+     *     manual jobs; one-off jobs are omitted unless {@link JobKind#ONE_OFF}
+     *     is passed); {@code scheduled} returns only jobs with an upcoming fire
+     *     in some environment ({@code true}) or none ({@code false}), and
+     *     {@code null} does not filter on scheduling; {@code name} returns only
+     *     jobs whose name contains that text ({@code null} lists all);
      *     {@code pageNumber} is the 1-based page ({@code null} returns the
      *     first page); {@code pageSize} is the max jobs per page ({@code null}
      *     uses the server default)
@@ -236,7 +322,8 @@ public final class JobsClient implements AutoCloseable {
      */
     public List<Job> list(ListJobsInput input) throws ApiException {
         JobListResponse resp = api.listJobs(
-            input.recurring, input.name, null, input.pageNumber, input.pageSize, null);
+            input.kind == null ? null : input.kind.getValue(), input.scheduled,
+            input.name, null, input.pageNumber, input.pageSize, null);
         List<Job> out = new ArrayList<>();
         if (resp.getData() != null) {
             for (JobResource r : resp.getData()) out.add(fromResource(r));
@@ -444,7 +531,8 @@ public final class JobsClient implements AutoCloseable {
         // environments map — true when the job is enabled in any environment.
         // The wire no longer carries a top-level ``enabled`` attribute.
         job.enabled = job.computeEnabledRollup();
-        job.recurring = a.getRecurring();
+        com.smplkit.internal.generated.jobs.model.Job.KindEnum genKind = a.getKind();
+        job.kind = genKind == null ? null : JobKind.fromValue(genKind.getValue());
         if (a.getType() != null) job.type = a.getType().getValue();
         if (a.getConcurrencyPolicy() != null) job.concurrencyPolicy = a.getConcurrencyPolicy().getValue();
         job.createdAt = a.getCreatedAt();

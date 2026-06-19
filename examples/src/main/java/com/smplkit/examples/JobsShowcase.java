@@ -18,14 +18,19 @@ import com.smplkit.jobs.HttpConfig;
 import com.smplkit.jobs.HttpHeader;
 import com.smplkit.jobs.HttpMethod;
 import com.smplkit.jobs.Job;
+import com.smplkit.jobs.JobKind;
 import com.smplkit.jobs.JobsClient;
+import com.smplkit.jobs.ListJobsInput;
 import com.smplkit.jobs.Run;
+import com.smplkit.jobs.RunTrigger;
 
+import java.time.OffsetDateTime;
 import java.util.List;
 
 public final class JobsShowcase {
 
     private static final String RECURRING_JOB_ID = "showcase-recurring";
+    private static final String MANUAL_JOB_ID = "showcase-manual";
     private static final String ONEOFF_JOB_ID = "showcase-oneoff";
 
     public static void main(String[] args) throws Exception {
@@ -35,52 +40,53 @@ public final class JobsShowcase {
         JobsClient jobs = JobsClient.create();
         JobsSetup.setup(jobs);
         try {
-            // create a recurring job, enabled in production with a development override
+            // create a recurring job: a base schedule and configuration every
+            // environment inherits, with per-environment overrides
             HttpConfig config = new HttpConfig(
                     HttpMethod.POST,
                     "https://httpbin.org/post",
                     List.of(new HttpHeader("Authorization", "Bearer s3cr3t")));
             config.body = "{\"scope\": \"all\"}";
             config.timeout = 30;
-            Job job = jobs.new_(
+            Job job = jobs.newRecurringJob(
                     RECURRING_JOB_ID,
                     "Nightly cache warm",
                     "0 2 * * *",
                     config);
             job.description = "Warms the product cache every night at 02:00 UTC.";
+            job.setEnabled(true, "production");
+            job.setEnabled(true, "development");
+            job.setSchedule("0 */6 * * *", "development");
             HttpConfig developmentConfig = new HttpConfig(
                     HttpMethod.POST,
                     "https://development.example.com/cache/warm",
                     List.of(new HttpHeader("Authorization", "Bearer development-s3cr3t")));
             developmentConfig.body = "{\"scope\": \"all\"}";
             job.setConfiguration(developmentConfig, "development");
-            job.setEnabled(false, "development");
-            job.setEnabled(true, "production");
             job.save();
-            assert job.version == 1;
-            assert !job.isEnabled("development");
+            assert job.isRecurring();
             assert job.isEnabled("production");
+            assert job.getConfiguration("development").url.equals("https://development.example.com/cache/warm");
             System.out.println("Created recurring job " + job.id + " (v" + job.version + ")");
 
             // get a job
             Job fetched = jobs.get(RECURRING_JOB_ID);
-            assert !fetched.isEnabled("development");
-            assert fetched.isEnabled("production");
-            assert fetched.getConfiguration("development").url.equals("https://development.example.com/cache/warm");
+            assert fetched.environments.get("development").schedule.equals("0 */6 * * *");
             System.out.println("Fetched job " + RECURRING_JOB_ID);
 
-            // list jobs
-            List<Job> listing = jobs.list();
+            // list jobs, filtered to recurring jobs
+            ListJobsInput filter = new ListJobsInput();
+            filter.kind = JobKind.RECURRING;
+            List<Job> listing = jobs.list(filter);
             assert listing.stream().anyMatch(j -> j.id.equals(RECURRING_JOB_ID));
             System.out.println("Found job " + RECURRING_JOB_ID + " in the listing");
 
-            // update a job (the schedule is environment-agnostic)
+            // update a job
             job.name = "Nightly cache warm (v2)";
-            job.setSchedule("30 2 * * *");
-            job.setEnabled(true, "development");
+            job.setSchedule("30 2 * * *", "production");
             job.save();
-            assert job.version == 2 && job.isEnabled("development");
-            System.out.println("Updated job to v" + job.version + ": now enabled in production and development");
+            assert job.version == 2;
+            System.out.println("Updated job to v" + job.version);
 
             // trigger an immediate run
             Run run = job.trigger("production");
@@ -114,16 +120,31 @@ public final class JobsShowcase {
                 }
             }
 
-            // create a one-off job, born in a single environment
-            Job oneoff = jobs.new_(
+            // create a manual job (no schedule, runs only when triggered)
+            Job manual = jobs.newManualJob(
+                    MANUAL_JOB_ID,
+                    "On-demand reindex",
+                    new HttpConfig(HttpMethod.POST, "https://httpbin.org/post", List.of()));
+            manual.setEnabled(true, "production");
+            manual.save();
+            assert manual.isManual();
+            Run manualRun = manual.trigger("production");
+            assert manualRun.trigger.equals(RunTrigger.MANUAL.getValue());
+            System.out.println("Created manual job " + manual.id + " and triggered it on demand");
+
+            // schedule a one-off job to run tomorrow
+            OffsetDateTime tomorrow = OffsetDateTime.now().plusDays(1);
+            Job oneoff = jobs.schedule(
                     ONEOFF_JOB_ID,
                     "One-shot reindex",
-                    "now",
+                    tomorrow,
                     new HttpConfig(HttpMethod.POST, "https://httpbin.org/post", List.of()),
                     "development");
             oneoff.save();
-            assert oneoff.version == 1 && oneoff.isEnabled("development");
-            System.out.println("Created one-off job " + oneoff.id + " born in development");
+            assert oneoff.isOneOff();
+            assert oneoff.isEnabled("development");
+            assert oneoff.environments.get("development").nextRunAt != null;
+            System.out.println("Created one-off job " + oneoff.id + " to run in development");
 
             // delete a job
             job.delete();

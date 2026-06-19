@@ -25,7 +25,11 @@ public final class Run {
      * a rerun copies its source run's environment.
      */
     public final String environment;
-    /** Why the run exists: {@code SCHEDULE}, {@code MANUAL} (run now), or {@code RERUN}. */
+    /**
+     * Why the run exists, as the raw wire string — {@code SCHEDULE},
+     * {@code MANUAL} (run now), or {@code RERUN}. Compare against the
+     * {@link RunTrigger} constants' {@link RunTrigger#getValue()}.
+     */
     public final String trigger;
     /** The source run's id; set only when {@code trigger} is {@code RERUN}. */
     public final String rerunOf;

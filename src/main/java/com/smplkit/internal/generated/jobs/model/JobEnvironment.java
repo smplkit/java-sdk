@@ -101,7 +101,7 @@ public class JobEnvironment {
   }
 
   /**
-   * Per-environment schedule override. Omit to inherit the job&#39;s base &#x60;schedule&#x60;. When present, it must be a 5-field cron expression evaluated in **UTC** (e.g. &#x60;0 3 * * *&#x60;), and is only allowed on a recurring (cron) job — it varies the cadence within that environment, it cannot turn a one-off job recurring or vice-versa.
+   * Per-environment schedule override. Omit to inherit the job&#39;s base &#x60;schedule&#x60;. When present, it must be a 5-field cron expression evaluated in **UTC** (e.g. &#x60;0 3 * * *&#x60;), and is only allowed on a recurring (cron) job — it varies the cadence within that environment. It cannot appear on a manual or one-off job, and cannot change a job&#39;s kind.
    * @return schedule
    */
   @jakarta.annotation.Nullable

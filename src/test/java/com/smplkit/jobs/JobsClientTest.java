@@ -15,6 +15,7 @@ import java.net.InetSocketAddress;
 import java.net.URLDecoder;
 import java.nio.charset.StandardCharsets;
 import java.time.Duration;
+import java.time.OffsetDateTime;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -121,7 +122,7 @@ class JobsClientTest {
         String prodNextRun = enabled ? "\"2026-06-05T00:00:00Z\"" : "null";
         return "{\"id\":\"" + id + "\",\"type\":\"job\",\"attributes\":{"
                 + "\"name\":\"My Job\",\"description\":\"does a thing\","
-                + "\"recurring\":true,\"type\":\"http\","
+                + "\"kind\":\"recurring\",\"type\":\"http\","
                 + "\"schedule\":\"0 * * * *\","
                 + "\"configuration\":{\"method\":\"POST\",\"url\":\"https://api.example.com/hook\","
                 + "\"headers\":[{\"name\":\"X-Api-Key\",\"value\":\"secret\"}],"
@@ -136,14 +137,14 @@ class JobsClientTest {
 
     // A job carrying a rich environments map: production enabled (no override,
     // inherits base) and development disabled with a per-environment override.
-    private static String jobResourceWithEnvs(String id, int version, boolean enabled, boolean recurring) {
+    private static String jobResourceWithEnvs(String id, int version, boolean enabled, String kind) {
         // production: enabled, no config override (inherits base) but a per-env
         //   ``schedule`` override + read-only ``next_run_at``.
         // development: disabled, config override, no schedule override, null
         //   ``next_run_at`` (not enabled).
         return "{\"id\":\"" + id + "\",\"type\":\"job\",\"attributes\":{"
                 + "\"name\":\"My Job\",\"description\":\"does a thing\","
-                + "\"recurring\":" + recurring + ",\"type\":\"http\","
+                + "\"kind\":\"" + kind + "\",\"type\":\"http\","
                 + "\"schedule\":\"0 2 * * *\","
                 + "\"configuration\":{\"method\":\"POST\",\"url\":\"https://base.example.com/hook\","
                 + "\"headers\":[],\"body\":null,\"success_status\":\"2xx\",\"timeout\":30,"
@@ -194,9 +195,9 @@ class JobsClientTest {
             } else if (path.endsWith("/actions/run")) {
                 respondJson(ex, 200, "{\"data\":" + runResource("PENDING", "MANUAL", null, "production") + "}");
             } else if (path.startsWith("/api/v1/jobs/") && m.equals("GET")) {
-                respondJson(ex, 200, "{\"data\":" + jobResourceWithEnvs(JOB_ID, 1, true, true) + "}");
+                respondJson(ex, 200, "{\"data\":" + jobResourceWithEnvs(JOB_ID, 1, true, "recurring") + "}");
             } else if (path.startsWith("/api/v1/jobs/") && m.equals("PUT")) {
-                respondJson(ex, 200, "{\"data\":" + jobResourceWithEnvs(JOB_ID, 2, true, true) + "}");
+                respondJson(ex, 200, "{\"data\":" + jobResourceWithEnvs(JOB_ID, 2, true, "recurring") + "}");
             } else if (path.startsWith("/api/v1/jobs/") && m.equals("DELETE")) {
                 respondJson(ex, 204, "");
             } else if (path.equals("/api/v1/usage")) {
@@ -225,13 +226,13 @@ class JobsClientTest {
     }
 
     // -----------------------------------------------------------------
-    // new_ overloads — defaults / one-off birth env / full
+    // newRecurringJob / newManualJob / schedule — defaults, full, birth env
     // -----------------------------------------------------------------
 
     @Test
-    void newJob_fourArg_appliesDefaults() {
+    void newRecurringJob_fourArg_appliesDefaults() {
         try (JobsClient c = client()) {
-            Job job = c.new_(JOB_ID, "My Job", "0 * * * *", new HttpConfig("https://x"));
+            Job job = c.newRecurringJob(JOB_ID, "My Job", "0 * * * *", new HttpConfig("https://x"));
             assertEquals(JOB_ID, job.id);
             assertEquals("My Job", job.name);
             assertEquals("0 * * * *", job.schedule);
@@ -240,71 +241,159 @@ class JobsClientTest {
             assertTrue(job.environments.isEmpty());
             assertEquals("ALLOW", job.concurrencyPolicy);
             assertNull(job.createdAt);
+            assertNull(job.kind);                     // unsaved -> no server kind yet
             assertNull(job.birthEnvironment);         // no client env configured
         }
     }
 
     @Test
-    void newJob_fiveArg_setsBirthEnvironment() {
-        try (JobsClient c = client()) {
-            Job job = c.new_(JOB_ID, "My Job", "now", new HttpConfig("https://x"), "development");
-            assertEquals("development", job.birthEnvironment);
-        }
-    }
-
-    @Test
-    void newJob_fiveArg_nullEnv_fallsBackToClientEnv() {
-        try (JobsClient c = clientWithEnv("production")) {
-            Job job = c.new_(JOB_ID, "My Job", "now", new HttpConfig("https://x"), null);
-            assertEquals("production", job.birthEnvironment);
-        }
-    }
-
-    @Test
-    void newJob_fourArg_birthEnvDefaultsToClientEnv() {
-        try (JobsClient c = clientWithEnv("production")) {
-            Job job = c.new_(JOB_ID, "My Job", "now", new HttpConfig("https://x"));
-            assertEquals("production", job.birthEnvironment);
-        }
-    }
-
-    @Test
-    void newJob_eightArg_setsEveryField() {
+    void newRecurringJob_sevenArg_setsEveryField() {
         try (JobsClient c = client()) {
             Map<String, JobEnvironment> envs = new HashMap<>();
             envs.put("production", new JobEnvironment(true));
-            Job job = c.new_(JOB_ID, "My Job", "0 * * * *", new HttpConfig("https://x"),
-                    "a description", envs, "ALLOW", "production");
+            Job job = c.newRecurringJob(JOB_ID, "My Job", "0 * * * *", new HttpConfig("https://x"),
+                    "a description", envs, "ALLOW");
             assertEquals("a description", job.description);
             assertTrue(job.isEnabled("production"));
             assertEquals("ALLOW", job.concurrencyPolicy);
-            assertEquals("production", job.birthEnvironment);
+            assertNull(job.birthEnvironment);         // recurring jobs have no birth env
         }
     }
 
     @Test
-    void newJob_eightArg_nullEnvironments_startsEmpty() {
+    void newRecurringJob_sevenArg_nullEnvironments_startsEmpty() {
         try (JobsClient c = client()) {
-            Job job = c.new_(JOB_ID, "My Job", "0 * * * *", new HttpConfig("https://x"),
-                    null, null, "ALLOW", null);
+            Job job = c.newRecurringJob(JOB_ID, "My Job", "0 * * * *", new HttpConfig("https://x"),
+                    null, null, "ALLOW");
             assertTrue(job.environments.isEmpty());
         }
     }
 
     @Test
-    void asyncNewJob_overloads() {
-        try (AsyncJobsClient c = asyncClient()) {
-            assertNull(c.new_(JOB_ID, "My Job", "0 * * * *", new HttpConfig("https://x")).description);
-            assertEquals("development",
-                    c.new_(JOB_ID, "My Job", "now", new HttpConfig("https://x"), "development").birthEnvironment);
+    void newManualJob_threeArg_hasNoScheduleAndDefaults() {
+        try (JobsClient c = client()) {
+            Job job = c.newManualJob(JOB_ID, "Manual", new HttpConfig("https://x"));
+            assertNull(job.schedule);                 // a manual job has no schedule
+            assertNull(job.description);
+            assertTrue(job.environments.isEmpty());
+            assertEquals("ALLOW", job.concurrencyPolicy);
+            assertNull(job.birthEnvironment);
+        }
+    }
+
+    @Test
+    void newManualJob_sixArg_setsEveryField() {
+        try (JobsClient c = client()) {
             Map<String, JobEnvironment> envs = new HashMap<>();
             envs.put("production", new JobEnvironment(true));
-            Job full = c.new_(JOB_ID, "My Job", "0 * * * *", new HttpConfig("https://x"),
-                    "desc", envs, "ALLOW", "production");
-            assertEquals("desc", full.description);
-            assertTrue(full.isEnabled("production"));
-            assertEquals("production", full.birthEnvironment);
+            Job job = c.newManualJob(JOB_ID, "Manual", new HttpConfig("https://x"),
+                    "a description", envs, "ALLOW");
+            assertNull(job.schedule);
+            assertEquals("a description", job.description);
+            assertTrue(job.isEnabled("production"));
+            assertEquals("ALLOW", job.concurrencyPolicy);
         }
+    }
+
+    @Test
+    void newManualJob_sixArg_nullEnvironments_startsEmpty() {
+        try (JobsClient c = client()) {
+            Job job = c.newManualJob(JOB_ID, "Manual", new HttpConfig("https://x"), null, null, "ALLOW");
+            assertTrue(job.environments.isEmpty());
+        }
+    }
+
+    @Test
+    void schedule_fourArg_serializesDatetimeAndDefaultsBirthEnv() {
+        OffsetDateTime when = OffsetDateTime.parse("2030-01-01T12:30:00Z");
+        try (JobsClient c = client()) {
+            Job job = c.schedule(JOB_ID, "One", when, new HttpConfig("https://x"));
+            assertEquals(when.toString(), job.schedule);   // datetime -> ISO-8601 string
+            assertNull(job.birthEnvironment);              // no client env configured
+        }
+        try (JobsClient c = clientWithEnv("production")) {
+            Job job = c.schedule(JOB_ID, "One", when, new HttpConfig("https://x"));
+            assertEquals("production", job.birthEnvironment);  // falls back to client env
+        }
+    }
+
+    @Test
+    void schedule_fiveArg_setsBirthEnvironment() {
+        OffsetDateTime when = OffsetDateTime.parse("2030-01-01T12:30:00Z");
+        try (JobsClient c = client()) {
+            Job job = c.schedule(JOB_ID, "One", when, new HttpConfig("https://x"), "development");
+            assertEquals("development", job.birthEnvironment);
+        }
+        try (JobsClient c = clientWithEnv("production")) {
+            Job job = c.schedule(JOB_ID, "One", when, new HttpConfig("https://x"), null);
+            assertEquals("production", job.birthEnvironment);  // null falls back to client env
+        }
+    }
+
+    @Test
+    void schedule_sevenArg_setsEveryField() {
+        OffsetDateTime when = OffsetDateTime.parse("2030-01-01T12:30:00Z");
+        try (JobsClient c = client()) {
+            Job job = c.schedule(JOB_ID, "One", when, new HttpConfig("https://x"),
+                    "a description", "ALLOW", "staging");
+            assertEquals(when.toString(), job.schedule);
+            assertEquals("a description", job.description);
+            assertEquals("ALLOW", job.concurrencyPolicy);
+            assertEquals("staging", job.birthEnvironment);
+        }
+    }
+
+    @Test
+    void asyncConstructors_overloads() {
+        OffsetDateTime when = OffsetDateTime.parse("2030-01-01T12:30:00Z");
+        try (AsyncJobsClient c = asyncClient()) {
+            assertNull(c.newRecurringJob(JOB_ID, "My Job", "0 * * * *", new HttpConfig("https://x")).description);
+            Map<String, JobEnvironment> envs = new HashMap<>();
+            envs.put("production", new JobEnvironment(true));
+            Job recFull = c.newRecurringJob(JOB_ID, "My Job", "0 * * * *", new HttpConfig("https://x"),
+                    "desc", envs, "ALLOW");
+            assertEquals("desc", recFull.description);
+            assertTrue(recFull.isEnabled("production"));
+
+            Job manual = c.newManualJob(JOB_ID, "Manual", new HttpConfig("https://x"));
+            assertNull(manual.schedule);
+            Job manualFull = c.newManualJob(JOB_ID, "Manual", new HttpConfig("https://x"),
+                    "desc", envs, "ALLOW");
+            assertEquals("desc", manualFull.description);
+            assertTrue(manualFull.isEnabled("production"));
+
+            assertEquals(when.toString(),
+                    c.schedule(JOB_ID, "One", when, new HttpConfig("https://x")).schedule);
+            assertEquals("development",
+                    c.schedule(JOB_ID, "One", when, new HttpConfig("https://x"), "development").birthEnvironment);
+            Job oneoffFull = c.schedule(JOB_ID, "One", when, new HttpConfig("https://x"),
+                    "desc", "ALLOW", "staging");
+            assertEquals("staging", oneoffFull.birthEnvironment);
+        }
+    }
+
+    @Test
+    void kindPredicates() {
+        // isRecurring / isManual / isOneOff reflect the parsed kind; all false
+        // when kind is null (an unsaved or kind-less job).
+        Job rec = new Job(null, "k", "n", "0 * * * *", new HttpConfig("https://x"));
+        rec.kind = JobKind.RECURRING;
+        assertTrue(rec.isRecurring());
+        assertFalse(rec.isManual());
+        assertFalse(rec.isOneOff());
+        Job man = new Job(null, "k", "n", null, new HttpConfig("https://x"));
+        man.kind = JobKind.MANUAL;
+        assertTrue(man.isManual());
+        assertFalse(man.isRecurring());
+        assertFalse(man.isOneOff());
+        Job off = new Job(null, "k", "n", "now", new HttpConfig("https://x"));
+        off.kind = JobKind.ONE_OFF;
+        assertTrue(off.isOneOff());
+        assertFalse(off.isRecurring());
+        assertFalse(off.isManual());
+        Job none = new Job(null, "k", "n", null, new HttpConfig("https://x"));
+        assertNull(none.kind);
+        assertFalse(none.isRecurring() || none.isManual() || none.isOneOff());
     }
 
     // -----------------------------------------------------------------
@@ -315,7 +404,7 @@ class JobsClientTest {
     void perEnvironmentMutatorsAndGetters() {
         try (JobsClient c = client()) {
             HttpConfig base = new HttpConfig("https://base");
-            Job job = c.new_(JOB_ID, "My Job", "0 * * * *", base);
+            Job job = c.newRecurringJob(JOB_ID, "My Job", "0 * * * *", base);
 
             // roll-up + per-env enablement (the no-arg roll-up computes live)
             assertFalse(job.isEnabled());
@@ -378,7 +467,7 @@ class JobsClientTest {
             HttpConfig cfg = new HttpConfig(HttpMethod.POST, "https://api.example.com/hook",
                     List.of(new HttpHeader("X-Api-Key", "secret")));
             cfg.body = "{}";
-            Job job = c.new_(JOB_ID, "My Job", "0 * * * *", cfg);
+            Job job = c.newRecurringJob(JOB_ID, "My Job", "0 * * * *", cfg);
             job.description = "does a thing";
             assertNull(job.createdAt);
             job.save();
@@ -386,7 +475,7 @@ class JobsClientTest {
             assertEquals(1, job.version);
             assertEquals(HttpMethod.POST, job.configuration.method);
             assertEquals("http", job.type);
-            assertEquals(Boolean.TRUE, job.recurring);  // parsed back
+            assertEquals(JobKind.RECURRING, job.kind);  // parsed back
             job.name = "renamed";
             job.save();
             assertEquals(2, job.version);
@@ -400,8 +489,8 @@ class JobsClientTest {
             Map<String, JobEnvironment> envs = new HashMap<>();
             envs.put("production", new JobEnvironment(true)); // no override -> inherit base
             envs.put("development", new JobEnvironment(false, new HttpConfig("https://dev")));
-            Job job = c.new_(JOB_ID, "My Job", "0 * * * *", new HttpConfig("https://base"),
-                    null, envs, "ALLOW", null);
+            Job job = c.newRecurringJob(JOB_ID, "My Job", "0 * * * *", new HttpConfig("https://base"),
+                    null, envs, "ALLOW");
             job.save();
             JsonNode a = attrs();
             // base ``enabled`` roll-up is read-only — never written
@@ -419,19 +508,36 @@ class JobsClientTest {
     void createWithoutEnvironments_omitsEnvironmentsKey() throws Exception {
         installFullHandler();
         try (JobsClient c = client()) {
-            Job job = c.new_(JOB_ID, "My Job", "0 * * * *", new HttpConfig("https://base"));
+            Job job = c.newRecurringJob(JOB_ID, "My Job", "0 * * * *", new HttpConfig("https://base"));
             job.save();
             assertFalse(attrs().has("environments"), "empty environments map must be omitted");
         }
     }
 
     @Test
-    void createOneOff_sendsBirthEnvironmentHeader() throws Exception {
+    void scheduleOneOff_sendsBirthEnvironmentHeaderAndDatetime() throws Exception {
         installFullHandler();
         try (JobsClient c = client()) {
-            Job oneoff = c.new_(JOB_ID, "One-shot", "now", new HttpConfig("https://x"), "development");
+            OffsetDateTime when = OffsetDateTime.parse("2030-01-01T12:30:00Z");
+            Job oneoff = c.schedule(JOB_ID, "One-shot", when, new HttpConfig("https://x"), "development");
             oneoff.save();
-            assertEquals("development", lastEnvHeader.get());
+            assertEquals("development", lastEnvHeader.get());                 // birth environment
+            assertEquals(when.toString(), attrs().path("schedule").asText()); // datetime -> ISO-8601
+        }
+    }
+
+    @Test
+    void createManual_sendsNullScheduleOnTheWire() throws Exception {
+        // A manual job has no schedule: ``newManualJob`` leaves schedule null and
+        // the create body carries ``schedule: null`` (present, explicitly null).
+        installFullHandler();
+        try (JobsClient c = client()) {
+            Job manual = c.newManualJob(JOB_ID, "Manual", new HttpConfig("https://x"));
+            assertNull(manual.schedule);                       // no schedule supplied
+            manual.setEnabled(true, "production");
+            manual.save();
+            JsonNode scheduleNode = attrs().path("schedule");
+            assertTrue(scheduleNode.isNull(), "null schedule must be sent on the wire");
         }
     }
 
@@ -439,7 +545,7 @@ class JobsClientTest {
     void createRecurring_sendsNoBirthEnvironmentHeader() throws Exception {
         installFullHandler();
         try (JobsClient c = client()) {
-            Job job = c.new_(JOB_ID, "Recurring", "0 * * * *", new HttpConfig("https://x"));
+            Job job = c.newRecurringJob(JOB_ID, "Recurring", "0 * * * *", new HttpConfig("https://x"));
             job.save();
             assertNull(lastEnvHeader.get());
         }
@@ -470,7 +576,8 @@ class JobsClientTest {
             assertTrue(job.enabled);                           // field mirrors the roll-up
             assertTrue(job.isEnabled("production"));
             assertFalse(job.isEnabled("development"));
-            assertEquals(Boolean.TRUE, job.recurring);
+            assertEquals(JobKind.RECURRING, job.kind);
+            assertTrue(job.isRecurring());
             // production has no config override -> getConfiguration falls back to base
             assertEquals("https://base.example.com/hook", job.getConfiguration("production").url);
             // development has a config override
@@ -510,13 +617,17 @@ class JobsClientTest {
         try (JobsClient c = client()) {
             assertEquals(2, c.list().size());
             ListJobsInput in = new ListJobsInput();
-            in.recurring = true;
+            in.kind = JobKind.MANUAL;
+            in.scheduled = true;
             in.name = "health";
             in.pageNumber = 1;
             in.pageSize = 10;
             assertEquals(2, c.list(in).size());
             assertTrue(lastQuery.get().contains("filter[name]=health"));
-            assertTrue(lastQuery.get().contains("filter[recurring]=true"));
+            assertTrue(lastQuery.get().contains("filter[kind]=manual"));   // JobKind -> wire value
+            assertTrue(lastQuery.get().contains("filter[scheduled]=true"));
+            // The dropped recurring filter is never emitted.
+            assertFalse(lastQuery.get().contains("filter[recurring]"));
             c.delete(JOB_ID);
             c.get(JOB_ID).delete();  // active-record delete with bound client
         }
@@ -578,6 +689,8 @@ class JobsClientTest {
             assertEquals(1, c.runs.list(in).size());
             Run got = c.runs.get(RUN_ID);
             assertEquals("SUCCEEDED", got.status);
+            // trigger is the raw wire string, equal to the RunTrigger constant's value
+            assertEquals(RunTrigger.SCHEDULE.getValue(), got.trigger);
             assertEquals("production", got.environment);
             assertEquals(1, got.jobVersion);
             assertEquals(400, got.totalDurationMs);
@@ -715,7 +828,7 @@ class JobsClientTest {
     void jobSaveAsync_andDeleteAsync_customExecutor() throws Exception {
         installFullHandler();
         try (JobsClient c = client()) {
-            Job job = c.new_(JOB_ID, "My Job", "0 * * * *", new HttpConfig("https://x"));
+            Job job = c.newRecurringJob(JOB_ID, "My Job", "0 * * * *", new HttpConfig("https://x"));
             await(job.saveAsync(executor));
             assertEquals(1, job.version);
             await(job.deleteAsync(executor));
@@ -726,7 +839,7 @@ class JobsClientTest {
     void jobSaveAsync_andDeleteAsync_commonPool() throws Exception {
         installFullHandler();
         try (JobsClient c = client()) {
-            Job job = c.new_(JOB_ID, "My Job", "0 * * * *", new HttpConfig("https://x"));
+            Job job = c.newRecurringJob(JOB_ID, "My Job", "0 * * * *", new HttpConfig("https://x"));
             await(job.saveAsync());
             assertEquals(1, job.version);
             await(job.deleteAsync());
@@ -737,7 +850,7 @@ class JobsClientTest {
     void jobSaveAsync_propagatesApiException() {
         installErrorHandler();
         try (JobsClient c = client()) {
-            Job job = c.new_("dup", "D", "now", new HttpConfig("https://x"));
+            Job job = c.newManualJob("dup", "D", new HttpConfig("https://x"));
             assertApiFailure(job.saveAsync(executor));
         }
     }
@@ -746,7 +859,7 @@ class JobsClientTest {
     void jobDeleteAsync_propagatesApiException() {
         installErrorHandler();
         try (JobsClient c = client()) {
-            Job job = c.new_(JOB_ID, "D", "now", new HttpConfig("https://x"));
+            Job job = c.newManualJob(JOB_ID, "D", new HttpConfig("https://x"));
             assertApiFailure(job.deleteAsync(executor));
         }
     }
@@ -761,7 +874,7 @@ class JobsClientTest {
         try (JobsClient c = client()) {
             ApiException notFound = assertThrows(ApiException.class, () -> c.get("missing"));
             assertEquals(404, notFound.getCode());
-            Job dup = c.new_("dup", "D", "now", new HttpConfig("https://x"));
+            Job dup = c.newManualJob("dup", "D", new HttpConfig("https://x"));
             ApiException conflict = assertThrows(ApiException.class, dup::save);
             assertEquals(409, conflict.getCode());
         }
@@ -786,7 +899,7 @@ class JobsClientTest {
     @Test
     void delete_withoutId_throws() {
         try (JobsClient c = client()) {
-            Job job = c.new_("k", "x", "now", new HttpConfig("https://x"));
+            Job job = c.newManualJob("k", "x", new HttpConfig("https://x"));
             job.id = null;
             assertThrows(IllegalStateException.class, job::delete);
         }
@@ -817,7 +930,7 @@ class JobsClientTest {
     @Test
     void create_withoutId_throws() {
         try (JobsClient c = client()) {
-            Job job = c.new_("k", "x", "now", new HttpConfig("https://x"));
+            Job job = c.newManualJob("k", "x", new HttpConfig("https://x"));
             job.id = null;
             assertThrows(IllegalStateException.class, job::save);
         }
@@ -855,7 +968,7 @@ class JobsClientTest {
             assertEquals("2xx", job.configuration.successStatus);
             assertTrue(job.configuration.headers.isEmpty());
             assertFalse(job.enabled);            // default false when enabled absent
-            assertNull(job.recurring);           // absent recurring -> null
+            assertNull(job.kind);                // absent kind -> null
             assertTrue(job.environments.isEmpty()); // absent environments -> empty
             assertEquals("ALLOW", job.concurrencyPolicy);
         }
@@ -987,7 +1100,7 @@ class JobsClientTest {
     void perEnvironmentScheduleSetter_baseAndOverride_emitsOnWrite() throws Exception {
         installFullHandler();
         try (JobsClient c = client()) {
-            Job job = c.new_(JOB_ID, "My Job", "0 * * * *", new HttpConfig("https://base"));
+            Job job = c.newRecurringJob(JOB_ID, "My Job", "0 * * * *", new HttpConfig("https://base"));
             // base schedule via env-aware setter (environment == null)
             job.setSchedule("30 1 * * *", null);
             assertEquals("30 1 * * *", job.schedule);
@@ -1017,7 +1130,7 @@ class JobsClientTest {
             cfg.method = null;
             cfg.headers = null;
             cfg.successStatus = null;
-            Job job = c.new_(JOB_ID, "My Job", "now", cfg);
+            Job job = c.newManualJob(JOB_ID, "My Job", cfg);
             assertDoesNotThrow(job::save);
         }
     }
@@ -1045,6 +1158,14 @@ class JobsClientTest {
             assertEquals(m, HttpMethod.fromValue(m.getValue()));
         }
         assertThrows(IllegalArgumentException.class, () -> HttpMethod.fromValue("nope"));
+        for (JobKind k : JobKind.values()) {
+            assertEquals(k, JobKind.fromValue(k.getValue()));
+        }
+        assertThrows(IllegalArgumentException.class, () -> JobKind.fromValue("nope"));
+        for (RunTrigger t : RunTrigger.values()) {
+            assertEquals(t, RunTrigger.fromValue(t.getValue()));
+        }
+        assertThrows(IllegalArgumentException.class, () -> RunTrigger.fromValue("nope"));
     }
 
     @Test
@@ -1106,7 +1227,8 @@ class JobsClientTest {
         assertEquals("a", h.name);
         assertEquals("b", h.value);
         ListJobsInput lji = new ListJobsInput();
-        assertNull(lji.recurring);
+        assertNull(lji.kind);
+        assertNull(lji.scheduled);
         assertNull(lji.pageNumber);
         assertNull(lji.pageSize);
         ListRunsInput lri = new ListRunsInput();

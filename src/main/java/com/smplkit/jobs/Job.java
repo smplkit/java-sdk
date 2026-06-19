@@ -13,9 +13,10 @@ import java.util.concurrent.ForkJoinPool;
 /**
  * A job definition (sync). Mutate fields, then call {@link #save}.
  *
- * <p>Enablement is per environment: a recurring (cron) job fires in an
- * environment only when {@link #environments} holds an entry for it with
- * {@code enabled=true}, set via {@link #setEnabled(boolean, String)}. The base
+ * <p>Enablement is per environment: a job runs in an environment only when
+ * {@link #environments} holds an entry for it with {@code enabled=true}
+ * (scheduled there for a recurring job, triggerable there for a manual one),
+ * set via {@link #setEnabled(boolean, String)}. The base
  * {@link #enabled} field is a read-only, derived roll-up (true when enabled in
  * at least one environment) computed from {@link #environments}; it is never
  * sent on the wire.</p>
@@ -48,19 +49,21 @@ public final class Job {
      */
     public Map<String, JobEnvironment> environments = new HashMap<>();
     /**
-     * Read-only: {@code true} for a recurring (cron) schedule, {@code false}
-     * for a one-off ({@code "now"} / datetime) schedule. {@code null} for an
-     * unsaved instance.
+     * Read-only server-derived kind: {@link JobKind#RECURRING} for a cron
+     * schedule, {@link JobKind#MANUAL} for no schedule, or
+     * {@link JobKind#ONE_OFF} for a {@code "now"} / datetime schedule.
+     * {@code null} for an unsaved instance.
      */
-    public Boolean recurring;
+    public JobKind kind;
     /** Job type. Only {@code "http"} is supported today. */
     public String type = "http";
     /**
-     * When the job runs: an ISO-8601 datetime (a one-off run), a 5-field cron
-     * expression evaluated in UTC (recurring), or the literal {@code "now"}
-     * (run once, as soon as possible). A datetime or {@code "now"} job
-     * disables itself after it fires. The schedule is environment-agnostic —
-     * one cadence shared across every environment the job runs in.
+     * The base schedule every environment inherits unless it overrides it, and
+     * the field that determines the job's {@link #kind}: {@code null} for a
+     * permanent manual job (never auto-fires; runs only when triggered), a
+     * 5-field cron expression evaluated in UTC for a recurring job, or an
+     * ISO-8601 datetime / the literal {@code "now"} for a one-off run. A
+     * datetime or {@code "now"} job disables itself after it fires.
      */
     public String schedule;
     /** The HTTP request to perform when the job fires. */
@@ -79,7 +82,8 @@ public final class Job {
     /**
      * Creation-time only: the environment a one-off job is born in, sent as the
      * {@code X-Smplkit-Environment} header by {@code JobsClient.create}. Ignored
-     * for a recurring job, whose environments come from {@link #environments}.
+     * for recurring and manual jobs, whose environments come from
+     * {@link #environments}.
      */
     String birthEnvironment;
 
@@ -232,6 +236,33 @@ public final class Job {
     public boolean isEnabled(String environment) {
         JobEnvironment env = environments.get(environment);
         return env != null && env.enabled;
+    }
+
+    /**
+     * Whether this is a recurring (cron-scheduled) job.
+     *
+     * @return {@code true} when {@link #kind} is {@link JobKind#RECURRING}
+     */
+    public boolean isRecurring() {
+        return kind == JobKind.RECURRING;
+    }
+
+    /**
+     * Whether this is a manual job — no schedule; runs only when triggered.
+     *
+     * @return {@code true} when {@link #kind} is {@link JobKind#MANUAL}
+     */
+    public boolean isManual() {
+        return kind == JobKind.MANUAL;
+    }
+
+    /**
+     * Whether this is a one-off job — a single {@code "now"} / datetime run.
+     *
+     * @return {@code true} when {@link #kind} is {@link JobKind#ONE_OFF}
+     */
+    public boolean isOneOff() {
+        return kind == JobKind.ONE_OFF;
     }
 
     /**
@@ -435,7 +466,7 @@ public final class Job {
         // ``enabled`` is the derived roll-up — recompute from the just-applied
         // environments rather than trusting a stale value.
         this.enabled = computeEnabledRollup();
-        this.recurring = other.recurring;
+        this.kind = other.kind;
         this.type = other.type;
         this.schedule = other.schedule;
         this.configuration = other.configuration;

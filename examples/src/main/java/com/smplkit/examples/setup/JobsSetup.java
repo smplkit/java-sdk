@@ -13,7 +13,7 @@ public final class JobsSetup {
     // down even when it fails mid-way, so a failed run never leaves orphans
     // behind.
     private static final List<String> DEMO_JOB_IDS =
-            List.of("showcase-recurring", "showcase-oneoff");
+            List.of("showcase-recurring", "showcase-manual", "showcase-oneoff");
 
     private JobsSetup() {}
 
