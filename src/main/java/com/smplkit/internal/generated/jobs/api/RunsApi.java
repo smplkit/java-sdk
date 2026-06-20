@@ -18,6 +18,7 @@ import com.smplkit.internal.generated.jobs.ApiResponse;
 import com.smplkit.internal.generated.jobs.Configuration;
 import com.smplkit.internal.generated.jobs.Pair;
 
+import com.smplkit.internal.generated.jobs.model.ErrorResponse;
 import com.smplkit.internal.generated.jobs.model.RunListResponse;
 import com.smplkit.internal.generated.jobs.model.RunResponse;
 import java.util.UUID;
@@ -166,7 +167,7 @@ public class RunsApi {
 
   /**
    * Cancel Run
-   * Cancel a pending or running run.  Returns &#x60;409&#x60; if the run is already in a terminal state. Canceling a running run stops us tracking it, but the HTTP request may already be in flight — cancel means \&quot;stop tracking,\&quot; not \&quot;guaranteed it didn&#39;t happen.\&quot;
+   * Cancel a pending or running run.  Returns &#x60;404&#x60; if the run does not exist and &#x60;409&#x60; if it is already in a terminal state. Canceling a running run stops us tracking it, but the HTTP request may already be in flight — cancel means \&quot;stop tracking,\&quot; not \&quot;guaranteed it didn&#39;t happen.\&quot; A run that has already started running still counts toward your monthly run allowance even if you cancel it; a run canceled while it is still pending does not count.
    * @param runId  (required)
    * @return RunResponse
    * @throws ApiException if fails to make API call
@@ -177,7 +178,7 @@ public class RunsApi {
 
   /**
    * Cancel Run
-   * Cancel a pending or running run.  Returns &#x60;409&#x60; if the run is already in a terminal state. Canceling a running run stops us tracking it, but the HTTP request may already be in flight — cancel means \&quot;stop tracking,\&quot; not \&quot;guaranteed it didn&#39;t happen.\&quot;
+   * Cancel a pending or running run.  Returns &#x60;404&#x60; if the run does not exist and &#x60;409&#x60; if it is already in a terminal state. Canceling a running run stops us tracking it, but the HTTP request may already be in flight — cancel means \&quot;stop tracking,\&quot; not \&quot;guaranteed it didn&#39;t happen.\&quot; A run that has already started running still counts toward your monthly run allowance even if you cancel it; a run canceled while it is still pending does not count.
    * @param runId  (required)
    * @param headers Optional headers to include in the request
    * @return RunResponse
@@ -190,7 +191,7 @@ public class RunsApi {
 
   /**
    * Cancel Run
-   * Cancel a pending or running run.  Returns &#x60;409&#x60; if the run is already in a terminal state. Canceling a running run stops us tracking it, but the HTTP request may already be in flight — cancel means \&quot;stop tracking,\&quot; not \&quot;guaranteed it didn&#39;t happen.\&quot;
+   * Cancel a pending or running run.  Returns &#x60;404&#x60; if the run does not exist and &#x60;409&#x60; if it is already in a terminal state. Canceling a running run stops us tracking it, but the HTTP request may already be in flight — cancel means \&quot;stop tracking,\&quot; not \&quot;guaranteed it didn&#39;t happen.\&quot; A run that has already started running still counts toward your monthly run allowance even if you cancel it; a run canceled while it is still pending does not count.
    * @param runId  (required)
    * @return ApiResponse&lt;RunResponse&gt;
    * @throws ApiException if fails to make API call
@@ -201,7 +202,7 @@ public class RunsApi {
 
   /**
    * Cancel Run
-   * Cancel a pending or running run.  Returns &#x60;409&#x60; if the run is already in a terminal state. Canceling a running run stops us tracking it, but the HTTP request may already be in flight — cancel means \&quot;stop tracking,\&quot; not \&quot;guaranteed it didn&#39;t happen.\&quot;
+   * Cancel a pending or running run.  Returns &#x60;404&#x60; if the run does not exist and &#x60;409&#x60; if it is already in a terminal state. Canceling a running run stops us tracking it, but the HTTP request may already be in flight — cancel means \&quot;stop tracking,\&quot; not \&quot;guaranteed it didn&#39;t happen.\&quot; A run that has already started running still counts toward your monthly run allowance even if you cancel it; a run canceled while it is still pending does not count.
    * @param runId  (required)
    * @param headers Optional headers to include in the request
    * @return ApiResponse&lt;RunResponse&gt;
@@ -596,7 +597,7 @@ public class RunsApi {
 
   /**
    * Rerun Run
-   * Spawn a new run from a prior run, using the job&#39;s current configuration.  Returns &#x60;409&#x60; if the run&#39;s parent job has been deleted.
+   * Spawn a new run from a prior run, using the job&#39;s current configuration.  Returns &#x60;404&#x60; if the run does not exist and &#x60;409&#x60; if the run&#39;s parent job has been deleted.
    * @param runId  (required)
    * @return RunResponse
    * @throws ApiException if fails to make API call
@@ -607,7 +608,7 @@ public class RunsApi {
 
   /**
    * Rerun Run
-   * Spawn a new run from a prior run, using the job&#39;s current configuration.  Returns &#x60;409&#x60; if the run&#39;s parent job has been deleted.
+   * Spawn a new run from a prior run, using the job&#39;s current configuration.  Returns &#x60;404&#x60; if the run does not exist and &#x60;409&#x60; if the run&#39;s parent job has been deleted.
    * @param runId  (required)
    * @param headers Optional headers to include in the request
    * @return RunResponse
@@ -620,7 +621,7 @@ public class RunsApi {
 
   /**
    * Rerun Run
-   * Spawn a new run from a prior run, using the job&#39;s current configuration.  Returns &#x60;409&#x60; if the run&#39;s parent job has been deleted.
+   * Spawn a new run from a prior run, using the job&#39;s current configuration.  Returns &#x60;404&#x60; if the run does not exist and &#x60;409&#x60; if the run&#39;s parent job has been deleted.
    * @param runId  (required)
    * @return ApiResponse&lt;RunResponse&gt;
    * @throws ApiException if fails to make API call
@@ -631,7 +632,7 @@ public class RunsApi {
 
   /**
    * Rerun Run
-   * Spawn a new run from a prior run, using the job&#39;s current configuration.  Returns &#x60;409&#x60; if the run&#39;s parent job has been deleted.
+   * Spawn a new run from a prior run, using the job&#39;s current configuration.  Returns &#x60;404&#x60; if the run does not exist and &#x60;409&#x60; if the run&#39;s parent job has been deleted.
    * @param runId  (required)
    * @param headers Optional headers to include in the request
    * @return ApiResponse&lt;RunResponse&gt;
