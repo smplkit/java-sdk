@@ -50,9 +50,14 @@ public final class RunsClient {
     public List<Run> list(ListRunsInput input) throws ApiException {
         String filterEnvironment =
                 JobsConversions.resolveEnvironmentFilter(input.environments, environment);
+        // Positional args track the generated listRuns signature: filterJob,
+        // filterStatus, filterEnvironment, filterTrigger, filterCreatedAt,
+        // filterStartedAt, filterFinishedAt, filterScheduledFor, lastRunOnly,
+        // pageSize, pageAfter, sort. The wrapper does not yet surface the
+        // trigger / lastRunOnly filters, so they are passed null.
         RunListResponse resp = api.listRuns(
             input.job, null, filterEnvironment, null, null, null, null,
-            null, input.pageSize, input.after, null);
+            null, null, input.pageSize, input.after, null);
         List<Run> out = new ArrayList<>();
         if (resp.getData() != null) {
             for (RunResource r : resp.getData()) out.add(JobsConversions.runFromResource(r, this));
