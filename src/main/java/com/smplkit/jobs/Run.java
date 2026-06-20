@@ -27,12 +27,19 @@ public final class Run {
     public final String environment;
     /**
      * Why the run exists, as the raw wire string — {@code SCHEDULE},
-     * {@code MANUAL} (run now), or {@code RERUN}. Compare against the
-     * {@link RunTrigger} constants' {@link RunTrigger#getValue()}.
+     * {@code MANUAL} (run now), {@code RERUN}, or {@code RETRY} (an automatic
+     * retry of a failed run). Compare against the {@link RunTrigger} constants'
+     * {@link RunTrigger#getValue()}.
      */
     public final String trigger;
     /** The source run's id; set only when {@code trigger} is {@code RERUN}. */
     public final String rerunOf;
+    /**
+     * Where this run sits in its retry chain; set only when {@code trigger} is
+     * {@code RETRY} (an automatic retry of a failed run), {@code null}
+     * otherwise.
+     */
+    public final RunRetry retry;
     /** The intended fire time for a scheduled run; {@code null} for manual / rerun runs. */
     public final OffsetDateTime scheduledFor;
     /** Lifecycle state of the run. */
@@ -59,7 +66,7 @@ public final class Run {
     public final OffsetDateTime createdAt;
 
     Run(String id, String job, Integer jobVersion, String environment, String trigger, String rerunOf,
-        OffsetDateTime scheduledFor, String status, OffsetDateTime startedAt,
+        RunRetry retry, OffsetDateTime scheduledFor, String status, OffsetDateTime startedAt,
         OffsetDateTime finishedAt, Integer pendingDurationMs, Integer runDurationMs,
         Integer totalDurationMs, String failureReason, String error,
         Map<String, Object> request, Map<String, Object> result, OffsetDateTime createdAt,
@@ -70,6 +77,7 @@ public final class Run {
         this.environment = environment;
         this.trigger = trigger;
         this.rerunOf = rerunOf;
+        this.retry = retry;
         this.scheduledFor = scheduledFor;
         this.status = status;
         this.startedAt = startedAt;

@@ -37,10 +37,14 @@ public final class AsyncJobsClient implements AutoCloseable {
     /** Async run history and run actions ({@code asyncJobs.runs}). */
     public final AsyncRunsClient runs;
 
+    /** Async reusable retry policies ({@code asyncJobs.retryPolicies}). */
+    public final AsyncRetryPoliciesClient retryPolicies;
+
     private AsyncJobsClient(JobsClient delegate, Executor executor) {
         this.delegate = delegate;
         this.executor = executor;
         this.runs = new AsyncRunsClient(delegate.runs, executor);
+        this.retryPolicies = new AsyncRetryPoliciesClient(delegate.retryPolicies, executor);
     }
 
     /** Create with default credentials and the common-pool executor. */
@@ -131,6 +135,38 @@ public final class AsyncJobsClient implements AutoCloseable {
     }
 
     /**
+     * Return an unsaved recurring {@link Job}, setting every job field at
+     * construction including the base {@code timezone} and {@code retryPolicy}.
+     * Call {@code .save()} / {@code .saveAsync()} to create it. Synchronous —
+     * no I/O.
+     *
+     * @param id stable caller-supplied unique identifier for the job. Unique
+     *     within the account and immutable; the service returns 409 if another
+     *     live job already uses this id.
+     * @param name human-readable name for the job
+     * @param schedule the base cron cadence (see
+     *     {@link #newRecurringJob(String, String, String, HttpConfig)})
+     * @param configuration the HTTP request the job sends each time it fires
+     * @param description free-text description for the job; {@code null} for none
+     * @param environments per-environment overrides keyed by environment key;
+     *     {@code null} starts with no overrides
+     * @param concurrencyPolicy how overlapping runs are handled. {@code "ALLOW"}
+     *     (the default and only value today) permits a new run to start while a
+     *     previous one is still in flight
+     * @param timezone the base IANA timezone the cron is evaluated in;
+     *     {@code null} means UTC
+     * @param retryPolicy the base retry policy id for failed runs;
+     *     {@code null} uses the built-in {@code "Default"} policy
+     * @return an unsaved recurring {@link Job} bound to the underlying sync client
+     */
+    public Job newRecurringJob(String id, String name, String schedule, HttpConfig configuration,
+                               String description, Map<String, JobEnvironment> environments,
+                               String concurrencyPolicy, String timezone, String retryPolicy) {
+        return delegate.newRecurringJob(id, name, schedule, configuration, description, environments,
+                concurrencyPolicy, timezone, retryPolicy);
+    }
+
+    /**
      * Return an unsaved manual {@link Job} with default {@code description}
      * (none), no per-environment overrides, and {@code concurrencyPolicy}
      * ({@code "ALLOW"}). Call {@code .save()} / {@code .saveAsync()} to create
@@ -172,6 +208,34 @@ public final class AsyncJobsClient implements AutoCloseable {
                             String concurrencyPolicy) {
         return delegate.newManualJob(id, name, configuration, description, environments,
                 concurrencyPolicy);
+    }
+
+    /**
+     * Return an unsaved manual {@link Job}, setting every job field at
+     * construction including the {@code retryPolicy}. Call {@code .save()} /
+     * {@code .saveAsync()} to create it. A manual job has no schedule (and no
+     * timezone). Synchronous — no I/O.
+     *
+     * @param id stable caller-supplied unique identifier for the job. Unique
+     *     within the account and immutable; the service returns 409 if another
+     *     live job already uses this id.
+     * @param name human-readable name for the job
+     * @param configuration the HTTP request the job sends each time it runs
+     * @param description free-text description for the job; {@code null} for none
+     * @param environments per-environment overrides keyed by environment key;
+     *     {@code null} starts with no overrides
+     * @param concurrencyPolicy how overlapping runs are handled. {@code "ALLOW"}
+     *     (the default and only value today) permits a new run to start while a
+     *     previous one is still in flight
+     * @param retryPolicy the retry policy id for failed runs; {@code null} uses
+     *     the built-in {@code "Default"} policy
+     * @return an unsaved manual {@link Job} bound to the underlying sync client
+     */
+    public Job newManualJob(String id, String name, HttpConfig configuration,
+                            String description, Map<String, JobEnvironment> environments,
+                            String concurrencyPolicy, String retryPolicy) {
+        return delegate.newManualJob(id, name, configuration, description, environments,
+                concurrencyPolicy, retryPolicy);
     }
 
     /**
@@ -233,6 +297,32 @@ public final class AsyncJobsClient implements AutoCloseable {
                         String description, String concurrencyPolicy, String environment) {
         return delegate.schedule(id, name, schedule, configuration, description, concurrencyPolicy,
                 environment);
+    }
+
+    /**
+     * Return an unsaved one-off {@link Job}, setting every job field at
+     * construction including the {@code retryPolicy}. Call {@code .save()} /
+     * {@code .saveAsync()} to create it. Synchronous — no I/O.
+     *
+     * @param id stable caller-supplied unique identifier for the job
+     * @param name human-readable name for the job
+     * @param schedule the instant the single run fires
+     * @param configuration the HTTP request the job sends when it runs
+     * @param description free-text description for the job; {@code null} for none
+     * @param concurrencyPolicy how overlapping runs are handled. {@code "ALLOW"}
+     *     (the default and only value today) permits a new run to start while a
+     *     previous one is still in flight
+     * @param retryPolicy the retry policy id for failed runs; {@code null} uses
+     *     the built-in {@code "Default"} policy
+     * @param environment the environment the job is born in; {@code null} falls
+     *     back to the client's configured environment
+     * @return an unsaved one-off {@link Job} bound to the underlying sync client
+     */
+    public Job schedule(String id, String name, OffsetDateTime schedule, HttpConfig configuration,
+                        String description, String concurrencyPolicy, String retryPolicy,
+                        String environment) {
+        return delegate.schedule(id, name, schedule, configuration, description, concurrencyPolicy,
+                retryPolicy, environment);
     }
 
     /**

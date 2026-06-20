@@ -50,14 +50,19 @@ public final class RunsClient {
     public List<Run> list(ListRunsInput input) throws ApiException {
         String filterEnvironment =
                 JobsConversions.resolveEnvironmentFilter(input.environments, environment);
+        String filterTrigger = JobsConversions.joinTriggers(input.triggers);
+        // The generated default (false) would emit ``last_run_only=false`` on
+        // every call; pass null unless explicitly requested so the param stays
+        // off the wire on default calls.
+        Boolean lastRunOnly = input.lastRunOnly ? Boolean.TRUE : null;
         // Positional args track the generated listRuns signature: filterJob,
         // filterStatus, filterEnvironment, filterTrigger, filterCreatedAt,
         // filterStartedAt, filterFinishedAt, filterScheduledFor, lastRunOnly,
-        // pageSize, pageAfter, sort. The wrapper does not yet surface the
-        // trigger / lastRunOnly filters, so they are passed null.
+        // pageSize, pageAfter, sort. status / date-range / sort filters are out
+        // of scope for the wrapper and stay null.
         RunListResponse resp = api.listRuns(
-            input.job, null, filterEnvironment, null, null, null, null,
-            null, null, input.pageSize, input.after, null);
+            input.job, null, filterEnvironment, filterTrigger, null, null, null,
+            null, lastRunOnly, input.pageSize, input.after, null);
         List<Run> out = new ArrayList<>();
         if (resp.getData() != null) {
             for (RunResource r : resp.getData()) out.add(JobsConversions.runFromResource(r, this));

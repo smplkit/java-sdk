@@ -11,6 +11,8 @@ package com.smplkit.jobs;
  *   <li>{@link #MANUAL} — a {@code run}/{@code trigger} call started it on
  *       demand.</li>
  *   <li>{@link #RERUN} — it repeats an earlier run.</li>
+ *   <li>{@link #RETRY} — an automatic retry of a failed run, per the job's
+ *       retry policy.</li>
  *   <li>{@link #SCHEDULE} — the job's schedule fired.</li>
  * </ul>
  *
@@ -21,6 +23,8 @@ public enum RunTrigger {
     MANUAL("MANUAL"),
     /** It repeats an earlier run. */
     RERUN("RERUN"),
+    /** An automatic retry of a failed run, per the job's retry policy. */
+    RETRY("RETRY"),
     /** The job's schedule fired. */
     SCHEDULE("SCHEDULE");
 

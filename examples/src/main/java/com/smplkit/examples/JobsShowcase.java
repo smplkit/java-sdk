@@ -14,6 +14,7 @@ package com.smplkit.examples;
 
 import com.smplkit.examples.setup.JobsSetup;
 import com.smplkit.internal.generated.jobs.ApiException;
+import com.smplkit.jobs.Backoff;
 import com.smplkit.jobs.HttpConfig;
 import com.smplkit.jobs.HttpHeader;
 import com.smplkit.jobs.HttpMethod;
@@ -21,6 +22,9 @@ import com.smplkit.jobs.Job;
 import com.smplkit.jobs.JobKind;
 import com.smplkit.jobs.JobsClient;
 import com.smplkit.jobs.ListJobsInput;
+import com.smplkit.jobs.RetryOn;
+import com.smplkit.jobs.RetryPolicy;
+import com.smplkit.jobs.RetryReason;
 import com.smplkit.jobs.Run;
 import com.smplkit.jobs.RunTrigger;
 
@@ -32,6 +36,7 @@ public final class JobsShowcase {
     private static final String RECURRING_JOB_ID = "showcase-recurring";
     private static final String MANUAL_JOB_ID = "showcase-manual";
     private static final String ONEOFF_JOB_ID = "showcase-oneoff";
+    private static final String RETRY_POLICY_ID = "showcase-retry";
 
     public static void main(String[] args) throws Exception {
 
@@ -40,8 +45,20 @@ public final class JobsShowcase {
         JobsClient jobs = JobsClient.create();
         JobsSetup.setup(jobs);
         try {
-            // create a recurring job: a base schedule and configuration every
-            // environment inherits, with per-environment overrides
+            // create a retry policy
+            RetryPolicy retryPolicy = jobs.retryPolicies.new_(
+                    RETRY_POLICY_ID,
+                    "Retry on server errors",
+                    5,
+                    Backoff.EXPONENTIAL,
+                    2,
+                    60,
+                    new RetryOn(List.of(429, 503), List.of(RetryReason.TIMEOUT)));
+            retryPolicy.save();
+            assert jobs.retryPolicies.list().stream().anyMatch(p -> p.id.equals(RETRY_POLICY_ID));
+            System.out.println("Created retry policy " + retryPolicy.id);
+
+            // create a recurring job
             HttpConfig config = new HttpConfig(
                     HttpMethod.POST,
                     "https://httpbin.org/post",
@@ -53,10 +70,10 @@ public final class JobsShowcase {
                     "Nightly cache warm",
                     "0 2 * * *",
                     config);
-            job.description = "Warms the product cache every night at 02:00 UTC.";
-            job.setEnabled(true, "production");
+            job.description = "Warms the product cache nightly.";
             job.setEnabled(true, "development");
-            job.setSchedule("0 */6 * * *", "development");
+            job.setEnabled(true, "production");
+            job.setSchedule("0 */6 * * *", "America/New_York", "development");
             HttpConfig developmentConfig = new HttpConfig(
                     HttpMethod.POST,
                     "https://development.example.com/cache/warm",
@@ -65,7 +82,9 @@ public final class JobsShowcase {
             job.setConfiguration(developmentConfig, "development");
             job.save();
             assert job.isRecurring();
+            assert job.isEnabled("development");
             assert job.isEnabled("production");
+            assert job.environments.get("development").timezone.equals("America/New_York");
             assert job.getConfiguration("development").url.equals("https://development.example.com/cache/warm");
             System.out.println("Created recurring job " + job.id + " (v" + job.version + ")");
 
@@ -83,7 +102,8 @@ public final class JobsShowcase {
 
             // update a job
             job.name = "Nightly cache warm (v2)";
-            job.setSchedule("30 2 * * *", "production");
+            job.setRetryPolicy(retryPolicy, "production");
+            job.setSchedule("30 2 * * *", "America/Los_Angeles", "production");
             job.save();
             assert job.version == 2;
             System.out.println("Updated job to v" + job.version);
@@ -97,6 +117,10 @@ public final class JobsShowcase {
             List<Run> runs = job.listRuns("production");
             assert runs.stream().anyMatch(r -> r.id.equals(run.id));
             System.out.println("Listed " + runs.size() + " production run(s)");
+
+            // get the last completed run in production
+            List<Run> recent = job.listRuns("production", true);
+            System.out.println("Last completed production run(s): " + recent.size());
 
             // get a run
             Run fetchedRun = jobs.runs.get(run.id);
@@ -149,7 +173,10 @@ public final class JobsShowcase {
             // delete a job
             job.delete();
             assert jobs.list().stream().noneMatch(j -> j.id.equals(RECURRING_JOB_ID));
-            System.out.println("Deleted job " + RECURRING_JOB_ID + " — jobs showcase complete.");
+
+            // delete the retry policy
+            retryPolicy.delete();
+            System.out.println("Deleted job " + RECURRING_JOB_ID + " and retry policy — jobs showcase complete.");
         } finally {
             JobsSetup.cleanup(jobs);
             jobs.close();

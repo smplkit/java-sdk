@@ -76,6 +76,14 @@ public final class Job {
      * one-off job. Settable; sent on writes only when non-{@code null}.
      */
     public String timezone;
+    /**
+     * The base retry policy for failed runs — the id of a {@link RetryPolicy}
+     * (or the built-in {@code "Default"}, which never retries), overridable per
+     * environment via {@link JobEnvironment#retryPolicy}. {@code null} (omitted
+     * on the wire) leaves the server default of {@code "Default"}. Settable;
+     * sent on writes only when non-{@code null}.
+     */
+    public String retryPolicy;
     /** The HTTP request to perform when the job fires. */
     public HttpConfig configuration;
     /** How overlapping runs are handled. {@code "ALLOW"} (the only value) permits them. */
@@ -365,6 +373,30 @@ public final class Job {
     }
 
     /**
+     * Set the job's schedule and, optionally, its timezone in memory — base
+     * ({@code environment == null}) or per-environment. Because the timezone is
+     * an integral part of a cron cadence, a {@code timezone} may be supplied
+     * alongside the schedule; when non-{@code null} it sets the same scope's
+     * timezone too (equivalent to a follow-up {@link #setTimezone(String, String)}).
+     * Pass {@code null} for {@code timezone} to leave the timezone untouched.
+     * For a timezone-only change, use {@link #setTimezone(String, String)}. Call
+     * {@link #save()} to persist.
+     *
+     * @param schedule the schedule to set, or {@code null} to clear a
+     *     per-environment override
+     * @param timezone the IANA timezone to set for the same scope, or
+     *     {@code null} to leave the timezone untouched
+     * @param environment the environment key to set the override for, or
+     *     {@code null} to set the base schedule (and base timezone)
+     */
+    public void setSchedule(String schedule, String timezone, String environment) {
+        setSchedule(schedule, environment);
+        if (timezone != null) {
+            setTimezone(timezone, environment);
+        }
+    }
+
+    /**
      * The job's effective schedule for an environment — that environment's cron
      * override when it has one, else the base {@link #schedule} (the cadence the
      * job actually fires on there).
@@ -439,6 +471,64 @@ public final class Job {
         return timezone;
     }
 
+    /**
+     * Set the job's base retry policy in memory. Call {@link #save()} to
+     * persist.
+     *
+     * @param policyId the id of a {@link RetryPolicy} (or {@code "Default"} for
+     *     the built-in never-retry policy); {@code null} leaves the server
+     *     default of {@code "Default"}
+     */
+    public void setRetryPolicy(String policyId) {
+        this.retryPolicy = policyId;
+    }
+
+    /**
+     * Set the retry policy for failed runs in memory — base
+     * ({@code environment == null}) or a per-environment override. A
+     * per-environment override applies to that environment only, creating the
+     * override entry if it doesn't exist yet (preserving any already-set
+     * {@code enabled} / {@code schedule} / {@code timezone} / {@code configuration}
+     * on it). Call {@link #save()} to persist.
+     *
+     * @param policyId the id of a {@link RetryPolicy} (or {@code "Default"});
+     *     {@code null} clears a per-environment override / leaves the base unset
+     * @param environment the environment key to set the override for, or
+     *     {@code null} to set the base retry policy
+     */
+    public void setRetryPolicy(String policyId, String environment) {
+        if (environment == null) {
+            this.retryPolicy = policyId;
+        } else {
+            environmentOverride(environment).retryPolicy = policyId;
+        }
+    }
+
+    /**
+     * Set the job's base retry policy from a {@link RetryPolicy} instance (its
+     * {@link RetryPolicy#id} is used) in memory. Call {@link #save()} to persist.
+     *
+     * @param policy the retry policy whose id to reference
+     */
+    public void setRetryPolicy(RetryPolicy policy) {
+        this.retryPolicy = policy.id;
+    }
+
+    /**
+     * Set the retry policy for failed runs from a {@link RetryPolicy} instance
+     * (its {@link RetryPolicy#id} is used) in memory — base
+     * ({@code environment == null}) or a per-environment override. See
+     * {@link #setRetryPolicy(String, String)} for the override semantics. Call
+     * {@link #save()} to persist.
+     *
+     * @param policy the retry policy whose id to reference
+     * @param environment the environment key to set the override for, or
+     *     {@code null} to set the base retry policy
+     */
+    public void setRetryPolicy(RetryPolicy policy, String environment) {
+        setRetryPolicy(policy.id, environment);
+    }
+
     // ------------------------------------------------------------------
     // Active-record run helpers
     // ------------------------------------------------------------------
@@ -481,7 +571,7 @@ public final class Job {
      * @throws ApiException if the request fails
      */
     public List<Run> listRuns() throws ApiException {
-        return listRuns(null, null, null);
+        return listRuns(null, null, false, null, null);
     }
 
     /**
@@ -494,7 +584,22 @@ public final class Job {
      * @throws ApiException if the request fails
      */
     public List<Run> listRuns(String environment) throws ApiException {
-        return listRuns(environment, null, null);
+        return listRuns(environment, null, false, null, null);
+    }
+
+    /**
+     * List this job's run history, most recent first, restricted to a single
+     * environment, optionally collapsed to the last completed run.
+     *
+     * @param environment restrict to runs stamped with this environment;
+     *     {@code null} covers every environment you can access
+     * @param lastRunOnly when {@code true}, return only the last completed run
+     *     per environment (in-flight runs excluded)
+     * @return the runs in this page, as a list of {@link Run}
+     * @throws ApiException if the request fails
+     */
+    public List<Run> listRuns(String environment, boolean lastRunOnly) throws ApiException {
+        return listRuns(environment, null, lastRunOnly, null, null);
     }
 
     /**
@@ -511,6 +616,30 @@ public final class Job {
      * @throws ApiException if the request fails
      */
     public List<Run> listRuns(String environment, Integer pageSize, String after) throws ApiException {
+        return listRuns(environment, null, false, pageSize, after);
+    }
+
+    /**
+     * List this job's run history, most recent first, with the full set of
+     * filters and cursor paging.
+     *
+     * @param environment restrict to runs stamped with this environment;
+     *     {@code null} covers every environment you can access
+     * @param triggers restrict to runs started by any of these triggers (see
+     *     {@link RunTrigger}) — e.g. {@code [RunTrigger.RETRY]} for automatic
+     *     retries; {@code null}/empty covers every trigger
+     * @param lastRunOnly when {@code true}, return only the last completed run
+     *     per environment (in-flight runs excluded); the other filters apply
+     *     first
+     * @param pageSize maximum number of runs to return in this page;
+     *     {@code null} uses the server default
+     * @param after opaque cursor from a previous page; {@code null} starts from
+     *     the first page
+     * @return the runs in this page, as a list of {@link Run}
+     * @throws ApiException if the request fails
+     */
+    public List<Run> listRuns(String environment, List<RunTrigger> triggers, boolean lastRunOnly,
+                              Integer pageSize, String after) throws ApiException {
         if (client == null) {
             throw new IllegalStateException("Job was constructed without a client; cannot list runs");
         }
@@ -519,6 +648,8 @@ public final class Job {
         if (environment != null) {
             input.environments = List.of(environment);
         }
+        input.triggers = triggers;
+        input.lastRunOnly = lastRunOnly;
         input.pageSize = pageSize;
         input.after = after;
         return client.runs.list(input);
@@ -536,6 +667,7 @@ public final class Job {
         this.type = other.type;
         this.schedule = other.schedule;
         this.timezone = other.timezone;
+        this.retryPolicy = other.retryPolicy;
         this.configuration = other.configuration;
         this.concurrencyPolicy = other.concurrencyPolicy;
         this.createdAt = other.createdAt;

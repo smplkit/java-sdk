@@ -943,7 +943,7 @@ class JobsClientTest {
 
     @Test
     void run_withoutClient_rerunCancelThrow() {
-        Run run = new Run(RUN_ID, JOB_ID, 1, "production", "MANUAL", null, null, "PENDING",
+        Run run = new Run(RUN_ID, JOB_ID, 1, "production", "MANUAL", null, null, null, "PENDING",
                 null, null, null, null, null, null, null, null, null, null, null);
         assertThrows(IllegalStateException.class, run::rerun);
         assertThrows(IllegalStateException.class, run::cancel);
@@ -1043,6 +1043,7 @@ class JobsClientTest {
             assertNull(run.status);
             assertNull(run.trigger);
             assertNull(run.rerunOf);
+            assertNull(run.retry);            // retry absent -> null
             assertNull(run.failureReason);
             assertNull(run.scheduledFor);
         }
@@ -1257,7 +1258,7 @@ class JobsClientTest {
     void modelToStringsAndInputs() {
         Job job = new Job(null, "id1", "name1", "now", new HttpConfig("https://x"));
         assertTrue(job.toString().contains("Job("));
-        Run run = new Run("r1", "j1", 1, "production", "MANUAL", null, null, "PENDING",
+        Run run = new Run("r1", "j1", 1, "production", "MANUAL", null, null, null, "PENDING",
                 null, null, null, null, null, null, null, null, null, null, null);
         assertTrue(run.toString().contains("Run("));
         assertEquals("r1", run.id);
@@ -1281,7 +1282,206 @@ class JobsClientTest {
         ListRunsInput lri = new ListRunsInput();
         assertNull(lri.job);
         assertNull(lri.environments);
+        assertNull(lri.triggers);
+        assertFalse(lri.lastRunOnly);
         assertNull(lri.pageSize);
         assertNull(lri.after);
+    }
+
+    // -----------------------------------------------------------------
+    // Timezone-with-schedule / retry-policy setters on Job
+    // -----------------------------------------------------------------
+
+    @Test
+    void setScheduleWithTimezone_baseAndPerEnv() {
+        try (JobsClient c = client()) {
+            Job job = c.newRecurringJob(JOB_ID, "My Job", "0 * * * *", new HttpConfig("https://x"));
+            // base: schedule + timezone together (environment == null)
+            job.setSchedule("0 2 * * *", "America/New_York", null);
+            assertEquals("0 2 * * *", job.schedule);
+            assertEquals("America/New_York", job.timezone);
+            // per-env: schedule + timezone together, creating the override
+            job.setSchedule("0 */6 * * *", "Europe/London", "development");
+            assertEquals("0 */6 * * *", job.environments.get("development").schedule);
+            assertEquals("Europe/London", job.environments.get("development").timezone);
+            // null timezone leaves the timezone untouched (schedule-only change)
+            job.setSchedule("15 3 * * *", null, "development");
+            assertEquals("15 3 * * *", job.environments.get("development").schedule);
+            assertEquals("Europe/London", job.environments.get("development").timezone);
+        }
+    }
+
+    @Test
+    void setRetryPolicy_objectAndId_baseAndPerEnv() {
+        try (JobsClient c = client()) {
+            Job job = c.newRecurringJob(JOB_ID, "My Job", "0 * * * *", new HttpConfig("https://x"));
+            // base via id string (1-arg)
+            job.setRetryPolicy("policy-a");
+            assertEquals("policy-a", job.retryPolicy);
+            // base via id string (2-arg, null environment)
+            job.setRetryPolicy("policy-b", null);
+            assertEquals("policy-b", job.retryPolicy);
+            // per-env via id string, preserving other env fields
+            job.setEnabled(true, "production");
+            job.setRetryPolicy("policy-prod", "production");
+            assertEquals("policy-prod", job.environments.get("production").retryPolicy);
+            assertTrue(job.environments.get("production").enabled);
+            // base via RetryPolicy object (its id is used)
+            RetryPolicy policy = c.retryPolicies.new_("policy-obj", "P", 3, Backoff.FIXED, 5);
+            job.setRetryPolicy(policy);
+            assertEquals("policy-obj", job.retryPolicy);
+            // per-env via RetryPolicy object
+            job.setRetryPolicy(policy, "development");
+            assertEquals("policy-obj", job.environments.get("development").retryPolicy);
+        }
+    }
+
+    @Test
+    void newConstructors_withTimezoneAndRetryPolicy() {
+        OffsetDateTime when = OffsetDateTime.parse("2030-01-01T12:30:00Z");
+        try (JobsClient c = client()) {
+            Map<String, JobEnvironment> envs = new HashMap<>();
+            envs.put("production", new JobEnvironment(true));
+            Job rec = c.newRecurringJob(JOB_ID, "Rec", "0 2 * * *", new HttpConfig("https://x"),
+                    "desc", envs, "ALLOW", "America/New_York", "policy-a");
+            assertEquals("America/New_York", rec.timezone);
+            assertEquals("policy-a", rec.retryPolicy);
+            assertTrue(rec.isEnabled("production"));
+            Job man = c.newManualJob(JOB_ID, "Man", new HttpConfig("https://x"),
+                    "desc", envs, "ALLOW", "policy-b");
+            assertNull(man.schedule);
+            assertNull(man.timezone);
+            assertEquals("policy-b", man.retryPolicy);
+            Job off = c.schedule(JOB_ID, "Off", when, new HttpConfig("https://x"),
+                    "desc", "ALLOW", "policy-c", "development");
+            assertNull(off.timezone);
+            assertEquals("policy-c", off.retryPolicy);
+            assertEquals("development", off.birthEnvironment);
+        }
+        // async delegating overloads (null environments -> empty map)
+        try (AsyncJobsClient c = asyncClient()) {
+            Job rec = c.newRecurringJob(JOB_ID, "Rec", "0 2 * * *", new HttpConfig("https://x"),
+                    "desc", null, "ALLOW", "America/New_York", "policy-a");
+            assertEquals("America/New_York", rec.timezone);
+            assertEquals("policy-a", rec.retryPolicy);
+            Job man = c.newManualJob(JOB_ID, "Man", new HttpConfig("https://x"),
+                    "desc", null, "ALLOW", "policy-b");
+            assertEquals("policy-b", man.retryPolicy);
+            Job off = c.schedule(JOB_ID, "Off", when, new HttpConfig("https://x"),
+                    "desc", "ALLOW", "policy-c", "development");
+            assertEquals("policy-c", off.retryPolicy);
+        }
+    }
+
+    // -----------------------------------------------------------------
+    // retry_policy on the wire (base + per-env) and parse-back
+    // -----------------------------------------------------------------
+
+    @Test
+    void retryPolicy_serializesOnJobAndPerEnv() throws Exception {
+        installFullHandler();
+        try (JobsClient c = client()) {
+            Job job = c.newRecurringJob(JOB_ID, "My Job", "0 2 * * *", new HttpConfig("https://base"));
+            job.setRetryPolicy("base-policy");
+            job.setEnabled(true, "production");
+            job.setRetryPolicy("prod-policy", "production");
+            // staging is enabled but carries no retry-policy override -> must be omitted
+            job.setEnabled(true, "staging");
+            job.save();
+            JsonNode a = attrs();
+            assertEquals("base-policy", a.path("retry_policy").asText());
+            JsonNode envNode = a.path("environments");
+            assertEquals("prod-policy", envNode.path("production").path("retry_policy").asText());
+            assertFalse(envNode.path("staging").has("retry_policy"),
+                    "an environment without a retry-policy override must omit it");
+        }
+    }
+
+    @Test
+    void retryPolicy_omittedFromWireWhenUnset() throws Exception {
+        installFullHandler();
+        try (JobsClient c = client()) {
+            Job job = c.newRecurringJob(JOB_ID, "My Job", "0 2 * * *", new HttpConfig("https://base"));
+            job.save();
+            assertFalse(attrs().has("retry_policy"), "null retry_policy must be omitted from the wire");
+        }
+    }
+
+    @Test
+    void getParsesRetryPolicy() throws Exception {
+        handler.set(ex -> respondJson(ex, 200, "{\"data\":{\"id\":\"rp\",\"type\":\"job\","
+                + "\"attributes\":{\"name\":\"RP\",\"schedule\":\"0 2 * * *\","
+                + "\"retry_policy\":\"base-policy\","
+                + "\"configuration\":{\"method\":\"POST\",\"url\":\"https://x\"},"
+                + "\"environments\":{\"production\":{\"enabled\":true,\"retry_policy\":\"prod-policy\"},"
+                + "\"staging\":{\"enabled\":true,\"retry_policy\":null}},"
+                + "\"created_at\":\"2026-06-04T00:00:00Z\"}}}"));
+        try (JobsClient c = client()) {
+            Job job = c.get("rp");
+            assertEquals("base-policy", job.retryPolicy);
+            assertEquals("prod-policy", job.environments.get("production").retryPolicy);
+            assertNull(job.environments.get("staging").retryPolicy);
+        }
+    }
+
+    // -----------------------------------------------------------------
+    // Run-list trigger / lastRunOnly filters + RunRetry parse
+    // -----------------------------------------------------------------
+
+    @Test
+    void runsList_triggerAndLastRunOnlyFilters() throws Exception {
+        installFullHandler();
+        try (JobsClient c = client()) {
+            // default: neither filter on the wire
+            c.runs.list();
+            assertFalse(lastQuery.get() != null && lastQuery.get().contains("filter[trigger]="));
+            assertFalse(lastQuery.get() != null && lastQuery.get().contains("last_run_only="));
+            // triggers comma-joined (any-of) + last_run_only=true
+            ListRunsInput in = new ListRunsInput();
+            in.triggers = List.of(RunTrigger.RETRY, RunTrigger.SCHEDULE);
+            in.lastRunOnly = true;
+            c.runs.list(in);
+            assertTrue(lastQuery.get().contains("filter[trigger]=RETRY,SCHEDULE"));
+            assertTrue(lastQuery.get().contains("last_run_only=true"));
+            // empty triggers list -> filter omitted
+            ListRunsInput empty = new ListRunsInput();
+            empty.triggers = List.of();
+            c.runs.list(empty);
+            assertFalse(lastQuery.get() != null && lastQuery.get().contains("filter[trigger]="));
+        }
+    }
+
+    @Test
+    void job_listRuns_triggerAndLastRunOnly() throws Exception {
+        installFullHandler();
+        try (JobsClient c = client()) {
+            Job job = c.get(JOB_ID);
+            // listRuns(environment, lastRunOnly)
+            assertEquals(1, job.listRuns("production", true).size());
+            assertTrue(lastQuery.get().contains("filter[job]=" + JOB_ID));
+            assertTrue(lastQuery.get().contains("filter[environment]=production"));
+            assertTrue(lastQuery.get().contains("last_run_only=true"));
+            // full overload with triggers + paging
+            assertEquals(1, job.listRuns("production", List.of(RunTrigger.RETRY), true, 5, "cur").size());
+            assertTrue(lastQuery.get().contains("filter[trigger]=RETRY"));
+            assertTrue(lastQuery.get().contains("page[size]=5"));
+            assertTrue(lastQuery.get().contains("last_run_only=true"));
+        }
+    }
+
+    @Test
+    void conversions_runWithRetry_parsesRunRetry() throws Exception {
+        handler.set(ex -> respondJson(ex, 200, "{\"data\":{\"id\":\"" + RUN_ID + "\",\"type\":\"run\","
+                + "\"attributes\":{\"job\":\"" + JOB_ID + "\",\"environment\":\"production\","
+                + "\"trigger\":\"RETRY\",\"status\":\"PENDING\","
+                + "\"retry\":{\"of\":\"" + RUN_ID + "\",\"attempt\":2}}}}"));
+        try (JobsClient c = client()) {
+            Run run = c.runs.get(RUN_ID);
+            assertEquals("RETRY", run.trigger);
+            assertNotNull(run.retry);
+            assertEquals(RUN_ID, run.retry.of);
+            assertEquals(2, run.retry.attempt);
+            assertTrue(run.retry.toString().contains("RunRetry("));
+        }
     }
 }

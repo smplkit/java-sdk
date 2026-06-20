@@ -89,6 +89,9 @@ final class JobsConversions {
             if (env.timezone != null) {
                 gen.setTimezone(env.timezone);
             }
+            if (env.retryPolicy != null) {
+                gen.setRetryPolicy(env.retryPolicy);
+            }
             if (env.configuration != null) {
                 gen.setConfiguration(configurationToGen(env.configuration));
             }
@@ -111,6 +114,7 @@ final class JobsConversions {
                 env.enabled = gen.getEnabled() != null ? gen.getEnabled() : false;
                 env.schedule = gen.getSchedule();
                 env.timezone = gen.getTimezone();
+                env.retryPolicy = gen.getRetryPolicy();
                 env.configuration = gen.getConfiguration() != null
                         ? configurationFromGen(gen.getConfiguration()) : null;
                 env.nextRunAt = gen.getNextRunAt();
@@ -118,6 +122,55 @@ final class JobsConversions {
             out.put(e.getKey(), env);
         }
         return out;
+    }
+
+    /**
+     * Convert the wrapper {@link RetryOn} to the generated model. Both
+     * {@code statuses} and {@code reasons} are always populated (an empty
+     * {@link RetryOn} serializes as empty lists — it retries nothing).
+     */
+    static com.smplkit.internal.generated.jobs.model.RetryOn retryOnToGen(RetryOn src) {
+        com.smplkit.internal.generated.jobs.model.RetryOn out =
+                new com.smplkit.internal.generated.jobs.model.RetryOn();
+        out.setStatuses(src.statuses != null ? new ArrayList<>(src.statuses) : new ArrayList<>());
+        List<com.smplkit.internal.generated.jobs.model.RetryOn.ReasonsEnum> reasons = new ArrayList<>();
+        if (src.reasons != null) {
+            for (RetryReason r : src.reasons) {
+                reasons.add(com.smplkit.internal.generated.jobs.model.RetryOn.ReasonsEnum
+                        .fromValue(r.getValue()));
+            }
+        }
+        out.setReasons(reasons);
+        return out;
+    }
+
+    /** Convert the generated {@link RetryOn} model to a wrapper instance. */
+    static RetryOn retryOnFromGen(com.smplkit.internal.generated.jobs.model.RetryOn src) {
+        RetryOn out = new RetryOn();
+        if (src == null) return out;
+        if (src.getStatuses() != null) {
+            out.statuses = new ArrayList<>(src.getStatuses());
+        }
+        if (src.getReasons() != null) {
+            List<RetryReason> reasons = new ArrayList<>();
+            for (com.smplkit.internal.generated.jobs.model.RetryOn.ReasonsEnum r : src.getReasons()) {
+                reasons.add(RetryReason.fromValue(r.getValue()));
+            }
+            out.reasons = reasons;
+        }
+        return out;
+    }
+
+    /**
+     * Join run triggers into the comma-separated string the generated
+     * {@code filter[trigger]} parameter expects (any-of). Returns {@code null}
+     * when the list is {@code null} or empty, leaving the filter unset.
+     */
+    static String joinTriggers(List<RunTrigger> triggers) {
+        if (triggers == null || triggers.isEmpty()) {
+            return null;
+        }
+        return triggers.stream().map(RunTrigger::getValue).collect(Collectors.joining(","));
     }
 
     /**
@@ -149,6 +202,11 @@ final class JobsConversions {
 
     static com.smplkit.jobs.Run runFromResource(RunResource r, RunsClient runs) {
         Run a = r.getAttributes();
+        // ``retry`` is present only on RETRY runs; map it to the read-only
+        // RunRetry record when the server includes it.
+        com.smplkit.internal.generated.jobs.model.RunRetry genRetry = a.getRetry();
+        RunRetry retry = genRetry == null ? null
+                : new RunRetry(genRetry.getOf().toString(), genRetry.getAttempt());
         return new com.smplkit.jobs.Run(
                 r.getId(),
                 a.getJob(),
@@ -156,6 +214,7 @@ final class JobsConversions {
                 a.getEnvironment(),
                 a.getTrigger() == null ? null : a.getTrigger().getValue(),
                 a.getRerunOf() == null ? null : a.getRerunOf().toString(),
+                retry,
                 a.getScheduledFor(),
                 a.getStatus() == null ? null : a.getStatus().getValue(),
                 a.getStartedAt(),

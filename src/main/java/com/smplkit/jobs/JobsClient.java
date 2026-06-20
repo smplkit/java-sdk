@@ -6,6 +6,7 @@ import com.smplkit.internal.HttpClients;
 import com.smplkit.internal.generated.jobs.ApiClient;
 import com.smplkit.internal.generated.jobs.ApiException;
 import com.smplkit.internal.generated.jobs.api.JobsApi;
+import com.smplkit.internal.generated.jobs.api.RetryPoliciesApi;
 import com.smplkit.internal.generated.jobs.api.RunsApi;
 import com.smplkit.internal.generated.jobs.api.UsageApi;
 import com.smplkit.internal.generated.jobs.model.JobCreateRequest;
@@ -67,6 +68,9 @@ public final class JobsClient implements AutoCloseable {
     /** Run history and run actions ({@code jobs.runs}). */
     public final RunsClient runs;
 
+    /** Reusable retry policies ({@code jobs.retryPolicies}). */
+    public final RetryPoliciesClient retryPolicies;
+
     /**
      * Wired constructor (no environment) — invoked by
      * {@link com.smplkit.SmplClient} so the jobs surface shares the parent
@@ -108,6 +112,7 @@ public final class JobsClient implements AutoCloseable {
         this.usageApi = new UsageApi(apiClient);
         this.environment = environment;
         this.runs = new RunsClient(new RunsApi(apiClient), environment);
+        this.retryPolicies = new RetryPoliciesClient(new RetryPoliciesApi(apiClient));
         this.ownsTransport = false;
     }
 
@@ -127,6 +132,7 @@ public final class JobsClient implements AutoCloseable {
         this.usageApi = new UsageApi(apiClient);
         this.environment = environment;
         this.runs = new RunsClient(new RunsApi(apiClient), environment);
+        this.retryPolicies = new RetryPoliciesClient(new RetryPoliciesApi(apiClient));
         this.ownsTransport = true;
     }
 
@@ -147,7 +153,7 @@ public final class JobsClient implements AutoCloseable {
      * @return an unsaved recurring {@link Job} bound to this client
      */
     public Job newRecurringJob(String id, String name, String schedule, HttpConfig configuration) {
-        return newJob(id, name, schedule, configuration, null, new HashMap<>(), "ALLOW", null);
+        return newJob(id, name, schedule, null, null, configuration, null, new HashMap<>(), "ALLOW", null);
     }
 
     /**
@@ -173,7 +179,41 @@ public final class JobsClient implements AutoCloseable {
     public Job newRecurringJob(String id, String name, String schedule, HttpConfig configuration,
                                String description, Map<String, JobEnvironment> environments,
                                String concurrencyPolicy) {
-        return newJob(id, name, schedule, configuration, description,
+        return newJob(id, name, schedule, null, null, configuration, description,
+                environments != null ? environments : new HashMap<>(), concurrencyPolicy, null);
+    }
+
+    /**
+     * Return an unsaved recurring {@link Job}, setting every job field at
+     * construction including the base {@code timezone} and {@code retryPolicy}.
+     * Call {@code .save()} to create it.
+     *
+     * @param id stable caller-supplied unique identifier for the job. Unique
+     *     within the account and immutable; the service returns 409 if another
+     *     live job already uses this id.
+     * @param name human-readable name for the job
+     * @param schedule the base cron cadence (see
+     *     {@link #newRecurringJob(String, String, String, HttpConfig)})
+     * @param configuration the HTTP request the job sends each time it fires
+     * @param description free-text description for the job; {@code null} for none
+     * @param environments per-environment overrides keyed by environment key;
+     *     the job is scheduled only in environments enabled here. {@code null}
+     *     starts with no overrides
+     * @param concurrencyPolicy how overlapping runs are handled. {@code "ALLOW"}
+     *     (the default and only value today) permits a new run to start while a
+     *     previous one is still in flight
+     * @param timezone the base IANA timezone the cron is evaluated in (e.g.
+     *     {@code "America/New_York"}), inherited by every environment unless it
+     *     overrides it; {@code null} means UTC
+     * @param retryPolicy the base retry policy for failed runs — the id of a
+     *     {@link RetryPolicy}, overridable per environment; {@code null} uses the
+     *     built-in {@code "Default"} policy, which never retries
+     * @return an unsaved recurring {@link Job} bound to this client
+     */
+    public Job newRecurringJob(String id, String name, String schedule, HttpConfig configuration,
+                               String description, Map<String, JobEnvironment> environments,
+                               String concurrencyPolicy, String timezone, String retryPolicy) {
+        return newJob(id, name, schedule, timezone, retryPolicy, configuration, description,
                 environments != null ? environments : new HashMap<>(), concurrencyPolicy, null);
     }
 
@@ -192,7 +232,7 @@ public final class JobsClient implements AutoCloseable {
      * @return an unsaved manual {@link Job} bound to this client
      */
     public Job newManualJob(String id, String name, HttpConfig configuration) {
-        return newJob(id, name, null, configuration, null, new HashMap<>(), "ALLOW", null);
+        return newJob(id, name, null, null, null, configuration, null, new HashMap<>(), "ALLOW", null);
     }
 
     /**
@@ -217,7 +257,37 @@ public final class JobsClient implements AutoCloseable {
     public Job newManualJob(String id, String name, HttpConfig configuration,
                             String description, Map<String, JobEnvironment> environments,
                             String concurrencyPolicy) {
-        return newJob(id, name, null, configuration, description,
+        return newJob(id, name, null, null, null, configuration, description,
+                environments != null ? environments : new HashMap<>(), concurrencyPolicy, null);
+    }
+
+    /**
+     * Return an unsaved manual {@link Job}, setting every job field at
+     * construction including the {@code retryPolicy}. Call {@code .save()} to
+     * create it. A manual job has no schedule (and no timezone) — it never
+     * auto-fires and runs only when triggered.
+     *
+     * @param id stable caller-supplied unique identifier for the job. Unique
+     *     within the account and immutable; the service returns 409 if another
+     *     live job already uses this id.
+     * @param name human-readable name for the job
+     * @param configuration the HTTP request the job sends each time it runs
+     * @param description free-text description for the job; {@code null} for none
+     * @param environments per-environment overrides keyed by environment key;
+     *     the job is triggerable only in environments enabled here. {@code null}
+     *     starts with no overrides
+     * @param concurrencyPolicy how overlapping runs are handled. {@code "ALLOW"}
+     *     (the default and only value today) permits a new run to start while a
+     *     previous one is still in flight
+     * @param retryPolicy the retry policy for failed runs — the id of a
+     *     {@link RetryPolicy}, overridable per environment; {@code null} uses the
+     *     built-in {@code "Default"} policy, which never retries
+     * @return an unsaved manual {@link Job} bound to this client
+     */
+    public Job newManualJob(String id, String name, HttpConfig configuration,
+                            String description, Map<String, JobEnvironment> environments,
+                            String concurrencyPolicy, String retryPolicy) {
+        return newJob(id, name, null, null, retryPolicy, configuration, description,
                 environments != null ? environments : new HashMap<>(), concurrencyPolicy, null);
     }
 
@@ -235,7 +305,8 @@ public final class JobsClient implements AutoCloseable {
      * @return an unsaved one-off {@link Job} bound to this client
      */
     public Job schedule(String id, String name, OffsetDateTime schedule, HttpConfig configuration) {
-        return newJob(id, name, schedule.toString(), configuration, null, new HashMap<>(), "ALLOW", null);
+        return newJob(id, name, schedule.toString(), null, null, configuration, null, new HashMap<>(),
+                "ALLOW", null);
     }
 
     /**
@@ -253,8 +324,8 @@ public final class JobsClient implements AutoCloseable {
      */
     public Job schedule(String id, String name, OffsetDateTime schedule, HttpConfig configuration,
                         String environment) {
-        return newJob(id, name, schedule.toString(), configuration, null, new HashMap<>(), "ALLOW",
-                environment);
+        return newJob(id, name, schedule.toString(), null, null, configuration, null, new HashMap<>(),
+                "ALLOW", environment);
     }
 
     /**
@@ -278,14 +349,46 @@ public final class JobsClient implements AutoCloseable {
      */
     public Job schedule(String id, String name, OffsetDateTime schedule, HttpConfig configuration,
                         String description, String concurrencyPolicy, String environment) {
-        return newJob(id, name, schedule.toString(), configuration, description,
+        return newJob(id, name, schedule.toString(), null, null, configuration, description,
                 new HashMap<>(), concurrencyPolicy, environment);
     }
 
-    private Job newJob(String id, String name, String schedule, HttpConfig configuration,
-                       String description, Map<String, JobEnvironment> environments,
+    /**
+     * Return an unsaved one-off {@link Job}, setting every job field at
+     * construction including the {@code retryPolicy}. Call {@code .save()} to
+     * create it. A one-off job runs a single time at {@code schedule} (and has
+     * no timezone) and is then spent.
+     *
+     * @param id stable caller-supplied unique identifier for the job. Unique
+     *     within the account and immutable; the service returns 409 if another
+     *     live job already uses this id.
+     * @param name human-readable name for the job
+     * @param schedule the instant the single run fires
+     * @param configuration the HTTP request the job sends when it runs
+     * @param description free-text description for the job; {@code null} for none
+     * @param concurrencyPolicy how overlapping runs are handled. {@code "ALLOW"}
+     *     (the default and only value today) permits a new run to start while a
+     *     previous one is still in flight
+     * @param retryPolicy the retry policy for failed runs — the id of a
+     *     {@link RetryPolicy}; {@code null} uses the built-in {@code "Default"}
+     *     policy, which never retries
+     * @param environment the environment the job is born in; {@code null} falls
+     *     back to the client's configured environment
+     * @return an unsaved one-off {@link Job} bound to this client
+     */
+    public Job schedule(String id, String name, OffsetDateTime schedule, HttpConfig configuration,
+                        String description, String concurrencyPolicy, String retryPolicy,
+                        String environment) {
+        return newJob(id, name, schedule.toString(), null, retryPolicy, configuration, description,
+                new HashMap<>(), concurrencyPolicy, environment);
+    }
+
+    private Job newJob(String id, String name, String schedule, String timezone, String retryPolicy,
+                       HttpConfig configuration, String description, Map<String, JobEnvironment> environments,
                        String concurrencyPolicy, String environment) {
         Job job = new Job(this, id, name, schedule, configuration);
+        job.timezone = timezone;
+        job.retryPolicy = retryPolicy;
         job.description = description;
         job.environments = environments;
         job.concurrencyPolicy = concurrencyPolicy;
@@ -489,6 +592,12 @@ public final class JobsClient implements AutoCloseable {
         if (job.timezone != null) {
             attrs.setTimezone(job.timezone);
         }
+        // ``retry_policy`` is the policy id for failed runs; a null policy is
+        // omitted, leaving the server default (the built-in ``Default`` policy,
+        // which never retries).
+        if (job.retryPolicy != null) {
+            attrs.setRetryPolicy(job.retryPolicy);
+        }
         attrs.setConfiguration(JobsConversions.configurationToGen(job.configuration));
         if (job.concurrencyPolicy != null) {
             attrs.setConcurrencyPolicy(com.smplkit.internal.generated.jobs.model.Job
@@ -532,6 +641,7 @@ public final class JobsClient implements AutoCloseable {
                 JobsConversions.configurationFromGen(a.getConfiguration()));
         job.description = a.getDescription();
         job.timezone = a.getTimezone();
+        job.retryPolicy = a.getRetryPolicy();
         job.environments = JobsConversions.environmentsFromGen(a.getEnvironments());
         // ``enabled`` is a derived, read-only roll-up computed from the
         // environments map — true when the job is enabled in any environment.

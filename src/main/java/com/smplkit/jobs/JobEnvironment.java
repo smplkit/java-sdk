@@ -39,6 +39,14 @@ public final class JobEnvironment {
     public String timezone = null;
 
     /**
+     * Optional per-environment retry-policy override — the id of a
+     * {@link RetryPolicy} (or {@code "Default"}). {@code null} (the default)
+     * inherits the job's base {@link Job#retryPolicy}. Sent on writes only when
+     * not {@code null}.
+     */
+    public String retryPolicy = null;
+
+    /**
      * Optional per-environment request configuration that fully replaces the
      * job's base {@link Job#configuration} for this environment. {@code null}
      * (the default) inherits the base configuration. Header values are returned

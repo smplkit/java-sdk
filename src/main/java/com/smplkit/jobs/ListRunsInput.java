@@ -13,6 +13,20 @@ public final class ListRunsInput {
      * covers every environment you can access.
      */
     public List<String> environments;
+    /**
+     * Restrict to runs started by any of these triggers (see {@link RunTrigger}),
+     * sent comma-joined as {@code filter[trigger]} (any-of) — e.g.
+     * {@code [RunTrigger.RETRY]} for automatic retries. {@code null} or empty
+     * covers every trigger.
+     */
+    public List<RunTrigger> triggers;
+    /**
+     * When {@code true}, collapse the result to the last completed (succeeded /
+     * failed / canceled) run per job-and-environment; in-flight runs are
+     * excluded and the other filters apply first. Sent as {@code last_run_only}
+     * only when {@code true} — a {@code false} value is omitted from the wire.
+     */
+    public boolean lastRunOnly = false;
     /** Items per page (cursor pagination). {@code null} uses the server default. */
     public Integer pageSize;
     /** Opaque cursor token from a prior page's {@code next} link. {@code null} starts at the first page. */

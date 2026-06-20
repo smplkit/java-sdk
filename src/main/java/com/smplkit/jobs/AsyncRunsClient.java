@@ -34,7 +34,10 @@ public final class AsyncRunsClient {
      *
      * @param input filters and paging for the listing. {@code job} returns
      *     only runs of the job with that id ({@code null} lists across all
-     *     jobs); {@code pageSize} is the max runs per page ({@code null} uses
+     *     jobs); {@code triggers} restricts to runs started by any of those
+     *     triggers ({@code null}/empty covers every trigger); {@code lastRunOnly}
+     *     collapses to the last completed run per environment when {@code true};
+     *     {@code pageSize} is the max runs per page ({@code null} uses
      *     the server default); {@code after} is an opaque cursor from a
      *     previous page ({@code null} starts from the first page)
      * @return a future of the runs in this page. It completes exceptionally
