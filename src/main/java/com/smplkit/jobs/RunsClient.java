@@ -52,7 +52,7 @@ public final class RunsClient {
                 JobsConversions.resolveEnvironmentFilter(input.environments, environment);
         RunListResponse resp = api.listRuns(
             input.job, null, filterEnvironment, null, null, null, null,
-            input.pageSize, input.after, null);
+            null, input.pageSize, input.after, null);
         List<Run> out = new ArrayList<>();
         if (resp.getData() != null) {
             for (RunResource r : resp.getData()) out.add(JobsConversions.runFromResource(r, this));
