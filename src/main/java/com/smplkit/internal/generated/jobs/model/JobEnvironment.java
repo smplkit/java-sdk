@@ -41,6 +41,7 @@ import com.smplkit.internal.generated.jobs.ApiClient;
 @JsonPropertyOrder({
   JobEnvironment.JSON_PROPERTY_ENABLED,
   JobEnvironment.JSON_PROPERTY_SCHEDULE,
+  JobEnvironment.JSON_PROPERTY_TIMEZONE,
   JobEnvironment.JSON_PROPERTY_CONFIGURATION,
   JobEnvironment.JSON_PROPERTY_NEXT_RUN_AT
 })
@@ -52,6 +53,9 @@ public class JobEnvironment {
 
   public static final String JSON_PROPERTY_SCHEDULE = "schedule";
   private JsonNullable<String> schedule = JsonNullable.<String>undefined();
+
+  public static final String JSON_PROPERTY_TIMEZONE = "timezone";
+  private JsonNullable<String> timezone = JsonNullable.<String>undefined();
 
   public static final String JSON_PROPERTY_CONFIGURATION = "configuration";
   @jakarta.annotation.Nullable
@@ -101,7 +105,7 @@ public class JobEnvironment {
   }
 
   /**
-   * Per-environment schedule override. Omit to inherit the job&#39;s base &#x60;schedule&#x60;. When present, it must be a 5-field cron expression evaluated in **UTC** (e.g. &#x60;0 3 * * *&#x60;), and is only allowed on a recurring (cron) job — it varies the cadence within that environment. It cannot appear on a manual or one-off job, and cannot change a job&#39;s kind.
+   * Per-environment schedule override. Omit to inherit the job&#39;s base &#x60;schedule&#x60;. When present, it must be a 5-field cron expression (e.g. &#x60;0 3 * * *&#x60;), evaluated in this environment&#39;s effective &#x60;timezone&#x60; (the per-environment override, else the base, else UTC), and is only allowed on a recurring (cron) job — it varies the cadence within that environment. It cannot appear on a manual or one-off job, and cannot change a job&#39;s kind.
    * @return schedule
    */
   @jakarta.annotation.Nullable
@@ -124,6 +128,38 @@ public class JobEnvironment {
 
   public void setSchedule(@jakarta.annotation.Nullable String schedule) {
     this.schedule = JsonNullable.<String>of(schedule);
+  }
+
+
+  public JobEnvironment timezone(@jakarta.annotation.Nullable String timezone) {
+    this.timezone = JsonNullable.<String>of(timezone);
+    return this;
+  }
+
+  /**
+   * Per-environment timezone override for evaluating this environment&#39;s cron &#x60;schedule&#x60;. Omit to inherit the base &#x60;timezone&#x60; (else UTC). When present, it must be a valid IANA timezone key (e.g. &#x60;America/New_York&#x60;). Only valid on a recurring (cron) job; it may be set on an environment that inherits the base schedule (it need not also override &#x60;schedule&#x60;).
+   * @return timezone
+   */
+  @jakarta.annotation.Nullable
+  @JsonIgnore
+  public String getTimezone() {
+        return timezone.orElse(null);
+  }
+
+  @JsonProperty(value = JSON_PROPERTY_TIMEZONE, required = false)
+  @JsonInclude(value = JsonInclude.Include.USE_DEFAULTS)
+
+  public JsonNullable<String> getTimezone_JsonNullable() {
+    return timezone;
+  }
+  
+  @JsonProperty(JSON_PROPERTY_TIMEZONE)
+  public void setTimezone_JsonNullable(JsonNullable<String> timezone) {
+    this.timezone = timezone;
+  }
+
+  public void setTimezone(@jakarta.annotation.Nullable String timezone) {
+    this.timezone = JsonNullable.<String>of(timezone);
   }
 
 
@@ -193,6 +229,7 @@ public class JobEnvironment {
     JobEnvironment jobEnvironment = (JobEnvironment) o;
     return Objects.equals(this.enabled, jobEnvironment.enabled) &&
         equalsNullable(this.schedule, jobEnvironment.schedule) &&
+        equalsNullable(this.timezone, jobEnvironment.timezone) &&
         Objects.equals(this._configuration, jobEnvironment._configuration) &&
         equalsNullable(this.nextRunAt, jobEnvironment.nextRunAt);
   }
@@ -203,7 +240,7 @@ public class JobEnvironment {
 
   @Override
   public int hashCode() {
-    return Objects.hash(enabled, hashCodeNullable(schedule), _configuration, hashCodeNullable(nextRunAt));
+    return Objects.hash(enabled, hashCodeNullable(schedule), hashCodeNullable(timezone), _configuration, hashCodeNullable(nextRunAt));
   }
 
   private static <T> int hashCodeNullable(JsonNullable<T> a) {
@@ -219,6 +256,7 @@ public class JobEnvironment {
     sb.append("class JobEnvironment {\n");
     sb.append("    enabled: ").append(toIndentedString(enabled)).append("\n");
     sb.append("    schedule: ").append(toIndentedString(schedule)).append("\n");
+    sb.append("    timezone: ").append(toIndentedString(timezone)).append("\n");
     sb.append("    _configuration: ").append(toIndentedString(_configuration)).append("\n");
     sb.append("    nextRunAt: ").append(toIndentedString(nextRunAt)).append("\n");
     sb.append("}");
@@ -273,6 +311,11 @@ public class JobEnvironment {
     // add `schedule` to the URL query string
     if (getSchedule() != null) {
       joiner.add(String.format(java.util.Locale.ROOT, "%sschedule%s=%s", prefix, suffix, ApiClient.urlEncode(ApiClient.valueToString(getSchedule()))));
+    }
+
+    // add `timezone` to the URL query string
+    if (getTimezone() != null) {
+      joiner.add(String.format(java.util.Locale.ROOT, "%stimezone%s=%s", prefix, suffix, ApiClient.urlEncode(ApiClient.valueToString(getTimezone()))));
     }
 
     // add `configuration` to the URL query string
