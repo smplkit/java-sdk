@@ -66,6 +66,16 @@ public final class Job {
      * datetime or {@code "now"} job disables itself after it fires.
      */
     public String schedule;
+    /**
+     * The base IANA timezone the cron {@link #schedule} is evaluated in (e.g.
+     * {@code "America/New_York"}); {@code null} means UTC. The base every
+     * environment inherits unless it sets its own {@link JobEnvironment#timezone}.
+     * The cron fires on this zone's wall clock (DST-aware) while the per-env
+     * {@link JobEnvironment#nextRunAt} is still reported as a UTC instant. Only
+     * valid on a recurring (cron) job — leave {@code null} for a manual or
+     * one-off job. Settable; sent on writes only when non-{@code null}.
+     */
+    public String timezone;
     /** The HTTP request to perform when the job fires. */
     public HttpConfig configuration;
     /** How overlapping runs are handled. {@code "ALLOW"} (the only value) permits them. */
@@ -373,6 +383,62 @@ public final class Job {
         return schedule;
     }
 
+    /**
+     * Set the job's base timezone in memory. Call {@link #save()} to persist.
+     *
+     * <p>The base timezone applies to every environment that does not carry its
+     * own override; use {@link #setTimezone(String, String)} to vary the zone
+     * for a single environment.</p>
+     *
+     * @param timezone the IANA timezone the cron {@link #schedule} is evaluated
+     *     in (e.g. {@code "America/New_York"}); {@code null} means UTC
+     */
+    public void setTimezone(String timezone) {
+        this.timezone = timezone;
+    }
+
+    /**
+     * Set the job's timezone in memory — base ({@code environment == null}) or a
+     * per-environment override. A per-environment override varies the zone the
+     * cron {@link #schedule} is evaluated in for that environment only; pass
+     * {@code null} as the {@code timezone} for that environment to clear the
+     * override and inherit the base timezone. A timezone is only meaningful on a
+     * recurring (cron) job; an override may be set on an environment that
+     * inherits the base schedule (it need not also override the schedule). Call
+     * {@link #save()} to persist.
+     *
+     * @param timezone the IANA timezone to set, or {@code null} to clear a
+     *     per-environment override
+     * @param environment the environment key to set the override for, or
+     *     {@code null} to set the base timezone
+     */
+    public void setTimezone(String timezone, String environment) {
+        if (environment == null) {
+            this.timezone = timezone;
+        } else {
+            environmentOverride(environment).timezone = timezone;
+        }
+    }
+
+    /**
+     * The job's effective timezone for an environment — that environment's
+     * override when it has one, else the base {@link #timezone} (the zone the
+     * job's cron is actually evaluated in there).
+     *
+     * @param environment the environment key, or {@code null} for the base
+     *     timezone
+     * @return the resolved IANA timezone string, or {@code null} for UTC
+     */
+    public String getTimezone(String environment) {
+        if (environment != null) {
+            JobEnvironment env = environments.get(environment);
+            if (env != null && env.timezone != null) {
+                return env.timezone;
+            }
+        }
+        return timezone;
+    }
+
     // ------------------------------------------------------------------
     // Active-record run helpers
     // ------------------------------------------------------------------
@@ -469,6 +535,7 @@ public final class Job {
         this.kind = other.kind;
         this.type = other.type;
         this.schedule = other.schedule;
+        this.timezone = other.timezone;
         this.configuration = other.configuration;
         this.concurrencyPolicy = other.concurrencyPolicy;
         this.createdAt = other.createdAt;

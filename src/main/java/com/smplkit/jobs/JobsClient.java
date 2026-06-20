@@ -484,6 +484,11 @@ public final class JobsClient implements AutoCloseable {
             attrs.setType(com.smplkit.internal.generated.jobs.model.Job.TypeEnum.fromValue(job.type));
         }
         attrs.setSchedule(job.schedule);
+        // ``timezone`` is the IANA zone the cron is evaluated in (recurring jobs
+        // only); a null timezone is omitted, leaving the server default of UTC.
+        if (job.timezone != null) {
+            attrs.setTimezone(job.timezone);
+        }
         attrs.setConfiguration(JobsConversions.configurationToGen(job.configuration));
         if (job.concurrencyPolicy != null) {
             attrs.setConcurrencyPolicy(com.smplkit.internal.generated.jobs.model.Job
@@ -526,6 +531,7 @@ public final class JobsClient implements AutoCloseable {
                 this, r.getId(), a.getName(), a.getSchedule(),
                 JobsConversions.configurationFromGen(a.getConfiguration()));
         job.description = a.getDescription();
+        job.timezone = a.getTimezone();
         job.environments = JobsConversions.environmentsFromGen(a.getEnvironments());
         // ``enabled`` is a derived, read-only roll-up computed from the
         // environments map — true when the job is enabled in any environment.

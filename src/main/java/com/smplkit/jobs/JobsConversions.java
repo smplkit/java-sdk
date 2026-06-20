@@ -69,8 +69,9 @@ final class JobsConversions {
      * Convert the wrapper {@code environments} map to the generated model.
      * Per-environment {@code configuration} overrides are sent as full
      * {@link HttpConfig} payloads (plaintext headers in), mirroring the base
-     * configuration's round-trip semantics; a {@code schedule} override is sent
-     * only when set (omit it to inherit the base schedule). The read-only
+     * configuration's round-trip semantics; a {@code schedule} or
+     * {@code timezone} override is sent only when set (omit either to inherit the
+     * base schedule / base timezone). The read-only
      * {@code nextRunAt} is never written. An entry without overrides sends only
      * {@code enabled} (inherit the base schedule and configuration).
      */
@@ -84,6 +85,9 @@ final class JobsConversions {
             gen.setEnabled(env.enabled);
             if (env.schedule != null) {
                 gen.setSchedule(env.schedule);
+            }
+            if (env.timezone != null) {
+                gen.setTimezone(env.timezone);
             }
             if (env.configuration != null) {
                 gen.setConfiguration(configurationToGen(env.configuration));
@@ -106,6 +110,7 @@ final class JobsConversions {
             if (gen != null) {
                 env.enabled = gen.getEnabled() != null ? gen.getEnabled() : false;
                 env.schedule = gen.getSchedule();
+                env.timezone = gen.getTimezone();
                 env.configuration = gen.getConfiguration() != null
                         ? configurationFromGen(gen.getConfiguration()) : null;
                 env.nextRunAt = gen.getNextRunAt();

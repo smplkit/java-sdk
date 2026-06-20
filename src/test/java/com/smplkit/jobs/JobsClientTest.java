@@ -441,6 +441,28 @@ class JobsClientTest {
             job.setSchedule("30 2 * * *");
             assertEquals("30 2 * * *", job.schedule);
 
+            // base timezone setter (one-arg) and the env-aware setter with a
+            // null environment both set the base timezone
+            job.setTimezone("America/New_York");
+            assertEquals("America/New_York", job.timezone);
+            job.setTimezone("America/Chicago", null);
+            assertEquals("America/Chicago", job.timezone);
+            // per-env timezone override is set on the environment, not the base,
+            // and preserves the already-set per-env configuration
+            job.setTimezone("Europe/London", "production");
+            assertEquals("Europe/London", job.environments.get("production").timezone);
+            assertSame(prodCfg, job.environments.get("production").configuration);
+            assertEquals("America/Chicago", job.timezone);
+            // getTimezone(env): override wins, else base (incl. unknown / null env)
+            assertEquals("Europe/London", job.getTimezone("production"));
+            assertEquals("America/Chicago", job.getTimezone("staging"));
+            assertEquals("America/Chicago", job.getTimezone("unknown"));
+            assertEquals("America/Chicago", job.getTimezone(null));
+            // clearing a per-env override falls back to base on resolution
+            job.setTimezone(null, "production");
+            assertNull(job.environments.get("production").timezone);
+            assertEquals("America/Chicago", job.getTimezone("production"));
+
             // toString lists the enabled environments, sorted
             job.setEnabled(true, "production");
             assertTrue(job.toString().contains("enabled_in=[development, production]"));
@@ -1074,11 +1096,14 @@ class JobsClientTest {
         // staging:    enabled, no schedule override (inherits base), null next run.
         handler.set(ex -> respondJson(ex, 200, "{\"data\":{\"id\":\"sched\",\"type\":\"job\","
                 + "\"attributes\":{\"name\":\"Sched\",\"schedule\":\"0 2 * * *\","
+                + "\"timezone\":\"America/New_York\","
                 + "\"configuration\":{\"method\":\"POST\",\"url\":\"https://x\"},"
                 + "\"environments\":{"
                 + "\"production\":{\"enabled\":true,\"schedule\":\"15 4 * * *\","
+                + "\"timezone\":\"Europe/London\","
                 + "\"next_run_at\":\"2026-06-05T04:15:00Z\"},"
-                + "\"staging\":{\"enabled\":true,\"schedule\":null,\"next_run_at\":null}},"
+                + "\"staging\":{\"enabled\":true,\"schedule\":null,\"timezone\":null,"
+                + "\"next_run_at\":null}},"
                 + "\"created_at\":\"2026-06-04T00:00:00Z\"}}}"));
         try (JobsClient c = client()) {
             Job job = c.get("sched");
@@ -1093,6 +1118,15 @@ class JobsClientTest {
             assertEquals("0 2 * * *", job.getSchedule("staging"));
             assertEquals("0 2 * * *", job.getSchedule("unknown"));
             assertEquals("0 2 * * *", job.getSchedule(null));
+            // base + per-env timezone decode from the wire; staging inherits (null)
+            assertEquals("America/New_York", job.timezone);
+            assertEquals("Europe/London", job.environments.get("production").timezone);
+            assertNull(job.environments.get("staging").timezone);
+            // getTimezone(env): override wins, else base for everything else
+            assertEquals("Europe/London", job.getTimezone("production"));
+            assertEquals("America/New_York", job.getTimezone("staging"));
+            assertEquals("America/New_York", job.getTimezone("unknown"));
+            assertEquals("America/New_York", job.getTimezone(null));
         }
     }
 
@@ -1114,11 +1148,24 @@ class JobsClientTest {
             assertEquals("30 1 * * *", job.getSchedule("production"));
             // re-set the override, then save: it travels on the wire; next_run_at never does
             job.setSchedule("45 6 * * *", "production");
+            // base timezone + a per-env timezone override on production
+            job.setTimezone("America/Chicago");
+            job.setTimezone("Europe/London", "production");
+            // staging is enabled but carries no timezone override -> must be omitted
+            job.setEnabled(true, "staging");
             job.save();
-            JsonNode envNode = attrs().path("environments");
+            JsonNode a = attrs();
+            JsonNode envNode = a.path("environments");
             assertEquals("45 6 * * *", envNode.path("production").path("schedule").asText());
             assertFalse(envNode.path("production").has("next_run_at"),
                     "read-only next_run_at must never be written");
+            // base timezone is sent when set
+            assertEquals("America/Chicago", a.path("timezone").asText());
+            // per-env timezone override travels on the wire for production
+            assertEquals("Europe/London", envNode.path("production").path("timezone").asText());
+            // staging has no timezone override; it must be omitted from the wire
+            assertFalse(envNode.path("staging").has("timezone"),
+                    "an environment without a timezone override must omit it");
         }
     }
 

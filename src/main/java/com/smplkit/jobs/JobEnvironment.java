@@ -29,6 +29,16 @@ public final class JobEnvironment {
     public String schedule = null;
 
     /**
+     * Optional per-environment IANA timezone override for evaluating this
+     * environment's cron {@link #schedule}. {@code null} (the default) inherits
+     * the job's base {@link Job#timezone} (else UTC). When set, it must be a
+     * valid IANA timezone key (e.g. {@code "America/New_York"}) and is only
+     * meaningful on a recurring job; it may be set on an environment that
+     * inherits the base schedule (it need not also override {@link #schedule}).
+     */
+    public String timezone = null;
+
+    /**
      * Optional per-environment request configuration that fully replaces the
      * job's base {@link Job#configuration} for this environment. {@code null}
      * (the default) inherits the base configuration. Header values are returned
