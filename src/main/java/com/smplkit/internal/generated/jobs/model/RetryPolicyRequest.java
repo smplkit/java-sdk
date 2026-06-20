@@ -24,52 +24,53 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonTypeName;
 import com.fasterxml.jackson.annotation.JsonValue;
+import com.smplkit.internal.generated.jobs.model.RetryPolicyResource;
 import java.util.Arrays;
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 
 
 import com.smplkit.internal.generated.jobs.ApiClient;
 /**
- * Cursor-pagination meta for the runs list.
+ * JSON:API request envelope for updating a retry policy.
  */
 @JsonPropertyOrder({
-  RunListMeta.JSON_PROPERTY_PAGE_SIZE
+  RetryPolicyRequest.JSON_PROPERTY_DATA
 })
 @jakarta.annotation.Generated(value = "org.openapitools.codegen.languages.JavaClientCodegen", comments = "Generator version: 7.21.0")
-public class RunListMeta {
-  public static final String JSON_PROPERTY_PAGE_SIZE = "page_size";
+public class RetryPolicyRequest {
+  public static final String JSON_PROPERTY_DATA = "data";
   @jakarta.annotation.Nonnull
-  private Integer pageSize;
+  private RetryPolicyResource data;
 
-  public RunListMeta() { 
+  public RetryPolicyRequest() { 
   }
 
-  public RunListMeta pageSize(@jakarta.annotation.Nonnull Integer pageSize) {
-    this.pageSize = pageSize;
+  public RetryPolicyRequest data(@jakarta.annotation.Nonnull RetryPolicyResource data) {
+    this.data = data;
     return this;
   }
 
   /**
-   * Number of runs returned per page.
-   * @return pageSize
+   * Get data
+   * @return data
    */
   @jakarta.annotation.Nonnull
-  @JsonProperty(value = JSON_PROPERTY_PAGE_SIZE, required = true)
+  @JsonProperty(value = JSON_PROPERTY_DATA, required = true)
   @JsonInclude(value = JsonInclude.Include.ALWAYS)
-  public Integer getPageSize() {
-    return pageSize;
+  public RetryPolicyResource getData() {
+    return data;
   }
 
 
-  @JsonProperty(value = JSON_PROPERTY_PAGE_SIZE, required = true)
+  @JsonProperty(value = JSON_PROPERTY_DATA, required = true)
   @JsonInclude(value = JsonInclude.Include.ALWAYS)
-  public void setPageSize(@jakarta.annotation.Nonnull Integer pageSize) {
-    this.pageSize = pageSize;
+  public void setData(@jakarta.annotation.Nonnull RetryPolicyResource data) {
+    this.data = data;
   }
 
 
   /**
-   * Return true if this RunListMeta object is equal to o.
+   * Return true if this RetryPolicyRequest object is equal to o.
    */
   @Override
   public boolean equals(Object o) {
@@ -79,20 +80,20 @@ public class RunListMeta {
     if (o == null || getClass() != o.getClass()) {
       return false;
     }
-    RunListMeta runListMeta = (RunListMeta) o;
-    return Objects.equals(this.pageSize, runListMeta.pageSize);
+    RetryPolicyRequest retryPolicyRequest = (RetryPolicyRequest) o;
+    return Objects.equals(this.data, retryPolicyRequest.data);
   }
 
   @Override
   public int hashCode() {
-    return Objects.hash(pageSize);
+    return Objects.hash(data);
   }
 
   @Override
   public String toString() {
     StringBuilder sb = new StringBuilder();
-    sb.append("class RunListMeta {\n");
-    sb.append("    pageSize: ").append(toIndentedString(pageSize)).append("\n");
+    sb.append("class RetryPolicyRequest {\n");
+    sb.append("    data: ").append(toIndentedString(data)).append("\n");
     sb.append("}");
     return sb.toString();
   }
@@ -137,9 +138,9 @@ public class RunListMeta {
 
     StringJoiner joiner = new StringJoiner("&");
 
-    // add `page_size` to the URL query string
-    if (getPageSize() != null) {
-      joiner.add(String.format(java.util.Locale.ROOT, "%spage_size%s=%s", prefix, suffix, ApiClient.urlEncode(ApiClient.valueToString(getPageSize()))));
+    // add `data` to the URL query string
+    if (getData() != null) {
+      joiner.add(getData().toUrlQueryString(prefix + "data" + suffix));
     }
 
     return joiner.toString();

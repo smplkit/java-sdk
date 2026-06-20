@@ -25,51 +25,81 @@ import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonTypeName;
 import com.fasterxml.jackson.annotation.JsonValue;
 import java.util.Arrays;
+import java.util.UUID;
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 
 
 import com.smplkit.internal.generated.jobs.ApiClient;
 /**
- * Cursor-pagination meta for the runs list.
+ * Where a &#x60;RETRY&#x60; run sits in its retry chain.
  */
 @JsonPropertyOrder({
-  RunListMeta.JSON_PROPERTY_PAGE_SIZE
+  RunRetry.JSON_PROPERTY_OF,
+  RunRetry.JSON_PROPERTY_ATTEMPT
 })
 @jakarta.annotation.Generated(value = "org.openapitools.codegen.languages.JavaClientCodegen", comments = "Generator version: 7.21.0")
-public class RunListMeta {
-  public static final String JSON_PROPERTY_PAGE_SIZE = "page_size";
+public class RunRetry {
+  public static final String JSON_PROPERTY_OF = "of";
   @jakarta.annotation.Nonnull
-  private Integer pageSize;
+  private UUID of;
 
-  public RunListMeta() { 
+  public static final String JSON_PROPERTY_ATTEMPT = "attempt";
+  @jakarta.annotation.Nonnull
+  private Integer attempt;
+
+  public RunRetry() { 
   }
 
-  public RunListMeta pageSize(@jakarta.annotation.Nonnull Integer pageSize) {
-    this.pageSize = pageSize;
+  public RunRetry of(@jakarta.annotation.Nonnull UUID of) {
+    this.of = of;
     return this;
   }
 
   /**
-   * Number of runs returned per page.
-   * @return pageSize
+   * The id of the chain&#39;s original run — the first attempt that failed and started the chain.
+   * @return of
    */
   @jakarta.annotation.Nonnull
-  @JsonProperty(value = JSON_PROPERTY_PAGE_SIZE, required = true)
+  @JsonProperty(value = JSON_PROPERTY_OF, required = true)
   @JsonInclude(value = JsonInclude.Include.ALWAYS)
-  public Integer getPageSize() {
-    return pageSize;
+  public UUID getOf() {
+    return of;
   }
 
 
-  @JsonProperty(value = JSON_PROPERTY_PAGE_SIZE, required = true)
+  @JsonProperty(value = JSON_PROPERTY_OF, required = true)
   @JsonInclude(value = JsonInclude.Include.ALWAYS)
-  public void setPageSize(@jakarta.annotation.Nonnull Integer pageSize) {
-    this.pageSize = pageSize;
+  public void setOf(@jakarta.annotation.Nonnull UUID of) {
+    this.of = of;
+  }
+
+
+  public RunRetry attempt(@jakarta.annotation.Nonnull Integer attempt) {
+    this.attempt = attempt;
+    return this;
+  }
+
+  /**
+   * Which retry this run is: &#x60;1&#x60; for the first retry, &#x60;2&#x60; for the second, and so on.
+   * @return attempt
+   */
+  @jakarta.annotation.Nonnull
+  @JsonProperty(value = JSON_PROPERTY_ATTEMPT, required = true)
+  @JsonInclude(value = JsonInclude.Include.ALWAYS)
+  public Integer getAttempt() {
+    return attempt;
+  }
+
+
+  @JsonProperty(value = JSON_PROPERTY_ATTEMPT, required = true)
+  @JsonInclude(value = JsonInclude.Include.ALWAYS)
+  public void setAttempt(@jakarta.annotation.Nonnull Integer attempt) {
+    this.attempt = attempt;
   }
 
 
   /**
-   * Return true if this RunListMeta object is equal to o.
+   * Return true if this RunRetry object is equal to o.
    */
   @Override
   public boolean equals(Object o) {
@@ -79,20 +109,22 @@ public class RunListMeta {
     if (o == null || getClass() != o.getClass()) {
       return false;
     }
-    RunListMeta runListMeta = (RunListMeta) o;
-    return Objects.equals(this.pageSize, runListMeta.pageSize);
+    RunRetry runRetry = (RunRetry) o;
+    return Objects.equals(this.of, runRetry.of) &&
+        Objects.equals(this.attempt, runRetry.attempt);
   }
 
   @Override
   public int hashCode() {
-    return Objects.hash(pageSize);
+    return Objects.hash(of, attempt);
   }
 
   @Override
   public String toString() {
     StringBuilder sb = new StringBuilder();
-    sb.append("class RunListMeta {\n");
-    sb.append("    pageSize: ").append(toIndentedString(pageSize)).append("\n");
+    sb.append("class RunRetry {\n");
+    sb.append("    of: ").append(toIndentedString(of)).append("\n");
+    sb.append("    attempt: ").append(toIndentedString(attempt)).append("\n");
     sb.append("}");
     return sb.toString();
   }
@@ -137,9 +169,14 @@ public class RunListMeta {
 
     StringJoiner joiner = new StringJoiner("&");
 
-    // add `page_size` to the URL query string
-    if (getPageSize() != null) {
-      joiner.add(String.format(java.util.Locale.ROOT, "%spage_size%s=%s", prefix, suffix, ApiClient.urlEncode(ApiClient.valueToString(getPageSize()))));
+    // add `of` to the URL query string
+    if (getOf() != null) {
+      joiner.add(String.format(java.util.Locale.ROOT, "%sof%s=%s", prefix, suffix, ApiClient.urlEncode(ApiClient.valueToString(getOf()))));
+    }
+
+    // add `attempt` to the URL query string
+    if (getAttempt() != null) {
+      joiner.add(String.format(java.util.Locale.ROOT, "%sattempt%s=%s", prefix, suffix, ApiClient.urlEncode(ApiClient.valueToString(getAttempt()))));
     }
 
     return joiner.toString();

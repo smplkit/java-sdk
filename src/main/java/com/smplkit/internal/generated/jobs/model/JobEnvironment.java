@@ -43,6 +43,7 @@ import com.smplkit.internal.generated.jobs.ApiClient;
   JobEnvironment.JSON_PROPERTY_SCHEDULE,
   JobEnvironment.JSON_PROPERTY_TIMEZONE,
   JobEnvironment.JSON_PROPERTY_CONFIGURATION,
+  JobEnvironment.JSON_PROPERTY_RETRY_POLICY,
   JobEnvironment.JSON_PROPERTY_NEXT_RUN_AT
 })
 @jakarta.annotation.Generated(value = "org.openapitools.codegen.languages.JavaClientCodegen", comments = "Generator version: 7.21.0")
@@ -60,6 +61,9 @@ public class JobEnvironment {
   public static final String JSON_PROPERTY_CONFIGURATION = "configuration";
   @jakarta.annotation.Nullable
   private JobHttpConfiguration _configuration;
+
+  public static final String JSON_PROPERTY_RETRY_POLICY = "retry_policy";
+  private JsonNullable<String> retryPolicy = JsonNullable.<String>undefined();
 
   public static final String JSON_PROPERTY_NEXT_RUN_AT = "next_run_at";
   private JsonNullable<OffsetDateTime> nextRunAt = JsonNullable.<OffsetDateTime>undefined();
@@ -187,6 +191,38 @@ public class JobEnvironment {
   }
 
 
+  public JobEnvironment retryPolicy(@jakarta.annotation.Nullable String retryPolicy) {
+    this.retryPolicy = JsonNullable.<String>of(retryPolicy);
+    return this;
+  }
+
+  /**
+   * Per-environment retry-policy override — the &#x60;id&#x60; of a retry policy (or &#x60;Default&#x60;). Omit to inherit the job&#39;s base &#x60;retry_policy&#x60;. When present, runs in this environment retry according to this policy instead of the base.
+   * @return retryPolicy
+   */
+  @jakarta.annotation.Nullable
+  @JsonIgnore
+  public String getRetryPolicy() {
+        return retryPolicy.orElse(null);
+  }
+
+  @JsonProperty(value = JSON_PROPERTY_RETRY_POLICY, required = false)
+  @JsonInclude(value = JsonInclude.Include.USE_DEFAULTS)
+
+  public JsonNullable<String> getRetryPolicy_JsonNullable() {
+    return retryPolicy;
+  }
+  
+  @JsonProperty(JSON_PROPERTY_RETRY_POLICY)
+  public void setRetryPolicy_JsonNullable(JsonNullable<String> retryPolicy) {
+    this.retryPolicy = retryPolicy;
+  }
+
+  public void setRetryPolicy(@jakarta.annotation.Nullable String retryPolicy) {
+    this.retryPolicy = JsonNullable.<String>of(retryPolicy);
+  }
+
+
   /**
    * The next scheduled fire time in this environment. &#x60;null&#x60; when the environment is not enabled, or once a one-off run has fired.
    * @return nextRunAt
@@ -231,6 +267,7 @@ public class JobEnvironment {
         equalsNullable(this.schedule, jobEnvironment.schedule) &&
         equalsNullable(this.timezone, jobEnvironment.timezone) &&
         Objects.equals(this._configuration, jobEnvironment._configuration) &&
+        equalsNullable(this.retryPolicy, jobEnvironment.retryPolicy) &&
         equalsNullable(this.nextRunAt, jobEnvironment.nextRunAt);
   }
 
@@ -240,7 +277,7 @@ public class JobEnvironment {
 
   @Override
   public int hashCode() {
-    return Objects.hash(enabled, hashCodeNullable(schedule), hashCodeNullable(timezone), _configuration, hashCodeNullable(nextRunAt));
+    return Objects.hash(enabled, hashCodeNullable(schedule), hashCodeNullable(timezone), _configuration, hashCodeNullable(retryPolicy), hashCodeNullable(nextRunAt));
   }
 
   private static <T> int hashCodeNullable(JsonNullable<T> a) {
@@ -258,6 +295,7 @@ public class JobEnvironment {
     sb.append("    schedule: ").append(toIndentedString(schedule)).append("\n");
     sb.append("    timezone: ").append(toIndentedString(timezone)).append("\n");
     sb.append("    _configuration: ").append(toIndentedString(_configuration)).append("\n");
+    sb.append("    retryPolicy: ").append(toIndentedString(retryPolicy)).append("\n");
     sb.append("    nextRunAt: ").append(toIndentedString(nextRunAt)).append("\n");
     sb.append("}");
     return sb.toString();
@@ -321,6 +359,11 @@ public class JobEnvironment {
     // add `configuration` to the URL query string
     if (getConfiguration() != null) {
       joiner.add(getConfiguration().toUrlQueryString(prefix + "configuration" + suffix));
+    }
+
+    // add `retry_policy` to the URL query string
+    if (getRetryPolicy() != null) {
+      joiner.add(String.format(java.util.Locale.ROOT, "%sretry_policy%s=%s", prefix, suffix, ApiClient.urlEncode(ApiClient.valueToString(getRetryPolicy()))));
     }
 
     // add `next_run_at` to the URL query string

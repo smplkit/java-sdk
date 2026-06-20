@@ -24,6 +24,7 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonTypeName;
 import com.fasterxml.jackson.annotation.JsonValue;
+import com.smplkit.internal.generated.jobs.model.RunRetry;
 import java.time.OffsetDateTime;
 import java.util.Arrays;
 import java.util.HashMap;
@@ -46,6 +47,7 @@ import com.smplkit.internal.generated.jobs.ApiClient;
   Run.JSON_PROPERTY_ENVIRONMENT,
   Run.JSON_PROPERTY_TRIGGER,
   Run.JSON_PROPERTY_RERUN_OF,
+  Run.JSON_PROPERTY_RETRY,
   Run.JSON_PROPERTY_SCHEDULED_FOR,
   Run.JSON_PROPERTY_STATUS,
   Run.JSON_PROPERTY_STARTED_AT,
@@ -73,14 +75,16 @@ public class Run {
   private String environment;
 
   /**
-   * Why the run exists: &#x60;SCHEDULE&#x60;, &#x60;MANUAL&#x60; (Run now), or &#x60;RERUN&#x60;.
+   * Why the run exists: &#x60;SCHEDULE&#x60;, &#x60;MANUAL&#x60; (Run now), &#x60;RERUN&#x60;, or &#x60;RETRY&#x60; (an automatic retry of a failed run).
    */
   public enum TriggerEnum {
     SCHEDULE(String.valueOf("SCHEDULE")),
     
     MANUAL(String.valueOf("MANUAL")),
     
-    RERUN(String.valueOf("RERUN"));
+    RERUN(String.valueOf("RERUN")),
+    
+    RETRY(String.valueOf("RETRY"));
 
     private String value;
 
@@ -115,6 +119,10 @@ public class Run {
 
   public static final String JSON_PROPERTY_RERUN_OF = "rerun_of";
   private JsonNullable<UUID> rerunOf = JsonNullable.<UUID>undefined();
+
+  public static final String JSON_PROPERTY_RETRY = "retry";
+  @jakarta.annotation.Nullable
+  private RunRetry retry;
 
   public static final String JSON_PROPERTY_SCHEDULED_FOR = "scheduled_for";
   private JsonNullable<OffsetDateTime> scheduledFor = JsonNullable.<OffsetDateTime>undefined();
@@ -326,7 +334,7 @@ public class Run {
   }
 
   /**
-   * Why the run exists: &#x60;SCHEDULE&#x60;, &#x60;MANUAL&#x60; (Run now), or &#x60;RERUN&#x60;.
+   * Why the run exists: &#x60;SCHEDULE&#x60;, &#x60;MANUAL&#x60; (Run now), &#x60;RERUN&#x60;, or &#x60;RETRY&#x60; (an automatic retry of a failed run).
    * @return trigger
    */
   @jakarta.annotation.Nonnull
@@ -373,6 +381,30 @@ public class Run {
 
   public void setRerunOf(@jakarta.annotation.Nullable UUID rerunOf) {
     this.rerunOf = JsonNullable.<UUID>of(rerunOf);
+  }
+
+
+  public Run retry(@jakarta.annotation.Nullable RunRetry retry) {
+    this.retry = retry;
+    return this;
+  }
+
+  /**
+   * Get retry
+   * @return retry
+   */
+  @jakarta.annotation.Nullable
+  @JsonProperty(value = JSON_PROPERTY_RETRY, required = false)
+  @JsonInclude(value = JsonInclude.Include.USE_DEFAULTS)
+  public RunRetry getRetry() {
+    return retry;
+  }
+
+
+  @JsonProperty(value = JSON_PROPERTY_RETRY, required = false)
+  @JsonInclude(value = JsonInclude.Include.USE_DEFAULTS)
+  public void setRetry(@jakarta.annotation.Nullable RunRetry retry) {
+    this.retry = retry;
   }
 
 
@@ -793,6 +825,7 @@ public class Run {
         Objects.equals(this.environment, run.environment) &&
         Objects.equals(this.trigger, run.trigger) &&
         equalsNullable(this.rerunOf, run.rerunOf) &&
+        Objects.equals(this.retry, run.retry) &&
         equalsNullable(this.scheduledFor, run.scheduledFor) &&
         Objects.equals(this.status, run.status) &&
         equalsNullable(this.startedAt, run.startedAt) &&
@@ -813,7 +846,7 @@ public class Run {
 
   @Override
   public int hashCode() {
-    return Objects.hash(job, hashCodeNullable(jobVersion), environment, trigger, hashCodeNullable(rerunOf), hashCodeNullable(scheduledFor), status, hashCodeNullable(startedAt), hashCodeNullable(finishedAt), hashCodeNullable(pendingDurationMs), hashCodeNullable(runDurationMs), hashCodeNullable(totalDurationMs), hashCodeNullable(failureReason), hashCodeNullable(error), hashCodeNullable(request), hashCodeNullable(result), hashCodeNullable(createdAt));
+    return Objects.hash(job, hashCodeNullable(jobVersion), environment, trigger, hashCodeNullable(rerunOf), retry, hashCodeNullable(scheduledFor), status, hashCodeNullable(startedAt), hashCodeNullable(finishedAt), hashCodeNullable(pendingDurationMs), hashCodeNullable(runDurationMs), hashCodeNullable(totalDurationMs), hashCodeNullable(failureReason), hashCodeNullable(error), hashCodeNullable(request), hashCodeNullable(result), hashCodeNullable(createdAt));
   }
 
   private static <T> int hashCodeNullable(JsonNullable<T> a) {
@@ -832,6 +865,7 @@ public class Run {
     sb.append("    environment: ").append(toIndentedString(environment)).append("\n");
     sb.append("    trigger: ").append(toIndentedString(trigger)).append("\n");
     sb.append("    rerunOf: ").append(toIndentedString(rerunOf)).append("\n");
+    sb.append("    retry: ").append(toIndentedString(retry)).append("\n");
     sb.append("    scheduledFor: ").append(toIndentedString(scheduledFor)).append("\n");
     sb.append("    status: ").append(toIndentedString(status)).append("\n");
     sb.append("    startedAt: ").append(toIndentedString(startedAt)).append("\n");
@@ -911,6 +945,11 @@ public class Run {
     // add `rerun_of` to the URL query string
     if (getRerunOf() != null) {
       joiner.add(String.format(java.util.Locale.ROOT, "%srerun_of%s=%s", prefix, suffix, ApiClient.urlEncode(ApiClient.valueToString(getRerunOf()))));
+    }
+
+    // add `retry` to the URL query string
+    if (getRetry() != null) {
+      joiner.add(getRetry().toUrlQueryString(prefix + "retry" + suffix));
     }
 
     // add `scheduled_for` to the URL query string
