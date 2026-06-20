@@ -50,6 +50,7 @@ import com.smplkit.internal.generated.jobs.ApiClient;
   Job.JSON_PROPERTY_CONFIGURATION,
   Job.JSON_PROPERTY_ENVIRONMENTS,
   Job.JSON_PROPERTY_CONCURRENCY_POLICY,
+  Job.JSON_PROPERTY_RETRY_POLICY,
   Job.JSON_PROPERTY_KIND,
   Job.JSON_PROPERTY_CREATED_AT,
   Job.JSON_PROPERTY_UPDATED_AT,
@@ -152,6 +153,9 @@ public class Job {
   public static final String JSON_PROPERTY_CONCURRENCY_POLICY = "concurrency_policy";
   @jakarta.annotation.Nullable
   private ConcurrencyPolicyEnum concurrencyPolicy = ConcurrencyPolicyEnum.ALLOW;
+
+  public static final String JSON_PROPERTY_RETRY_POLICY = "retry_policy";
+  private JsonNullable<String> retryPolicy = JsonNullable.<String>undefined();
 
   /**
    * How the job runs, derived from its base &#x60;schedule&#x60;: &#x60;recurring&#x60; for a cron schedule (fires on a repeating cadence), &#x60;manual&#x60; for no schedule (never auto-fires; runs only when triggered), or &#x60;one_off&#x60; for a &#x60;now&#x60; or datetime schedule (runs a single time, then is spent).
@@ -448,6 +452,38 @@ public class Job {
   }
 
 
+  public Job retryPolicy(@jakarta.annotation.Nullable String retryPolicy) {
+    this.retryPolicy = JsonNullable.<String>of(retryPolicy);
+    return this;
+  }
+
+  /**
+   * The base retry policy for failed runs — the &#x60;id&#x60; of a retry policy (or the built-in &#x60;Default&#x60;), overridable per environment. Omit (or send &#x60;null&#x60;) to use &#x60;Default&#x60;, which never retries — so a job that sets nothing behaves exactly as before retries existed.
+   * @return retryPolicy
+   */
+  @jakarta.annotation.Nullable
+  @JsonIgnore
+  public String getRetryPolicy() {
+        return retryPolicy.orElse(null);
+  }
+
+  @JsonProperty(value = JSON_PROPERTY_RETRY_POLICY, required = false)
+  @JsonInclude(value = JsonInclude.Include.USE_DEFAULTS)
+
+  public JsonNullable<String> getRetryPolicy_JsonNullable() {
+    return retryPolicy;
+  }
+  
+  @JsonProperty(JSON_PROPERTY_RETRY_POLICY)
+  public void setRetryPolicy_JsonNullable(JsonNullable<String> retryPolicy) {
+    this.retryPolicy = retryPolicy;
+  }
+
+  public void setRetryPolicy(@jakarta.annotation.Nullable String retryPolicy) {
+    this.retryPolicy = JsonNullable.<String>of(retryPolicy);
+  }
+
+
   /**
    * How the job runs, derived from its base &#x60;schedule&#x60;: &#x60;recurring&#x60; for a cron schedule (fires on a repeating cadence), &#x60;manual&#x60; for no schedule (never auto-fires; runs only when triggered), or &#x60;one_off&#x60; for a &#x60;now&#x60; or datetime schedule (runs a single time, then is spent).
    * @return kind
@@ -608,6 +644,7 @@ public class Job {
         Objects.equals(this._configuration, job._configuration) &&
         Objects.equals(this.environments, job.environments) &&
         Objects.equals(this.concurrencyPolicy, job.concurrencyPolicy) &&
+        equalsNullable(this.retryPolicy, job.retryPolicy) &&
         equalsNullable(this.kind, job.kind) &&
         equalsNullable(this.createdAt, job.createdAt) &&
         equalsNullable(this.updatedAt, job.updatedAt) &&
@@ -621,7 +658,7 @@ public class Job {
 
   @Override
   public int hashCode() {
-    return Objects.hash(name, hashCodeNullable(description), type, hashCodeNullable(schedule), hashCodeNullable(timezone), _configuration, environments, concurrencyPolicy, hashCodeNullable(kind), hashCodeNullable(createdAt), hashCodeNullable(updatedAt), hashCodeNullable(deletedAt), hashCodeNullable(version));
+    return Objects.hash(name, hashCodeNullable(description), type, hashCodeNullable(schedule), hashCodeNullable(timezone), _configuration, environments, concurrencyPolicy, hashCodeNullable(retryPolicy), hashCodeNullable(kind), hashCodeNullable(createdAt), hashCodeNullable(updatedAt), hashCodeNullable(deletedAt), hashCodeNullable(version));
   }
 
   private static <T> int hashCodeNullable(JsonNullable<T> a) {
@@ -643,6 +680,7 @@ public class Job {
     sb.append("    _configuration: ").append(toIndentedString(_configuration)).append("\n");
     sb.append("    environments: ").append(toIndentedString(environments)).append("\n");
     sb.append("    concurrencyPolicy: ").append(toIndentedString(concurrencyPolicy)).append("\n");
+    sb.append("    retryPolicy: ").append(toIndentedString(retryPolicy)).append("\n");
     sb.append("    kind: ").append(toIndentedString(kind)).append("\n");
     sb.append("    createdAt: ").append(toIndentedString(createdAt)).append("\n");
     sb.append("    updatedAt: ").append(toIndentedString(updatedAt)).append("\n");
@@ -735,6 +773,11 @@ public class Job {
     // add `concurrency_policy` to the URL query string
     if (getConcurrencyPolicy() != null) {
       joiner.add(String.format(java.util.Locale.ROOT, "%sconcurrency_policy%s=%s", prefix, suffix, ApiClient.urlEncode(ApiClient.valueToString(getConcurrencyPolicy()))));
+    }
+
+    // add `retry_policy` to the URL query string
+    if (getRetryPolicy() != null) {
+      joiner.add(String.format(java.util.Locale.ROOT, "%sretry_policy%s=%s", prefix, suffix, ApiClient.urlEncode(ApiClient.valueToString(getRetryPolicy()))));
     }
 
     // add `kind` to the URL query string
