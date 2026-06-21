@@ -24,7 +24,6 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonTypeName;
 import com.fasterxml.jackson.annotation.JsonValue;
-import com.smplkit.internal.generated.audit.model.ForwarderEnvironment;
 import com.smplkit.internal.generated.audit.model.ForwarderType;
 import com.smplkit.internal.generated.audit.model.HttpConfiguration;
 import java.time.OffsetDateTime;
@@ -127,7 +126,7 @@ public class Forwarder {
 
   public static final String JSON_PROPERTY_ENVIRONMENTS = "environments";
   @jakarta.annotation.Nullable
-  private Map<String, ForwarderEnvironment> environments = new HashMap<>();
+  private Map<String, Map<String, Object>> environments = new HashMap<>();
 
   public static final String JSON_PROPERTY_CREATED_AT = "created_at";
   private JsonNullable<OffsetDateTime> createdAt = JsonNullable.<OffsetDateTime>undefined();
@@ -241,7 +240,7 @@ public class Forwarder {
 
 
   /**
-   * Always false. Enablement is per-environment: a forwarder delivers in an environment only when &#x60;environments[&lt;env&gt;].enabled&#x60; is true. The base value is pinned false and cannot be set.
+   * Always false. Enablement is per-environment: a forwarder delivers in an environment only when that environment&#39;s entry in &#x60;environments&#x60; sets &#x60;enabled&#x60; to true. The base value is pinned false and cannot be set.
    * @return enabled
    */
   @jakarta.annotation.Nullable
@@ -410,12 +409,12 @@ public class Forwarder {
   }
 
 
-  public Forwarder environments(@jakarta.annotation.Nullable Map<String, ForwarderEnvironment> environments) {
+  public Forwarder environments(@jakarta.annotation.Nullable Map<String, Map<String, Object>> environments) {
     this.environments = environments;
     return this;
   }
 
-  public Forwarder putEnvironmentsItem(String key, ForwarderEnvironment environmentsItem) {
+  public Forwarder putEnvironmentsItem(String key, Map<String, Object> environmentsItem) {
     if (this.environments == null) {
       this.environments = new HashMap<>();
     }
@@ -424,20 +423,20 @@ public class Forwarder {
   }
 
   /**
-   * Per-environment overrides keyed by environment key (e.g. &#x60;production&#x60;, &#x60;staging&#x60;). Each entry sets &#x60;enabled&#x60; (whether the forwarder delivers in that environment) and an optional &#x60;configuration&#x60; override (omit to inherit the base &#x60;configuration&#x60;). A forwarder with no entry for an environment is disabled there. Every referenced environment must exist and be managed for the account.
+   * Per-environment overrides keyed by environment key (e.g. &#x60;production&#x60;, &#x60;staging&#x60;). Each entry is a sparse map of only the fields that differ in that environment: &#x60;enabled&#x60; (whether the forwarder delivers there) plus any of &#x60;url&#x60;, &#x60;method&#x60;, &#x60;success_status&#x60;, &#x60;tls_verify&#x60;, &#x60;ca_cert&#x60;, and individual headers as &#x60;headers.&lt;name&gt;&#x60; (e.g. &#x60;headers.Authorization&#x60;). Fields you omit are inherited from the base &#x60;configuration&#x60;; an entry never needs to repeat the whole configuration. A forwarder with no entry for an environment is disabled there. Every referenced environment must exist and be managed for the account.
    * @return environments
    */
   @jakarta.annotation.Nullable
   @JsonProperty(value = JSON_PROPERTY_ENVIRONMENTS, required = false)
   @JsonInclude(value = JsonInclude.Include.USE_DEFAULTS)
-  public Map<String, ForwarderEnvironment> getEnvironments() {
+  public Map<String, Map<String, Object>> getEnvironments() {
     return environments;
   }
 
 
   @JsonProperty(value = JSON_PROPERTY_ENVIRONMENTS, required = false)
   @JsonInclude(value = JsonInclude.Include.USE_DEFAULTS)
-  public void setEnvironments(@jakarta.annotation.Nullable Map<String, ForwarderEnvironment> environments) {
+  public void setEnvironments(@jakarta.annotation.Nullable Map<String, Map<String, Object>> environments) {
     this.environments = environments;
   }
 
@@ -712,10 +711,9 @@ public class Forwarder {
     // add `environments` to the URL query string
     if (getEnvironments() != null) {
       for (String _key : getEnvironments().keySet()) {
-        if (getEnvironments().get(_key) != null) {
-          joiner.add(getEnvironments().get(_key).toUrlQueryString(String.format(java.util.Locale.ROOT, "%senvironments%s%s", prefix, suffix,
-              "".equals(suffix) ? "" : String.format(java.util.Locale.ROOT, "%s%d%s", containerPrefix, _key, containerSuffix))));
-        }
+        joiner.add(String.format(java.util.Locale.ROOT, "%senvironments%s%s=%s", prefix, suffix,
+            "".equals(suffix) ? "" : String.format(java.util.Locale.ROOT, "%s%d%s", containerPrefix, _key, containerSuffix),
+            getEnvironments().get(_key), ApiClient.urlEncode(ApiClient.valueToString(getEnvironments().get(_key)))));
       }
     }
 
