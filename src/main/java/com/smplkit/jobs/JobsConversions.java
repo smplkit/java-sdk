@@ -125,43 +125,6 @@ final class JobsConversions {
     }
 
     /**
-     * Convert the wrapper {@link RetryOn} to the generated model. Both
-     * {@code statuses} and {@code reasons} are always populated (an empty
-     * {@link RetryOn} serializes as empty lists — it retries nothing).
-     */
-    static com.smplkit.internal.generated.jobs.model.RetryOn retryOnToGen(RetryOn src) {
-        com.smplkit.internal.generated.jobs.model.RetryOn out =
-                new com.smplkit.internal.generated.jobs.model.RetryOn();
-        out.setStatuses(src.statuses != null ? new ArrayList<>(src.statuses) : new ArrayList<>());
-        List<com.smplkit.internal.generated.jobs.model.RetryOn.ReasonsEnum> reasons = new ArrayList<>();
-        if (src.reasons != null) {
-            for (RetryReason r : src.reasons) {
-                reasons.add(com.smplkit.internal.generated.jobs.model.RetryOn.ReasonsEnum
-                        .fromValue(r.getValue()));
-            }
-        }
-        out.setReasons(reasons);
-        return out;
-    }
-
-    /** Convert the generated {@link RetryOn} model to a wrapper instance. */
-    static RetryOn retryOnFromGen(com.smplkit.internal.generated.jobs.model.RetryOn src) {
-        RetryOn out = new RetryOn();
-        if (src == null) return out;
-        if (src.getStatuses() != null) {
-            out.statuses = new ArrayList<>(src.getStatuses());
-        }
-        if (src.getReasons() != null) {
-            List<RetryReason> reasons = new ArrayList<>();
-            for (com.smplkit.internal.generated.jobs.model.RetryOn.ReasonsEnum r : src.getReasons()) {
-                reasons.add(RetryReason.fromValue(r.getValue()));
-            }
-            out.reasons = reasons;
-        }
-        return out;
-    }
-
-    /**
      * Join run triggers into the comma-separated string the generated
      * {@code filter[trigger]} parameter expects (any-of). Returns {@code null}
      * when the list is {@code null} or empty, leaving the filter unset.

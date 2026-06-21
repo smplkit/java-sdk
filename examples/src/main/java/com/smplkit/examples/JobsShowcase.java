@@ -22,9 +22,7 @@ import com.smplkit.jobs.Job;
 import com.smplkit.jobs.JobKind;
 import com.smplkit.jobs.JobsClient;
 import com.smplkit.jobs.ListJobsInput;
-import com.smplkit.jobs.RetryOn;
 import com.smplkit.jobs.RetryPolicy;
-import com.smplkit.jobs.RetryReason;
 import com.smplkit.jobs.Run;
 import com.smplkit.jobs.RunTrigger;
 
@@ -53,7 +51,10 @@ public final class JobsShowcase {
                     Backoff.EXPONENTIAL,
                     2,
                     60,
-                    new RetryOn(List.of(429, 503), List.of(RetryReason.TIMEOUT)));
+                    true,
+                    true,
+                    List.of("429", "5xx"),
+                    List.of("501"));
             retryPolicy.save();
             assert jobs.retryPolicies.list().stream().anyMatch(p -> p.id.equals(RETRY_POLICY_ID));
             System.out.println("Created retry policy " + retryPolicy.id);

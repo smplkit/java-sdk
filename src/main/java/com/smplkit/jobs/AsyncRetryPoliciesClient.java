@@ -27,9 +27,9 @@ public final class AsyncRetryPoliciesClient {
     }
 
     /**
-     * Return an unsaved {@link RetryPolicy} with an empty {@link RetryOn} and no
-     * {@code maxDelaySeconds}. Call {@code .save()} / {@code .saveAsync()} to
-     * create it. Synchronous — no I/O.
+     * Return an unsaved {@link RetryPolicy} that retries nothing (all retry
+     * conditions off) and has no {@code maxDelaySeconds}. Call {@code .save()} /
+     * {@code .saveAsync()} to create it. Synchronous — no I/O.
      *
      * @param id caller-supplied unique identifier for the policy
      * @param name human-readable name for the policy
@@ -54,12 +54,21 @@ public final class AsyncRetryPoliciesClient {
      * @param delaySeconds the wait before a retry, in seconds
      * @param maxDelaySeconds ceiling on the wait, for {@code EXPONENTIAL} only;
      *     {@code null} leaves it uncapped
-     * @param retryOn which failures to retry; {@code null} retries nothing
+     * @param retryOnTimeout retry a run that timed out
+     * @param retryOnConnectionError retry a run whose destination could not be
+     *     reached
+     * @param retryStatuses allowlist of response-status patterns to retry —
+     *     each an exact 3-digit code like {@code "429"} or a class token like
+     *     {@code "5xx"}; {@code null} starts empty
+     * @param retryStatusesExcept patterns subtracted from {@code retryStatuses}
+     *     ({@code except} wins on overlap); {@code null} starts empty
      * @return an unsaved {@link RetryPolicy} bound to the underlying sync client
      */
     public RetryPolicy new_(String id, String name, int maxRetries, Backoff backoff, int delaySeconds,
-                            Integer maxDelaySeconds, RetryOn retryOn) {
-        return sync.new_(id, name, maxRetries, backoff, delaySeconds, maxDelaySeconds, retryOn);
+                            Integer maxDelaySeconds, boolean retryOnTimeout, boolean retryOnConnectionError,
+                            List<String> retryStatuses, List<String> retryStatusesExcept) {
+        return sync.new_(id, name, maxRetries, backoff, delaySeconds, maxDelaySeconds,
+                retryOnTimeout, retryOnConnectionError, retryStatuses, retryStatusesExcept);
     }
 
     /**
