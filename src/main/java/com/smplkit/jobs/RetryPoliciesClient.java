@@ -29,9 +29,9 @@ public final class RetryPoliciesClient {
     }
 
     /**
-     * Return an unsaved {@link RetryPolicy} with an empty {@link RetryOn}
-     * (retries nothing) and no {@code maxDelaySeconds}. Call {@code .save()} to
-     * create it.
+     * Return an unsaved {@link RetryPolicy} that retries nothing (all retry
+     * conditions off) and has no {@code maxDelaySeconds}. Call {@code .save()}
+     * to create it.
      *
      * @param id caller-supplied unique identifier for the policy. Unique within
      *     the account and immutable; the service returns 409 if another live
@@ -68,17 +68,26 @@ public final class RetryPoliciesClient {
      * @param maxDelaySeconds ceiling on the wait between retries, for
      *     {@code EXPONENTIAL} backoff only. {@code null} leaves it uncapped;
      *     omit it for {@code FIXED} backoff
-     * @param retryOn which failures to retry (see {@link RetryOn}). {@code null}
-     *     retries nothing
+     * @param retryOnTimeout retry a run that timed out
+     * @param retryOnConnectionError retry a run whose destination could not be
+     *     reached
+     * @param retryStatuses allowlist of response-status patterns to retry on a
+     *     non-success response — each an exact 3-digit code like {@code "429"}
+     *     or a class token like {@code "5xx"}. {@code null} starts empty
+     * @param retryStatusesExcept patterns subtracted from {@code retryStatuses}
+     *     ({@code except} wins on overlap). {@code null} starts empty
      * @return an unsaved {@link RetryPolicy} bound to this client
      */
     public RetryPolicy new_(String id, String name, int maxRetries, Backoff backoff, int delaySeconds,
-                            Integer maxDelaySeconds, RetryOn retryOn) {
+                            Integer maxDelaySeconds, boolean retryOnTimeout, boolean retryOnConnectionError,
+                            List<String> retryStatuses, List<String> retryStatusesExcept) {
         RetryPolicy policy = new RetryPolicy(this, id, name, maxRetries, backoff, delaySeconds);
         policy.maxDelaySeconds = maxDelaySeconds;
-        if (retryOn != null) {
-            policy.retryOn = retryOn;
-        }
+        policy.retryOnTimeout = retryOnTimeout;
+        policy.retryOnConnectionError = retryOnConnectionError;
+        policy.retryStatuses = retryStatuses != null ? new ArrayList<>(retryStatuses) : new ArrayList<>();
+        policy.retryStatusesExcept =
+                retryStatusesExcept != null ? new ArrayList<>(retryStatusesExcept) : new ArrayList<>();
         return policy;
     }
 
@@ -172,9 +181,13 @@ public final class RetryPoliciesClient {
         attrs.setBackoff(com.smplkit.internal.generated.jobs.model.RetryPolicy.BackoffEnum
                 .fromValue(policy.backoff.getValue()));
         attrs.setDelaySeconds(policy.delaySeconds);
-        // retry_on is always sent (an empty RetryOn retries nothing).
-        attrs.setRetryOn(JobsConversions.retryOnToGen(
-                policy.retryOn != null ? policy.retryOn : new RetryOn()));
+        // Each retry condition is sent independently; all-off retries nothing.
+        attrs.setRetryOnTimeout(policy.retryOnTimeout);
+        attrs.setRetryOnConnectionError(policy.retryOnConnectionError);
+        attrs.setRetryStatuses(policy.retryStatuses != null
+                ? new ArrayList<>(policy.retryStatuses) : new ArrayList<>());
+        attrs.setRetryStatusesExcept(policy.retryStatusesExcept != null
+                ? new ArrayList<>(policy.retryStatusesExcept) : new ArrayList<>());
         // max_delay_seconds is exponential-only; omit it on the wire when unset.
         if (policy.maxDelaySeconds != null) {
             attrs.setMaxDelaySeconds(policy.maxDelaySeconds);
@@ -209,7 +222,13 @@ public final class RetryPoliciesClient {
                 this, r.getId(), a.getName(), a.getMaxRetries(),
                 Backoff.fromValue(a.getBackoff().getValue()), a.getDelaySeconds());
         policy.maxDelaySeconds = a.getMaxDelaySeconds();
-        policy.retryOn = JobsConversions.retryOnFromGen(a.getRetryOn());
+        policy.retryOnTimeout = a.getRetryOnTimeout() != null ? a.getRetryOnTimeout() : false;
+        policy.retryOnConnectionError =
+                a.getRetryOnConnectionError() != null ? a.getRetryOnConnectionError() : false;
+        policy.retryStatuses = a.getRetryStatuses() != null
+                ? new ArrayList<>(a.getRetryStatuses()) : new ArrayList<>();
+        policy.retryStatusesExcept = a.getRetryStatusesExcept() != null
+                ? new ArrayList<>(a.getRetryStatusesExcept()) : new ArrayList<>();
         policy.createdAt = a.getCreatedAt();
         policy.updatedAt = a.getUpdatedAt();
         policy.deletedAt = a.getDeletedAt();

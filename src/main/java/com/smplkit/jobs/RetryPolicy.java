@@ -3,6 +3,8 @@ package com.smplkit.jobs;
 import com.smplkit.internal.generated.jobs.ApiException;
 
 import java.time.OffsetDateTime;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.Executor;
 import java.util.concurrent.ForkJoinPool;
@@ -45,8 +47,29 @@ public final class RetryPolicy {
      * {@code FIXED} backoff.
      */
     public Integer maxDelaySeconds;
-    /** Which failures to retry (see {@link RetryOn}); an empty {@link RetryOn} retries nothing. */
-    public RetryOn retryOn = new RetryOn();
+    /**
+     * Retry a run that timed out. Defaults to {@code false}. Each retry field
+     * is independently neutral, so a policy retries exactly the failures you opt
+     * into; all-off retries nothing.
+     */
+    public boolean retryOnTimeout = false;
+    /**
+     * Retry a run whose destination could not be reached (connection error).
+     * Defaults to {@code false}.
+     */
+    public boolean retryOnConnectionError = false;
+    /**
+     * Allowlist of response-status patterns to retry on a non-success response.
+     * Each element is an exact 3-digit code like {@code "429"} or a class token
+     * like {@code "5xx"} (one of {@code "1xx"}–{@code "5xx"}). Defaults to empty
+     * (matches no status).
+     */
+    public List<String> retryStatuses = new ArrayList<>();
+    /**
+     * Patterns subtracted from {@link #retryStatuses} (same form: exact codes or
+     * class tokens). {@code except} wins on overlap. Defaults to empty.
+     */
+    public List<String> retryStatusesExcept = new ArrayList<>();
     /** When the policy was created. {@code null} for an unsaved instance. */
     public OffsetDateTime createdAt;
     /** When the policy was last modified. */
@@ -148,7 +171,10 @@ public final class RetryPolicy {
         this.backoff = other.backoff;
         this.delaySeconds = other.delaySeconds;
         this.maxDelaySeconds = other.maxDelaySeconds;
-        this.retryOn = other.retryOn;
+        this.retryOnTimeout = other.retryOnTimeout;
+        this.retryOnConnectionError = other.retryOnConnectionError;
+        this.retryStatuses = other.retryStatuses;
+        this.retryStatusesExcept = other.retryStatusesExcept;
         this.createdAt = other.createdAt;
         this.updatedAt = other.updatedAt;
         this.deletedAt = other.deletedAt;

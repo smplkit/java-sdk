@@ -30,8 +30,8 @@ import static org.junit.jupiter.api.Assertions.*;
 /**
  * Tests for the reusable retry-policy surface — {@link RetryPoliciesClient}
  * (sync) and {@link AsyncRetryPoliciesClient} (async), the {@link RetryPolicy}
- * active record, the {@link RetryOn} value type, and the {@link Backoff} /
- * {@link RetryReason} enums.
+ * active record (including its four retry-condition fields), and the
+ * {@link Backoff} enum.
  *
  * <p>Stubs the jobs service via the JDK's built-in {@link HttpServer} bound to
  * {@code 127.0.0.1:0}; no real network. The wrapper layer here must reach 100%
@@ -108,7 +108,8 @@ class RetryPoliciesClientTest {
         return "{\"id\":\"" + id + "\",\"type\":\"retry_policy\",\"attributes\":{"
                 + "\"name\":\"My Policy\",\"max_retries\":5,\"backoff\":\"exponential\","
                 + "\"delay_seconds\":2,\"max_delay_seconds\":" + maxDelay + ","
-                + "\"retry_on\":{\"statuses\":[429,503],\"reasons\":[\"TIMEOUT\"]},"
+                + "\"retry_on_timeout\":true,\"retry_on_connection_error\":true,"
+                + "\"retry_statuses\":[\"429\",\"5xx\"],\"retry_statuses_except\":[\"501\"],"
                 + "\"created_at\":" + ts + ",\"updated_at\":" + ts + ","
                 + "\"deleted_at\":null,\"version\":" + version + "}}";
     }
@@ -168,25 +169,29 @@ class RetryPoliciesClientTest {
         installPolicyHandler();
         try (JobsClient c = client()) {
             RetryPolicy p = c.retryPolicies.new_(POLICY_ID, "My Policy", 5, Backoff.EXPONENTIAL, 2,
-                    60, new RetryOn(List.of(429, 503), List.of(RetryReason.TIMEOUT)));
+                    60, true, true, List.of("429", "5xx"), List.of("501"));
             assertNull(p.createdAt);
             p.save();   // create (createdAt null -> POST)
             assertNotNull(p.createdAt);
             assertEquals(1, p.version);
             assertEquals(Backoff.EXPONENTIAL, p.backoff);
             assertEquals(60, p.maxDelaySeconds);
-            assertEquals(List.of(429, 503), p.retryOn.statuses);
-            assertEquals(List.of(RetryReason.TIMEOUT), p.retryOn.reasons);
-            // create body: every attribute, retry_on, and max_delay_seconds
+            assertTrue(p.retryOnTimeout);
+            assertTrue(p.retryOnConnectionError);
+            assertEquals(List.of("429", "5xx"), p.retryStatuses);
+            assertEquals(List.of("501"), p.retryStatusesExcept);
+            // create body: every attribute, the four retry fields, and max_delay_seconds
             JsonNode a = attrs();
             assertEquals("My Policy", a.path("name").asText());
             assertEquals(5, a.path("max_retries").asInt());
             assertEquals("exponential", a.path("backoff").asText());
             assertEquals(2, a.path("delay_seconds").asInt());
             assertEquals(60, a.path("max_delay_seconds").asInt());
-            assertEquals(429, a.path("retry_on").path("statuses").get(0).asInt());
-            assertEquals(503, a.path("retry_on").path("statuses").get(1).asInt());
-            assertEquals("TIMEOUT", a.path("retry_on").path("reasons").get(0).asText());
+            assertTrue(a.path("retry_on_timeout").asBoolean());
+            assertTrue(a.path("retry_on_connection_error").asBoolean());
+            assertEquals("429", a.path("retry_statuses").get(0).asText());
+            assertEquals("5xx", a.path("retry_statuses").get(1).asText());
+            assertEquals("501", a.path("retry_statuses_except").get(0).asText());
             p.name = "renamed";
             p.save();   // update (createdAt set -> PUT)
             assertEquals(2, p.version);
@@ -194,28 +199,36 @@ class RetryPoliciesClientTest {
     }
 
     @Test
-    void createWithoutMaxDelay_omitsIt_andRetryOnAlwaysPresent() throws Exception {
+    void createWithoutMaxDelay_omitsIt_andRetryFieldsAlwaysPresent() throws Exception {
         installPolicyHandler();
         try (JobsClient c = client()) {
             RetryPolicy p = c.retryPolicies.new_(POLICY_ID, "Fixed", 3, Backoff.FIXED, 5);
             p.save();
             JsonNode a = attrs();
             assertFalse(a.has("max_delay_seconds"), "unset max_delay_seconds must be omitted");
-            // retry_on is always sent — an empty RetryOn serializes as empty lists
-            assertTrue(a.path("retry_on").path("statuses").isArray());
-            assertEquals(0, a.path("retry_on").path("statuses").size());
-            assertEquals(0, a.path("retry_on").path("reasons").size());
+            // The four retry fields are always sent; an unconfigured policy
+            // sends false booleans and empty lists (it retries nothing).
+            assertFalse(a.path("retry_on_timeout").asBoolean());
+            assertFalse(a.path("retry_on_connection_error").asBoolean());
+            assertTrue(a.path("retry_statuses").isArray());
+            assertEquals(0, a.path("retry_statuses").size());
+            assertTrue(a.path("retry_statuses_except").isArray());
+            assertEquals(0, a.path("retry_statuses_except").size());
         }
     }
 
     @Test
-    void new_withNullRetryOn_defaultsEmpty() {
+    void new_withNullStatusLists_defaultsEmpty() {
         try (JobsClient c = client()) {
-            RetryPolicy p = c.retryPolicies.new_(POLICY_ID, "P", 3, Backoff.FIXED, 5, null, null);
+            RetryPolicy p = c.retryPolicies.new_(POLICY_ID, "P", 3, Backoff.FIXED, 5,
+                    null, false, false, null, null);
             assertNull(p.maxDelaySeconds);
-            assertNotNull(p.retryOn);
-            assertTrue(p.retryOn.statuses.isEmpty());
-            assertTrue(p.retryOn.reasons.isEmpty());
+            assertFalse(p.retryOnTimeout);
+            assertFalse(p.retryOnConnectionError);
+            assertNotNull(p.retryStatuses);
+            assertNotNull(p.retryStatusesExcept);
+            assertTrue(p.retryStatuses.isEmpty());
+            assertTrue(p.retryStatusesExcept.isEmpty());
         }
     }
 
@@ -239,40 +252,45 @@ class RetryPoliciesClientTest {
             RetryPolicy got = c.retryPolicies.get(POLICY_ID);
             assertEquals(POLICY_ID, got.id);
             assertEquals("My Policy", got.name);
-            assertEquals(List.of(429, 503), got.retryOn.statuses);
-            assertEquals(List.of(RetryReason.TIMEOUT), got.retryOn.reasons);
+            assertTrue(got.retryOnTimeout);
+            assertTrue(got.retryOnConnectionError);
+            assertEquals(List.of("429", "5xx"), got.retryStatuses);
+            assertEquals(List.of("501"), got.retryStatusesExcept);
             c.retryPolicies.delete(POLICY_ID);
             got.delete();   // active-record delete bound to the client
         }
     }
 
     // -----------------------------------------------------------------
-    // RetryOn conversions
+    // Absent retry fields parse to neutral defaults
     // -----------------------------------------------------------------
 
     @Test
-    void retryOnConversions_roundTripAndEmpty() {
-        // toGen: empty RetryOn -> empty lists
-        com.smplkit.internal.generated.jobs.model.RetryOn genEmpty =
-                JobsConversions.retryOnToGen(new RetryOn());
-        assertTrue(genEmpty.getStatuses().isEmpty());
-        assertTrue(genEmpty.getReasons().isEmpty());
-        // toGen: populated, then fromGen round-trips
-        com.smplkit.internal.generated.jobs.model.RetryOn gen = JobsConversions.retryOnToGen(
-                new RetryOn(List.of(429, 503), List.of(RetryReason.TIMEOUT, RetryReason.CONNECTION_ERROR)));
-        assertEquals(List.of(429, 503), gen.getStatuses());
-        assertEquals(2, gen.getReasons().size());
-        RetryOn back = JobsConversions.retryOnFromGen(gen);
-        assertEquals(List.of(429, 503), back.statuses);
-        assertEquals(List.of(RetryReason.TIMEOUT, RetryReason.CONNECTION_ERROR), back.reasons);
-        // fromGen: null -> empty
-        RetryOn fromNull = JobsConversions.retryOnFromGen(null);
-        assertTrue(fromNull.statuses.isEmpty());
-        assertTrue(fromNull.reasons.isEmpty());
-        // RetryOn(null, null) constructor defaults to empty lists
-        RetryOn nulls = new RetryOn(null, null);
-        assertTrue(nulls.statuses.isEmpty());
-        assertTrue(nulls.reasons.isEmpty());
+    void fromResource_absentRetryFields_defaultToNeutral() throws Exception {
+        // A policy resource that omits the four retry fields entirely (e.g. a
+        // policy persisted before they landed) parses to false / empty-list.
+        handler.set(ex -> {
+            try {
+                capture(ex);
+            } catch (IOException e) {
+                throw new RuntimeException(e);
+            }
+            respondJson(ex, 200, "{\"data\":{\"id\":\"" + POLICY_ID + "\",\"type\":\"retry_policy\","
+                    + "\"attributes\":{\"name\":\"Bare\",\"max_retries\":1,\"backoff\":\"fixed\","
+                    + "\"delay_seconds\":1,\"max_delay_seconds\":null,"
+                    + "\"created_at\":\"2026-06-04T00:00:00Z\","
+                    + "\"updated_at\":\"2026-06-04T00:00:00Z\","
+                    + "\"deleted_at\":null,\"version\":1}}}");
+        });
+        try (JobsClient c = client()) {
+            RetryPolicy got = c.retryPolicies.get(POLICY_ID);
+            assertFalse(got.retryOnTimeout);
+            assertFalse(got.retryOnConnectionError);
+            assertNotNull(got.retryStatuses);
+            assertNotNull(got.retryStatusesExcept);
+            assertTrue(got.retryStatuses.isEmpty());
+            assertTrue(got.retryStatusesExcept.isEmpty());
+        }
     }
 
     // -----------------------------------------------------------------
@@ -284,7 +302,7 @@ class RetryPoliciesClientTest {
         installPolicyHandler();
         try (AsyncJobsClient c = asyncClient()) {
             RetryPolicy p = c.retryPolicies.new_(POLICY_ID, "My Policy", 5, Backoff.EXPONENTIAL, 2,
-                    60, new RetryOn(List.of(429), List.of(RetryReason.TIMEOUT)));
+                    60, true, false, List.of("429"), List.of());
             await(p.saveAsync(executor));
             assertEquals(1, p.version);
             assertEquals(2, await(c.retryPolicies.list()).size());
@@ -368,23 +386,20 @@ class RetryPoliciesClientTest {
             assertEquals(b, Backoff.fromValue(b.getValue()));
         }
         assertThrows(IllegalArgumentException.class, () -> Backoff.fromValue("nope"));
-        for (RetryReason r : RetryReason.values()) {
-            assertEquals(r, RetryReason.fromValue(r.getValue()));
-        }
-        assertThrows(IllegalArgumentException.class, () -> RetryReason.fromValue("nope"));
 
         RetryPolicy p = new RetryPolicy(null, "id1", "name1", 3, Backoff.FIXED, 5);
         assertTrue(p.toString().contains("RetryPolicy("));
         assertEquals("id1", p.id);
         assertEquals(3, p.maxRetries);
+        // A freshly built policy retries nothing: all conditions off, lists empty.
+        assertFalse(p.retryOnTimeout);
+        assertFalse(p.retryOnConnectionError);
+        assertTrue(p.retryStatuses.isEmpty());
+        assertTrue(p.retryStatusesExcept.isEmpty());
 
         ListRetryPoliciesInput in = new ListRetryPoliciesInput();
         assertNull(in.name);
         assertNull(in.pageNumber);
         assertNull(in.pageSize);
-
-        RetryOn empty = new RetryOn();
-        assertTrue(empty.statuses.isEmpty());
-        assertTrue(empty.reasons.isEmpty());
     }
 }

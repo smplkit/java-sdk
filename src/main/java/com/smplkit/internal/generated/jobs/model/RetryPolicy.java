@@ -24,9 +24,10 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonTypeName;
 import com.fasterxml.jackson.annotation.JsonValue;
-import com.smplkit.internal.generated.jobs.model.RetryOn;
 import java.time.OffsetDateTime;
+import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.List;
 import org.openapitools.jackson.nullable.JsonNullable;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import org.openapitools.jackson.nullable.JsonNullable;
@@ -44,7 +45,10 @@ import com.smplkit.internal.generated.jobs.ApiClient;
   RetryPolicy.JSON_PROPERTY_BACKOFF,
   RetryPolicy.JSON_PROPERTY_DELAY_SECONDS,
   RetryPolicy.JSON_PROPERTY_MAX_DELAY_SECONDS,
-  RetryPolicy.JSON_PROPERTY_RETRY_ON,
+  RetryPolicy.JSON_PROPERTY_RETRY_ON_TIMEOUT,
+  RetryPolicy.JSON_PROPERTY_RETRY_ON_CONNECTION_ERROR,
+  RetryPolicy.JSON_PROPERTY_RETRY_STATUSES,
+  RetryPolicy.JSON_PROPERTY_RETRY_STATUSES_EXCEPT,
   RetryPolicy.JSON_PROPERTY_CREATED_AT,
   RetryPolicy.JSON_PROPERTY_UPDATED_AT,
   RetryPolicy.JSON_PROPERTY_DELETED_AT,
@@ -106,9 +110,21 @@ public class RetryPolicy {
   public static final String JSON_PROPERTY_MAX_DELAY_SECONDS = "max_delay_seconds";
   private JsonNullable<Integer> maxDelaySeconds = JsonNullable.<Integer>undefined();
 
-  public static final String JSON_PROPERTY_RETRY_ON = "retry_on";
+  public static final String JSON_PROPERTY_RETRY_ON_TIMEOUT = "retry_on_timeout";
   @jakarta.annotation.Nullable
-  private RetryOn retryOn;
+  private Boolean retryOnTimeout = false;
+
+  public static final String JSON_PROPERTY_RETRY_ON_CONNECTION_ERROR = "retry_on_connection_error";
+  @jakarta.annotation.Nullable
+  private Boolean retryOnConnectionError = false;
+
+  public static final String JSON_PROPERTY_RETRY_STATUSES = "retry_statuses";
+  @jakarta.annotation.Nullable
+  private List<String> retryStatuses = new ArrayList<>();
+
+  public static final String JSON_PROPERTY_RETRY_STATUSES_EXCEPT = "retry_statuses_except";
+  @jakarta.annotation.Nullable
+  private List<String> retryStatusesExcept = new ArrayList<>();
 
   public static final String JSON_PROPERTY_CREATED_AT = "created_at";
   private JsonNullable<OffsetDateTime> createdAt = JsonNullable.<OffsetDateTime>undefined();
@@ -271,27 +287,115 @@ public class RetryPolicy {
   }
 
 
-  public RetryPolicy retryOn(@jakarta.annotation.Nullable RetryOn retryOn) {
-    this.retryOn = retryOn;
+  public RetryPolicy retryOnTimeout(@jakarta.annotation.Nullable Boolean retryOnTimeout) {
+    this.retryOnTimeout = retryOnTimeout;
     return this;
   }
 
   /**
-   * Get retryOn
-   * @return retryOn
+   * Retry a run that failed because the request did not complete within the job&#39;s timeout. Defaults to &#x60;false&#x60; (timeouts are not retried).
+   * @return retryOnTimeout
    */
   @jakarta.annotation.Nullable
-  @JsonProperty(value = JSON_PROPERTY_RETRY_ON, required = false)
+  @JsonProperty(value = JSON_PROPERTY_RETRY_ON_TIMEOUT, required = false)
   @JsonInclude(value = JsonInclude.Include.USE_DEFAULTS)
-  public RetryOn getRetryOn() {
-    return retryOn;
+  public Boolean getRetryOnTimeout() {
+    return retryOnTimeout;
   }
 
 
-  @JsonProperty(value = JSON_PROPERTY_RETRY_ON, required = false)
+  @JsonProperty(value = JSON_PROPERTY_RETRY_ON_TIMEOUT, required = false)
   @JsonInclude(value = JsonInclude.Include.USE_DEFAULTS)
-  public void setRetryOn(@jakarta.annotation.Nullable RetryOn retryOn) {
-    this.retryOn = retryOn;
+  public void setRetryOnTimeout(@jakarta.annotation.Nullable Boolean retryOnTimeout) {
+    this.retryOnTimeout = retryOnTimeout;
+  }
+
+
+  public RetryPolicy retryOnConnectionError(@jakarta.annotation.Nullable Boolean retryOnConnectionError) {
+    this.retryOnConnectionError = retryOnConnectionError;
+    return this;
+  }
+
+  /**
+   * Retry a run that failed because the destination could not be reached (DNS, connection refused, TLS, or transport error). Defaults to &#x60;false&#x60; (connection errors are not retried).
+   * @return retryOnConnectionError
+   */
+  @jakarta.annotation.Nullable
+  @JsonProperty(value = JSON_PROPERTY_RETRY_ON_CONNECTION_ERROR, required = false)
+  @JsonInclude(value = JsonInclude.Include.USE_DEFAULTS)
+  public Boolean getRetryOnConnectionError() {
+    return retryOnConnectionError;
+  }
+
+
+  @JsonProperty(value = JSON_PROPERTY_RETRY_ON_CONNECTION_ERROR, required = false)
+  @JsonInclude(value = JsonInclude.Include.USE_DEFAULTS)
+  public void setRetryOnConnectionError(@jakarta.annotation.Nullable Boolean retryOnConnectionError) {
+    this.retryOnConnectionError = retryOnConnectionError;
+  }
+
+
+  public RetryPolicy retryStatuses(@jakarta.annotation.Nullable List<String> retryStatuses) {
+    this.retryStatuses = retryStatuses;
+    return this;
+  }
+
+  public RetryPolicy addRetryStatusesItem(String retryStatusesItem) {
+    if (this.retryStatuses == null) {
+      this.retryStatuses = new ArrayList<>();
+    }
+    this.retryStatuses.add(retryStatusesItem);
+    return this;
+  }
+
+  /**
+   * Allowlist of response status patterns to retry when a run fails because the response did not match the job&#39;s success status. Each element is either an exact 3-digit HTTP code (e.g. &#x60;429&#x60;) or a status class (&#x60;1xx&#x60;, &#x60;2xx&#x60;, &#x60;3xx&#x60;, &#x60;4xx&#x60;, &#x60;5xx&#x60;) — for example &#x60;[\&quot;429\&quot;, \&quot;5xx\&quot;]&#x60; to retry on rate-limit and any server error. Empty (the default) matches no status, so nothing is retried on a non-success response.
+   * @return retryStatuses
+   */
+  @jakarta.annotation.Nullable
+  @JsonProperty(value = JSON_PROPERTY_RETRY_STATUSES, required = false)
+  @JsonInclude(value = JsonInclude.Include.USE_DEFAULTS)
+  public List<String> getRetryStatuses() {
+    return retryStatuses;
+  }
+
+
+  @JsonProperty(value = JSON_PROPERTY_RETRY_STATUSES, required = false)
+  @JsonInclude(value = JsonInclude.Include.USE_DEFAULTS)
+  public void setRetryStatuses(@jakarta.annotation.Nullable List<String> retryStatuses) {
+    this.retryStatuses = retryStatuses;
+  }
+
+
+  public RetryPolicy retryStatusesExcept(@jakarta.annotation.Nullable List<String> retryStatusesExcept) {
+    this.retryStatusesExcept = retryStatusesExcept;
+    return this;
+  }
+
+  public RetryPolicy addRetryStatusesExceptItem(String retryStatusesExceptItem) {
+    if (this.retryStatusesExcept == null) {
+      this.retryStatusesExcept = new ArrayList<>();
+    }
+    this.retryStatusesExcept.add(retryStatusesExceptItem);
+    return this;
+  }
+
+  /**
+   * Subtractions from &#x60;retry_statuses&#x60;, using the same exact-code or class syntax. A status that matches both lists is not retried — &#x60;except&#x60; wins on overlap — so &#x60;retry_statuses&#x60; of &#x60;[\&quot;5xx\&quot;]&#x60; with &#x60;retry_statuses_except&#x60; of &#x60;[\&quot;501\&quot;]&#x60; retries every server error except &#x60;501&#x60;. An element that does not overlap &#x60;retry_statuses&#x60; is allowed and simply has no effect. Empty (the default) subtracts nothing.
+   * @return retryStatusesExcept
+   */
+  @jakarta.annotation.Nullable
+  @JsonProperty(value = JSON_PROPERTY_RETRY_STATUSES_EXCEPT, required = false)
+  @JsonInclude(value = JsonInclude.Include.USE_DEFAULTS)
+  public List<String> getRetryStatusesExcept() {
+    return retryStatusesExcept;
+  }
+
+
+  @JsonProperty(value = JSON_PROPERTY_RETRY_STATUSES_EXCEPT, required = false)
+  @JsonInclude(value = JsonInclude.Include.USE_DEFAULTS)
+  public void setRetryStatusesExcept(@jakarta.annotation.Nullable List<String> retryStatusesExcept) {
+    this.retryStatusesExcept = retryStatusesExcept;
   }
 
 
@@ -424,7 +528,10 @@ public class RetryPolicy {
         Objects.equals(this.backoff, retryPolicy.backoff) &&
         Objects.equals(this.delaySeconds, retryPolicy.delaySeconds) &&
         equalsNullable(this.maxDelaySeconds, retryPolicy.maxDelaySeconds) &&
-        Objects.equals(this.retryOn, retryPolicy.retryOn) &&
+        Objects.equals(this.retryOnTimeout, retryPolicy.retryOnTimeout) &&
+        Objects.equals(this.retryOnConnectionError, retryPolicy.retryOnConnectionError) &&
+        Objects.equals(this.retryStatuses, retryPolicy.retryStatuses) &&
+        Objects.equals(this.retryStatusesExcept, retryPolicy.retryStatusesExcept) &&
         equalsNullable(this.createdAt, retryPolicy.createdAt) &&
         equalsNullable(this.updatedAt, retryPolicy.updatedAt) &&
         equalsNullable(this.deletedAt, retryPolicy.deletedAt) &&
@@ -437,7 +544,7 @@ public class RetryPolicy {
 
   @Override
   public int hashCode() {
-    return Objects.hash(name, maxRetries, backoff, delaySeconds, hashCodeNullable(maxDelaySeconds), retryOn, hashCodeNullable(createdAt), hashCodeNullable(updatedAt), hashCodeNullable(deletedAt), hashCodeNullable(version));
+    return Objects.hash(name, maxRetries, backoff, delaySeconds, hashCodeNullable(maxDelaySeconds), retryOnTimeout, retryOnConnectionError, retryStatuses, retryStatusesExcept, hashCodeNullable(createdAt), hashCodeNullable(updatedAt), hashCodeNullable(deletedAt), hashCodeNullable(version));
   }
 
   private static <T> int hashCodeNullable(JsonNullable<T> a) {
@@ -456,7 +563,10 @@ public class RetryPolicy {
     sb.append("    backoff: ").append(toIndentedString(backoff)).append("\n");
     sb.append("    delaySeconds: ").append(toIndentedString(delaySeconds)).append("\n");
     sb.append("    maxDelaySeconds: ").append(toIndentedString(maxDelaySeconds)).append("\n");
-    sb.append("    retryOn: ").append(toIndentedString(retryOn)).append("\n");
+    sb.append("    retryOnTimeout: ").append(toIndentedString(retryOnTimeout)).append("\n");
+    sb.append("    retryOnConnectionError: ").append(toIndentedString(retryOnConnectionError)).append("\n");
+    sb.append("    retryStatuses: ").append(toIndentedString(retryStatuses)).append("\n");
+    sb.append("    retryStatusesExcept: ").append(toIndentedString(retryStatusesExcept)).append("\n");
     sb.append("    createdAt: ").append(toIndentedString(createdAt)).append("\n");
     sb.append("    updatedAt: ").append(toIndentedString(updatedAt)).append("\n");
     sb.append("    deletedAt: ").append(toIndentedString(deletedAt)).append("\n");
@@ -530,9 +640,32 @@ public class RetryPolicy {
       joiner.add(String.format(java.util.Locale.ROOT, "%smax_delay_seconds%s=%s", prefix, suffix, ApiClient.urlEncode(ApiClient.valueToString(getMaxDelaySeconds()))));
     }
 
-    // add `retry_on` to the URL query string
-    if (getRetryOn() != null) {
-      joiner.add(getRetryOn().toUrlQueryString(prefix + "retry_on" + suffix));
+    // add `retry_on_timeout` to the URL query string
+    if (getRetryOnTimeout() != null) {
+      joiner.add(String.format(java.util.Locale.ROOT, "%sretry_on_timeout%s=%s", prefix, suffix, ApiClient.urlEncode(ApiClient.valueToString(getRetryOnTimeout()))));
+    }
+
+    // add `retry_on_connection_error` to the URL query string
+    if (getRetryOnConnectionError() != null) {
+      joiner.add(String.format(java.util.Locale.ROOT, "%sretry_on_connection_error%s=%s", prefix, suffix, ApiClient.urlEncode(ApiClient.valueToString(getRetryOnConnectionError()))));
+    }
+
+    // add `retry_statuses` to the URL query string
+    if (getRetryStatuses() != null) {
+      for (int i = 0; i < getRetryStatuses().size(); i++) {
+        joiner.add(String.format(java.util.Locale.ROOT, "%sretry_statuses%s%s=%s", prefix, suffix,
+            "".equals(suffix) ? "" : String.format(java.util.Locale.ROOT, "%s%d%s", containerPrefix, i, containerSuffix),
+            ApiClient.urlEncode(ApiClient.valueToString(getRetryStatuses().get(i)))));
+      }
+    }
+
+    // add `retry_statuses_except` to the URL query string
+    if (getRetryStatusesExcept() != null) {
+      for (int i = 0; i < getRetryStatusesExcept().size(); i++) {
+        joiner.add(String.format(java.util.Locale.ROOT, "%sretry_statuses_except%s%s=%s", prefix, suffix,
+            "".equals(suffix) ? "" : String.format(java.util.Locale.ROOT, "%s%d%s", containerPrefix, i, containerSuffix),
+            ApiClient.urlEncode(ApiClient.valueToString(getRetryStatusesExcept().get(i)))));
+      }
     }
 
     // add `created_at` to the URL query string
