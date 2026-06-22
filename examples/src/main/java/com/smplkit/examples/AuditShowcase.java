@@ -19,7 +19,6 @@ import com.smplkit.audit.CreateEventInput;
 import com.smplkit.audit.Forwarder;
 import com.smplkit.audit.ForwarderType;
 import com.smplkit.audit.HttpConfiguration;
-import com.smplkit.audit.HttpHeader;
 import com.smplkit.audit.HttpMethod;
 import com.smplkit.audit.ListCategoriesInput;
 import com.smplkit.audit.ListEventTypesInput;
@@ -134,7 +133,7 @@ public final class AuditShowcase {
                         new HttpConfiguration(
                                 HttpMethod.POST,
                                 "https://example.com",
-                                List.of(new HttpHeader("X-Showcase", "ok"))),
+                                Map.of("X-Showcase", "ok")),
                         TransformType.JSONATA,
                         SIEM_TRANSFORM);
                 forwarder.filter = INVOICE_FILTER;
@@ -153,19 +152,16 @@ public final class AuditShowcase {
                 assert forwarder.id.equals(forwarderId) : "fetched id mismatch";
 
                 // configure where to forward events in production
-                forwarder.setConfiguration(new HttpConfiguration(
-                        HttpMethod.POST,
-                        "https://httpbin.org/post",
-                        List.of(new HttpHeader("X-Showcase", "ok"))),
-                        "production");
+                forwarder.environment("production").url = "https://httpbin.org/post";
+                forwarder.environment("production").setHeader("X-Showcase", "ok");
                 forwarder.save();
                 assert "https://httpbin.org/post".equals(
-                        forwarder.environments.get("production").configuration.url)
+                        forwarder.environments.get("production").url)
                         : "expected production configuration url updated";
                 System.out.println("Updated forwarder: " + forwarder.name);
 
                 // start forwarding events in production
-                forwarder.setEnabled(true, "production");
+                forwarder.environment("production").enabled = true;
                 forwarder.save();
                 System.out.println("Enabled forwarder " + forwarder.name + " (id=" + forwarder.id + ") "
                         + "to start forwarding events in production");

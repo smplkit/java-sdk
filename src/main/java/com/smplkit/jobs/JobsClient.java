@@ -140,7 +140,8 @@ public final class JobsClient implements AutoCloseable {
      * Return an unsaved recurring {@link Job} with default {@code description}
      * (none), no per-environment overrides, and {@code concurrencyPolicy}
      * ({@code "ALLOW"}). Call {@code .save()} to create it. Set enablement per
-     * environment via {@link Job#setEnabled(boolean, String)}.
+     * environment via {@code job.environment(env).enabled = true} (see
+     * {@link Job#environment(String)}).
      *
      * @param id stable caller-supplied unique identifier for the job. Unique
      *     within the account and immutable; the service returns 409 if another

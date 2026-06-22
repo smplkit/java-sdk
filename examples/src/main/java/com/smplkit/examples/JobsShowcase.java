@@ -16,7 +16,6 @@ import com.smplkit.examples.setup.JobsSetup;
 import com.smplkit.internal.generated.jobs.ApiException;
 import com.smplkit.jobs.Backoff;
 import com.smplkit.jobs.HttpConfig;
-import com.smplkit.jobs.HttpHeader;
 import com.smplkit.jobs.HttpMethod;
 import com.smplkit.jobs.Job;
 import com.smplkit.jobs.JobKind;
@@ -28,6 +27,7 @@ import com.smplkit.jobs.RunTrigger;
 
 import java.time.OffsetDateTime;
 import java.util.List;
+import java.util.Map;
 
 public final class JobsShowcase {
 
@@ -63,7 +63,7 @@ public final class JobsShowcase {
             HttpConfig config = new HttpConfig(
                     HttpMethod.POST,
                     "https://httpbin.org/post",
-                    List.of(new HttpHeader("Authorization", "Bearer s3cr3t")));
+                    Map.of("Authorization", "Bearer s3cr3t"));
             config.body = "{\"scope\": \"all\"}";
             config.timeout = 30;
             Job job = jobs.newRecurringJob(
@@ -72,26 +72,26 @@ public final class JobsShowcase {
                     "0 2 * * *",
                     config);
             job.description = "Warms the product cache nightly.";
-            job.setEnabled(true, "development");
-            job.setEnabled(true, "production");
-            job.setSchedule("0 */6 * * *", "America/New_York", "development");
-            HttpConfig developmentConfig = new HttpConfig(
-                    HttpMethod.POST,
-                    "https://development.example.com/cache/warm",
-                    List.of(new HttpHeader("Authorization", "Bearer development-s3cr3t")));
-            developmentConfig.body = "{\"scope\": \"all\"}";
-            job.setConfiguration(developmentConfig, "development");
+
+            // enable the job to run in various environments
+            job.environment("development").enabled = true;
+            job.environment("production").enabled = true;
+
+            // change how the job runs in production
+            var prod = job.environment("production");
+            prod.schedule = "0 */6 * * *";
+            prod.timezone = "America/New_York";
+            prod.url = "https://production.example.com/cache/warm";
+            prod.setHeader("Authorization", "Bearer production-s3cr3t");
             job.save();
             assert job.isRecurring();
-            assert job.isEnabled("development");
-            assert job.isEnabled("production");
-            assert job.environments.get("development").timezone.equals("America/New_York");
-            assert job.getConfiguration("development").url.equals("https://development.example.com/cache/warm");
+            assert job.environments.get("production").schedule.equals("0 */6 * * *");
+            assert job.environments.get("production").url.equals("https://production.example.com/cache/warm");
             System.out.println("Created recurring job " + job.id + " (v" + job.version + ")");
 
             // get a job
             Job fetched = jobs.get(RECURRING_JOB_ID);
-            assert fetched.environments.get("development").schedule.equals("0 */6 * * *");
+            assert fetched.environments.get("production").schedule.equals("0 */6 * * *");
             System.out.println("Fetched job " + RECURRING_JOB_ID);
 
             // list jobs, filtered to recurring jobs
@@ -103,8 +103,7 @@ public final class JobsShowcase {
 
             // update a job
             job.name = "Nightly cache warm (v2)";
-            job.setRetryPolicy(retryPolicy, "production");
-            job.setSchedule("30 2 * * *", "America/Los_Angeles", "production");
+            job.environment("production").setRetryPolicy(retryPolicy);
             job.save();
             assert job.version == 2;
             System.out.println("Updated job to v" + job.version);
@@ -149,8 +148,8 @@ public final class JobsShowcase {
             Job manual = jobs.newManualJob(
                     MANUAL_JOB_ID,
                     "On-demand reindex",
-                    new HttpConfig(HttpMethod.POST, "https://httpbin.org/post", List.of()));
-            manual.setEnabled(true, "production");
+                    new HttpConfig(HttpMethod.POST, "https://httpbin.org/post", Map.of()));
+            manual.environment("production").enabled = true;
             manual.save();
             assert manual.isManual();
             Run manualRun = manual.trigger("production");
@@ -163,11 +162,11 @@ public final class JobsShowcase {
                     ONEOFF_JOB_ID,
                     "One-shot reindex",
                     tomorrow,
-                    new HttpConfig(HttpMethod.POST, "https://httpbin.org/post", List.of()),
+                    new HttpConfig(HttpMethod.POST, "https://httpbin.org/post", Map.of()),
                     "development");
             oneoff.save();
             assert oneoff.isOneOff();
-            assert oneoff.isEnabled("development");
+            assert oneoff.environments.get("development").enabled;
             assert oneoff.environments.get("development").nextRunAt != null;
             System.out.println("Created one-off job " + oneoff.id + " to run in development");
 

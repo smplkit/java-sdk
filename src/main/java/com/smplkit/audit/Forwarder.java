@@ -41,18 +41,21 @@ public final class Forwarder {
     /** Destination type — see {@link ForwarderType}. */
     public ForwarderType forwarderType;
     /**
-     * Read-only. Always {@code false} — the base enablement is pinned off.
-     * Whether a forwarder actually delivers is decided per environment via
-     * {@link #environments}; mutating this field has no effect on the server.
+     * Read-only, derived roll-up: {@code true} when the forwarder is enabled in
+     * at least one environment. Computed from {@link #environments} on
+     * parse/save and not sent on the wire. Mutating this field has no effect on
+     * the server — enable per environment via
+     * {@code forwarder.environment(env).enabled = true}.
      */
     public boolean enabled = false;
     /**
-     * Per-environment overrides keyed by environment key (e.g.
-     * {@code "production"}, {@code "staging"}). A forwarder delivers in an
-     * environment only when {@code environments.get(env).enabled} is
-     * {@code true}. Each entry may carry an optional {@link HttpConfiguration}
-     * override; omit it to inherit the base {@link #configuration}. Every
-     * referenced environment must exist and be managed for the account.
+     * Per-environment sparse overrides keyed by environment key (e.g.
+     * {@code "production"}, {@code "staging"}). Reach one via
+     * {@link #environment(String)} and set its {@code enabled} flag / leaf
+     * overrides to make the forwarder deliver (and vary its request) in that
+     * environment (ADR-056). Each entry overrides only the leaves it sets;
+     * omitted leaves inherit the base {@link #configuration}. Every referenced
+     * environment must exist and be managed for the account.
      */
     public Map<String, ForwarderEnvironment> environments = new HashMap<>();
     /**
@@ -105,7 +108,7 @@ public final class Forwarder {
     }
 
     Forwarder(AuditForwarders client, String id, String name, String description,
-              ForwarderType forwarderType, boolean enabled,
+              ForwarderType forwarderType,
               Map<String, ForwarderEnvironment> environments, Map<String, Object> filter,
               TransformType transformType, Object transform, boolean forwardSmplkitEvents,
               HttpConfiguration configuration,
@@ -116,8 +119,9 @@ public final class Forwarder {
         this.name = name;
         this.description = description;
         this.forwarderType = forwarderType;
-        this.enabled = enabled;
         this.environments = environments != null ? environments : new HashMap<>();
+        // ``enabled`` is the derived roll-up — true when enabled in any environment.
+        this.enabled = computeEnabledRollup();
         this.filter = filter;
         this.transformType = transformType;
         this.transform = transform;
@@ -127,6 +131,49 @@ public final class Forwarder {
         this.updatedAt = updatedAt;
         this.deletedAt = deletedAt;
         this.version = version;
+    }
+
+    /**
+     * The per-environment override for {@code environment} — the single place to
+     * read or set what this forwarder overrides there (ADR-056).
+     *
+     * <p>Returns the {@link ForwarderEnvironment} for {@code environment},
+     * creating an empty one (and inserting it into {@link #environments}) on
+     * first access, so you can set overrides directly:</p>
+     *
+     * <pre>{@code
+     * forwarder.environment("production").enabled = true;
+     * forwarder.environment("production").url = "https://prod.siem.example.com/in";
+     * forwarder.environment("production").setHeader("DD-API-KEY", "prod-secret");
+     * }</pre>
+     *
+     * <p>Only the leaves you set are sent on save; everything else inherits the
+     * base definition (the server resolves base &oplus; overrides on
+     * delivery).</p>
+     *
+     * @param environment the environment key
+     * @return the {@link ForwarderEnvironment} override for {@code environment}
+     */
+    public ForwarderEnvironment environment(String environment) {
+        ForwarderEnvironment env = environments.get(environment);
+        if (env == null) {
+            env = new ForwarderEnvironment();
+            environments.put(environment, env);
+        }
+        return env;
+    }
+
+    /**
+     * Compute the enabled roll-up from {@link #environments}: {@code true} when
+     * any environment override has {@code enabled=true}.
+     */
+    boolean computeEnabledRollup() {
+        for (ForwarderEnvironment env : environments.values()) {
+            if (env != null && env.enabled) {
+                return true;
+            }
+        }
+        return false;
     }
 
     @Override
@@ -215,86 +262,15 @@ public final class Forwarder {
         }, executor);
     }
 
-    /**
-     * Return the override for {@code environment}, creating an empty one if absent.
-     *
-     * <p>The per-environment mutators reach through here so an existing
-     * override's other field is preserved when only one of {@code enabled} /
-     * {@code configuration} is being set.</p>
-     */
-    private ForwarderEnvironment environmentOverride(String environment) {
-        ForwarderEnvironment env = environments.get(environment);
-        if (env == null) {
-            env = new ForwarderEnvironment();
-            environments.put(environment, env);
-        }
-        return env;
-    }
-
-    /**
-     * Set this forwarder's destination configuration in memory (base).
-     *
-     * <p>Replaces the base {@link #configuration}. Call {@link #save()} to
-     * persist.</p>
-     */
-    public void setConfiguration(HttpConfiguration configuration) {
-        this.configuration = configuration;
-    }
-
-    /**
-     * Set this forwarder's destination configuration in memory.
-     *
-     * <p>With {@code environment} omitted (the base overload), replaces the
-     * base {@link #configuration}. With {@code environment} given, sets the
-     * per-environment override's configuration on {@link #environments},
-     * creating the override entry if it doesn't exist yet (preserving any
-     * already-set {@code enabled} on it). Call {@link #save()} to persist.</p>
-     */
-    public void setConfiguration(HttpConfiguration configuration, String environment) {
-        if (environment == null) {
-            this.configuration = configuration;
-        } else {
-            environmentOverride(environment).configuration = configuration;
-        }
-    }
-
-    /**
-     * Set this forwarder's enablement in memory (base).
-     *
-     * <p>Sets the base {@link #enabled} (which the server pins false
-     * regardless — enablement is per-environment). Call {@link #save()} to
-     * persist.</p>
-     */
-    public void setEnabled(boolean enabled) {
-        this.enabled = enabled;
-    }
-
-    /**
-     * Set this forwarder's enablement in memory.
-     *
-     * <p>With {@code environment} omitted (the base overload), sets the base
-     * {@link #enabled} (which the server pins false regardless — enablement is
-     * per-environment). With {@code environment} given, sets the
-     * per-environment override's {@code enabled} on {@link #environments},
-     * creating the override entry if it doesn't exist yet (preserving any
-     * already-set {@code configuration} on it). Call {@link #save()} to
-     * persist.</p>
-     */
-    public void setEnabled(boolean enabled, String environment) {
-        if (environment == null) {
-            this.enabled = enabled;
-        } else {
-            environmentOverride(environment).enabled = enabled;
-        }
-    }
-
     void apply(Forwarder other) {
         this.id = other.id;
         this.name = other.name;
         this.description = other.description;
         this.forwarderType = other.forwarderType;
-        this.enabled = other.enabled;
         this.environments = other.environments;
+        // ``enabled`` is the derived roll-up — recompute from the just-applied
+        // environments rather than trusting a stale value.
+        this.enabled = computeEnabledRollup();
         this.filter = other.filter;
         this.transformType = other.transformType;
         this.transform = other.transform;

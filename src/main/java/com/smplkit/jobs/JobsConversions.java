@@ -6,8 +6,7 @@ import com.smplkit.internal.generated.jobs.model.RunResource;
 import com.smplkit.internal.generated.jobs.model.Usage;
 import com.smplkit.internal.generated.jobs.model.UsageResource;
 
-import java.util.ArrayList;
-import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
@@ -28,17 +27,8 @@ final class JobsConversions {
         out.setTimeout(src.timeout);
         out.setTlsVerify(src.tlsVerify);
         out.setCaCert(src.caCert);
-        List<com.smplkit.internal.generated.jobs.model.HttpHeader> hh = new ArrayList<>();
-        if (src.headers != null) {
-            for (HttpHeader h : src.headers) {
-                com.smplkit.internal.generated.jobs.model.HttpHeader g =
-                        new com.smplkit.internal.generated.jobs.model.HttpHeader();
-                g.setName(h.name);
-                g.setValue(h.value);
-                hh.add(g);
-            }
-        }
-        out.setHeaders(hh);
+        // Headers travel as a name->value object (ADR-056).
+        out.setHeaders(src.headers != null ? new LinkedHashMap<>(src.headers) : new LinkedHashMap<>());
         return out;
     }
 
@@ -56,70 +46,31 @@ final class JobsConversions {
         // default to verifying so its prior secure behaviour is preserved.
         out.tlsVerify = src.getTlsVerify() == null ? true : src.getTlsVerify();
         out.caCert = src.getCaCert();
-        out.headers = new ArrayList<>();
-        if (src.getHeaders() != null) {
-            for (com.smplkit.internal.generated.jobs.model.HttpHeader h : src.getHeaders()) {
-                out.headers.add(new HttpHeader(h.getName(), h.getValue()));
-            }
-        }
+        out.headers = src.getHeaders() != null ? new LinkedHashMap<>(src.getHeaders()) : new LinkedHashMap<>();
         return out;
     }
 
     /**
-     * Convert the wrapper {@code environments} map to the generated model.
-     * Per-environment {@code configuration} overrides are sent as full
-     * {@link HttpConfig} payloads (plaintext headers in), mirroring the base
-     * configuration's round-trip semantics; a {@code schedule} or
-     * {@code timezone} override is sent only when set (omit either to inherit the
-     * base schedule / base timezone). The read-only
-     * {@code nextRunAt} is never written. An entry without overrides sends only
-     * {@code enabled} (inherit the base schedule and configuration).
+     * Convert the wrapper {@code environments} map to the generated model. Each
+     * value is a flat sparse leaf-path overlay (ADR-056): {@code enabled} plus
+     * only the leaves the environment overrides, with each header as a
+     * {@code headers.<name>} leaf. The read-only {@code nextRunAt} is never
+     * written.
      */
-    static Map<String, com.smplkit.internal.generated.jobs.model.JobEnvironment> environmentsToGen(
-            Map<String, JobEnvironment> environments) {
-        Map<String, com.smplkit.internal.generated.jobs.model.JobEnvironment> out = new HashMap<>();
+    static Map<String, Map<String, Object>> environmentsToGen(Map<String, JobEnvironment> environments) {
+        Map<String, Map<String, Object>> out = new LinkedHashMap<>();
         for (Map.Entry<String, JobEnvironment> e : environments.entrySet()) {
-            JobEnvironment env = e.getValue();
-            com.smplkit.internal.generated.jobs.model.JobEnvironment gen =
-                    new com.smplkit.internal.generated.jobs.model.JobEnvironment();
-            gen.setEnabled(env.enabled);
-            if (env.schedule != null) {
-                gen.setSchedule(env.schedule);
-            }
-            if (env.timezone != null) {
-                gen.setTimezone(env.timezone);
-            }
-            if (env.retryPolicy != null) {
-                gen.setRetryPolicy(env.retryPolicy);
-            }
-            if (env.configuration != null) {
-                gen.setConfiguration(configurationToGen(env.configuration));
-            }
-            // ``nextRunAt`` is read-only and server-derived — never written.
-            out.put(e.getKey(), gen);
+            out.put(e.getKey(), e.getValue().toOverlay());
         }
         return out;
     }
 
-    /** Convert the generated {@code environments} map to wrapper instances. */
-    static Map<String, JobEnvironment> environmentsFromGen(
-            Map<String, com.smplkit.internal.generated.jobs.model.JobEnvironment> environments) {
-        Map<String, JobEnvironment> out = new HashMap<>();
+    /** Convert the generated {@code environments} map (flat overlays) to wrapper instances. */
+    static Map<String, JobEnvironment> environmentsFromGen(Map<String, Map<String, Object>> environments) {
+        Map<String, JobEnvironment> out = new LinkedHashMap<>();
         if (environments == null) return out;
-        for (Map.Entry<String, com.smplkit.internal.generated.jobs.model.JobEnvironment> e
-                : environments.entrySet()) {
-            com.smplkit.internal.generated.jobs.model.JobEnvironment gen = e.getValue();
-            JobEnvironment env = new JobEnvironment();
-            if (gen != null) {
-                env.enabled = gen.getEnabled() != null ? gen.getEnabled() : false;
-                env.schedule = gen.getSchedule();
-                env.timezone = gen.getTimezone();
-                env.retryPolicy = gen.getRetryPolicy();
-                env.configuration = gen.getConfiguration() != null
-                        ? configurationFromGen(gen.getConfiguration()) : null;
-                env.nextRunAt = gen.getNextRunAt();
-            }
-            out.put(e.getKey(), env);
+        for (Map.Entry<String, Map<String, Object>> e : environments.entrySet()) {
+            out.put(e.getKey(), JobEnvironment.fromOverlay(e.getValue()));
         }
         return out;
     }

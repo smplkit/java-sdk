@@ -24,9 +24,8 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonTypeName;
 import com.fasterxml.jackson.annotation.JsonValue;
-import com.smplkit.internal.generated.audit.model.ForwarderEnvironment;
+import com.smplkit.internal.generated.audit.model.ForwarderHttpConfiguration;
 import com.smplkit.internal.generated.audit.model.ForwarderType;
-import com.smplkit.internal.generated.audit.model.HttpConfiguration;
 import java.time.OffsetDateTime;
 import java.util.Arrays;
 import java.util.HashMap;
@@ -46,7 +45,6 @@ import com.smplkit.internal.generated.audit.ApiClient;
   Forwarder.JSON_PROPERTY_NAME,
   Forwarder.JSON_PROPERTY_DESCRIPTION,
   Forwarder.JSON_PROPERTY_FORWARDER_TYPE,
-  Forwarder.JSON_PROPERTY_ENABLED,
   Forwarder.JSON_PROPERTY_FORWARD_SMPLKIT_EVENTS,
   Forwarder.JSON_PROPERTY_FILTER,
   Forwarder.JSON_PROPERTY_TRANSFORM_TYPE,
@@ -70,10 +68,6 @@ public class Forwarder {
   public static final String JSON_PROPERTY_FORWARDER_TYPE = "forwarder_type";
   @jakarta.annotation.Nonnull
   private ForwarderType forwarderType;
-
-  public static final String JSON_PROPERTY_ENABLED = "enabled";
-  @jakarta.annotation.Nullable
-  private Boolean enabled = false;
 
   public static final String JSON_PROPERTY_FORWARD_SMPLKIT_EVENTS = "forward_smplkit_events";
   @jakarta.annotation.Nullable
@@ -123,11 +117,11 @@ public class Forwarder {
 
   public static final String JSON_PROPERTY_CONFIGURATION = "configuration";
   @jakarta.annotation.Nonnull
-  private HttpConfiguration _configuration;
+  private ForwarderHttpConfiguration _configuration;
 
   public static final String JSON_PROPERTY_ENVIRONMENTS = "environments";
   @jakarta.annotation.Nullable
-  private Map<String, ForwarderEnvironment> environments = new HashMap<>();
+  private Map<String, Map<String, Object>> environments = new HashMap<>();
 
   public static final String JSON_PROPERTY_CREATED_AT = "created_at";
   private JsonNullable<OffsetDateTime> createdAt = JsonNullable.<OffsetDateTime>undefined();
@@ -146,14 +140,12 @@ public class Forwarder {
 
   @JsonCreator
   public Forwarder(
-    @JsonProperty(JSON_PROPERTY_ENABLED) Boolean enabled, 
     @JsonProperty(JSON_PROPERTY_CREATED_AT) OffsetDateTime createdAt, 
     @JsonProperty(JSON_PROPERTY_UPDATED_AT) OffsetDateTime updatedAt, 
     @JsonProperty(JSON_PROPERTY_DELETED_AT) OffsetDateTime deletedAt, 
     @JsonProperty(JSON_PROPERTY_VERSION) Integer version
   ) {
   this();
-    this.enabled = enabled;
     this.createdAt = createdAt == null ? JsonNullable.<OffsetDateTime>undefined() : JsonNullable.of(createdAt);
     this.updatedAt = updatedAt == null ? JsonNullable.<OffsetDateTime>undefined() : JsonNullable.of(updatedAt);
     this.deletedAt = deletedAt == null ? JsonNullable.<OffsetDateTime>undefined() : JsonNullable.of(deletedAt);
@@ -238,20 +230,6 @@ public class Forwarder {
   public void setForwarderType(@jakarta.annotation.Nonnull ForwarderType forwarderType) {
     this.forwarderType = forwarderType;
   }
-
-
-  /**
-   * Always false. Enablement is per-environment: a forwarder delivers in an environment only when &#x60;environments[&lt;env&gt;].enabled&#x60; is true. The base value is pinned false and cannot be set.
-   * @return enabled
-   */
-  @jakarta.annotation.Nullable
-  @JsonProperty(value = JSON_PROPERTY_ENABLED, required = false)
-  @JsonInclude(value = JsonInclude.Include.USE_DEFAULTS)
-  public Boolean getEnabled() {
-    return enabled;
-  }
-
-
 
 
   public Forwarder forwardSmplkitEvents(@jakarta.annotation.Nullable Boolean forwardSmplkitEvents) {
@@ -386,7 +364,7 @@ public class Forwarder {
   }
 
 
-  public Forwarder _configuration(@jakarta.annotation.Nonnull HttpConfiguration _configuration) {
+  public Forwarder _configuration(@jakarta.annotation.Nonnull ForwarderHttpConfiguration _configuration) {
     this._configuration = _configuration;
     return this;
   }
@@ -398,24 +376,24 @@ public class Forwarder {
   @jakarta.annotation.Nonnull
   @JsonProperty(value = JSON_PROPERTY_CONFIGURATION, required = true)
   @JsonInclude(value = JsonInclude.Include.ALWAYS)
-  public HttpConfiguration getConfiguration() {
+  public ForwarderHttpConfiguration getConfiguration() {
     return _configuration;
   }
 
 
   @JsonProperty(value = JSON_PROPERTY_CONFIGURATION, required = true)
   @JsonInclude(value = JsonInclude.Include.ALWAYS)
-  public void setConfiguration(@jakarta.annotation.Nonnull HttpConfiguration _configuration) {
+  public void setConfiguration(@jakarta.annotation.Nonnull ForwarderHttpConfiguration _configuration) {
     this._configuration = _configuration;
   }
 
 
-  public Forwarder environments(@jakarta.annotation.Nullable Map<String, ForwarderEnvironment> environments) {
+  public Forwarder environments(@jakarta.annotation.Nullable Map<String, Map<String, Object>> environments) {
     this.environments = environments;
     return this;
   }
 
-  public Forwarder putEnvironmentsItem(String key, ForwarderEnvironment environmentsItem) {
+  public Forwarder putEnvironmentsItem(String key, Map<String, Object> environmentsItem) {
     if (this.environments == null) {
       this.environments = new HashMap<>();
     }
@@ -424,20 +402,20 @@ public class Forwarder {
   }
 
   /**
-   * Per-environment overrides keyed by environment key (e.g. &#x60;production&#x60;, &#x60;staging&#x60;). Each entry sets &#x60;enabled&#x60; (whether the forwarder delivers in that environment) and an optional &#x60;configuration&#x60; override (omit to inherit the base &#x60;configuration&#x60;). A forwarder with no entry for an environment is disabled there. Every referenced environment must exist and be managed for the account.
+   * Per-environment overrides keyed by environment key (e.g. &#x60;production&#x60;, &#x60;staging&#x60;). Each entry is a sparse map of only the fields that differ in that environment: &#x60;enabled&#x60; (whether the forwarder delivers there) plus any of &#x60;url&#x60;, &#x60;method&#x60;, &#x60;success_status&#x60;, &#x60;tls_verify&#x60;, &#x60;ca_cert&#x60;, and individual headers as &#x60;headers.&lt;name&gt;&#x60; (e.g. &#x60;headers.Authorization&#x60;). Fields you omit are inherited from the base &#x60;configuration&#x60;; an entry never needs to repeat the whole configuration. A forwarder with no entry for an environment is disabled there. Every referenced environment must exist and be managed for the account.
    * @return environments
    */
   @jakarta.annotation.Nullable
   @JsonProperty(value = JSON_PROPERTY_ENVIRONMENTS, required = false)
   @JsonInclude(value = JsonInclude.Include.USE_DEFAULTS)
-  public Map<String, ForwarderEnvironment> getEnvironments() {
+  public Map<String, Map<String, Object>> getEnvironments() {
     return environments;
   }
 
 
   @JsonProperty(value = JSON_PROPERTY_ENVIRONMENTS, required = false)
   @JsonInclude(value = JsonInclude.Include.USE_DEFAULTS)
-  public void setEnvironments(@jakarta.annotation.Nullable Map<String, ForwarderEnvironment> environments) {
+  public void setEnvironments(@jakarta.annotation.Nullable Map<String, Map<String, Object>> environments) {
     this.environments = environments;
   }
 
@@ -569,7 +547,6 @@ public class Forwarder {
     return Objects.equals(this.name, forwarder.name) &&
         equalsNullable(this.description, forwarder.description) &&
         Objects.equals(this.forwarderType, forwarder.forwarderType) &&
-        Objects.equals(this.enabled, forwarder.enabled) &&
         Objects.equals(this.forwardSmplkitEvents, forwarder.forwardSmplkitEvents) &&
         equalsNullable(this.filter, forwarder.filter) &&
         equalsNullable(this.transformType, forwarder.transformType) &&
@@ -588,7 +565,7 @@ public class Forwarder {
 
   @Override
   public int hashCode() {
-    return Objects.hash(name, hashCodeNullable(description), forwarderType, enabled, forwardSmplkitEvents, hashCodeNullable(filter), hashCodeNullable(transformType), hashCodeNullable(transform), _configuration, environments, hashCodeNullable(createdAt), hashCodeNullable(updatedAt), hashCodeNullable(deletedAt), hashCodeNullable(version));
+    return Objects.hash(name, hashCodeNullable(description), forwarderType, forwardSmplkitEvents, hashCodeNullable(filter), hashCodeNullable(transformType), hashCodeNullable(transform), _configuration, environments, hashCodeNullable(createdAt), hashCodeNullable(updatedAt), hashCodeNullable(deletedAt), hashCodeNullable(version));
   }
 
   private static <T> int hashCodeNullable(JsonNullable<T> a) {
@@ -605,7 +582,6 @@ public class Forwarder {
     sb.append("    name: ").append(toIndentedString(name)).append("\n");
     sb.append("    description: ").append(toIndentedString(description)).append("\n");
     sb.append("    forwarderType: ").append(toIndentedString(forwarderType)).append("\n");
-    sb.append("    enabled: ").append(toIndentedString(enabled)).append("\n");
     sb.append("    forwardSmplkitEvents: ").append(toIndentedString(forwardSmplkitEvents)).append("\n");
     sb.append("    filter: ").append(toIndentedString(filter)).append("\n");
     sb.append("    transformType: ").append(toIndentedString(transformType)).append("\n");
@@ -675,11 +651,6 @@ public class Forwarder {
       joiner.add(String.format(java.util.Locale.ROOT, "%sforwarder_type%s=%s", prefix, suffix, ApiClient.urlEncode(ApiClient.valueToString(getForwarderType()))));
     }
 
-    // add `enabled` to the URL query string
-    if (getEnabled() != null) {
-      joiner.add(String.format(java.util.Locale.ROOT, "%senabled%s=%s", prefix, suffix, ApiClient.urlEncode(ApiClient.valueToString(getEnabled()))));
-    }
-
     // add `forward_smplkit_events` to the URL query string
     if (getForwardSmplkitEvents() != null) {
       joiner.add(String.format(java.util.Locale.ROOT, "%sforward_smplkit_events%s=%s", prefix, suffix, ApiClient.urlEncode(ApiClient.valueToString(getForwardSmplkitEvents()))));
@@ -712,10 +683,9 @@ public class Forwarder {
     // add `environments` to the URL query string
     if (getEnvironments() != null) {
       for (String _key : getEnvironments().keySet()) {
-        if (getEnvironments().get(_key) != null) {
-          joiner.add(getEnvironments().get(_key).toUrlQueryString(String.format(java.util.Locale.ROOT, "%senvironments%s%s", prefix, suffix,
-              "".equals(suffix) ? "" : String.format(java.util.Locale.ROOT, "%s%d%s", containerPrefix, _key, containerSuffix))));
-        }
+        joiner.add(String.format(java.util.Locale.ROOT, "%senvironments%s%s=%s", prefix, suffix,
+            "".equals(suffix) ? "" : String.format(java.util.Locale.ROOT, "%s%d%s", containerPrefix, _key, containerSuffix),
+            getEnvironments().get(_key), ApiClient.urlEncode(ApiClient.valueToString(getEnvironments().get(_key)))));
       }
     }
 

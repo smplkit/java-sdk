@@ -24,10 +24,9 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonTypeName;
 import com.fasterxml.jackson.annotation.JsonValue;
-import com.smplkit.internal.generated.jobs.model.HttpHeader;
-import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.List;
+import java.util.HashMap;
+import java.util.Map;
 import org.openapitools.jackson.nullable.JsonNullable;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import org.openapitools.jackson.nullable.JsonNullable;
@@ -37,7 +36,7 @@ import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 
 import com.smplkit.internal.generated.jobs.ApiClient;
 /**
- * HTTP request a job performs when it fires.  Extends the shared forwarder configuration with the two fields a scheduled job needs beyond a forwarder.
+ * HTTP request a job performs when it fires.  Extends the shared forwarder configuration with the two fields a scheduled job needs beyond a forwarder, and represents headers as a name→value object so an individual header can be overridden per environment by its name.
  */
 @JsonPropertyOrder({
   JobHttpConfiguration.JSON_PROPERTY_METHOD,
@@ -102,7 +101,7 @@ public class JobHttpConfiguration {
 
   public static final String JSON_PROPERTY_HEADERS = "headers";
   @jakarta.annotation.Nullable
-  private List<HttpHeader> headers = new ArrayList<>();
+  private Map<String, String> headers = new HashMap<>();
 
   public static final String JSON_PROPERTY_SUCCESS_STATUS = "success_status";
   @jakarta.annotation.Nullable
@@ -173,34 +172,34 @@ public class JobHttpConfiguration {
   }
 
 
-  public JobHttpConfiguration headers(@jakarta.annotation.Nullable List<HttpHeader> headers) {
+  public JobHttpConfiguration headers(@jakarta.annotation.Nullable Map<String, String> headers) {
     this.headers = headers;
     return this;
   }
 
-  public JobHttpConfiguration addHeadersItem(HttpHeader headersItem) {
+  public JobHttpConfiguration putHeadersItem(String key, String headersItem) {
     if (this.headers == null) {
-      this.headers = new ArrayList<>();
+      this.headers = new HashMap<>();
     }
-    this.headers.add(headersItem);
+    this.headers.put(key, headersItem);
     return this;
   }
 
   /**
-   * HTTP headers attached to each request.
+   * HTTP headers sent on each request, as a name→value object (e.g. &#x60;{\&quot;Authorization\&quot;: \&quot;Bearer s3cr3t\&quot;}&#x60;). A header is overridden per environment by its name via a &#x60;headers.&lt;name&gt;&#x60; entry in that environment&#39;s overrides; header names match case-insensitively.
    * @return headers
    */
   @jakarta.annotation.Nullable
   @JsonProperty(value = JSON_PROPERTY_HEADERS, required = false)
   @JsonInclude(value = JsonInclude.Include.USE_DEFAULTS)
-  public List<HttpHeader> getHeaders() {
+  public Map<String, String> getHeaders() {
     return headers;
   }
 
 
   @JsonProperty(value = JSON_PROPERTY_HEADERS, required = false)
   @JsonInclude(value = JsonInclude.Include.USE_DEFAULTS)
-  public void setHeaders(@jakarta.annotation.Nullable List<HttpHeader> headers) {
+  public void setHeaders(@jakarta.annotation.Nullable Map<String, String> headers) {
     this.headers = headers;
   }
 
@@ -448,11 +447,10 @@ public class JobHttpConfiguration {
 
     // add `headers` to the URL query string
     if (getHeaders() != null) {
-      for (int i = 0; i < getHeaders().size(); i++) {
-        if (getHeaders().get(i) != null) {
-          joiner.add(getHeaders().get(i).toUrlQueryString(String.format(java.util.Locale.ROOT, "%sheaders%s%s", prefix, suffix,
-          "".equals(suffix) ? "" : String.format(java.util.Locale.ROOT, "%s%d%s", containerPrefix, i, containerSuffix))));
-        }
+      for (String _key : getHeaders().keySet()) {
+        joiner.add(String.format(java.util.Locale.ROOT, "%sheaders%s%s=%s", prefix, suffix,
+            "".equals(suffix) ? "" : String.format(java.util.Locale.ROOT, "%s%d%s", containerPrefix, _key, containerSuffix),
+            getHeaders().get(_key), ApiClient.urlEncode(ApiClient.valueToString(getHeaders().get(_key)))));
       }
     }
 

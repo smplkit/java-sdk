@@ -7,12 +7,11 @@ import com.smplkit.internal.generated.audit.model.ForwarderCreateResource;
 import com.smplkit.internal.generated.audit.model.ForwarderListResponse;
 import com.smplkit.internal.generated.audit.model.ForwarderRequest;
 import com.smplkit.internal.generated.audit.model.ForwarderResource;
+import com.smplkit.internal.generated.audit.model.ForwarderHttpConfiguration;
 import com.smplkit.internal.generated.audit.model.ForwarderResponse;
-import com.smplkit.internal.generated.audit.model.HttpConfiguration;
-import com.smplkit.internal.generated.audit.model.HttpHeader;
 
 import java.util.ArrayList;
-import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -207,25 +206,17 @@ public final class AuditForwarders {
         return body;
     }
 
-    private static HttpConfiguration toGenConfiguration(com.smplkit.audit.HttpConfiguration src) {
-        HttpConfiguration out = new HttpConfiguration();
+    private static ForwarderHttpConfiguration toGenConfiguration(com.smplkit.audit.HttpConfiguration src) {
+        ForwarderHttpConfiguration out = new ForwarderHttpConfiguration();
         if (src.method != null) {
-            out.setMethod(HttpConfiguration.MethodEnum.fromValue(src.method.getValue()));
+            out.setMethod(ForwarderHttpConfiguration.MethodEnum.fromValue(src.method.getValue()));
         }
         out.setUrl(src.url);
         if (src.successStatus != null) out.setSuccessStatus(src.successStatus);
         out.setTlsVerify(src.tlsVerify);
         out.setCaCert(src.caCert);
-        if (src.headers != null) {
-            List<HttpHeader> hh = new ArrayList<>();
-            for (com.smplkit.audit.HttpHeader h : src.headers) {
-                HttpHeader g = new HttpHeader();
-                g.setName(h.name);
-                g.setValue(h.value);
-                hh.add(g);
-            }
-            out.setHeaders(hh);
-        }
+        // Headers travel as a name->value object (ADR-056).
+        out.setHeaders(src.headers != null ? new LinkedHashMap<>(src.headers) : new LinkedHashMap<>());
         return out;
     }
 
@@ -240,9 +231,6 @@ public final class AuditForwarders {
                 a.getName(),
                 a.getDescription(),
                 fromGenForwarderType(a.getForwarderType()),
-                // The base ``enabled`` is server-pinned false; round-trip whatever
-                // the server returned (always false) without assuming a default of true.
-                a.getEnabled() != null ? a.getEnabled() : false,
                 environmentsFromGen(a.getEnvironments()),
                 a.getFilter(),
                 tt != null ? TransformType.fromValue(tt.getValue()) : null,
@@ -258,42 +246,27 @@ public final class AuditForwarders {
     }
 
     /**
-     * Convert the wrapper {@code environments} map to the generated model.
-     * Per-environment {@code configuration} overrides are sent as full
-     * {@link com.smplkit.audit.HttpConfiguration} payloads (plaintext headers
-     * in), mirroring the base configuration's round-trip semantics.
+     * Convert the wrapper {@code environments} map to the generated model. Each
+     * value is a flat sparse leaf-path overlay (ADR-056): {@code enabled} plus
+     * only the leaves the environment overrides, with each header as a
+     * {@code headers.<name>} leaf.
      */
-    private static Map<String, com.smplkit.internal.generated.audit.model.ForwarderEnvironment>
-            environmentsToGen(Map<String, ForwarderEnvironment> environments) {
-        Map<String, com.smplkit.internal.generated.audit.model.ForwarderEnvironment> out = new HashMap<>();
+    private static Map<String, Map<String, Object>> environmentsToGen(
+            Map<String, ForwarderEnvironment> environments) {
+        Map<String, Map<String, Object>> out = new LinkedHashMap<>();
         for (Map.Entry<String, ForwarderEnvironment> e : environments.entrySet()) {
-            ForwarderEnvironment env = e.getValue();
-            com.smplkit.internal.generated.audit.model.ForwarderEnvironment gen =
-                    new com.smplkit.internal.generated.audit.model.ForwarderEnvironment();
-            gen.setEnabled(env.enabled);
-            if (env.configuration != null) {
-                gen.setConfiguration(toGenConfiguration(env.configuration));
-            }
-            out.put(e.getKey(), gen);
+            out.put(e.getKey(), e.getValue().toOverlay());
         }
         return out;
     }
 
-    /** Convert the generated {@code environments} map to wrapper instances. */
+    /** Convert the generated {@code environments} map (flat overlays) to wrapper instances. */
     private static Map<String, ForwarderEnvironment> environmentsFromGen(
-            Map<String, com.smplkit.internal.generated.audit.model.ForwarderEnvironment> environments) {
-        Map<String, ForwarderEnvironment> out = new HashMap<>();
+            Map<String, Map<String, Object>> environments) {
+        Map<String, ForwarderEnvironment> out = new LinkedHashMap<>();
         if (environments == null) return out;
-        for (Map.Entry<String, com.smplkit.internal.generated.audit.model.ForwarderEnvironment> e
-                : environments.entrySet()) {
-            com.smplkit.internal.generated.audit.model.ForwarderEnvironment gen = e.getValue();
-            ForwarderEnvironment env = new ForwarderEnvironment();
-            if (gen != null) {
-                env.enabled = gen.getEnabled() != null ? gen.getEnabled() : false;
-                env.configuration = gen.getConfiguration() != null
-                        ? configurationFromGen(gen.getConfiguration()) : null;
-            }
-            out.put(e.getKey(), env);
+        for (Map.Entry<String, Map<String, Object>> e : environments.entrySet()) {
+            out.put(e.getKey(), ForwarderEnvironment.fromOverlay(e.getValue()));
         }
         return out;
     }
@@ -310,7 +283,7 @@ public final class AuditForwarders {
         return ForwarderType.fromValue(src.getValue());
     }
 
-    private static com.smplkit.audit.HttpConfiguration configurationFromGen(HttpConfiguration src) {
+    private static com.smplkit.audit.HttpConfiguration configurationFromGen(ForwarderHttpConfiguration src) {
         com.smplkit.audit.HttpConfiguration out = new com.smplkit.audit.HttpConfiguration();
         if (src == null) return out;
         if (src.getMethod() != null) out.method = HttpMethod.fromValue(src.getMethod().getValue());
@@ -321,12 +294,7 @@ public final class AuditForwarders {
         // secure behaviour is preserved.
         out.tlsVerify = src.getTlsVerify() == null ? true : src.getTlsVerify();
         out.caCert = src.getCaCert();
-        out.headers = new ArrayList<>();
-        if (src.getHeaders() != null) {
-            for (HttpHeader h : src.getHeaders()) {
-                out.headers.add(new com.smplkit.audit.HttpHeader(h.getName(), h.getValue()));
-            }
-        }
+        out.headers = src.getHeaders() != null ? new LinkedHashMap<>(src.getHeaders()) : new LinkedHashMap<>();
         return out;
     }
 

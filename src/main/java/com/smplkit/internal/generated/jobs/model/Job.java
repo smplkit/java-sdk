@@ -24,7 +24,6 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonTypeName;
 import com.fasterxml.jackson.annotation.JsonValue;
-import com.smplkit.internal.generated.jobs.model.JobEnvironment;
 import com.smplkit.internal.generated.jobs.model.JobHttpConfiguration;
 import java.time.OffsetDateTime;
 import java.util.Arrays;
@@ -115,7 +114,7 @@ public class Job {
 
   public static final String JSON_PROPERTY_ENVIRONMENTS = "environments";
   @jakarta.annotation.Nullable
-  private Map<String, JobEnvironment> environments = new HashMap<>();
+  private Map<String, Map<String, Object>> environments = new HashMap<>();
 
   /**
    * How overlapping runs are handled. &#x60;ALLOW&#x60; (the only value today) permits them.
@@ -396,12 +395,12 @@ public class Job {
   }
 
 
-  public Job environments(@jakarta.annotation.Nullable Map<String, JobEnvironment> environments) {
+  public Job environments(@jakarta.annotation.Nullable Map<String, Map<String, Object>> environments) {
     this.environments = environments;
     return this;
   }
 
-  public Job putEnvironmentsItem(String key, JobEnvironment environmentsItem) {
+  public Job putEnvironmentsItem(String key, Map<String, Object> environmentsItem) {
     if (this.environments == null) {
       this.environments = new HashMap<>();
     }
@@ -410,20 +409,20 @@ public class Job {
   }
 
   /**
-   * Per-environment overrides keyed by environment key (e.g. &#x60;production&#x60;, &#x60;staging&#x60;). Each entry sets &#x60;enabled&#x60; (whether the job is enabled — scheduled, for a recurring job, or triggerable, for a manual job — in that environment), an optional &#x60;schedule&#x60; override (a cron expression for recurring jobs; omit to inherit the base &#x60;schedule&#x60;), an optional &#x60;timezone&#x60; override (an IANA zone for recurring jobs; omit to inherit the base &#x60;timezone&#x60;, else UTC), and an optional &#x60;configuration&#x60; override (omit to inherit the base &#x60;configuration&#x60;); it also reports the read-only &#x60;next_run_at&#x60; for that environment. A job with no entry for an environment is disabled there. For a recurring or manual job, supply this map to choose where it runs. For a one-off job, the environment it is created in is recorded here automatically — name it with the &#x60;X-Smplkit-Environment&#x60; header. Every referenced environment must exist for the account.
+   * Per-environment overrides keyed by environment key (e.g. &#x60;production&#x60;, &#x60;staging&#x60;). Each entry is a flat, sparse overlay: only the leaves that differ from the base definition are present, and everything absent is inherited. Set &#x60;enabled&#x60; to &#x60;true&#x60; to run the job in that environment (the base is disabled everywhere; an environment with no entry, or an entry without &#x60;enabled: true&#x60;, does not run). Overridable leaves are &#x60;url&#x60;, &#x60;method&#x60;, &#x60;timeout&#x60;, &#x60;body&#x60;, &#x60;success_status&#x60;, &#x60;tls_verify&#x60;, &#x60;ca_cert&#x60;, &#x60;schedule&#x60; and &#x60;timezone&#x60; (recurring jobs only), &#x60;retry_policy&#x60; (the &#x60;id&#x60; of a retry policy, or &#x60;Default&#x60;), and an individual header as &#x60;headers.&lt;name&gt;&#x60; (e.g. &#x60;headers.Authorization&#x60;). On read, each entry also reports the read-only &#x60;next_run_at&#x60; for that environment (the next fire time, or &#x60;null&#x60;). For a recurring or manual job, supply this map to choose where it runs. For a one-off job, the environment it is created in is recorded here automatically — name it with the &#x60;X-Smplkit-Environment&#x60; header. Every referenced environment must exist for the account.
    * @return environments
    */
   @jakarta.annotation.Nullable
   @JsonProperty(value = JSON_PROPERTY_ENVIRONMENTS, required = false)
   @JsonInclude(value = JsonInclude.Include.USE_DEFAULTS)
-  public Map<String, JobEnvironment> getEnvironments() {
+  public Map<String, Map<String, Object>> getEnvironments() {
     return environments;
   }
 
 
   @JsonProperty(value = JSON_PROPERTY_ENVIRONMENTS, required = false)
   @JsonInclude(value = JsonInclude.Include.USE_DEFAULTS)
-  public void setEnvironments(@jakarta.annotation.Nullable Map<String, JobEnvironment> environments) {
+  public void setEnvironments(@jakarta.annotation.Nullable Map<String, Map<String, Object>> environments) {
     this.environments = environments;
   }
 
@@ -763,10 +762,9 @@ public class Job {
     // add `environments` to the URL query string
     if (getEnvironments() != null) {
       for (String _key : getEnvironments().keySet()) {
-        if (getEnvironments().get(_key) != null) {
-          joiner.add(getEnvironments().get(_key).toUrlQueryString(String.format(java.util.Locale.ROOT, "%senvironments%s%s", prefix, suffix,
-              "".equals(suffix) ? "" : String.format(java.util.Locale.ROOT, "%s%d%s", containerPrefix, _key, containerSuffix))));
-        }
+        joiner.add(String.format(java.util.Locale.ROOT, "%senvironments%s%s=%s", prefix, suffix,
+            "".equals(suffix) ? "" : String.format(java.util.Locale.ROOT, "%s%d%s", containerPrefix, _key, containerSuffix),
+            getEnvironments().get(_key), ApiClient.urlEncode(ApiClient.valueToString(getEnvironments().get(_key)))));
       }
     }
 

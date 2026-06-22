@@ -81,16 +81,17 @@ class AuditForwardersTest {
     }
 
     private static String forwarderResource(String name, String description) {
-        return forwarderResource(name, description, true, "2026-05-07T12:00:00Z");
+        return forwarderResource(name, description, "2026-05-07T12:00:00Z");
     }
 
-    private static String forwarderResource(String name, String description,
-                                            boolean enabled, String createdAt) {
+    // ADR-056: base ``configuration.headers`` is a name->value object and the
+    // wire no longer carries a base ``enabled`` (enablement is per-environment).
+    private static String forwarderResource(String name, String description, String createdAt) {
         return "{\"id\":\"" + FWD_ID + "\",\"type\":\"forwarder\",\"attributes\":{"
                 + "\"name\":\"" + name + "\",\"description\":\"" + description + "\","
-                + "\"forwarder_type\":\"datadog\",\"enabled\":" + enabled + ","
+                + "\"forwarder_type\":\"datadog\","
                 + "\"configuration\":{\"method\":\"POST\",\"url\":\"https://siem.example.com/in\","
-                + "\"headers\":[{\"name\":\"DD-API-KEY\",\"value\":\"<redacted>\"}],"
+                + "\"headers\":{\"DD-API-KEY\":\"<redacted>\"},"
                 + "\"success_status\":\"2xx\"},"
                 + "\"data\":{},\"created_at\":\"" + createdAt + "\","
                 + "\"updated_at\":\"" + createdAt + "\",\"version\":1}}";
@@ -110,13 +111,13 @@ class AuditForwardersTest {
                 new HttpConfiguration("https://siem.example.com/in"),
                 TransformType.JSONATA, "$");
         fwd.description = "prod sink";
-        fwd.configuration.headers.add(new HttpHeader("DD-API-KEY", "real-secret"));
+        fwd.configuration.setHeader("DD-API-KEY", "real-secret");
         fwd.filter = Map.of("==", java.util.List.of(1, 1));
         fwd.save();
         assertEquals(FWD_ID, fwd.id);
         assertEquals("prod sink", fwd.description);
         assertEquals(1, fwd.configuration.headers.size());
-        assertEquals("<redacted>", fwd.configuration.headers.get(0).value);
+        assertEquals("<redacted>", fwd.configuration.getHeader("DD-API-KEY"));
         assertNotNull(fwd.createdAt);
     }
 
@@ -194,13 +195,13 @@ class AuditForwardersTest {
     @Test
     void existingForwarderSave_putsAndAppliesResponse() throws Exception {
         handler.set(ex -> respondJson(ex, 200,
-                "{\"data\":" + forwarderResource("Renamed", "renamed sink", false, "2026-05-07T12:00:00Z") + "}"));
+                "{\"data\":" + forwarderResource("Renamed", "renamed sink", "2026-05-07T12:00:00Z") + "}"));
         AuditForwarders fwds = new AuditForwarders(forwardersApi);
         Forwarder fwd = fwds.get(FWD_ID);  // first GET handler also returns the same body
         fwd.name = "Renamed";
         fwd.save();
         assertEquals("Renamed", fwd.name);
-        // The base ``enabled`` is server-pinned false (read-only).
+        // No environments enabled -> the derived roll-up is false.
         assertFalse(fwd.enabled);
     }
 
@@ -341,11 +342,16 @@ class AuditForwardersTest {
         ListForwardersInput lfi = new ListForwardersInput();
         HttpConfiguration cfg = new HttpConfiguration();
         HttpConfiguration cfg2 = new HttpConfiguration(HttpMethod.GET, "https://x",
-                java.util.List.of(new HttpHeader("k", "v")));
+                Map.of("k", "v"));
         assertNull(lfi.forwarderType);
         assertEquals(HttpMethod.POST, cfg.method);
         assertEquals(HttpMethod.GET, cfg2.method);
-        assertEquals(1, cfg2.headers.size());
+        assertEquals("v", cfg2.getHeader("k"));
+        // header helpers + null-headers defensive path
+        cfg.setHeader("DD-API-KEY", "s");
+        assertEquals("s", cfg.getHeader("DD-API-KEY"));
+        assertNull(cfg.getHeader("missing"));
+        assertTrue(new HttpConfiguration(HttpMethod.GET, "https://z", null).headers.isEmpty());
     }
 
     @Test
@@ -415,27 +421,49 @@ class AuditForwardersTest {
     }
 
     // -----------------------------------------------------------------
-    // Per-environment enablement (ADR-055)
+    // Per-environment sparse overrides (ADR-056)
     // -----------------------------------------------------------------
 
     @Test
-    void forwarderEnvironment_constructors_populateFields() {
+    void forwarderEnvironment_constructorsAndHeaderHelpers() {
         ForwarderEnvironment defaults = new ForwarderEnvironment();
         assertFalse(defaults.enabled);
-        assertNull(defaults.configuration);
+        // pure-override reads: a fresh override overrides nothing (all null)
+        assertNull(defaults.url);
+        assertNull(defaults.method);
+        assertNull(defaults.successStatus);
+        assertNull(defaults.tlsVerify);
+        assertNull(defaults.caCert);
+        assertTrue(defaults.headers.isEmpty());
+        assertNull(defaults.getHeader("X"));
+        defaults.setHeader("X", "y");
+        assertEquals("y", defaults.getHeader("X"));
 
         ForwarderEnvironment enabledOnly = new ForwarderEnvironment(true);
         assertTrue(enabledOnly.enabled);
-        assertNull(enabledOnly.configuration);
-
-        HttpConfiguration cfg = new HttpConfiguration("https://override.example.com");
-        ForwarderEnvironment withCfg = new ForwarderEnvironment(true, cfg);
-        assertTrue(withCfg.enabled);
-        assertSame(cfg, withCfg.configuration);
+        assertNull(enabledOnly.url);
     }
 
     @Test
-    void saveForwarder_sendsEnvironmentsMap_onWire() throws Exception {
+    void forwarder_environmentAccessor_createsAndReuses() {
+        AuditForwarders fwds = new AuditForwarders(forwardersApi);
+        Forwarder fwd = fwds.newForwarder(FWD_ID, "n", ForwarderType.HTTP,
+                new HttpConfiguration("https://base"));
+        assertTrue(fwd.environments.isEmpty());
+        ForwarderEnvironment prod = fwd.environment("production");
+        assertSame(prod, fwd.environment("production"));
+        assertEquals(1, fwd.environments.size());
+        // setting per-env leaves leaves the base configuration untouched
+        prod.enabled = true;
+        prod.url = "https://prod.siem.example.com/in";
+        prod.method = HttpMethod.PUT;
+        prod.setHeader("DD-API-KEY", "prod-secret");
+        assertEquals("https://base", fwd.configuration.url);
+        assertEquals("prod-secret", prod.getHeader("DD-API-KEY"));
+    }
+
+    @Test
+    void saveForwarder_sendsFlatEnvironmentOverlays_onWire() throws Exception {
         AtomicReference<String> body = new AtomicReference<>();
         handler.set(ex -> {
             byte[] in = ex.getRequestBody().readAllBytes();
@@ -446,42 +474,43 @@ class AuditForwardersTest {
         AuditForwarders fwds = new AuditForwarders(forwardersApi);
         Forwarder fwd = fwds.newForwarder(FWD_ID, "Datadog production",
                 ForwarderType.DATADOG, new HttpConfiguration("https://siem.example.com/in"));
-        // production: enabled with a per-environment configuration override.
-        HttpConfiguration prodOverride = new HttpConfiguration("https://prod-override.example.com");
-        fwd.environments.put("production", new ForwarderEnvironment(true, prodOverride));
-        // staging: enabled, no override (inherits base configuration).
-        fwd.environments.put("staging", new ForwarderEnvironment(true));
+        // production: enabled with per-environment url + method + header leaf overrides.
+        ForwarderEnvironment prod = fwd.environment("production");
+        prod.enabled = true;
+        prod.url = "https://prod-override.example.com";
+        prod.method = HttpMethod.PUT;
+        prod.setHeader("DD-API-KEY", "prod-secret");
+        // staging: enabled, no leaf override (inherits the base configuration).
+        fwd.environment("staging").enabled = true;
         fwd.save();
-        assertTrue(body.get().contains("\"environments\""),
-                "expected environments map on wire, got: " + body.get());
-        assertTrue(body.get().contains("\"production\""),
-                "expected production entry on wire, got: " + body.get());
-        assertTrue(body.get().contains("https://prod-override.example.com"),
-                "expected per-environment config override on wire, got: " + body.get());
-        // Per-environment enablement IS sent (inside the environments map).
-        assertTrue(body.get().contains("\"enabled\":true"),
-                "expected per-environment enabled=true on wire, got: " + body.get());
-        // The wrapper never sets the base ``enabled`` (it's server-pinned false
-        // and read-only); the generated model leaves it at its false default, so
-        // the base attributes carry at most ``"enabled":false`` and never
-        // ``enabled:true`` outside the environments map.
-        String wire = body.get();
-        int envIdx = wire.indexOf("\"environments\"");
-        assertTrue(envIdx > 0, "environments must be present");
-        assertFalse(wire.substring(0, envIdx).contains("\"enabled\":true"),
-                "base attributes must not carry enabled=true before environments: " + wire);
+        com.fasterxml.jackson.databind.JsonNode env = new com.fasterxml.jackson.databind.ObjectMapper()
+                .readTree(body.get()).path("data").path("attributes").path("environments");
+        // production overlay carries the flat leaf overrides
+        assertTrue(env.path("production").path("enabled").asBoolean());
+        assertEquals("https://prod-override.example.com", env.path("production").path("url").asText());
+        assertEquals("PUT", env.path("production").path("method").asText());
+        // header override is a flat ``headers.<name>`` leaf, not a nested object
+        assertEquals("prod-secret", env.path("production").path("headers.DD-API-KEY").asText());
+        assertFalse(env.path("production").path("headers").isObject());
+        // staging overlay carries only ``enabled`` (inherits everything else)
+        assertTrue(env.path("staging").path("enabled").asBoolean());
+        assertFalse(env.path("staging").has("url"));
+        // The wrapper never sends a base ``enabled`` (enablement is per-environment).
+        assertFalse(new com.fasterxml.jackson.databind.ObjectMapper().readTree(body.get())
+                .path("data").path("attributes").has("enabled"),
+                "base attributes must not carry enabled");
     }
 
     @Test
-    void getForwarder_readsEnvironmentsMap_fromWire() throws Exception {
+    void getForwarder_readsFlatEnvironmentOverlays_fromWire() throws Exception {
         String resource = "{\"id\":\"" + FWD_ID + "\",\"type\":\"forwarder\",\"attributes\":{"
                 + "\"name\":\"n\",\"description\":\"d\","
-                + "\"forwarder_type\":\"datadog\",\"enabled\":false,"
+                + "\"forwarder_type\":\"datadog\","
                 + "\"configuration\":{\"method\":\"POST\",\"url\":\"https://base.example.com\","
-                + "\"headers\":[],\"success_status\":\"2xx\"},"
+                + "\"headers\":{},\"success_status\":\"2xx\"},"
                 + "\"environments\":{"
-                + "\"production\":{\"enabled\":true,\"configuration\":{\"method\":\"POST\","
-                + "\"url\":\"https://prod-override.example.com\",\"headers\":[],\"success_status\":\"2xx\"}},"
+                + "\"production\":{\"enabled\":true,\"url\":\"https://prod-override.example.com\","
+                + "\"method\":\"PUT\",\"headers.DD-API-KEY\":\"prod-secret\"},"
                 + "\"staging\":{\"enabled\":false}"
                 + "},"
                 + "\"data\":{},\"created_at\":\"2026-05-07T12:00:00Z\","
@@ -489,15 +518,21 @@ class AuditForwardersTest {
         handler.set(ex -> respondJson(ex, 200, "{\"data\":" + resource + "}"));
         AuditForwarders fwds = new AuditForwarders(forwardersApi);
         Forwarder fwd = fwds.get(FWD_ID);
-        assertFalse(fwd.enabled);
+        // derived roll-up: production enabled -> true
+        assertTrue(fwd.enabled);
         assertEquals(2, fwd.environments.size());
         ForwarderEnvironment prod = fwd.environments.get("production");
         assertTrue(prod.enabled);
-        assertNotNull(prod.configuration);
-        assertEquals("https://prod-override.example.com", prod.configuration.url);
+        assertEquals("https://prod-override.example.com", prod.url);
+        assertEquals(HttpMethod.PUT, prod.method);
+        assertEquals("prod-secret", prod.getHeader("DD-API-KEY"));
+        // base config is read directly from the forwarder; pure-override reads
+        // return null for leaves the override doesn't set
+        assertEquals("https://base.example.com", fwd.configuration.url);
         ForwarderEnvironment staging = fwd.environments.get("staging");
         assertFalse(staging.enabled);
-        assertNull(staging.configuration);
+        assertNull(staging.url);
+        assertNull(staging.method);
     }
 
     @Test
@@ -510,16 +545,92 @@ class AuditForwardersTest {
         Forwarder fwd = fwds.get(FWD_ID);
         assertNotNull(fwd.environments);
         assertTrue(fwd.environments.isEmpty());
+        assertFalse(fwd.enabled);
+    }
+
+    @Test
+    void getForwarder_nullEnvironmentEntry_yieldsDefaultOverride() throws Exception {
+        // A null environment entry -> fromOverlay(null) yields a default override.
+        String resource = "{\"id\":\"" + FWD_ID + "\",\"type\":\"forwarder\",\"attributes\":{"
+                + "\"name\":\"n\",\"forwarder_type\":\"http\","
+                + "\"configuration\":{\"method\":\"POST\",\"url\":\"https://x\",\"success_status\":\"2xx\"},"
+                + "\"environments\":{\"production\":null},"
+                + "\"created_at\":\"2026-05-07T12:00:00Z\","
+                + "\"updated_at\":\"2026-05-07T12:00:00Z\",\"version\":1}}";
+        handler.set(ex -> respondJson(ex, 200, "{\"data\":" + resource + "}"));
+        AuditForwarders fwds = new AuditForwarders(forwardersApi);
+        Forwarder fwd = fwds.get(FWD_ID);
+        assertTrue(fwd.environments.containsKey("production"));
+        assertFalse(fwd.environments.get("production").enabled);
+        assertNull(fwd.environments.get("production").url);
+        assertFalse(fwd.enabled);
+    }
+
+    @Test
+    void forwarderEnvironment_overlay_roundTrip_dottedHeaderAndUnknownIgnored() {
+        ForwarderEnvironment env = new ForwarderEnvironment(true);
+        env.url = "https://o";
+        env.method = HttpMethod.DELETE;
+        env.successStatus = "204";
+        env.tlsVerify = false;
+        env.caCert = "PEM";
+        env.setHeader("X-Foo.Bar", "v");   // dotted header name preserved
+        Map<String, Object> overlay = env.toOverlay();
+        assertEquals(Boolean.TRUE, overlay.get("enabled"));
+        assertEquals("https://o", overlay.get("url"));
+        assertEquals("DELETE", overlay.get("method"));
+        assertEquals("204", overlay.get("success_status"));
+        assertEquals(Boolean.FALSE, overlay.get("tls_verify"));
+        assertEquals("PEM", overlay.get("ca_cert"));
+        assertEquals("v", overlay.get("headers.X-Foo.Bar"));
+
+        Map<String, Object> raw = new java.util.LinkedHashMap<>();
+        raw.put("enabled", true);
+        raw.put("url", "https://o2");
+        raw.put("method", "GET");
+        raw.put("success_status", "201");
+        raw.put("tls_verify", false);
+        raw.put("ca_cert", "PEM2");
+        raw.put("headers.X-Foo.Bar", "w");   // split on first dot keeps the dotted name
+        raw.put("headers.", "dropped");      // empty header name -> dropped
+        raw.put("unknown_leaf", "ignored");   // unknown -> ignored
+        ForwarderEnvironment parsed = ForwarderEnvironment.fromOverlay(raw);
+        assertTrue(parsed.enabled);
+        assertEquals("https://o2", parsed.url);
+        assertEquals(HttpMethod.GET, parsed.method);
+        assertEquals("201", parsed.successStatus);
+        assertEquals(Boolean.FALSE, parsed.tlsVerify);
+        assertEquals("PEM2", parsed.caCert);
+        assertEquals("w", parsed.getHeader("X-Foo.Bar"));
+        assertEquals(1, parsed.headers.size());
+
+        // null map and explicit null leaves -> defaults / no override
+        ForwarderEnvironment def = ForwarderEnvironment.fromOverlay(null);
+        assertFalse(def.enabled);
+        assertNull(def.method);
+        Map<String, Object> nulls = new java.util.LinkedHashMap<>();
+        nulls.put("enabled", false);
+        nulls.put("method", null);
+        nulls.put("tls_verify", null);
+        ForwarderEnvironment parsedNulls = ForwarderEnvironment.fromOverlay(nulls);
+        assertNull(parsedNulls.method);
+        assertNull(parsedNulls.tlsVerify);
+
+        // an override with nothing set serializes only ``enabled``
+        Map<String, Object> minimal = new ForwarderEnvironment().toOverlay();
+        assertEquals(1, minimal.size());
+        assertEquals(Boolean.FALSE, minimal.get("enabled"));
     }
 
     @Test
     void forwarder_fullArgsConstructor_nullEnvironmentsDefaultsToEmptyMap() {
         AuditForwarders fwds = new AuditForwarders(forwardersApi);
-        Forwarder fwd = new Forwarder(fwds, FWD_ID, "n", "d", ForwarderType.HTTP, false,
+        Forwarder fwd = new Forwarder(fwds, FWD_ID, "n", "d", ForwarderType.HTTP,
                 null, null, null, null, false, new HttpConfiguration("https://x"),
                 null, null, null, null);
         assertNotNull(fwd.environments);
         assertTrue(fwd.environments.isEmpty());
+        assertFalse(fwd.enabled);
     }
 
     // -----------------------------------------------------------------
@@ -863,9 +974,9 @@ class AuditForwardersTest {
     void getForwarder_readsTlsVerifyAndCaCert_fromWire() throws Exception {
         String resource = "{\"id\":\"" + FWD_ID + "\",\"type\":\"forwarder\",\"attributes\":{"
                 + "\"name\":\"n\",\"description\":\"d\","
-                + "\"forwarder_type\":\"datadog\",\"enabled\":true,"
+                + "\"forwarder_type\":\"datadog\","
                 + "\"configuration\":{\"method\":\"POST\",\"url\":\"https://x\","
-                + "\"headers\":[],\"success_status\":\"2xx\","
+                + "\"headers\":{},\"success_status\":\"2xx\","
                 + "\"tls_verify\":false,"
                 + "\"ca_cert\":\"-----BEGIN CERTIFICATE-----\\nfoo\\n-----END CERTIFICATE-----\"},"
                 + "\"data\":{},\"created_at\":\"2026-05-07T12:00:00Z\","

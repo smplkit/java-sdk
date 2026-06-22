@@ -26,8 +26,8 @@ import static org.junit.jupiter.api.Assertions.*;
  * Coverage for the {@link Forwarder} active-record async paths
  * ({@code saveAsync} / {@code deleteAsync}, both overloads, success and the
  * {@link CompletionException}-wrapping failure path) and the in-memory
- * mutator surface ({@code setConfiguration} / {@code setEnabled} overloads,
- * {@code toString}, and the per-environment override creation/reuse).
+ * per-environment override surface ({@link Forwarder#environment(String)}
+ * create/reuse, {@code toString}, and the derived {@code enabled} roll-up).
  *
  * <p>Stubs the audit service via the JDK's built-in HttpServer; no real
  * network.</p>
@@ -167,77 +167,37 @@ class ForwarderAsyncTest {
     }
 
     // -----------------------------------------------------------------
-    // in-memory mutators + toString
+    // in-memory per-environment overrides + toString
     // -----------------------------------------------------------------
 
     @Test
-    void setConfiguration_base_replacesBaseConfiguration() {
-        AuditForwarders fwds = new AuditForwarders(forwardersApi);
-        Forwarder fwd = fwds.newForwarder(FWD_ID, "n", ForwarderType.HTTP,
-                new HttpConfiguration("https://old"));
-        HttpConfiguration next = new HttpConfiguration("https://new");
-        fwd.setConfiguration(next);
-        assertSame(next, fwd.configuration);
-    }
-
-    @Test
-    void setConfiguration_nullEnvironment_replacesBase() {
-        AuditForwarders fwds = new AuditForwarders(forwardersApi);
-        Forwarder fwd = fwds.newForwarder(FWD_ID, "n", ForwarderType.HTTP,
-                new HttpConfiguration("https://old"));
-        HttpConfiguration next = new HttpConfiguration("https://new");
-        fwd.setConfiguration(next, null);
-        assertSame(next, fwd.configuration);
-        assertTrue(fwd.environments.isEmpty());
-    }
-
-    @Test
-    void setConfiguration_withEnvironment_setsOverrideAndCreatesEntry() {
+    void environment_setsLeafOverride_andCreatesEntry() {
         AuditForwarders fwds = new AuditForwarders(forwardersApi);
         Forwarder fwd = fwds.newForwarder(FWD_ID, "n", ForwarderType.HTTP,
                 new HttpConfiguration("https://base"));
-        HttpConfiguration prod = new HttpConfiguration("https://prod");
-        fwd.setConfiguration(prod, "production");
+        ForwarderEnvironment prod = fwd.environment("production");
+        prod.url = "https://prod";
         ForwarderEnvironment env = fwd.environments.get("production");
         assertNotNull(env);
-        assertSame(prod, env.configuration);
+        assertEquals("https://prod", env.url);
         assertFalse(env.enabled);
+        // base configuration is untouched by per-environment overrides
+        assertEquals("https://base", fwd.configuration.url);
     }
 
     @Test
-    void setEnabled_base_setsBaseFlag() {
-        AuditForwarders fwds = new AuditForwarders(forwardersApi);
-        Forwarder fwd = fwds.newForwarder(FWD_ID, "n", ForwarderType.HTTP,
-                new HttpConfiguration("https://x"));
-        fwd.setEnabled(true);
-        assertTrue(fwd.enabled);
-    }
-
-    @Test
-    void setEnabled_nullEnvironment_setsBaseFlag() {
-        AuditForwarders fwds = new AuditForwarders(forwardersApi);
-        Forwarder fwd = fwds.newForwarder(FWD_ID, "n", ForwarderType.HTTP,
-                new HttpConfiguration("https://x"));
-        fwd.setEnabled(true, null);
-        assertTrue(fwd.enabled);
-        assertTrue(fwd.environments.isEmpty());
-    }
-
-    @Test
-    void setEnabled_withEnvironment_preservesExistingConfigurationOnOverride() {
+    void environment_reusesExistingEntry_preservingLeaves() {
         AuditForwarders fwds = new AuditForwarders(forwardersApi);
         Forwarder fwd = fwds.newForwarder(FWD_ID, "n", ForwarderType.HTTP,
                 new HttpConfiguration("https://base"));
-        // First create the override via a configuration set...
-        HttpConfiguration prod = new HttpConfiguration("https://prod");
-        fwd.setConfiguration(prod, "production");
+        // First set a leaf override...
+        fwd.environment("production").url = "https://prod";
         // ...then flip enabled on the SAME environment — reuses the existing
-        // override (environmentOverride returns the existing entry) and
-        // preserves its configuration.
-        fwd.setEnabled(true, "production");
+        // entry and preserves its leaf override.
+        fwd.environment("production").enabled = true;
         ForwarderEnvironment env = fwd.environments.get("production");
         assertTrue(env.enabled);
-        assertSame(prod, env.configuration);
+        assertEquals("https://prod", env.url);
         assertEquals(1, fwd.environments.size());
     }
 
@@ -246,9 +206,9 @@ class ForwarderAsyncTest {
         AuditForwarders fwds = new AuditForwarders(forwardersApi);
         Forwarder fwd = fwds.newForwarder(FWD_ID, "Datadog", ForwarderType.DATADOG,
                 new HttpConfiguration("https://x"));
-        fwd.setEnabled(true, "staging");
-        fwd.setEnabled(true, "production");
-        fwd.setEnabled(false, "dev");
+        fwd.environment("staging").enabled = true;
+        fwd.environment("production").enabled = true;
+        fwd.environment("dev").enabled = false;
         fwd.environments.put("nullentry", null);
         String s = fwd.toString();
         assertTrue(s.contains("id=" + FWD_ID));

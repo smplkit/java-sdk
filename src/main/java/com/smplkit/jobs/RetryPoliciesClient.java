@@ -17,8 +17,9 @@ import java.util.List;
  *
  * <p>A {@link RetryPolicy} is an active record: build one with
  * {@link #new_}, set fields, and call {@code save()}; then reference it from a
- * job's {@code retryPolicy} (see {@link Job#setRetryPolicy(RetryPolicy, String)}).
- * Retry policies are account-global — never environment-scoped.</p>
+ * job's base {@code retryPolicy} ({@link Job#setRetryPolicy(RetryPolicy)}) or per
+ * environment ({@link JobEnvironment#setRetryPolicy(RetryPolicy)}). Retry
+ * policies are account-global — never environment-scoped.</p>
  */
 public final class RetryPoliciesClient {
 

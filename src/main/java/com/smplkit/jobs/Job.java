@@ -13,13 +13,13 @@ import java.util.concurrent.ForkJoinPool;
 /**
  * A job definition (sync). Mutate fields, then call {@link #save}.
  *
- * <p>Enablement is per environment: a job runs in an environment only when
- * {@link #environments} holds an entry for it with {@code enabled=true}
- * (scheduled there for a recurring job, triggerable there for a manual one),
- * set via {@link #setEnabled(boolean, String)}. The base
- * {@link #enabled} field is a read-only, derived roll-up (true when enabled in
- * at least one environment) computed from {@link #environments}; it is never
- * sent on the wire.</p>
+ * <p>Set base fields directly ({@link #schedule}, {@link #timezone},
+ * {@link #configuration}, …). A job runs per environment: reach a
+ * {@link JobEnvironment} via {@link #environment(String)} and set its
+ * {@code enabled} flag (and any leaf overrides) to run — and vary the request —
+ * in that environment (ADR-056). The base definition is disabled everywhere;
+ * {@link #enabled} is a read-only, derived roll-up (true when enabled in at
+ * least one environment) and is never sent on the wire.</p>
  */
 public final class Job {
 
@@ -33,19 +33,19 @@ public final class Job {
     public String description;
     /**
      * Read-only, derived roll-up: {@code true} when the job is enabled in at
-     * least one environment. Computed from {@link #environments} on parse and
-     * not sent on the wire. Mutating this field has no effect on the server —
-     * set enablement per environment via {@link #setEnabled(boolean, String)} /
-     * {@link #environments}.
+     * least one environment. Computed from {@link #environments} on parse/save
+     * and not sent on the wire. Mutating this field has no effect on the
+     * server — enable per environment via
+     * {@code job.environment(env).enabled = true}.
      */
     public boolean enabled = false;
     /**
-     * Per-environment overrides keyed by environment key (e.g.
-     * {@code "production"}, {@code "development"}). A recurring job fires in an
-     * environment only when {@code environments.get(env).enabled} is
-     * {@code true}. Each entry may carry an optional {@link HttpConfig}
-     * override; omit it to inherit the base {@link #configuration}. Every
-     * referenced environment must exist and be managed for the account.
+     * Per-environment sparse overrides keyed by environment key (e.g.
+     * {@code "production"}, {@code "development"}). Reach one via
+     * {@link #environment(String)} and set its {@code enabled} flag / leaf
+     * overrides to make the job run (and vary its request) in that environment.
+     * Each entry also reports its read-only {@link JobEnvironment#nextRunAt}.
+     * Every referenced environment must exist and be managed for the account.
      */
     public Map<String, JobEnvironment> environments = new HashMap<>();
     /**
@@ -61,9 +61,9 @@ public final class Job {
      * The base schedule every environment inherits unless it overrides it, and
      * the field that determines the job's {@link #kind}: {@code null} for a
      * permanent manual job (never auto-fires; runs only when triggered), a
-     * 5-field cron expression evaluated in UTC for a recurring job, or an
-     * ISO-8601 datetime / the literal {@code "now"} for a one-off run. A
-     * datetime or {@code "now"} job disables itself after it fires.
+     * 5-field cron expression evaluated in {@link #timezone} for a recurring
+     * job, or an ISO-8601 datetime / the literal {@code "now"} for a one-off
+     * run. A datetime or {@code "now"} job disables itself after it fires.
      */
     public String schedule;
     /**
@@ -73,18 +73,19 @@ public final class Job {
      * The cron fires on this zone's wall clock (DST-aware) while the per-env
      * {@link JobEnvironment#nextRunAt} is still reported as a UTC instant. Only
      * valid on a recurring (cron) job — leave {@code null} for a manual or
-     * one-off job. Settable; sent on writes only when non-{@code null}.
+     * one-off job. Sent on writes only when non-{@code null}.
      */
     public String timezone;
     /**
      * The base retry policy for failed runs — the id of a {@link RetryPolicy}
      * (or the built-in {@code "Default"}, which never retries), overridable per
      * environment via {@link JobEnvironment#retryPolicy}. {@code null} (omitted
-     * on the wire) leaves the server default of {@code "Default"}. Settable;
-     * sent on writes only when non-{@code null}.
+     * on the wire) leaves the server default of {@code "Default"}. Assign the id
+     * directly, or use {@link #setRetryPolicy(RetryPolicy)} to reference a
+     * policy instance.
      */
     public String retryPolicy;
-    /** The HTTP request to perform when the job fires. */
+    /** The base HTTP request to perform when the job fires. */
     public HttpConfig configuration;
     /** How overlapping runs are handled. {@code "ALLOW"} (the only value) permits them. */
     public String concurrencyPolicy = "ALLOW";
@@ -189,15 +190,31 @@ public final class Job {
     }
 
     // ------------------------------------------------------------------
-    // Per-environment enablement / configuration
+    // Per-environment overrides
     // ------------------------------------------------------------------
 
     /**
-     * Return the override for {@code environment}, creating an empty one if
-     * absent so an existing override's other field is preserved when only one
-     * of {@code enabled} / {@code configuration} is being set.
+     * The per-environment override for {@code environment} — the single place to
+     * read or set what this job overrides there (ADR-056).
+     *
+     * <p>Returns the {@link JobEnvironment} for {@code environment}, creating an
+     * empty one (and inserting it into {@link #environments}) on first access,
+     * so you can set overrides directly:</p>
+     *
+     * <pre>{@code
+     * job.environment("production").enabled = true;
+     * job.environment("production").url = "https://prod.example.com/warm";
+     * job.environment("production").setHeader("Authorization", "Bearer prod");
+     * }</pre>
+     *
+     * <p>Only the leaves you set are sent on save; everything else inherits the
+     * base definition (the server resolves base &oplus; overrides when the job
+     * fires).</p>
+     *
+     * @param environment the environment key
+     * @return the {@link JobEnvironment} override for {@code environment}
      */
-    private JobEnvironment environmentOverride(String environment) {
+    public JobEnvironment environment(String environment) {
         JobEnvironment env = environments.get(environment);
         if (env == null) {
             env = new JobEnvironment();
@@ -207,53 +224,13 @@ public final class Job {
     }
 
     /**
-     * Enable or disable the job in a single environment, in memory. Call
-     * {@link #save()} to persist.
+     * Set the job's base retry policy from a {@link RetryPolicy} instance (its
+     * {@link RetryPolicy#id} is used) in memory. Call {@link #save()} to persist.
      *
-     * @param enabled whether the job fires in {@code environment}
-     * @param environment the environment key to set enablement for
+     * @param policy the retry policy whose id to reference
      */
-    public void setEnabled(boolean enabled, String environment) {
-        environmentOverride(environment).enabled = enabled;
-    }
-
-    /**
-     * Whether the job is enabled in at least one environment (the derived
-     * roll-up). Computed live from {@link #environments}, so it reflects any
-     * in-memory enablement changes made via {@link #setEnabled(boolean, String)}.
-     *
-     * @return {@code true} when the job is enabled in any environment
-     */
-    public boolean isEnabled() {
-        return computeEnabledRollup();
-    }
-
-    /**
-     * Compute the enabled roll-up from {@link #environments}: {@code true} when
-     * any environment override has {@code enabled=true}.
-     */
-    boolean computeEnabledRollup() {
-        if (environments == null) {
-            return false;
-        }
-        for (JobEnvironment env : environments.values()) {
-            if (env != null && env.enabled) {
-                return true;
-            }
-        }
-        return false;
-    }
-
-    /**
-     * Whether the job is enabled in a specific environment.
-     *
-     * @param environment the environment key to test
-     * @return {@code true} when the job has an override for {@code environment}
-     *     with {@code enabled=true}
-     */
-    public boolean isEnabled(String environment) {
-        JobEnvironment env = environments.get(environment);
-        return env != null && env.enabled;
+    public void setRetryPolicy(RetryPolicy policy) {
+        this.retryPolicy = policy.id;
     }
 
     /**
@@ -284,249 +261,16 @@ public final class Job {
     }
 
     /**
-     * Set the job's base configuration in memory. Call {@link #save()} to
-     * persist.
-     *
-     * @param configuration the base HTTP request the job sends when it fires
+     * Compute the enabled roll-up from {@link #environments}: {@code true} when
+     * any environment override has {@code enabled=true}.
      */
-    public void setConfiguration(HttpConfig configuration) {
-        this.configuration = configuration;
-    }
-
-    /**
-     * Set the job's configuration in memory — base ({@code environment == null})
-     * or per-environment override. A per-environment override fully replaces the
-     * base configuration for that environment. Call {@link #save()} to persist.
-     *
-     * @param configuration the HTTP request to set
-     * @param environment the environment key to set the override for, or
-     *     {@code null} to set the base configuration
-     */
-    public void setConfiguration(HttpConfig configuration, String environment) {
-        if (environment == null) {
-            this.configuration = configuration;
-        } else {
-            environmentOverride(environment).configuration = configuration;
-        }
-    }
-
-    /**
-     * The job's base configuration.
-     *
-     * @return the base HTTP request the job sends when it fires
-     */
-    public HttpConfig getConfiguration() {
-        return configuration;
-    }
-
-    /**
-     * The job's effective configuration for an environment — that environment's
-     * override when it has one, else the base configuration (the request the job
-     * actually sends when it fires there).
-     *
-     * @param environment the environment key, or {@code null} for the base
-     *     configuration
-     * @return the resolved {@link HttpConfig}
-     */
-    public HttpConfig getConfiguration(String environment) {
-        if (environment != null) {
-            JobEnvironment env = environments.get(environment);
-            if (env != null && env.configuration != null) {
-                return env.configuration;
+    boolean computeEnabledRollup() {
+        for (JobEnvironment env : environments.values()) {
+            if (env != null && env.enabled) {
+                return true;
             }
         }
-        return configuration;
-    }
-
-    /**
-     * Set the job's base schedule in memory. Call {@link #save()} to persist.
-     *
-     * <p>The base schedule applies to every environment that does not carry its
-     * own override; use {@link #setSchedule(String, String)} to vary the cadence
-     * for a single environment.</p>
-     *
-     * @param schedule the new cron / datetime / {@code "now"} schedule
-     */
-    public void setSchedule(String schedule) {
-        this.schedule = schedule;
-    }
-
-    /**
-     * Set the job's schedule in memory — base ({@code environment == null}) or a
-     * per-environment cron override. A per-environment override varies the
-     * cadence for that environment only; pass {@code null} as the {@code schedule}
-     * for that environment to clear the override and inherit the base schedule.
-     * Per-environment overrides are only meaningful on a recurring (cron) job.
-     * Call {@link #save()} to persist.
-     *
-     * @param schedule the schedule to set, or {@code null} to clear a
-     *     per-environment override
-     * @param environment the environment key to set the override for, or
-     *     {@code null} to set the base schedule
-     */
-    public void setSchedule(String schedule, String environment) {
-        if (environment == null) {
-            this.schedule = schedule;
-        } else {
-            environmentOverride(environment).schedule = schedule;
-        }
-    }
-
-    /**
-     * Set the job's schedule and, optionally, its timezone in memory — base
-     * ({@code environment == null}) or per-environment. Because the timezone is
-     * an integral part of a cron cadence, a {@code timezone} may be supplied
-     * alongside the schedule; when non-{@code null} it sets the same scope's
-     * timezone too (equivalent to a follow-up {@link #setTimezone(String, String)}).
-     * Pass {@code null} for {@code timezone} to leave the timezone untouched.
-     * For a timezone-only change, use {@link #setTimezone(String, String)}. Call
-     * {@link #save()} to persist.
-     *
-     * @param schedule the schedule to set, or {@code null} to clear a
-     *     per-environment override
-     * @param timezone the IANA timezone to set for the same scope, or
-     *     {@code null} to leave the timezone untouched
-     * @param environment the environment key to set the override for, or
-     *     {@code null} to set the base schedule (and base timezone)
-     */
-    public void setSchedule(String schedule, String timezone, String environment) {
-        setSchedule(schedule, environment);
-        if (timezone != null) {
-            setTimezone(timezone, environment);
-        }
-    }
-
-    /**
-     * The job's effective schedule for an environment — that environment's cron
-     * override when it has one, else the base {@link #schedule} (the cadence the
-     * job actually fires on there).
-     *
-     * @param environment the environment key, or {@code null} for the base
-     *     schedule
-     * @return the resolved schedule string
-     */
-    public String getSchedule(String environment) {
-        if (environment != null) {
-            JobEnvironment env = environments.get(environment);
-            if (env != null && env.schedule != null) {
-                return env.schedule;
-            }
-        }
-        return schedule;
-    }
-
-    /**
-     * Set the job's base timezone in memory. Call {@link #save()} to persist.
-     *
-     * <p>The base timezone applies to every environment that does not carry its
-     * own override; use {@link #setTimezone(String, String)} to vary the zone
-     * for a single environment.</p>
-     *
-     * @param timezone the IANA timezone the cron {@link #schedule} is evaluated
-     *     in (e.g. {@code "America/New_York"}); {@code null} means UTC
-     */
-    public void setTimezone(String timezone) {
-        this.timezone = timezone;
-    }
-
-    /**
-     * Set the job's timezone in memory — base ({@code environment == null}) or a
-     * per-environment override. A per-environment override varies the zone the
-     * cron {@link #schedule} is evaluated in for that environment only; pass
-     * {@code null} as the {@code timezone} for that environment to clear the
-     * override and inherit the base timezone. A timezone is only meaningful on a
-     * recurring (cron) job; an override may be set on an environment that
-     * inherits the base schedule (it need not also override the schedule). Call
-     * {@link #save()} to persist.
-     *
-     * @param timezone the IANA timezone to set, or {@code null} to clear a
-     *     per-environment override
-     * @param environment the environment key to set the override for, or
-     *     {@code null} to set the base timezone
-     */
-    public void setTimezone(String timezone, String environment) {
-        if (environment == null) {
-            this.timezone = timezone;
-        } else {
-            environmentOverride(environment).timezone = timezone;
-        }
-    }
-
-    /**
-     * The job's effective timezone for an environment — that environment's
-     * override when it has one, else the base {@link #timezone} (the zone the
-     * job's cron is actually evaluated in there).
-     *
-     * @param environment the environment key, or {@code null} for the base
-     *     timezone
-     * @return the resolved IANA timezone string, or {@code null} for UTC
-     */
-    public String getTimezone(String environment) {
-        if (environment != null) {
-            JobEnvironment env = environments.get(environment);
-            if (env != null && env.timezone != null) {
-                return env.timezone;
-            }
-        }
-        return timezone;
-    }
-
-    /**
-     * Set the job's base retry policy in memory. Call {@link #save()} to
-     * persist.
-     *
-     * @param policyId the id of a {@link RetryPolicy} (or {@code "Default"} for
-     *     the built-in never-retry policy); {@code null} leaves the server
-     *     default of {@code "Default"}
-     */
-    public void setRetryPolicy(String policyId) {
-        this.retryPolicy = policyId;
-    }
-
-    /**
-     * Set the retry policy for failed runs in memory — base
-     * ({@code environment == null}) or a per-environment override. A
-     * per-environment override applies to that environment only, creating the
-     * override entry if it doesn't exist yet (preserving any already-set
-     * {@code enabled} / {@code schedule} / {@code timezone} / {@code configuration}
-     * on it). Call {@link #save()} to persist.
-     *
-     * @param policyId the id of a {@link RetryPolicy} (or {@code "Default"});
-     *     {@code null} clears a per-environment override / leaves the base unset
-     * @param environment the environment key to set the override for, or
-     *     {@code null} to set the base retry policy
-     */
-    public void setRetryPolicy(String policyId, String environment) {
-        if (environment == null) {
-            this.retryPolicy = policyId;
-        } else {
-            environmentOverride(environment).retryPolicy = policyId;
-        }
-    }
-
-    /**
-     * Set the job's base retry policy from a {@link RetryPolicy} instance (its
-     * {@link RetryPolicy#id} is used) in memory. Call {@link #save()} to persist.
-     *
-     * @param policy the retry policy whose id to reference
-     */
-    public void setRetryPolicy(RetryPolicy policy) {
-        this.retryPolicy = policy.id;
-    }
-
-    /**
-     * Set the retry policy for failed runs from a {@link RetryPolicy} instance
-     * (its {@link RetryPolicy#id} is used) in memory — base
-     * ({@code environment == null}) or a per-environment override. See
-     * {@link #setRetryPolicy(String, String)} for the override semantics. Call
-     * {@link #save()} to persist.
-     *
-     * @param policy the retry policy whose id to reference
-     * @param environment the environment key to set the override for, or
-     *     {@code null} to set the base retry policy
-     */
-    public void setRetryPolicy(RetryPolicy policy, String environment) {
-        setRetryPolicy(policy.id, environment);
+        return false;
     }
 
     // ------------------------------------------------------------------
