@@ -18,6 +18,7 @@ import java.time.Duration;
 import java.time.OffsetDateTime;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.CompletableFuture;
@@ -33,9 +34,10 @@ import static org.junit.jupiter.api.Assertions.*;
 /**
  * Tests for the fused Smpl Jobs surface — {@link JobsClient} (sync) and
  * {@link AsyncJobsClient} (async), plus {@link RunsClient} /
- * {@link AsyncRunsClient}, including the environment-scoping surface
- * (per-environment enablement / configuration, the {@code X-Smplkit-Environment}
- * write header, and {@code filter[environment]} on run reads).
+ * {@link AsyncRunsClient}, including the ADR-056 flat per-environment override
+ * surface (sparse leaf overlays, object headers, {@code headers.<name>}
+ * leaves, the {@code X-Smplkit-Environment} write header, and
+ * {@code filter[environment]} on run reads).
  *
  * <p>Stubs the jobs service via the JDK's built-in {@link HttpServer} bound to
  * {@code 127.0.0.1:0}; no real network. The clients are built through the wired
@@ -117,15 +119,15 @@ class JobsClientTest {
     private static String jobResource(String id, boolean created, int version, boolean enabled) {
         String ts = created ? "\"2026-06-04T00:00:00Z\"" : "null";
         // The production env carries a per-environment ``next_run_at`` (read-only)
-        // when enabled, exercising the per-env nextRunAt mapping. Top-level
-        // ``enabled`` / ``next_run_at`` are gone from the wire.
+        // when enabled, exercising the per-env nextRunAt mapping. Headers travel
+        // as a name->value object (ADR-056).
         String prodNextRun = enabled ? "\"2026-06-05T00:00:00Z\"" : "null";
         return "{\"id\":\"" + id + "\",\"type\":\"job\",\"attributes\":{"
                 + "\"name\":\"My Job\",\"description\":\"does a thing\","
                 + "\"kind\":\"recurring\",\"type\":\"http\","
                 + "\"schedule\":\"0 * * * *\","
                 + "\"configuration\":{\"method\":\"POST\",\"url\":\"https://api.example.com/hook\","
-                + "\"headers\":[{\"name\":\"X-Api-Key\",\"value\":\"secret\"}],"
+                + "\"headers\":{\"X-Api-Key\":\"secret\"},"
                 + "\"body\":\"{}\",\"success_status\":\"2xx\",\"timeout\":30,"
                 + "\"tls_verify\":true,\"ca_cert\":null},"
                 + "\"environments\":{\"production\":{\"enabled\":" + enabled
@@ -135,27 +137,22 @@ class JobsClientTest {
                 + "\"deleted_at\":null,\"version\":" + version + "}}";
     }
 
-    // A job carrying a rich environments map: production enabled (no override,
-    // inherits base) and development disabled with a per-environment override.
+    // A job carrying a rich environments map (flat ADR-056 overlays): production
+    // enabled with a per-env schedule override and read-only next_run_at;
+    // development disabled with a per-env url + header leaf override.
     private static String jobResourceWithEnvs(String id, int version, boolean enabled, String kind) {
-        // production: enabled, no config override (inherits base) but a per-env
-        //   ``schedule`` override + read-only ``next_run_at``.
-        // development: disabled, config override, no schedule override, null
-        //   ``next_run_at`` (not enabled).
         return "{\"id\":\"" + id + "\",\"type\":\"job\",\"attributes\":{"
                 + "\"name\":\"My Job\",\"description\":\"does a thing\","
                 + "\"kind\":\"" + kind + "\",\"type\":\"http\","
                 + "\"schedule\":\"0 2 * * *\","
                 + "\"configuration\":{\"method\":\"POST\",\"url\":\"https://base.example.com/hook\","
-                + "\"headers\":[],\"body\":null,\"success_status\":\"2xx\",\"timeout\":30,"
+                + "\"headers\":{},\"body\":null,\"success_status\":\"2xx\",\"timeout\":30,"
                 + "\"tls_verify\":true,\"ca_cert\":null},"
                 + "\"environments\":{"
                 + "\"production\":{\"enabled\":true,\"schedule\":\"30 3 * * *\","
                 + "\"next_run_at\":\"2026-06-05T03:30:00Z\"},"
-                + "\"development\":{\"enabled\":false,\"schedule\":null,\"next_run_at\":null,"
-                + "\"configuration\":{\"method\":\"POST\","
-                + "\"url\":\"https://dev.example.com/hook\",\"headers\":[],\"body\":null,"
-                + "\"success_status\":\"2xx\",\"timeout\":30,\"tls_verify\":true,\"ca_cert\":null}}"
+                + "\"development\":{\"enabled\":false,"
+                + "\"url\":\"https://dev.example.com/hook\",\"headers.X-Env\":\"dev\"}"
                 + "},\"concurrency_policy\":\"ALLOW\","
                 + "\"created_at\":\"2026-06-04T00:00:00Z\",\"updated_at\":\"2026-06-04T00:00:00Z\","
                 + "\"deleted_at\":null,\"version\":" + version + "}}";
@@ -254,7 +251,7 @@ class JobsClientTest {
             Job job = c.newRecurringJob(JOB_ID, "My Job", "0 * * * *", new HttpConfig("https://x"),
                     "a description", envs, "ALLOW");
             assertEquals("a description", job.description);
-            assertTrue(job.isEnabled("production"));
+            assertTrue(job.environment("production").enabled);
             assertEquals("ALLOW", job.concurrencyPolicy);
             assertNull(job.birthEnvironment);         // recurring jobs have no birth env
         }
@@ -290,7 +287,7 @@ class JobsClientTest {
                     "a description", envs, "ALLOW");
             assertNull(job.schedule);
             assertEquals("a description", job.description);
-            assertTrue(job.isEnabled("production"));
+            assertTrue(job.environment("production").enabled);
             assertEquals("ALLOW", job.concurrencyPolicy);
         }
     }
@@ -353,14 +350,14 @@ class JobsClientTest {
             Job recFull = c.newRecurringJob(JOB_ID, "My Job", "0 * * * *", new HttpConfig("https://x"),
                     "desc", envs, "ALLOW");
             assertEquals("desc", recFull.description);
-            assertTrue(recFull.isEnabled("production"));
+            assertTrue(recFull.environment("production").enabled);
 
             Job manual = c.newManualJob(JOB_ID, "Manual", new HttpConfig("https://x"));
             assertNull(manual.schedule);
             Job manualFull = c.newManualJob(JOB_ID, "Manual", new HttpConfig("https://x"),
                     "desc", envs, "ALLOW");
             assertEquals("desc", manualFull.description);
-            assertTrue(manualFull.isEnabled("production"));
+            assertTrue(manualFull.environment("production").enabled);
 
             assertEquals(when.toString(),
                     c.schedule(JOB_ID, "One", when, new HttpConfig("https://x")).schedule);
@@ -397,85 +394,70 @@ class JobsClientTest {
     }
 
     // -----------------------------------------------------------------
-    // Per-environment enablement / configuration on Job
+    // Per-environment overrides on Job (ADR-056 flat leaves)
     // -----------------------------------------------------------------
 
     @Test
-    void perEnvironmentMutatorsAndGetters() {
+    void environmentAccessor_createsAndReuses_andRollup() {
         try (JobsClient c = client()) {
-            HttpConfig base = new HttpConfig("https://base");
-            Job job = c.newRecurringJob(JOB_ID, "My Job", "0 * * * *", base);
+            Job job = c.newRecurringJob(JOB_ID, "My Job", "0 * * * *", new HttpConfig("https://base"));
 
-            // roll-up + per-env enablement (the no-arg roll-up computes live)
-            assertFalse(job.isEnabled());
-            assertFalse(job.isEnabled("production"));
-            job.setEnabled(true, "production");
-            assertTrue(job.isEnabled("production"));
-            assertTrue(job.isEnabled());          // any-env-enabled -> roll-up true
-            // flipping enabled preserves a previously-set configuration override
-            HttpConfig prodCfg = new HttpConfig("https://prod");
-            job.setConfiguration(prodCfg, "production");
-            job.setEnabled(false, "production");
-            assertFalse(job.isEnabled("production"));
-            assertFalse(job.isEnabled());         // back to no env enabled -> roll-up false
-            assertSame(prodCfg, job.environments.get("production").configuration);
+            // environment() lazily creates the entry and reuses it thereafter
+            assertTrue(job.environments.isEmpty());
+            JobEnvironment prod = job.environment("production");
+            assertSame(prod, job.environment("production"));
+            assertEquals(1, job.environments.size());
 
-            // base configuration via setter + getter
-            HttpConfig base2 = new HttpConfig("https://base2");
-            job.setConfiguration(base2);
-            assertSame(base2, job.getConfiguration());
-            job.setConfiguration(base, null); // environment == null sets base
-            assertSame(base, job.getConfiguration());
+            // pure-override reads: a fresh entry overrides nothing (all null)
+            assertNull(prod.url);
+            assertNull(prod.method);
+            assertNull(prod.schedule);
+            assertNull(prod.timezone);
+            assertNull(prod.retryPolicy);
+            assertNull(prod.getHeader("Authorization"));
 
-            // per-env override resolution: present override wins
-            assertSame(prodCfg, job.getConfiguration("production"));
-            // environment with no override falls back to base
-            assertSame(base, job.getConfiguration("staging"));
-            // environment whose override has a null configuration falls back to base
-            job.setEnabled(true, "development"); // creates an override with null config
-            assertSame(base, job.getConfiguration("development"));
-            // base when environment arg is null
-            assertSame(base, job.getConfiguration(null));
+            // set per-env leaves directly; the base configuration is untouched
+            prod.enabled = true;
+            prod.url = "https://prod.example.com/warm";
+            prod.method = HttpMethod.PUT;
+            prod.schedule = "0 */6 * * *";
+            prod.timezone = "America/New_York";
+            prod.setHeader("Authorization", "Bearer prod");
+            assertEquals("https://base", job.configuration.url);          // base unchanged
+            assertEquals("Bearer prod", prod.getHeader("Authorization"));
 
-            // schedule setter is environment-agnostic
-            job.setSchedule("30 2 * * *");
-            assertEquals("30 2 * * *", job.schedule);
-
-            // base timezone setter (one-arg) and the env-aware setter with a
-            // null environment both set the base timezone
-            job.setTimezone("America/New_York");
-            assertEquals("America/New_York", job.timezone);
-            job.setTimezone("America/Chicago", null);
-            assertEquals("America/Chicago", job.timezone);
-            // per-env timezone override is set on the environment, not the base,
-            // and preserves the already-set per-env configuration
-            job.setTimezone("Europe/London", "production");
-            assertEquals("Europe/London", job.environments.get("production").timezone);
-            assertSame(prodCfg, job.environments.get("production").configuration);
-            assertEquals("America/Chicago", job.timezone);
-            // getTimezone(env): override wins, else base (incl. unknown / null env)
-            assertEquals("Europe/London", job.getTimezone("production"));
-            assertEquals("America/Chicago", job.getTimezone("staging"));
-            assertEquals("America/Chicago", job.getTimezone("unknown"));
-            assertEquals("America/Chicago", job.getTimezone(null));
-            // clearing a per-env override falls back to base on resolution
-            job.setTimezone(null, "production");
-            assertNull(job.environments.get("production").timezone);
-            assertEquals("America/Chicago", job.getTimezone("production"));
+            // the roll-up reflects enablement after a save round-trip; in memory
+            // the per-env flag is the source of truth
+            assertTrue(job.environment("production").enabled);
+            assertEquals(1, job.environments.size());
 
             // toString lists the enabled environments, sorted
-            job.setEnabled(true, "production");
+            job.environment("development").enabled = true;
             assertTrue(job.toString().contains("enabled_in=[development, production]"));
         }
     }
 
     @Test
-    void enabledRollup_nullEnvironmentsMap_isFalse() {
-        // Defensive: a caller that nulls the environments map yields a false
-        // roll-up rather than an NPE.
-        Job job = new Job(null, "k", "name", "0 * * * *", new HttpConfig("https://x"));
-        job.environments = null;
-        assertFalse(job.isEnabled());
+    void setRetryPolicy_baseObject_andPerEnv() {
+        try (JobsClient c = client()) {
+            Job job = c.newRecurringJob(JOB_ID, "My Job", "0 * * * *", new HttpConfig("https://x"));
+            // base by id (direct field assignment)
+            job.retryPolicy = "policy-a";
+            assertEquals("policy-a", job.retryPolicy);
+            // base by RetryPolicy object (its id is used)
+            RetryPolicy policy = c.retryPolicies.new_("policy-obj", "P", 3, Backoff.FIXED, 5);
+            job.setRetryPolicy(policy);
+            assertEquals("policy-obj", job.retryPolicy);
+            // per-env by id (direct field assignment), preserving other env fields
+            JobEnvironment prod = job.environment("production");
+            prod.enabled = true;
+            prod.retryPolicy = "policy-prod";
+            assertEquals("policy-prod", prod.retryPolicy);
+            assertTrue(prod.enabled);
+            // per-env by RetryPolicy object
+            job.environment("development").setRetryPolicy(policy);
+            assertEquals("policy-obj", job.environment("development").retryPolicy);
+        }
     }
 
     // -----------------------------------------------------------------
@@ -487,7 +469,7 @@ class JobsClientTest {
         installFullHandler();
         try (JobsClient c = client()) {
             HttpConfig cfg = new HttpConfig(HttpMethod.POST, "https://api.example.com/hook",
-                    List.of(new HttpHeader("X-Api-Key", "secret")));
+                    Map.of("X-Api-Key", "secret"));
             cfg.body = "{}";
             Job job = c.newRecurringJob(JOB_ID, "My Job", "0 * * * *", cfg);
             job.description = "does a thing";
@@ -505,24 +487,37 @@ class JobsClientTest {
     }
 
     @Test
-    void createDropsEnabled_andEmitsEnvironments() throws Exception {
+    void create_emitsObjectHeaders_andFlatEnvironmentOverlays() throws Exception {
         installFullHandler();
         try (JobsClient c = client()) {
-            Map<String, JobEnvironment> envs = new HashMap<>();
-            envs.put("production", new JobEnvironment(true)); // no override -> inherit base
-            envs.put("development", new JobEnvironment(false, new HttpConfig("https://dev")));
-            Job job = c.newRecurringJob(JOB_ID, "My Job", "0 * * * *", new HttpConfig("https://base"),
-                    null, envs, "ALLOW");
+            HttpConfig base = new HttpConfig("https://base");
+            base.setHeader("X-Base", "b");
+            Job job = c.newRecurringJob(JOB_ID, "My Job", "0 * * * *", base);
+            // production: enabled only (no leaf override -> inherit base)
+            job.environment("production").enabled = true;
+            // development: enabled=false plus url + header leaf overrides
+            JobEnvironment dev = job.environment("development");
+            dev.url = "https://dev";
+            dev.method = HttpMethod.GET;
+            dev.setHeader("X-Env", "dev");
             job.save();
             JsonNode a = attrs();
             // base ``enabled`` roll-up is read-only — never written
             assertFalse(a.has("enabled"), "write body must not include base 'enabled'");
-            // environments emitted; production has no configuration, development does
+            // base headers travel as an object, not a list
+            assertTrue(a.path("configuration").path("headers").isObject());
+            assertEquals("b", a.path("configuration").path("headers").path("X-Base").asText());
+
             JsonNode envNode = a.path("environments");
+            // production overlay carries only ``enabled`` (no inherited leaves)
             assertTrue(envNode.path("production").path("enabled").asBoolean());
-            assertFalse(envNode.path("production").has("configuration"));
-            assertTrue(envNode.path("development").has("configuration"));
-            assertEquals("https://dev", envNode.path("development").path("configuration").path("url").asText());
+            assertFalse(envNode.path("production").has("url"));
+            // development overlay carries the leaf overrides as flat keys
+            assertEquals("https://dev", envNode.path("development").path("url").asText());
+            assertEquals("GET", envNode.path("development").path("method").asText());
+            // header override is a flat ``headers.<name>`` leaf, not a nested object
+            assertEquals("dev", envNode.path("development").path("headers.X-Env").asText());
+            assertFalse(envNode.path("development").path("headers").isObject());
         }
     }
 
@@ -556,7 +551,7 @@ class JobsClientTest {
         try (JobsClient c = client()) {
             Job manual = c.newManualJob(JOB_ID, "Manual", new HttpConfig("https://x"));
             assertNull(manual.schedule);                       // no schedule supplied
-            manual.setEnabled(true, "production");
+            manual.environment("production").enabled = true;
             manual.save();
             JsonNode scheduleNode = attrs().path("schedule");
             assertTrue(scheduleNode.isNull(), "null schedule must be sent on the wire");
@@ -586,7 +581,7 @@ class JobsClientTest {
     }
 
     // -----------------------------------------------------------------
-    // Parse-from-wire — environments / recurling / enabled roll-up
+    // Parse-from-wire — environments / recurring / enabled roll-up
     // -----------------------------------------------------------------
 
     @Test
@@ -594,21 +589,21 @@ class JobsClientTest {
         installFullHandler();
         try (JobsClient c = client()) {
             Job job = c.get(JOB_ID);
-            assertTrue(job.isEnabled());                       // derived roll-up true
-            assertTrue(job.enabled);                           // field mirrors the roll-up
-            assertTrue(job.isEnabled("production"));
-            assertFalse(job.isEnabled("development"));
+            assertTrue(job.enabled);                           // derived roll-up true
+            assertTrue(job.environments.get("production").enabled);
+            assertFalse(job.environments.get("development").enabled);
             assertEquals(JobKind.RECURRING, job.kind);
             assertTrue(job.isRecurring());
-            // production has no config override -> getConfiguration falls back to base
-            assertEquals("https://base.example.com/hook", job.getConfiguration("production").url);
-            // development has a config override
-            assertEquals("https://dev.example.com/hook", job.getConfiguration("development").url);
-            // per-env schedule override parsed for production; development inherits base
+            // production overrides nothing in its configuration -> leaves read null
+            assertNull(job.environments.get("production").url);
+            // base configuration is read directly from the job
+            assertEquals("https://base.example.com/hook", job.configuration.url);
+            // development has a flat url + header leaf override
+            assertEquals("https://dev.example.com/hook", job.environments.get("development").url);
+            assertEquals("dev", job.environments.get("development").getHeader("X-Env"));
+            // per-env schedule override parsed for production; development overrides none
             assertEquals("30 3 * * *", job.environments.get("production").schedule);
             assertNull(job.environments.get("development").schedule);
-            assertEquals("30 3 * * *", job.getSchedule("production"));
-            assertEquals("0 2 * * *", job.getSchedule("development"));
             // read-only per-env next_run_at: present for enabled production, null otherwise
             assertNotNull(job.environments.get("production").nextRunAt);
             assertNull(job.environments.get("development").nextRunAt);
@@ -617,7 +612,7 @@ class JobsClientTest {
 
     @Test
     void getParsesNullEnvironmentEntry() throws Exception {
-        // A null environment entry -> environmentsFromGen leaves the default.
+        // A null environment entry -> fromOverlay(null) yields a default override.
         handler.set(ex -> respondJson(ex, 200, "{\"data\":{\"id\":\"n\",\"type\":\"job\","
                 + "\"attributes\":{\"name\":\"N\",\"schedule\":\"0 * * * *\","
                 + "\"configuration\":{\"url\":\"https://x\"},"
@@ -628,7 +623,7 @@ class JobsClientTest {
             assertTrue(job.environments.containsKey("production"));
             assertFalse(job.environments.get("production").enabled);
             assertNull(job.environments.get("production").schedule);
-            assertNull(job.environments.get("production").configuration);
+            assertNull(job.environments.get("production").url);
             assertNull(job.environments.get("production").nextRunAt);
         }
     }
@@ -989,7 +984,7 @@ class JobsClientTest {
             assertNull(job.configuration.caCert);
             assertEquals("2xx", job.configuration.successStatus);
             assertTrue(job.configuration.headers.isEmpty());
-            assertFalse(job.enabled);            // default false when enabled absent
+            assertFalse(job.enabled);            // default false when no env enabled
             assertNull(job.kind);                // absent kind -> null
             assertTrue(job.environments.isEmpty()); // absent environments -> empty
             assertEquals("ALLOW", job.concurrencyPolicy);
@@ -1006,16 +1001,17 @@ class JobsClientTest {
             assertNotNull(job.configuration);
             assertEquals("", job.configuration.url);
             assertEquals(HttpMethod.POST, job.configuration.method);
+            assertTrue(job.configuration.headers.isEmpty());
         }
     }
 
     @Test
-    void conversions_disabledJobAndExplicitFalseTls() throws Exception {
+    void conversions_objectHeadersAndExplicitFalseTls() throws Exception {
         handler.set(ex -> respondJson(ex, 200, "{\"data\":{\"id\":\"d\",\"type\":\"job\","
                 + "\"attributes\":{\"name\":\"D\",\"type\":\"http\","
                 + "\"schedule\":\"now\",\"concurrency_policy\":\"ALLOW\","
                 + "\"configuration\":{\"method\":\"GET\",\"url\":\"https://d\","
-                + "\"headers\":[{\"name\":\"H\",\"value\":\"v\"}],"
+                + "\"headers\":{\"H\":\"v\"},"
                 + "\"body\":\"x\",\"success_status\":\"200\",\"timeout\":5,"
                 + "\"tls_verify\":false,\"ca_cert\":\"PEM\"},"
                 + "\"created_at\":\"2026-06-04T00:00:00Z\"}}}"));
@@ -1028,7 +1024,7 @@ class JobsClientTest {
             assertEquals("x", job.configuration.body);
             assertEquals("200", job.configuration.successStatus);
             assertEquals("PEM", job.configuration.caCert);
-            assertEquals(1, job.configuration.headers.size());
+            assertEquals("v", job.configuration.getHeader("H"));
         }
     }
 
@@ -1046,6 +1042,19 @@ class JobsClientTest {
             assertNull(run.retry);            // retry absent -> null
             assertNull(run.failureReason);
             assertNull(run.scheduledFor);
+        }
+    }
+
+    @Test
+    void conversions_configurationToGen_nullMethodAndNullHeaders() {
+        installFullHandler();
+        try (JobsClient c = client()) {
+            HttpConfig cfg = new HttpConfig("https://x");
+            cfg.method = null;
+            cfg.headers = null;
+            cfg.successStatus = null;
+            Job job = c.newManualJob(JOB_ID, "My Job", cfg);
+            assertDoesNotThrow(job::save);
         }
     }
 
@@ -1087,113 +1096,151 @@ class JobsClientTest {
         try (JobsClient c = client()) {
             Job job = c.get("en");
             assertTrue(job.enabled);          // derived roll-up
-            assertTrue(job.isEnabled());      // no-arg roll-up agrees
         }
     }
 
     @Test
-    void conversions_perEnvironmentScheduleAndNextRunAt() throws Exception {
-        // production: enabled, per-env schedule override + read-only next_run_at.
-        // staging:    enabled, no schedule override (inherits base), null next run.
-        handler.set(ex -> respondJson(ex, 200, "{\"data\":{\"id\":\"sched\",\"type\":\"job\","
-                + "\"attributes\":{\"name\":\"Sched\",\"schedule\":\"0 2 * * *\","
-                + "\"timezone\":\"America/New_York\","
-                + "\"configuration\":{\"method\":\"POST\",\"url\":\"https://x\"},"
-                + "\"environments\":{"
-                + "\"production\":{\"enabled\":true,\"schedule\":\"15 4 * * *\","
-                + "\"timezone\":\"Europe/London\","
-                + "\"next_run_at\":\"2026-06-05T04:15:00Z\"},"
-                + "\"staging\":{\"enabled\":true,\"schedule\":null,\"timezone\":null,"
-                + "\"next_run_at\":null}},"
-                + "\"created_at\":\"2026-06-04T00:00:00Z\"}}}"));
-        try (JobsClient c = client()) {
-            Job job = c.get("sched");
-            // per-env schedule override parsed; staging inherits (null override)
-            assertEquals("15 4 * * *", job.environments.get("production").schedule);
-            assertNull(job.environments.get("staging").schedule);
-            // read-only next_run_at parsed where present, null otherwise
-            assertNotNull(job.environments.get("production").nextRunAt);
-            assertNull(job.environments.get("staging").nextRunAt);
-            // getSchedule(env): override wins, else base, else base for unknown env
-            assertEquals("15 4 * * *", job.getSchedule("production"));
-            assertEquals("0 2 * * *", job.getSchedule("staging"));
-            assertEquals("0 2 * * *", job.getSchedule("unknown"));
-            assertEquals("0 2 * * *", job.getSchedule(null));
-            // base + per-env timezone decode from the wire; staging inherits (null)
-            assertEquals("America/New_York", job.timezone);
-            assertEquals("Europe/London", job.environments.get("production").timezone);
-            assertNull(job.environments.get("staging").timezone);
-            // getTimezone(env): override wins, else base for everything else
-            assertEquals("Europe/London", job.getTimezone("production"));
-            assertEquals("America/New_York", job.getTimezone("staging"));
-            assertEquals("America/New_York", job.getTimezone("unknown"));
-            assertEquals("America/New_York", job.getTimezone(null));
-        }
-    }
-
-    @Test
-    void perEnvironmentScheduleSetter_baseAndOverride_emitsOnWrite() throws Exception {
+    void perEnvironmentScheduleAndTimezone_emitOnWrite() throws Exception {
         installFullHandler();
         try (JobsClient c = client()) {
             Job job = c.newRecurringJob(JOB_ID, "My Job", "0 * * * *", new HttpConfig("https://base"));
-            // base schedule via env-aware setter (environment == null)
-            job.setSchedule("30 1 * * *", null);
-            assertEquals("30 1 * * *", job.schedule);
-            // per-env schedule override is set in memory
-            job.setEnabled(true, "production");
-            job.setSchedule("45 6 * * *", "production");
-            assertEquals("45 6 * * *", job.environments.get("production").schedule);
-            // clearing a per-env override falls back to base on resolution
-            job.setSchedule(null, "production");
-            assertNull(job.environments.get("production").schedule);
-            assertEquals("30 1 * * *", job.getSchedule("production"));
-            // re-set the override, then save: it travels on the wire; next_run_at never does
-            job.setSchedule("45 6 * * *", "production");
-            // base timezone + a per-env timezone override on production
-            job.setTimezone("America/Chicago");
-            job.setTimezone("Europe/London", "production");
-            // staging is enabled but carries no timezone override -> must be omitted
-            job.setEnabled(true, "staging");
+            // base schedule + timezone via direct field assignment
+            job.schedule = "30 1 * * *";
+            job.timezone = "America/Chicago";
+            // per-env schedule + timezone override on production
+            JobEnvironment prod = job.environment("production");
+            prod.enabled = true;
+            prod.schedule = "45 6 * * *";
+            prod.timezone = "Europe/London";
+            // staging is enabled but carries no schedule/timezone override -> omitted
+            job.environment("staging").enabled = true;
             job.save();
             JsonNode a = attrs();
+            assertEquals("30 1 * * *", a.path("schedule").asText());
+            assertEquals("America/Chicago", a.path("timezone").asText());
             JsonNode envNode = a.path("environments");
             assertEquals("45 6 * * *", envNode.path("production").path("schedule").asText());
+            assertEquals("Europe/London", envNode.path("production").path("timezone").asText());
             assertFalse(envNode.path("production").has("next_run_at"),
                     "read-only next_run_at must never be written");
-            // base timezone is sent when set
-            assertEquals("America/Chicago", a.path("timezone").asText());
-            // per-env timezone override travels on the wire for production
-            assertEquals("Europe/London", envNode.path("production").path("timezone").asText());
-            // staging has no timezone override; it must be omitted from the wire
+            assertFalse(envNode.path("staging").has("schedule"),
+                    "an environment without a schedule override must omit it");
             assertFalse(envNode.path("staging").has("timezone"),
                     "an environment without a timezone override must omit it");
         }
     }
 
+    // -----------------------------------------------------------------
+    // JobEnvironment overlay serialize / parse (ADR-056) — direct coverage
+    // -----------------------------------------------------------------
+
     @Test
-    void conversions_configurationToGen_nullMethodAndNullHeaders() {
-        installFullHandler();
-        try (JobsClient c = client()) {
-            HttpConfig cfg = new HttpConfig("https://x");
-            cfg.method = null;
-            cfg.headers = null;
-            cfg.successStatus = null;
-            Job job = c.newManualJob(JOB_ID, "My Job", cfg);
-            assertDoesNotThrow(job::save);
-        }
+    void jobEnvironment_toOverlay_emitsEnabledOnlyLeavesAndHeaders() {
+        JobEnvironment env = new JobEnvironment(true);
+        env.schedule = "0 2 * * *";
+        env.timezone = "UTC";
+        env.retryPolicy = "rp";
+        env.url = "https://o";
+        env.method = HttpMethod.PATCH;
+        env.timeout = 12;
+        env.body = "{}";
+        env.successStatus = "201";
+        env.tlsVerify = false;
+        env.caCert = "PEM";
+        env.setHeader("X-Foo.Bar", "v");          // dotted header name preserved on the wire
+        env.nextRunAt = OffsetDateTime.parse("2026-06-05T00:00:00Z"); // read-only, never written
+
+        Map<String, Object> overlay = env.toOverlay();
+        assertEquals(Boolean.TRUE, overlay.get("enabled"));
+        assertEquals("0 2 * * *", overlay.get("schedule"));
+        assertEquals("UTC", overlay.get("timezone"));
+        assertEquals("rp", overlay.get("retry_policy"));
+        assertEquals("https://o", overlay.get("url"));
+        assertEquals("PATCH", overlay.get("method"));      // method -> wire string
+        assertEquals(12, overlay.get("timeout"));
+        assertEquals("{}", overlay.get("body"));
+        assertEquals("201", overlay.get("success_status"));
+        assertEquals(Boolean.FALSE, overlay.get("tls_verify"));
+        assertEquals("PEM", overlay.get("ca_cert"));
+        assertEquals("v", overlay.get("headers.X-Foo.Bar"));
+        assertFalse(overlay.containsKey("next_run_at"));   // never serialized
     }
 
     @Test
-    void conversions_envFilterHelpers() {
-        // joinEnvironments: null / empty / blank-only -> null; valid -> comma-joined
-        assertNull(JobsConversions.joinEnvironments(null));
-        assertNull(JobsConversions.joinEnvironments(new ArrayList<>()));
-        assertNull(JobsConversions.joinEnvironments(List.of(" ", "")));
-        assertEquals("a,b", JobsConversions.joinEnvironments(List.of("a", "b")));
-        // resolveEnvironmentFilter: explicit wins / falls back to default / null
-        assertEquals("x,y", JobsConversions.resolveEnvironmentFilter(List.of("x", "y"), "prod"));
-        assertEquals("prod", JobsConversions.resolveEnvironmentFilter(null, "prod"));
-        assertNull(JobsConversions.resolveEnvironmentFilter(null, null));
+    void jobEnvironment_toOverlay_omitsUnsetLeaves() {
+        Map<String, Object> overlay = new JobEnvironment().toOverlay();
+        assertEquals(Boolean.FALSE, overlay.get("enabled"));
+        assertEquals(1, overlay.size());                   // only ``enabled``
+    }
+
+    @Test
+    void jobEnvironment_fromOverlay_parsesEveryLeaf_dottedHeader_ignoresUnknown() {
+        Map<String, Object> raw = new LinkedHashMap<>();
+        raw.put("enabled", true);
+        raw.put("schedule", "0 2 * * *");
+        raw.put("timezone", "UTC");
+        raw.put("retry_policy", "rp");
+        raw.put("url", "https://o");
+        raw.put("method", "DELETE");
+        raw.put("timeout", 7);
+        raw.put("body", "{}");
+        raw.put("success_status", "204");
+        raw.put("tls_verify", false);
+        raw.put("ca_cert", "PEM");
+        raw.put("headers.X-Foo.Bar", "v");   // dotted header name kept (split on first dot)
+        raw.put("headers.", "ignored");      // empty header name after the dot -> dropped
+        raw.put("unknown_leaf", "whatever");  // unknown -> ignored
+        raw.put("next_run_at", "2026-06-05T00:00:00Z");
+
+        JobEnvironment env = JobEnvironment.fromOverlay(raw);
+        assertTrue(env.enabled);
+        assertEquals("0 2 * * *", env.schedule);
+        assertEquals("UTC", env.timezone);
+        assertEquals("rp", env.retryPolicy);
+        assertEquals("https://o", env.url);
+        assertEquals(HttpMethod.DELETE, env.method);
+        assertEquals(7, env.timeout);
+        assertEquals("{}", env.body);
+        assertEquals("204", env.successStatus);
+        assertEquals(Boolean.FALSE, env.tlsVerify);
+        assertEquals("PEM", env.caCert);
+        assertEquals("v", env.getHeader("X-Foo.Bar"));
+        assertEquals(1, env.headers.size());  // empty-name header dropped
+        assertNotNull(env.nextRunAt);
+    }
+
+    @Test
+    void jobEnvironment_fromOverlay_nullLeavesAndNullMap() {
+        // null map -> default override
+        JobEnvironment def = JobEnvironment.fromOverlay(null);
+        assertFalse(def.enabled);
+        assertNull(def.method);
+
+        // explicit null leaves parse to null (no override); next_run_at variants
+        Map<String, Object> raw = new LinkedHashMap<>();
+        raw.put("enabled", false);
+        raw.put("method", null);          // null method -> null
+        raw.put("timeout", null);         // non-Number -> null
+        raw.put("tls_verify", null);      // non-Boolean -> null
+        raw.put("next_run_at", null);     // null -> null
+        JobEnvironment env = JobEnvironment.fromOverlay(raw);
+        assertFalse(env.enabled);
+        assertNull(env.method);
+        assertNull(env.timeout);
+        assertNull(env.tlsVerify);
+        assertNull(env.nextRunAt);
+    }
+
+    @Test
+    void jobEnvironment_fromOverlay_nextRunAt_emptyAndOffsetForms() {
+        // empty string -> null
+        Map<String, Object> empty = new LinkedHashMap<>();
+        empty.put("next_run_at", "");
+        assertNull(JobEnvironment.fromOverlay(empty).nextRunAt);
+        // explicit +00:00 offset (no trailing Z) -> parsed
+        Map<String, Object> offset = new LinkedHashMap<>();
+        offset.put("next_run_at", "2026-06-05T00:00:00+00:00");
+        assertNotNull(JobEnvironment.fromOverlay(offset).nextRunAt);
     }
 
     // -----------------------------------------------------------------
@@ -1217,7 +1264,7 @@ class JobsClientTest {
     }
 
     @Test
-    void httpConfigConstructorsAndDefaults() {
+    void httpConfigConstructorsDefaultsAndHeaderHelpers() {
         HttpConfig empty = new HttpConfig();
         assertEquals(HttpMethod.POST, empty.method);
         assertEquals("", empty.url);
@@ -1227,31 +1274,41 @@ class JobsClientTest {
         assertNull(empty.body);
         assertNull(empty.caCert);
         assertTrue(empty.headers.isEmpty());
+        // header helpers
+        empty.setHeader("Authorization", "Bearer t");
+        assertEquals("Bearer t", empty.getHeader("Authorization"));
+        assertNull(empty.getHeader("Missing"));
+
         HttpConfig fromUrl = new HttpConfig("https://x");
         assertEquals("https://x", fromUrl.url);
-        HttpConfig full = new HttpConfig(HttpMethod.GET, "https://y",
-                List.of(new HttpHeader("k", "v")));
+
+        HttpConfig full = new HttpConfig(HttpMethod.GET, "https://y", Map.of("k", "v"));
         assertEquals(HttpMethod.GET, full.method);
         assertEquals("https://y", full.url);
-        assertEquals(1, full.headers.size());
+        assertEquals("v", full.getHeader("k"));
+
+        // null headers map -> empty (defensive)
+        HttpConfig nullHeaders = new HttpConfig(HttpMethod.GET, "https://z", null);
+        assertTrue(nullHeaders.headers.isEmpty());
     }
 
     @Test
-    void jobEnvironmentConstructors() {
+    void jobEnvironmentConstructorsAndHeaderHelpers() {
         JobEnvironment empty = new JobEnvironment();
         assertFalse(empty.enabled);
         assertNull(empty.schedule);
-        assertNull(empty.configuration);
+        assertNull(empty.url);
+        assertNull(empty.method);
         assertNull(empty.nextRunAt);
+        assertTrue(empty.headers.isEmpty());
+        assertNull(empty.getHeader("X"));
+        empty.setHeader("X", "y");
+        assertEquals("y", empty.getHeader("X"));
+
         JobEnvironment enabledOnly = new JobEnvironment(true);
         assertTrue(enabledOnly.enabled);
-        assertNull(enabledOnly.schedule);
-        assertNull(enabledOnly.configuration);
+        assertNull(enabledOnly.url);
         assertNull(enabledOnly.nextRunAt);
-        HttpConfig cfg = new HttpConfig("https://z");
-        JobEnvironment both = new JobEnvironment(false, cfg);
-        assertFalse(both.enabled);
-        assertSame(cfg, both.configuration);
     }
 
     @Test
@@ -1271,9 +1328,6 @@ class JobsClientTest {
         assertEquals(2, usage.runsIncluded);
         assertEquals(3, usage.activeJobs);
         assertEquals(4, usage.activeJobsLimit);
-        HttpHeader h = new HttpHeader("a", "b");
-        assertEquals("a", h.name);
-        assertEquals("b", h.value);
         ListJobsInput lji = new ListJobsInput();
         assertNull(lji.kind);
         assertNull(lji.scheduled);
@@ -1288,52 +1342,22 @@ class JobsClientTest {
         assertNull(lri.after);
     }
 
-    // -----------------------------------------------------------------
-    // Timezone-with-schedule / retry-policy setters on Job
-    // -----------------------------------------------------------------
-
     @Test
-    void setScheduleWithTimezone_baseAndPerEnv() {
-        try (JobsClient c = client()) {
-            Job job = c.newRecurringJob(JOB_ID, "My Job", "0 * * * *", new HttpConfig("https://x"));
-            // base: schedule + timezone together (environment == null)
-            job.setSchedule("0 2 * * *", "America/New_York", null);
-            assertEquals("0 2 * * *", job.schedule);
-            assertEquals("America/New_York", job.timezone);
-            // per-env: schedule + timezone together, creating the override
-            job.setSchedule("0 */6 * * *", "Europe/London", "development");
-            assertEquals("0 */6 * * *", job.environments.get("development").schedule);
-            assertEquals("Europe/London", job.environments.get("development").timezone);
-            // null timezone leaves the timezone untouched (schedule-only change)
-            job.setSchedule("15 3 * * *", null, "development");
-            assertEquals("15 3 * * *", job.environments.get("development").schedule);
-            assertEquals("Europe/London", job.environments.get("development").timezone);
-        }
-    }
-
-    @Test
-    void setRetryPolicy_objectAndId_baseAndPerEnv() {
-        try (JobsClient c = client()) {
-            Job job = c.newRecurringJob(JOB_ID, "My Job", "0 * * * *", new HttpConfig("https://x"));
-            // base via id string (1-arg)
-            job.setRetryPolicy("policy-a");
-            assertEquals("policy-a", job.retryPolicy);
-            // base via id string (2-arg, null environment)
-            job.setRetryPolicy("policy-b", null);
-            assertEquals("policy-b", job.retryPolicy);
-            // per-env via id string, preserving other env fields
-            job.setEnabled(true, "production");
-            job.setRetryPolicy("policy-prod", "production");
-            assertEquals("policy-prod", job.environments.get("production").retryPolicy);
-            assertTrue(job.environments.get("production").enabled);
-            // base via RetryPolicy object (its id is used)
-            RetryPolicy policy = c.retryPolicies.new_("policy-obj", "P", 3, Backoff.FIXED, 5);
-            job.setRetryPolicy(policy);
-            assertEquals("policy-obj", job.retryPolicy);
-            // per-env via RetryPolicy object
-            job.setRetryPolicy(policy, "development");
-            assertEquals("policy-obj", job.environments.get("development").retryPolicy);
-        }
+    void conversions_envFilterHelpers() {
+        // joinEnvironments: null / empty / blank-only -> null; valid -> comma-joined
+        assertNull(JobsConversions.joinEnvironments(null));
+        assertNull(JobsConversions.joinEnvironments(new ArrayList<>()));
+        assertNull(JobsConversions.joinEnvironments(List.of(" ", "")));
+        assertEquals("a,b", JobsConversions.joinEnvironments(List.of("a", "b")));
+        // resolveEnvironmentFilter: explicit wins / falls back to default / null
+        assertEquals("x,y", JobsConversions.resolveEnvironmentFilter(List.of("x", "y"), "prod"));
+        assertEquals("prod", JobsConversions.resolveEnvironmentFilter(null, "prod"));
+        assertNull(JobsConversions.resolveEnvironmentFilter(null, null));
+        // joinTriggers: null / empty -> null; valid -> comma-joined wire values
+        assertNull(JobsConversions.joinTriggers(null));
+        assertNull(JobsConversions.joinTriggers(List.of()));
+        assertEquals("RETRY,SCHEDULE",
+                JobsConversions.joinTriggers(List.of(RunTrigger.RETRY, RunTrigger.SCHEDULE)));
     }
 
     @Test
@@ -1346,7 +1370,7 @@ class JobsClientTest {
                     "desc", envs, "ALLOW", "America/New_York", "policy-a");
             assertEquals("America/New_York", rec.timezone);
             assertEquals("policy-a", rec.retryPolicy);
-            assertTrue(rec.isEnabled("production"));
+            assertTrue(rec.environment("production").enabled);
             Job man = c.newManualJob(JOB_ID, "Man", new HttpConfig("https://x"),
                     "desc", envs, "ALLOW", "policy-b");
             assertNull(man.schedule);
@@ -1382,11 +1406,12 @@ class JobsClientTest {
         installFullHandler();
         try (JobsClient c = client()) {
             Job job = c.newRecurringJob(JOB_ID, "My Job", "0 2 * * *", new HttpConfig("https://base"));
-            job.setRetryPolicy("base-policy");
-            job.setEnabled(true, "production");
-            job.setRetryPolicy("prod-policy", "production");
+            job.retryPolicy = "base-policy";
+            JobEnvironment prod = job.environment("production");
+            prod.enabled = true;
+            prod.retryPolicy = "prod-policy";
             // staging is enabled but carries no retry-policy override -> must be omitted
-            job.setEnabled(true, "staging");
+            job.environment("staging").enabled = true;
             job.save();
             JsonNode a = attrs();
             assertEquals("base-policy", a.path("retry_policy").asText());
@@ -1414,7 +1439,7 @@ class JobsClientTest {
                 + "\"retry_policy\":\"base-policy\","
                 + "\"configuration\":{\"method\":\"POST\",\"url\":\"https://x\"},"
                 + "\"environments\":{\"production\":{\"enabled\":true,\"retry_policy\":\"prod-policy\"},"
-                + "\"staging\":{\"enabled\":true,\"retry_policy\":null}},"
+                + "\"staging\":{\"enabled\":true}},"
                 + "\"created_at\":\"2026-06-04T00:00:00Z\"}}}"));
         try (JobsClient c = client()) {
             Job job = c.get("rp");

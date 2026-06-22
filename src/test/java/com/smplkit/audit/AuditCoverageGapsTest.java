@@ -98,10 +98,10 @@ class AuditCoverageGapsTest {
 
     @Test
     void getForwarder_emptyIdAndAbsentEnabledAndAbsentUrl_useFallbacks() throws Exception {
-        // Empty id              -> AuditForwarders.fromResource line 235 ``: null`` arm
-        // enabled absent        -> line 245 ``: false`` arm
-        // forward_smplkit absent-> line 252 ``: false`` arm
-        // configuration url absent -> configurationFromGen line 317 ``: ""`` arm
+        // Empty wire id           -> AuditForwarders.fromResource id ``: null`` arm
+        // no environment enabled  -> derived ``enabled`` roll-up is false
+        // forward_smplkit absent  -> ``: false`` arm
+        // configuration url absent -> configurationFromGen ``: ""`` arm
         String resource = "{\"id\":\"\",\"type\":\"forwarder\",\"attributes\":{"
                 + "\"name\":\"n\",\"forwarder_type\":\"http\","
                 + "\"configuration\":{\"method\":\"POST\",\"success_status\":\"2xx\"},"
@@ -118,10 +118,10 @@ class AuditCoverageGapsTest {
 
     @Test
     void getForwarder_environmentWithAbsentEnabled_defaultsFalse() throws Exception {
-        // A wire environment object whose ``enabled`` key is omitted drives the
-        // ``: false`` arm of AuditForwarders.environmentsFromGen line 292.
+        // A wire environment overlay with no leaves (``{}``) parses to a default
+        // override: enabled false and no leaf overrides set.
         String resource = "{\"id\":\"" + FWD_ID + "\",\"type\":\"forwarder\",\"attributes\":{"
-                + "\"name\":\"n\",\"forwarder_type\":\"http\",\"enabled\":false,"
+                + "\"name\":\"n\",\"forwarder_type\":\"http\","
                 + "\"configuration\":{\"method\":\"POST\",\"url\":\"https://x\",\"success_status\":\"2xx\"},"
                 + "\"environments\":{\"production\":{}},"
                 + "\"created_at\":\"2026-05-07T12:00:00Z\","
@@ -132,7 +132,8 @@ class AuditCoverageGapsTest {
         ForwarderEnvironment prod = fwd.environments.get("production");
         assertNotNull(prod);
         assertFalse(prod.enabled);          // absent enabled -> false
-        assertNull(prod.configuration);     // absent configuration -> null
+        assertNull(prod.url);               // no leaf overrides set
+        assertFalse(fwd.enabled);           // no environment enabled -> roll-up false
     }
 
     // -----------------------------------------------------------------

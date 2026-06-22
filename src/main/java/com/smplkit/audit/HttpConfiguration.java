@@ -1,10 +1,10 @@
 package com.smplkit.audit;
 
-import java.util.ArrayList;
-import java.util.List;
+import java.util.LinkedHashMap;
+import java.util.Map;
 
 /**
- * Forwarder destination HTTP request shape.
+ * Forwarder destination HTTP request shape — the base configuration.
  */
 public final class HttpConfiguration {
     /** HTTP verb used for delivery. Defaults to {@link HttpMethod#POST}. */
@@ -12,11 +12,14 @@ public final class HttpConfiguration {
     /** Destination URL the audit service POSTs each event to. */
     public String url = "";
     /**
-     * Headers attached to every outbound request. Values often carry
-     * credentials and are returned in plaintext on reads, so a
-     * get-mutate-put round-trip preserves them without re-entering secrets.
+     * Headers attached to every outbound request, as a name&rarr;value map
+     * (e.g. {@code {"DD-API-KEY": "s3cr3t"}}). Values often carry credentials
+     * and are returned in plaintext on reads, so a get-mutate-put round-trip
+     * preserves them without re-entering secrets. Use
+     * {@link #setHeader(String, String)} / {@link #getHeader(String)} to read
+     * and write individual headers.
      */
-    public List<HttpHeader> headers = new ArrayList<>();
+    public Map<String, String> headers = new LinkedHashMap<>();
     /**
      * Status the destination must return for delivery to count as success —
      * either an exact code ({@code "200"}, {@code "204"}) or a class
@@ -50,13 +53,33 @@ public final class HttpConfiguration {
     /**
      * @param method HTTP verb used for delivery
      * @param url destination URL the audit service POSTs each event to
-     * @param headers headers attached to every outbound request; values are
-     *     returned in plaintext on reads, so a get-mutate-put round-trip
-     *     preserves them without re-entering secrets
+     * @param headers headers attached to every outbound request, as a
+     *     name&rarr;value map; values are returned in plaintext on reads, so a
+     *     get-mutate-put round-trip preserves them without re-entering secrets
      */
-    public HttpConfiguration(HttpMethod method, String url, List<HttpHeader> headers) {
+    public HttpConfiguration(HttpMethod method, String url, Map<String, String> headers) {
         this.method = method;
         this.url = url;
-        this.headers = new ArrayList<>(headers);
+        this.headers = headers != null ? new LinkedHashMap<>(headers) : new LinkedHashMap<>();
+    }
+
+    /**
+     * Set (or replace) a single request header by name.
+     *
+     * @param name  header name (e.g. {@code "DD-API-KEY"})
+     * @param value header value
+     */
+    public void setHeader(String name, String value) {
+        headers.put(name, value);
+    }
+
+    /**
+     * The value of header {@code name}, or {@code null} if it is not set.
+     *
+     * @param name header name to look up
+     * @return the header value, or {@code null} when unset
+     */
+    public String getHeader(String name) {
+        return headers.get(name);
     }
 }

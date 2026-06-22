@@ -15,9 +15,9 @@ import java.util.concurrent.ForkJoinPool;
  *
  * <p>A retry policy describes how failed runs are retried — how many times,
  * how long to wait between attempts, and which failures to retry. Reference it
- * from a job's {@code retryPolicy} (see
- * {@link JobsClient#newRecurringJob(String, String, String, HttpConfig, String, java.util.Map, String, String, String)}
- * and {@link Job#setRetryPolicy(RetryPolicy, String)}). Retry policies are
+ * from a job's base {@code retryPolicy} (via {@link Job#setRetryPolicy(RetryPolicy)})
+ * or per environment ({@code job.environment(env).setRetryPolicy(policy)}, see
+ * {@link JobEnvironment#setRetryPolicy(RetryPolicy)}). Retry policies are
  * account-global — never environment-scoped.</p>
  */
 public final class RetryPolicy {

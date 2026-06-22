@@ -1,7 +1,7 @@
 package com.smplkit.jobs;
 
-import java.util.ArrayList;
-import java.util.List;
+import java.util.LinkedHashMap;
+import java.util.Map;
 
 /**
  * The HTTP request a job performs when it fires (the {@code http}
@@ -13,11 +13,13 @@ public final class HttpConfig {
     /** Destination URL the job requests on each run. */
     public String url = "";
     /**
-     * Headers attached to every request, as name/value pairs. Header values
-     * are returned in plaintext on reads, so a get-mutate-put round-trip
-     * preserves them.
+     * Headers attached to every request, as a name&rarr;value map (e.g.
+     * {@code {"Authorization": "Bearer s3cr3t"}}). Header values are returned
+     * in plaintext on reads, so a get-mutate-put round-trip preserves them.
+     * Use {@link #setHeader(String, String)} / {@link #getHeader(String)} to
+     * read and write individual headers.
      */
-    public List<HttpHeader> headers = new ArrayList<>();
+    public Map<String, String> headers = new LinkedHashMap<>();
     /**
      * Request body sent on each run. {@code null} (the default) sends an empty
      * body, suitable for a connectivity ping. Sent verbatim — pair with a
@@ -67,11 +69,31 @@ public final class HttpConfig {
      *
      * @param method  HTTP verb used for the request
      * @param url     destination URL the job sends its request to
-     * @param headers headers attached to the request, as name/value pairs
+     * @param headers headers attached to the request, as a name&rarr;value map
      */
-    public HttpConfig(HttpMethod method, String url, List<HttpHeader> headers) {
+    public HttpConfig(HttpMethod method, String url, Map<String, String> headers) {
         this.method = method;
         this.url = url;
-        this.headers = new ArrayList<>(headers);
+        this.headers = headers != null ? new LinkedHashMap<>(headers) : new LinkedHashMap<>();
+    }
+
+    /**
+     * Set (or replace) a single request header by name.
+     *
+     * @param name  header name (e.g. {@code "Authorization"})
+     * @param value header value
+     */
+    public void setHeader(String name, String value) {
+        headers.put(name, value);
+    }
+
+    /**
+     * The value of header {@code name}, or {@code null} if it is not set.
+     *
+     * @param name header name to look up
+     * @return the header value, or {@code null} when unset
+     */
+    public String getHeader(String name) {
+        return headers.get(name);
     }
 }
