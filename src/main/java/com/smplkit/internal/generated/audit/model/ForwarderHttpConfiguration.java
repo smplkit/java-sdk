@@ -24,10 +24,9 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonTypeName;
 import com.fasterxml.jackson.annotation.JsonValue;
-import com.smplkit.internal.generated.audit.model.HttpHeader;
-import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.List;
+import java.util.HashMap;
+import java.util.Map;
 import org.openapitools.jackson.nullable.JsonNullable;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import org.openapitools.jackson.nullable.JsonNullable;
@@ -37,18 +36,18 @@ import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 
 import com.smplkit.internal.generated.audit.ApiClient;
 /**
- * HTTP request configuration for delivering a payload to a destination.  The shared base shape for any product that posts to a customer-supplied HTTP destination. Smpl Audit forwarders use it directly; Smpl Jobs extends it (adding &#x60;&#x60;body&#x60;&#x60; and &#x60;&#x60;timeout&#x60;&#x60;). When other transports land (&#x60;&#x60;FTP&#x60;&#x60;, &#x60;&#x60;SQS&#x60;&#x60;, …) their own configuration schemas will join this one as members of a discriminated union under a &#x60;&#x60;configuration&#x60;&#x60; field.
+ * HTTP request a forwarder makes to deliver an event.  Identical to the shared HTTP configuration except that &#x60;&#x60;headers&#x60;&#x60; is a name→value object so an individual header can be overridden per environment by its name.
  */
 @JsonPropertyOrder({
-  HttpConfiguration.JSON_PROPERTY_METHOD,
-  HttpConfiguration.JSON_PROPERTY_URL,
-  HttpConfiguration.JSON_PROPERTY_HEADERS,
-  HttpConfiguration.JSON_PROPERTY_SUCCESS_STATUS,
-  HttpConfiguration.JSON_PROPERTY_TLS_VERIFY,
-  HttpConfiguration.JSON_PROPERTY_CA_CERT
+  ForwarderHttpConfiguration.JSON_PROPERTY_METHOD,
+  ForwarderHttpConfiguration.JSON_PROPERTY_URL,
+  ForwarderHttpConfiguration.JSON_PROPERTY_HEADERS,
+  ForwarderHttpConfiguration.JSON_PROPERTY_SUCCESS_STATUS,
+  ForwarderHttpConfiguration.JSON_PROPERTY_TLS_VERIFY,
+  ForwarderHttpConfiguration.JSON_PROPERTY_CA_CERT
 })
 @jakarta.annotation.Generated(value = "org.openapitools.codegen.languages.JavaClientCodegen", comments = "Generator version: 7.21.0")
-public class HttpConfiguration {
+public class ForwarderHttpConfiguration {
   /**
    * HTTP method used when delivering the request.
    */
@@ -100,7 +99,7 @@ public class HttpConfiguration {
 
   public static final String JSON_PROPERTY_HEADERS = "headers";
   @jakarta.annotation.Nullable
-  private List<HttpHeader> headers = new ArrayList<>();
+  private Map<String, String> headers = new HashMap<>();
 
   public static final String JSON_PROPERTY_SUCCESS_STATUS = "success_status";
   @jakarta.annotation.Nullable
@@ -113,10 +112,10 @@ public class HttpConfiguration {
   public static final String JSON_PROPERTY_CA_CERT = "ca_cert";
   private JsonNullable<String> caCert = JsonNullable.<String>undefined();
 
-  public HttpConfiguration() { 
+  public ForwarderHttpConfiguration() { 
   }
 
-  public HttpConfiguration method(@jakarta.annotation.Nullable MethodEnum method) {
+  public ForwarderHttpConfiguration method(@jakarta.annotation.Nullable MethodEnum method) {
     this.method = method;
     return this;
   }
@@ -140,7 +139,7 @@ public class HttpConfiguration {
   }
 
 
-  public HttpConfiguration url(@jakarta.annotation.Nonnull String url) {
+  public ForwarderHttpConfiguration url(@jakarta.annotation.Nonnull String url) {
     this.url = url;
     return this;
   }
@@ -164,39 +163,39 @@ public class HttpConfiguration {
   }
 
 
-  public HttpConfiguration headers(@jakarta.annotation.Nullable List<HttpHeader> headers) {
+  public ForwarderHttpConfiguration headers(@jakarta.annotation.Nullable Map<String, String> headers) {
     this.headers = headers;
     return this;
   }
 
-  public HttpConfiguration addHeadersItem(HttpHeader headersItem) {
+  public ForwarderHttpConfiguration putHeadersItem(String key, String headersItem) {
     if (this.headers == null) {
-      this.headers = new ArrayList<>();
+      this.headers = new HashMap<>();
     }
-    this.headers.add(headersItem);
+    this.headers.put(key, headersItem);
     return this;
   }
 
   /**
-   * HTTP headers attached to each request.
+   * HTTP headers attached to each delivery, as a name→value object (e.g. &#x60;{\&quot;DD-API-KEY\&quot;: \&quot;s3cr3t\&quot;}&#x60;). A header is overridden in a specific environment by its name via a &#x60;headers.&lt;name&gt;&#x60; entry in that environment&#39;s overrides; header names match case-insensitively.
    * @return headers
    */
   @jakarta.annotation.Nullable
   @JsonProperty(value = JSON_PROPERTY_HEADERS, required = false)
   @JsonInclude(value = JsonInclude.Include.USE_DEFAULTS)
-  public List<HttpHeader> getHeaders() {
+  public Map<String, String> getHeaders() {
     return headers;
   }
 
 
   @JsonProperty(value = JSON_PROPERTY_HEADERS, required = false)
   @JsonInclude(value = JsonInclude.Include.USE_DEFAULTS)
-  public void setHeaders(@jakarta.annotation.Nullable List<HttpHeader> headers) {
+  public void setHeaders(@jakarta.annotation.Nullable Map<String, String> headers) {
     this.headers = headers;
   }
 
 
-  public HttpConfiguration successStatus(@jakarta.annotation.Nullable String successStatus) {
+  public ForwarderHttpConfiguration successStatus(@jakarta.annotation.Nullable String successStatus) {
     this.successStatus = successStatus;
     return this;
   }
@@ -220,7 +219,7 @@ public class HttpConfiguration {
   }
 
 
-  public HttpConfiguration tlsVerify(@jakarta.annotation.Nullable Boolean tlsVerify) {
+  public ForwarderHttpConfiguration tlsVerify(@jakarta.annotation.Nullable Boolean tlsVerify) {
     this.tlsVerify = tlsVerify;
     return this;
   }
@@ -244,7 +243,7 @@ public class HttpConfiguration {
   }
 
 
-  public HttpConfiguration caCert(@jakarta.annotation.Nullable String caCert) {
+  public ForwarderHttpConfiguration caCert(@jakarta.annotation.Nullable String caCert) {
     this.caCert = JsonNullable.<String>of(caCert);
     return this;
   }
@@ -277,7 +276,7 @@ public class HttpConfiguration {
 
 
   /**
-   * Return true if this HttpConfiguration object is equal to o.
+   * Return true if this ForwarderHttpConfiguration object is equal to o.
    */
   @Override
   public boolean equals(Object o) {
@@ -287,13 +286,13 @@ public class HttpConfiguration {
     if (o == null || getClass() != o.getClass()) {
       return false;
     }
-    HttpConfiguration httpConfiguration = (HttpConfiguration) o;
-    return Objects.equals(this.method, httpConfiguration.method) &&
-        Objects.equals(this.url, httpConfiguration.url) &&
-        Objects.equals(this.headers, httpConfiguration.headers) &&
-        Objects.equals(this.successStatus, httpConfiguration.successStatus) &&
-        Objects.equals(this.tlsVerify, httpConfiguration.tlsVerify) &&
-        equalsNullable(this.caCert, httpConfiguration.caCert);
+    ForwarderHttpConfiguration forwarderHttpConfiguration = (ForwarderHttpConfiguration) o;
+    return Objects.equals(this.method, forwarderHttpConfiguration.method) &&
+        Objects.equals(this.url, forwarderHttpConfiguration.url) &&
+        Objects.equals(this.headers, forwarderHttpConfiguration.headers) &&
+        Objects.equals(this.successStatus, forwarderHttpConfiguration.successStatus) &&
+        Objects.equals(this.tlsVerify, forwarderHttpConfiguration.tlsVerify) &&
+        equalsNullable(this.caCert, forwarderHttpConfiguration.caCert);
   }
 
   private static <T> boolean equalsNullable(JsonNullable<T> a, JsonNullable<T> b) {
@@ -315,7 +314,7 @@ public class HttpConfiguration {
   @Override
   public String toString() {
     StringBuilder sb = new StringBuilder();
-    sb.append("class HttpConfiguration {\n");
+    sb.append("class ForwarderHttpConfiguration {\n");
     sb.append("    method: ").append(toIndentedString(method)).append("\n");
     sb.append("    url: ").append(toIndentedString(url)).append("\n");
     sb.append("    headers: ").append(toIndentedString(headers)).append("\n");
@@ -378,11 +377,10 @@ public class HttpConfiguration {
 
     // add `headers` to the URL query string
     if (getHeaders() != null) {
-      for (int i = 0; i < getHeaders().size(); i++) {
-        if (getHeaders().get(i) != null) {
-          joiner.add(getHeaders().get(i).toUrlQueryString(String.format(java.util.Locale.ROOT, "%sheaders%s%s", prefix, suffix,
-          "".equals(suffix) ? "" : String.format(java.util.Locale.ROOT, "%s%d%s", containerPrefix, i, containerSuffix))));
-        }
+      for (String _key : getHeaders().keySet()) {
+        joiner.add(String.format(java.util.Locale.ROOT, "%sheaders%s%s=%s", prefix, suffix,
+            "".equals(suffix) ? "" : String.format(java.util.Locale.ROOT, "%s%d%s", containerPrefix, _key, containerSuffix),
+            getHeaders().get(_key), ApiClient.urlEncode(ApiClient.valueToString(getHeaders().get(_key)))));
       }
     }
 
