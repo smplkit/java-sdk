@@ -36,7 +36,7 @@ import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 
 import com.smplkit.internal.generated.jobs.ApiClient;
 /**
- * HTTP request a job performs when it fires.  Extends the shared forwarder configuration with the two fields a scheduled job needs beyond a forwarder, and represents headers as a name→value object so an individual header can be overridden per environment by its name.
+ * HTTP request a job performs when it fires.  Extends the shared HTTP configuration with the two fields a scheduled job needs beyond a forwarder (&#x60;&#x60;body&#x60;&#x60; and &#x60;&#x60;timeout&#x60;&#x60;); everything else, including the shared name→value &#x60;&#x60;headers&#x60;&#x60; object, is inherited unchanged.
  */
 @JsonPropertyOrder({
   JobHttpConfiguration.JSON_PROPERTY_METHOD,
@@ -186,7 +186,7 @@ public class JobHttpConfiguration {
   }
 
   /**
-   * HTTP headers sent on each request, as a name→value object (e.g. &#x60;{\&quot;Authorization\&quot;: \&quot;Bearer s3cr3t\&quot;}&#x60;). A header is overridden per environment by its name via a &#x60;headers.&lt;name&gt;&#x60; entry in that environment&#39;s overrides; header names match case-insensitively.
+   * HTTP headers attached to each request, as a name→value object (e.g. &#x60;{\&quot;Authorization\&quot;: \&quot;Bearer s3cr3t\&quot;}&#x60;). Override an individual header in a specific environment by its name via a &#x60;headers.&lt;name&gt;&#x60; entry in that environment&#39;s overrides; header names match case-insensitively.
    * @return headers
    */
   @jakarta.annotation.Nullable
