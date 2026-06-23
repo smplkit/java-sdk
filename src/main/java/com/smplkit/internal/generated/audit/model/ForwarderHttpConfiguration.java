@@ -36,7 +36,7 @@ import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 
 import com.smplkit.internal.generated.audit.ApiClient;
 /**
- * HTTP request a forwarder makes to deliver an event.  Identical to the shared HTTP configuration except that &#x60;&#x60;headers&#x60;&#x60; is a name→value object so an individual header can be overridden per environment by its name.
+ * HTTP request a forwarder makes to deliver an event.  The shared HTTP configuration, unchanged — including the name→value &#x60;&#x60;headers&#x60;&#x60; object whose entries can be overridden per environment by name. It exists as a distinct subclass only so the spec exposes a forwarder-specific schema name; it adds no fields of its own.
  */
 @JsonPropertyOrder({
   ForwarderHttpConfiguration.JSON_PROPERTY_METHOD,
@@ -177,7 +177,7 @@ public class ForwarderHttpConfiguration {
   }
 
   /**
-   * HTTP headers attached to each delivery, as a name→value object (e.g. &#x60;{\&quot;DD-API-KEY\&quot;: \&quot;s3cr3t\&quot;}&#x60;). A header is overridden in a specific environment by its name via a &#x60;headers.&lt;name&gt;&#x60; entry in that environment&#39;s overrides; header names match case-insensitively.
+   * HTTP headers attached to each request, as a name→value object (e.g. &#x60;{\&quot;Authorization\&quot;: \&quot;Bearer s3cr3t\&quot;}&#x60;). Override an individual header in a specific environment by its name via a &#x60;headers.&lt;name&gt;&#x60; entry in that environment&#39;s overrides; header names match case-insensitively.
    * @return headers
    */
   @jakarta.annotation.Nullable
