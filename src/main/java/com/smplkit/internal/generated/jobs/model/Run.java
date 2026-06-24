@@ -310,7 +310,7 @@ public class Run {
   }
 
   /**
-   * The environment this run executed in. A scheduled run inherits the firing job-environment; a manual run is created in the environment you name with the &#x60;X-Smplkit-Environment&#x60; header; a rerun copies its source run&#39;s environment.
+   * The environment this run executed in. A scheduled run inherits the firing job-environment; a manual run is created in the environment you name in the run request body (implied when your credential is scoped to a single environment); a rerun copies its source run&#39;s environment.
    * @return environment
    */
   @jakarta.annotation.Nonnull
