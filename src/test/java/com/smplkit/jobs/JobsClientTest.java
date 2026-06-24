@@ -21,6 +21,7 @@ import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CompletionException;
 import java.util.concurrent.ExecutionException;
@@ -36,8 +37,9 @@ import static org.junit.jupiter.api.Assertions.*;
  * {@link AsyncJobsClient} (async), plus {@link RunsClient} /
  * {@link AsyncRunsClient}, including the ADR-056 flat per-environment override
  * surface (sparse leaf overlays, object headers, {@code headers.<name>}
- * leaves, the {@code X-Smplkit-Environment} write header, and
- * {@code filter[environment]} on run reads).
+ * leaves, the body-carried environment on writes — a one-off job's birth
+ * environment in the {@code environments} map and the run-now request body —
+ * and {@code filter[environment]} on run reads).
  *
  * <p>Stubs the jobs service via the JDK's built-in {@link HttpServer} bound to
  * {@code 127.0.0.1:0}; no real network. The clients are built through the wired
@@ -222,6 +224,16 @@ class JobsClientTest {
         return MAPPER.readTree(lastBody.get()).path("data").path("attributes");
     }
 
+    /**
+     * The captured run-now request body parsed as a plain object (not a JSON:API
+     * envelope). An empty body is captured as {@code null}; return an empty
+     * object node so callers can assert the {@code environment} key is absent.
+     */
+    private JsonNode runNowBody() throws Exception {
+        String body = lastBody.get();
+        return body == null ? MAPPER.createObjectNode() : MAPPER.readTree(body);
+    }
+
     // -----------------------------------------------------------------
     // newRecurringJob / newManualJob / schedule — defaults, full, birth env
     // -----------------------------------------------------------------
@@ -239,7 +251,6 @@ class JobsClientTest {
             assertEquals("ALLOW", job.concurrencyPolicy);
             assertNull(job.createdAt);
             assertNull(job.kind);                     // unsaved -> no server kind yet
-            assertNull(job.birthEnvironment);         // no client env configured
         }
     }
 
@@ -253,7 +264,9 @@ class JobsClientTest {
             assertEquals("a description", job.description);
             assertTrue(job.environment("production").enabled);
             assertEquals("ALLOW", job.concurrencyPolicy);
-            assertNull(job.birthEnvironment);         // recurring jobs have no birth env
+            // recurring jobs carry only their supplied environments map; no
+            // birth-environment entry is injected.
+            assertEquals(1, job.environments.size());
         }
     }
 
@@ -274,7 +287,6 @@ class JobsClientTest {
             assertNull(job.description);
             assertTrue(job.environments.isEmpty());
             assertEquals("ALLOW", job.concurrencyPolicy);
-            assertNull(job.birthEnvironment);
         }
     }
 
@@ -306,11 +318,14 @@ class JobsClientTest {
         try (JobsClient c = client()) {
             Job job = c.schedule(JOB_ID, "One", when, new HttpConfig("https://x"));
             assertEquals(when.toString(), job.schedule);   // datetime -> ISO-8601 string
-            assertNull(job.birthEnvironment);              // no client env configured
+            // No client env configured -> no birth-environment entry in the map.
+            assertTrue(job.environments.isEmpty());
         }
         try (JobsClient c = clientWithEnv("production")) {
             Job job = c.schedule(JOB_ID, "One", when, new HttpConfig("https://x"));
-            assertEquals("production", job.birthEnvironment);  // falls back to client env
+            // Falls back to the client env, placed as an enabled map entry.
+            assertEquals(Set.of("production"), job.environments.keySet());
+            assertTrue(job.environment("production").enabled);
         }
     }
 
@@ -319,11 +334,14 @@ class JobsClientTest {
         OffsetDateTime when = OffsetDateTime.parse("2030-01-01T12:30:00Z");
         try (JobsClient c = client()) {
             Job job = c.schedule(JOB_ID, "One", when, new HttpConfig("https://x"), "development");
-            assertEquals("development", job.birthEnvironment);
+            assertEquals(Set.of("development"), job.environments.keySet());
+            assertTrue(job.environment("development").enabled);
         }
         try (JobsClient c = clientWithEnv("production")) {
             Job job = c.schedule(JOB_ID, "One", when, new HttpConfig("https://x"), null);
-            assertEquals("production", job.birthEnvironment);  // null falls back to client env
+            // null falls back to the client env.
+            assertEquals(Set.of("production"), job.environments.keySet());
+            assertTrue(job.environment("production").enabled);
         }
     }
 
@@ -336,7 +354,8 @@ class JobsClientTest {
             assertEquals(when.toString(), job.schedule);
             assertEquals("a description", job.description);
             assertEquals("ALLOW", job.concurrencyPolicy);
-            assertEquals("staging", job.birthEnvironment);
+            assertEquals(Set.of("staging"), job.environments.keySet());
+            assertTrue(job.environment("staging").enabled);
         }
     }
 
@@ -361,11 +380,11 @@ class JobsClientTest {
 
             assertEquals(when.toString(),
                     c.schedule(JOB_ID, "One", when, new HttpConfig("https://x")).schedule);
-            assertEquals("development",
-                    c.schedule(JOB_ID, "One", when, new HttpConfig("https://x"), "development").birthEnvironment);
+            assertTrue(c.schedule(JOB_ID, "One", when, new HttpConfig("https://x"), "development")
+                    .environment("development").enabled);
             Job oneoffFull = c.schedule(JOB_ID, "One", when, new HttpConfig("https://x"),
                     "desc", "ALLOW", "staging");
-            assertEquals("staging", oneoffFull.birthEnvironment);
+            assertTrue(oneoffFull.environment("staging").enabled);
         }
     }
 
@@ -532,14 +551,31 @@ class JobsClientTest {
     }
 
     @Test
-    void scheduleOneOff_sendsBirthEnvironmentHeaderAndDatetime() throws Exception {
+    void scheduleOneOff_sendsBirthEnvironmentInBodyAndDatetime() throws Exception {
         installFullHandler();
         try (JobsClient c = client()) {
             OffsetDateTime when = OffsetDateTime.parse("2030-01-01T12:30:00Z");
             Job oneoff = c.schedule(JOB_ID, "One-shot", when, new HttpConfig("https://x"), "development");
             oneoff.save();
-            assertEquals("development", lastEnvHeader.get());                 // birth environment
+            assertNull(lastEnvHeader.get());                                  // no request header
             assertEquals(when.toString(), attrs().path("schedule").asText()); // datetime -> ISO-8601
+            // the birth environment travels as an enabled entry in the body's
+            // environments map
+            assertTrue(attrs().path("environments").path("development").path("enabled").asBoolean());
+        }
+    }
+
+    @Test
+    void scheduleOneOff_withoutEnvironment_sendsEmptyMap() throws Exception {
+        // No explicit environment and no client default -> the environments map
+        // is empty (and thus omitted), so a single-environment credential implies
+        // the birth environment server-side.
+        installFullHandler();
+        try (JobsClient c = client()) {
+            OffsetDateTime when = OffsetDateTime.parse("2030-01-01T12:30:00Z");
+            c.schedule(JOB_ID, "One-shot", when, new HttpConfig("https://x")).save();
+            assertNull(lastEnvHeader.get());
+            assertFalse(attrs().has("environments"), "empty environments map must be omitted");
         }
     }
 
@@ -569,14 +605,14 @@ class JobsClientTest {
     }
 
     @Test
-    void update_sendsClientEnvironmentHeader() throws Exception {
+    void update_sendsNoEnvironmentHeader() throws Exception {
         installFullHandler();
         try (JobsClient c = clientWithEnv("production")) {
             Job job = c.get(JOB_ID);          // createdAt set -> next save is an update
             assertNotNull(job.createdAt);
             job.name = "renamed";
             job.save();
-            assertEquals("production", lastEnvHeader.get());
+            assertNull(lastEnvHeader.get());  // update carries no environment header
         }
     }
 
@@ -655,21 +691,22 @@ class JobsClientTest {
     // -----------------------------------------------------------------
 
     @Test
-    void run_environmentHeaderResolution() throws Exception {
+    void run_environmentBodyResolution() throws Exception {
         installFullHandler();
         try (JobsClient c = client()) {
-            Run r = c.run(JOB_ID);                 // no client env -> no header
+            Run r = c.run(JOB_ID);                 // no client env -> empty body
             assertEquals("MANUAL", r.trigger);
             assertEquals("production", r.environment);
-            assertNull(lastEnvHeader.get());
-            c.run(JOB_ID, "development");           // explicit env header
-            assertEquals("development", lastEnvHeader.get());
+            assertNull(lastEnvHeader.get());       // no request header anymore
+            assertFalse(runNowBody().has("environment"), "empty body when no env resolves");
+            c.run(JOB_ID, "development");           // explicit env in body
+            assertEquals("development", runNowBody().path("environment").asText());
         }
         try (JobsClient c = clientWithEnv("production")) {
-            c.run(JOB_ID);                          // client default env header
-            assertEquals("production", lastEnvHeader.get());
+            c.run(JOB_ID);                          // client default env in body
+            assertEquals("production", runNowBody().path("environment").asText());
             c.run(JOB_ID, "staging");               // explicit overrides client default
-            assertEquals("staging", lastEnvHeader.get());
+            assertEquals("staging", runNowBody().path("environment").asText());
         }
     }
 
@@ -758,7 +795,8 @@ class JobsClientTest {
             assertEquals("MANUAL", viaDefault.trigger);
             Run viaEnv = job.trigger("production");
             assertEquals("production", viaEnv.environment);
-            assertEquals("production", lastEnvHeader.get());
+            assertNull(lastEnvHeader.get());                                   // no request header
+            assertEquals("production", runNowBody().path("environment").asText());
 
             assertEquals(1, job.listRuns().size());
             assertFalse(lastQuery.get() != null && lastQuery.get().contains("filter[environment]="));
@@ -789,7 +827,8 @@ class JobsClientTest {
             assertEquals(JOB_ID, await(c.get(JOB_ID)).id);
             assertEquals("MANUAL", await(c.run(JOB_ID)).trigger);
             assertEquals("MANUAL", await(c.run(JOB_ID, "development")).trigger);
-            assertEquals("development", lastEnvHeader.get());
+            assertNull(lastEnvHeader.get());                                   // no request header
+            assertEquals("development", runNowBody().path("environment").asText());
             assertEquals(12, await(c.usage()).runsUsed);
             await(c.delete(JOB_ID)); // CompletableFuture<Void>
 
@@ -1380,7 +1419,7 @@ class JobsClientTest {
                     "desc", "ALLOW", "policy-c", "development");
             assertNull(off.timezone);
             assertEquals("policy-c", off.retryPolicy);
-            assertEquals("development", off.birthEnvironment);
+            assertTrue(off.environment("development").enabled);
         }
         // async delegating overloads (null environments -> empty map)
         try (AsyncJobsClient c = asyncClient()) {
