@@ -409,7 +409,7 @@ public class Job {
   }
 
   /**
-   * Per-environment overrides keyed by environment key (e.g. &#x60;production&#x60;, &#x60;staging&#x60;). Each entry is a flat, sparse overlay: only the leaves that differ from the base definition are present, and everything absent is inherited. Set &#x60;enabled&#x60; to &#x60;true&#x60; to run the job in that environment (the base is disabled everywhere; an environment with no entry, or an entry without &#x60;enabled: true&#x60;, does not run). Overridable leaves are &#x60;url&#x60;, &#x60;method&#x60;, &#x60;timeout&#x60;, &#x60;body&#x60;, &#x60;success_status&#x60;, &#x60;tls_verify&#x60;, &#x60;ca_cert&#x60;, &#x60;schedule&#x60; and &#x60;timezone&#x60; (recurring jobs only), &#x60;retry_policy&#x60; (the &#x60;id&#x60; of a retry policy, or &#x60;Default&#x60;), and an individual header as &#x60;headers.&lt;name&gt;&#x60; (e.g. &#x60;headers.Authorization&#x60;). On read, each entry also reports the read-only &#x60;next_run_at&#x60; for that environment (the next fire time, or &#x60;null&#x60;). For a recurring or manual job, supply this map to choose where it runs. For a one-off job, the environment it is created in is recorded here automatically — name it with the &#x60;X-Smplkit-Environment&#x60; header. Every referenced environment must exist for the account.
+   * Per-environment overrides keyed by environment key (e.g. &#x60;production&#x60;, &#x60;staging&#x60;). Each entry is a flat, sparse overlay: only the leaves that differ from the base definition are present, and everything absent is inherited. Set &#x60;enabled&#x60; to &#x60;true&#x60; to run the job in that environment (the base is disabled everywhere; an environment with no entry, or an entry without &#x60;enabled: true&#x60;, does not run). Overridable leaves are &#x60;url&#x60;, &#x60;method&#x60;, &#x60;timeout&#x60;, &#x60;body&#x60;, &#x60;success_status&#x60;, &#x60;tls_verify&#x60;, &#x60;ca_cert&#x60;, &#x60;schedule&#x60; and &#x60;timezone&#x60; (recurring jobs only), &#x60;retry_policy&#x60; (the &#x60;id&#x60; of a retry policy), and an individual header as &#x60;headers.&lt;name&gt;&#x60; (e.g. &#x60;headers.Authorization&#x60;). On read, each entry also reports the read-only &#x60;next_run_at&#x60; for that environment (the next fire time, or &#x60;null&#x60;). For a recurring or manual job, supply this map to choose where it runs. For a one-off job, the environment it is created in is recorded here automatically — name it with the &#x60;X-Smplkit-Environment&#x60; header. Every referenced environment must exist for the account.
    * @return environments
    */
   @jakarta.annotation.Nullable
@@ -457,7 +457,7 @@ public class Job {
   }
 
   /**
-   * The base retry policy for failed runs — the &#x60;id&#x60; of a retry policy (or the built-in &#x60;Default&#x60;), overridable per environment. Omit (or send &#x60;null&#x60;) to use &#x60;Default&#x60;, which never retries — so a job that sets nothing behaves exactly as before retries existed.
+   * The base retry policy for failed runs — the &#x60;id&#x60; of a retry policy, overridable per environment. Omit (or send &#x60;null&#x60;) to reference no policy, in which case failed runs are never retried.
    * @return retryPolicy
    */
   @jakarta.annotation.Nullable

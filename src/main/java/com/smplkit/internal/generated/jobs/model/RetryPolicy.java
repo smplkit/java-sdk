@@ -37,7 +37,7 @@ import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 
 import com.smplkit.internal.generated.jobs.ApiClient;
 /**
- * A named, reusable automatic-retry policy.  A policy decides whether and how a failed run is retried. Reference it from a job&#39;s &#x60;retry_policy&#x60; (and optionally override it per environment). A job that references nothing uses the built-in &#x60;Default&#x60; policy, which never retries.
+ * A named, reusable automatic-retry policy.  A policy decides whether and how a failed run is retried. Reference it from a job&#39;s &#x60;retry_policy&#x60; (and optionally override it per environment). A job that references no policy is never retried.
  */
 @JsonPropertyOrder({
   RetryPolicy.JSON_PROPERTY_NAME,
