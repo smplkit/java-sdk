@@ -22,6 +22,7 @@ import com.smplkit.internal.generated.jobs.model.JobCreateRequest;
 import com.smplkit.internal.generated.jobs.model.JobListResponse;
 import com.smplkit.internal.generated.jobs.model.JobRequest;
 import com.smplkit.internal.generated.jobs.model.JobResponse;
+import com.smplkit.internal.generated.jobs.model.RunNowRequest;
 import com.smplkit.internal.generated.jobs.model.RunResponse;
 
 import com.fasterxml.jackson.core.type.TypeReference;
@@ -168,53 +169,49 @@ public class JobsApi {
 
   /**
    * Create Job
-   * Create a job for this account.  The caller supplies the job&#39;s id as &#x60;data.id&#x60;. Ids are unique within an account and immutable. The job&#39;s kind follows from its &#x60;schedule&#x60;: omit the schedule for a permanent **manual** job (triggered on demand), give a cron expression for a **recurring** job, or a datetime / &#x60;now&#x60; for a **one-off** job. A recurring or manual job supplies &#x60;environments&#x60; to choose where it runs; a recurring job begins scheduling immediately in each enabled environment. A one-off job is created in the environment named by the &#x60;X-Smplkit-Environment&#x60; header (implied when the credential is scoped to a single environment); a &#x60;now&#x60; one-off enqueues its single run immediately.
+   * Create a job for this account.  The caller supplies the job&#39;s id as &#x60;data.id&#x60;. Ids are unique within an account and immutable. The job&#39;s kind follows from its &#x60;schedule&#x60;: omit the schedule for a permanent **manual** job (triggered on demand), give a cron expression for a **recurring** job, or a datetime / &#x60;now&#x60; for a **one-off** job. Supply &#x60;environments&#x60; to choose where the job runs: a recurring job begins scheduling immediately in each enabled environment, while a one-off job names its target environment(s) by the keys of that map and enqueues one run per environment (a single-environment credential implies the one environment when the map is empty). A &#x60;now&#x60; one-off enqueues its run(s) immediately.
    * @param jobCreateRequest  (required)
-   * @param xSmplkitEnvironment The environment to operate in. Names the single environment a one-off job is born in (or a manual run executes in). Optional when the credential is scoped to a single environment (which is then implied); required when the credential can reach several environments and the choice is otherwise ambiguous. Ignored for a recurring job, whose environments come from its &#x60;environments&#x60; map. (optional)
    * @return JobResponse
    * @throws ApiException if fails to make API call
    */
-  public JobResponse createJob(@jakarta.annotation.Nonnull JobCreateRequest jobCreateRequest, @jakarta.annotation.Nullable String xSmplkitEnvironment) throws ApiException {
-    return createJob(jobCreateRequest, xSmplkitEnvironment, null);
+  public JobResponse createJob(@jakarta.annotation.Nonnull JobCreateRequest jobCreateRequest) throws ApiException {
+    return createJob(jobCreateRequest, null);
   }
 
   /**
    * Create Job
-   * Create a job for this account.  The caller supplies the job&#39;s id as &#x60;data.id&#x60;. Ids are unique within an account and immutable. The job&#39;s kind follows from its &#x60;schedule&#x60;: omit the schedule for a permanent **manual** job (triggered on demand), give a cron expression for a **recurring** job, or a datetime / &#x60;now&#x60; for a **one-off** job. A recurring or manual job supplies &#x60;environments&#x60; to choose where it runs; a recurring job begins scheduling immediately in each enabled environment. A one-off job is created in the environment named by the &#x60;X-Smplkit-Environment&#x60; header (implied when the credential is scoped to a single environment); a &#x60;now&#x60; one-off enqueues its single run immediately.
+   * Create a job for this account.  The caller supplies the job&#39;s id as &#x60;data.id&#x60;. Ids are unique within an account and immutable. The job&#39;s kind follows from its &#x60;schedule&#x60;: omit the schedule for a permanent **manual** job (triggered on demand), give a cron expression for a **recurring** job, or a datetime / &#x60;now&#x60; for a **one-off** job. Supply &#x60;environments&#x60; to choose where the job runs: a recurring job begins scheduling immediately in each enabled environment, while a one-off job names its target environment(s) by the keys of that map and enqueues one run per environment (a single-environment credential implies the one environment when the map is empty). A &#x60;now&#x60; one-off enqueues its run(s) immediately.
    * @param jobCreateRequest  (required)
-   * @param xSmplkitEnvironment The environment to operate in. Names the single environment a one-off job is born in (or a manual run executes in). Optional when the credential is scoped to a single environment (which is then implied); required when the credential can reach several environments and the choice is otherwise ambiguous. Ignored for a recurring job, whose environments come from its &#x60;environments&#x60; map. (optional)
    * @param headers Optional headers to include in the request
    * @return JobResponse
    * @throws ApiException if fails to make API call
    */
-  public JobResponse createJob(@jakarta.annotation.Nonnull JobCreateRequest jobCreateRequest, @jakarta.annotation.Nullable String xSmplkitEnvironment, Map<String, String> headers) throws ApiException {
-    ApiResponse<JobResponse> localVarResponse = createJobWithHttpInfo(jobCreateRequest, xSmplkitEnvironment, headers);
+  public JobResponse createJob(@jakarta.annotation.Nonnull JobCreateRequest jobCreateRequest, Map<String, String> headers) throws ApiException {
+    ApiResponse<JobResponse> localVarResponse = createJobWithHttpInfo(jobCreateRequest, headers);
     return localVarResponse.getData();
   }
 
   /**
    * Create Job
-   * Create a job for this account.  The caller supplies the job&#39;s id as &#x60;data.id&#x60;. Ids are unique within an account and immutable. The job&#39;s kind follows from its &#x60;schedule&#x60;: omit the schedule for a permanent **manual** job (triggered on demand), give a cron expression for a **recurring** job, or a datetime / &#x60;now&#x60; for a **one-off** job. A recurring or manual job supplies &#x60;environments&#x60; to choose where it runs; a recurring job begins scheduling immediately in each enabled environment. A one-off job is created in the environment named by the &#x60;X-Smplkit-Environment&#x60; header (implied when the credential is scoped to a single environment); a &#x60;now&#x60; one-off enqueues its single run immediately.
+   * Create a job for this account.  The caller supplies the job&#39;s id as &#x60;data.id&#x60;. Ids are unique within an account and immutable. The job&#39;s kind follows from its &#x60;schedule&#x60;: omit the schedule for a permanent **manual** job (triggered on demand), give a cron expression for a **recurring** job, or a datetime / &#x60;now&#x60; for a **one-off** job. Supply &#x60;environments&#x60; to choose where the job runs: a recurring job begins scheduling immediately in each enabled environment, while a one-off job names its target environment(s) by the keys of that map and enqueues one run per environment (a single-environment credential implies the one environment when the map is empty). A &#x60;now&#x60; one-off enqueues its run(s) immediately.
    * @param jobCreateRequest  (required)
-   * @param xSmplkitEnvironment The environment to operate in. Names the single environment a one-off job is born in (or a manual run executes in). Optional when the credential is scoped to a single environment (which is then implied); required when the credential can reach several environments and the choice is otherwise ambiguous. Ignored for a recurring job, whose environments come from its &#x60;environments&#x60; map. (optional)
    * @return ApiResponse&lt;JobResponse&gt;
    * @throws ApiException if fails to make API call
    */
-  public ApiResponse<JobResponse> createJobWithHttpInfo(@jakarta.annotation.Nonnull JobCreateRequest jobCreateRequest, @jakarta.annotation.Nullable String xSmplkitEnvironment) throws ApiException {
-    return createJobWithHttpInfo(jobCreateRequest, xSmplkitEnvironment, null);
+  public ApiResponse<JobResponse> createJobWithHttpInfo(@jakarta.annotation.Nonnull JobCreateRequest jobCreateRequest) throws ApiException {
+    return createJobWithHttpInfo(jobCreateRequest, null);
   }
 
   /**
    * Create Job
-   * Create a job for this account.  The caller supplies the job&#39;s id as &#x60;data.id&#x60;. Ids are unique within an account and immutable. The job&#39;s kind follows from its &#x60;schedule&#x60;: omit the schedule for a permanent **manual** job (triggered on demand), give a cron expression for a **recurring** job, or a datetime / &#x60;now&#x60; for a **one-off** job. A recurring or manual job supplies &#x60;environments&#x60; to choose where it runs; a recurring job begins scheduling immediately in each enabled environment. A one-off job is created in the environment named by the &#x60;X-Smplkit-Environment&#x60; header (implied when the credential is scoped to a single environment); a &#x60;now&#x60; one-off enqueues its single run immediately.
+   * Create a job for this account.  The caller supplies the job&#39;s id as &#x60;data.id&#x60;. Ids are unique within an account and immutable. The job&#39;s kind follows from its &#x60;schedule&#x60;: omit the schedule for a permanent **manual** job (triggered on demand), give a cron expression for a **recurring** job, or a datetime / &#x60;now&#x60; for a **one-off** job. Supply &#x60;environments&#x60; to choose where the job runs: a recurring job begins scheduling immediately in each enabled environment, while a one-off job names its target environment(s) by the keys of that map and enqueues one run per environment (a single-environment credential implies the one environment when the map is empty). A &#x60;now&#x60; one-off enqueues its run(s) immediately.
    * @param jobCreateRequest  (required)
-   * @param xSmplkitEnvironment The environment to operate in. Names the single environment a one-off job is born in (or a manual run executes in). Optional when the credential is scoped to a single environment (which is then implied); required when the credential can reach several environments and the choice is otherwise ambiguous. Ignored for a recurring job, whose environments come from its &#x60;environments&#x60; map. (optional)
    * @param headers Optional headers to include in the request
    * @return ApiResponse&lt;JobResponse&gt;
    * @throws ApiException if fails to make API call
    */
-  public ApiResponse<JobResponse> createJobWithHttpInfo(@jakarta.annotation.Nonnull JobCreateRequest jobCreateRequest, @jakarta.annotation.Nullable String xSmplkitEnvironment, Map<String, String> headers) throws ApiException {
-    HttpRequest.Builder localVarRequestBuilder = createJobRequestBuilder(jobCreateRequest, xSmplkitEnvironment, headers);
+  public ApiResponse<JobResponse> createJobWithHttpInfo(@jakarta.annotation.Nonnull JobCreateRequest jobCreateRequest, Map<String, String> headers) throws ApiException {
+    HttpRequest.Builder localVarRequestBuilder = createJobRequestBuilder(jobCreateRequest, headers);
     try {
       HttpResponse<InputStream> localVarResponse = memberVarHttpClient.send(
           localVarRequestBuilder.build(),
@@ -261,7 +258,7 @@ public class JobsApi {
     }
   }
 
-  private HttpRequest.Builder createJobRequestBuilder(@jakarta.annotation.Nonnull JobCreateRequest jobCreateRequest, @jakarta.annotation.Nullable String xSmplkitEnvironment, Map<String, String> headers) throws ApiException {
+  private HttpRequest.Builder createJobRequestBuilder(@jakarta.annotation.Nonnull JobCreateRequest jobCreateRequest, Map<String, String> headers) throws ApiException {
     // verify the required parameter 'jobCreateRequest' is set
     if (jobCreateRequest == null) {
       throw new ApiException(400, "Missing the required parameter 'jobCreateRequest' when calling createJob");
@@ -273,9 +270,6 @@ public class JobsApi {
 
     localVarRequestBuilder.uri(URI.create(memberVarBaseUri + localVarPath));
 
-    if (xSmplkitEnvironment != null) {
-      localVarRequestBuilder.header("X-Smplkit-Environment", xSmplkitEnvironment.toString());
-    }
     localVarRequestBuilder.header("Content-Type", "application/vnd.api+json");
     localVarRequestBuilder.header("Accept", "application/vnd.api+json");
 
@@ -684,53 +678,53 @@ public class JobsApi {
 
   /**
    * Run Job Now
-   * Trigger one immediate run of the job in a specified environment (a &#x60;MANUAL&#x60; run).  This is the primary execution path for a manual job and is also usable ad hoc for a recurring job (\&quot;run now\&quot;). The job&#39;s schedule and enabled state are untouched. The run executes in the environment named by the &#x60;X-Smplkit-Environment&#x60; header; when the job is enabled in exactly one environment that environment is used, and a single-environment credential implies it. The environment must be one the job is **enabled** in (409 otherwise). The run executes the job&#39;s effective configuration for that environment. It is enqueued and executed by the worker; if the account is over its run allotment the run will fail with reason &#x60;QUOTA_EXCEEDED&#x60; rather than being rejected here.
+   * Trigger one immediate run of the job in a specified environment (a &#x60;MANUAL&#x60; run).  This is the primary execution path for a manual job and is also usable ad hoc for a recurring job (\&quot;run now\&quot;). The job&#39;s schedule and enabled state are untouched. The run executes in the environment named by the request body&#39;s &#x60;environment&#x60;; when the job is enabled in exactly one environment that environment is used, and a single-environment credential implies it. The environment must be one the job is **enabled** in (409 otherwise). The run executes the job&#39;s effective configuration for that environment. It is enqueued and executed by the worker; if the account is over its run allotment the run will fail with reason &#x60;QUOTA_EXCEEDED&#x60; rather than being rejected here.
    * @param jobId  (required)
-   * @param xSmplkitEnvironment The environment to operate in. Names the single environment a one-off job is born in (or a manual run executes in). Optional when the credential is scoped to a single environment (which is then implied); required when the credential can reach several environments and the choice is otherwise ambiguous. Ignored for a recurring job, whose environments come from its &#x60;environments&#x60; map. (optional)
+   * @param runNowRequest  (optional)
    * @return RunResponse
    * @throws ApiException if fails to make API call
    */
-  public RunResponse runJobNow(@jakarta.annotation.Nonnull String jobId, @jakarta.annotation.Nullable String xSmplkitEnvironment) throws ApiException {
-    return runJobNow(jobId, xSmplkitEnvironment, null);
+  public RunResponse runJobNow(@jakarta.annotation.Nonnull String jobId, @jakarta.annotation.Nullable RunNowRequest runNowRequest) throws ApiException {
+    return runJobNow(jobId, runNowRequest, null);
   }
 
   /**
    * Run Job Now
-   * Trigger one immediate run of the job in a specified environment (a &#x60;MANUAL&#x60; run).  This is the primary execution path for a manual job and is also usable ad hoc for a recurring job (\&quot;run now\&quot;). The job&#39;s schedule and enabled state are untouched. The run executes in the environment named by the &#x60;X-Smplkit-Environment&#x60; header; when the job is enabled in exactly one environment that environment is used, and a single-environment credential implies it. The environment must be one the job is **enabled** in (409 otherwise). The run executes the job&#39;s effective configuration for that environment. It is enqueued and executed by the worker; if the account is over its run allotment the run will fail with reason &#x60;QUOTA_EXCEEDED&#x60; rather than being rejected here.
+   * Trigger one immediate run of the job in a specified environment (a &#x60;MANUAL&#x60; run).  This is the primary execution path for a manual job and is also usable ad hoc for a recurring job (\&quot;run now\&quot;). The job&#39;s schedule and enabled state are untouched. The run executes in the environment named by the request body&#39;s &#x60;environment&#x60;; when the job is enabled in exactly one environment that environment is used, and a single-environment credential implies it. The environment must be one the job is **enabled** in (409 otherwise). The run executes the job&#39;s effective configuration for that environment. It is enqueued and executed by the worker; if the account is over its run allotment the run will fail with reason &#x60;QUOTA_EXCEEDED&#x60; rather than being rejected here.
    * @param jobId  (required)
-   * @param xSmplkitEnvironment The environment to operate in. Names the single environment a one-off job is born in (or a manual run executes in). Optional when the credential is scoped to a single environment (which is then implied); required when the credential can reach several environments and the choice is otherwise ambiguous. Ignored for a recurring job, whose environments come from its &#x60;environments&#x60; map. (optional)
+   * @param runNowRequest  (optional)
    * @param headers Optional headers to include in the request
    * @return RunResponse
    * @throws ApiException if fails to make API call
    */
-  public RunResponse runJobNow(@jakarta.annotation.Nonnull String jobId, @jakarta.annotation.Nullable String xSmplkitEnvironment, Map<String, String> headers) throws ApiException {
-    ApiResponse<RunResponse> localVarResponse = runJobNowWithHttpInfo(jobId, xSmplkitEnvironment, headers);
+  public RunResponse runJobNow(@jakarta.annotation.Nonnull String jobId, @jakarta.annotation.Nullable RunNowRequest runNowRequest, Map<String, String> headers) throws ApiException {
+    ApiResponse<RunResponse> localVarResponse = runJobNowWithHttpInfo(jobId, runNowRequest, headers);
     return localVarResponse.getData();
   }
 
   /**
    * Run Job Now
-   * Trigger one immediate run of the job in a specified environment (a &#x60;MANUAL&#x60; run).  This is the primary execution path for a manual job and is also usable ad hoc for a recurring job (\&quot;run now\&quot;). The job&#39;s schedule and enabled state are untouched. The run executes in the environment named by the &#x60;X-Smplkit-Environment&#x60; header; when the job is enabled in exactly one environment that environment is used, and a single-environment credential implies it. The environment must be one the job is **enabled** in (409 otherwise). The run executes the job&#39;s effective configuration for that environment. It is enqueued and executed by the worker; if the account is over its run allotment the run will fail with reason &#x60;QUOTA_EXCEEDED&#x60; rather than being rejected here.
+   * Trigger one immediate run of the job in a specified environment (a &#x60;MANUAL&#x60; run).  This is the primary execution path for a manual job and is also usable ad hoc for a recurring job (\&quot;run now\&quot;). The job&#39;s schedule and enabled state are untouched. The run executes in the environment named by the request body&#39;s &#x60;environment&#x60;; when the job is enabled in exactly one environment that environment is used, and a single-environment credential implies it. The environment must be one the job is **enabled** in (409 otherwise). The run executes the job&#39;s effective configuration for that environment. It is enqueued and executed by the worker; if the account is over its run allotment the run will fail with reason &#x60;QUOTA_EXCEEDED&#x60; rather than being rejected here.
    * @param jobId  (required)
-   * @param xSmplkitEnvironment The environment to operate in. Names the single environment a one-off job is born in (or a manual run executes in). Optional when the credential is scoped to a single environment (which is then implied); required when the credential can reach several environments and the choice is otherwise ambiguous. Ignored for a recurring job, whose environments come from its &#x60;environments&#x60; map. (optional)
+   * @param runNowRequest  (optional)
    * @return ApiResponse&lt;RunResponse&gt;
    * @throws ApiException if fails to make API call
    */
-  public ApiResponse<RunResponse> runJobNowWithHttpInfo(@jakarta.annotation.Nonnull String jobId, @jakarta.annotation.Nullable String xSmplkitEnvironment) throws ApiException {
-    return runJobNowWithHttpInfo(jobId, xSmplkitEnvironment, null);
+  public ApiResponse<RunResponse> runJobNowWithHttpInfo(@jakarta.annotation.Nonnull String jobId, @jakarta.annotation.Nullable RunNowRequest runNowRequest) throws ApiException {
+    return runJobNowWithHttpInfo(jobId, runNowRequest, null);
   }
 
   /**
    * Run Job Now
-   * Trigger one immediate run of the job in a specified environment (a &#x60;MANUAL&#x60; run).  This is the primary execution path for a manual job and is also usable ad hoc for a recurring job (\&quot;run now\&quot;). The job&#39;s schedule and enabled state are untouched. The run executes in the environment named by the &#x60;X-Smplkit-Environment&#x60; header; when the job is enabled in exactly one environment that environment is used, and a single-environment credential implies it. The environment must be one the job is **enabled** in (409 otherwise). The run executes the job&#39;s effective configuration for that environment. It is enqueued and executed by the worker; if the account is over its run allotment the run will fail with reason &#x60;QUOTA_EXCEEDED&#x60; rather than being rejected here.
+   * Trigger one immediate run of the job in a specified environment (a &#x60;MANUAL&#x60; run).  This is the primary execution path for a manual job and is also usable ad hoc for a recurring job (\&quot;run now\&quot;). The job&#39;s schedule and enabled state are untouched. The run executes in the environment named by the request body&#39;s &#x60;environment&#x60;; when the job is enabled in exactly one environment that environment is used, and a single-environment credential implies it. The environment must be one the job is **enabled** in (409 otherwise). The run executes the job&#39;s effective configuration for that environment. It is enqueued and executed by the worker; if the account is over its run allotment the run will fail with reason &#x60;QUOTA_EXCEEDED&#x60; rather than being rejected here.
    * @param jobId  (required)
-   * @param xSmplkitEnvironment The environment to operate in. Names the single environment a one-off job is born in (or a manual run executes in). Optional when the credential is scoped to a single environment (which is then implied); required when the credential can reach several environments and the choice is otherwise ambiguous. Ignored for a recurring job, whose environments come from its &#x60;environments&#x60; map. (optional)
+   * @param runNowRequest  (optional)
    * @param headers Optional headers to include in the request
    * @return ApiResponse&lt;RunResponse&gt;
    * @throws ApiException if fails to make API call
    */
-  public ApiResponse<RunResponse> runJobNowWithHttpInfo(@jakarta.annotation.Nonnull String jobId, @jakarta.annotation.Nullable String xSmplkitEnvironment, Map<String, String> headers) throws ApiException {
-    HttpRequest.Builder localVarRequestBuilder = runJobNowRequestBuilder(jobId, xSmplkitEnvironment, headers);
+  public ApiResponse<RunResponse> runJobNowWithHttpInfo(@jakarta.annotation.Nonnull String jobId, @jakarta.annotation.Nullable RunNowRequest runNowRequest, Map<String, String> headers) throws ApiException {
+    HttpRequest.Builder localVarRequestBuilder = runJobNowRequestBuilder(jobId, runNowRequest, headers);
     try {
       HttpResponse<InputStream> localVarResponse = memberVarHttpClient.send(
           localVarRequestBuilder.build(),
@@ -777,7 +771,7 @@ public class JobsApi {
     }
   }
 
-  private HttpRequest.Builder runJobNowRequestBuilder(@jakarta.annotation.Nonnull String jobId, @jakarta.annotation.Nullable String xSmplkitEnvironment, Map<String, String> headers) throws ApiException {
+  private HttpRequest.Builder runJobNowRequestBuilder(@jakarta.annotation.Nonnull String jobId, @jakarta.annotation.Nullable RunNowRequest runNowRequest, Map<String, String> headers) throws ApiException {
     // verify the required parameter 'jobId' is set
     if (jobId == null) {
       throw new ApiException(400, "Missing the required parameter 'jobId' when calling runJobNow");
@@ -790,12 +784,15 @@ public class JobsApi {
 
     localVarRequestBuilder.uri(URI.create(memberVarBaseUri + localVarPath));
 
-    if (xSmplkitEnvironment != null) {
-      localVarRequestBuilder.header("X-Smplkit-Environment", xSmplkitEnvironment.toString());
-    }
+    localVarRequestBuilder.header("Content-Type", "application/vnd.api+json");
     localVarRequestBuilder.header("Accept", "application/vnd.api+json");
 
-    localVarRequestBuilder.method("POST", HttpRequest.BodyPublishers.noBody());
+    try {
+      byte[] localVarPostBody = memberVarObjectMapper.writeValueAsBytes(runNowRequest);
+      localVarRequestBuilder.method("POST", HttpRequest.BodyPublishers.ofByteArray(localVarPostBody));
+    } catch (IOException e) {
+      throw new ApiException(e);
+    }
     if (memberVarReadTimeout != null) {
       localVarRequestBuilder.timeout(memberVarReadTimeout);
     }
@@ -809,57 +806,53 @@ public class JobsApi {
 
   /**
    * Update Job
-   * Replace an existing job. Every writable field is overwritten.  The job&#39;s kind is re-derived from the new &#x60;schedule&#x60; (omit it for a manual job). Set enablement per environment via the &#x60;environments&#x60; map (a recurring or manual job), or by recreating a one-off job in the desired environment. Each environment may carry its own cron &#x60;schedule&#x60; override (recurring jobs only). Editing a recurring environment&#39;s effective schedule recomputes its next fire time; an edit that leaves it unchanged preserves the existing cadence.
+   * Replace an existing job. Every writable field is overwritten.  The job&#39;s kind is re-derived from the new &#x60;schedule&#x60; (omit it for a manual job). Set enablement per environment via the &#x60;environments&#x60; map (a recurring or manual job), or by recreating a one-off job naming its target environment(s) in that map. Each environment may carry its own cron &#x60;schedule&#x60; override (recurring jobs only). Editing a recurring environment&#39;s effective schedule recomputes its next fire time; an edit that leaves it unchanged preserves the existing cadence.
    * @param jobId  (required)
    * @param jobRequest  (required)
-   * @param xSmplkitEnvironment The environment to operate in. Names the single environment a one-off job is born in (or a manual run executes in). Optional when the credential is scoped to a single environment (which is then implied); required when the credential can reach several environments and the choice is otherwise ambiguous. Ignored for a recurring job, whose environments come from its &#x60;environments&#x60; map. (optional)
    * @return JobResponse
    * @throws ApiException if fails to make API call
    */
-  public JobResponse updateJob(@jakarta.annotation.Nonnull String jobId, @jakarta.annotation.Nonnull JobRequest jobRequest, @jakarta.annotation.Nullable String xSmplkitEnvironment) throws ApiException {
-    return updateJob(jobId, jobRequest, xSmplkitEnvironment, null);
+  public JobResponse updateJob(@jakarta.annotation.Nonnull String jobId, @jakarta.annotation.Nonnull JobRequest jobRequest) throws ApiException {
+    return updateJob(jobId, jobRequest, null);
   }
 
   /**
    * Update Job
-   * Replace an existing job. Every writable field is overwritten.  The job&#39;s kind is re-derived from the new &#x60;schedule&#x60; (omit it for a manual job). Set enablement per environment via the &#x60;environments&#x60; map (a recurring or manual job), or by recreating a one-off job in the desired environment. Each environment may carry its own cron &#x60;schedule&#x60; override (recurring jobs only). Editing a recurring environment&#39;s effective schedule recomputes its next fire time; an edit that leaves it unchanged preserves the existing cadence.
+   * Replace an existing job. Every writable field is overwritten.  The job&#39;s kind is re-derived from the new &#x60;schedule&#x60; (omit it for a manual job). Set enablement per environment via the &#x60;environments&#x60; map (a recurring or manual job), or by recreating a one-off job naming its target environment(s) in that map. Each environment may carry its own cron &#x60;schedule&#x60; override (recurring jobs only). Editing a recurring environment&#39;s effective schedule recomputes its next fire time; an edit that leaves it unchanged preserves the existing cadence.
    * @param jobId  (required)
    * @param jobRequest  (required)
-   * @param xSmplkitEnvironment The environment to operate in. Names the single environment a one-off job is born in (or a manual run executes in). Optional when the credential is scoped to a single environment (which is then implied); required when the credential can reach several environments and the choice is otherwise ambiguous. Ignored for a recurring job, whose environments come from its &#x60;environments&#x60; map. (optional)
    * @param headers Optional headers to include in the request
    * @return JobResponse
    * @throws ApiException if fails to make API call
    */
-  public JobResponse updateJob(@jakarta.annotation.Nonnull String jobId, @jakarta.annotation.Nonnull JobRequest jobRequest, @jakarta.annotation.Nullable String xSmplkitEnvironment, Map<String, String> headers) throws ApiException {
-    ApiResponse<JobResponse> localVarResponse = updateJobWithHttpInfo(jobId, jobRequest, xSmplkitEnvironment, headers);
+  public JobResponse updateJob(@jakarta.annotation.Nonnull String jobId, @jakarta.annotation.Nonnull JobRequest jobRequest, Map<String, String> headers) throws ApiException {
+    ApiResponse<JobResponse> localVarResponse = updateJobWithHttpInfo(jobId, jobRequest, headers);
     return localVarResponse.getData();
   }
 
   /**
    * Update Job
-   * Replace an existing job. Every writable field is overwritten.  The job&#39;s kind is re-derived from the new &#x60;schedule&#x60; (omit it for a manual job). Set enablement per environment via the &#x60;environments&#x60; map (a recurring or manual job), or by recreating a one-off job in the desired environment. Each environment may carry its own cron &#x60;schedule&#x60; override (recurring jobs only). Editing a recurring environment&#39;s effective schedule recomputes its next fire time; an edit that leaves it unchanged preserves the existing cadence.
+   * Replace an existing job. Every writable field is overwritten.  The job&#39;s kind is re-derived from the new &#x60;schedule&#x60; (omit it for a manual job). Set enablement per environment via the &#x60;environments&#x60; map (a recurring or manual job), or by recreating a one-off job naming its target environment(s) in that map. Each environment may carry its own cron &#x60;schedule&#x60; override (recurring jobs only). Editing a recurring environment&#39;s effective schedule recomputes its next fire time; an edit that leaves it unchanged preserves the existing cadence.
    * @param jobId  (required)
    * @param jobRequest  (required)
-   * @param xSmplkitEnvironment The environment to operate in. Names the single environment a one-off job is born in (or a manual run executes in). Optional when the credential is scoped to a single environment (which is then implied); required when the credential can reach several environments and the choice is otherwise ambiguous. Ignored for a recurring job, whose environments come from its &#x60;environments&#x60; map. (optional)
    * @return ApiResponse&lt;JobResponse&gt;
    * @throws ApiException if fails to make API call
    */
-  public ApiResponse<JobResponse> updateJobWithHttpInfo(@jakarta.annotation.Nonnull String jobId, @jakarta.annotation.Nonnull JobRequest jobRequest, @jakarta.annotation.Nullable String xSmplkitEnvironment) throws ApiException {
-    return updateJobWithHttpInfo(jobId, jobRequest, xSmplkitEnvironment, null);
+  public ApiResponse<JobResponse> updateJobWithHttpInfo(@jakarta.annotation.Nonnull String jobId, @jakarta.annotation.Nonnull JobRequest jobRequest) throws ApiException {
+    return updateJobWithHttpInfo(jobId, jobRequest, null);
   }
 
   /**
    * Update Job
-   * Replace an existing job. Every writable field is overwritten.  The job&#39;s kind is re-derived from the new &#x60;schedule&#x60; (omit it for a manual job). Set enablement per environment via the &#x60;environments&#x60; map (a recurring or manual job), or by recreating a one-off job in the desired environment. Each environment may carry its own cron &#x60;schedule&#x60; override (recurring jobs only). Editing a recurring environment&#39;s effective schedule recomputes its next fire time; an edit that leaves it unchanged preserves the existing cadence.
+   * Replace an existing job. Every writable field is overwritten.  The job&#39;s kind is re-derived from the new &#x60;schedule&#x60; (omit it for a manual job). Set enablement per environment via the &#x60;environments&#x60; map (a recurring or manual job), or by recreating a one-off job naming its target environment(s) in that map. Each environment may carry its own cron &#x60;schedule&#x60; override (recurring jobs only). Editing a recurring environment&#39;s effective schedule recomputes its next fire time; an edit that leaves it unchanged preserves the existing cadence.
    * @param jobId  (required)
    * @param jobRequest  (required)
-   * @param xSmplkitEnvironment The environment to operate in. Names the single environment a one-off job is born in (or a manual run executes in). Optional when the credential is scoped to a single environment (which is then implied); required when the credential can reach several environments and the choice is otherwise ambiguous. Ignored for a recurring job, whose environments come from its &#x60;environments&#x60; map. (optional)
    * @param headers Optional headers to include in the request
    * @return ApiResponse&lt;JobResponse&gt;
    * @throws ApiException if fails to make API call
    */
-  public ApiResponse<JobResponse> updateJobWithHttpInfo(@jakarta.annotation.Nonnull String jobId, @jakarta.annotation.Nonnull JobRequest jobRequest, @jakarta.annotation.Nullable String xSmplkitEnvironment, Map<String, String> headers) throws ApiException {
-    HttpRequest.Builder localVarRequestBuilder = updateJobRequestBuilder(jobId, jobRequest, xSmplkitEnvironment, headers);
+  public ApiResponse<JobResponse> updateJobWithHttpInfo(@jakarta.annotation.Nonnull String jobId, @jakarta.annotation.Nonnull JobRequest jobRequest, Map<String, String> headers) throws ApiException {
+    HttpRequest.Builder localVarRequestBuilder = updateJobRequestBuilder(jobId, jobRequest, headers);
     try {
       HttpResponse<InputStream> localVarResponse = memberVarHttpClient.send(
           localVarRequestBuilder.build(),
@@ -906,7 +899,7 @@ public class JobsApi {
     }
   }
 
-  private HttpRequest.Builder updateJobRequestBuilder(@jakarta.annotation.Nonnull String jobId, @jakarta.annotation.Nonnull JobRequest jobRequest, @jakarta.annotation.Nullable String xSmplkitEnvironment, Map<String, String> headers) throws ApiException {
+  private HttpRequest.Builder updateJobRequestBuilder(@jakarta.annotation.Nonnull String jobId, @jakarta.annotation.Nonnull JobRequest jobRequest, Map<String, String> headers) throws ApiException {
     // verify the required parameter 'jobId' is set
     if (jobId == null) {
       throw new ApiException(400, "Missing the required parameter 'jobId' when calling updateJob");
@@ -923,9 +916,6 @@ public class JobsApi {
 
     localVarRequestBuilder.uri(URI.create(memberVarBaseUri + localVarPath));
 
-    if (xSmplkitEnvironment != null) {
-      localVarRequestBuilder.header("X-Smplkit-Environment", xSmplkitEnvironment.toString());
-    }
     localVarRequestBuilder.header("Content-Type", "application/vnd.api+json");
     localVarRequestBuilder.header("Accept", "application/vnd.api+json");
 

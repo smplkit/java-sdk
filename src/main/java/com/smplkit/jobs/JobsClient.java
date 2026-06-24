@@ -15,6 +15,7 @@ import com.smplkit.internal.generated.jobs.model.JobListResponse;
 import com.smplkit.internal.generated.jobs.model.JobRequest;
 import com.smplkit.internal.generated.jobs.model.JobResource;
 import com.smplkit.internal.generated.jobs.model.JobResponse;
+import com.smplkit.internal.generated.jobs.model.RunNowRequest;
 
 import java.time.Duration;
 import java.time.OffsetDateTime;
@@ -98,8 +99,8 @@ public final class JobsClient implements AutoCloseable {
      * @param baseUrl      fully-qualified jobs service base URL
      *                     ({@code ConfigResolver.serviceUrl(scheme, "jobs", baseDomain)})
      * @param environment  the SDK's configured environment (defaults the one-off
-     *                     birth header, the run-now header, and the runs read
-     *                     filter), or {@code null} to leave them unset
+     *                     birth environment, the run-now target environment, and
+     *                     the runs read filter), or {@code null} to leave them unset
      */
     public JobsClient(String apiKey, Map<String, String> extraHeaders,
                Duration timeout, String baseUrl, String environment) {
@@ -154,7 +155,7 @@ public final class JobsClient implements AutoCloseable {
      * @return an unsaved recurring {@link Job} bound to this client
      */
     public Job newRecurringJob(String id, String name, String schedule, HttpConfig configuration) {
-        return newJob(id, name, schedule, null, null, configuration, null, new HashMap<>(), "ALLOW", null);
+        return newJob(id, name, schedule, null, null, configuration, null, new HashMap<>(), "ALLOW");
     }
 
     /**
@@ -181,7 +182,7 @@ public final class JobsClient implements AutoCloseable {
                                String description, Map<String, JobEnvironment> environments,
                                String concurrencyPolicy) {
         return newJob(id, name, schedule, null, null, configuration, description,
-                environments != null ? environments : new HashMap<>(), concurrencyPolicy, null);
+                environments != null ? environments : new HashMap<>(), concurrencyPolicy);
     }
 
     /**
@@ -215,7 +216,7 @@ public final class JobsClient implements AutoCloseable {
                                String description, Map<String, JobEnvironment> environments,
                                String concurrencyPolicy, String timezone, String retryPolicy) {
         return newJob(id, name, schedule, timezone, retryPolicy, configuration, description,
-                environments != null ? environments : new HashMap<>(), concurrencyPolicy, null);
+                environments != null ? environments : new HashMap<>(), concurrencyPolicy);
     }
 
     /**
@@ -233,7 +234,7 @@ public final class JobsClient implements AutoCloseable {
      * @return an unsaved manual {@link Job} bound to this client
      */
     public Job newManualJob(String id, String name, HttpConfig configuration) {
-        return newJob(id, name, null, null, null, configuration, null, new HashMap<>(), "ALLOW", null);
+        return newJob(id, name, null, null, null, configuration, null, new HashMap<>(), "ALLOW");
     }
 
     /**
@@ -259,7 +260,7 @@ public final class JobsClient implements AutoCloseable {
                             String description, Map<String, JobEnvironment> environments,
                             String concurrencyPolicy) {
         return newJob(id, name, null, null, null, configuration, description,
-                environments != null ? environments : new HashMap<>(), concurrencyPolicy, null);
+                environments != null ? environments : new HashMap<>(), concurrencyPolicy);
     }
 
     /**
@@ -289,7 +290,7 @@ public final class JobsClient implements AutoCloseable {
                             String description, Map<String, JobEnvironment> environments,
                             String concurrencyPolicy, String retryPolicy) {
         return newJob(id, name, null, null, retryPolicy, configuration, description,
-                environments != null ? environments : new HashMap<>(), concurrencyPolicy, null);
+                environments != null ? environments : new HashMap<>(), concurrencyPolicy);
     }
 
     /**
@@ -306,14 +307,15 @@ public final class JobsClient implements AutoCloseable {
      * @return an unsaved one-off {@link Job} bound to this client
      */
     public Job schedule(String id, String name, OffsetDateTime schedule, HttpConfig configuration) {
-        return newJob(id, name, schedule.toString(), null, null, configuration, null, new HashMap<>(),
-                "ALLOW", null);
+        return newJob(id, name, schedule.toString(), null, null, configuration, null, birthEnvMap(null),
+                "ALLOW");
     }
 
     /**
      * Return an unsaved one-off {@link Job} born in a named environment. Call
      * {@code .save()} to create it. The job is created in {@code environment}
-     * (sent as the {@code X-Smplkit-Environment} header on save).
+     * (carried as an enabled entry in the body's {@code environments} map on
+     * save).
      *
      * @param id stable caller-supplied unique identifier for the job
      * @param name human-readable name for the job
@@ -325,8 +327,8 @@ public final class JobsClient implements AutoCloseable {
      */
     public Job schedule(String id, String name, OffsetDateTime schedule, HttpConfig configuration,
                         String environment) {
-        return newJob(id, name, schedule.toString(), null, null, configuration, null, new HashMap<>(),
-                "ALLOW", environment);
+        return newJob(id, name, schedule.toString(), null, null, configuration, null, birthEnvMap(environment),
+                "ALLOW");
     }
 
     /**
@@ -351,7 +353,7 @@ public final class JobsClient implements AutoCloseable {
     public Job schedule(String id, String name, OffsetDateTime schedule, HttpConfig configuration,
                         String description, String concurrencyPolicy, String environment) {
         return newJob(id, name, schedule.toString(), null, null, configuration, description,
-                new HashMap<>(), concurrencyPolicy, environment);
+                birthEnvMap(environment), concurrencyPolicy);
     }
 
     /**
@@ -381,21 +383,36 @@ public final class JobsClient implements AutoCloseable {
                         String description, String concurrencyPolicy, String retryPolicy,
                         String environment) {
         return newJob(id, name, schedule.toString(), null, retryPolicy, configuration, description,
-                new HashMap<>(), concurrencyPolicy, environment);
+                birthEnvMap(environment), concurrencyPolicy);
     }
 
     private Job newJob(String id, String name, String schedule, String timezone, String retryPolicy,
                        HttpConfig configuration, String description, Map<String, JobEnvironment> environments,
-                       String concurrencyPolicy, String environment) {
+                       String concurrencyPolicy) {
         Job job = new Job(this, id, name, schedule, configuration);
         job.timezone = timezone;
         job.retryPolicy = retryPolicy;
         job.description = description;
         job.environments = environments;
         job.concurrencyPolicy = concurrencyPolicy;
-        // A one-off job's birth environment: explicit wins, else the client default.
-        job.birthEnvironment = environment != null ? environment : this.environment;
         return job;
+    }
+
+    /**
+     * Build a one-off job's birth environment as an enabled entry in the
+     * {@code environments} map. The target environment of a one-off job is
+     * conveyed by the keys of the body's map (there is no request header):
+     * the explicit argument wins, else the client's configured default. When
+     * neither is known the map is left empty so a single-environment credential
+     * implies it server-side.
+     */
+    private Map<String, JobEnvironment> birthEnvMap(String environment) {
+        String env = environment != null ? environment : this.environment;
+        Map<String, JobEnvironment> map = new HashMap<>();
+        if (env != null) {
+            map.put(env, new JobEnvironment(true));
+        }
+        return map;
     }
 
     /**
@@ -493,7 +510,15 @@ public final class JobsClient implements AutoCloseable {
      */
     public Run run(String jobId, String environment) throws ApiException {
         String env = environment != null ? environment : this.environment;
-        return JobsConversions.runFromResource(api.runJobNow(jobId, env).getData(), runs);
+        // The target environment travels in the run-now request body (there is
+        // no request header). When neither an explicit argument nor a client
+        // default resolves an environment, send an empty body so the service
+        // implies it from a single-environment credential.
+        RunNowRequest body = new RunNowRequest();
+        if (env != null) {
+            body.setEnvironment(env);
+        }
+        return JobsConversions.runFromResource(api.runJobNow(jobId, body).getData(), runs);
     }
 
     /**
@@ -515,9 +540,10 @@ public final class JobsClient implements AutoCloseable {
         if (job.id == null) {
             throw new IllegalStateException("cannot create a Job with no id (caller must supply a stable key)");
         }
-        // A one-off job is born in its birth environment, named on the
-        // X-Smplkit-Environment header; ignored for a recurring job.
-        JobResponse resp = api.createJob(wrapCreateRequest(job), job.birthEnvironment);
+        // A one-off job's birth environment is carried as an enabled entry in
+        // the body's environments map (see the schedule(...) factories); there
+        // is no request header.
+        JobResponse resp = api.createJob(wrapCreateRequest(job));
         return fromResource(resp.getData());
     }
 
@@ -525,8 +551,9 @@ public final class JobsClient implements AutoCloseable {
         if (job.id == null) {
             throw new IllegalStateException("cannot update a Job with no id");
         }
-        // Update names the client's configured environment on the header (if any).
-        JobResponse resp = api.updateJob(job.id, wrapRequest(job.id, job), environment);
+        // Update carries no environment header; per-environment state travels in
+        // the body's environments map.
+        JobResponse resp = api.updateJob(job.id, wrapRequest(job.id, job));
         return fromResource(resp.getData());
     }
 

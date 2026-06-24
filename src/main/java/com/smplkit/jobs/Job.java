@@ -98,14 +98,6 @@ public final class Job {
     /** Monotonic version counter; bumped on every server-side write. */
     public Integer version;
 
-    /**
-     * Creation-time only: the environment a one-off job is born in, sent as the
-     * {@code X-Smplkit-Environment} header by {@code JobsClient.create}. Ignored
-     * for recurring and manual jobs, whose environments come from
-     * {@link #environments}.
-     */
-    String birthEnvironment;
-
     Job(JobsClient client, String id, String name, String schedule, HttpConfig configuration) {
         this.client = client;
         this.id = id;
