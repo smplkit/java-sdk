@@ -167,7 +167,7 @@ public class RetryPoliciesApi {
 
   /**
    * Create Retry Policy
-   * Create a retry policy for this account.  The caller supplies the policy&#39;s id as &#x60;data.id&#x60;. Ids are unique within an account and immutable. &#x60;Default&#x60; is reserved for the built-in policy and cannot be created.
+   * Create a retry policy for this account.  The caller supplies the policy&#39;s id as &#x60;data.id&#x60;. Ids are unique within an account and immutable.
    * @param retryPolicyCreateRequest  (required)
    * @return RetryPolicyResponse
    * @throws ApiException if fails to make API call
@@ -178,7 +178,7 @@ public class RetryPoliciesApi {
 
   /**
    * Create Retry Policy
-   * Create a retry policy for this account.  The caller supplies the policy&#39;s id as &#x60;data.id&#x60;. Ids are unique within an account and immutable. &#x60;Default&#x60; is reserved for the built-in policy and cannot be created.
+   * Create a retry policy for this account.  The caller supplies the policy&#39;s id as &#x60;data.id&#x60;. Ids are unique within an account and immutable.
    * @param retryPolicyCreateRequest  (required)
    * @param headers Optional headers to include in the request
    * @return RetryPolicyResponse
@@ -191,7 +191,7 @@ public class RetryPoliciesApi {
 
   /**
    * Create Retry Policy
-   * Create a retry policy for this account.  The caller supplies the policy&#39;s id as &#x60;data.id&#x60;. Ids are unique within an account and immutable. &#x60;Default&#x60; is reserved for the built-in policy and cannot be created.
+   * Create a retry policy for this account.  The caller supplies the policy&#39;s id as &#x60;data.id&#x60;. Ids are unique within an account and immutable.
    * @param retryPolicyCreateRequest  (required)
    * @return ApiResponse&lt;RetryPolicyResponse&gt;
    * @throws ApiException if fails to make API call
@@ -202,7 +202,7 @@ public class RetryPoliciesApi {
 
   /**
    * Create Retry Policy
-   * Create a retry policy for this account.  The caller supplies the policy&#39;s id as &#x60;data.id&#x60;. Ids are unique within an account and immutable. &#x60;Default&#x60; is reserved for the built-in policy and cannot be created.
+   * Create a retry policy for this account.  The caller supplies the policy&#39;s id as &#x60;data.id&#x60;. Ids are unique within an account and immutable.
    * @param retryPolicyCreateRequest  (required)
    * @param headers Optional headers to include in the request
    * @return ApiResponse&lt;RetryPolicyResponse&gt;
@@ -290,7 +290,7 @@ public class RetryPoliciesApi {
 
   /**
    * Delete Retry Policy
-   * Delete a retry policy.  The built-in &#x60;Default&#x60; policy cannot be deleted (&#x60;403&#x60;). A policy still referenced by any job — at the base level or in a per-environment override — cannot be deleted (&#x60;409&#x60;); the error lists the referencing job ids under &#x60;meta.referencing_jobs&#x60; so they can be reassigned to &#x60;Default&#x60; first.
+   * Delete a retry policy.  A policy still referenced by any job — at the base level or in a per-environment override — cannot be deleted (&#x60;409&#x60;); the error lists the referencing job ids under &#x60;meta.referencing_jobs&#x60; so they can be reassigned (or cleared to no policy) first.
    * @param policyId  (required)
    * @throws ApiException if fails to make API call
    */
@@ -300,7 +300,7 @@ public class RetryPoliciesApi {
 
   /**
    * Delete Retry Policy
-   * Delete a retry policy.  The built-in &#x60;Default&#x60; policy cannot be deleted (&#x60;403&#x60;). A policy still referenced by any job — at the base level or in a per-environment override — cannot be deleted (&#x60;409&#x60;); the error lists the referencing job ids under &#x60;meta.referencing_jobs&#x60; so they can be reassigned to &#x60;Default&#x60; first.
+   * Delete a retry policy.  A policy still referenced by any job — at the base level or in a per-environment override — cannot be deleted (&#x60;409&#x60;); the error lists the referencing job ids under &#x60;meta.referencing_jobs&#x60; so they can be reassigned (or cleared to no policy) first.
    * @param policyId  (required)
    * @param headers Optional headers to include in the request
    * @throws ApiException if fails to make API call
@@ -311,7 +311,7 @@ public class RetryPoliciesApi {
 
   /**
    * Delete Retry Policy
-   * Delete a retry policy.  The built-in &#x60;Default&#x60; policy cannot be deleted (&#x60;403&#x60;). A policy still referenced by any job — at the base level or in a per-environment override — cannot be deleted (&#x60;409&#x60;); the error lists the referencing job ids under &#x60;meta.referencing_jobs&#x60; so they can be reassigned to &#x60;Default&#x60; first.
+   * Delete a retry policy.  A policy still referenced by any job — at the base level or in a per-environment override — cannot be deleted (&#x60;409&#x60;); the error lists the referencing job ids under &#x60;meta.referencing_jobs&#x60; so they can be reassigned (or cleared to no policy) first.
    * @param policyId  (required)
    * @return ApiResponse&lt;Void&gt;
    * @throws ApiException if fails to make API call
@@ -322,7 +322,7 @@ public class RetryPoliciesApi {
 
   /**
    * Delete Retry Policy
-   * Delete a retry policy.  The built-in &#x60;Default&#x60; policy cannot be deleted (&#x60;403&#x60;). A policy still referenced by any job — at the base level or in a per-environment override — cannot be deleted (&#x60;409&#x60;); the error lists the referencing job ids under &#x60;meta.referencing_jobs&#x60; so they can be reassigned to &#x60;Default&#x60; first.
+   * Delete a retry policy.  A policy still referenced by any job — at the base level or in a per-environment override — cannot be deleted (&#x60;409&#x60;); the error lists the referencing job ids under &#x60;meta.referencing_jobs&#x60; so they can be reassigned (or cleared to no policy) first.
    * @param policyId  (required)
    * @param headers Optional headers to include in the request
    * @return ApiResponse&lt;Void&gt;
@@ -394,7 +394,7 @@ public class RetryPoliciesApi {
 
   /**
    * Get Retry Policy
-   * Retrieve a single retry policy by its id.  &#x60;Default&#x60; returns the built-in do-not-retry policy.
+   * Retrieve a single retry policy by its id.
    * @param policyId  (required)
    * @return RetryPolicyResponse
    * @throws ApiException if fails to make API call
@@ -405,7 +405,7 @@ public class RetryPoliciesApi {
 
   /**
    * Get Retry Policy
-   * Retrieve a single retry policy by its id.  &#x60;Default&#x60; returns the built-in do-not-retry policy.
+   * Retrieve a single retry policy by its id.
    * @param policyId  (required)
    * @param headers Optional headers to include in the request
    * @return RetryPolicyResponse
@@ -418,7 +418,7 @@ public class RetryPoliciesApi {
 
   /**
    * Get Retry Policy
-   * Retrieve a single retry policy by its id.  &#x60;Default&#x60; returns the built-in do-not-retry policy.
+   * Retrieve a single retry policy by its id.
    * @param policyId  (required)
    * @return ApiResponse&lt;RetryPolicyResponse&gt;
    * @throws ApiException if fails to make API call
@@ -429,7 +429,7 @@ public class RetryPoliciesApi {
 
   /**
    * Get Retry Policy
-   * Retrieve a single retry policy by its id.  &#x60;Default&#x60; returns the built-in do-not-retry policy.
+   * Retrieve a single retry policy by its id.
    * @param policyId  (required)
    * @param headers Optional headers to include in the request
    * @return ApiResponse&lt;RetryPolicyResponse&gt;
@@ -512,7 +512,7 @@ public class RetryPoliciesApi {
 
   /**
    * List Retry Policies
-   * List this account&#39;s retry policies.  Default sort is &#x60;name&#x60; ascending. Sort by &#x60;name&#x60;, &#x60;created_at&#x60;, or &#x60;updated_at&#x60; (prefix &#x60;-&#x60; for descending). The built-in &#x60;Default&#x60; policy is not included here — it always exists and is retrievable at &#x60;/retry-policies/Default&#x60;.
+   * List this account&#39;s retry policies.  Default sort is &#x60;name&#x60; ascending. Sort by &#x60;name&#x60;, &#x60;created_at&#x60;, or &#x60;updated_at&#x60; (prefix &#x60;-&#x60; for descending).
    * @param filterName Case-insensitive substring match on the policy &#x60;name&#x60; (matches when the name contains the given text). (optional)
    * @param sort Field to sort by. Prefix with &#x60;-&#x60; for descending order. Default: &#x60;name&#x60;. Allowed values: &#x60;created_at&#x60;, &#x60;-created_at&#x60;, &#x60;name&#x60;, &#x60;-name&#x60;, &#x60;updated_at&#x60;, &#x60;-updated_at&#x60;. (optional, default to name)
    * @param pageNumber 1-based page number to return. Optional; defaults to &#x60;1&#x60; when omitted. Must be &#x60;&gt;&#x3D; 1&#x60; — requests with a smaller value are rejected with a 400 error. (optional, default to 1)
@@ -527,7 +527,7 @@ public class RetryPoliciesApi {
 
   /**
    * List Retry Policies
-   * List this account&#39;s retry policies.  Default sort is &#x60;name&#x60; ascending. Sort by &#x60;name&#x60;, &#x60;created_at&#x60;, or &#x60;updated_at&#x60; (prefix &#x60;-&#x60; for descending). The built-in &#x60;Default&#x60; policy is not included here — it always exists and is retrievable at &#x60;/retry-policies/Default&#x60;.
+   * List this account&#39;s retry policies.  Default sort is &#x60;name&#x60; ascending. Sort by &#x60;name&#x60;, &#x60;created_at&#x60;, or &#x60;updated_at&#x60; (prefix &#x60;-&#x60; for descending).
    * @param filterName Case-insensitive substring match on the policy &#x60;name&#x60; (matches when the name contains the given text). (optional)
    * @param sort Field to sort by. Prefix with &#x60;-&#x60; for descending order. Default: &#x60;name&#x60;. Allowed values: &#x60;created_at&#x60;, &#x60;-created_at&#x60;, &#x60;name&#x60;, &#x60;-name&#x60;, &#x60;updated_at&#x60;, &#x60;-updated_at&#x60;. (optional, default to name)
    * @param pageNumber 1-based page number to return. Optional; defaults to &#x60;1&#x60; when omitted. Must be &#x60;&gt;&#x3D; 1&#x60; — requests with a smaller value are rejected with a 400 error. (optional, default to 1)
@@ -544,7 +544,7 @@ public class RetryPoliciesApi {
 
   /**
    * List Retry Policies
-   * List this account&#39;s retry policies.  Default sort is &#x60;name&#x60; ascending. Sort by &#x60;name&#x60;, &#x60;created_at&#x60;, or &#x60;updated_at&#x60; (prefix &#x60;-&#x60; for descending). The built-in &#x60;Default&#x60; policy is not included here — it always exists and is retrievable at &#x60;/retry-policies/Default&#x60;.
+   * List this account&#39;s retry policies.  Default sort is &#x60;name&#x60; ascending. Sort by &#x60;name&#x60;, &#x60;created_at&#x60;, or &#x60;updated_at&#x60; (prefix &#x60;-&#x60; for descending).
    * @param filterName Case-insensitive substring match on the policy &#x60;name&#x60; (matches when the name contains the given text). (optional)
    * @param sort Field to sort by. Prefix with &#x60;-&#x60; for descending order. Default: &#x60;name&#x60;. Allowed values: &#x60;created_at&#x60;, &#x60;-created_at&#x60;, &#x60;name&#x60;, &#x60;-name&#x60;, &#x60;updated_at&#x60;, &#x60;-updated_at&#x60;. (optional, default to name)
    * @param pageNumber 1-based page number to return. Optional; defaults to &#x60;1&#x60; when omitted. Must be &#x60;&gt;&#x3D; 1&#x60; — requests with a smaller value are rejected with a 400 error. (optional, default to 1)
@@ -559,7 +559,7 @@ public class RetryPoliciesApi {
 
   /**
    * List Retry Policies
-   * List this account&#39;s retry policies.  Default sort is &#x60;name&#x60; ascending. Sort by &#x60;name&#x60;, &#x60;created_at&#x60;, or &#x60;updated_at&#x60; (prefix &#x60;-&#x60; for descending). The built-in &#x60;Default&#x60; policy is not included here — it always exists and is retrievable at &#x60;/retry-policies/Default&#x60;.
+   * List this account&#39;s retry policies.  Default sort is &#x60;name&#x60; ascending. Sort by &#x60;name&#x60;, &#x60;created_at&#x60;, or &#x60;updated_at&#x60; (prefix &#x60;-&#x60; for descending).
    * @param filterName Case-insensitive substring match on the policy &#x60;name&#x60; (matches when the name contains the given text). (optional)
    * @param sort Field to sort by. Prefix with &#x60;-&#x60; for descending order. Default: &#x60;name&#x60;. Allowed values: &#x60;created_at&#x60;, &#x60;-created_at&#x60;, &#x60;name&#x60;, &#x60;-name&#x60;, &#x60;updated_at&#x60;, &#x60;-updated_at&#x60;. (optional, default to name)
    * @param pageNumber 1-based page number to return. Optional; defaults to &#x60;1&#x60; when omitted. Must be &#x60;&gt;&#x3D; 1&#x60; — requests with a smaller value are rejected with a 400 error. (optional, default to 1)
@@ -664,7 +664,7 @@ public class RetryPoliciesApi {
 
   /**
    * Update Retry Policy
-   * Replace an existing retry policy. Every writable field is overwritten.  The built-in &#x60;Default&#x60; policy cannot be modified.
+   * Replace an existing retry policy. Every writable field is overwritten.
    * @param policyId  (required)
    * @param retryPolicyRequest  (required)
    * @return RetryPolicyResponse
@@ -676,7 +676,7 @@ public class RetryPoliciesApi {
 
   /**
    * Update Retry Policy
-   * Replace an existing retry policy. Every writable field is overwritten.  The built-in &#x60;Default&#x60; policy cannot be modified.
+   * Replace an existing retry policy. Every writable field is overwritten.
    * @param policyId  (required)
    * @param retryPolicyRequest  (required)
    * @param headers Optional headers to include in the request
@@ -690,7 +690,7 @@ public class RetryPoliciesApi {
 
   /**
    * Update Retry Policy
-   * Replace an existing retry policy. Every writable field is overwritten.  The built-in &#x60;Default&#x60; policy cannot be modified.
+   * Replace an existing retry policy. Every writable field is overwritten.
    * @param policyId  (required)
    * @param retryPolicyRequest  (required)
    * @return ApiResponse&lt;RetryPolicyResponse&gt;
@@ -702,7 +702,7 @@ public class RetryPoliciesApi {
 
   /**
    * Update Retry Policy
-   * Replace an existing retry policy. Every writable field is overwritten.  The built-in &#x60;Default&#x60; policy cannot be modified.
+   * Replace an existing retry policy. Every writable field is overwritten.
    * @param policyId  (required)
    * @param retryPolicyRequest  (required)
    * @param headers Optional headers to include in the request
