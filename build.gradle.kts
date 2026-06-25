@@ -1,7 +1,7 @@
 plugins {
     `java-library`
     jacoco
-    id("com.vanniktech.maven.publish") version "0.36.0"
+    id("com.vanniktech.maven.publish") version "0.37.0"
 }
 
 group = "com.smplkit"
@@ -51,13 +51,13 @@ dependencies {
     compileOnly("jakarta.annotation:jakarta.annotation-api:3.0.0")
     // @ApiStatus.Internal markers on internal seams; CLASS-retention, compile-only
     // (never on the customer's runtime/transitive classpath).
-    compileOnly("org.jetbrains:annotations:26.0.2")
+    compileOnly("org.jetbrains:annotations:26.1.0")
 
     // JSON Logic evaluation for flags runtime
     implementation("io.github.jamsesso:json-logic-java:1.1.0")
 
     // Logging adapter dependencies — compileOnly so they're not transitive
-    compileOnly("ch.qos.logback:logback-classic:1.5.34")
+    compileOnly("ch.qos.logback:logback-classic:1.5.35")
     compileOnly("org.slf4j:slf4j-api:2.0.18")
     compileOnly("org.apache.logging.log4j:log4j-core:2.26.0")
     compileOnly("org.apache.logging.log4j:log4j-api:2.26.0")
@@ -67,7 +67,7 @@ dependencies {
     testRuntimeOnly("org.junit.platform:junit-platform-launcher")
 
     // Test dependencies for adapter tests
-    testImplementation("ch.qos.logback:logback-classic:1.5.34")
+    testImplementation("ch.qos.logback:logback-classic:1.5.35")
     testImplementation("org.slf4j:slf4j-api:2.0.18")
     testImplementation("org.apache.logging.log4j:log4j-core:2.26.0")
     testImplementation("org.apache.logging.log4j:log4j-api:2.26.0")
