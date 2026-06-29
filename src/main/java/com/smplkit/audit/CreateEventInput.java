@@ -18,6 +18,13 @@ public final class CreateEventInput {
     public String resourceId;
     /** Optional free-form bucket label. {@code null} round-trips as {@code null} on read. */
     public String category;
+    /**
+     * Optional severity — one of {@code "TRACE"}, {@code "DEBUG"},
+     * {@code "INFO"}, {@code "WARN"}, {@code "ERROR"}, {@code "FATAL"}.
+     * Defaults to {@code "INFO"} server-side when {@code null}. The server
+     * validates the value and returns a 400 for anything outside the set.
+     */
+    public String severity;
     /** Optional; defaults to server-side {@code now()} if {@code null}. */
     public OffsetDateTime occurredAt;
     /**

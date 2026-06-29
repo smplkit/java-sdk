@@ -223,6 +223,16 @@ class AuditClientTest {
         assertTrue(postCount.get() >= 1);
     }
 
+    @Test
+    void create_withSeverity_serializesField() throws Exception {
+        CreateEventInput input = new CreateEventInput("user.created", "user", "u-1");
+        input.severity = "WARN";
+        client.events().record(input, true, 2_000);
+        assertTrue(postCount.get() >= 1);
+        assertTrue(lastPostBody.get().replace(" ", "").contains("\"severity\":\"WARN\""),
+                "record must serialize the severity onto the body, got: " + lastPostBody.get());
+    }
+
     // -----------------------------------------------------------------
     // Inline flush on record() — parity with canonical record(flush=...)
     // -----------------------------------------------------------------

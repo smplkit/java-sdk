@@ -7,6 +7,7 @@ import com.smplkit.internal.generated.audit.model.EventListResponse;
 import com.smplkit.internal.generated.audit.model.EventRequest;
 import com.smplkit.internal.generated.audit.model.EventResource;
 import com.smplkit.internal.generated.audit.model.EventResponse;
+import com.smplkit.internal.generated.audit.model.Severity;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
@@ -129,6 +130,9 @@ public final class AuditEvents {
                 .resourceId(input.resourceId);
         if (input.category != null) {
             attrs.category(input.category);
+        }
+        if (input.severity != null) {
+            attrs.severity(Severity.fromValue(input.severity));
         }
         if (input.occurredAt != null) {
             attrs.occurredAt(input.occurredAt);
