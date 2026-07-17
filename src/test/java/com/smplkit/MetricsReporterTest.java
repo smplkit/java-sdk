@@ -272,6 +272,20 @@ class MetricsReporterTest {
     }
 
     @Test
+    void flushSendsSdkUserAgent() throws Exception {
+        reporter.record("flags.evaluations", "evaluations");
+        reporter.flush();
+
+        var captor = org.mockito.ArgumentCaptor.forClass(HttpRequest.class);
+        verify(mockHttpClient).send(captor.capture(), any());
+        HttpRequest request = captor.getValue();
+        List<String> uaValues = request.headers().allValues("User-Agent");
+        assertEquals(1, uaValues.size());
+        assertEquals(com.smplkit.internal.UserAgent.VALUE, uaValues.get(0));
+        assertTrue(uaValues.get(0).startsWith("smplkit-sdk-java/"));
+    }
+
+    @Test
     void payloadIncludesPeriodSeconds() {
         reporter.record("flags.evaluations", "evaluations");
         reporter.flush();

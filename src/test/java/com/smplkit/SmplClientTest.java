@@ -2,6 +2,7 @@ package com.smplkit;
 
 import com.smplkit.config.ConfigClient;
 import com.smplkit.internal.HttpClients;
+import com.smplkit.internal.UserAgent;
 import com.smplkit.errors.SmplError;
 import com.smplkit.flags.FlagsClient;
 import com.smplkit.logging.LoggingClient;
@@ -12,6 +13,7 @@ import java.net.URI;
 import java.net.http.HttpRequest;
 import java.nio.file.Path;
 import java.time.Duration;
+import java.util.List;
 import java.util.Map;
 
 import static org.junit.jupiter.api.Assertions.*;
@@ -413,5 +415,67 @@ class SmplClientTest {
         assertEquals("Bearer sk_api_test", request.headers().firstValue("Authorization").orElse(""));
         // Non-SDK header passes through
         assertEquals("acme", request.headers().firstValue("X-Tenant").orElse(""));
+    }
+
+    @Test
+    void compositeInterceptor_setsDefaultUserAgent() throws Exception {
+        var interceptor = HttpClients.compositeInterceptor("sk_api_test", null);
+        var builder = HttpRequest.newBuilder(new URI("http://example.com"));
+        interceptor.accept(builder);
+        var request = builder.build();
+        var uaValues = request.headers().allValues("User-Agent");
+        assertEquals(1, uaValues.size());
+        assertEquals(UserAgent.VALUE, uaValues.get(0));
+        assertTrue(uaValues.get(0).startsWith("smplkit-sdk-java/"));
+    }
+
+    @Test
+    void compositeInterceptor_setsDefaultUserAgentWithUnrelatedExtraHeaders() throws Exception {
+        var interceptor = HttpClients.compositeInterceptor("sk_api_test",
+                Map.of("X-Custom", "value"));
+        var builder = HttpRequest.newBuilder(new URI("http://example.com"));
+        interceptor.accept(builder);
+        var request = builder.build();
+        assertEquals(List.of(UserAgent.VALUE),
+                request.headers().allValues("User-Agent"));
+    }
+
+    @Test
+    void compositeInterceptor_callerUserAgentWins() throws Exception {
+        var interceptor = HttpClients.compositeInterceptor("sk_api_test",
+                Map.of("User-Agent", "custom-agent/9.9"));
+        var builder = HttpRequest.newBuilder(new URI("http://example.com"));
+        interceptor.accept(builder);
+        var request = builder.build();
+        // Exactly one UA — the caller's; the SDK default must not be added.
+        assertEquals(List.of("custom-agent/9.9"),
+                request.headers().allValues("User-Agent"));
+    }
+
+    @Test
+    void compositeInterceptor_callerUserAgentWinsCaseInsensitively() throws Exception {
+        var interceptor = HttpClients.compositeInterceptor("sk_api_test",
+                Map.of("user-agent", "lowercase-agent/1.0"));
+        var builder = HttpRequest.newBuilder(new URI("http://example.com"));
+        interceptor.accept(builder);
+        var request = builder.build();
+        assertEquals(List.of("lowercase-agent/1.0"),
+                request.headers().allValues("User-Agent"));
+    }
+
+    @Test
+    void authInterceptor_setsDefaultUserAgent() throws Exception {
+        var interceptor = HttpClients.authInterceptor("sk_api_test");
+        var builder = HttpRequest.newBuilder(new URI("http://example.com"));
+        interceptor.accept(builder);
+        var request = builder.build();
+        assertEquals(List.of(UserAgent.VALUE),
+                request.headers().allValues("User-Agent"));
+    }
+
+    @Test
+    void webSocketHandshakeUserAgent_matchesHttpDefault() {
+        assertEquals(UserAgent.VALUE, SharedWebSocket.WS_USER_AGENT);
+        assertTrue(SharedWebSocket.WS_USER_AGENT.startsWith("smplkit-sdk-java/"));
     }
 }

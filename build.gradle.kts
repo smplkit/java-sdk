@@ -73,6 +73,20 @@ dependencies {
     testImplementation("org.apache.logging.log4j:log4j-api:2.26.0")
 }
 
+// Embed the build version so the SDK can identify itself in its default
+// User-Agent header (com.smplkit.internal.UserAgent). CI passes
+// -PprojectVersion=<semver> when publishing, so the published jar carries the
+// real release version; local builds embed the 0.0.0-local default above.
+val embeddedVersion = version.toString()
+tasks.processResources {
+    // Track the expanded value as an input so a version change re-processes
+    // the resource even with a warm build directory.
+    inputs.property("embeddedVersion", embeddedVersion)
+    filesMatching("com/smplkit/internal/version.properties") {
+        expand("version" to embeddedVersion)
+    }
+}
+
 tasks.withType<Javadoc>().configureEach {
     // The com.smplkit.internal package (incl. internal.generated) is implementation
     // detail and must never appear on the published Javadoc surface (P1).

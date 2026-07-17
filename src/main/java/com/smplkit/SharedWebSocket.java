@@ -66,13 +66,14 @@ public final class SharedWebSocket {
     }
 
     /**
-     * Mirrors the User-Agent the HTTP transport sends. CloudFront's WAF
+     * Mirrors the User-Agent the HTTP transport sends
+     * ({@link com.smplkit.internal.UserAgent#VALUE}). CloudFront's WAF
      * blocks WebSocket upgrades that omit a User-Agent header; the JDK
      * WebSocket builder does not set one by default, so we inject it
      * explicitly. Without this, the upgrade is rejected with HTTP 403
      * before reaching our backend.
      */
-    static final String WS_USER_AGENT = "smplkit-java-sdk/0.0.0";
+    static final String WS_USER_AGENT = com.smplkit.internal.UserAgent.VALUE;
 
     public SharedWebSocket(HttpClient httpClient, String appBaseUrl, String apiKey, MetricsReporter metrics) {
         this.httpClient = httpClient;

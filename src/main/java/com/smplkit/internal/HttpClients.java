@@ -39,26 +39,48 @@ public final class HttpClients {
     private static final Set<String> SDK_MANAGED_HEADERS =
             Set.of("authorization", "accept", "content-type");
 
+    /** Lowercase User-Agent header name, for caller-override detection. */
+    private static final String USER_AGENT_HEADER = "user-agent";
+
     /**
      * Builds a request interceptor that sets extra headers (excluding SDK-managed ones),
-     * then always sets the Authorization header. SDK headers win on collision.
+     * applies the SDK's default {@code User-Agent} unless the caller supplied one via
+     * extraHeaders (any casing), then always sets the Authorization header. SDK headers
+     * win on collision.
+     *
+     * <p>The default User-Agent exists because the platform edge rejects UA-less
+     * requests, and an SDK-identifying value gives support/telemetry the SDK and
+     * version in access logs — the JDK's {@code Java-http-client/<jdk>} default
+     * identifies neither.</p>
      */
     public static Consumer<HttpRequest.Builder> compositeInterceptor(String apiKey,
                                                                Map<String, String> extraHeaders) {
         return builder -> {
+            boolean callerSetUserAgent = false;
             if (extraHeaders != null) {
-                extraHeaders.forEach((k, v) -> {
-                    if (!SDK_MANAGED_HEADERS.contains(k.toLowerCase(Locale.ROOT))) {
-                        builder.header(k, v);
+                for (Map.Entry<String, String> entry : extraHeaders.entrySet()) {
+                    String lower = entry.getKey().toLowerCase(Locale.ROOT);
+                    if (SDK_MANAGED_HEADERS.contains(lower)) {
+                        continue;
                     }
-                });
+                    builder.header(entry.getKey(), entry.getValue());
+                    if (USER_AGENT_HEADER.equals(lower)) {
+                        callerSetUserAgent = true;
+                    }
+                }
+            }
+            if (!callerSetUserAgent) {
+                builder.setHeader("User-Agent", UserAgent.VALUE);
             }
             builder.header("Authorization", "Bearer " + apiKey);
         };
     }
 
-    /** Builds the auth-only interceptor (no extra headers). */
+    /** Builds the auth-only interceptor (no extra headers); also applies the default User-Agent. */
     public static Consumer<HttpRequest.Builder> authInterceptor(String apiKey) {
-        return builder -> builder.header("Authorization", "Bearer " + apiKey);
+        return builder -> {
+            builder.setHeader("User-Agent", UserAgent.VALUE);
+            builder.header("Authorization", "Bearer " + apiKey);
+        };
     }
 }

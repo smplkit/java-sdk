@@ -1,6 +1,7 @@
 package com.smplkit;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.smplkit.internal.UserAgent;
 
 import java.math.BigDecimal;
 import java.net.URI;
@@ -164,6 +165,8 @@ public final class MetricsReporter implements AutoCloseable {
                     .uri(URI.create(endpoint))
                     .header("Authorization", "Bearer " + apiKey)
                     .header("Content-Type", "application/json")
+                    // The platform edge rejects UA-less requests; identify the SDK.
+                    .header("User-Agent", UserAgent.VALUE)
                     .POST(HttpRequest.BodyPublishers.ofString(json))
                     .build();
             httpClient.send(request, HttpResponse.BodyHandlers.discarding());
