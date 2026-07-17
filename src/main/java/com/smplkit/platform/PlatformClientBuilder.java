@@ -113,8 +113,10 @@ public final class PlatformClientBuilder {
      * @return a new {@link PlatformClient} that owns its app transport
      */
     public PlatformClient build() {
+        // Platform is environment- and service-agnostic: resolved
+        // environment/service values are ignored.
         ResolvedClientConfig cfg = ConfigResolver.resolveClient(
-                profile, apiKey, baseDomain, scheme, debug);
+                profile, apiKey, baseDomain, scheme, null, null, debug);
         if (cfg.debug) {
             Debug.enable();
         }

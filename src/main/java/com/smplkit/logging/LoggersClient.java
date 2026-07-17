@@ -36,10 +36,14 @@ public final class LoggersClient {
 
     private final LoggersApi loggersApi;
     private final LoggerRegistrationBuffer buffer;
+    /** When {@code false} (stateless mode), threshold flushes run inline
+     * instead of on a one-shot background thread. */
+    private final boolean streaming;
 
-    LoggersClient(LoggersApi loggersApi, LoggerRegistrationBuffer buffer) {
+    LoggersClient(LoggersApi loggersApi, LoggerRegistrationBuffer buffer, boolean streaming) {
         this.loggersApi = loggersApi;
         this.buffer = buffer;
+        this.streaming = streaming;
     }
 
     // -----------------------------------------------------------------------
@@ -105,9 +109,14 @@ public final class LoggersClient {
             return;
         }
         if (buffer.pendingCount() >= LOGGER_BATCH_FLUSH_SIZE) {
-            Thread t = new Thread(this::thresholdFlush, "smplkit-logger-flush-eager");
-            t.setDaemon(true);
-            t.start();
+            if (streaming) {
+                Thread t = new Thread(this::thresholdFlush, "smplkit-logger-flush-eager");
+                t.setDaemon(true);
+                t.start();
+            } else {
+                // Stateless mode never spawns threads — flush inline (blocking).
+                thresholdFlush();
+            }
         }
     }
 

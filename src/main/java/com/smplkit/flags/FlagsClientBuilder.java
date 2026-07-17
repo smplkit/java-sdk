@@ -34,8 +34,10 @@ public final class FlagsClientBuilder {
     private String baseDomain;
     private String scheme;
     private String environment;
+    private String service;
     private Duration timeout = Duration.ofSeconds(30);
     private Boolean debug;
+    private boolean streaming = true;
     private final Map<String, String> extraHeaders = new LinkedHashMap<>();
 
     FlagsClientBuilder() {}
@@ -96,13 +98,29 @@ public final class FlagsClientBuilder {
     }
 
     /**
-     * Deployment environment used to resolve runtime flag values and scope discovery.
+     * Deployment environment used to resolve runtime flag values and scope
+     * discovery. When omitted, it is resolved from {@code SMPLKIT_ENVIRONMENT}
+     * or {@code ~/.smplkit}.
      *
      * @param environment the deployment environment name
      * @return this builder
      */
     public FlagsClientBuilder environment(String environment) {
         this.environment = Objects.requireNonNull(environment, "environment must not be null");
+        return this;
+    }
+
+    /**
+     * Name of the service this client runs in. Used to attribute discovered
+     * flag declarations and auto-injected as the {@code service} evaluation
+     * context. When omitted, it is resolved from {@code SMPLKIT_SERVICE} or
+     * {@code ~/.smplkit}.
+     *
+     * @param service the service name
+     * @return this builder
+     */
+    public FlagsClientBuilder service(String service) {
+        this.service = Objects.requireNonNull(service, "service must not be null");
         return this;
     }
 
@@ -125,6 +143,26 @@ public final class FlagsClientBuilder {
      */
     public FlagsClientBuilder debug(boolean debug) {
         this.debug = debug;
+        return this;
+    }
+
+    /**
+     * Stream live flag updates (default {@code true}): the first live call
+     * opens a WebSocket for real-time change events and starts periodic
+     * background flushes of discovered declarations.
+     *
+     * <p>Pass {@code false} for the stateless live surface: the first live
+     * call still fetches all flag definitions once (blocking), but no
+     * WebSocket, timers, or background threads are created; discovery
+     * flushes run inline and {@code refresh()} re-fetches on demand — the
+     * right shape for serverless and edge runtimes, whose short-lived
+     * instances cannot hold open connections.</p>
+     *
+     * @param streaming whether to stream live flag updates
+     * @return this builder
+     */
+    public FlagsClientBuilder streaming(boolean streaming) {
+        this.streaming = streaming;
         return this;
     }
 
@@ -156,7 +194,8 @@ public final class FlagsClientBuilder {
 
     public FlagsClient build() {
         ResolvedClientConfig cfg = ConfigResolver.resolveClient(
-                profile, apiKey, baseDomain, scheme, debug);
-        return FlagsClient.fromResolved(cfg, environment, baseUrl, timeout, new LinkedHashMap<>(extraHeaders));
+                profile, apiKey, baseDomain, scheme, environment, service, debug);
+        return FlagsClient.fromResolved(cfg, baseUrl, timeout,
+                new LinkedHashMap<>(extraHeaders), streaming);
     }
 }

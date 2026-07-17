@@ -79,8 +79,17 @@ public final class AuditClient implements AutoCloseable {
      */
     public AuditClient(HttpClient httpClient, String apiKey, Map<String, String> extraHeaders,
                        Duration timeout, String baseUrl, String environment) {
+        this(httpClient, apiKey, extraHeaders, timeout, baseUrl, environment, true);
+    }
+
+    /**
+     * Wired constructor with an explicit buffering mode — package-private
+     * (tests exercise the unbuffered write path against a local server).
+     */
+    AuditClient(HttpClient httpClient, String apiKey, Map<String, String> extraHeaders,
+                Duration timeout, String baseUrl, String environment, boolean buffered) {
         ApiClient apiClient = buildApiClient(baseUrl, apiKey, extraHeaders, timeout);
-        this.events = new AuditEvents(new EventsApi(apiClient), environment);
+        this.events = new AuditEvents(new EventsApi(apiClient), environment, buffered);
         this.resourceTypes = new AuditResourceTypesClient(new ResourceTypesApi(apiClient), environment);
         this.eventTypes = new AuditEventTypesClient(new EventTypesApi(apiClient), environment);
         this.categories = new AuditCategoriesClient(new CategoriesApi(apiClient), environment);
@@ -93,10 +102,10 @@ public final class AuditClient implements AutoCloseable {
      * {@link AuditClientBuilder#build()}.
      */
     private AuditClient(ResolvedClientConfig cfg, String environment, Duration timeout,
-                        Map<String, String> extraHeaders) {
+                        Map<String, String> extraHeaders, boolean buffered) {
         String baseUrl = ConfigResolver.serviceUrl(cfg.scheme, "audit", cfg.baseDomain);
         ApiClient apiClient = buildApiClient(baseUrl, cfg.apiKey, extraHeaders, timeout);
-        this.events = new AuditEvents(new EventsApi(apiClient), environment);
+        this.events = new AuditEvents(new EventsApi(apiClient), environment, buffered);
         this.resourceTypes = new AuditResourceTypesClient(new ResourceTypesApi(apiClient), environment);
         this.eventTypes = new AuditEventTypesClient(new EventTypesApi(apiClient), environment);
         this.categories = new AuditCategoriesClient(new CategoriesApi(apiClient), environment);
@@ -187,7 +196,8 @@ public final class AuditClient implements AutoCloseable {
 
     /** Internal: build a standalone client from already-resolved config. */
     static AuditClient fromResolved(ResolvedClientConfig cfg, String environment,
-                                    Duration timeout, Map<String, String> extraHeaders) {
-        return new AuditClient(cfg, environment, timeout, extraHeaders);
+                                    Duration timeout, Map<String, String> extraHeaders,
+                                    boolean buffered) {
+        return new AuditClient(cfg, environment, timeout, extraHeaders, buffered);
     }
 }

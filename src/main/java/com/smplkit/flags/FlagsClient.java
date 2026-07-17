@@ -138,6 +138,10 @@ public final class FlagsClient implements AutoCloseable {
     private final String appBaseUrl;
     private final Duration timeout;
     private final boolean ownsTransport;
+    /** When {@code false}, the live surface runs stateless: no WebSocket, no
+     * periodic timers, no background flush threads; {@code refresh()}
+     * re-fetches on demand and threshold flushes run inline. */
+    private final boolean streaming;
 
     // --- Runtime state ---
     private volatile boolean connected = false;
@@ -221,13 +225,13 @@ public final class FlagsClient implements AutoCloseable {
     public FlagsClient(FlagsApi flagsApi, ContextsApi contextsApi,
                        HttpClient httpClient, String apiKey,
                        String flagsBaseUrl, String appBaseUrl, Duration timeout) {
-        this(flagsApi, contextsApi, httpClient, apiKey, flagsBaseUrl, appBaseUrl, timeout, false);
+        this(flagsApi, contextsApi, httpClient, apiKey, flagsBaseUrl, appBaseUrl, timeout, false, true);
     }
 
-    private FlagsClient(FlagsApi flagsApi, ContextsApi contextsApi,
-                        HttpClient httpClient, String apiKey,
-                        String flagsBaseUrl, String appBaseUrl, Duration timeout,
-                        boolean ownsTransport) {
+    FlagsClient(FlagsApi flagsApi, ContextsApi contextsApi,
+                HttpClient httpClient, String apiKey,
+                String flagsBaseUrl, String appBaseUrl, Duration timeout,
+                boolean ownsTransport, boolean streaming) {
         this.flagsApi = flagsApi;
         this.contextsApi = contextsApi;
         this.httpClient = httpClient;
@@ -236,6 +240,7 @@ public final class FlagsClient implements AutoCloseable {
         this.appBaseUrl = appBaseUrl;
         this.timeout = timeout;
         this.ownsTransport = ownsTransport;
+        this.streaming = streaming;
 
         this.contextFlushExecutor = Executors.newSingleThreadScheduledExecutor(r -> {
             Thread t = new Thread(r, "smplkit-flags-ctx-flush");
@@ -258,6 +263,7 @@ public final class FlagsClient implements AutoCloseable {
         this.appBaseUrl = null;
         this.timeout = null;
         this.ownsTransport = false;
+        this.streaming = true;
         this.contextFlushExecutor = null;
         this.flagChangedHandler = this::handleFlagChanged;
         this.flagDeletedHandler = this::handleFlagDeleted;
@@ -287,8 +293,9 @@ public final class FlagsClient implements AutoCloseable {
     }
 
     /** Internal: build a standalone client from already-resolved config. */
-    static FlagsClient fromResolved(ResolvedClientConfig cfg, String environment, String baseUrl,
-                                    Duration timeout, Map<String, String> extraHeaders) {
+    static FlagsClient fromResolved(ResolvedClientConfig cfg, String baseUrl,
+                                    Duration timeout, Map<String, String> extraHeaders,
+                                    boolean streaming) {
         // base_url is used directly when supplied (the path a top-level client
         // takes after it has already resolved it); otherwise it is derived from
         // the resolved scheme/base-domain.
@@ -314,8 +321,9 @@ public final class FlagsClient implements AutoCloseable {
 
         HttpClient httpClient = HttpClients.http11(timeout);
         FlagsClient client = new FlagsClient(flagsApi, contextsApi, httpClient, cfg.apiKey,
-                flagsBaseUrl, appBaseUrl, timeout, true);
-        client.environment = environment;
+                flagsBaseUrl, appBaseUrl, timeout, true, streaming);
+        client.environment = cfg.environment;
+        client.parentService = cfg.service;
         return client;
     }
 
@@ -730,9 +738,14 @@ public final class FlagsClient implements AutoCloseable {
             return;
         }
         if (flagBuffer.pendingCount() >= FLAG_BATCH_FLUSH_SIZE) {
-            Thread t = new Thread(this::thresholdFlush, "smplkit-flag-flush-eager");
-            t.setDaemon(true);
-            t.start();
+            if (streaming) {
+                Thread t = new Thread(this::thresholdFlush, "smplkit-flag-flush-eager");
+                t.setDaemon(true);
+                t.start();
+            } else {
+                // Stateless mode never spawns threads — flush inline (blocking).
+                thresholdFlush();
+            }
         }
     }
 
@@ -870,6 +883,10 @@ public final class FlagsClient implements AutoCloseable {
         if (connected) return;
         synchronized (connectLock) {
             if (connected) return;
+            if (!streaming) {
+                connectStateless();
+                return;
+            }
             if (retryScheduled) return;
             Debug.log("websocket", "flags runtime initializing");
 
@@ -914,6 +931,24 @@ public final class FlagsClient implements AutoCloseable {
                         this::flushContextsSafe, 30, 30, TimeUnit.SECONDS);
             }
         }
+    }
+
+    /**
+     * Stateless connect ({@code streaming(false)}): flush discovery
+     * best-effort and fetch all flag definitions once, blocking. No
+     * WebSocket, no periodic timers, and no retry scheduling — a fetch
+     * failure propagates as the mapped SDK exception and the next live call
+     * retries inline. Callers hold {@code connectLock}.
+     */
+    private void connectStateless() {
+        Debug.log("websocket", "flags runtime initializing (streaming disabled)");
+        // Discovery flush stays best-effort (mirrors the streaming path);
+        // items stay buffered until a later flush succeeds.
+        flushFlags();
+        fetchAllFlags();
+        resolutionCache.clear();
+        connected = true;
+        Debug.log("websocket", "flags runtime connected (stateless)");
     }
 
     /** Return the shared WebSocket — the parent's when wired, else our own. */
@@ -1044,9 +1079,14 @@ public final class FlagsClient implements AutoCloseable {
         }
 
         if (pendingContexts.size() >= CONTEXT_BATCH_FLUSH_SIZE) {
-            Thread flushThread = new Thread(this::flushContextsSafe, "smplkit-flags-ctx-flush-eager");
-            flushThread.setDaemon(true);
-            flushThread.start();
+            if (streaming) {
+                Thread flushThread = new Thread(this::flushContextsSafe, "smplkit-flags-ctx-flush-eager");
+                flushThread.setDaemon(true);
+                flushThread.start();
+            } else {
+                // Stateless mode never spawns threads — flush inline (blocking).
+                flushContextsSafe();
+            }
         }
 
         if (flagData == null) return defaultValue;

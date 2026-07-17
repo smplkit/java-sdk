@@ -124,6 +124,10 @@ public final class ConfigClient implements AutoCloseable {
     private final HttpClient ownedHttpClient;
     private final String standaloneApiKey;
     private final String appBaseUrl;
+    /** When {@code false}, the live surface runs stateless: no WebSocket and
+     * no background flush threads; {@code refresh()} re-fetches on demand and
+     * threshold flushes run inline. */
+    private final boolean streaming;
 
     /**
      * Wired constructor invoked by {@link com.smplkit.SmplClient}. Receives a
@@ -138,6 +142,7 @@ public final class ConfigClient implements AutoCloseable {
         this.ownedHttpClient = null;
         this.standaloneApiKey = null;
         this.appBaseUrl = null;
+        this.streaming = true;
         this.configChangedHandler = this::handleConfigChanged;
         this.configDeletedHandler = this::handleConfigDeleted;
         this.configsChangedHandler = this::handleConfigsChanged;
@@ -148,7 +153,7 @@ public final class ConfigClient implements AutoCloseable {
      * Used by {@link ConfigClientBuilder}.
      */
     ConfigClient(ConfigsApi configsApi, HttpClient ownedHttpClient, String standaloneApiKey,
-                 String appBaseUrl, String environment, String service) {
+                 String appBaseUrl, String environment, String service, boolean streaming) {
         this.configsApi = configsApi;
         this.ownsTransport = true;
         this.ownedHttpClient = ownedHttpClient;
@@ -156,6 +161,7 @@ public final class ConfigClient implements AutoCloseable {
         this.appBaseUrl = appBaseUrl;
         this.environment = environment;
         this.service = service;
+        this.streaming = streaming;
         this.configChangedHandler = this::handleConfigChanged;
         this.configDeletedHandler = this::handleConfigDeleted;
         this.configsChangedHandler = this::handleConfigsChanged;
@@ -423,7 +429,7 @@ public final class ConfigClient implements AutoCloseable {
                                String parent, String name, String description) {
         buffer.declare(configId, service, environment, parent, name, description);
         if (buffer.pendingCount() >= CONFIG_BATCH_FLUSH_SIZE) {
-            triggerBackgroundFlush();
+            thresholdFlush();
         }
     }
 
@@ -444,12 +450,23 @@ public final class ConfigClient implements AutoCloseable {
                                    Object defaultValue, String description) {
         buffer.addItem(configId, itemKey, itemType, defaultValue, description);
         if (buffer.pendingCount() >= CONFIG_BATCH_FLUSH_SIZE) {
-            triggerBackgroundFlush();
+            thresholdFlush();
         }
     }
 
     /** Latest in-flight background-flush thread; package-private for test waits. */
     volatile Thread lastFlushThread;
+
+    /** Batch-size flush: background thread when streaming, inline when stateless. */
+    private void thresholdFlush() {
+        if (streaming) {
+            triggerBackgroundFlush();
+        } else {
+            // Stateless mode never spawns threads — flush inline (blocking,
+            // best-effort like every discovery flush).
+            flush();
+        }
+    }
 
     private synchronized void triggerBackgroundFlush() {
         Thread existing = lastFlushThread;
@@ -595,14 +612,18 @@ public final class ConfigClient implements AutoCloseable {
             doRefresh("initial");
             connected = true;
 
-            SharedWebSocket ws = ensureWs();
-            if (ws != null) {
-                Debug.log("registration",
-                        "registering config_changed, config_deleted, and configs_changed handlers");
-                ws.on("config_changed", configChangedHandler);
-                ws.on("config_deleted", configDeletedHandler);
-                ws.on("configs_changed", configsChangedHandler);
-                ws.ensureConnected(Duration.ofSeconds(10));
+            // Stateless mode (streaming(false)) skips the WebSocket entirely:
+            // refresh()/refreshAsync() re-fetch on demand instead.
+            if (streaming) {
+                SharedWebSocket ws = ensureWs();
+                if (ws != null) {
+                    Debug.log("registration",
+                            "registering config_changed, config_deleted, and configs_changed handlers");
+                    ws.on("config_changed", configChangedHandler);
+                    ws.on("config_deleted", configDeletedHandler);
+                    ws.on("configs_changed", configsChangedHandler);
+                    ws.ensureConnected(Duration.ofSeconds(10));
+                }
             }
             Debug.log("websocket", "config runtime connected");
         }

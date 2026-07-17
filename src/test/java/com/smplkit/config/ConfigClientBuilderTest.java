@@ -23,12 +23,14 @@ import static org.mockito.Mockito.verify;
 class ConfigClientBuilderTest {
 
     @Test
-    void builder_fluentChain_buildsStandaloneClient() {
+    void builder_fluentChain_buildsStandaloneClient() throws Exception {
         ConfigClient client = ConfigClient.builder()
                 .apiKey("test-key")
                 .baseDomain("example.test")
                 .scheme("http")
                 .environment("staging")
+                .service("checkout")
+                .streaming(false)
                 .timeout(Duration.ofSeconds(5))
                 .debug(true)
                 .extraHeaders(Map.of("X-Trace", "abc"))
@@ -36,6 +38,40 @@ class ConfigClientBuilderTest {
         try (client) {
             assertNotNull(client);
             assertFalse(client.isConnected());
+            assertEquals("staging", getField(client, "environment"));
+            assertEquals("checkout", getField(client, "service"));
+        }
+    }
+
+    // --- environment/service resolution through the standard chain ---
+
+    @Test
+    void builder_environmentAndServiceResolvedFromEnvVars() throws Exception {
+        setEnv("SMPLKIT_ENVIRONMENT", "env-from-var");
+        setEnv("SMPLKIT_SERVICE", "svc-from-var");
+        try (ConfigClient client = ConfigClient.builder().apiKey("test-key").build()) {
+            assertEquals("env-from-var", getField(client, "environment"));
+            assertEquals("svc-from-var", getField(client, "service"));
+        } finally {
+            clearEnv("SMPLKIT_ENVIRONMENT");
+            clearEnv("SMPLKIT_SERVICE");
+        }
+    }
+
+    @Test
+    void builder_builderEnvironmentAndServiceWinOverEnvVars() throws Exception {
+        setEnv("SMPLKIT_ENVIRONMENT", "env-from-var");
+        setEnv("SMPLKIT_SERVICE", "svc-from-var");
+        try (ConfigClient client = ConfigClient.builder()
+                .apiKey("test-key")
+                .environment("env-from-builder")
+                .service("svc-from-builder")
+                .build()) {
+            assertEquals("env-from-builder", getField(client, "environment"));
+            assertEquals("svc-from-builder", getField(client, "service"));
+        } finally {
+            clearEnv("SMPLKIT_ENVIRONMENT");
+            clearEnv("SMPLKIT_SERVICE");
         }
     }
 
@@ -72,6 +108,7 @@ class ConfigClientBuilderTest {
         assertThrows(NullPointerException.class, () -> b.baseDomain(null));
         assertThrows(NullPointerException.class, () -> b.scheme(null));
         assertThrows(NullPointerException.class, () -> b.environment(null));
+        assertThrows(NullPointerException.class, () -> b.service(null));
         assertThrows(NullPointerException.class, () -> b.timeout(null));
         assertThrows(NullPointerException.class, () -> b.extraHeaders(null));
     }
@@ -123,7 +160,7 @@ class ConfigClientBuilderTest {
         // a bare mock satisfies the constructor.
         ConfigsApi mockApi = Mockito.mock(ConfigsApi.class);
         ConfigClient client = new ConfigClient(mockApi, HttpClient.newHttpClient(),
-                "test-key", "http://localhost:1", "staging", "test-service");
+                "test-key", "http://localhost:1", "staging", "test-service", true);
 
         java.lang.reflect.Method ensureWs = ConfigClient.class.getDeclaredMethod("ensureWs");
         ensureWs.setAccessible(true);
@@ -156,5 +193,27 @@ class ConfigClientBuilderTest {
         } catch (Exception e) {
             throw new RuntimeException(e);
         }
+    }
+
+    private static Object getField(ConfigClient client, String name) throws Exception {
+        Field f = ConfigClient.class.getDeclaredField(name);
+        f.setAccessible(true);
+        return f.get(client);
+    }
+
+    @SuppressWarnings("unchecked")
+    private static void setEnv(String key, String value) throws Exception {
+        var env = System.getenv();
+        var field = env.getClass().getDeclaredField("m");
+        field.setAccessible(true);
+        ((java.util.Map<String, String>) field.get(env)).put(key, value);
+    }
+
+    @SuppressWarnings("unchecked")
+    private static void clearEnv(String key) throws Exception {
+        var env = System.getenv();
+        var field = env.getClass().getDeclaredField("m");
+        field.setAccessible(true);
+        ((java.util.Map<String, String>) field.get(env)).remove(key);
     }
 }

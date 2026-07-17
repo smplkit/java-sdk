@@ -133,6 +133,11 @@ public final class AsyncAuditClient implements AutoCloseable {
          * drained by a background worker thread, so this returns without
          * awaiting any network round-trip — nothing blocks the caller.</p>
          *
+         * <p>When the wrapped client is unbuffered ({@code buffered(false)}
+         * on {@link AuditClientBuilder}) this performs one blocking POST and
+         * throws the SDK's typed exceptions on failure; prefer the
+         * future-returning overloads there.</p>
+         *
          * @param input the event to record; per-field semantics live on
          *     {@link CreateEventInput}
          * @throws IllegalArgumentException if eventType / resourceType /
@@ -177,6 +182,12 @@ public final class AsyncAuditClient implements AutoCloseable {
          * wrapper's executor. Use it when the caller needs the event durable
          * before continuing — CLI tools, tests, and flows about to exit.</p>
          *
+         * <p>When the wrapped client is unbuffered ({@code buffered(false)}
+         * on {@link AuditClientBuilder}) there is no buffer: the POST is
+         * performed on the wrapper's executor, the returned future completes
+         * once the event is durable (exceptionally on failure), and
+         * {@code flush} / {@code flushTimeoutMs} are ignored.</p>
+         *
          * @param input the event to record; per-field semantics live on
          *     {@link CreateEventInput}
          * @param flush when {@code true}, complete only after the buffer drains
@@ -190,6 +201,11 @@ public final class AsyncAuditClient implements AutoCloseable {
          *     resourceId are missing
          */
         public CompletableFuture<Void> record(CreateEventInput input, boolean flush, long flushTimeoutMs) {
+            if (!delegate.events().isBuffered()) {
+                // Unbuffered: one awaited POST on the executor; the future
+                // completes exceptionally with the SDK's typed exceptions.
+                return CompletableFuture.runAsync(() -> delegate.events().record(input), executor);
+            }
             delegate.events().record(input);
             if (flush) {
                 return flush(flushTimeoutMs);
@@ -199,6 +215,8 @@ public final class AsyncAuditClient implements AutoCloseable {
 
         /**
          * Drain the in-memory buffer, scheduled on the wrapper's executor.
+         * A no-op when the wrapped client is unbuffered, where every record
+         * is already durable on return.
          *
          * @param timeoutMs upper bound on the flush, in milliseconds
          * @return a future that completes when the buffer is drained or the

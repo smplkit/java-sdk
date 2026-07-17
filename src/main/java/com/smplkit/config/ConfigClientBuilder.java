@@ -29,8 +29,10 @@ public final class ConfigClientBuilder {
     private String baseDomain;
     private String scheme;
     private String environment;
+    private String service;
     private Duration timeout = Duration.ofSeconds(30);
     private Boolean debug;
+    private boolean streaming = true;
     private Map<String, String> extraHeaders;
 
     ConfigClientBuilder() {
@@ -96,13 +98,27 @@ public final class ConfigClientBuilder {
 
     /**
      * Sets the deployment environment used to resolve runtime config values and
-     * to scope discovery declarations.
+     * to scope discovery declarations. When omitted, it is resolved from
+     * {@code SMPLKIT_ENVIRONMENT} or {@code ~/.smplkit}.
      *
      * @param environment the deployment environment name
      * @return this builder
      */
     public ConfigClientBuilder environment(String environment) {
         this.environment = Objects.requireNonNull(environment, "environment must not be null");
+        return this;
+    }
+
+    /**
+     * Sets the name of the service this client runs in, used to attribute
+     * discovered config declarations. When omitted, it is resolved from
+     * {@code SMPLKIT_SERVICE} or {@code ~/.smplkit}.
+     *
+     * @param service the service name
+     * @return this builder
+     */
+    public ConfigClientBuilder service(String service) {
+        this.service = Objects.requireNonNull(service, "service must not be null");
         return this;
     }
 
@@ -129,6 +145,25 @@ public final class ConfigClientBuilder {
     }
 
     /**
+     * Stream live config updates (default {@code true}): the first live call
+     * opens a WebSocket for real-time change events.
+     *
+     * <p>Pass {@code false} for the stateless live surface: the first live
+     * call still fetches and resolves every config once (blocking), but no
+     * WebSocket or background threads are created; discovery flushes run
+     * inline and {@code refresh()} re-fetches on demand — the right shape for
+     * serverless and edge runtimes, whose short-lived instances cannot hold
+     * open connections.</p>
+     *
+     * @param streaming whether to stream live config updates
+     * @return this builder
+     */
+    public ConfigClientBuilder streaming(boolean streaming) {
+        this.streaming = streaming;
+        return this;
+    }
+
+    /**
      * Adds additional HTTP headers sent on every request made by this client.
      *
      * @param extraHeaders headers attached to every request
@@ -147,7 +182,7 @@ public final class ConfigClientBuilder {
      */
     public ConfigClient build() {
         ResolvedClientConfig cfg = ConfigResolver.resolveClient(
-                profile, apiKey, baseDomain, scheme, debug);
+                profile, apiKey, baseDomain, scheme, environment, service, debug);
 
         String configBaseUrl = baseUrl != null
                 ? baseUrl
@@ -163,6 +198,7 @@ public final class ConfigClientBuilder {
         apiClient.setReadTimeout(timeout);
         ConfigsApi configsApi = new ConfigsApi(apiClient);
 
-        return new ConfigClient(configsApi, httpClient, cfg.apiKey, appBaseUrl, environment, null);
+        return new ConfigClient(configsApi, httpClient, cfg.apiKey, appBaseUrl,
+                cfg.environment, cfg.service, streaming);
     }
 }

@@ -26,10 +26,12 @@ public final class LoggingClientBuilder {
     private String profile;
     private String apiKey;
     private String environment;
+    private String service;
     private String baseUrl;
     private String baseDomain;
     private String scheme;
     private Boolean debug;
+    private boolean streaming = true;
     private Map<String, String> extraHeaders = Map.of();
     private Duration timeout = Duration.ofSeconds(30);
 
@@ -60,13 +62,27 @@ public final class LoggingClientBuilder {
 
     /**
      * Deployment environment used to resolve runtime levels and to scope
-     * discovery declarations.
+     * discovery declarations. When omitted, it is resolved from
+     * {@code SMPLKIT_ENVIRONMENT} or {@code ~/.smplkit}.
      *
      * @param environment the environment name
      * @return this builder
      */
     public LoggingClientBuilder environment(String environment) {
         this.environment = Objects.requireNonNull(environment, "environment must not be null");
+        return this;
+    }
+
+    /**
+     * Name of the service this client runs in, used to attribute discovered
+     * loggers. When omitted, it is resolved from {@code SMPLKIT_SERVICE} or
+     * {@code ~/.smplkit}.
+     *
+     * @param service the service name
+     * @return this builder
+     */
+    public LoggingClientBuilder service(String service) {
+        this.service = Objects.requireNonNull(service, "service must not be null");
         return this;
     }
 
@@ -115,6 +131,26 @@ public final class LoggingClientBuilder {
     }
 
     /**
+     * Stream live logger-level updates (default {@code true}):
+     * {@link LoggingClient#install()} opens a WebSocket for real-time change
+     * events.
+     *
+     * <p>Pass {@code false} for the stateless live surface:
+     * {@code install()} still discovers loggers and fetches and applies
+     * levels once (blocking), but no WebSocket or background threads are
+     * created; discovery flushes run inline and {@code refresh()} re-fetches
+     * on demand — the right shape for serverless and edge runtimes, whose
+     * short-lived instances cannot hold open connections.</p>
+     *
+     * @param streaming whether to stream live level updates
+     * @return this builder
+     */
+    public LoggingClientBuilder streaming(boolean streaming) {
+        this.streaming = streaming;
+        return this;
+    }
+
+    /**
      * Extra headers attached to every request.
      *
      * @param extraHeaders the headers to attach
@@ -138,7 +174,7 @@ public final class LoggingClientBuilder {
 
     public LoggingClient build() {
         ResolvedClientConfig cfg = ConfigResolver.resolveClient(
-                profile, apiKey, baseDomain, scheme, debug);
+                profile, apiKey, baseDomain, scheme, environment, service, debug);
         if (cfg.debug) {
             Debug.enable();
         }
@@ -162,8 +198,9 @@ public final class LoggingClientBuilder {
         HttpClient wsHttpClient = HttpClients.builder().build();
 
         LoggingClient client = LoggingClient.standalone(
-                loggersApi, logGroupsApi, wsHttpClient, cfg.apiKey, appBaseUrl);
-        client.setEnvironment(environment);
+                loggersApi, logGroupsApi, wsHttpClient, cfg.apiKey, appBaseUrl, streaming);
+        client.setEnvironment(cfg.environment);
+        client.setService(cfg.service);
         return client;
     }
 }

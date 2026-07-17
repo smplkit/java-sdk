@@ -77,6 +77,39 @@ class JobsClientBuilderTest {
         client.close();
     }
 
+    // -----------------------------------------------------------------
+    // environment resolution through the standard chain
+    // -----------------------------------------------------------------
+
+    @Test
+    void builder_environmentResolvedFromEnvVar() throws Exception {
+        setEnv("SMPLKIT_ENVIRONMENT", "env-from-var");
+        try (JobsClient client = JobsClient.builder().apiKey("sk_test").build()) {
+            assertEquals("env-from-var", environmentOf(client));
+        } finally {
+            clearEnv("SMPLKIT_ENVIRONMENT");
+        }
+    }
+
+    @Test
+    void builder_environmentBuilderValueWinsOverEnvVar() throws Exception {
+        setEnv("SMPLKIT_ENVIRONMENT", "env-from-var");
+        try (JobsClient client = JobsClient.builder()
+                .apiKey("sk_test")
+                .environment("env-from-builder")
+                .build()) {
+            assertEquals("env-from-builder", environmentOf(client));
+        } finally {
+            clearEnv("SMPLKIT_ENVIRONMENT");
+        }
+    }
+
+    private static String environmentOf(JobsClient client) throws Exception {
+        var f = JobsClient.class.getDeclaredField("environment");
+        f.setAccessible(true);
+        return (String) f.get(client);
+    }
+
     @Test
     void asyncCreate_withApiKey_andWrap() {
         try (AsyncJobsClient client = AsyncJobsClient.create("sk_test")) {

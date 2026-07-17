@@ -29,6 +29,7 @@ public final class AuditClientBuilder {
     private String scheme;
     private Duration timeout = Duration.ofSeconds(30);
     private Boolean debug;
+    private boolean buffered = true;
     private final Map<String, String> extraHeaders = new LinkedHashMap<>();
 
     AuditClientBuilder() {}
@@ -61,7 +62,8 @@ public final class AuditClientBuilder {
      * event request body when recording and as the default
      * {@code filter[environment]} on the read surfaces. Optional — forwarder
      * CRUD and discovery are environment-agnostic, and reads accept an explicit
-     * {@code environments} filter that overrides this default.
+     * {@code environments} filter that overrides this default. When omitted,
+     * it is resolved from {@code SMPLKIT_ENVIRONMENT} or {@code ~/.smplkit}.
      *
      * @param environment the deployment environment key
      * @return this builder
@@ -115,6 +117,26 @@ public final class AuditClientBuilder {
         return this;
     }
 
+    /**
+     * Buffer event recording (default {@code true}): {@code record(...)}
+     * enqueues onto an in-memory buffer that a background worker drains with
+     * retry, and returns immediately.
+     *
+     * <p>Pass {@code false} for the stateless write path: {@code record(...)}
+     * performs one blocking POST per call and throws on failure, the
+     * {@code flush} argument and {@code flush(...)} are no-ops, and no
+     * background threads or in-memory state are created — the right shape for
+     * serverless and edge runtimes, whose short-lived instances cannot host
+     * background delivery.</p>
+     *
+     * @param buffered whether to buffer event recording
+     * @return this builder
+     */
+    public AuditClientBuilder buffered(boolean buffered) {
+        this.buffered = buffered;
+        return this;
+    }
+
     /** Extra headers attached to every request (SDK-managed headers win on collision). */
     public AuditClientBuilder extraHeaders(Map<String, String> extraHeaders) {
         Objects.requireNonNull(extraHeaders, "extraHeaders must not be null");
@@ -132,7 +154,8 @@ public final class AuditClientBuilder {
 
     public AuditClient build() {
         ResolvedClientConfig cfg = ConfigResolver.resolveClient(
-                profile, apiKey, baseDomain, scheme, debug);
-        return AuditClient.fromResolved(cfg, environment, timeout, new LinkedHashMap<>(extraHeaders));
+                profile, apiKey, baseDomain, scheme, environment, null, debug);
+        return AuditClient.fromResolved(cfg, cfg.environment, timeout,
+                new LinkedHashMap<>(extraHeaders), buffered);
     }
 }

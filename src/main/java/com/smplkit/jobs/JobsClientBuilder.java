@@ -59,8 +59,9 @@ public final class JobsClientBuilder {
      * Default environment for environment-scoped operations — the environment a
      * one-off job created through this client is born in, the default a manual
      * run executes in, and the default {@code filter[environment]} scope on
-     * {@code jobs.runs.list()}. Optional; when absent a single-environment
-     * credential resolves it server-side.
+     * {@code jobs.runs.list()}. When omitted, it is resolved from
+     * {@code SMPLKIT_ENVIRONMENT} or {@code ~/.smplkit}; when absent everywhere
+     * a single-environment credential resolves it server-side.
      *
      * @param environment the deployment environment key
      * @return this builder
@@ -137,7 +138,7 @@ public final class JobsClientBuilder {
      */
     public JobsClient build() {
         ResolvedClientConfig cfg = ConfigResolver.resolveClient(
-                profile, apiKey, baseDomain, scheme, debug);
-        return JobsClient.fromResolved(cfg, environment, timeout, new LinkedHashMap<>(extraHeaders));
+                profile, apiKey, baseDomain, scheme, environment, null, debug);
+        return JobsClient.fromResolved(cfg, cfg.environment, timeout, new LinkedHashMap<>(extraHeaders));
     }
 }

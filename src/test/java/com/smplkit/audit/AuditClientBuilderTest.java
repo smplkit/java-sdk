@@ -87,6 +87,58 @@ class AuditClientBuilderTest {
         client.close();
     }
 
+    @Test
+    void builder_bufferedFalse_buildsUnbufferedClient() {
+        try (AuditClient client = AuditClient.builder()
+                .apiKey("sk_test")
+                .buffered(false)
+                .build()) {
+            assertFalse(client.events().isBuffered());
+        }
+    }
+
+    @Test
+    void builder_bufferedDefaultsToTrue() {
+        try (AuditClient client = AuditClient.builder().apiKey("sk_test").build()) {
+            assertTrue(client.events().isBuffered());
+        }
+    }
+
+    // -----------------------------------------------------------------
+    // environment resolution through the standard chain
+    // -----------------------------------------------------------------
+
+    @Test
+    void builder_environmentResolvedFromEnvVar() throws Exception {
+        setEnv("SMPLKIT_API_KEY", "sk_env_res");
+        setEnv("SMPLKIT_ENVIRONMENT", "env-from-var");
+        try (AuditClient client = AuditClient.builder().build()) {
+            assertEquals("env-from-var", eventsEnvironment(client));
+        } finally {
+            clearEnv("SMPLKIT_API_KEY");
+            clearEnv("SMPLKIT_ENVIRONMENT");
+        }
+    }
+
+    @Test
+    void builder_environmentBuilderValueWinsOverEnvVar() throws Exception {
+        setEnv("SMPLKIT_ENVIRONMENT", "env-from-var");
+        try (AuditClient client = AuditClient.builder()
+                .apiKey("sk_test")
+                .environment("env-from-builder")
+                .build()) {
+            assertEquals("env-from-builder", eventsEnvironment(client));
+        } finally {
+            clearEnv("SMPLKIT_ENVIRONMENT");
+        }
+    }
+
+    private static String eventsEnvironment(AuditClient client) throws Exception {
+        var f = AuditEvents.class.getDeclaredField("environment");
+        f.setAccessible(true);
+        return (String) f.get(client.events());
+    }
+
     // -----------------------------------------------------------------
     // builder null-guards
     // -----------------------------------------------------------------

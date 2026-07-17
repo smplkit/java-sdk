@@ -35,11 +35,13 @@ class LoggingClientStandaloneTest {
     // -------------------------------------------------------- builder
 
     @Test
-    void builder_allSettersThenBuild() {
+    void builder_allSettersThenBuild() throws Exception {
         LoggingClient client = LoggingClient.builder()
                 .profile("default")
                 .apiKey("sk_test")
                 .environment("staging")
+                .service("checkout")
+                .streaming(false)
                 .baseDomain("example.test")
                 .scheme("http")
                 .debug(true)
@@ -49,7 +51,45 @@ class LoggingClientStandaloneTest {
         assertNotNull(client);
         assertNotNull(client.loggers);
         assertNotNull(client.logGroups);
+        assertEquals("staging", getField(client, "environment"));
+        assertEquals("checkout", getField(client, "service"));
         client.close();
+    }
+
+    // --- environment/service resolution through the standard chain ---
+
+    @Test
+    void builder_environmentAndServiceResolvedFromEnvVars() throws Exception {
+        setEnv("SMPLKIT_ENVIRONMENT", "env-from-var");
+        setEnv("SMPLKIT_SERVICE", "svc-from-var");
+        try {
+            LoggingClient client = LoggingClient.builder().apiKey("sk_test").build();
+            assertEquals("env-from-var", getField(client, "environment"));
+            assertEquals("svc-from-var", getField(client, "service"));
+            client.close();
+        } finally {
+            clearEnv("SMPLKIT_ENVIRONMENT");
+            clearEnv("SMPLKIT_SERVICE");
+        }
+    }
+
+    @Test
+    void builder_builderEnvironmentAndServiceWinOverEnvVars() throws Exception {
+        setEnv("SMPLKIT_ENVIRONMENT", "env-from-var");
+        setEnv("SMPLKIT_SERVICE", "svc-from-var");
+        try {
+            LoggingClient client = LoggingClient.builder()
+                    .apiKey("sk_test")
+                    .environment("env-from-builder")
+                    .service("svc-from-builder")
+                    .build();
+            assertEquals("env-from-builder", getField(client, "environment"));
+            assertEquals("svc-from-builder", getField(client, "service"));
+            client.close();
+        } finally {
+            clearEnv("SMPLKIT_ENVIRONMENT");
+            clearEnv("SMPLKIT_SERVICE");
+        }
     }
 
     @Test
@@ -68,6 +108,7 @@ class LoggingClientStandaloneTest {
         assertThrows(NullPointerException.class, () -> b.profile(null));
         assertThrows(NullPointerException.class, () -> b.apiKey(null));
         assertThrows(NullPointerException.class, () -> b.environment(null));
+        assertThrows(NullPointerException.class, () -> b.service(null));
         assertThrows(NullPointerException.class, () -> b.baseUrl(null));
         assertThrows(NullPointerException.class, () -> b.baseDomain(null));
         assertThrows(NullPointerException.class, () -> b.scheme(null));
@@ -101,7 +142,8 @@ class LoggingClientStandaloneTest {
 
         // Refused localhost port -> WS daemon dies instantly without a real connection.
         LoggingClient client = LoggingClient.standalone(
-                loggersApi, logGroupsApi, HttpClient.newHttpClient(), "sk_test", "http://127.0.0.1:1");
+                loggersApi, logGroupsApi, HttpClient.newHttpClient(), "sk_test",
+                "http://127.0.0.1:1", true);
 
         LoggingAdapter adapter = mock(LoggingAdapter.class);
         when(adapter.name()).thenReturn("noop");
@@ -143,5 +185,29 @@ class LoggingClientStandaloneTest {
 
         // Borrowed WS is unsubscribed but never closed.
         verify(borrowed, never()).close();
+    }
+
+    // -------------------------------------------------------------- helpers
+
+    private static Object getField(LoggingClient client, String name) throws Exception {
+        var f = LoggingClient.class.getDeclaredField(name);
+        f.setAccessible(true);
+        return f.get(client);
+    }
+
+    @SuppressWarnings("unchecked")
+    private static void setEnv(String key, String value) throws Exception {
+        var env = System.getenv();
+        var field = env.getClass().getDeclaredField("m");
+        field.setAccessible(true);
+        ((java.util.Map<String, String>) field.get(env)).put(key, value);
+    }
+
+    @SuppressWarnings("unchecked")
+    private static void clearEnv(String key) throws Exception {
+        var env = System.getenv();
+        var field = env.getClass().getDeclaredField("m");
+        field.setAccessible(true);
+        ((java.util.Map<String, String>) field.get(env)).remove(key);
     }
 }

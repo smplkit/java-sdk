@@ -814,7 +814,7 @@ class ConfigResolverTest {
     }
 
     // -----------------------------------------------------------------------
-    // resolveClient() — CRUD-only config resolution (no environment/service)
+    // resolveClient() — standalone sub-client config resolution
     // -----------------------------------------------------------------------
 
     @Test
@@ -827,13 +827,32 @@ class ConfigResolverTest {
                 "scheme = http\n");
 
         ConfigResolver.ResolvedClientConfig config = ConfigResolver.resolveClient(
-                null, null, null, null, null,
+                null, null, null, null, null, null, null,
                 null, key -> null, configFile);
 
         assertEquals("sk_file", config.apiKey);
         assertEquals("file.example.com", config.baseDomain);
         assertEquals("http", config.scheme);
+        assertNull(config.environment);
+        assertNull(config.service);
         assertFalse(config.debug);
+    }
+
+    @Test
+    void resolveClient_readsEnvironmentAndServiceFromFile(@TempDir Path tempDir) throws IOException {
+        Path configFile = tempDir.resolve(".smplkit");
+        Files.writeString(configFile,
+                "[default]\n" +
+                "api_key = sk_file\n" +
+                "environment = file-env\n" +
+                "service = file-svc\n");
+
+        ConfigResolver.ResolvedClientConfig config = ConfigResolver.resolveClient(
+                null, null, null, null, null, null, null,
+                null, key -> null, configFile);
+
+        assertEquals("file-env", config.environment);
+        assertEquals("file-svc", config.service);
     }
 
     @Test
@@ -847,7 +866,7 @@ class ConfigResolverTest {
                 "SMPLKIT_DEBUG", "true");
 
         ConfigResolver.ResolvedClientConfig config = ConfigResolver.resolveClient(
-                null, null, null, null, null,
+                null, null, null, null, null, null, null,
                 null, envVars::get, configFile);
 
         assertEquals("sk_env", config.apiKey);
@@ -857,22 +876,67 @@ class ConfigResolverTest {
     }
 
     @Test
+    void resolveClient_envVarsOverrideFileEnvironmentAndService(@TempDir Path tempDir)
+            throws IOException {
+        Path configFile = tempDir.resolve(".smplkit");
+        Files.writeString(configFile,
+                "[default]\n" +
+                "api_key = sk_file\n" +
+                "environment = file-env\n" +
+                "service = file-svc\n");
+
+        Map<String, String> envVars = Map.of(
+                "SMPLKIT_ENVIRONMENT", "env-env",
+                "SMPLKIT_SERVICE", "env-svc");
+
+        ConfigResolver.ResolvedClientConfig config = ConfigResolver.resolveClient(
+                null, null, null, null, null, null, null,
+                null, envVars::get, configFile);
+
+        assertEquals("env-env", config.environment);
+        assertEquals("env-svc", config.service);
+    }
+
+    @Test
+    void resolveClient_builderEnvironmentAndServiceWin(@TempDir Path tempDir) throws IOException {
+        Path configFile = tempDir.resolve(".smplkit");
+        Files.writeString(configFile,
+                "[default]\n" +
+                "api_key = sk_file\n" +
+                "environment = file-env\n" +
+                "service = file-svc\n");
+
+        Map<String, String> envVars = Map.of(
+                "SMPLKIT_ENVIRONMENT", "env-env",
+                "SMPLKIT_SERVICE", "env-svc");
+
+        ConfigResolver.ResolvedClientConfig config = ConfigResolver.resolveClient(
+                null, null, null, null, "builder-env", "builder-svc", null,
+                null, envVars::get, configFile);
+
+        assertEquals("builder-env", config.environment);
+        assertEquals("builder-svc", config.service);
+    }
+
+    @Test
     void resolveClient_throwsWhenNoApiKey(@TempDir Path tempDir) {
         Path configFile = tempDir.resolve(".smplkit"); // does not exist
 
         SmplError ex = assertThrows(SmplError.class, () -> ConfigResolver.resolveClient(
-                "default", null, null, null, null,
+                "default", null, null, null, null, null, null,
                 null, key -> null, configFile));
         assertTrue(ex.getMessage().contains("No API key provided"));
     }
 
     @Test
     void resolveClient_productionOverloadCovered() {
-        // The 5-arg overload reads from real System.getenv and home dir;
-        // pass an explicit key so it resolves regardless of environment.
+        // The production overload reads from real System.getenv and home dir;
+        // pass explicit values so it resolves regardless of environment.
         ConfigResolver.ResolvedClientConfig config = ConfigResolver.resolveClient(
-                "default", "sk_prod", null, null, null);
+                "default", "sk_prod", null, null, "prod-env", "prod-svc", null);
         assertEquals("sk_prod", config.apiKey);
+        assertEquals("prod-env", config.environment);
+        assertEquals("prod-svc", config.service);
     }
 
     // -----------------------------------------------------------------------

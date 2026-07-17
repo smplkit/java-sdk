@@ -102,6 +102,10 @@ public final class LoggingClient implements AutoCloseable {
     private final String apiKey;
     private final String appBaseUrl;
     private final boolean ownsTransport;
+    /** When {@code false}, the live surface runs stateless: no WebSocket and
+     * no background flush threads; {@code refresh()} re-fetches on demand and
+     * threshold flushes run inline. */
+    private final boolean streaming;
     private volatile com.smplkit.MetricsReporter metrics;
 
     // Discovery buffer is owned by this client; the loggers sub-client
@@ -154,19 +158,20 @@ public final class LoggingClient implements AutoCloseable {
      */
     public LoggingClient(LoggersApi loggersApi, LogGroupsApi logGroupsApi,
                          HttpClient httpClient, String apiKey) {
-        this(loggersApi, logGroupsApi, httpClient, apiKey, null, false);
+        this(loggersApi, logGroupsApi, httpClient, apiKey, null, false, true);
     }
 
     private LoggingClient(LoggersApi loggersApi, LogGroupsApi logGroupsApi,
                           HttpClient httpClient, String apiKey,
-                          String appBaseUrl, boolean ownsTransport) {
+                          String appBaseUrl, boolean ownsTransport, boolean streaming) {
         this.loggersApi = loggersApi;
         this.logGroupsApi = logGroupsApi;
         this.httpClient = httpClient;
         this.apiKey = apiKey;
         this.appBaseUrl = appBaseUrl;
         this.ownsTransport = ownsTransport;
-        this.loggers = new LoggersClient(loggersApi, buffer);
+        this.streaming = streaming;
+        this.loggers = new LoggersClient(loggersApi, buffer, streaming);
         this.logGroups = new LogGroupsClient(logGroupsApi);
     }
 
@@ -178,10 +183,14 @@ public final class LoggingClient implements AutoCloseable {
      * @param httpClient   the standalone HTTP client used to open the owned WebSocket
      * @param apiKey       the resolved api key
      * @param appBaseUrl   the app-service base URL (the WebSocket gateway lives on app)
+     * @param streaming    when {@code false}, {@link #install()} skips the
+     *                     WebSocket and threshold flushes run inline
      */
     static LoggingClient standalone(LoggersApi loggersApi, LogGroupsApi logGroupsApi,
-                                    HttpClient httpClient, String apiKey, String appBaseUrl) {
-        return new LoggingClient(loggersApi, logGroupsApi, httpClient, apiKey, appBaseUrl, true);
+                                    HttpClient httpClient, String apiKey, String appBaseUrl,
+                                    boolean streaming) {
+        return new LoggingClient(loggersApi, logGroupsApi, httpClient, apiKey, appBaseUrl,
+                true, streaming);
     }
 
     // -----------------------------------------------------------------------
@@ -351,14 +360,18 @@ public final class LoggingClient implements AutoCloseable {
             Debug.log("resolution", "Failed to fetch/apply logging levels during connect: " + exc);
         }
 
-        // 7. Register WebSocket event handlers for real-time level updates
-        SharedWebSocket ws = ensureWs();
-        if (ws != null) {
-            ws.on("logger_changed", loggerChangedHandler);
-            ws.on("logger_deleted", loggerDeletedHandler);
-            ws.on("group_changed", groupChangedHandler);
-            ws.on("group_deleted", groupDeletedHandler);
-            ws.on("loggers_changed", loggersChangedHandler);
+        // 7. Register WebSocket event handlers for real-time level updates.
+        // Stateless mode (streaming(false)) skips the WebSocket entirely:
+        // refresh() re-fetches on demand instead.
+        if (streaming) {
+            SharedWebSocket ws = ensureWs();
+            if (ws != null) {
+                ws.on("logger_changed", loggerChangedHandler);
+                ws.on("logger_deleted", loggerDeletedHandler);
+                ws.on("group_changed", groupChangedHandler);
+                ws.on("group_deleted", groupDeletedHandler);
+                ws.on("loggers_changed", loggersChangedHandler);
+            }
         }
 
         connected = true;

@@ -113,8 +113,10 @@ public final class AccountClientBuilder {
      * @return a new {@link AccountClient}
      */
     public AccountClient build() {
+        // Account is environment- and service-agnostic: resolved
+        // environment/service values are ignored.
         ResolvedClientConfig cfg = ConfigResolver.resolveClient(
-                profile, apiKey, baseDomain, scheme, debug);
+                profile, apiKey, baseDomain, scheme, null, null, debug);
         String appUrl = baseUrl != null
                 ? baseUrl
                 : ConfigResolver.serviceUrl(cfg.scheme, "app", cfg.baseDomain);

@@ -1,5 +1,7 @@
 package com.smplkit.audit;
 
+import com.smplkit.errors.SmplError;
+import com.smplkit.internal.ApiExceptionHandler;
 import com.smplkit.internal.generated.audit.ApiException;
 import com.smplkit.internal.generated.audit.api.EventsApi;
 import com.smplkit.internal.generated.audit.model.Event;
@@ -23,6 +25,13 @@ import java.util.UUID;
  * the event is durable — useful from CLI tools, tests, and any flow about
  * to exit the process. Reads ({@link #list(ListEventsInput)},
  * {@link #get(UUID)}) are synchronous.</p>
+ *
+ * <p>In unbuffered mode ({@code buffered(false)} on
+ * {@link AuditClientBuilder}) no in-memory buffer or background worker
+ * exists: every {@code record} performs one blocking POST and throws the
+ * SDK's typed exceptions on failure, the {@code flush} argument is ignored,
+ * and {@link #flush(long)} is a no-op. That shape suits serverless and edge
+ * runtimes, which cannot host background threads.</p>
  */
 public final class AuditEvents {
 
@@ -34,6 +43,7 @@ public final class AuditEvents {
     public static final long DEFAULT_FLUSH_TIMEOUT_MS = 5_000L;
 
     private final EventsApi api;
+    /** The background buffer, or {@code null} in unbuffered mode. */
     private final AuditEventBuffer buffer;
     private final String environment;
 
@@ -42,9 +52,18 @@ public final class AuditEvents {
     }
 
     AuditEvents(EventsApi api, String environment) {
+        this(api, environment, true);
+    }
+
+    AuditEvents(EventsApi api, String environment, boolean buffered) {
         this.api = api;
         this.environment = environment;
-        this.buffer = new AuditEventBuffer(api);
+        this.buffer = buffered ? new AuditEventBuffer(api) : null;
+    }
+
+    /** Whether recording buffers through the background worker. */
+    boolean isBuffered() {
+        return buffer != null;
     }
 
     /**
@@ -107,6 +126,10 @@ public final class AuditEvents {
      * starting with {@code smpl.} are rejected by the server with a 403
      * (the buffer logs the permanent failure and drops the item).</p>
      *
+     * <p>In unbuffered mode this call performs one blocking POST and throws
+     * the SDK's typed exceptions on failure; {@code flush} and
+     * {@code flushTimeoutMs} are meaningless there and ignored.</p>
+     *
      * @param input the event to record; per-field semantics live on
      *     {@link CreateEventInput}
      * @param flush when {@code true}, block until the buffer drains (or
@@ -164,6 +187,16 @@ public final class AuditEvents {
                 .type("event")
                 .attributes(attrs);
         EventRequest body = new EventRequest().data(resource);
+        if (buffer == null) {
+            // Unbuffered: one blocking POST per record; failures surface as
+            // the SDK's typed exceptions like every other awaited call.
+            try {
+                api.recordEvent(body, input.idempotencyKey);
+            } catch (ApiException e) {
+                throw mapException(e);
+            }
+            return;
+        }
         buffer.enqueue(body, input.idempotencyKey);
         if (flush) {
             buffer.flush(flushTimeoutMs);
@@ -255,17 +288,30 @@ public final class AuditEvents {
      * Block until the in-memory buffer is drained or the timeout elapses.
      *
      * <p>Useful for draining buffered events at process shutdown or after a
-     * batch of fire-and-forget records.</p>
+     * batch of fire-and-forget records. A no-op in unbuffered mode, where
+     * every record is already durable on return.</p>
      *
      * @param timeoutMs upper bound on the blocking flush, in milliseconds
      */
     public void flush(long timeoutMs) {
-        buffer.flush(timeoutMs);
+        if (buffer != null) {
+            buffer.flush(timeoutMs);
+        }
     }
 
     /** Drains best-effort and stops the background worker. Called from {@code SmplClient.close}. */
     public void close() {
-        buffer.close();
+        if (buffer != null) {
+            buffer.close();
+        }
+    }
+
+    /** Maps a generated {@link ApiException} to the SDK's typed exceptions. */
+    private static SmplError mapException(ApiException e) {
+        if (e.getCode() == 0) {
+            return ApiExceptionHandler.mapApiException(e);
+        }
+        return ApiExceptionHandler.mapApiException(e.getCode(), e.getResponseBody());
     }
 
     private static AuditEvent fromResource(EventResource r) {

@@ -63,29 +63,42 @@ public final class ConfigResolver {
     }
 
     /**
-     * Resolved configuration for a standalone CRUD client: credentials and
-     * transport settings, resolved without an environment or service (which a
-     * pure CRUD client never needs).
+     * Resolved configuration for a standalone sub-client: credentials,
+     * transport settings, and the optional environment / service scoping,
+     * resolved through the same 4-step chain as {@link ResolvedConfig} (minus
+     * telemetry, which only the top-level client uses).
      */
     public static final class ResolvedClientConfig {
         public final String apiKey;
         public final String baseDomain;
         public final String scheme;
+        public final String environment;
+        public final String service;
         public final boolean debug;
 
-        public ResolvedClientConfig(String apiKey, String baseDomain, String scheme, boolean debug) {
+        public ResolvedClientConfig(String apiKey, String baseDomain, String scheme,
+                                    String environment, String service, boolean debug) {
             this.apiKey = apiKey;
             this.baseDomain = baseDomain;
             this.scheme = scheme;
+            this.environment = environment;
+            this.service = service;
             this.debug = debug;
         }
     }
 
-    /** Resolve client config (no environment/service required). */
+    /**
+     * Resolve a standalone sub-client's config. {@code environment} and
+     * {@code service} resolve through the same chain as {@link #resolve}
+     * (defaults → {@code ~/.smplkit} → {@code SMPLKIT_ENVIRONMENT} /
+     * {@code SMPLKIT_SERVICE} → builder value) and stay {@code null} when
+     * unset everywhere — both are optional for every sub-client.
+     */
     public static ResolvedClientConfig resolveClient(String profile, String apiKey,
                                                        String baseDomain, String scheme,
+                                                       String environment, String service,
                                                        Boolean debug) {
-        return resolveClient(profile, apiKey, baseDomain, scheme, debug,
+        return resolveClient(profile, apiKey, baseDomain, scheme, environment, service, debug,
                 System.getenv("SMPLKIT_PROFILE"),
                 key -> System.getenv(key),
                 Paths.get(System.getProperty("user.home"), ".smplkit"));
@@ -94,12 +107,15 @@ public final class ConfigResolver {
     /** Injectable variant for tests. */
     static ResolvedClientConfig resolveClient(String profile, String apiKey,
                                                        String baseDomain, String scheme,
+                                                       String environment, String service,
                                                        Boolean debug,
                                                        String envProfile, EnvLookup envLookup,
                                                        Path configPath) {
         String resolvedApiKey = null;
         String resolvedBaseDomain = "smplkit.com";
         String resolvedScheme = "https";
+        String resolvedEnvironment = null;
+        String resolvedService = null;
         boolean resolvedDebug = false;
 
         String activeProfile = profile;
@@ -110,6 +126,8 @@ public final class ConfigResolver {
         if (fileValues.containsKey("api_key")) resolvedApiKey = fileValues.get("api_key");
         if (fileValues.containsKey("base_domain")) resolvedBaseDomain = fileValues.get("base_domain");
         if (fileValues.containsKey("scheme")) resolvedScheme = fileValues.get("scheme");
+        if (fileValues.containsKey("environment")) resolvedEnvironment = fileValues.get("environment");
+        if (fileValues.containsKey("service")) resolvedService = fileValues.get("service");
         if (fileValues.containsKey("debug")) resolvedDebug = parseBool(fileValues.get("debug"), "debug");
 
         for (Map.Entry<String, String> entry : CONFIG_KEYS.entrySet()) {
@@ -121,8 +139,10 @@ public final class ConfigResolver {
                     case "api_key" -> resolvedApiKey = envVal;
                     case "base_domain" -> resolvedBaseDomain = envVal;
                     case "scheme" -> resolvedScheme = envVal;
+                    case "environment" -> resolvedEnvironment = envVal;
+                    case "service" -> resolvedService = envVal;
                     case "debug" -> resolvedDebug = parseBool(envVal, envVar);
-                    default -> { /* environment/service/disable_telemetry are runtime-only */ }
+                    default -> { /* disable_telemetry is top-level-client-only */ }
                 }
             }
         }
@@ -130,6 +150,8 @@ public final class ConfigResolver {
         if (apiKey != null && !apiKey.isEmpty()) resolvedApiKey = apiKey;
         if (baseDomain != null && !baseDomain.isEmpty()) resolvedBaseDomain = baseDomain;
         if (scheme != null && !scheme.isEmpty()) resolvedScheme = scheme;
+        if (environment != null && !environment.isEmpty()) resolvedEnvironment = environment;
+        if (service != null && !service.isEmpty()) resolvedService = service;
         if (debug != null) resolvedDebug = debug;
 
         if (resolvedApiKey == null || resolvedApiKey.isEmpty()) {
@@ -141,7 +163,8 @@ public final class ConfigResolver {
                     0, null);
         }
 
-        return new ResolvedClientConfig(resolvedApiKey, resolvedBaseDomain, resolvedScheme, resolvedDebug);
+        return new ResolvedClientConfig(resolvedApiKey, resolvedBaseDomain, resolvedScheme,
+                resolvedEnvironment, resolvedService, resolvedDebug);
     }
 
     /**
