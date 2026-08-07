@@ -21,6 +21,7 @@ import com.smplkit.internal.generated.jobs.Pair;
 import com.smplkit.internal.generated.jobs.model.ErrorResponse;
 import com.smplkit.internal.generated.jobs.model.RunListResponse;
 import com.smplkit.internal.generated.jobs.model.RunResponse;
+import com.smplkit.internal.generated.jobs.model.RunStatsResponse;
 import java.util.UUID;
 
 import com.fasterxml.jackson.core.type.TypeReference;
@@ -386,6 +387,146 @@ public class RunsApi {
         .replace("{run_id}", ApiClient.urlEncode(runId.toString()));
 
     localVarRequestBuilder.uri(URI.create(memberVarBaseUri + localVarPath));
+
+    localVarRequestBuilder.header("Accept", "application/vnd.api+json");
+
+    localVarRequestBuilder.method("GET", HttpRequest.BodyPublishers.noBody());
+    if (memberVarReadTimeout != null) {
+      localVarRequestBuilder.timeout(memberVarReadTimeout);
+    }
+    // Add custom headers if provided
+    localVarRequestBuilder = HttpRequestBuilderExtensions.withAdditionalHeaders(localVarRequestBuilder, headers);
+    if (memberVarInterceptor != null) {
+      memberVarInterceptor.accept(localVarRequestBuilder);
+    }
+    return localVarRequestBuilder;
+  }
+
+  /**
+   * Get Run Stats
+   * Report aggregated statistics over this account&#39;s runs.  One request answers the common monitoring questions: how many runs matched the filters (&#x60;total&#x60;), how they broke down by lifecycle state (&#x60;tally&#x60;), how they were distributed over time (&#x60;buckets&#x60;, when the &#x60;bucket&#x60; directive is given), which runs failed most recently (&#x60;recent_failures&#x60;, at most 3, newest first), and what fires next (&#x60;next_scheduled&#x60;).  Filters compose with AND:  - &#x60;filter[created_at]&#x60; — a half-open &#x60;[start,end)&#x60; date range (see the   parameter for the interval syntax). - &#x60;filter[environment]&#x60; — one environment key or a comma-separated list   (any-of); omitted covers every environment you can access.  &#x60;next_scheduled&#x60; honors only the environment filter: it reports the soonest &#x60;PENDING&#x60; run with a fire time at or after the request, no matter when that run was created.  The resource id is always &#x60;current&#x60; — statistics are computed at read time, not stored.
+   * @param filterCreatedAt Restrict the statistics to runs whose &#x60;created_at&#x60; falls in a half-open &#x60;[start,end)&#x60; interval. Bounds are ISO-8601 timestamps; &#x60;*&#x60; leaves a bound open. The leading bracket is &#x60;[&#x60; (inclusive) or &#x60;(&#x60; (exclusive) and the trailing bracket is &#x60;]&#x60; (inclusive) or &#x60;)&#x60; (exclusive). Example: &#x60;[2026-06-01T00:00:00Z,*)&#x60; covers everything from June 1 onward. Does not apply to &#x60;next_scheduled&#x60;. (optional)
+   * @param filterEnvironment Comma-separated list of environment keys to scope the statistics to (e.g. &#x60;production,staging&#x60;). When omitted, statistics cover every environment you can access. (optional)
+   * @param bucket Also return run counts over time, grouped into buckets of this size (a directive, not a filter). One of &#x60;1m&#x60;, &#x60;5m&#x60;, &#x60;15m&#x60;, &#x60;1h&#x60;, &#x60;6h&#x60;, or &#x60;1d&#x60;. Omit to skip the time series. (optional)
+   * @return RunStatsResponse
+   * @throws ApiException if fails to make API call
+   */
+  public RunStatsResponse getRunStats(@jakarta.annotation.Nullable String filterCreatedAt, @jakarta.annotation.Nullable String filterEnvironment, @jakarta.annotation.Nullable String bucket) throws ApiException {
+    return getRunStats(filterCreatedAt, filterEnvironment, bucket, null);
+  }
+
+  /**
+   * Get Run Stats
+   * Report aggregated statistics over this account&#39;s runs.  One request answers the common monitoring questions: how many runs matched the filters (&#x60;total&#x60;), how they broke down by lifecycle state (&#x60;tally&#x60;), how they were distributed over time (&#x60;buckets&#x60;, when the &#x60;bucket&#x60; directive is given), which runs failed most recently (&#x60;recent_failures&#x60;, at most 3, newest first), and what fires next (&#x60;next_scheduled&#x60;).  Filters compose with AND:  - &#x60;filter[created_at]&#x60; — a half-open &#x60;[start,end)&#x60; date range (see the   parameter for the interval syntax). - &#x60;filter[environment]&#x60; — one environment key or a comma-separated list   (any-of); omitted covers every environment you can access.  &#x60;next_scheduled&#x60; honors only the environment filter: it reports the soonest &#x60;PENDING&#x60; run with a fire time at or after the request, no matter when that run was created.  The resource id is always &#x60;current&#x60; — statistics are computed at read time, not stored.
+   * @param filterCreatedAt Restrict the statistics to runs whose &#x60;created_at&#x60; falls in a half-open &#x60;[start,end)&#x60; interval. Bounds are ISO-8601 timestamps; &#x60;*&#x60; leaves a bound open. The leading bracket is &#x60;[&#x60; (inclusive) or &#x60;(&#x60; (exclusive) and the trailing bracket is &#x60;]&#x60; (inclusive) or &#x60;)&#x60; (exclusive). Example: &#x60;[2026-06-01T00:00:00Z,*)&#x60; covers everything from June 1 onward. Does not apply to &#x60;next_scheduled&#x60;. (optional)
+   * @param filterEnvironment Comma-separated list of environment keys to scope the statistics to (e.g. &#x60;production,staging&#x60;). When omitted, statistics cover every environment you can access. (optional)
+   * @param bucket Also return run counts over time, grouped into buckets of this size (a directive, not a filter). One of &#x60;1m&#x60;, &#x60;5m&#x60;, &#x60;15m&#x60;, &#x60;1h&#x60;, &#x60;6h&#x60;, or &#x60;1d&#x60;. Omit to skip the time series. (optional)
+   * @param headers Optional headers to include in the request
+   * @return RunStatsResponse
+   * @throws ApiException if fails to make API call
+   */
+  public RunStatsResponse getRunStats(@jakarta.annotation.Nullable String filterCreatedAt, @jakarta.annotation.Nullable String filterEnvironment, @jakarta.annotation.Nullable String bucket, Map<String, String> headers) throws ApiException {
+    ApiResponse<RunStatsResponse> localVarResponse = getRunStatsWithHttpInfo(filterCreatedAt, filterEnvironment, bucket, headers);
+    return localVarResponse.getData();
+  }
+
+  /**
+   * Get Run Stats
+   * Report aggregated statistics over this account&#39;s runs.  One request answers the common monitoring questions: how many runs matched the filters (&#x60;total&#x60;), how they broke down by lifecycle state (&#x60;tally&#x60;), how they were distributed over time (&#x60;buckets&#x60;, when the &#x60;bucket&#x60; directive is given), which runs failed most recently (&#x60;recent_failures&#x60;, at most 3, newest first), and what fires next (&#x60;next_scheduled&#x60;).  Filters compose with AND:  - &#x60;filter[created_at]&#x60; — a half-open &#x60;[start,end)&#x60; date range (see the   parameter for the interval syntax). - &#x60;filter[environment]&#x60; — one environment key or a comma-separated list   (any-of); omitted covers every environment you can access.  &#x60;next_scheduled&#x60; honors only the environment filter: it reports the soonest &#x60;PENDING&#x60; run with a fire time at or after the request, no matter when that run was created.  The resource id is always &#x60;current&#x60; — statistics are computed at read time, not stored.
+   * @param filterCreatedAt Restrict the statistics to runs whose &#x60;created_at&#x60; falls in a half-open &#x60;[start,end)&#x60; interval. Bounds are ISO-8601 timestamps; &#x60;*&#x60; leaves a bound open. The leading bracket is &#x60;[&#x60; (inclusive) or &#x60;(&#x60; (exclusive) and the trailing bracket is &#x60;]&#x60; (inclusive) or &#x60;)&#x60; (exclusive). Example: &#x60;[2026-06-01T00:00:00Z,*)&#x60; covers everything from June 1 onward. Does not apply to &#x60;next_scheduled&#x60;. (optional)
+   * @param filterEnvironment Comma-separated list of environment keys to scope the statistics to (e.g. &#x60;production,staging&#x60;). When omitted, statistics cover every environment you can access. (optional)
+   * @param bucket Also return run counts over time, grouped into buckets of this size (a directive, not a filter). One of &#x60;1m&#x60;, &#x60;5m&#x60;, &#x60;15m&#x60;, &#x60;1h&#x60;, &#x60;6h&#x60;, or &#x60;1d&#x60;. Omit to skip the time series. (optional)
+   * @return ApiResponse&lt;RunStatsResponse&gt;
+   * @throws ApiException if fails to make API call
+   */
+  public ApiResponse<RunStatsResponse> getRunStatsWithHttpInfo(@jakarta.annotation.Nullable String filterCreatedAt, @jakarta.annotation.Nullable String filterEnvironment, @jakarta.annotation.Nullable String bucket) throws ApiException {
+    return getRunStatsWithHttpInfo(filterCreatedAt, filterEnvironment, bucket, null);
+  }
+
+  /**
+   * Get Run Stats
+   * Report aggregated statistics over this account&#39;s runs.  One request answers the common monitoring questions: how many runs matched the filters (&#x60;total&#x60;), how they broke down by lifecycle state (&#x60;tally&#x60;), how they were distributed over time (&#x60;buckets&#x60;, when the &#x60;bucket&#x60; directive is given), which runs failed most recently (&#x60;recent_failures&#x60;, at most 3, newest first), and what fires next (&#x60;next_scheduled&#x60;).  Filters compose with AND:  - &#x60;filter[created_at]&#x60; — a half-open &#x60;[start,end)&#x60; date range (see the   parameter for the interval syntax). - &#x60;filter[environment]&#x60; — one environment key or a comma-separated list   (any-of); omitted covers every environment you can access.  &#x60;next_scheduled&#x60; honors only the environment filter: it reports the soonest &#x60;PENDING&#x60; run with a fire time at or after the request, no matter when that run was created.  The resource id is always &#x60;current&#x60; — statistics are computed at read time, not stored.
+   * @param filterCreatedAt Restrict the statistics to runs whose &#x60;created_at&#x60; falls in a half-open &#x60;[start,end)&#x60; interval. Bounds are ISO-8601 timestamps; &#x60;*&#x60; leaves a bound open. The leading bracket is &#x60;[&#x60; (inclusive) or &#x60;(&#x60; (exclusive) and the trailing bracket is &#x60;]&#x60; (inclusive) or &#x60;)&#x60; (exclusive). Example: &#x60;[2026-06-01T00:00:00Z,*)&#x60; covers everything from June 1 onward. Does not apply to &#x60;next_scheduled&#x60;. (optional)
+   * @param filterEnvironment Comma-separated list of environment keys to scope the statistics to (e.g. &#x60;production,staging&#x60;). When omitted, statistics cover every environment you can access. (optional)
+   * @param bucket Also return run counts over time, grouped into buckets of this size (a directive, not a filter). One of &#x60;1m&#x60;, &#x60;5m&#x60;, &#x60;15m&#x60;, &#x60;1h&#x60;, &#x60;6h&#x60;, or &#x60;1d&#x60;. Omit to skip the time series. (optional)
+   * @param headers Optional headers to include in the request
+   * @return ApiResponse&lt;RunStatsResponse&gt;
+   * @throws ApiException if fails to make API call
+   */
+  public ApiResponse<RunStatsResponse> getRunStatsWithHttpInfo(@jakarta.annotation.Nullable String filterCreatedAt, @jakarta.annotation.Nullable String filterEnvironment, @jakarta.annotation.Nullable String bucket, Map<String, String> headers) throws ApiException {
+    HttpRequest.Builder localVarRequestBuilder = getRunStatsRequestBuilder(filterCreatedAt, filterEnvironment, bucket, headers);
+    try {
+      HttpResponse<InputStream> localVarResponse = memberVarHttpClient.send(
+          localVarRequestBuilder.build(),
+          HttpResponse.BodyHandlers.ofInputStream());
+      if (memberVarResponseInterceptor != null) {
+        memberVarResponseInterceptor.accept(localVarResponse);
+      }
+      InputStream localVarResponseBody = null;
+      try {
+        if (localVarResponse.statusCode()/ 100 != 2) {
+          throw getApiException("getRunStats", localVarResponse);
+        }
+        localVarResponseBody = ApiClient.getResponseBody(localVarResponse);
+        if (localVarResponseBody == null) {
+          return new ApiResponse<RunStatsResponse>(
+              localVarResponse.statusCode(),
+              localVarResponse.headers().map(),
+              null
+          );
+        }
+
+        
+        
+        String responseBody = new String(localVarResponseBody.readAllBytes());
+        RunStatsResponse responseValue = responseBody.isBlank()? null: memberVarObjectMapper.readValue(responseBody, new TypeReference<RunStatsResponse>() {});
+        
+
+        return new ApiResponse<RunStatsResponse>(
+            localVarResponse.statusCode(),
+            localVarResponse.headers().map(),
+            responseValue
+        );
+      } finally {
+        if (localVarResponseBody != null) {
+          localVarResponseBody.close();
+        }
+      }
+    } catch (IOException e) {
+      throw new ApiException(e);
+    }
+    catch (InterruptedException e) {
+      Thread.currentThread().interrupt();
+      throw new ApiException(e);
+    }
+  }
+
+  private HttpRequest.Builder getRunStatsRequestBuilder(@jakarta.annotation.Nullable String filterCreatedAt, @jakarta.annotation.Nullable String filterEnvironment, @jakarta.annotation.Nullable String bucket, Map<String, String> headers) throws ApiException {
+
+    HttpRequest.Builder localVarRequestBuilder = HttpRequest.newBuilder();
+
+    String localVarPath = "/api/v1/run_stats";
+
+    List<Pair> localVarQueryParams = new ArrayList<>();
+    StringJoiner localVarQueryStringJoiner = new StringJoiner("&");
+    String localVarQueryParameterBaseName;
+    localVarQueryParameterBaseName = "filter[created_at]";
+    localVarQueryParams.addAll(ApiClient.parameterToPairs("filter[created_at]", filterCreatedAt));
+    localVarQueryParameterBaseName = "filter[environment]";
+    localVarQueryParams.addAll(ApiClient.parameterToPairs("filter[environment]", filterEnvironment));
+    localVarQueryParameterBaseName = "bucket";
+    localVarQueryParams.addAll(ApiClient.parameterToPairs("bucket", bucket));
+
+    if (!localVarQueryParams.isEmpty() || localVarQueryStringJoiner.length() != 0) {
+      StringJoiner queryJoiner = new StringJoiner("&");
+      localVarQueryParams.forEach(p -> queryJoiner.add(p.getName() + '=' + p.getValue()));
+      if (localVarQueryStringJoiner.length() != 0) {
+        queryJoiner.add(localVarQueryStringJoiner.toString());
+      }
+      localVarRequestBuilder.uri(URI.create(memberVarBaseUri + localVarPath + '?' + queryJoiner.toString()));
+    } else {
+      localVarRequestBuilder.uri(URI.create(memberVarBaseUri + localVarPath));
+    }
 
     localVarRequestBuilder.header("Accept", "application/vnd.api+json");
 
