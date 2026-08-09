@@ -40,7 +40,7 @@ methods are stateless HTTP calls.
 
 **Runtime showcases** demonstrate the developer experience: a per-product
 `install()` (`client.config` connects lazily / `client.flags` connects lazily /
-`client.logging.install()`), local evaluation, live updates via WebSocket, and
+`client.logging.install()`), local evaluation, live updates pushed from the server, and
 change listeners. Each runtime showcase imports its setup helper to create
 server-side state, then cleans up after itself.
 
