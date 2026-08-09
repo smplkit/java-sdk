@@ -21,7 +21,7 @@ import java.util.function.Consumer;
  * raises.</p>
  *
  * <p>For typed access via a Java POJO, use {@link ConfigClient#bind}
- * instead — bound instances stay live on the same WebSocket cache, with
+ * instead — bound instances stay live on the same push-updated cache, with
  * field access typed by the POJO class.</p>
  */
 public final class LiveConfigProxy implements Map<String, Object> {
@@ -115,7 +115,7 @@ public final class LiveConfigProxy implements Map<String, Object> {
     @Override
     public Set<String> keySet() {
         // Defensive copy so iterators don't throw ConcurrentModificationException
-        // when WebSocket events update the underlying cache mid-iteration.
+        // when push events update the underlying cache mid-iteration.
         return new HashSet<>(currentValues().keySet());
     }
 

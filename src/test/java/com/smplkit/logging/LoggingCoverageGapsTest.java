@@ -34,7 +34,7 @@ import static org.mockito.Mockito.*;
 /**
  * Targeted line-coverage tests for the logging wrapper. Each test drives a
  * specific conditional arm or WS-event-handler path that the broader behavioral
- * suites leave uncovered. All tests are WebSocket-free: the generated
+ * suites leave uncovered. All tests are network-free: the generated
  * {@code *Api}s are Mockito mocks and WS handlers are driven through the
  * {@code simulate*} test seams.
  */

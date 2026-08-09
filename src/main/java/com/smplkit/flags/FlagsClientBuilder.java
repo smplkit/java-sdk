@@ -148,12 +148,12 @@ public final class FlagsClientBuilder {
 
     /**
      * Stream live flag updates (default {@code true}): the first live call
-     * opens a WebSocket for real-time change events and starts periodic
+     * opens an event stream for real-time change events and starts periodic
      * background flushes of discovered declarations.
      *
      * <p>Pass {@code false} for the stateless live surface: the first live
      * call still fetches all flag definitions once (blocking), but no
-     * WebSocket, timers, or background threads are created; discovery
+     * event stream, timers, or background threads are created; discovery
      * flushes run inline and {@code refresh()} re-fetches on demand — the
      * right shape for serverless and edge runtimes, whose short-lived
      * instances cannot hold open connections.</p>

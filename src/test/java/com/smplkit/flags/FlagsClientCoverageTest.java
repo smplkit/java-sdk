@@ -565,6 +565,20 @@ class FlagsClientCoverageTest {
                 "eager context flush should have fired within 5s");
     }
 
+    // --- flushFlagsSafe: the periodic-flush task entry point ---
+
+    @Test
+    void flushFlagsSafe_periodicTaskEntryPoint_delegatesToFlush() throws Exception {
+        // The 30-second periodic flag-flush task never fires inside a unit
+        // test run, so its entry point would only be covered when a leaked
+        // client's timer happened to fire mid-suite (the intermittent
+        // coverage flake documented in CLAUDE.md). Invoke it directly so the
+        // delegation is covered deterministically.
+        var flushFlagsSafe = FlagsClient.class.getDeclaredMethod("flushFlagsSafe");
+        flushFlagsSafe.setAccessible(true);
+        assertDoesNotThrow(() -> flushFlagsSafe.invoke(client));
+    }
+
     // --- flushContextsSafe catches exception ---
 
     @Test

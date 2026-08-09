@@ -16,7 +16,7 @@ com.smplkit
 ├── Context.java             # Cross-cutting evaluation context
 ├── Rule.java                # Fluent rule builder for flag targeting
 ├── LogLevel.java            # Log level enum (TRACE..SILENT)
-├── SharedWebSocket.java     # Shared WebSocket connection infrastructure
+├── EventStream.java         # Shared live-update stream infrastructure (SSE)
 ├── Helpers.java             # Shared utilities (keyToDisplayName)
 ├── ApiKeyResolver.java      # Multi-source API key resolution
 ├── flags/
@@ -85,7 +85,7 @@ run.
 What "0.99" actually means: the wrapper is ≈4855 lines, so the gap is
 **25-73 missed lines**, not a single line. Tests still pass — only
 the verification gate fails. Strongly suggests races in background-
-thread coverage (daemon threads spawned by `SharedWebSocket.reconnect`,
+thread coverage (daemon threads spawned by `EventStream.runLoop`,
 `FlagsClient.scheduleConnectRetry`, `MetricsReporter` scheduled tasks)
 where tests use `Thread.sleep(50/100/200)` waits that don't reliably
 let the daemon execute its coverage-bearing code under CI load. The
@@ -123,10 +123,9 @@ Don't burn time trying.
    is at 100% by design and coverage exclusions need Mike's explicit
    permission (universal rule).
 
-Suspect tests to look at first: `SharedWebSocketLifecycleTest`
-(`Thread.sleep(50/100/200)` after spawning reconnect threads),
-`TelemetryIntegrationTest` (several `Thread.sleep(100)` waits around
-ws lifecycle), `MetricsReporterTest.timerStartsLazilyOnFirstRecord`
+Suspect tests to look at first: `EventStreamLifecycleTest`
+(thread-based reconnect scenarios), `TelemetryIntegrationTest`
+(waits around stream lifecycle), `MetricsReporterTest.timerStartsLazilyOnFirstRecord`
 (1.5s wait for timer fire), `FlagsClientStartRetryTest.retryTimer_firesAutomaticallyAndConnects`
 (1.5s wait for retry).
 

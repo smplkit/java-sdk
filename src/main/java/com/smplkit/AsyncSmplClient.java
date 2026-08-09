@@ -127,22 +127,22 @@ public final class AsyncSmplClient implements AutoCloseable {
     /**
      * Optionally pre-warm the SDK and wait until the live socket is up.
      *
-     * <p>Eagerly opens the live-updates WebSocket and waits for the handshake
-     * to complete. After the returned future completes, any {@code onChange}
+     * <p>Eagerly opens the live-updates event stream and waits for the server
+     * to confirm the subscription. After the returned future completes, any {@code onChange}
      * listeners receive every server event from this point forward — including
      * events triggered by writes the caller fires immediately afterward.</p>
      *
      * <p>Optional: config and flags connect lazily on first live use, so this
-     * is purely a pre-warm / WebSocket-ready barrier. Logging integration is
+     * is purely a pre-warm / stream-ready barrier. Logging integration is
      * <em>not</em> connected here — call {@code client.logging.install()}
      * separately if you want it (it installs adapters and hooks into your
      * application's logger, which should be opt-in).</p>
      *
-     * @param timeout the maximum time to wait for the live-updates WebSocket
+     * @param timeout the maximum time to wait for the live-updates stream
      *     handshake before giving up
      * @return a future that completes when the live socket is up; it completes
      *     exceptionally with a {@link java.util.concurrent.CompletionException}
-     *     wrapping a {@link com.smplkit.errors.TimeoutError} if the WebSocket
+     *     wrapping a {@link com.smplkit.errors.TimeoutError} if the event stream
      *     fails to connect within {@code timeout}, or wrapping an
      *     {@link InterruptedException} if the waiting thread is interrupted
      */
@@ -164,7 +164,7 @@ public final class AsyncSmplClient implements AutoCloseable {
      *
      * @return a future that completes when the live socket is up; it completes
      *     exceptionally with a {@link java.util.concurrent.CompletionException}
-     *     wrapping a {@link com.smplkit.errors.TimeoutError} if the WebSocket
+     *     wrapping a {@link com.smplkit.errors.TimeoutError} if the event stream
      *     fails to connect within the default timeout, or wrapping an
      *     {@link InterruptedException} if the waiting thread is interrupted
      */

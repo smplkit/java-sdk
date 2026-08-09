@@ -43,7 +43,7 @@ class LoggerChangeEventTest {
     @Test
     void record_inequalityOnDifferentSource() {
         LoggerChangeEvent a = new LoggerChangeEvent("key", LogLevel.INFO, "start");
-        LoggerChangeEvent b = new LoggerChangeEvent("key", LogLevel.INFO, "websocket");
+        LoggerChangeEvent b = new LoggerChangeEvent("key", LogLevel.INFO, "push");
         assertNotEquals(a, b);
     }
 

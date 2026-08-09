@@ -85,7 +85,7 @@ class AsyncSmplClientTest {
     void waitUntilReady_withTimeout_completesOnInlineExecutor() {
         try (SmplClient sync = newSync();
              AsyncSmplClient async = AsyncSmplClient.wrap(sync, INLINE)) {
-            // disableDialForTests (WsFreeTestExtension) marks the socket
+            // disableDialForTests (DialFreeTestExtension) marks the stream
             // connected immediately, so the wait returns without blocking.
             CompletableFuture<Void> future = async.waitUntilReady(Duration.ofSeconds(1));
             assertDoesNotThrow(() -> future.get());

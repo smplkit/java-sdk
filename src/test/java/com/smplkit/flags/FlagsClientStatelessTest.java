@@ -32,7 +32,7 @@ import static org.mockito.Mockito.*;
  * Stateless live surface for {@link FlagsClient} — {@code streaming(false)}.
  *
  * <p>The first live call still flushes discovery (best-effort) and fetches
- * all definitions once, blocking, but no WebSocket is opened, no periodic
+ * all definitions once, blocking, but no event stream is opened, no periodic
  * flush tasks are scheduled, no connect retry is queued, and registration
  * threshold flushes run inline on the calling thread. All assertions on the
  * mocked transports are made immediately after the triggering call — no
@@ -66,7 +66,7 @@ class FlagsClientStatelessTest {
     // ------------------------------------------------------------ lazy connect
 
     @Test
-    void statelessConnect_fetchesFlagsAndSkipsWebSocketAndTimers() throws Exception {
+    void statelessConnect_fetchesFlagsAndSkipsEventStreamAndTimers() throws Exception {
         when(mockApi.listFlags(isNull(), isNull(), isNull(), isNull(), isNull(), isNull(), any(), any(), isNull()))
                 .thenReturn(makeFlagListResponse("beta", "BOOLEAN", true));
 
@@ -74,9 +74,9 @@ class FlagsClientStatelessTest {
         assertTrue(client.isConnected());
         assertTrue(handle.get());
 
-        // No WebSocket, no handler registration, no scheduled periodic flushes.
-        assertNull(field(client, "sharedWs"));
-        assertFalse((boolean) field(client, "wsHandlersRegistered"));
+        // No event stream, no handler registration, no scheduled periodic flushes.
+        assertNull(field(client, "eventStream"));
+        assertFalse((boolean) field(client, "eventHandlersRegistered"));
         assertNull(field(client, "flagFlushFuture"));
         assertNull(field(client, "contextFlushFuture"));
     }

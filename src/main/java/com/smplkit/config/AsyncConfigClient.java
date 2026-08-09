@@ -243,7 +243,7 @@ public final class AsyncConfigClient implements AutoCloseable {
      *
      * <p>Declarative, code-first API with no parent. On first use the schema and
      * values are registered with the server, the local cache is seeded, and the
-     * bound object is mutated in place on every WebSocket-delivered change so
+     * bound object is mutated in place on every push-delivered change so
      * readers always see the current resolved value. Connects lazily on first
      * use — no explicit install step.</p>
      *
@@ -407,7 +407,7 @@ public final class AsyncConfigClient implements AutoCloseable {
      * Release resources owned by the underlying synchronous client.
      *
      * <p>Delegates to {@link ConfigClient#close()} — tears down the owned
-     * WebSocket and HTTP transport for a standalone client; a wired client
+     * event stream and HTTP transport for a standalone client; a wired client
      * closes neither.</p>
      */
     @Override

@@ -12,7 +12,7 @@ import com.smplkit.LogLevel;
  *     {@code INFO}, {@code DEBUG}); same value the resolution algorithm
  *     returns and that {@link Levels#smplLevelToPython} converts.</li>
  *   <li>{@code source}: short string identifying the trigger — typically
- *     {@code "websocket"} or {@code "manual"} (a {@link LoggingClient#refresh}
+ *     {@code "push"} (a server-delivered live update) or {@code "manual"} (a {@link LoggingClient#refresh}
  *     call).</li>
  * </ul>
  *

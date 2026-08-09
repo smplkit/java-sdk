@@ -1,6 +1,6 @@
 package com.smplkit.logging;
 
-import com.smplkit.SharedWebSocket;
+import com.smplkit.EventStream;
 import com.smplkit.internal.generated.logging.ApiException;
 import com.smplkit.internal.generated.logging.api.LogGroupsApi;
 import com.smplkit.internal.generated.logging.api.LoggersApi;
@@ -21,14 +21,13 @@ import static org.mockito.Mockito.*;
 /**
  * Tests for the standalone {@link LoggingClient} construction paths — the
  * {@link LoggingClientBuilder} (every setter + {@code build()}), the
- * {@code create} factories, and the owned-transport / owned-WebSocket lifecycle.
+ * {@code create} factories, and the owned-transport / owned-stream lifecycle.
  *
- * <p>The owned-WebSocket lines that {@link LoggingClient#install()} reaches for a
+ * <p>The owned-stream lines that {@link LoggingClient#install()} reaches for a
  * standalone client (creating and later tearing down its own
- * {@link SharedWebSocket}) execute synchronously on the calling thread; the
- * actual socket dial happens on a daemon thread pointed at a refused localhost
- * address, so no real connection is ever made and no listener races a coverage
- * read.</p>
+ * {@link EventStream}) execute synchronously on the calling thread; the actual
+ * dial happens on a daemon thread pointed at a refused localhost address, so
+ * no real connection is ever made and no listener races a coverage read.</p>
  */
 class LoggingClientStandaloneTest {
 
@@ -125,10 +124,10 @@ class LoggingClientStandaloneTest {
         }
     }
 
-    // -------------------------------------------------------- owned WS lifecycle
+    // ---------------------------------------------------- owned stream lifecycle
 
     @Test
-    void standalone_install_createsOwnedWs_closeTearsItDown() throws ApiException {
+    void standalone_install_createsOwnedStream_closeTearsItDown() throws ApiException {
         LoggersApi loggersApi = mock(LoggersApi.class);
         LogGroupsApi logGroupsApi = mock(LogGroupsApi.class);
         // No real fetch: mock the list endpoints.
@@ -140,7 +139,7 @@ class LoggingClientStandaloneTest {
         groups.setData(new ArrayList<>());
         when(logGroupsApi.listLogGroups(isNull(), any(), any(), isNull())).thenReturn(groups);
 
-        // Refused localhost port -> WS daemon dies instantly without a real connection.
+        // Refused localhost port -> stream daemon retries harmlessly, never connects.
         LoggingClient client = LoggingClient.standalone(
                 loggersApi, logGroupsApi, HttpClient.newHttpClient(), "sk_test",
                 "http://127.0.0.1:1", true);
@@ -153,13 +152,13 @@ class LoggingClientStandaloneTest {
         client.install();
         assertTrue(client.isInstalled());
 
-        // close() tears down the owned WS and resets installed state.
+        // close() tears down the owned stream and resets installed state.
         client.close();
         assertFalse(client.isInstalled());
     }
 
     @Test
-    void wired_install_borrowsWs_closeDoesNotCloseIt() throws ApiException {
+    void wired_install_borrowsStream_closeDoesNotCloseIt() throws ApiException {
         LoggersApi loggersApi = mock(LoggersApi.class);
         LogGroupsApi logGroupsApi = mock(LogGroupsApi.class);
         LoggerListResponse loggers = new LoggerListResponse();
@@ -172,8 +171,8 @@ class LoggingClientStandaloneTest {
 
         LoggingClient client = new LoggingClient(loggersApi, logGroupsApi,
                 HttpClient.newHttpClient(), "sk_test");
-        SharedWebSocket borrowed = mock(SharedWebSocket.class);
-        client.setSharedWs(borrowed);
+        EventStream borrowed = mock(EventStream.class);
+        client.setEventStream(borrowed);
 
         LoggingAdapter adapter = mock(LoggingAdapter.class);
         when(adapter.name()).thenReturn("noop");
@@ -183,7 +182,7 @@ class LoggingClientStandaloneTest {
         client.install();
         client.close();
 
-        // Borrowed WS is unsubscribed but never closed.
+        // Borrowed stream is unsubscribed but never closed.
         verify(borrowed, never()).close();
     }
 

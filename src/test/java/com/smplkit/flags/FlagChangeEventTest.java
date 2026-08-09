@@ -8,9 +8,9 @@ class FlagChangeEventTest {
 
     @Test
     void recordFields() {
-        FlagChangeEvent event = new FlagChangeEvent("my-flag", "websocket");
+        FlagChangeEvent event = new FlagChangeEvent("my-flag", "push");
         assertEquals("my-flag", event.id());
-        assertEquals("websocket", event.source());
+        assertEquals("push", event.source());
     }
 
     @Test

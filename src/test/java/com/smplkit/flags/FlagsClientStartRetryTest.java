@@ -1,6 +1,6 @@
 package com.smplkit.flags;
 
-import com.smplkit.SharedWebSocket;
+import com.smplkit.EventStream;
 import com.smplkit.internal.generated.app.api.ContextsApi;
 import com.smplkit.internal.generated.flags.ApiException;
 import com.smplkit.flags.types.FlagDeclaration;
@@ -32,7 +32,7 @@ import static org.mockito.Mockito.*;
  *   <li>{@code connected} stays {@code false} after a 500 response.</li>
  *   <li>A second start attempt (after the backoff) flushes the still-pending
  *       queue and connects successfully.</li>
- *   <li>WebSocket handlers are registered exactly once across retry attempts.</li>
+ *   <li>Push-event handlers are registered exactly once across retry attempts.</li>
  *   <li>A {@code fetchAllFlags} failure also triggers the retry path.</li>
  * </ul>
  */
@@ -50,10 +50,10 @@ class FlagsClientStartRetryTest {
                 "test-key", "https://flags.smplkit.com", "https://app.smplkit.com",
                 Duration.ofSeconds(5));
         client.setEnvironment("staging");
-        // Inject a mock WebSocket so a successful connect never dials a real
-        // socket (keeps the whole class WS-free). Tests that need to verify WS
-        // interactions install their own mock over this one.
-        client.setSharedWs(Mockito.mock(SharedWebSocket.class));
+        // Inject a mock event stream so a successful connect never dials a
+        // real connection (keeps the whole class network-free). Tests that need
+        // to verify stream interactions install their own mock over this one.
+        client.setEventStream(Mockito.mock(EventStream.class));
     }
 
     @AfterEach
@@ -129,13 +129,13 @@ class FlagsClientStartRetryTest {
     }
 
     // -----------------------------------------------------------------------
-    // WebSocket handlers registered exactly once across retry attempts
+    // Push-event handlers registered exactly once across retry attempts
     // -----------------------------------------------------------------------
 
     @Test
-    void wsHandlersRegisteredExactlyOnce_acrossRetry() throws ApiException {
-        SharedWebSocket mockWs = Mockito.mock(SharedWebSocket.class);
-        client.setSharedWs(mockWs);
+    void eventHandlersRegisteredExactlyOnce_acrossRetry() throws ApiException {
+        EventStream mockStream = Mockito.mock(EventStream.class);
+        client.setEventStream(mockStream);
 
         when(mockApi.bulkRegisterFlags(any()))
                 .thenThrow(new ApiException(500, "Service Unavailable"))
@@ -145,18 +145,19 @@ class FlagsClientStartRetryTest {
 
         client.register(new FlagDeclaration("feature-x", "BOOLEAN", false), false);
 
-        // First attempt: fails before WS registration
+        // First attempt: fails before handler registration
         client.ensureConnected();
-        verify(mockWs, never()).on(anyString(), any());
+        verify(mockStream, never()).on(anyString(), any());
 
         // Simulate retry
         client.disconnect();
         client.ensureConnected();
 
         // Handlers registered exactly once each
-        verify(mockWs, times(1)).on(eq("flag_changed"), any());
-        verify(mockWs, times(1)).on(eq("flag_deleted"), any());
-        verify(mockWs, times(1)).on(eq("flags_changed"), any());
+        verify(mockStream, times(1)).on(eq("flag_changed"), any());
+        verify(mockStream, times(1)).on(eq("flag_deleted"), any());
+        verify(mockStream, times(1)).on(eq("flags_changed"), any());
+        verify(mockStream, times(1)).onReconnect(any());
     }
 
     // -----------------------------------------------------------------------

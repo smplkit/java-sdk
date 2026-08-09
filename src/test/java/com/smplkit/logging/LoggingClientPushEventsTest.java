@@ -28,7 +28,7 @@ import static org.mockito.ArgumentMatchers.*;
 import static org.mockito.Mockito.*;
 
 /**
- * Tests for LoggingClient WS event behaviors. Listener semantics:
+ * Tests for LoggingClient push-event behaviors. Listener semantics:
  * <ul>
  *   <li>Every {@code adapter.applyLevel(...)} call fires the matching
  *       key-scoped listener AND every global listener with the per-key event.
@@ -38,7 +38,7 @@ import static org.mockito.Mockito.*;
  *   <li>An edit that leaves the resolved level unchanged fires no listeners.
  * </ul>
  */
-class LoggingClientWsEventsTest {
+class LoggingClientPushEventsTest {
 
     private LoggersApi mockLoggersApi;
     private LogGroupsApi mockLogGroupsApi;
@@ -76,7 +76,7 @@ class LoggingClientWsEventsTest {
 
         assertNotNull(received.get(), "Key-scoped listener should fire when level changes");
         assertEquals("com.acme.service", received.get().id());
-        assertEquals("websocket", received.get().source());
+        assertEquals("push", received.get().source());
         verify(mockLoggersApi, times(1)).getLogger("com.acme.service");
         verify(mockLoggersApi, times(1)).listLoggers(isNull(), isNull(), isNull(), isNull(), isNull(), any(), any(), isNull()); // only start
     }

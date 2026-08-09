@@ -22,7 +22,7 @@ import static org.mockito.Mockito.*;
  *
  * <p>{@code install()} still loads adapters, discovers loggers, flushes the
  * registration buffer, and fetches + applies levels once, blocking — but no
- * WebSocket is opened, and registration threshold flushes run inline on the
+ * event stream is opened, and registration threshold flushes run inline on the
  * calling thread instead of on a one-shot background thread. Mock
  * verifications run immediately after the triggering call — no latch, no
  * sleep — proving no background thread sits in the path.</p>
@@ -52,7 +52,7 @@ class LoggingClientStatelessTest {
     }
 
     @Test
-    void statelessInstall_fetchesAndAppliesButSkipsWebSocket() throws Exception {
+    void statelessInstall_fetchesAndAppliesButSkipsEventStream() throws Exception {
         LoggersApi loggersApi = mockLoggersApi();
         LogGroupsApi logGroupsApi = mockLogGroupsApi();
         LoggingClient client = statelessClient(loggersApi, logGroupsApi);
@@ -69,9 +69,9 @@ class LoggingClientStatelessTest {
         verify(loggersApi, times(1)).listLoggers(isNull(), isNull(), isNull(), isNull(), isNull(), any(), any(), isNull());
         verify(logGroupsApi, times(1)).listLogGroups(isNull(), any(), any(), isNull());
 
-        // No WebSocket was created or owned despite the non-null app base URL.
-        assertNull(field(client, "wsManager"));
-        assertFalse((boolean) field(client, "ownsWs"));
+        // No event stream was created or owned despite the non-null app base URL.
+        assertNull(field(client, "eventStream"));
+        assertFalse((boolean) field(client, "ownsEventStream"));
 
         // refresh() re-fetches on demand.
         client.refresh();

@@ -18,8 +18,8 @@ import java.util.Objects;
  *
  * <p>Resolution order matches {@link com.smplkit.SmplClientBuilder}. A standalone
  * client owns its own logging transport and, on {@link LoggingClient#install()},
- * its own {@link com.smplkit.SharedWebSocket} opened against the app service (the
- * WebSocket gateway lives on the app service, like flags).</p>
+ * its own {@code EventStream} opened against the app service (the
+ * event gateway lives on the app service, like flags).</p>
  */
 public final class LoggingClientBuilder {
 
@@ -132,12 +132,12 @@ public final class LoggingClientBuilder {
 
     /**
      * Stream live logger-level updates (default {@code true}):
-     * {@link LoggingClient#install()} opens a WebSocket for real-time change
+     * {@link LoggingClient#install()} opens an event stream for real-time change
      * events.
      *
      * <p>Pass {@code false} for the stateless live surface:
      * {@code install()} still discovers loggers and fetches and applies
-     * levels once (blocking), but no WebSocket or background threads are
+     * levels once (blocking), but no event stream or background threads are
      * created; discovery flushes run inline and {@code refresh()} re-fetches
      * on demand — the right shape for serverless and edge runtimes, whose
      * short-lived instances cannot hold open connections.</p>
@@ -181,7 +181,7 @@ public final class LoggingClientBuilder {
         String loggingBaseUrl = baseUrl != null
                 ? baseUrl
                 : ConfigResolver.serviceUrl(cfg.scheme, "logging", cfg.baseDomain);
-        // The WebSocket gateway lives on the app service (like flags).
+        // The event gateway lives on the app service (like flags).
         String appBaseUrl = ConfigResolver.serviceUrl(cfg.scheme, "app", cfg.baseDomain);
 
         ApiClient apiClient = new ApiClient();
@@ -193,7 +193,7 @@ public final class LoggingClientBuilder {
         LoggersApi loggersApi = new LoggersApi(apiClient);
         LogGroupsApi logGroupsApi = new LogGroupsApi(apiClient);
 
-        // A standalone client opens its own WebSocket lazily on install(); give it
+        // A standalone client opens its own event stream lazily on install(); give it
         // its own HTTP client for the upgrade handshake.
         HttpClient wsHttpClient = HttpClients.builder().build();
 

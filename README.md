@@ -60,12 +60,12 @@ try (SmplClient client = SmplClient.builder().profile("local").build()) { /* ...
 ```
 
 `SmplClient` is `AutoCloseable` — always use try-with-resources or call
-`close()`, otherwise the live-updates WebSocket and metrics threads stay alive.
+`close()`, otherwise the live-updates connection and metrics threads stay alive.
 
 ### `waitUntilReady()`
 
 Code that creates a client and immediately fires a management write (then expects
-to observe the resulting WebSocket event) needs to wait until the live-updates
+to observe the resulting live-update event) needs to wait until the live-updates
 subscription is registered server-side. Without it the broadcast races the
 subscribe and is silently missed:
 
@@ -175,7 +175,8 @@ try (SmplClient client = SmplClient.builder()
     String bannerText = banner.get();
     Number limit = rateLimit.get();
 
-    // Listen for flag changes (WebSocket + manual refresh both fire these)
+    // Listen for flag changes — event.source() is "push" for changes
+    // delivered live from the server, "manual" for a local refresh()
     client.flags().onChange(event ->
         System.out.println("Flag changed: " + event.id()));
 
@@ -241,8 +242,8 @@ try (SmplClient client = SmplClient.builder()
     client.waitUntilReady();
 
     // Get a live, dict-like, identity-stable proxy over the resolved config.
-    // Reads pass through the resolution cache and pick up WebSocket updates
-    // automatically — no separate subscribe() step.
+    // Reads pass through the resolution cache and pick up pushed live
+    // updates automatically — no separate subscribe() step.
     LiveConfigProxy svc = client.config().get("user_service");
     Number ttl = (Number) svc.get("cache_ttl");
     String host = (String) svc.get("database.host");
@@ -324,8 +325,9 @@ try (SmplClient client = SmplClient.builder()
 `install()` scans every logger registered with the JVM's logging frameworks
 (JUL is always available; SLF4J-Logback and Log4j2 are picked up if on the
 classpath), bulk-registers them with the server, and applies the resolved
-levels back to the native loggers. WebSocket events keep the levels live;
-`refresh()` forces a re-pull when you've made server-side changes elsewhere.
+levels back to the native loggers. Pushed live updates keep the levels
+current; `refresh()` forces a re-pull when you've made server-side changes
+elsewhere.
 
 ```java
 try (SmplClient client = SmplClient.builder()
@@ -461,7 +463,7 @@ Each line follows the format:
 [smplkit:{subsystem}] {ISO-8601 timestamp} {message}
 ```
 
-Subsystems: `lifecycle`, `websocket`, `api`, `flags`, `discovery`, `resolution`, `adapter`, `registration`, `metrics`.
+Subsystems: `lifecycle`, `events`, `api`, `flags`, `discovery`, `resolution`, `adapter`, `registration`, `metrics`.
 
 Output bypasses the Java logging framework and writes directly to stderr to avoid interference with level management.
 

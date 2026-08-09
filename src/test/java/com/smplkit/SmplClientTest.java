@@ -339,12 +339,12 @@ class SmplClientTest {
     }
 
     @Test
-    void waitUntilReadyTimesOutWhenWsUnreachable() {
+    void waitUntilReadyTimesOutWhenStreamUnreachable() {
         // This test exercises the real timeout path, so opt out of the suite-wide
-        // dial neutralization. The WS points at a refused localhost port (no
+        // dial neutralization. The stream points at a refused localhost port (no
         // external network), so it never reaches "connected" and the dial fails
         // fast. waitUntilReady must throw a TimeoutError instead of blocking forever.
-        SharedWebSocket.disableDialForTests = false;
+        EventStream.disableDialForTests = false;
         try (SmplClient client = SmplClient.builder()
                 .apiKey("test-key")
                 .environment("test")
@@ -362,7 +362,7 @@ class SmplClientTest {
     void waitUntilReadyReturnsImmediatelyWhenAlreadyConnected() throws Exception {
         // Cover the happy-path return of waitUntilReady AND the no-arg
         // overload's delegation to the Duration overload. We close the
-        // client first so SharedWebSocket.start() early-returns instead
+        // client first so EventStream.start() early-returns instead
         // of spawning a connect thread that would race our pre-flip and
         // overwrite the status back to "connecting". Then we set status
         // to "connected" and call waitUntilReady; the loop exits on the
@@ -374,7 +374,7 @@ class SmplClientTest {
                 .disableTelemetry(true)
                 .build()) {
             client.close();
-            client.sharedWsForTesting().setConnectionStatus("connected");
+            client.eventStreamForTesting().setConnectionStatus("connected");
             client.waitUntilReady();
             client.waitUntilReady(Duration.ofSeconds(1));
         }
@@ -473,9 +473,4 @@ class SmplClientTest {
                 request.headers().allValues("User-Agent"));
     }
 
-    @Test
-    void webSocketHandshakeUserAgent_matchesHttpDefault() {
-        assertEquals(UserAgent.VALUE, SharedWebSocket.WS_USER_AGENT);
-        assertTrue(SharedWebSocket.WS_USER_AGENT.startsWith("smplkit-sdk-java/"));
-    }
 }

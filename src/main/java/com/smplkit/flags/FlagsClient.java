@@ -7,7 +7,7 @@ import com.smplkit.internal.ConfigResolver;
 import com.smplkit.internal.ConfigResolver.ResolvedClientConfig;
 import com.smplkit.Context;
 import com.smplkit.Helpers;
-import com.smplkit.SharedWebSocket;
+import com.smplkit.EventStream;
 import com.smplkit.internal.ApiExceptionHandler;
 import com.smplkit.errors.SmplError;
 import com.smplkit.flags.types.FlagDeclaration;
@@ -79,7 +79,7 @@ import java.util.logging.Logger;
  *       against the cached definitions, plus {@link #refresh} / {@link #stats} /
  *       {@link #onChange}. The first live call transparently flushes discovery,
  *       fetches all flag definitions into the local cache, and opens the
- *       live-updates WebSocket — no explicit install step.</li>
+ *       live-updates event stream — no explicit install step.</li>
  * </ul>
  *
  * <p>One client exposes the full surface, reachable as {@code client.flags()}
@@ -101,7 +101,7 @@ import java.util.logging.Logger;
  * ({@link #booleanFlag} / {@link #stringFlag} / {@link #numberFlag} /
  * {@link #jsonFlag} / {@link #refresh} / {@link #stats} / {@link #onChange})
  * connects lazily on first use — the first call flushes discovery, fetches all
- * flag definitions into the local cache, and opens the live-updates WebSocket.
+ * flag definitions into the local cache, and opens the live-updates event stream.
  * No explicit install step is required.</p>
  *
  * <p>The client supports two construction shapes:</p>
@@ -109,12 +109,12 @@ import java.util.logging.Logger;
  * <ul>
  *   <li><b>Wired</b> into {@link com.smplkit.SmplClient} — borrows the parent's
  *       flags transport for both runtime fetch and CRUD, the parent's shared
- *       WebSocket for the live channel, and {@code client.platform.contexts} for
+ *       event stream for the live channel, and {@code client.platform.contexts} for
  *       evaluation-context registration. This is the common path.</li>
  *   <li><b>Standalone</b> — {@code FlagsClient.builder().apiKey(...).baseDomain(...)...build()}
  *       builds and owns its own flags transport and a contexts client (against its
- *       own app transport), and on first live use opens and owns its own WebSocket.
- *       {@link #close()} tears down only the owned transports and owned WebSocket.</li>
+ *       own app transport), and on first live use opens and owns its own event stream.
+ *       {@link #close()} tears down only the owned transports and owned event stream.</li>
  * </ul>
  */
 public final class FlagsClient implements AutoCloseable {
@@ -138,7 +138,7 @@ public final class FlagsClient implements AutoCloseable {
     private final String appBaseUrl;
     private final Duration timeout;
     private final boolean ownsTransport;
-    /** When {@code false}, the live surface runs stateless: no WebSocket, no
+    /** When {@code false}, the live surface runs stateless: no event stream, no
      * periodic timers, no background flush threads; {@code refresh()}
      * re-fetches on demand and threshold flushes run inline. */
     private final boolean streaming;
@@ -186,7 +186,7 @@ public final class FlagsClient implements AutoCloseable {
     private final Object connectLock = new Object();
     private volatile long backoffSeconds = 1;
     private volatile boolean retryScheduled = false;
-    private volatile boolean wsHandlersRegistered = false;
+    private volatile boolean eventHandlersRegistered = false;
     private volatile ScheduledFuture<?> retryFuture;
 
     // Change listeners
@@ -201,16 +201,19 @@ public final class FlagsClient implements AutoCloseable {
     // Service name from parent SmplClient (for auto-injection)
     private volatile String parentService;
 
-    // Shared WebSocket reference (set by SmplClient; lazily created when standalone)
-    private volatile SharedWebSocket sharedWs;
-    private volatile boolean ownsWs = false;
+    // Shared event stream reference (set by SmplClient; lazily created when standalone)
+    private volatile EventStream eventStream;
+    private volatile boolean ownsEventStream = false;
     private final Consumer<Map<String, Object>> flagChangedHandler;
     private final Consumer<Map<String, Object>> flagDeletedHandler;
     private final Consumer<Map<String, Object>> flagsChangedHandler;
+    /** Reconnect refetch: the same bulk-refresh path the flags_changed handler
+     * takes, so listeners fire only for keys whose content actually changed. */
+    private final Runnable reconnectRefetch;
 
     /**
      * Wired constructor — invoked by {@link com.smplkit.SmplClient} so the flags
-     * surface shares the parent client's connection pool and shared WebSocket.
+     * surface shares the parent client's connection pool and shared event stream.
      * The resulting client does NOT own its transport, so {@link #close()} tears
      * down nothing.
      *
@@ -251,6 +254,7 @@ public final class FlagsClient implements AutoCloseable {
         this.flagChangedHandler = this::handleFlagChanged;
         this.flagDeletedHandler = this::handleFlagDeleted;
         this.flagsChangedHandler = this::handleFlagsChanged;
+        this.reconnectRefetch = () -> handleFlagsChanged(Map.of());
     }
 
     /** Package-private test constructor. */
@@ -268,6 +272,7 @@ public final class FlagsClient implements AutoCloseable {
         this.flagChangedHandler = this::handleFlagChanged;
         this.flagDeletedHandler = this::handleFlagDeleted;
         this.flagsChangedHandler = this::handleFlagsChanged;
+        this.reconnectRefetch = () -> handleFlagsChanged(Map.of());
     }
 
     // -----------------------------------------------------------------------
@@ -336,9 +341,9 @@ public final class FlagsClient implements AutoCloseable {
         this.metrics = metrics;
     }
 
-    /** Internal — wires the parent's shared WebSocket for the live channel. Used by {@link com.smplkit.SmplClient}; not for direct use. */
-    public void setSharedWs(SharedWebSocket ws) {
-        this.sharedWs = ws;
+    /** Internal — wires the parent's shared event stream for the live channel. Used by {@link com.smplkit.SmplClient}; not for direct use. */
+    public void setEventStream(EventStream stream) {
+        this.eventStream = stream;
     }
 
     /** Internal — wires the shared evaluation-context registration buffer. Used by {@link com.smplkit.SmplClient}; not for direct use. */
@@ -868,7 +873,7 @@ public final class FlagsClient implements AutoCloseable {
      * Open the live connection to the running Smpl Flags service.
      *
      * <p>Flushes any buffered discovery declarations, fetches all flag
-     * definitions into the local cache, opens the shared WebSocket, and
+     * definitions into the local cache, opens the shared event stream, and
      * subscribes to {@code flag_changed} / {@code flag_deleted} / {@code flags_changed}
      * events.</p>
      *
@@ -888,7 +893,7 @@ public final class FlagsClient implements AutoCloseable {
                 return;
             }
             if (retryScheduled) return;
-            Debug.log("websocket", "flags runtime initializing");
+            Debug.log("events", "flags runtime initializing");
 
             // Flush discovered flags BEFORE fetching definitions so the fetch
             // reflects them. Items stay in the buffer until the POST succeeds.
@@ -901,25 +906,26 @@ public final class FlagsClient implements AutoCloseable {
             try {
                 fetchAllFlags();
             } catch (Exception e) {
-                Debug.log("websocket", "flags runtime fetchAllFlags failed: " + e);
+                Debug.log("events", "flags runtime fetchAllFlags failed: " + e);
                 scheduleConnectRetry();
                 return;
             }
             resolutionCache.clear();
 
-            SharedWebSocket ws = ensureWs();
-            if (ws != null && !wsHandlersRegistered) {
+            EventStream stream = ensureEventStream();
+            if (stream != null && !eventHandlersRegistered) {
                 Debug.log("registration", "registering flag_changed, flag_deleted, and flags_changed handlers");
-                ws.on("flag_changed", flagChangedHandler);
-                ws.on("flag_deleted", flagDeletedHandler);
-                ws.on("flags_changed", flagsChangedHandler);
-                ws.ensureConnected(Duration.ofSeconds(10));
-                wsHandlersRegistered = true;
+                stream.on("flag_changed", flagChangedHandler);
+                stream.on("flag_deleted", flagDeletedHandler);
+                stream.on("flags_changed", flagsChangedHandler);
+                stream.onReconnect(reconnectRefetch);
+                stream.ensureConnected(Duration.ofSeconds(10));
+                eventHandlersRegistered = true;
             }
 
             connected = true;
             backoffSeconds = 1;
-            Debug.log("websocket", "flags runtime connected");
+            Debug.log("events", "flags runtime connected");
 
             if (contextFlushExecutor != null && flagFlushFuture == null) {
                 flagFlushFuture = contextFlushExecutor.scheduleAtFixedRate(
@@ -936,34 +942,34 @@ public final class FlagsClient implements AutoCloseable {
     /**
      * Stateless connect ({@code streaming(false)}): flush discovery
      * best-effort and fetch all flag definitions once, blocking. No
-     * WebSocket, no periodic timers, and no retry scheduling — a fetch
+     * event stream, no periodic timers, and no retry scheduling — a fetch
      * failure propagates as the mapped SDK exception and the next live call
      * retries inline. Callers hold {@code connectLock}.
      */
     private void connectStateless() {
-        Debug.log("websocket", "flags runtime initializing (streaming disabled)");
+        Debug.log("events", "flags runtime initializing (streaming disabled)");
         // Discovery flush stays best-effort (mirrors the streaming path);
         // items stay buffered until a later flush succeeds.
         flushFlags();
         fetchAllFlags();
         resolutionCache.clear();
         connected = true;
-        Debug.log("websocket", "flags runtime connected (stateless)");
+        Debug.log("events", "flags runtime connected (stateless)");
     }
 
-    /** Return the shared WebSocket — the parent's when wired, else our own. */
-    private SharedWebSocket ensureWs() {
-        SharedWebSocket ws = this.sharedWs;
-        if (ws != null) return ws;
+    /** Return the shared event stream — the parent's when wired, else our own. */
+    private EventStream ensureEventStream() {
+        EventStream stream = this.eventStream;
+        if (stream != null) return stream;
         if (appBaseUrl == null || httpClient == null) return null;
         synchronized (connectLock) {
-            if (this.sharedWs == null) {
-                SharedWebSocket created = new SharedWebSocket(httpClient, appBaseUrl, apiKey, metrics);
+            if (this.eventStream == null) {
+                EventStream created = new EventStream(httpClient, appBaseUrl, apiKey, metrics);
                 created.start();
-                this.sharedWs = created;
-                this.ownsWs = true;
+                this.eventStream = created;
+                this.ownsEventStream = true;
             }
-            return this.sharedWs;
+            return this.eventStream;
         }
     }
 
@@ -1346,17 +1352,17 @@ public final class FlagsClient implements AutoCloseable {
     }
 
     // -----------------------------------------------------------------------
-    // Internal: WebSocket handlers
+    // Internal: push-event handlers
     // -----------------------------------------------------------------------
 
     private void handleFlagChanged(Map<String, Object> data) {
         if (!connected) return;
         String flagKey = data.get("id") instanceof String s ? s : null;
         if (flagKey == null) {
-            Debug.log("websocket", "flag_changed event missing id, skipping");
+            Debug.log("events", "flag_changed event missing id, skipping");
             return;
         }
-        Debug.log("websocket", "flag_changed event received, key=" + flagKey);
+        Debug.log("events", "flag_changed event received, key=" + flagKey);
 
         // Snapshot pre-state for this key
         Map<String, Object> preFlagData = flagStore.get(flagKey);
@@ -1366,7 +1372,7 @@ public final class FlagsClient implements AutoCloseable {
         try {
             fetched = get(flagKey);
         } catch (Exception e) {
-            Debug.log("websocket", "flag_changed scoped fetch failed for key=" + flagKey + ": " + e);
+            Debug.log("events", "flag_changed scoped fetch failed for key=" + flagKey + ": " + e);
             return;
         }
 
@@ -1376,22 +1382,22 @@ public final class FlagsClient implements AutoCloseable {
 
         // Only fire if content actually changed
         if (Objects.equals(preFlagData, postFlagData)) {
-            Debug.log("websocket", "flag_changed: content unchanged for key=" + flagKey + ", no listeners fired");
+            Debug.log("events", "flag_changed: content unchanged for key=" + flagKey + ", no listeners fired");
             return;
         }
 
-        fireListenersForKey(flagKey, new FlagChangeEvent(flagKey, "websocket"));
-        fireGlobalListeners(new FlagChangeEvent(flagKey, "websocket"));
+        fireListenersForKey(flagKey, new FlagChangeEvent(flagKey, "push"));
+        fireGlobalListeners(new FlagChangeEvent(flagKey, "push"));
     }
 
     private void handleFlagDeleted(Map<String, Object> data) {
         if (!connected) return;
         String flagKey = data.get("id") instanceof String s ? s : null;
         if (flagKey == null) {
-            Debug.log("websocket", "flag_deleted event missing id, skipping");
+            Debug.log("events", "flag_deleted event missing id, skipping");
             return;
         }
-        Debug.log("websocket", "flag_deleted event received, key=" + flagKey);
+        Debug.log("events", "flag_deleted event received, key=" + flagKey);
 
         // Remove from local store — no HTTP fetch
         boolean existed = flagStore.containsKey(flagKey);
@@ -1400,14 +1406,14 @@ public final class FlagsClient implements AutoCloseable {
 
         if (!existed) return;
 
-        FlagChangeEvent event = new FlagChangeEvent(flagKey, "websocket", true);
+        FlagChangeEvent event = new FlagChangeEvent(flagKey, "push", true);
         fireListenersForKey(flagKey, event);
         fireGlobalListeners(event);
     }
 
     private void handleFlagsChanged(Map<String, Object> data) {
         if (!connected) return;
-        Debug.log("websocket", "flags_changed event received");
+        Debug.log("events", "flags_changed event received");
 
         // Snapshot pre-state
         Map<String, Map<String, Object>> preStore = new HashMap<>(flagStore);
@@ -1416,7 +1422,7 @@ public final class FlagsClient implements AutoCloseable {
         try {
             fetchAllFlags();
         } catch (Exception e) {
-            Debug.log("websocket", "Failed to refresh flags after flags_changed WS event: " + e);
+            Debug.log("events", "Failed to refresh flags after flags_changed event: " + e);
             return;
         }
         resolutionCache.clear();
@@ -1432,7 +1438,7 @@ public final class FlagsClient implements AutoCloseable {
             Map<String, Object> post = flagStore.get(key);
             if (!Objects.equals(pre, post)) {
                 anyChanged = true;
-                fireListenersForKey(key, new FlagChangeEvent(key, "websocket"));
+                fireListenersForKey(key, new FlagChangeEvent(key, "push"));
             }
         }
 
@@ -1441,7 +1447,7 @@ public final class FlagsClient implements AutoCloseable {
             String firstKey = allKeys.stream()
                     .filter(k -> !Objects.equals(preStore.get(k), flagStore.get(k)))
                     .findFirst().orElse("");
-            fireGlobalListeners(new FlagChangeEvent(firstKey, "websocket"));
+            fireGlobalListeners(new FlagChangeEvent(firstKey, "push"));
         }
     }
 
@@ -1573,9 +1579,9 @@ public final class FlagsClient implements AutoCloseable {
     /**
      * Release resources — only those this client owns.
      *
-     * <p>Tears down the owned WebSocket (standalone install) and the owned
+     * <p>Tears down the owned event stream (standalone install) and the owned
      * flags + app HTTP transports (standalone construction). A wired client
-     * borrows the parent's transport, WebSocket, and contexts client and
+     * borrows the parent's transport, event stream, and contexts client and
      * closes none of them.</p>
      */
     @Override
@@ -1583,10 +1589,10 @@ public final class FlagsClient implements AutoCloseable {
         if (contextFlushExecutor != null) {
             contextFlushExecutor.shutdownNow();
         }
-        if (ownsWs && sharedWs != null) {
-            sharedWs.close();
-            sharedWs = null;
-            ownsWs = false;
+        if (ownsEventStream && eventStream != null) {
+            eventStream.close();
+            eventStream = null;
+            ownsEventStream = false;
         }
         if (ownsTransport) {
             // No persistent resources beyond the owned HttpClient (managed by JDK).
@@ -1634,7 +1640,7 @@ public final class FlagsClient implements AutoCloseable {
     void disconnect() {
         connected = false;
         retryScheduled = false;
-        wsHandlersRegistered = false;
+        eventHandlersRegistered = false;
         backoffSeconds = 1;
         if (retryFuture != null) {
             retryFuture.cancel(false);
@@ -1648,11 +1654,12 @@ public final class FlagsClient implements AutoCloseable {
             contextFlushFuture.cancel(false);
             contextFlushFuture = null;
         }
-        SharedWebSocket ws = this.sharedWs;
-        if (ws != null) {
-            ws.off("flag_changed", flagChangedHandler);
-            ws.off("flag_deleted", flagDeletedHandler);
-            ws.off("flags_changed", flagsChangedHandler);
+        EventStream stream = this.eventStream;
+        if (stream != null) {
+            stream.off("flag_changed", flagChangedHandler);
+            stream.off("flag_deleted", flagDeletedHandler);
+            stream.off("flags_changed", flagsChangedHandler);
+            stream.offReconnect(reconnectRefetch);
         }
         flagStore.clear();
         resolutionCache.clear();

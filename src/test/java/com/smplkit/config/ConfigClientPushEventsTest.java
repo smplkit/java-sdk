@@ -23,14 +23,14 @@ import static org.mockito.ArgumentMatchers.*;
 import static org.mockito.Mockito.*;
 
 /**
- * Tests for ConfigClient WS event behaviors driven through the simulate seams:
+ * Tests for ConfigClient push-event behaviors driven through the simulate seams:
  * <ul>
  *   <li>{@code config_changed}: scoped fetch, transitive ancestor fetch, diff-based listener firing.</li>
  *   <li>{@code config_deleted}: remove from cache, re-resolve (no scoped fetch).</li>
  *   <li>{@code configs_changed}: full list fetch, diff-based firing.</li>
  * </ul>
  */
-class ConfigClientWsEventsTest {
+class ConfigClientPushEventsTest {
 
     private ConfigsApi mockApi;
     private ConfigClient configClient;
@@ -69,7 +69,7 @@ class ConfigClientWsEventsTest {
 
         assertNotNull(received.get(), "Listener should fire when content changes");
         assertEquals("my-config", received.get().configId());
-        assertEquals("websocket", received.get().source());
+        assertEquals("push", received.get().source());
         assertEquals(30, received.get().oldValue());
         assertEquals(60, received.get().newValue());
         verify(mockApi, times(1)).getConfig("my-config");
@@ -243,7 +243,7 @@ class ConfigClientWsEventsTest {
         assertEquals("k", received.get().itemKey());
         assertEquals("v", received.get().oldValue());
         assertNull(received.get().newValue());
-        assertEquals("websocket", received.get().source());
+        assertEquals("push", received.get().source());
         verify(mockApi, never()).getConfig(any());
         verify(mockApi, times(1)).listConfigs(isNull(), isNull(), isNull(), isNull(), any(), any(), isNull());
     }

@@ -88,10 +88,10 @@ class DebugTest {
 
     @Test
     void log_writesExpectedPrefix() {
-        writeDebugLine("websocket", "connected");
+        writeDebugLine("events", "connected");
         String output = capturedErr.toString();
-        assertTrue(output.startsWith("[smplkit:websocket]"),
-                "Expected prefix [smplkit:websocket], got: " + output);
+        assertTrue(output.startsWith("[smplkit:events]"),
+                "Expected prefix [smplkit:events], got: " + output);
     }
 
     @Test
@@ -141,7 +141,7 @@ class DebugTest {
 
     @ParameterizedTest
     @ValueSource(strings = {
-            "lifecycle", "websocket", "api", "discovery", "resolution", "adapter", "registration"
+            "lifecycle", "events", "api", "discovery", "resolution", "adapter", "registration"
     })
     void log_allSubsystemsRenderCorrectly(String subsystem) {
         writeDebugLine(subsystem, "test");
@@ -156,7 +156,7 @@ class DebugTest {
         boolean prev = Debug.ENABLED;
         Debug.ENABLED = false;
         try {
-            Debug.log("websocket", "should not appear");
+            Debug.log("events", "should not appear");
             assertEquals(0, capturedErr.size(),
                     "Expected no output when debug is disabled");
         } finally {
@@ -169,11 +169,11 @@ class DebugTest {
         boolean prev = Debug.ENABLED;
         Debug.ENABLED = true;
         try {
-            Debug.log("websocket", "connected");
+            Debug.log("events", "connected");
             assertTrue(capturedErr.size() > 0,
                     "Expected output when debug is enabled");
             String output = capturedErr.toString();
-            assertTrue(output.contains("[smplkit:websocket]"),
+            assertTrue(output.contains("[smplkit:events]"),
                     "Expected prefix in output: " + output);
         } finally {
             Debug.ENABLED = prev;

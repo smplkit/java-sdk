@@ -15,7 +15,7 @@ import java.util.function.Consumer;
  * <p>Reads, CRUD, and discovery flush perform their network round-trips on the
  * wrapped executor and return a {@link CompletableFuture}. The live surface
  * connects lazily — {@link #refresh()} opens the connection: it flushes
- * discovery, fetches all flag definitions, and opens the WebSocket. The
+ * discovery, fetches all flag definitions, and opens the event stream. The
  * synchronous helpers ({@link #booleanFlag} / {@link #stringFlag} /
  * {@link #numberFlag} / {@link #jsonFlag} / {@link #stats} / {@link #onChange}
  * and a handle's {@code .get()}) operate against whatever cache state exists, so

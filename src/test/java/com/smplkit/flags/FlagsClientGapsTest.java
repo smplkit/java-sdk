@@ -2,7 +2,7 @@ package com.smplkit.flags;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
-import com.smplkit.SharedWebSocket;
+import com.smplkit.EventStream;
 import com.smplkit.internal.generated.app.api.ContextsApi;
 import com.smplkit.internal.generated.flags.ApiException;
 import com.smplkit.internal.generated.flags.api.FlagsApi;
@@ -35,7 +35,7 @@ import static org.mockito.Mockito.*;
  * <ul>
  *   <li>{@code ensureConnected}: the deferred-start hook, the retry-scheduled
  *       early-return, and the inner double-checked-locking guard.</li>
- *   <li>{@code ensureWs}: the null-return when no app transport is owned.</li>
+ *   <li>{@code ensureEventStream}: the null-return when no app transport is owned.</li>
  *   <li>{@code thresholdFlush}: the catch block on an eager-flush failure.</li>
  *   <li>{@code refresh} / {@code handleFlagsChanged}: the changed-key stream and
  *       the {@code flags_changed} fetch-failure catch and not-connected guard.</li>
@@ -66,7 +66,7 @@ class FlagsClientGapsTest {
                 Duration.ofSeconds(5));
         client.setEnvironment("staging");
         // Inject a mock WS so a successful connect never dials a real socket.
-        client.setSharedWs(Mockito.mock(SharedWebSocket.class));
+        client.setEventStream(Mockito.mock(EventStream.class));
     }
 
     @AfterEach
@@ -174,13 +174,13 @@ class FlagsClientGapsTest {
     }
 
     // ------------------------------------------------------------------
-    // ensureWs: returns null when no shared WS and no owned app transport
+    // ensureEventStream: returns null when no shared stream and no owned app transport
     // (line 923)
     // ------------------------------------------------------------------
 
     @Test
     void ensureConnected_withoutAppTransportOrSharedWs_skipsWsAndConnects() throws ApiException {
-        // appBaseUrl == null and no shared WS injected → ensureWs() returns null,
+        // appBaseUrl == null and no shared stream injected → ensureEventStream() returns null,
         // so the WS-handler registration block is skipped but connect succeeds.
         FlagsApi api = Mockito.mock(FlagsApi.class);
         when(api.listFlags(isNull(), isNull(), isNull(), isNull(), isNull(), isNull(), any(), any(), isNull()))
@@ -303,7 +303,7 @@ class FlagsClientGapsTest {
         client.simulateFlagsChanged();
 
         assertNotNull(global.get());
-        assertEquals("websocket", global.get().source());
+        assertEquals("push", global.get().source());
         assertEquals("flag-1", global.get().id());
     }
 

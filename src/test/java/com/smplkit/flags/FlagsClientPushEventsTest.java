@@ -26,14 +26,14 @@ import static org.mockito.ArgumentMatchers.*;
 import static org.mockito.Mockito.*;
 
 /**
- * Tests for FlagsClient WS event behaviors:
+ * Tests for FlagsClient push-event behaviors:
  * - Fan-out bug fix: flag_changed for key X only fires X's listener, not Y's
  * - Keyed event + content changed → scoped fetch, listener fires
  * - Keyed event + content unchanged → scoped fetch, listener does NOT fire
  * - Plural (flags_changed) event → full fetch, diff-based firing
  * - Deleted event → store removal, listener fires with deleted=true, no fetch
  */
-class FlagsClientWsEventsTest {
+class FlagsClientPushEventsTest {
 
     private static final ObjectMapper OBJECT_MAPPER = new ObjectMapper()
             .registerModule(new JavaTimeModule())
@@ -122,7 +122,7 @@ class FlagsClientWsEventsTest {
 
         assertNotNull(received.get());
         assertEquals("my-flag", received.get().id());
-        assertEquals("websocket", received.get().source());
+        assertEquals("push", received.get().source());
         assertFalse(received.get().isDeleted());
         // Verify scoped fetch (getFlag) was called, not listFlags
         verify(mockApi).getFlag("my-flag");
@@ -178,7 +178,7 @@ class FlagsClientWsEventsTest {
         assertNotNull(received.get());
         assertEquals("deleted-flag", received.get().id());
         assertTrue(received.get().isDeleted());
-        assertEquals("websocket", received.get().source());
+        assertEquals("push", received.get().source());
         // No HTTP fetch should occur
         verify(mockApi, never()).getFlag(any());
         verify(mockApi, times(1)).listFlags(isNull(), isNull(), isNull(), isNull(), isNull(), isNull(), any(), any(), isNull()); // only initial
@@ -374,14 +374,14 @@ class FlagsClientWsEventsTest {
 
     @Test
     void flagChangeEvent_isDeletedFalseByDefault() {
-        FlagChangeEvent event = new FlagChangeEvent("my-flag", "websocket");
+        FlagChangeEvent event = new FlagChangeEvent("my-flag", "push");
         assertFalse(event.isDeleted());
         assertFalse(event.deleted());
     }
 
     @Test
     void flagChangeEvent_isDeletedTrueWhenSet() {
-        FlagChangeEvent event = new FlagChangeEvent("my-flag", "websocket", true);
+        FlagChangeEvent event = new FlagChangeEvent("my-flag", "push", true);
         assertTrue(event.isDeleted());
         assertTrue(event.deleted());
     }

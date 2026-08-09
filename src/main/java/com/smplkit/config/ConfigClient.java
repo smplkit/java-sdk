@@ -3,7 +3,7 @@ package com.smplkit.config;
 import com.smplkit.internal.ConfigResolver;
 import com.smplkit.Helpers;
 import com.smplkit.MetricsReporter;
-import com.smplkit.SharedWebSocket;
+import com.smplkit.EventStream;
 import com.smplkit.internal.ApiExceptionHandler;
 import com.smplkit.errors.NotFoundError;
 import com.smplkit.errors.SmplError;
@@ -61,7 +61,7 @@ import java.util.logging.Logger;
  *       {@code getValue} (an ad-hoc resolved read), {@code bind} (a live POJO/Map
  *       binding), {@code onChange}, and {@code refresh}. The first live call
  *       transparently flushes discovery, fetches and resolves every config into
- *       the local cache, and opens the live-updates WebSocket — no explicit
+ *       the local cache, and opens the live-updates event stream — no explicit
  *       install step.</li>
  * </ul>
  *
@@ -70,17 +70,17 @@ import java.util.logging.Logger;
  * <ul>
  *   <li><b>Wired</b> into {@link com.smplkit.SmplClient} — borrows the parent's
  *       config transport for both runtime fetch and CRUD and the parent's shared
- *       WebSocket for the live channel. This is the common path.</li>
+ *       event stream for the live channel. This is the common path.</li>
  *   <li><b>Standalone</b> — {@code ConfigClient.builder()...build()} builds and
  *       owns its own config transport, and on first live use opens and owns its
- *       own WebSocket. {@code close()} tears down only the owned transport and
- *       owned WebSocket.</li>
+ *       own event stream. {@code close()} tears down only the owned transport and
+ *       owned event stream.</li>
  * </ul>
  */
 public final class ConfigClient implements AutoCloseable {
 
     private static final Logger LOG = Logger.getLogger("smplkit.config");
-    private static final Logger WS_LOG = Logger.getLogger("smplkit.config.ws");
+    private static final Logger EVENTS_LOG = Logger.getLogger("smplkit.config.events");
 
     private static final int CONFIG_BATCH_FLUSH_SIZE = 50;
     private static final int RUNTIME_PAGE_SIZE = 1000;
@@ -98,14 +98,14 @@ public final class ConfigClient implements AutoCloseable {
     private volatile Runnable ensureStartedHook;
     private Map<String, Map<String, Object>> configCache = new HashMap<>();
     /** Raw {@link Config} objects keyed by id, kept around so a single-config
-     * change (WS event) can refetch one config and rebuild the resolved cache
+     * change (push event) can refetch one config and rebuild the resolved cache
      * for everyone — including descendants that inherit from the changed
      * config — without a full re-list. */
     private Map<String, Config> rawConfigCache = new HashMap<>();
     /** Identity-stable proxy cache: same id maps to the same proxy instance. */
     private final Map<String, LiveConfigProxy> proxies = new ConcurrentHashMap<>();
     /** Targets bound via {@link #bind} keyed by config id. Mutated in place on
-     * WebSocket events. */
+     * push events. */
     private final Map<String, Object> bindings = new ConcurrentHashMap<>();
     /** Parent config id each binding was bound under ({@code null} for roots) —
      * drives in-memory cache seeding through the bound parent chain. */
@@ -113,18 +113,21 @@ public final class ConfigClient implements AutoCloseable {
     private final List<ListenerEntry> listeners = Collections.synchronizedList(new ArrayList<>());
     private final Object cacheLock = new Object();
 
-    private volatile SharedWebSocket wsManager;
-    private volatile boolean ownsWs;
+    private volatile EventStream eventStream;
+    private volatile boolean ownsEventStream;
     private final Consumer<Map<String, Object>> configChangedHandler;
     private final Consumer<Map<String, Object>> configDeletedHandler;
     private final Consumer<Map<String, Object>> configsChangedHandler;
+    /** Reconnect refetch: the same full-refresh path the configs_changed
+     * handler takes, so listeners fire only for values that actually moved. */
+    private final Runnable reconnectRefetch;
 
     // Standalone-only state (null when wired into a parent SmplClient).
     private final boolean ownsTransport;
     private final HttpClient ownedHttpClient;
     private final String standaloneApiKey;
     private final String appBaseUrl;
-    /** When {@code false}, the live surface runs stateless: no WebSocket and
+    /** When {@code false}, the live surface runs stateless: no event stream and
      * no background flush threads; {@code refresh()} re-fetches on demand and
      * threshold flushes run inline. */
     private final boolean streaming;
@@ -133,8 +136,8 @@ public final class ConfigClient implements AutoCloseable {
      * Wired constructor invoked by {@link com.smplkit.SmplClient}. Receives a
      * pre-built generated {@link ConfigsApi}, the parent's {@link HttpClient},
      * and the resolved {@code apiKey}. The wired client borrows the parent's
-     * transport and (via {@link #setSharedWs}) the parent's WebSocket; it owns
-     * neither and closes neither.
+     * transport and (via {@link #setEventStream}) the parent's event stream; it
+     * owns neither and closes neither.
      */
     public ConfigClient(ConfigsApi configsApi, HttpClient httpClient, String apiKey) {
         this.configsApi = configsApi;
@@ -146,10 +149,11 @@ public final class ConfigClient implements AutoCloseable {
         this.configChangedHandler = this::handleConfigChanged;
         this.configDeletedHandler = this::handleConfigDeleted;
         this.configsChangedHandler = this::handleConfigsChanged;
+        this.reconnectRefetch = () -> handleConfigsChanged(Map.of());
     }
 
     /**
-     * Standalone constructor — owns its transport and (lazily) its WebSocket.
+     * Standalone constructor — owns its transport and (lazily) its event stream.
      * Used by {@link ConfigClientBuilder}.
      */
     ConfigClient(ConfigsApi configsApi, HttpClient ownedHttpClient, String standaloneApiKey,
@@ -165,6 +169,7 @@ public final class ConfigClient implements AutoCloseable {
         this.configChangedHandler = this::handleConfigChanged;
         this.configDeletedHandler = this::handleConfigDeleted;
         this.configsChangedHandler = this::handleConfigsChanged;
+        this.reconnectRefetch = () -> handleConfigsChanged(Map.of());
     }
 
     // -----------------------------------------------------------------------
@@ -205,9 +210,9 @@ public final class ConfigClient implements AutoCloseable {
         this.metrics = metrics;
     }
 
-    /** Sets the shared WebSocket for real-time config updates (wired path). */
-    public void setSharedWs(SharedWebSocket ws) {
-        this.wsManager = ws;
+    /** Sets the shared event stream for real-time config updates (wired path). */
+    public void setEventStream(EventStream stream) {
+        this.eventStream = stream;
     }
 
     /** Sets the parent's deferred-start hook, run once when the live surface first connects (wired path). */
@@ -558,23 +563,23 @@ public final class ConfigClient implements AutoCloseable {
     }
 
     // -----------------------------------------------------------------------
-    // Live surface: lazy connect + WebSocket helpers
+    // Live surface: lazy connect + event-stream helpers
     // -----------------------------------------------------------------------
 
-    /** Return the shared WebSocket — the parent's when wired, else our own. */
-    private SharedWebSocket ensureWs() {
-        SharedWebSocket ws = this.wsManager;
-        if (ws != null) {
-            return ws;
+    /** Return the shared event stream — the parent's when wired, else our own. */
+    private EventStream ensureEventStream() {
+        EventStream stream = this.eventStream;
+        if (stream != null) {
+            return stream;
         }
-        // Standalone: open and own a WebSocket against the event gateway.
+        // Standalone: open and own an event stream against the event gateway.
         if (appBaseUrl != null) {
-            ws = new SharedWebSocket(ownedHttpClient, appBaseUrl, standaloneApiKey, metrics);
-            ws.start();
-            this.wsManager = ws;
-            this.ownsWs = true;
+            stream = new EventStream(ownedHttpClient, appBaseUrl, standaloneApiKey, metrics);
+            stream.start();
+            this.eventStream = stream;
+            this.ownsEventStream = true;
         }
-        return this.wsManager;
+        return this.eventStream;
     }
 
     /**
@@ -582,7 +587,7 @@ public final class ConfigClient implements AutoCloseable {
      *
      * <p>Flushes any buffered discovery declarations, fetches and resolves
      * every config for the configured environment into the local cache,
-     * opens the shared WebSocket, and subscribes to {@code config_changed} /
+     * opens the shared event stream, and subscribes to {@code config_changed} /
      * {@code config_deleted} / {@code configs_changed} events.</p>
      *
      * <p>Idempotent and internal — every live method calls it on first use, so
@@ -600,7 +605,7 @@ public final class ConfigClient implements AutoCloseable {
             if (connected) {
                 return;
             }
-            Debug.log("websocket", "config runtime initializing");
+            Debug.log("events", "config runtime initializing");
 
             // Flush any buffered discovery declarations BEFORE the initial fetch,
             // so newly-discovered configs appear in the cache on first read.
@@ -612,20 +617,21 @@ public final class ConfigClient implements AutoCloseable {
             doRefresh("initial");
             connected = true;
 
-            // Stateless mode (streaming(false)) skips the WebSocket entirely:
+            // Stateless mode (streaming(false)) skips the event stream entirely:
             // refresh()/refreshAsync() re-fetch on demand instead.
             if (streaming) {
-                SharedWebSocket ws = ensureWs();
-                if (ws != null) {
+                EventStream stream = ensureEventStream();
+                if (stream != null) {
                     Debug.log("registration",
                             "registering config_changed, config_deleted, and configs_changed handlers");
-                    ws.on("config_changed", configChangedHandler);
-                    ws.on("config_deleted", configDeletedHandler);
-                    ws.on("configs_changed", configsChangedHandler);
-                    ws.ensureConnected(Duration.ofSeconds(10));
+                    stream.on("config_changed", configChangedHandler);
+                    stream.on("config_deleted", configDeletedHandler);
+                    stream.on("configs_changed", configsChangedHandler);
+                    stream.onReconnect(reconnectRefetch);
+                    stream.ensureConnected(Duration.ofSeconds(10));
                 }
             }
-            Debug.log("websocket", "config runtime connected");
+            Debug.log("events", "config runtime connected");
         }
     }
 
@@ -703,7 +709,7 @@ public final class ConfigClient implements AutoCloseable {
      * authoritative and synced onto the bound object; if it is brand-new, the
      * cache entry is seeded in-memory from the bound object's values resolved
      * through its bound parent chain (no network round-trip). On every
-     * WebSocket-delivered change thereafter the bound object is mutated in place
+     * push-delivered change thereafter the bound object is mutated in place
      * — POJO instances via {@code Field.set}, maps via {@code Map.put}. Readers
      * always see the current resolved value with no proxy indirection.</p>
      *
@@ -741,7 +747,7 @@ public final class ConfigClient implements AutoCloseable {
 
         String parentId = registerBindingDeclaration(id, config, parent);
 
-        // Register the binding BEFORE syncing so WebSocket dispatch finds it.
+        // Register the binding BEFORE syncing so event dispatch finds it.
         bindings.put(id, config);
         if (parentId != null) {
             boundParents.put(id, parentId);
@@ -978,7 +984,7 @@ public final class ConfigClient implements AutoCloseable {
      *
      * <p>A freshly-bound config lives only as a seed until it is flushed and
      * fetched; without this, any cache rebuild (a manual refresh, or a
-     * WebSocket event for another config) would drop it. Server-present
+     * push event for another config) would drop it. Server-present
      * configs are already in {@code newCache} and are authoritative — only
      * bound ids missing from it are re-seeded.</p>
      */
@@ -1424,7 +1430,7 @@ public final class ConfigClient implements AutoCloseable {
     }
 
     // -----------------------------------------------------------------------
-    // Internal: event handlers (called by SharedWebSocket)
+    // Internal: event handlers (called by EventStream)
     // -----------------------------------------------------------------------
 
     /**
@@ -1461,7 +1467,7 @@ public final class ConfigClient implements AutoCloseable {
             handleConfigsChanged(data);
             return;
         }
-        Debug.log("websocket", "config_changed event received, key=" + key);
+        Debug.log("events", "config_changed event received, key=" + key);
 
         Map<String, Config> rawCache;
         synchronized (cacheLock) {
@@ -1471,7 +1477,7 @@ public final class ConfigClient implements AutoCloseable {
         try {
             cfg = fetchConfig(key);
         } catch (Exception e) {
-            WS_LOG.log(Level.SEVERE, "Failed to fetch config '" + key + "' after WS event", e);
+            EVENTS_LOG.log(Level.SEVERE, "Failed to fetch config '" + key + "' after push event", e);
             return;
         }
         if (cfg == null) {
@@ -1480,9 +1486,9 @@ public final class ConfigClient implements AutoCloseable {
         rawCache.put(key, cfg);
         try {
             ensureAncestorsCached(rawCache);
-            rebuildResolvedCache(rawCache, "websocket");
+            rebuildResolvedCache(rawCache, "push");
         } catch (Exception e) {
-            WS_LOG.log(Level.SEVERE, "Failed to handle config_changed for '" + key + "' after WS event", e);
+            EVENTS_LOG.log(Level.SEVERE, "Failed to handle config_changed for '" + key + "' after push event", e);
         }
     }
 
@@ -1529,7 +1535,7 @@ public final class ConfigClient implements AutoCloseable {
             handleConfigsChanged(data);
             return;
         }
-        Debug.log("websocket", "config_deleted event received, key=" + key);
+        Debug.log("events", "config_deleted event received, key=" + key);
 
         Map<String, Config> rawCache;
         synchronized (cacheLock) {
@@ -1538,18 +1544,18 @@ public final class ConfigClient implements AutoCloseable {
         if (rawCache.remove(key) == null) {
             return;
         }
-        rebuildResolvedCache(rawCache, "websocket");
+        rebuildResolvedCache(rawCache, "push");
     }
 
     private void handleConfigsChanged(Map<String, Object> data) {
         if (!connected) {
             return;
         }
-        Debug.log("websocket", "configs_changed event received");
+        Debug.log("events", "configs_changed event received");
         try {
-            doRefresh("websocket");
+            doRefresh("push");
         } catch (Exception e) {
-            WS_LOG.log(Level.SEVERE, "Failed to refresh configs after WS event", e);
+            EVENTS_LOG.log(Level.SEVERE, "Failed to refresh configs after push event", e);
         }
     }
 
@@ -1567,17 +1573,17 @@ public final class ConfigClient implements AutoCloseable {
         return connected;
     }
 
-    /** Simulates a config_changed WebSocket event (for testing). */
+    /** Simulates a config_changed push event (for testing). */
     void simulateConfigChanged(Map<String, Object> data) {
         handleConfigChanged(data);
     }
 
-    /** Simulates a config_deleted WebSocket event (for testing). */
+    /** Simulates a config_deleted push event (for testing). */
     void simulateConfigDeleted(Map<String, Object> data) {
         handleConfigDeleted(data);
     }
 
-    /** Simulates a configs_changed WebSocket event (for testing). */
+    /** Simulates a configs_changed push event (for testing). */
     void simulateConfigsChanged(Map<String, Object> data) {
         handleConfigsChanged(data);
     }
@@ -1710,16 +1716,16 @@ public final class ConfigClient implements AutoCloseable {
     /**
      * Release resources — only those this client owns.
      *
-     * <p>Tears down the owned WebSocket (opened by a standalone client on first
+     * <p>Tears down the owned event stream (opened by a standalone client on first
      * live use) and the owned HTTP transport (standalone construction). A wired
-     * client borrows the parent's transport and WebSocket and closes neither.</p>
+     * client borrows the parent's transport and event stream and closes neither.</p>
      */
     @Override
     public void close() {
-        if (ownsWs && wsManager != null) {
-            wsManager.close();
-            wsManager = null;
-            ownsWs = false;
+        if (ownsEventStream && eventStream != null) {
+            eventStream.close();
+            eventStream = null;
+            ownsEventStream = false;
         }
         // The owned java.net.http.HttpClient has no explicit close in JDK 17;
         // dropping the reference is sufficient for GC to reclaim its threads.

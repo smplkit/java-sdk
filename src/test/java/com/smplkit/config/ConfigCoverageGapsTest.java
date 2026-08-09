@@ -36,7 +36,7 @@ import static org.mockito.Mockito.when;
  * and the null arms of the {@link Config} constructor / {@code toChainEntry} /
  * {@code parseResource} ternaries.
  *
- * <p>WebSocket-free: a Mockito {@link ConfigsApi} backs every client; WS events
+ * <p>Network-free: a Mockito {@link ConfigsApi} backs every client; push events
  * are driven through the {@code simulate*} seams.</p>
  */
 class ConfigCoverageGapsTest {

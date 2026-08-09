@@ -191,8 +191,8 @@ class MetricsReporterTest {
 
     @Test
     void gaugeReplacesValue() {
-        reporter.recordGauge("platform.websocket_connections", 1, "connections");
-        reporter.recordGauge("platform.websocket_connections", 0, "connections");
+        reporter.recordGauge("platform.event_connections", 1, "connections");
+        reporter.recordGauge("platform.event_connections", 0, "connections");
 
         reporter.flush();
 
@@ -204,7 +204,7 @@ class MetricsReporterTest {
         for (Map<String, Object> item : data) {
             @SuppressWarnings("unchecked")
             Map<String, Object> attrs = (Map<String, Object>) item.get("attributes");
-            if ("platform.websocket_connections".equals(attrs.get("name"))) {
+            if ("platform.event_connections".equals(attrs.get("name"))) {
                 assertEquals(0, attrs.get("value"));
                 found = true;
             }
@@ -215,7 +215,7 @@ class MetricsReporterTest {
     @Test
     void gaugeAndCountersSeparate() {
         reporter.record("flags.evaluations", "evaluations");
-        reporter.recordGauge("platform.websocket_connections", 1, "connections");
+        reporter.recordGauge("platform.event_connections", 1, "connections");
 
         reporter.flush();
 

@@ -17,7 +17,7 @@ import java.util.Objects;
  * Builder for a standalone {@link ConfigClient}.
  *
  * <p>Resolves credentials via {@link ConfigResolver#resolveClient}, builds
- * and owns its own config transport, and opens its own {@link com.smplkit.SharedWebSocket}
+ * and owns its own config transport, and opens its own {@code EventStream}
  * lazily on first live use. Mirrors {@link com.smplkit.SmplClientBuilder} but
  * scoped to the config service.</p>
  */
@@ -146,11 +146,11 @@ public final class ConfigClientBuilder {
 
     /**
      * Stream live config updates (default {@code true}): the first live call
-     * opens a WebSocket for real-time change events.
+     * opens an event stream for real-time change events.
      *
      * <p>Pass {@code false} for the stateless live surface: the first live
      * call still fetches and resolves every config once (blocking), but no
-     * WebSocket or background threads are created; discovery flushes run
+     * event stream or background threads are created; discovery flushes run
      * inline and {@code refresh()} re-fetches on demand — the right shape for
      * serverless and edge runtimes, whose short-lived instances cannot hold
      * open connections.</p>

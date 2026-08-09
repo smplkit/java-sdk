@@ -1,7 +1,7 @@
 package com.smplkit.logging;
 
 import com.smplkit.LogLevel;
-import com.smplkit.SharedWebSocket;
+import com.smplkit.EventStream;
 import com.smplkit.internal.ApiExceptionHandler;
 import com.smplkit.errors.NotInstalledError;
 import com.smplkit.internal.Debug;
@@ -51,7 +51,7 @@ import java.util.logging.Level;
  *   is a PRE-install configuration call (allowed before {@link #install}).
  *   {@link #install} opens the live connection (hooks into the application's
  *   logging framework via the registered adapters, discovers loggers, fetches +
- *   applies levels, opens the shared WebSocket). {@code onChange} / {@code refresh} require {@link #install} first;
+ *   applies levels, opens the shared event stream). {@code onChange} / {@code refresh} require {@link #install} first;
  *   calling them earlier raises {@link NotInstalledError}.</li>
  * </ul>
  *
@@ -71,11 +71,11 @@ import java.util.logging.Level;
  * <ul>
  *   <li><strong>Wired</strong> into {@link com.smplkit.SmplClient} — borrows the
  *   parent's logging transport for both runtime fetch and CRUD and the parent's
- *   shared WebSocket for the live channel. This is the common path.</li>
+ *   shared event stream for the live channel. This is the common path.</li>
  *   <li><strong>Standalone</strong> — {@code LoggingClient.builder()...build()}
  *   builds and owns its own logging transport, and on {@link #install} opens and
- *   owns its own WebSocket (the WebSocket gateway lives on the app service).
- *   {@link #close()} tears down only the owned transport and owned WebSocket.</li>
+ *   owns its own event stream (the event gateway lives on the app service).
+ *   {@link #close()} tears down only the owned transport and owned event stream.</li>
  * </ul>
  */
 public final class LoggingClient implements AutoCloseable {
@@ -102,7 +102,7 @@ public final class LoggingClient implements AutoCloseable {
     private final String apiKey;
     private final String appBaseUrl;
     private final boolean ownsTransport;
-    /** When {@code false}, the live surface runs stateless: no WebSocket and
+    /** When {@code false}, the live surface runs stateless: no event stream and
      * no background flush threads; {@code refresh()} re-fetches on demand and
      * threshold flushes run inline. */
     private final boolean streaming;
@@ -125,15 +125,18 @@ public final class LoggingClient implements AutoCloseable {
     private Map<String, Map<String, Object>> groupsCache = new ConcurrentHashMap<>();
     private final List<Consumer<LoggerChangeEvent>> globalListeners = new CopyOnWriteArrayList<>();
     private final Map<String, List<Consumer<LoggerChangeEvent>>> keyListeners = new ConcurrentHashMap<>();
-    private volatile SharedWebSocket wsManager;
-    private boolean ownsWs = false;
+    private volatile EventStream eventStream;
+    private boolean ownsEventStream = false;
 
-    // WS event handlers (stored as fields so they can be unregistered)
+    // Push-event handlers (stored as fields so they can be unregistered)
     private final Consumer<Map<String, Object>> loggerChangedHandler = this::handleLoggerChanged;
     private final Consumer<Map<String, Object>> loggerDeletedHandler = this::handleLoggerDeleted;
     private final Consumer<Map<String, Object>> groupChangedHandler = this::handleGroupChanged;
     private final Consumer<Map<String, Object>> groupDeletedHandler = this::handleGroupDeleted;
     private final Consumer<Map<String, Object>> loggersChangedHandler = this::handleLoggersChanged;
+    /** Reconnect refetch: the same full-refetch path the loggers_changed
+     * handler takes, so listeners fire only for levels that actually moved. */
+    private final Runnable reconnectRefetch = () -> handleLoggersChanged(Map.of());
 
     /**
      * Wired constructor — called by {@link com.smplkit.SmplClient}.
@@ -145,15 +148,15 @@ public final class LoggingClient implements AutoCloseable {
      * <p>SmplClient builds the generated logging {@code ApiClient} via the
      * {@code HttpClients.compositeInterceptor} transport idiom, derives the two
      * generated {@code *Api} instances, and passes the parent's shared
-     * {@link HttpClient} (used by the parent {@link SharedWebSocket}) plus the
+     * {@link HttpClient} (used by the parent {@code EventStream}) plus the
      * api key. After construction SmplClient calls {@link #setEnvironment},
-     * {@link #setService}, {@link #setMetrics}, and {@link #setSharedWs} to wire
-     * the runtime context. A wired client borrows the parent's transport and
-     * WebSocket and closes neither.</p>
+     * {@link #setService}, {@link #setMetrics}, and {@link #setEventStream} to
+     * wire the runtime context. A wired client borrows the parent's transport
+     * and event stream and closes neither.</p>
      *
      * @param loggersApi   the generated Loggers API client
      * @param logGroupsApi the generated LogGroups API client
-     * @param httpClient   shared HTTP client (for the parent's WebSocket)
+     * @param httpClient   shared HTTP client (for the parent's event stream)
      * @param apiKey       bearer token for authentication
      */
     public LoggingClient(LoggersApi loggersApi, LogGroupsApi logGroupsApi,
@@ -180,11 +183,11 @@ public final class LoggingClient implements AutoCloseable {
      *
      * @param loggersApi   the standalone Loggers API
      * @param logGroupsApi the standalone LogGroups API
-     * @param httpClient   the standalone HTTP client used to open the owned WebSocket
+     * @param httpClient   the standalone HTTP client used to open the owned event stream
      * @param apiKey       the resolved api key
-     * @param appBaseUrl   the app-service base URL (the WebSocket gateway lives on app)
+     * @param appBaseUrl   the app-service base URL (the event gateway lives on app)
      * @param streaming    when {@code false}, {@link #install()} skips the
-     *                     WebSocket and threshold flushes run inline
+     *                     event stream and threshold flushes run inline
      */
     static LoggingClient standalone(LoggersApi loggersApi, LogGroupsApi logGroupsApi,
                                     HttpClient httpClient, String apiKey, String appBaseUrl,
@@ -234,9 +237,9 @@ public final class LoggingClient implements AutoCloseable {
         this.metrics = metrics;
     }
 
-    /** Sets the shared WebSocket manager. Called by SmplClient before install(). */
-    public void setSharedWs(SharedWebSocket ws) {
-        this.wsManager = ws;
+    /** Sets the shared event stream. Called by SmplClient before install(). */
+    public void setEventStream(EventStream stream) {
+        this.eventStream = stream;
     }
 
     private volatile Runnable ensureStartedHook;
@@ -269,7 +272,7 @@ public final class LoggingClient implements AutoCloseable {
     }
 
     // -----------------------------------------------------------------------
-    // Live surface: install (gate) + WebSocket helpers
+    // Live surface: install (gate) + event-stream helpers
     // -----------------------------------------------------------------------
 
     private void requireInstalled() {
@@ -278,21 +281,21 @@ public final class LoggingClient implements AutoCloseable {
         }
     }
 
-    /** Return the shared WebSocket — the parent's when wired, else our own. */
-    private SharedWebSocket ensureWs() {
-        if (wsManager == null && ownsTransport && appBaseUrl != null && httpClient != null) {
-            wsManager = new SharedWebSocket(httpClient, appBaseUrl, apiKey, metrics);
-            wsManager.start();
-            ownsWs = true;
+    /** Return the shared event stream — the parent's when wired, else our own. */
+    private EventStream ensureEventStream() {
+        if (eventStream == null && ownsTransport && appBaseUrl != null && httpClient != null) {
+            eventStream = new EventStream(httpClient, appBaseUrl, apiKey, metrics);
+            eventStream.start();
+            ownsEventStream = true;
         }
-        return wsManager;
+        return eventStream;
     }
 
     /**
      * Hook smplkit into the application's logging machinery.
      *
      * <p>Loads adapters, scans existing loggers, applies levels from the
-     * smplkit server, and wires WebSocket handlers for live updates. This
+     * smplkit server, and wires push-event handlers for live updates. This
      * IS the explicit consent gate — {@link #onChange} / {@link #refresh}
      * require it first.</p>
      *
@@ -360,17 +363,18 @@ public final class LoggingClient implements AutoCloseable {
             Debug.log("resolution", "Failed to fetch/apply logging levels during connect: " + exc);
         }
 
-        // 7. Register WebSocket event handlers for real-time level updates.
-        // Stateless mode (streaming(false)) skips the WebSocket entirely:
+        // 7. Register push-event handlers for real-time level updates.
+        // Stateless mode (streaming(false)) skips the event stream entirely:
         // refresh() re-fetches on demand instead.
         if (streaming) {
-            SharedWebSocket ws = ensureWs();
-            if (ws != null) {
-                ws.on("logger_changed", loggerChangedHandler);
-                ws.on("logger_deleted", loggerDeletedHandler);
-                ws.on("group_changed", groupChangedHandler);
-                ws.on("group_deleted", groupDeletedHandler);
-                ws.on("loggers_changed", loggersChangedHandler);
+            EventStream stream = ensureEventStream();
+            if (stream != null) {
+                stream.on("logger_changed", loggerChangedHandler);
+                stream.on("logger_deleted", loggerDeletedHandler);
+                stream.on("group_changed", groupChangedHandler);
+                stream.on("group_deleted", groupDeletedHandler);
+                stream.on("loggers_changed", loggersChangedHandler);
+                stream.onReconnect(reconnectRefetch);
             }
         }
 
@@ -538,7 +542,7 @@ public final class LoggingClient implements AutoCloseable {
     }
 
     // -----------------------------------------------------------------------
-    // Internal: event handlers (called by SharedWebSocket)
+    // Internal: event handlers (called by EventStream)
     // -----------------------------------------------------------------------
 
     private void handleLoggerChanged(Map<String, Object> data) {
@@ -546,7 +550,7 @@ public final class LoggingClient implements AutoCloseable {
             return;
         }
         String key = data.get("id") instanceof String s ? s : "";
-        Debug.log("websocket", "logger_changed: fetching logger '" + key + "'");
+        Debug.log("events", "logger_changed: fetching logger '" + key + "'");
         Map<String, String> pre = snapshotEffectiveLevels();
         try {
             LoggerResponse resp = loggersApi.getLogger(key);
@@ -562,11 +566,11 @@ public final class LoggingClient implements AutoCloseable {
                 loggersCache.put(lid, entry);
             }
         } catch (ApiException e) {
-            LOG.warning("Failed to fetch logger '" + key + "' after WS event: " + e.getMessage());
-            Debug.log("websocket", "logger_changed scoped fetch failed for '" + key + "': " + e);
+            LOG.warning("Failed to fetch logger '" + key + "' after push event: " + e.getMessage());
+            Debug.log("events", "logger_changed scoped fetch failed for '" + key + "': " + e);
             return;
         }
-        applyDeltasAndFire(pre, "websocket");
+        applyDeltasAndFire(pre, "push");
     }
 
     private void handleLoggerDeleted(Map<String, Object> data) {
@@ -574,10 +578,10 @@ public final class LoggingClient implements AutoCloseable {
             return;
         }
         String key = data.get("id") instanceof String s ? s : "";
-        Debug.log("websocket", "logger_deleted: removing logger '" + key + "'");
+        Debug.log("events", "logger_deleted: removing logger '" + key + "'");
         Map<String, String> pre = snapshotEffectiveLevels();
         loggersCache.remove(key);
-        applyDeltasAndFire(pre, "websocket");
+        applyDeltasAndFire(pre, "push");
     }
 
     private void handleGroupChanged(Map<String, Object> data) {
@@ -585,7 +589,7 @@ public final class LoggingClient implements AutoCloseable {
             return;
         }
         String key = data.get("id") instanceof String s ? s : "";
-        Debug.log("websocket", "group_changed: fetching group '" + key + "'");
+        Debug.log("events", "group_changed: fetching group '" + key + "'");
         Map<String, String> pre = snapshotEffectiveLevels();
         try {
             LogGroupResponse resp = logGroupsApi.getLogGroup(key);
@@ -600,11 +604,11 @@ public final class LoggingClient implements AutoCloseable {
                 groupsCache.put(gid, entry);
             }
         } catch (ApiException e) {
-            LOG.warning("Failed to fetch log group '" + key + "' after WS event: " + e.getMessage());
-            Debug.log("websocket", "group_changed scoped fetch failed for '" + key + "': " + e);
+            LOG.warning("Failed to fetch log group '" + key + "' after push event: " + e.getMessage());
+            Debug.log("events", "group_changed scoped fetch failed for '" + key + "': " + e);
             return;
         }
-        applyDeltasAndFire(pre, "websocket");
+        applyDeltasAndFire(pre, "push");
     }
 
     private void handleGroupDeleted(Map<String, Object> data) {
@@ -612,24 +616,24 @@ public final class LoggingClient implements AutoCloseable {
             return;
         }
         String key = data.get("id") instanceof String s ? s : "";
-        Debug.log("websocket", "group_deleted: removing group '" + key + "'");
+        Debug.log("events", "group_deleted: removing group '" + key + "'");
         Map<String, String> pre = snapshotEffectiveLevels();
         groupsCache.remove(key);
-        applyDeltasAndFire(pre, "websocket");
+        applyDeltasAndFire(pre, "push");
     }
 
     private void handleLoggersChanged(Map<String, Object> data) {
         if (!connected) {
             return;
         }
-        Debug.log("websocket", "loggers_changed: full re-fetch");
+        Debug.log("events", "loggers_changed: full re-fetch");
         try {
             Map<String, String> pre = snapshotEffectiveLevels();
-            fetchCache("loggers_changed WS event");
-            applyDeltasAndFire(pre, "websocket");
+            fetchCache("loggers_changed push event");
+            applyDeltasAndFire(pre, "push");
         } catch (Exception exc) {
             LOG.warning("Failed to re-fetch/apply logging levels after loggers_changed event: " + exc);
-            Debug.log("websocket", "loggers_changed fetch failed: " + exc);
+            Debug.log("events", "loggers_changed fetch failed: " + exc);
         }
     }
 
@@ -867,10 +871,10 @@ public final class LoggingClient implements AutoCloseable {
     /**
      * Release resources — only those this client owns.
      *
-     * <p>Uninstalls the adapter hooks, unsubscribes from the WebSocket, and
-     * tears down the owned WebSocket (standalone install) and the owned
+     * <p>Uninstalls the adapter hooks, unsubscribes from the event stream, and
+     * tears down the owned event stream (standalone install) and the owned
      * logging transport (standalone construction). A wired client borrows
-     * the parent's transport and WebSocket and closes neither.</p>
+     * the parent's transport and event stream and closes neither.</p>
      */
     @Override
     public void close() {
@@ -882,17 +886,18 @@ public final class LoggingClient implements AutoCloseable {
                 Debug.log("lifecycle", "Adapter " + adapter.name() + " uninstall_hook() failed: " + e);
             }
         }
-        if (wsManager != null) {
-            wsManager.off("logger_changed", loggerChangedHandler);
-            wsManager.off("logger_deleted", loggerDeletedHandler);
-            wsManager.off("group_changed", groupChangedHandler);
-            wsManager.off("group_deleted", groupDeletedHandler);
-            wsManager.off("loggers_changed", loggersChangedHandler);
-            if (ownsWs) {
-                wsManager.close();
-                ownsWs = false;
+        if (eventStream != null) {
+            eventStream.off("logger_changed", loggerChangedHandler);
+            eventStream.off("logger_deleted", loggerDeletedHandler);
+            eventStream.off("group_changed", groupChangedHandler);
+            eventStream.off("group_deleted", groupDeletedHandler);
+            eventStream.off("loggers_changed", loggersChangedHandler);
+            eventStream.offReconnect(reconnectRefetch);
+            if (ownsEventStream) {
+                eventStream.close();
+                ownsEventStream = false;
             }
-            wsManager = null;
+            eventStream = null;
         }
         // The standalone logging transport is a JDK HttpClient managed by the
         // generated ApiClient; the JDK reclaims its connection pool on GC.
@@ -911,27 +916,27 @@ public final class LoggingClient implements AutoCloseable {
     // Package-private test helpers
     // -----------------------------------------------------------------------
 
-    /** Simulates a logger_changed WebSocket event (for testing). */
+    /** Simulates a logger_changed push event (for testing). */
     void simulateLoggerChanged(Map<String, Object> data) {
         handleLoggerChanged(data);
     }
 
-    /** Simulates a logger_deleted WebSocket event (for testing). */
+    /** Simulates a logger_deleted push event (for testing). */
     void simulateLoggerDeleted(Map<String, Object> data) {
         handleLoggerDeleted(data);
     }
 
-    /** Simulates a group_changed WebSocket event (for testing). */
+    /** Simulates a group_changed push event (for testing). */
     void simulateGroupChanged(Map<String, Object> data) {
         handleGroupChanged(data);
     }
 
-    /** Simulates a group_deleted WebSocket event (for testing). */
+    /** Simulates a group_deleted push event (for testing). */
     void simulateGroupDeleted(Map<String, Object> data) {
         handleGroupDeleted(data);
     }
 
-    /** Simulates a loggers_changed WebSocket event (for testing). */
+    /** Simulates a loggers_changed push event (for testing). */
     void simulateLoggersChanged(Map<String, Object> data) {
         handleLoggersChanged(data);
     }

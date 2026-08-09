@@ -2,7 +2,7 @@ package com.smplkit.flags;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
-import com.smplkit.SharedWebSocket;
+import com.smplkit.EventStream;
 import com.smplkit.internal.generated.app.api.ContextsApi;
 import com.smplkit.internal.generated.flags.ApiException;
 import com.smplkit.internal.generated.flags.api.FlagsApi;
@@ -27,9 +27,9 @@ import static org.mockito.ArgumentMatchers.*;
 import static org.mockito.Mockito.*;
 
 /**
- * Tests for FlagsClient WebSocket event handling and lifecycle.
+ * Tests for FlagsClient push-event handling and event-stream lifecycle.
  */
-class FlagsClientWebSocketTest {
+class FlagsClientEventStreamTest {
 
     private static final ObjectMapper OBJECT_MAPPER = new ObjectMapper()
             .registerModule(new JavaTimeModule())
@@ -37,24 +37,24 @@ class FlagsClientWebSocketTest {
 
     private FlagsApi mockApi;
     private FlagsClient client;
-    private SharedWebSocket sharedWs;
+    private EventStream eventStream;
     private static final String FLAG_ID = "feature-x";
 
     @BeforeEach
     void setUp() {
         mockApi = Mockito.mock(FlagsApi.class);
-        sharedWs = new SharedWebSocket(); // test WS (no real connection)
+        eventStream = new EventStream(); // test stream (no real connection)
         client = new FlagsClient(mockApi, null, HttpClient.newHttpClient(),
                 "test-key", "https://flags.smplkit.com", "https://app.smplkit.com",
                 Duration.ofSeconds(5));
-        client.setSharedWs(sharedWs);
+        client.setEventStream(eventStream);
         client.setEnvironment("staging");
     }
 
     @AfterEach
     void tearDown() {
         if (client != null) client.close();
-        if (sharedWs != null) sharedWs.close();
+        if (eventStream != null) eventStream.close();
     }
 
     @Test
@@ -65,13 +65,13 @@ class FlagsClientWebSocketTest {
         AtomicReference<FlagChangeEvent> received = new AtomicReference<>();
         client.onChange(received::set);
 
-        // Simulate a WS flag_changed event with changed data
+        // Simulate a pushed flag_changed event with changed data
         setupGetFlag("feature-x", Map.of("staging", Map.of("enabled", true, "default", false)));
         client.simulateFlagChanged("feature-x");
 
         assertNotNull(received.get());
         assertEquals("feature-x", received.get().id());
-        assertEquals("websocket", received.get().source());
+        assertEquals("push", received.get().source());
     }
 
     @Test
@@ -85,7 +85,7 @@ class FlagsClientWebSocketTest {
         client.simulateFlagDeleted("feature-x");
 
         assertNotNull(received.get());
-        assertEquals("websocket", received.get().source());
+        assertEquals("push", received.get().source());
         assertTrue(received.get().isDeleted());
     }
 
@@ -110,9 +110,9 @@ class FlagsClientWebSocketTest {
     }
 
     @Test
-    void connect_registersWsListeners() throws ApiException {
+    void connect_registersStreamListeners() throws ApiException {
         setupList("feature-x", Map.of());
-        sharedWs.setConnectionStatus("connected");
+        eventStream.setConnectionStatus("connected");
 
         client.ensureConnected();
 
@@ -120,22 +120,23 @@ class FlagsClientWebSocketTest {
     }
 
     @Test
-    void connect_registersWsListenersByName() throws ApiException {
+    void connect_registersStreamListenersByName() throws ApiException {
         setupList("feature-x", Map.of());
-        SharedWebSocket mockWs = mock(SharedWebSocket.class);
-        client.setSharedWs(mockWs);
+        EventStream mockStream = mock(EventStream.class);
+        client.setEventStream(mockStream);
 
         client.ensureConnected();
 
-        verify(mockWs).on(eq("flag_changed"), any());
-        verify(mockWs).on(eq("flag_deleted"), any());
-        verify(mockWs).on(eq("flags_changed"), any());
+        verify(mockStream).on(eq("flag_changed"), any());
+        verify(mockStream).on(eq("flag_deleted"), any());
+        verify(mockStream).on(eq("flags_changed"), any());
+        verify(mockStream).onReconnect(any());
     }
 
     @Test
-    void disconnect_unregistersWsListeners() throws ApiException {
+    void disconnect_unregistersStreamListeners() throws ApiException {
         setupList("feature-x", Map.of());
-        sharedWs.setConnectionStatus("connected");
+        eventStream.setConnectionStatus("connected");
         client.ensureConnected();
 
         client.disconnect();
@@ -183,18 +184,18 @@ class FlagsClientWebSocketTest {
     }
 
     @Test
-    void wsEventTriggeredViaSharedWs() throws ApiException {
+    void pushEventTriggeredViaEventStream() throws ApiException {
         setupList("feature-x", Map.of("staging", Map.of("enabled", true, "default", true)));
-        sharedWs.setConnectionStatus("connected");
+        eventStream.setConnectionStatus("connected");
         client.ensureConnected();
 
         AtomicReference<FlagChangeEvent> received = new AtomicReference<>();
         client.onChange(received::set);
 
-        // Use SharedWebSocket simulateMessage to trigger event dispatch
-        // Message must have "id" field matching the flag key, and data must differ
+        // Dispatch through the EventStream exactly as the SSE reader would:
+        // the payload carries only the changed resource id.
         setupGetFlag("feature-x", Map.of("staging", Map.of("enabled", true, "default", false)));
-        sharedWs.simulateMessage("{\"event\":\"flag_changed\",\"id\":\"feature-x\"}");
+        eventStream.dispatch("flag_changed", Map.of("id", "feature-x"));
 
         assertNotNull(received.get());
     }

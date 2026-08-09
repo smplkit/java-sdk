@@ -1,6 +1,6 @@
 package com.smplkit.config;
 
-import com.smplkit.SharedWebSocket;
+import com.smplkit.EventStream;
 import com.smplkit.errors.ConflictError;
 import com.smplkit.errors.NotFoundError;
 import com.smplkit.errors.ValidationError;
@@ -37,7 +37,7 @@ import static org.mockito.Mockito.when;
 /**
  * Tests for the fused {@link ConfigClient} CRUD surface:
  * new_() + save(), get(id), list(), delete(id), plus error mapping,
- * {@link ConfigChangeEvent}, and the WebSocket-handler registration / simulate
+ * {@link ConfigChangeEvent}, and the push-handler registration / simulate
  * seams.
  */
 class ConfigClientTest {
@@ -579,12 +579,12 @@ class ConfigClientTest {
 
     @Test
     void configChangeEvent_accessors() {
-        ConfigChangeEvent event = new ConfigChangeEvent("user_service", "timeout", 30, 60, "websocket");
+        ConfigChangeEvent event = new ConfigChangeEvent("user_service", "timeout", 30, 60, "push");
         assertEquals("user_service", event.configId());
         assertEquals("timeout", event.itemKey());
         assertEquals(30, event.oldValue());
         assertEquals(60, event.newValue());
-        assertEquals("websocket", event.source());
+        assertEquals("push", event.source());
     }
 
     @Test
@@ -600,15 +600,15 @@ class ConfigClientTest {
 
     @Test
     void configChangeEvent_nullValues_allowed() {
-        ConfigChangeEvent event = new ConfigChangeEvent("cfg", "key", null, "value", "websocket");
+        ConfigChangeEvent event = new ConfigChangeEvent("cfg", "key", null, "value", "push");
         assertNull(event.oldValue());
         assertEquals("value", event.newValue());
     }
 
     @Test
     void configChangeEvent_equality() {
-        ConfigChangeEvent e1 = new ConfigChangeEvent("cfg", "k", "a", "b", "websocket");
-        ConfigChangeEvent e2 = new ConfigChangeEvent("cfg", "k", "a", "b", "websocket");
+        ConfigChangeEvent e1 = new ConfigChangeEvent("cfg", "k", "a", "b", "push");
+        ConfigChangeEvent e2 = new ConfigChangeEvent("cfg", "k", "a", "b", "push");
         assertEquals(e1, e2);
         assertEquals(e1.hashCode(), e2.hashCode());
     }
@@ -646,23 +646,23 @@ class ConfigClientTest {
     }
 
     // -----------------------------------------------------------------------
-    // WebSocket handler registration + simulate seams
+    // Push-event handler registration + simulate seams
     // -----------------------------------------------------------------------
 
     @Test
     void ensureConnected_registersWsHandlersWhenManagerSet() throws ApiException {
         when(mockApi.listConfigs(isNull(), isNull(), isNull(), isNull(), any(), any(), isNull()))
                 .thenReturn(emptyListResponse());
-        SharedWebSocket mockWs = mock(SharedWebSocket.class);
-        configClient.setSharedWs(mockWs);
+        EventStream mockStream = mock(EventStream.class);
+        configClient.setEventStream(mockStream);
         configClient.setEnvironment("production");
 
         configClient.ensureConnected();
 
-        verify(mockWs).on(eq("config_changed"), any());
-        verify(mockWs).on(eq("config_deleted"), any());
-        verify(mockWs).on(eq("configs_changed"), any());
-        verify(mockWs).ensureConnected(any());
+        verify(mockStream).on(eq("config_changed"), any());
+        verify(mockStream).on(eq("config_deleted"), any());
+        verify(mockStream).on(eq("configs_changed"), any());
+        verify(mockStream).ensureConnected(any());
     }
 
     @Test

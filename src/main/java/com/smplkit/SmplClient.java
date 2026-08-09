@@ -88,7 +88,7 @@ public final class SmplClient implements AutoCloseable {
     /** Jobs' full surface on one client. */
     public final JobsClient jobs;
 
-    private final SharedWebSocket sharedWs;
+    private final EventStream eventStream;
     private final HttpClient httpClient;
     private final ContextsApi contextsApi;
     private final String environment;
@@ -142,7 +142,7 @@ public final class SmplClient implements AutoCloseable {
         this.httpClient = httpClient;
         this.metrics = resolvedConfig.disableTelemetry ? null
                 : new MetricsReporter(httpClient, appBaseUrl, apiKey, environment, service);
-        this.sharedWs = new SharedWebSocket(httpClient, appBaseUrl, apiKey, metrics);
+        this.eventStream = new EventStream(httpClient, appBaseUrl, apiKey, metrics);
 
         // Build the per-service HTTP transports + the context-registration
         // buffer. Side-effect-free: each transport connects lazily on first
@@ -161,18 +161,18 @@ public final class SmplClient implements AutoCloseable {
         // key (the settings sub-client uses HTTP directly).
         this.account = new AccountClient(apiKey, appBaseUrl, extraHeaders);
         // Config's full surface on one client; wired into this parent so it
-        // borrows the shared config transport and WebSocket.
+        // borrows the shared config transport and event stream.
         this.config = buildConfigClient(httpClient, apiKey, extraHeaders, timeout, configBaseUrl);
         this.config.setEnvironment(environment);
         this.config.setService(service);
         this.config.setMetrics(metrics);
-        this.config.setSharedWs(this.sharedWs);
+        this.config.setEventStream(this.eventStream);
         this.config.setEnsureStarted(this::ensureStarted);
         // Flags' full surface on one client; wired into this parent so it
-        // borrows the shared flags transport and WebSocket. The context
+        // borrows the shared flags transport and event stream. The context
         // buffer is the seam for evaluation-context registration, shared with
         // client.platform.contexts.
-        this.flags = buildFlagsClient(httpClient, apiKey, extraHeaders, timeout, sharedWs,
+        this.flags = buildFlagsClient(httpClient, apiKey, extraHeaders, timeout, eventStream,
                 environment, service, flagsBaseUrl, appBaseUrl);
         this.flags.setMetrics(metrics);
         this.flags.setContextBuffer(contextBuffer);
@@ -182,7 +182,7 @@ public final class SmplClient implements AutoCloseable {
         this.logging = buildLoggingClient(httpClient, apiKey, extraHeaders, timeout, environment,
                 service, loggingBaseUrl);
         this.logging.setMetrics(metrics);
-        this.logging.setSharedWs(this.sharedWs);
+        this.logging.setEventStream(this.eventStream);
         this.logging.setEnsureStarted(this::ensureStarted);
         // Audit's full surface on one client; this runtime instance carries
         // the configured environment as X-Smplkit-Environment and owns its
@@ -227,7 +227,7 @@ public final class SmplClient implements AutoCloseable {
      *
      * <p>Idempotent and thread-safe (lock + flag); a no-op after {@link #close()}.
      * Triggered by the first config/flags/logging operation, {@link #setContext},
-     * {@link #waitUntilReady}, or WebSocket open — never at construction.</p>
+     * {@link #waitUntilReady}, or event-stream open — never at construction.</p>
      */
     void ensureStarted() {
         synchronized (startLock) {
@@ -314,7 +314,7 @@ public final class SmplClient implements AutoCloseable {
 
     private static FlagsClient buildFlagsClient(HttpClient httpClient, String apiKey,
                                                  Map<String, String> extraHeaders,
-                                                 Duration timeout, SharedWebSocket sharedWs,
+                                                 Duration timeout, EventStream eventStream,
                                                  String environment, String service,
                                                  String flagsBaseUrl, String appBaseUrl) {
         com.smplkit.internal.generated.flags.ApiClient flagsApiClient =
@@ -329,7 +329,7 @@ public final class SmplClient implements AutoCloseable {
 
         FlagsClient client = new FlagsClient(flagsApi, contextsApi,
                 httpClient, apiKey, flagsBaseUrl, appBaseUrl, timeout);
-        client.setSharedWs(sharedWs);
+        client.setEventStream(eventStream);
         client.setParentService(service);
         client.setEnvironment(environment);
         return client;
@@ -368,33 +368,33 @@ public final class SmplClient implements AutoCloseable {
     private static final Duration DEFAULT_WAIT_UNTIL_READY = Duration.ofSeconds(10);
 
     /**
-     * Optionally pre-warm the SDK and block until the live socket is up.
+     * Optionally pre-warm the SDK and block until the live stream is up.
      *
-     * <p>Eagerly opens the live-updates WebSocket and waits for the handshake
-     * to complete. After this returns, any {@code onChange} listeners receive
-     * every server event from this point forward — including events triggered
-     * by writes the caller fires immediately afterward.</p>
+     * <p>Eagerly opens the live-updates event stream and waits for the server
+     * to confirm the subscription. After this returns, any {@code onChange}
+     * listeners receive every server event from this point forward — including
+     * events triggered by writes the caller fires immediately afterward.</p>
      *
      * <p>Optional: config and flags connect lazily on first live use, so this
-     * is purely a pre-warm / WebSocket-ready barrier. Logging integration is
+     * is purely a pre-warm / stream-ready barrier. Logging integration is
      * <em>not</em> connected here — call {@code client.logging.install()}
      * separately if you want it (it installs adapters and hooks into your
      * application's logger, which should be opt-in).</p>
      *
-     * @param timeout the maximum time to wait for the live-updates WebSocket
-     *     handshake before giving up
-     * @throws com.smplkit.errors.TimeoutError if the WebSocket fails to
+     * @param timeout the maximum time to wait for the live-updates stream
+     *     to connect before giving up
+     * @throws com.smplkit.errors.TimeoutError if the event stream fails to
      *     connect within {@code timeout}
      * @throws InterruptedException if the calling thread is interrupted while waiting
      */
     public void waitUntilReady(Duration timeout) throws InterruptedException {
-        ensureWs();
+        ensureEventStream();
         long deadlineNanos = System.nanoTime() + timeout.toNanos();
-        while (!"connected".equals(sharedWs.connectionStatus())) {
+        while (!"connected".equals(eventStream.connectionStatus())) {
             if (System.nanoTime() >= deadlineNanos) {
                 throw new com.smplkit.errors.TimeoutError(
-                        "Live-updates websocket did not connect within " + timeout
-                                + " (status: " + sharedWs.connectionStatus() + ")",
+                        "Live-updates event stream did not connect within " + timeout
+                                + " (status: " + eventStream.connectionStatus() + ")",
                         null);
             }
             Thread.sleep(50);
@@ -402,11 +402,11 @@ public final class SmplClient implements AutoCloseable {
     }
 
     /**
-     * Pre-warms the SDK and blocks until the live socket is up, using the
+     * Pre-warms the SDK and blocks until the live stream is up, using the
      * default 10-second timeout. Equivalent to
      * {@code waitUntilReady(Duration.ofSeconds(10))}.
      *
-     * @throws com.smplkit.errors.TimeoutError if the WebSocket fails to
+     * @throws com.smplkit.errors.TimeoutError if the event stream fails to
      *     connect within the default timeout
      * @throws InterruptedException if the calling thread is interrupted while waiting
      */
@@ -414,17 +414,17 @@ public final class SmplClient implements AutoCloseable {
         waitUntilReady(DEFAULT_WAIT_UNTIL_READY);
     }
 
-    /** Lazily start the deferred machinery and the shared WebSocket. */
-    private SharedWebSocket ensureWs() {
+    /** Lazily start the deferred machinery and the shared event stream. */
+    private EventStream ensureEventStream() {
         ensureStarted();
-        sharedWs.start();
-        return sharedWs;
+        eventStream.start();
+        return eventStream;
     }
 
-    /** Test-only accessor for the shared WebSocket. Used to flip status
+    /** Test-only accessor for the shared event stream. Used to flip status
      * to "connected" without opening a real network connection. */
-    SharedWebSocket sharedWsForTesting() {
-        return sharedWs;
+    EventStream eventStreamForTesting() {
+        return eventStream;
     }
 
     /**
@@ -565,6 +565,6 @@ public final class SmplClient implements AutoCloseable {
         flags.close();
         audit.close();
         config.close();
-        sharedWs.close();
+        eventStream.close();
     }
 }

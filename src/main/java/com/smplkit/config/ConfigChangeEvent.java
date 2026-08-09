@@ -9,7 +9,8 @@ package com.smplkit.config;
  * @param itemKey  The item key within the config that changed.
  * @param oldValue The previous value.
  * @param newValue The updated value.
- * @param source   How the change was delivered ({@code "websocket"} or {@code "manual"}).
+ * @param source   How the change was delivered ({@code "push"} for a
+ *                 server-delivered live update, {@code "manual"} for a local refresh).
  */
 public record ConfigChangeEvent(String configId, String itemKey, Object oldValue, Object newValue, String source) {
 

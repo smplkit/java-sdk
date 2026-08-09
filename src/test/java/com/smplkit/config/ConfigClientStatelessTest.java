@@ -25,7 +25,7 @@ import static org.mockito.Mockito.*;
  * Stateless live surface for {@link ConfigClient} — {@code streaming(false)}.
  *
  * <p>The first live call still flushes discovery (best-effort) and fetches +
- * resolves every config once, blocking, but no WebSocket is opened and
+ * resolves every config once, blocking, but no event stream is opened and
  * registration threshold flushes run inline on the calling thread instead of
  * on a one-shot background thread. Mock verifications run immediately after
  * the triggering call — no latch, no sleep — proving no background thread
@@ -51,16 +51,16 @@ class ConfigClientStatelessTest {
     // ------------------------------------------------------------ lazy connect
 
     @Test
-    void statelessConnect_resolvesValuesAndSkipsWebSocket() throws Exception {
+    void statelessConnect_resolvesValuesAndSkipsEventStream() throws Exception {
         when(mockApi.listConfigs(isNull(), isNull(), isNull(), isNull(), any(), any(), isNull()))
                 .thenReturn(listResponse("app", Map.of("timeout", 30)));
 
         assertEquals(30, client.getValue("app", "timeout"));
         assertTrue(client.isConnected());
 
-        // No WebSocket was created or owned despite the non-null app base URL.
-        assertNull(field(client, "wsManager"));
-        assertFalse((boolean) field(client, "ownsWs"));
+        // No event stream was created or owned despite the non-null app base URL.
+        assertNull(field(client, "eventStream"));
+        assertFalse((boolean) field(client, "ownsEventStream"));
     }
 
     // ---------------------------------------------------- inline threshold flush

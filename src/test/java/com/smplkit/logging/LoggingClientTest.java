@@ -2,7 +2,7 @@ package com.smplkit.logging;
 
 import com.smplkit.LogLevel;
 import com.smplkit.MetricsReporter;
-import com.smplkit.SharedWebSocket;
+import com.smplkit.EventStream;
 import com.smplkit.internal.generated.logging.ApiException;
 import com.smplkit.internal.generated.logging.api.LogGroupsApi;
 import com.smplkit.internal.generated.logging.api.LoggersApi;
@@ -45,9 +45,9 @@ import static org.mockito.Mockito.*;
  * surface, change listeners, the discovery buffer, and adapter auto-loading.
  *
  * <p>Constructed via the wired constructor with mocked generated {@code *Api}s; no
- * real network or WebSocket. WS event handlers are driven via the
- * {@code simulate*} test hooks, and the WebSocket manager is a Mockito mock
- * injected through {@link LoggingClient#setSharedWs}.</p>
+ * real network connection. Push-event handlers are driven via the
+ * {@code simulate*} test hooks, and the event stream is a Mockito mock
+ * injected through {@link LoggingClient#setEventStream}.</p>
  */
 class LoggingClientTest {
 
@@ -474,7 +474,7 @@ class LoggingClientTest {
         assertNotNull(received.get());
         assertEquals("com.acme", received.get().id());
         assertEquals(LogLevel.WARN, received.get().level());
-        assertEquals("websocket", received.get().source());
+        assertEquals("push", received.get().source());
     }
 
     @Test
@@ -1092,7 +1092,7 @@ class LoggingClientTest {
     }
 
     // -----------------------------------------------------------------------
-    // WebSocket handler registration
+    // Push-event handler registration
     // -----------------------------------------------------------------------
 
     @Test
@@ -1103,16 +1103,16 @@ class LoggingClientTest {
         when(mockAdapter.discover()).thenReturn(List.of());
         client.registerAdapter(mockAdapter);
 
-        SharedWebSocket mockWs = mock(SharedWebSocket.class);
-        client.setSharedWs(mockWs);
+        EventStream mockStream = mock(EventStream.class);
+        client.setEventStream(mockStream);
 
         client.install();
 
-        verify(mockWs).on(eq("logger_changed"), any());
-        verify(mockWs).on(eq("logger_deleted"), any());
-        verify(mockWs).on(eq("group_changed"), any());
-        verify(mockWs).on(eq("group_deleted"), any());
-        verify(mockWs).on(eq("loggers_changed"), any());
+        verify(mockStream).on(eq("logger_changed"), any());
+        verify(mockStream).on(eq("logger_deleted"), any());
+        verify(mockStream).on(eq("group_changed"), any());
+        verify(mockStream).on(eq("group_deleted"), any());
+        verify(mockStream).on(eq("loggers_changed"), any());
     }
 
     @Test
@@ -1123,15 +1123,15 @@ class LoggingClientTest {
         when(mockAdapter.discover()).thenReturn(List.of());
         client.registerAdapter(mockAdapter);
 
-        SharedWebSocket mockWs = mock(SharedWebSocket.class);
-        client.setSharedWs(mockWs);
+        EventStream mockStream = mock(EventStream.class);
+        client.setEventStream(mockStream);
         client.install();
         client.close();
 
-        verify(mockWs).off(eq("logger_changed"), any());
-        verify(mockWs).off(eq("loggers_changed"), any());
+        verify(mockStream).off(eq("logger_changed"), any());
+        verify(mockStream).off(eq("loggers_changed"), any());
         // A wired (borrowed) WS is not closed by the client.
-        verify(mockWs, never()).close();
+        verify(mockStream, never()).close();
     }
 
     @Test

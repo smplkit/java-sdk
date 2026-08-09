@@ -1,6 +1,6 @@
 package com.smplkit.config;
 
-import com.smplkit.SharedWebSocket;
+import com.smplkit.EventStream;
 import com.smplkit.internal.generated.config.api.ConfigsApi;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;
@@ -124,60 +124,61 @@ class ConfigClientBuilderTest {
     @Test
     void close_onNeverConnectedStandalone_isNoOp() {
         ConfigClient client = ConfigClient.create("test-key");
-        // No live use → no owned WebSocket. close() must not throw and may be
-        // called more than once.
+        // No live use → no owned event stream. close() must not throw and may
+        // be called more than once.
         assertDoesNotThrow(client::close);
         assertDoesNotThrow(client::close);
     }
 
     @Test
-    void close_withOwnedWebSocket_tearsItDown() throws Exception {
-        // A standalone client that opened its own WebSocket must close it. We
-        // inject a fake owned WS via reflection so close() exercises the
-        // owns-WS teardown branch without dialing a real socket.
+    void close_withOwnedEventStream_tearsItDown() throws Exception {
+        // A standalone client that opened its own event stream must close it.
+        // We inject a fake owned stream via reflection so close() exercises
+        // the owns-stream teardown branch without dialing a real connection.
         ConfigClient client = ConfigClient.create("test-key");
-        SharedWebSocket fakeWs = mock(SharedWebSocket.class);
-        setField(client, "wsManager", fakeWs);
-        setField(client, "ownsWs", true);
+        EventStream fakeStream = mock(EventStream.class);
+        setField(client, "eventStream", fakeStream);
+        setField(client, "ownsEventStream", true);
 
         client.close();
 
-        verify(fakeWs).close();
-        // Idempotent: a second close() does not re-close the (now-null) WS.
+        verify(fakeStream).close();
+        // Idempotent: a second close() does not re-close the (now-null) stream.
         assertDoesNotThrow(client::close);
-        verify(fakeWs, Mockito.times(1)).close();
+        verify(fakeStream, Mockito.times(1)).close();
     }
 
     @Test
-    void standalone_ensureWs_opensOwnsAndClosesWebSocket() throws Exception {
+    void standalone_ensureEventStream_opensOwnsAndClosesStream() throws Exception {
         // Build a standalone client via the package-private ctor with a mocked
-        // ConfigsApi and an unroutable app base URL. We invoke ensureWs()
-        // directly (rather than through ensureConnected, which would block on
-        // SharedWebSocket.ensureConnected awaiting a connection that never
-        // completes). The owned WS's daemon fails to connect harmlessly, and
-        // close() tears it down. Mirrors the FlagsClient standalone-WS pattern.
-        // ensureWs() is invoked directly, so the transport is never used here —
-        // a bare mock satisfies the constructor.
+        // ConfigsApi and an unroutable app base URL. We invoke
+        // ensureEventStream() directly (rather than through ensureConnected,
+        // which would block on EventStream.ensureConnected awaiting a
+        // connection that never completes). The owned stream's daemon fails to
+        // connect harmlessly, and close() tears it down. Mirrors the
+        // FlagsClient standalone-stream pattern. ensureEventStream() is
+        // invoked directly, so the transport is never used here — a bare mock
+        // satisfies the constructor.
         ConfigsApi mockApi = Mockito.mock(ConfigsApi.class);
         ConfigClient client = new ConfigClient(mockApi, HttpClient.newHttpClient(),
                 "test-key", "http://localhost:1", "staging", "test-service", true);
 
-        java.lang.reflect.Method ensureWs = ConfigClient.class.getDeclaredMethod("ensureWs");
-        ensureWs.setAccessible(true);
-        Object ws = ensureWs.invoke(client);
-        assertNotNull(ws, "standalone ensureWs should open and own a WebSocket");
-        assertTrue(ownsWs(client), "standalone ensureWs should mark the WS as owned");
+        java.lang.reflect.Method ensureStream = ConfigClient.class.getDeclaredMethod("ensureEventStream");
+        ensureStream.setAccessible(true);
+        Object stream = ensureStream.invoke(client);
+        assertNotNull(stream, "standalone ensureEventStream should open and own a stream");
+        assertTrue(ownsEventStream(client), "standalone ensureEventStream should mark the stream as owned");
 
-        // A second call returns the same already-owned WS (early-return branch).
-        assertSame(ws, ensureWs.invoke(client));
+        // A second call returns the same already-owned stream (early-return branch).
+        assertSame(stream, ensureStream.invoke(client));
 
         assertDoesNotThrow(client::close);
-        assertFalse(ownsWs(client), "close() should release the owned WebSocket");
+        assertFalse(ownsEventStream(client), "close() should release the owned stream");
     }
 
-    private static boolean ownsWs(ConfigClient client) {
+    private static boolean ownsEventStream(ConfigClient client) {
         try {
-            Field f = ConfigClient.class.getDeclaredField("ownsWs");
+            Field f = ConfigClient.class.getDeclaredField("ownsEventStream");
             f.setAccessible(true);
             return f.getBoolean(client);
         } catch (Exception e) {

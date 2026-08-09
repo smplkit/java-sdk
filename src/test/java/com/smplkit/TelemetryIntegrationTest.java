@@ -109,9 +109,9 @@ class TelemetryIntegrationTest {
         flags.setEnvironment("production");
         flags.setParentService("my-service");
 
-        SharedWebSocket ws = new SharedWebSocket();
-        ws.setConnectionStatus("connected");
-        flags.setSharedWs(ws);
+        EventStream stream = new EventStream();
+        stream.setConnectionStatus("connected");
+        flags.setEventStream(stream);
 
         Flag<Boolean> handle = flags.booleanFlag("test-flag", false);
         handle.get(); // First eval = cache miss
@@ -142,9 +142,9 @@ class TelemetryIntegrationTest {
         flags.setEnvironment("production");
         flags.setParentService("my-service");
 
-        SharedWebSocket ws = new SharedWebSocket();
-        ws.setConnectionStatus("connected");
-        flags.setSharedWs(ws);
+        EventStream stream = new EventStream();
+        stream.setConnectionStatus("connected");
+        flags.setEventStream(stream);
 
         Flag<Boolean> handle = flags.booleanFlag("test-flag", false);
         handle.get(); // miss
@@ -176,9 +176,9 @@ class TelemetryIntegrationTest {
         flags.setEnvironment("production");
         flags.setParentService("my-service");
 
-        SharedWebSocket ws = new SharedWebSocket();
-        ws.setConnectionStatus("connected");
-        flags.setSharedWs(ws);
+        EventStream stream = new EventStream();
+        stream.setConnectionStatus("connected");
+        flags.setEventStream(stream);
 
         Flag<Boolean> handle = flags.booleanFlag("test-flag", false);
         assertDoesNotThrow(() -> handle.get());
@@ -358,13 +358,13 @@ class TelemetryIntegrationTest {
     }
 
     // -----------------------------------------------------------------------
-    // SharedWebSocket telemetry
+    // EventStream telemetry
     // -----------------------------------------------------------------------
 
     @Test
-    void websocketConnectionGaugeOnConnect() {
-        SharedWebSocket ws = new SharedWebSocket(null, null, reporter);
-        ws.simulateMessage("{\"type\":\"connected\"}");
+    void eventConnectionGaugeOnConnect() {
+        EventStream stream = new EventStream(null, null, reporter);
+        stream.markConnected();
 
         reporter.flush();
 
@@ -372,21 +372,21 @@ class TelemetryIntegrationTest {
         Map<String, Object> payload = parsePayload(capturedBodies.get(0));
         @SuppressWarnings("unchecked")
         List<Map<String, Object>> data = (List<Map<String, Object>>) payload.get("data");
-        assertTrue(hasMetric(data, "platform.websocket_connections"));
+        assertTrue(hasMetric(data, "platform.event_connections"));
         for (Map<String, Object> item : data) {
             @SuppressWarnings("unchecked")
             Map<String, Object> itemAttrs = (Map<String, Object>) item.get("attributes");
-            if ("platform.websocket_connections".equals(itemAttrs.get("name"))) {
+            if ("platform.event_connections".equals(itemAttrs.get("name"))) {
                 assertEquals(1, itemAttrs.get("value"));
             }
         }
     }
 
     @Test
-    void websocketConnectionGaugeOnClose() {
-        SharedWebSocket ws = new SharedWebSocket(null, null, reporter);
-        ws.simulateMessage("{\"type\":\"connected\"}");
-        ws.close();
+    void eventConnectionGaugeOnClose() {
+        EventStream stream = new EventStream(null, null, reporter);
+        stream.markConnected();
+        stream.close();
 
         reporter.flush();
 
@@ -398,48 +398,31 @@ class TelemetryIntegrationTest {
         for (Map<String, Object> item : data) {
             @SuppressWarnings("unchecked")
             Map<String, Object> itemAttrs = (Map<String, Object>) item.get("attributes");
-            if ("platform.websocket_connections".equals(itemAttrs.get("name"))) {
+            if ("platform.event_connections".equals(itemAttrs.get("name"))) {
                 assertEquals(0, itemAttrs.get("value"));
             }
         }
     }
 
     @Test
-    void websocketNoMetricsWhenReporterNull() {
-        SharedWebSocket ws = new SharedWebSocket();
+    void eventStreamNoMetricsWhenReporterNull() {
+        EventStream stream = new EventStream();
         // Should not throw
-        assertDoesNotThrow(() -> ws.simulateMessage("{\"type\":\"connected\"}"));
-        assertDoesNotThrow(() -> ws.close());
+        assertDoesNotThrow(stream::markConnected);
+        assertDoesNotThrow(stream::close);
     }
 
     @Test
-    void websocketGaugeOnListenerClose() throws Exception {
-        // Create a WS with a connector that gives us a mock WebSocket
-        java.util.concurrent.atomic.AtomicReference<java.net.http.WebSocket.Listener> listenerRef =
-                new java.util.concurrent.atomic.AtomicReference<>();
-        SharedWebSocket.WsConnector connector = (uri, listener) -> {
-            listenerRef.set(listener);
-            return mock(java.net.http.WebSocket.class);
-        };
-        SharedWebSocket ws = new SharedWebSocket(connector, "wss://test/ws", reporter);
+    void eventConnectionGaugeOnStreamDrop() throws Exception {
+        // A connection that delivers the connected event and then EOFs: the
+        // reader must record gauge=1 on connect and gauge=0 on the drop.
+        EventStream stream = new EventStream(
+                uri -> new EventStream.Connection(200, "text/event-stream",
+                        new java.io.ByteArrayInputStream(
+                                "event: connected\ndata: {}\n\n".getBytes(java.nio.charset.StandardCharsets.UTF_8))),
+                "http://test/api/v1/events", reporter);
 
-        // Start connection in background
-        Thread t = new Thread(ws::wsThreadEntry);
-        t.setDaemon(true);
-        t.start();
-        Thread.sleep(100);
-
-        // Simulate connected
-        ws.simulateMessage("{\"type\":\"connected\"}");
-
-        // Now trigger onClose on the listener
-        java.net.http.WebSocket.Listener listener = listenerRef.get();
-        assertNotNull(listener);
-        listener.onClose(mock(java.net.http.WebSocket.class), 1000, "bye");
-
-        // Give reconnect thread time to start
-        Thread.sleep(100);
-        ws.close();
+        assertTrue(stream.connectOnce()); // reads to EOF inline
 
         reporter.flush();
 
@@ -447,41 +430,7 @@ class TelemetryIntegrationTest {
         Map<String, Object> payload = parsePayload(capturedBodies.get(0));
         @SuppressWarnings("unchecked")
         List<Map<String, Object>> data = (List<Map<String, Object>>) payload.get("data");
-        // The gauge should be 0 after close
-        assertTrue(hasMetric(data, "platform.websocket_connections"));
-    }
-
-    @Test
-    void websocketGaugeOnListenerError() throws Exception {
-        java.util.concurrent.atomic.AtomicReference<java.net.http.WebSocket.Listener> listenerRef =
-                new java.util.concurrent.atomic.AtomicReference<>();
-        SharedWebSocket.WsConnector connector = (uri, listener) -> {
-            listenerRef.set(listener);
-            return mock(java.net.http.WebSocket.class);
-        };
-        SharedWebSocket ws = new SharedWebSocket(connector, "wss://test/ws", reporter);
-
-        Thread t = new Thread(ws::wsThreadEntry);
-        t.setDaemon(true);
-        t.start();
-        Thread.sleep(100);
-
-        ws.simulateMessage("{\"type\":\"connected\"}");
-
-        java.net.http.WebSocket.Listener listener = listenerRef.get();
-        assertNotNull(listener);
-        listener.onError(mock(java.net.http.WebSocket.class), new RuntimeException("test error"));
-
-        Thread.sleep(100);
-        ws.close();
-
-        reporter.flush();
-
-        assertTrue(capturedBodies.size() > 0);
-        Map<String, Object> payload = parsePayload(capturedBodies.get(0));
-        @SuppressWarnings("unchecked")
-        List<Map<String, Object>> data = (List<Map<String, Object>>) payload.get("data");
-        assertTrue(hasMetric(data, "platform.websocket_connections"));
+        assertTrue(hasMetric(data, "platform.event_connections"));
     }
 
     // -----------------------------------------------------------------------
