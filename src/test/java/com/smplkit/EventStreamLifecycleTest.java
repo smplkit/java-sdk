@@ -356,12 +356,20 @@ class EventStreamLifecycleTest {
     @Test
     void close_interruptedDuringJoin() throws Exception {
         EventStream stream = new EventStream();
-        // A thread that blocks forever stands in for the stream thread
+        // Stands in for the stream thread. It must survive the interrupt()
+        // that close() issues before joining: Thread.join(millis) only
+        // consults the caller's interrupt flag from its internal wait(),
+        // which it skips entirely once the target is dead — so a stand-in
+        // that dies on interrupt races the join and sometimes lets it
+        // return without throwing.
+        var stop = new java.util.concurrent.atomic.AtomicBoolean();
         Thread blockingThread = new Thread(() -> {
-            try {
-                Thread.sleep(60_000);
-            } catch (InterruptedException e) {
-                // expected
+            while (!stop.get()) {
+                try {
+                    Thread.sleep(60_000);
+                } catch (InterruptedException e) {
+                    // keep blocking — close()'s join must find us alive
+                }
             }
         }, "test-blocking-events");
         blockingThread.setDaemon(true);
@@ -372,13 +380,18 @@ class EventStreamLifecycleTest {
         streamThreadField.set(stream, blockingThread);
 
         // Interrupt the closing thread before close() so join() throws
+        var flagRestored = new java.util.concurrent.atomic.AtomicBoolean();
         Thread closeThread = new Thread(() -> {
             Thread.currentThread().interrupt();
             stream.close();
+            flagRestored.set(Thread.currentThread().isInterrupted());
         });
         closeThread.start();
         closeThread.join(3000);
+        assertFalse(closeThread.isAlive(), "close() should not wait out the full join timeout");
+        assertTrue(flagRestored.get(), "close() must restore the caller's interrupt flag");
 
+        stop.set(true);
         blockingThread.interrupt();
         blockingThread.join(1000);
     }
