@@ -41,6 +41,7 @@ import com.smplkit.internal.generated.app.ApiClient;
  */
 @JsonPropertyOrder({
   ApiKey.JSON_PROPERTY_NAME,
+  ApiKey.JSON_PROPERTY_KIND,
   ApiKey.JSON_PROPERTY_STATUS,
   ApiKey.JSON_PROPERTY_KEY,
   ApiKey.JSON_PROPERTY_SCOPES,
@@ -55,6 +56,45 @@ public class ApiKey {
   public static final String JSON_PROPERTY_NAME = "name";
   @jakarta.annotation.Nonnull
   private String name;
+
+  /**
+   * Credential class of the key, set at creation and immutable. &#x60;PRIVATE&#x60; (the default) keys carry full API access and must be kept secret — never expose one in a browser or client application. &#x60;PUBLIC&#x60; keys are browser-safe, read-only credentials for reading feature flags and configuration from client-side code; they must be scoped to exactly one environment with &#x60;permissions: [\&quot;read\&quot;]&#x60;. Accepted case-insensitively.
+   */
+  public enum KindEnum {
+    PUBLIC(String.valueOf("PUBLIC")),
+    
+    PRIVATE(String.valueOf("PRIVATE"));
+
+    private String value;
+
+    KindEnum(String value) {
+      this.value = value;
+    }
+
+    @JsonValue
+    public String getValue() {
+      return value;
+    }
+
+    @Override
+    public String toString() {
+      return String.valueOf(value);
+    }
+
+    @JsonCreator
+    public static KindEnum fromValue(String value) {
+      for (KindEnum b : KindEnum.values()) {
+        if (b.value.equals(value)) {
+          return b;
+        }
+      }
+      throw new IllegalArgumentException("Unexpected value '" + value + "'");
+    }
+  }
+
+  public static final String JSON_PROPERTY_KIND = "kind";
+  @jakarta.annotation.Nullable
+  private KindEnum kind = KindEnum.PRIVATE;
 
   public static final String JSON_PROPERTY_STATUS = "status";
   private JsonNullable<String> status = JsonNullable.<String>undefined();
@@ -123,6 +163,30 @@ public class ApiKey {
   @JsonInclude(value = JsonInclude.Include.ALWAYS)
   public void setName(@jakarta.annotation.Nonnull String name) {
     this.name = name;
+  }
+
+
+  public ApiKey kind(@jakarta.annotation.Nullable KindEnum kind) {
+    this.kind = kind;
+    return this;
+  }
+
+  /**
+   * Credential class of the key, set at creation and immutable. &#x60;PRIVATE&#x60; (the default) keys carry full API access and must be kept secret — never expose one in a browser or client application. &#x60;PUBLIC&#x60; keys are browser-safe, read-only credentials for reading feature flags and configuration from client-side code; they must be scoped to exactly one environment with &#x60;permissions: [\&quot;read\&quot;]&#x60;. Accepted case-insensitively.
+   * @return kind
+   */
+  @jakarta.annotation.Nullable
+  @JsonProperty(value = JSON_PROPERTY_KIND, required = false)
+  @JsonInclude(value = JsonInclude.Include.USE_DEFAULTS)
+  public KindEnum getKind() {
+    return kind;
+  }
+
+
+  @JsonProperty(value = JSON_PROPERTY_KIND, required = false)
+  @JsonInclude(value = JsonInclude.Include.USE_DEFAULTS)
+  public void setKind(@jakarta.annotation.Nullable KindEnum kind) {
+    this.kind = kind;
   }
 
 
@@ -371,6 +435,7 @@ public class ApiKey {
     }
     ApiKey apiKey = (ApiKey) o;
     return Objects.equals(this.name, apiKey.name) &&
+        Objects.equals(this.kind, apiKey.kind) &&
         equalsNullable(this.status, apiKey.status) &&
         equalsNullable(this.key, apiKey.key) &&
         Objects.equals(this.scopes, apiKey.scopes) &&
@@ -387,7 +452,7 @@ public class ApiKey {
 
   @Override
   public int hashCode() {
-    return Objects.hash(name, hashCodeNullable(status), hashCodeNullable(key), scopes, hashCodeNullable(createdBy), hashCodeNullable(expiresAt), hashCodeNullable(lastUsedAt), hashCodeNullable(createdAt), hashCodeNullable(updatedAt));
+    return Objects.hash(name, kind, hashCodeNullable(status), hashCodeNullable(key), scopes, hashCodeNullable(createdBy), hashCodeNullable(expiresAt), hashCodeNullable(lastUsedAt), hashCodeNullable(createdAt), hashCodeNullable(updatedAt));
   }
 
   private static <T> int hashCodeNullable(JsonNullable<T> a) {
@@ -402,6 +467,7 @@ public class ApiKey {
     StringBuilder sb = new StringBuilder();
     sb.append("class ApiKey {\n");
     sb.append("    name: ").append(toIndentedString(name)).append("\n");
+    sb.append("    kind: ").append(toIndentedString(kind)).append("\n");
     sb.append("    status: ").append(toIndentedString(status)).append("\n");
     sb.append("    key: ").append(toIndentedString(key)).append("\n");
     sb.append("    scopes: ").append(toIndentedString(scopes)).append("\n");
@@ -457,6 +523,11 @@ public class ApiKey {
     // add `name` to the URL query string
     if (getName() != null) {
       joiner.add(String.format(java.util.Locale.ROOT, "%sname%s=%s", prefix, suffix, ApiClient.urlEncode(ApiClient.valueToString(getName()))));
+    }
+
+    // add `kind` to the URL query string
+    if (getKind() != null) {
+      joiner.add(String.format(java.util.Locale.ROOT, "%skind%s=%s", prefix, suffix, ApiClient.urlEncode(ApiClient.valueToString(getKind()))));
     }
 
     // add `status` to the URL query string
