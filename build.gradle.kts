@@ -57,17 +57,17 @@ dependencies {
     implementation("io.github.jamsesso:json-logic-java:1.1.0")
 
     // Logging adapter dependencies — compileOnly so they're not transitive
-    compileOnly("ch.qos.logback:logback-classic:1.6.1")
+    compileOnly("ch.qos.logback:logback-classic:1.6.3")
     compileOnly("org.slf4j:slf4j-api:2.0.18")
     compileOnly("org.apache.logging.log4j:log4j-core:2.26.1")
     compileOnly("org.apache.logging.log4j:log4j-api:2.26.1")
 
-    testImplementation("org.junit.jupiter:junit-jupiter:6.1.2")
+    testImplementation("org.junit.jupiter:junit-jupiter:6.1.3")
     testImplementation("org.mockito:mockito-core:5.23.0")
     testRuntimeOnly("org.junit.platform:junit-platform-launcher")
 
     // Test dependencies for adapter tests
-    testImplementation("ch.qos.logback:logback-classic:1.6.1")
+    testImplementation("ch.qos.logback:logback-classic:1.6.3")
     testImplementation("org.slf4j:slf4j-api:2.0.18")
     testImplementation("org.apache.logging.log4j:log4j-core:2.26.1")
     testImplementation("org.apache.logging.log4j:log4j-api:2.26.1")
